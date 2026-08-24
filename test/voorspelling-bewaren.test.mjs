@@ -1,0 +1,74 @@
+// Regressietest voor de bug waarbij een opgeslagen voorspelling verdween
+// zodra je terugging naar het overzicht en de race opnieuw opende.
+//
+// De oude versie schreef de rij wel naar de database maar werkte S.preds in
+// het geheugen niet bij; het scherm las daarna nog de oude, lege stand.
+// Deze test zakte op de oude versie met 0 van de 10 plekken ingevuld.
+
+import { maakControle, startPagina, meedoen, openRace, kiesTien } from './hulp.mjs';
+
+const { check, afronden } = maakControle('voorspelling bewaren');
+const { page, jsFouten, stoppen } = await startPagina();
+
+await meedoen(page);
+check('poule openen en speler kiezen', true);
+
+// --- invullen en opslaan --------------------------------------------------
+await openRace(page, 'Melbourne');
+await kiesTien(page);
+const knop = (await page.textContent('#opslaan')).trim();
+check('opslaanknop actief na 10 keuzes', knop === 'Opslaan', `knop: "${knop}"`);
+
+const gekozen = await page.$$eval('.slot.vol .who', (n) => n.map((x) => x.firstChild.textContent.trim()));
+await page.click('#opslaan');
+await page.waitForSelector('[data-race]');
+
+const melding = await page.$('.melding');
+check('bevestiging na opslaan', !!melding, melding ? (await melding.textContent()).trim() : 'geen melding');
+
+const inDb = await page.evaluate(() => globalThis.__db.predictions);
+check('rij staat in de database',
+  inDb.length === 1 && inDb[0].quali_top10?.length === 10, `${inDb.length} rij(en)`);
+
+const vinkjes = await page.$$eval('[data-race]:has(.nm:text-is("Melbourne")) .mk i',
+  (n) => n.map((x) => x.textContent + ':' + (x.className || 'uit')));
+check('Q-vinkje aan op het overzicht', vinkjes[0] === 'Q:aan', vinkjes.join(' '));
+
+// --- de kern: staat het er nog na opnieuw openen? -------------------------
+await openRace(page, 'Melbourne');
+const terug = await page.$$eval('.slot.vol .who', (n) => n.map((x) => x.firstChild.textContent.trim()));
+check('voorspelling staat er nog na opnieuw openen',
+  terug.length === 10 && terug.join() === gekozen.join(), `${terug.length} van 10 ingevuld`);
+
+// --- wijzigen maakt geen tweede rij ---------------------------------------
+await page.click('.slot.vol .x');            // haal P1 weg
+await page.click('.drv:not([disabled])');    // kies een andere
+await page.click('#opslaan');
+await page.waitForSelector('[data-race]');
+const na = await page.evaluate(() => globalThis.__db.predictions);
+check('wijzigen maakt geen tweede rij aan', na.length === 1, `${na.length} rijen`);
+
+// --- kwalificatie dicht, race nog open ------------------------------------
+await openRace(page, 'Shanghai');
+await page.click('[data-tab="race"]');
+await page.waitForSelector('.drv');
+await kiesTien(page);
+await page.click('#opslaan');
+await page.waitForSelector('[data-race]');
+const shanghai = await page.evaluate(() =>
+  globalThis.__db.predictions.find((p) => String(p.race_id) === '2'));
+check('race-top-10 opslaan lukt terwijl de kwalificatie dicht is',
+  shanghai?.race_top10?.length === 10, JSON.stringify(shanghai?.race_top10));
+check('gesloten kwalificatie blijft leeg in plaats van overschreven',
+  shanghai?.quali_top10 === null, `quali_top10: ${JSON.stringify(shanghai?.quali_top10)}`);
+
+// --- race zonder deelnemerslijst ------------------------------------------
+await openRace(page, 'Suzuka');
+const uitleg = (await page.textContent('#paneel')).trim();
+check('race zonder deelnemerslijst legt uit wat er moet gebeuren',
+  uitleg.includes('sync.html'), uitleg.slice(0, 70) + '...');
+
+check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
+
+await stoppen();
+process.exit(afronden() ? 0 : 1);

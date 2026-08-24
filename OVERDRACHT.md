@@ -97,6 +97,17 @@ De fix is nagespeeld in Chromium tegen een nagebootste Supabase, en
 deadline-trigger en het opruimen van dubbele rijen). Tegen het echte
 Supabase-project is niet getest, dus dat blijft de laatste stap.
 
+## Tests
+
+Bij elke pull request draait GitHub de tests uit `test/`: `index.html` wordt
+echt in Chromium nagespeeld tegen een nagebootste Supabase, en `schema.sql`
+wordt uitgevoerd tegen een echte PostgreSQL. De bewaar-bug hierboven kan dus
+niet stilzwijgend terugkomen.
+
+**De poule zelf heeft nog steeds geen npm of build-stap nodig.** Dat draait
+allemaal op de runner van GitHub; op de werk-pc verandert er niets. Zie
+`test/LEESMIJ.md`.
+
 ## Bestanden in de repo
 
 | Bestand | Doel |
@@ -105,6 +116,7 @@ Supabase-project is niet getest, dus dat blijft de laatste stap.
 | `sync.html` | Admin-tool, haalt kalender/uitslagen uit OpenF1, draait in de browser |
 | `schema.sql` | Volledig databaseschema, opnieuw te draaien in de Supabase SQL editor |
 | `reset.sql` | Gooit oude tabellen weg, draai vóór schema.sql bij een schone herstart |
+| `test/` | Automatische tests, draaien in CI (zie `test/LEESMIJ.md`) |
 
 Supabase-project: `etifamdwqxjfaeaordlr` (URL en anon key staan bovenin
 `index.html` en `sync.html`, zijn bewust publiek want dat hoort bij de

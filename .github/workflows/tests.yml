@@ -1,0 +1,79 @@
+name: Tests
+
+# Draait bij elke pull request en bij elke push naar main. De poule zelf
+# heeft geen build-stap en geen npm nodig; dit gebruikt Node alleen om
+# index.html in een echte browser na te spelen.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  browser:
+    name: Browsertests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Playwright installeren
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: Tests draaien
+        run: node test/draai-alles.mjs
+
+  schema:
+    name: schema.sql tegen PostgreSQL
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PGPASSWORD: postgres
+      PGHOST: localhost
+      PGUSER: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: psql beschikbaar maken
+        run: which psql || sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Rollen aanmaken die Supabase standaard heeft
+        run: psql -v ON_ERROR_STOP=1 -c "create role anon; create role authenticated;"
+
+      - name: schema.sql draaien op een lege database
+        run: psql -v ON_ERROR_STOP=1 -f schema.sql
+
+      - name: Gedrag van de deadline-trigger en de unieke sleutel
+        run: psql -v ON_ERROR_STOP=1 -f test/schema-gedrag.test.sql
+
+      # De vorige stap heeft de tabel opzettelijk beschadigd. schema.sql hoort
+      # dat te herstellen zonder dat er data verloren gaat die de app gebruikt.
+      - name: schema.sql opnieuw draaien op de beschadigde database
+        run: psql -v ON_ERROR_STOP=1 -f schema.sql
+
+      - name: Controleren of het herstel is gelukt
+        run: psql -v ON_ERROR_STOP=1 -f test/schema-herstel.test.sql
+
+      - name: reset.sql en daarna weer schema.sql
+        run: |
+          psql -v ON_ERROR_STOP=1 -f reset.sql
+          psql -v ON_ERROR_STOP=1 -f schema.sql

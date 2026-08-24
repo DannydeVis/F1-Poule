@@ -1,0 +1,3 @@
+# Alleen nodig om de tests te draaien; de poule zelf heeft geen npm nodig.
+node_modules/
+package-lock.json
