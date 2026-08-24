@@ -14,9 +14,25 @@ juiste sleutels heeft. **Draai `schema.sql` in de Supabase SQL editor voor
 je de app opnieuw test.** Onderaan dat script staat een controletabel; daar
 hoort overal `ok` te staan.
 
-Blijft het daarna misgaan, dan wijkt de oude tabelstructuur te ver af:
-draai eerst `reset.sql`, dan `schema.sql`, dan `sync.html` →
-"Kalender ophalen" en "Uitslagen bijwerken".
+Blijft het daarna misgaan, draai dan `diagnose.sql`. Dat leest alleen en laat
+zien welke tabellen, kolommen en sleutels er werkelijk staan. Wijkt de
+structuur te ver af, dan is de volgorde: `reset.sql`, `schema.sql`,
+`sync.html` → "Kalender ophalen" en "Uitslagen bijwerken".
+
+### Al tegengekomen: fout 42830
+
+> ERROR: 42830: there is no unique constraint matching given keys for
+> referenced table "pool_members"
+
+De productiedatabase bleek een oudere opzet te hebben waarin `member_id` in
+een samengestelde primaire sleutel `(pool_id, member_id)` zat. `member_id` is
+dan op zichzelf niet uniek, en een foreign key ernaartoe wordt geweigerd.
+`create table if not exists` had die tabel ongemoeid gelaten.
+
+`schema.sql` zet dit nu zelf recht: het zet er een unieke sleutel op
+`member_id` bij en laat de bestaande primaire sleutel en alle gegevens
+staan. Dit pad wordt in CI nagespeeld (`test/oude-structuur.sql`), dus het
+kan niet stilzwijgend terugvallen.
 
 ## Architectuurkeuzes, en waarom
 
@@ -116,6 +132,7 @@ allemaal op de runner van GitHub; op de werk-pc verandert er niets. Zie
 | `sync.html` | Admin-tool, haalt kalender/uitslagen uit OpenF1, draait in de browser |
 | `schema.sql` | Volledig databaseschema, opnieuw te draaien in de Supabase SQL editor |
 | `reset.sql` | Gooit oude tabellen weg, draai vóór schema.sql bij een schone herstart |
+| `diagnose.sql` | Leest alleen: toont de werkelijke tabellen, kolommen en sleutels |
 | `test/` | Automatische tests, draaien in CI (zie `test/LEESMIJ.md`) |
 
 Supabase-project: `etifamdwqxjfaeaordlr` (URL en anon key staan bovenin

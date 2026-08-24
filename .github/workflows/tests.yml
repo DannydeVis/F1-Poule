@@ -82,3 +82,19 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -f reset.sql
           psql -v ON_ERROR_STOP=1 -f schema.sql
+
+      # Een tweede database met de tabelstructuur zoals die in productie
+      # bleek te staan: member_id in een samengestelde primaire sleutel.
+      # Daar gaf schema.sql eerst 42830 op.
+      - name: schema.sql tegen een oudere tabelstructuur
+        run: |
+          createdb oud
+          psql -d oud -v ON_ERROR_STOP=1 -f test/oude-structuur.sql
+          psql -d oud -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d oud -v ON_ERROR_STOP=1 -f test/oude-structuur-controle.sql
+
+      - name: diagnose.sql leest zonder te wijzigen
+        run: |
+          psql -d oud -v ON_ERROR_STOP=1 -f diagnose.sql
+          createdb leeg
+          psql -d leeg -v ON_ERROR_STOP=1 -f diagnose.sql
