@@ -141,6 +141,20 @@
     background:#2a2010;border:1px solid #4a3a18;color:#e0c168;
     font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:14px;
   }
+  .melding{
+    background:rgba(63,185,80,.10);border:1px solid rgba(63,185,80,.35);
+    color:var(--p5);font-size:13px;padding:9px 12px;border-radius:8px;margin-bottom:14px;
+  }
+
+  /* Q/R-vinkjes op het racesoverzicht: laten zien wat er daadwerkelijk
+     in de database staat, zodat "is mijn voorspelling bewaard?" zonder
+     devtools te beantwoorden is. */
+  .mk{display:flex;gap:3px;font-family:var(--mono);font-size:10px;font-weight:700}
+  .mk i{
+    font-style:normal;width:17px;height:17px;border-radius:4px;
+    display:grid;place-items:center;border:1px solid var(--line);color:var(--ink-3);
+  }
+  .mk i.aan{background:rgba(63,185,80,.16);border-color:rgba(63,185,80,.5);color:var(--p5)}
 </style>
 </head>
 <body>
@@ -258,7 +272,7 @@ const S = {
   poule: DEMO ? { id:'p1', name:'Vrijdagmiddagpoule', join_code:'RTM026' } : null,
   ik:    DEMO ? { id:'m1', naam:'Danny' } : null,
   races: [], leden: [], preds: [],
-  race:  null, tab: 'quali', keuze: { quali: [], race: [] }, fout: '',
+  race:  null, tab: 'quali', keuze: { quali: [], race: [] }, fout: '', melding: '',
 };
 
 const app = document.getElementById('app');
@@ -267,6 +281,44 @@ const esc = (s) => String(s ?? '').replace(/[<>&"]/g, c =>
   ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
 const drv = (race, nr) => (race.drivers ?? []).find(d => d.nr === nr)
                          ?? { nr, code:nr, naam:`#${nr}`, team:'', kleur:'#888' };
+
+// Ids komen als getal of als tekst terug, afhankelijk van het kolomtype in
+// Postgres. Overal als tekst vergelijken scheelt een klasse fouten waarbij
+// een voorspelling "verdwijnt" omdat 3 !== '3'.
+const zelfde = (a, b) => String(a) === String(b);
+const vindPred = (raceId, memberId) =>
+  S.preds.find(p => zelfde(p.race_id, raceId) && zelfde(p.member_id, memberId));
+
+// ============================================================
+//  Foutmeldingen
+//  De poule draait op een werk-pc zonder devtools. Een fout uit Postgres
+//  moet daarom op het scherm zelf uitleggen wat er te doen staat.
+// ============================================================
+
+function uitleg(error) {
+  const code = error?.code ?? '';
+  const bekend = {
+    '42P10': 'De tabel predictions mist de unieke sleutel op (pool_id, race_id, member_id). '
+           + 'Draai schema.sql opnieuw in de Supabase SQL editor.',
+    '23505': 'Er staan dubbele voorspellingen in de database. '
+           + 'Draai schema.sql opnieuw, die ruimt ze op en zet de unieke sleutel goed.',
+    '23503': 'Deze race of speler bestaat niet (meer) in de database.',
+    '42501': 'De database weigert het schrijven (RLS-policy). Draai schema.sql opnieuw.',
+    '42P01': 'Een tabel ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.',
+    '42703': 'Een kolom ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.',
+  };
+  if (bekend[code]) return bekend[code];
+  const bericht = error?.message ?? 'Onbekende fout';
+  return code ? `${bericht} (${code})` : bericht;
+}
+
+function toonFout(bericht) {
+  app.innerHTML = `
+    <h2>Er ging iets mis</h2>
+    <div class="card"><p class="err" style="margin:0">${esc(bericht)}</p></div>
+    <button class="btn ghost sm" id="opnieuw">Opnieuw proberen</button>`;
+  app.querySelector('#opnieuw').onclick = () => location.reload();
+}
 
 // ============================================================
 //  Data laden
@@ -278,31 +330,63 @@ async function laad() {
     S.preds = demoPreds.map(p => ({ ...p, pool_id:'p1' }));
     return;
   }
-  const [{ data:races }, { data:leden }, { data:preds }] = await Promise.all([
+  const [races, leden, preds] = await Promise.all([
     db.from('races').select('*').eq('season', SEIZOEN).order('round'),
     db.from('pool_members').select('member_id,display_name').eq('pool_id', S.poule.id),
     db.from('predictions').select('*').eq('pool_id', S.poule.id),
   ]);
-  S.races = races ?? []; S.leden = leden ?? []; S.preds = preds ?? [];
+  // Een mislukte lees-actie stil laten passeren geeft een lege lijst zonder
+  // uitleg; dat is precies hoe de bewaar-bug zo lang onzichtbaar bleef.
+  const stuk = [races, leden, preds].find(r => r.error);
+  if (stuk) throw new Error(uitleg(stuk.error));
+  S.races = races.data ?? []; S.leden = leden.data ?? []; S.preds = preds.data ?? [];
 }
 
 async function bewaar() {
-  const rij = {
-    pool_id: S.poule.id, race_id: S.race.id, member_id: S.ik.id,
-    quali_top10: S.keuze.quali.length ? S.keuze.quali : null,
-    race_top10:  S.keuze.race.length  ? S.keuze.race  : null,
-  };
+  const nu = Date.now();
+  const dicht = { quali: nu >= new Date(S.race.deadline_quali).getTime(),
+                  race:  nu >= new Date(S.race.deadline_race).getTime() };
+
+  // De deadline kan verstreken zijn terwijl het formulier openstond. Zonder
+  // deze controle zou hieronder een lege kolom worden weggeschreven en zou de
+  // speler alsnog "opgeslagen" te zien krijgen.
+  if (dicht[S.tab]) throw new Error(S.tab === 'quali'
+    ? 'De kwalificatie is inmiddels begonnen, je kunt hem niet meer invullen.'
+    : 'De race is inmiddels begonnen, je kunt hem niet meer invullen.');
+
+  const rij = { pool_id: S.poule.id, race_id: S.race.id, member_id: S.ik.id };
+
+  // Alleen de lijst meesturen waarvan de deadline nog open staat. Een
+  // ongewijzigde kolom toch meesturen laat een deadline-trigger afgaan die
+  // op "kolom aanwezig" test in plaats van op "kolom gewijzigd" — dan kun je
+  // je race-top-10 niet meer opslaan zodra de kwalificatie is begonnen.
+  if (!dicht.quali) rij.quali_top10 = S.keuze.quali.length ? S.keuze.quali : null;
+  if (!dicht.race)  rij.race_top10  = S.keuze.race.length  ? S.keuze.race  : null;
+
   if (DEMO) {
-    const i = S.preds.findIndex(p => p.race_id === rij.race_id && p.member_id === S.ik.id);
-    i === -1 ? S.preds.push(rij) : (S.preds[i] = rij);
+    const i = S.preds.findIndex(p => zelfde(p.race_id, rij.race_id) && zelfde(p.member_id, S.ik.id));
+    const volledig = { quali_top10:null, race_top10:null, ...S.preds[i], ...rij };
+    i === -1 ? S.preds.push(volledig) : (S.preds[i] = volledig);
     return;
   }
-  const { error } = await db.from('predictions').upsert(rij);
-  if (error) throw new Error(error.message);
+
+  // onConflict expliciet: zonder deze regel mikt PostgREST op de primaire
+  // sleutel. Staat daar een los id-kolommetje, dan wordt elke "update" een
+  // nieuwe rij en lijkt bewaren willekeurig wel en niet te werken.
+  const { data, error } = await db
+    .from('predictions')
+    .upsert(rij, { onConflict: 'pool_id,race_id,member_id' })
+    .select();
+
+  if (error) throw new Error(uitleg(error));
+  if (!data?.length) throw new Error(
+    'De database nam de voorspelling aan maar gaf geen rij terug. '
+    + 'Waarschijnlijk blokkeert een RLS-policy het schrijven of het teruglezen. '
+    + 'Draai schema.sql opnieuw in de Supabase SQL editor.');
 }
 
 // ============================================================
-//  Races, invullen, uitslag  (ongewijzigd t.o.v. de vorige versie)
+//  Races, invullen, uitslag
 // ============================================================
 
 function toonRaces() {
@@ -310,24 +394,30 @@ function toonRaces() {
   hdr.textContent = S.poule.name;
   app.innerHTML = `
     ${DEMO ? `<div class="waarschuwing">Demomodus met verzonnen data.</div>` : ''}
+    ${S.melding ? `<div class="melding">${esc(S.melding)}</div>` : ''}
     <button class="btn ghost sm" id="wissel" style="margin-bottom:14px">
       Wissel speler (nu: ${esc(S.ik.naam)})</button>
     <h2>Races</h2>
     <p class="sub">Poulecode <b style="font-family:var(--mono)">${esc(S.poule.join_code)}</b></p>
     ${S.races.map(r => {
       const gescoord = r.race_result;
-      const open = nu < new Date(r.deadline_race).getTime();
-      const st = gescoord ? ['klaar','uitslag'] : open ? ['open','open'] : ['dicht','wacht'];
-      return `<button class="race" data-race="${r.id}">
+      const nogOpen = nu < new Date(r.deadline_race).getTime();
+      const st = gescoord ? ['klaar','uitslag'] : nogOpen ? ['open','open'] : ['dicht','wacht'];
+      const mijn = vindPred(r.id, S.ik.id);
+      const vink = (lijst) => lijst?.length ? 'aan' : '';
+      return `<button class="race" data-race="${esc(r.id)}">
         <span class="rnd">${String(r.round).padStart(2,'0')}</span>
         <span class="nm">${esc(r.name)}</span>
+        <span class="mk" title="Q = kwalificatie ingevuld, R = race ingevuld">
+          <i class="${vink(mijn?.quali_top10)}">Q</i><i class="${vink(mijn?.race_top10)}">R</i></span>
         <span class="st ${st[0]}">${st[1]}</span>
       </button>`;
     }).join('')}
     <h2>Stand</h2>
     ${stand()}`;
 
-  app.querySelectorAll('[data-race]').forEach(b => b.onclick = () => open(Number(b.dataset.race)));
+  S.melding = '';
+  app.querySelectorAll('[data-race]').forEach(b => b.onclick = () => openRace(b.dataset.race));
   app.querySelector('#wissel').onclick = () => { vergeet(S.poule.id); kiesSpeler(); };
 }
 
@@ -336,9 +426,9 @@ function stand() {
     let punten = 0;
     for (const r of S.races) {
       if (!r.race_result && !r.quali_result) continue;
-      punten += scoreWeekend(S.preds.find(p => p.race_id === r.id && p.member_id === l.member_id), r);
+      punten += scoreWeekend(vindPred(r.id, l.member_id), r);
     }
-    return { naam:l.display_name, punten, mij:l.member_id === S.ik.id };
+    return { naam:l.display_name, punten, mij:zelfde(l.member_id, S.ik.id) };
   }).sort((a,b) => b.punten - a.punten);
 
   if (!rijen.length) return `<p class="muted">Nog niemand meegedaan.</p>`;
@@ -348,9 +438,10 @@ function stand() {
     </div>`).join('');
 }
 
-function open(id) {
-  S.race = S.races.find(r => r.id === id);
-  const mijn = S.preds.find(p => p.race_id === id && p.member_id === S.ik.id);
+function openRace(id) {
+  S.race = S.races.find(r => zelfde(r.id, id));
+  if (!S.race) { toonFout('Deze race staat niet meer in de lijst.'); return; }
+  const mijn = vindPred(id, S.ik.id);
   S.keuze = { quali:[...(mijn?.quali_top10 ?? [])], race:[...(mijn?.race_top10 ?? [])] };
   S.tab = 'quali'; S.fout = ''; toonRace();
 }
@@ -380,6 +471,14 @@ function toonRace() {
 }
 
 function invulWeergave(paneel, r, dicht) {
+  // Zonder deelnemerslijst is er niets om aan te klikken en blijft de
+  // opslaanknop hangen op "nog 10 te kiezen" zonder uit te leggen waarom.
+  if (!(r.drivers ?? []).length) {
+    paneel.innerHTML = `<p class="muted">De deelnemerslijst voor deze race staat nog niet
+      in de database, dus er valt nog niets te kiezen. Draai sync.html
+      ("Uitslagen bijwerken") om hem op te halen.</p>`;
+    return;
+  }
   const lijst = S.keuze[S.tab];
   const kanKopieren = S.tab === 'race' && !S.keuze.race.length && S.keuze.quali.length;
   paneel.innerHTML = `
@@ -417,15 +516,28 @@ function invulWeergave(paneel, r, dicht) {
   });
   const kop = paneel.querySelector('#kopieer');
   if (kop) kop.onclick = () => { S.keuze.race = [...S.keuze.quali]; invulWeergave(paneel, r, dicht); };
-  paneel.querySelector('#opslaan').onclick = async () => {
+  paneel.querySelector('#opslaan').onclick = async (ev) => {
+    const knop = ev.currentTarget;
+    knop.disabled = true;                       // dubbeltikken op mobiel
+    knop.textContent = 'Bezig met opslaan...';
     S.fout = '';
-    try { await bewaar(); toonRaces(); }
-    catch (e) { S.fout = e.message; invulWeergave(paneel, r, dicht); }
+    try {
+      await bewaar();
+      // De eigenlijke fix voor "mijn voorspelling is weg": bewaar() schrijft
+      // naar de database maar raakt S.preds niet aan. Zonder herladen toont
+      // het scherm daarna nog de oude, lege stand.
+      await laad();
+      S.melding = `Voorspelling voor ${r.name} opgeslagen.`;
+      toonRaces();
+    } catch (e) {
+      S.fout = e.message;
+      invulWeergave(paneel, r, dicht);
+    }
   };
 }
 
 function uitslagWeergave(r, werkelijk) {
-  const mijn = S.preds.find(p => p.race_id === r.id && p.member_id === S.ik.id);
+  const mijn = vindPred(r.id, S.ik.id);
   const lijst = S.tab === 'quali' ? mijn?.quali_top10 : mijn?.race_top10;
   if (!lijst?.length) return `<p class="muted">Je hebt hier niks ingevuld.</p>${andermans(r)}`;
   const { totaal, regels } = scoreLijst(lijst, werkelijk);
@@ -451,11 +563,11 @@ function uitslagWeergave(r, werkelijk) {
 }
 
 function andermans(r) {
-  const anderen = S.leden.filter(l => l.member_id !== S.ik.id);
+  const anderen = S.leden.filter(l => !zelfde(l.member_id, S.ik.id));
   if (!anderen.length) return '';
   const werkelijk = S.tab === 'quali' ? r.quali_result : r.race_result;
   const rijen = anderen.map(l => {
-    const p = S.preds.find(x => x.race_id === r.id && x.member_id === l.member_id);
+    const p = vindPred(r.id, l.member_id);
     const v = S.tab === 'quali' ? p?.quali_top10 : p?.race_top10;
     return { naam:l.display_name, punten: werkelijk && v ? scoreLijst(v, werkelijk).totaal : null };
   }).sort((a,b) => (b.punten ?? -1) - (a.punten ?? -1));
@@ -487,9 +599,10 @@ function kiesSpeler() {
     || `<p class="muted">Nog geen spelers, maak de eerste aan.</p>`;
 
   app.querySelectorAll('[data-lid]').forEach(b => b.onclick = () => {
-    S.ik = { id: b.dataset.lid, naam: S.leden.find(l => l.member_id === b.dataset.lid).display_name };
+    S.ik = { id: b.dataset.lid,
+             naam: S.leden.find(l => zelfde(l.member_id, b.dataset.lid)).display_name };
     onthoud(S.poule.id, S.ik.id);
-    laad().then(toonRaces);
+    laad().then(toonRaces).catch(e => toonFout(e.message));
   });
 
   app.querySelector('#maak').onclick = async () => {
@@ -503,10 +616,11 @@ function kiesSpeler() {
     const { data, error } = await db.from('pool_members')
       .insert({ pool_id: S.poule.id, display_name: naam })
       .select().single();
-    if (error) { app.querySelector('#f').textContent = error.message; return; }
+    if (error) { app.querySelector('#f').textContent = uitleg(error); return; }
     S.ik = { id: data.member_id, naam };
     onthoud(S.poule.id, data.member_id);
-    await laad(); toonRaces();
+    try { await laad(); toonRaces(); }
+    catch (e) { app.querySelector('#f').textContent = e.message; }
   };
 }
 
@@ -534,9 +648,10 @@ function toonStart() {
     if (error || !data) { app.querySelector('#f').textContent = 'Die poulecode bestaat niet'; return; }
     S.poule = data;
     const bekend = mijnId(S.poule.id);
-    await laad();
-    if (bekend && S.leden.some(l => l.member_id === bekend)) {
-      S.ik = { id: bekend, naam: S.leden.find(l => l.member_id === bekend).display_name };
+    try { await laad(); }
+    catch (e) { app.querySelector('#f').textContent = e.message; return; }
+    if (bekend && S.leden.some(l => zelfde(l.member_id, bekend))) {
+      S.ik = { id: bekend, naam: S.leden.find(l => zelfde(l.member_id, bekend)).display_name };
       toonRaces();
     } else kiesSpeler();
   };
@@ -546,7 +661,7 @@ function toonStart() {
     if (!naam) return;
     const { data, error } = await db.from('pools')
       .insert({ name: naam, season: SEIZOEN }).select().single();
-    if (error) { app.querySelector('#f').textContent = error.message; return; }
+    if (error) { app.querySelector('#f').textContent = uitleg(error); return; }
     S.poule = data; S.leden = []; kiesSpeler();
   };
 }
@@ -558,8 +673,8 @@ function toonStart() {
 if (DEMO) {
   await laad();
   const bekend = mijnId(S.poule.id);
-  if (bekend && S.leden.some(l => l.member_id === bekend)) {
-    S.ik = { id: bekend, naam: S.leden.find(l => l.member_id === bekend).display_name };
+  if (bekend && S.leden.some(l => zelfde(l.member_id, bekend))) {
+    S.ik = { id: bekend, naam: S.leden.find(l => zelfde(l.member_id, bekend)).display_name };
   }
   toonRaces();
 } else {
