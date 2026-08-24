@@ -54,7 +54,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: psql beschikbaar maken
-        run: which psql || sudo apt-get update && sudo apt-get install -y postgresql-client
+        run: |
+          if ! command -v psql >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+          psql --version
 
       - name: Rollen aanmaken die Supabase standaard heeft
         run: psql -v ON_ERROR_STOP=1 -c "create role anon; create role authenticated;"
