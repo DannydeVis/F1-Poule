@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Poule</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel-2:#1c232c;
+    --line:#2a3440; --line-soft:#212a34;
+    --ink:#e8edf2; --ink-2:#8b98a5; --ink-3:#5a6673;
+    --p5:#3fb950; --p3:#a5c261; --p1:#d9a441; --p0:#3d4750;
+    --hit:#3fb950;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    font-size:15px;line-height:1.45;
+    padding:0 0 env(safe-area-inset-bottom);
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 14px 64px}
+
+  header{
+    position:sticky;top:0;z-index:20;background:rgba(13,17,23,.94);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+    padding:12px 0 10px;margin-bottom:16px;
+  }
+  .brand{
+    display:flex;align-items:baseline;gap:9px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .brand b{color:var(--ink);font-size:17px;letter-spacing:.02em;font-weight:650}
+  h2{font-size:19px;margin:22px 0 10px;font-weight:640;letter-spacing:-.01em}
+  .sub{color:var(--ink-2);font-size:13px;margin:-4px 0 14px}
+
+  button{font:inherit;cursor:pointer;border:0;border-radius:8px}
+  .btn{
+    background:var(--ink);color:#0d1117;padding:11px 16px;font-weight:600;
+    width:100%;font-size:15px;
+  }
+  .btn:disabled{opacity:.35;cursor:default}
+  .btn.ghost{background:transparent;color:var(--ink-2);border:1px solid var(--line)}
+  .btn.sm{width:auto;padding:7px 13px;font-size:13px}
+  input{
+    font:inherit;width:100%;padding:11px 13px;border-radius:8px;
+    border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  }
+  input:focus,button:focus-visible{outline:2px solid #4f8cc9;outline-offset:1px}
+  .row{display:flex;gap:8px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px}
+  .muted{color:var(--ink-2);font-size:13px}
+  .err{color:#f0736a;font-size:13px;margin-top:8px}
+  .hide{display:none!important}
+
+  .tabs{display:flex;gap:4px;margin-bottom:16px}
+  .tabs button{
+    flex:1;background:var(--panel);color:var(--ink-2);padding:9px 0;
+    font-size:13px;font-weight:600;border:1px solid var(--line);
+  }
+  .tabs button[aria-selected=true]{background:var(--ink);color:#0d1117;border-color:var(--ink)}
+
+  .race{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:13px 14px;margin-bottom:8px;color:var(--ink);
+  }
+  .race .rnd{font-family:var(--mono);font-size:19px;color:var(--ink-3);min-width:30px}
+  .race .nm{flex:1;font-weight:600}
+  .race .st{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+  .st.open{color:var(--hit)}
+  .st.dicht{color:var(--ink-3)}
+  .st.klaar{color:var(--p1)}
+
+  .slots{margin:0 0 18px;padding:0;list-style:none}
+  .slot{
+    display:flex;align-items:center;gap:10px;
+    border-bottom:1px solid var(--line-soft);padding:7px 0;min-height:44px;
+  }
+  .pos{
+    font-family:var(--mono);font-size:14px;color:var(--ink-3);
+    min-width:26px;text-align:right;font-variant-numeric:tabular-nums;
+  }
+  .bar{width:3px;align-self:stretch;border-radius:2px;background:var(--line)}
+  .slot .who{flex:1;color:var(--ink-3);font-size:14px}
+  .slot.vol .who{color:var(--ink);font-weight:600}
+  .slot .who small{display:block;color:var(--ink-2);font-weight:400;font-size:11.5px}
+  .x{background:transparent;color:var(--ink-3);font-size:20px;padding:4px 8px;line-height:1}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .drv{
+    display:flex;align-items:center;gap:8px;background:var(--panel);
+    border:1px solid var(--line);border-radius:8px;padding:9px 10px;
+    color:var(--ink);text-align:left;font-size:13.5px;min-height:44px;
+  }
+  .drv:disabled{opacity:.28}
+  .drv .code{font-family:var(--mono);font-weight:700;letter-spacing:.04em}
+  .drv .tm{color:var(--ink-2);font-size:11px;display:block;font-weight:400}
+
+  .strip{margin:0;padding:0;list-style:none}
+  .sr{
+    display:grid;grid-template-columns:26px 3px 1fr auto auto;
+    align-items:center;gap:9px;padding:7px 0;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .sr .delta{
+    font-family:var(--mono);font-size:12px;color:var(--ink-2);
+    font-variant-numeric:tabular-nums;min-width:44px;text-align:right;
+  }
+  .pts{
+    font-family:var(--mono);font-size:12.5px;font-weight:700;
+    min-width:30px;text-align:right;font-variant-numeric:tabular-nums;
+  }
+  .v5{color:var(--p5)} .v3{color:var(--p3)} .v1{color:var(--p1)} .v0{color:var(--p0)}
+
+  .score{
+    display:flex;align-items:baseline;justify-content:space-between;
+    padding:12px 14px;background:var(--panel-2);border-radius:10px;margin-bottom:14px;
+  }
+  .score b{font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:-.02em}
+  .score span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-2)}
+
+  .st-row{
+    display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:10px;
+    padding:11px 0;border-bottom:1px solid var(--line-soft);
+  }
+  .st-row .p{font-family:var(--mono);color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .st-row .t{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
+  .st-row.self{background:linear-gradient(90deg,rgba(63,185,80,.09),transparent);
+    margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:6px}
+
+  .wie{display:flex;align-items:center;gap:10px;background:var(--panel);
+    border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+    width:100%;text-align:left;color:var(--ink);margin-bottom:8px;font-weight:600}
+  .wie .puntje{width:8px;height:8px;border-radius:50%;background:var(--hit)}
+
+  .waarschuwing{
+    background:#2a2010;border:1px solid #4a3a18;color:#e0c168;
+    font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><b>Poule</b><span id="hdr">seizoen 2026</span></div>
+  </header>
+  <div id="app"></div>
+</div>
+
+<script type="module">
+// ============================================================
+//  Instellingen
+// ============================================================
+const SUPABASE_URL = 'https://etifamdwqxjfaeaordlr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aWZhbWR3cXhqZmFlYW9yZGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzMzNTUsImV4cCI6MjEwMzE0OTM1NX0.dI0HMZsO0JcmhF9ibD81ivVl96UCYInoUz94r8cAqio';
+const SEIZOEN = 2026;
+
+const DEMO = !SUPABASE_URL || !SUPABASE_ANON_KEY;
+
+let db = null;
+if (!DEMO) {
+  const { createClient } = await import(
+    'https://esm.sh/@supabase/supabase-js@2'
+  );
+  db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+// ============================================================
+//  Wie ben ik?
+//  Geen login. De browser onthoudt een willekeurig id per poule
+//  in localStorage. Dat is geen beveiliging, maar gemak: kom je
+//  terug op hetzelfde toestel, dan hoef je jezelf niet opnieuw
+//  aan te wijzen.
+// ============================================================
+
+const sleutel = (poolId) => `poule:${poolId}:mijn_id`;
+const mijnId  = (poolId) => localStorage.getItem(sleutel(poolId));
+const onthoud = (poolId, memberId) => localStorage.setItem(sleutel(poolId), memberId);
+const vergeet = (poolId) => localStorage.removeItem(sleutel(poolId));
+
+// ============================================================
+//  Scoren
+// ============================================================
+
+export function scoreLijst(voorspeld = [], werkelijk = []) {
+  let totaal = 0;
+  const regels = voorspeld.map((nr, i) => {
+    const echt = werkelijk.indexOf(nr);
+    const punten = echt === -1 ? 0 : Math.max(0, 5 - 2 * Math.abs(i - echt));
+    totaal += punten;
+    return { nr, voorspeld: i + 1, werkelijk: echt === -1 ? null : echt + 1, punten };
+  });
+  return { totaal, regels };
+}
+
+const scoreWeekend = (p, race) =>
+    scoreLijst(p?.quali_top10 ?? [], race.quali_result ?? []).totaal
+  + scoreLijst(p?.race_top10  ?? [], race.race_result  ?? []).totaal;
+
+// ============================================================
+//  Demodata (alleen als er geen Supabase-gegevens zijn ingevuld)
+// ============================================================
+
+const DEMO_DRIVERS = [
+  { nr:'1',  code:'VER', naam:'Max Verstappen',   team:'Red Bull',  kleur:'#3671C6' },
+  { nr:'6',  code:'HAD', naam:'Isack Hadjar',     team:'Red Bull',  kleur:'#3671C6' },
+  { nr:'12', code:'ANT', naam:'Kimi Antonelli',   team:'Mercedes',  kleur:'#27F4D2' },
+  { nr:'63', code:'RUS', naam:'George Russell',   team:'Mercedes',  kleur:'#27F4D2' },
+  { nr:'16', code:'LEC', naam:'Charles Leclerc',  team:'Ferrari',   kleur:'#E8002D' },
+  { nr:'44', code:'HAM', naam:'Lewis Hamilton',   team:'Ferrari',   kleur:'#E8002D' },
+  { nr:'4',  code:'NOR', naam:'Lando Norris',     team:'McLaren',   kleur:'#FF8000' },
+  { nr:'81', code:'PIA', naam:'Oscar Piastri',    team:'McLaren',   kleur:'#FF8000' },
+  { nr:'10', code:'GAS', naam:'Pierre Gasly',     team:'Alpine',    kleur:'#0093CC' },
+  { nr:'43', code:'COL', naam:'Franco Colapinto', team:'Alpine',    kleur:'#0093CC' },
+  { nr:'14', code:'ALO', naam:'Fernando Alonso',  team:'Aston',     kleur:'#229971' },
+  { nr:'18', code:'STR', naam:'Lance Stroll',     team:'Aston',     kleur:'#229971' },
+];
+const uur = (h) => new Date(Date.now() + h * 3600e3).toISOString();
+const demoRaces = [
+  { id:1, round:1, name:'Melbourne', drivers:DEMO_DRIVERS,
+    deadline_quali:uur(-72), deadline_race:uur(-48),
+    quali_result:['12','1','4','63','16','81','44','6','10','43','14','18'],
+    race_result: ['63','12','16','1','4','44','81','10','6','14','43','18'] },
+  { id:2, round:2, name:'Shanghai', drivers:DEMO_DRIVERS,
+    deadline_quali:uur(-30), deadline_race:uur(-6),
+    quali_result:['4','81','1','16','12','63','44','14','6','10','43','18'],
+    race_result: ['4','1','81','12','63','16','14','44','10','6','18','43'] },
+  { id:3, round:3, name:'Suzuka', drivers:DEMO_DRIVERS,
+    deadline_quali:uur(28), deadline_race:uur(52),
+    quali_result:null, race_result:null },
+];
+const husselen = (a, zaad) => [...a].sort(() => Math.sin(zaad++) - .5).slice(0, 10).map(d => d.nr);
+const demoLeden = [
+  { member_id:'m1', display_name:'Danny' },
+  { member_id:'m2', display_name:'Michael' },
+  { member_id:'m3', display_name:'Davy' },
+];
+const demoPreds = [
+  { member_id:'m1', race_id:1, quali_top10:['12','1','63','4','16','81','44','6','10','43'],
+                               race_top10: ['12','63','1','16','4','44','81','6','10','43'] },
+  { member_id:'m2', race_id:1, quali_top10:husselen(DEMO_DRIVERS,3),  race_top10: husselen(DEMO_DRIVERS,7) },
+  { member_id:'m3', race_id:1, quali_top10:husselen(DEMO_DRIVERS,11), race_top10: husselen(DEMO_DRIVERS,13) },
+  { member_id:'m1', race_id:2, quali_top10:['4','81','1','16','12','63','44','14','6','10'],
+                               race_top10: ['4','81','1','12','63','16','44','14','10','6'] },
+  { member_id:'m2', race_id:2, quali_top10:husselen(DEMO_DRIVERS,5),  race_top10: husselen(DEMO_DRIVERS,9) },
+  { member_id:'m3', race_id:2, quali_top10:husselen(DEMO_DRIVERS,17), race_top10: husselen(DEMO_DRIVERS,19) },
+];
+
+// ============================================================
+//  Toestand
+// ============================================================
+
+const S = {
+  poule: DEMO ? { id:'p1', name:'Vrijdagmiddagpoule', join_code:'RTM026' } : null,
+  ik:    DEMO ? { id:'m1', naam:'Danny' } : null,
+  races: [], leden: [], preds: [],
+  race:  null, tab: 'quali', keuze: { quali: [], race: [] }, fout: '',
+};
+
+const app = document.getElementById('app');
+const hdr = document.getElementById('hdr');
+const esc = (s) => String(s ?? '').replace(/[<>&"]/g, c =>
+  ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const drv = (race, nr) => (race.drivers ?? []).find(d => d.nr === nr)
+                         ?? { nr, code:nr, naam:`#${nr}`, team:'', kleur:'#888' };
+
+// ============================================================
+//  Data laden
+// ============================================================
+
+async function laad() {
+  if (DEMO) {
+    S.races = demoRaces; S.leden = demoLeden;
+    S.preds = demoPreds.map(p => ({ ...p, pool_id:'p1' }));
+    return;
+  }
+  const [{ data:races }, { data:leden }, { data:preds }] = await Promise.all([
+    db.from('races').select('*').eq('season', SEIZOEN).order('round'),
+    db.from('pool_members').select('member_id,display_name').eq('pool_id', S.poule.id),
+    db.from('predictions').select('*').eq('pool_id', S.poule.id),
+  ]);
+  S.races = races ?? []; S.leden = leden ?? []; S.preds = preds ?? [];
+}
+
+async function bewaar() {
+  const rij = {
+    pool_id: S.poule.id, race_id: S.race.id, member_id: S.ik.id,
+    quali_top10: S.keuze.quali.length ? S.keuze.quali : null,
+    race_top10:  S.keuze.race.length  ? S.keuze.race  : null,
+  };
+  if (DEMO) {
+    const i = S.preds.findIndex(p => p.race_id === rij.race_id && p.member_id === S.ik.id);
+    i === -1 ? S.preds.push(rij) : (S.preds[i] = rij);
+    return;
+  }
+  const { error } = await db.from('predictions').upsert(rij);
+  if (error) throw new Error(error.message);
+}
+
+// ============================================================
+//  Races, invullen, uitslag  (ongewijzigd t.o.v. de vorige versie)
+// ============================================================
+
+function toonRaces() {
+  const nu = Date.now();
+  hdr.textContent = S.poule.name;
+  app.innerHTML = `
+    ${DEMO ? `<div class="waarschuwing">Demomodus met verzonnen data.</div>` : ''}
+    <button class="btn ghost sm" id="wissel" style="margin-bottom:14px">
+      Wissel speler (nu: ${esc(S.ik.naam)})</button>
+    <h2>Races</h2>
+    <p class="sub">Poulecode <b style="font-family:var(--mono)">${esc(S.poule.join_code)}</b></p>
+    ${S.races.map(r => {
+      const gescoord = r.race_result;
+      const open = nu < new Date(r.deadline_race).getTime();
+      const st = gescoord ? ['klaar','uitslag'] : open ? ['open','open'] : ['dicht','wacht'];
+      return `<button class="race" data-race="${r.id}">
+        <span class="rnd">${String(r.round).padStart(2,'0')}</span>
+        <span class="nm">${esc(r.name)}</span>
+        <span class="st ${st[0]}">${st[1]}</span>
+      </button>`;
+    }).join('')}
+    <h2>Stand</h2>
+    ${stand()}`;
+
+  app.querySelectorAll('[data-race]').forEach(b => b.onclick = () => open(Number(b.dataset.race)));
+  app.querySelector('#wissel').onclick = () => { vergeet(S.poule.id); kiesSpeler(); };
+}
+
+function stand() {
+  const rijen = S.leden.map(l => {
+    let punten = 0;
+    for (const r of S.races) {
+      if (!r.race_result && !r.quali_result) continue;
+      punten += scoreWeekend(S.preds.find(p => p.race_id === r.id && p.member_id === l.member_id), r);
+    }
+    return { naam:l.display_name, punten, mij:l.member_id === S.ik.id };
+  }).sort((a,b) => b.punten - a.punten);
+
+  if (!rijen.length) return `<p class="muted">Nog niemand meegedaan.</p>`;
+  return rijen.map((r,i) => `
+    <div class="st-row ${r.mij ? 'self' : ''}">
+      <span class="p">${i+1}</span><span>${esc(r.naam)}</span><span class="t">${r.punten}</span>
+    </div>`).join('');
+}
+
+function open(id) {
+  S.race = S.races.find(r => r.id === id);
+  const mijn = S.preds.find(p => p.race_id === id && p.member_id === S.ik.id);
+  S.keuze = { quali:[...(mijn?.quali_top10 ?? [])], race:[...(mijn?.race_top10 ?? [])] };
+  S.tab = 'quali'; S.fout = ''; toonRace();
+}
+
+function toonRace() {
+  const r = S.race, nu = Date.now();
+  const dicht = { quali: nu >= new Date(r.deadline_quali).getTime(),
+                  race:  nu >= new Date(r.deadline_race).getTime() };
+  hdr.textContent = r.name;
+  app.innerHTML = `
+    <button class="btn ghost sm" id="terug">Terug</button>
+    <h2>${esc(r.name)}</h2>
+    <div class="tabs">
+      <button data-tab="quali" aria-selected="${S.tab==='quali'}">Kwalificatie</button>
+      <button data-tab="race"  aria-selected="${S.tab==='race'}">Race</button>
+    </div>
+    <div id="paneel"></div>`;
+  app.querySelector('#terug').onclick = toonRaces;
+  app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; toonRace(); });
+
+  const paneel = app.querySelector('#paneel');
+  const lijstKlaar = S.tab === 'quali' ? r.quali_result : r.race_result;
+  if (lijstKlaar) paneel.innerHTML = uitslagWeergave(r, lijstKlaar);
+  else if (dicht[S.tab]) paneel.innerHTML =
+    `<p class="muted">Inzendingen zijn gesloten. Uitslag volgt zodra de sessie is verwerkt.</p>${andermans(r)}`;
+  else invulWeergave(paneel, r, dicht);
+}
+
+function invulWeergave(paneel, r, dicht) {
+  const lijst = S.keuze[S.tab];
+  const kanKopieren = S.tab === 'race' && !S.keuze.race.length && S.keuze.quali.length;
+  paneel.innerHTML = `
+    ${kanKopieren ? `<button class="btn ghost sm" id="kopieer" style="margin-bottom:12px">Neem kwalificatie over</button>` : ''}
+    <ol class="slots">
+      ${Array.from({length:10}, (_,i) => {
+        const nr = lijst[i], d = nr ? drv(r, nr) : null;
+        return `<li class="slot ${nr?'vol':''}">
+          <span class="pos">P${i+1}</span>
+          <span class="bar" style="background:${d ? d.kleur : 'var(--line)'}"></span>
+          <span class="who">${d ? `${esc(d.code)} <small>${esc(d.naam)}</small>` : 'leeg'}</span>
+          ${nr ? `<button class="x" data-weg="${i}" aria-label="verwijder">×</button>` : ''}
+        </li>`;
+      }).join('')}
+    </ol>
+    <div class="grid">
+      ${(r.drivers ?? []).map(d => `
+        <button class="drv" data-add="${d.nr}" ${lijst.includes(d.nr)?'disabled':''}>
+          <span class="bar" style="background:${d.kleur};width:3px;height:24px"></span>
+          <span><span class="code">${esc(d.code)}</span><span class="tm">${esc(d.team)}</span></span>
+        </button>`).join('')}
+    </div>
+    <p class="muted" style="margin:14px 0 8px">
+      Sluit ${new Date(S.tab==='quali'?r.deadline_quali:r.deadline_race)
+        .toLocaleString('nl-NL',{weekday:'short',hour:'2-digit',minute:'2-digit'})}</p>
+    <button class="btn" id="opslaan" ${lijst.length<10?'disabled':''}>
+      ${lijst.length<10 ? `Nog ${10-lijst.length} te kiezen` : 'Opslaan'}</button>
+    <p class="err">${esc(S.fout)}</p>`;
+
+  paneel.querySelectorAll('[data-add]').forEach(b => b.onclick = () => {
+    if (lijst.length < 10) { lijst.push(b.dataset.add); invulWeergave(paneel, r, dicht); }
+  });
+  paneel.querySelectorAll('[data-weg]').forEach(b => b.onclick = () => {
+    lijst.splice(Number(b.dataset.weg), 1); invulWeergave(paneel, r, dicht);
+  });
+  const kop = paneel.querySelector('#kopieer');
+  if (kop) kop.onclick = () => { S.keuze.race = [...S.keuze.quali]; invulWeergave(paneel, r, dicht); };
+  paneel.querySelector('#opslaan').onclick = async () => {
+    S.fout = '';
+    try { await bewaar(); toonRaces(); }
+    catch (e) { S.fout = e.message; invulWeergave(paneel, r, dicht); }
+  };
+}
+
+function uitslagWeergave(r, werkelijk) {
+  const mijn = S.preds.find(p => p.race_id === r.id && p.member_id === S.ik.id);
+  const lijst = S.tab === 'quali' ? mijn?.quali_top10 : mijn?.race_top10;
+  if (!lijst?.length) return `<p class="muted">Je hebt hier niks ingevuld.</p>${andermans(r)}`;
+  const { totaal, regels } = scoreLijst(lijst, werkelijk);
+  const klasse = (p) => p===5?'v5':p===3?'v3':p===1?'v1':'v0';
+  return `
+    <div class="score"><span>jouw punten</span><b>${totaal}</b></div>
+    <ul class="strip">
+      ${regels.map(x => {
+        const d = drv(r, x.nr);
+        const verschil = x.werkelijk === null ? 'niet gefinisht'
+          : x.werkelijk === x.voorspeld ? 'exact'
+          : `${x.werkelijk > x.voorspeld ? '↓' : '↑'} ${Math.abs(x.werkelijk-x.voorspeld)}`;
+        return `<li class="sr">
+          <span class="pos">P${x.voorspeld}</span>
+          <span class="bar" style="background:${d.kleur};height:20px"></span>
+          <span><b>${esc(d.code)}</b> <span class="muted">${x.werkelijk ? 'werd P'+x.werkelijk : 'DNF'}</span></span>
+          <span class="delta">${verschil}</span>
+          <span class="pts ${klasse(x.punten)}">${x.punten}</span>
+        </li>`;
+      }).join('')}
+    </ul>
+    ${andermans(r)}`;
+}
+
+function andermans(r) {
+  const anderen = S.leden.filter(l => l.member_id !== S.ik.id);
+  if (!anderen.length) return '';
+  const werkelijk = S.tab === 'quali' ? r.quali_result : r.race_result;
+  const rijen = anderen.map(l => {
+    const p = S.preds.find(x => x.race_id === r.id && x.member_id === l.member_id);
+    const v = S.tab === 'quali' ? p?.quali_top10 : p?.race_top10;
+    return { naam:l.display_name, punten: werkelijk && v ? scoreLijst(v, werkelijk).totaal : null };
+  }).sort((a,b) => (b.punten ?? -1) - (a.punten ?? -1));
+  return `<h2>De rest</h2>${rijen.map(x => `
+    <div class="st-row"><span class="p"></span><span>${esc(x.naam)}</span>
+      <span class="t">${x.punten ?? '—'}</span></div>`).join('')}`;
+}
+
+// ============================================================
+//  Wie ben je? — vervangt de login
+// ============================================================
+
+function kiesSpeler() {
+  hdr.textContent = S.poule.name;
+  app.innerHTML = `
+    <h2>Wie ben jij?</h2>
+    <p class="sub">Kies je naam, of maak een nieuwe speler aan.</p>
+    <div id="lijst"></div>
+    <h2>Nieuwe speler</h2>
+    <div class="card">
+      <input id="naam" placeholder="Jouw naam">
+      <p></p><button class="btn" id="maak">Meedoen</button>
+      <p class="err" id="f"></p>
+    </div>`;
+
+  app.querySelector('#lijst').innerHTML = S.leden.map(l => `
+    <button class="wie" data-lid="${l.member_id}">
+      <span class="puntje"></span>${esc(l.display_name)}</button>`).join('')
+    || `<p class="muted">Nog geen spelers, maak de eerste aan.</p>`;
+
+  app.querySelectorAll('[data-lid]').forEach(b => b.onclick = () => {
+    S.ik = { id: b.dataset.lid, naam: S.leden.find(l => l.member_id === b.dataset.lid).display_name };
+    onthoud(S.poule.id, S.ik.id);
+    laad().then(toonRaces);
+  });
+
+  app.querySelector('#maak').onclick = async () => {
+    const naam = app.querySelector('#naam').value.trim();
+    if (!naam) { app.querySelector('#f').textContent = 'Vul een naam in'; return; }
+    if (DEMO) {
+      const id = 'm' + (S.leden.length + 1);
+      S.leden.push({ member_id:id, display_name:naam });
+      S.ik = { id, naam }; onthoud(S.poule.id, id); toonRaces(); return;
+    }
+    const { data, error } = await db.from('pool_members')
+      .insert({ pool_id: S.poule.id, display_name: naam })
+      .select().single();
+    if (error) { app.querySelector('#f').textContent = error.message; return; }
+    S.ik = { id: data.member_id, naam };
+    onthoud(S.poule.id, data.member_id);
+    await laad(); toonRaces();
+  };
+}
+
+// ============================================================
+//  Poule vinden of aanmaken
+// ============================================================
+
+function toonStart() {
+  app.innerHTML = `
+    <h2>Meedoen met een poule</h2>
+    <div class="card">
+      <div class="row"><input id="code" placeholder="Poulecode" maxlength="6">
+      <button class="btn sm" id="mee">Ga</button></div>
+    </div>
+    <h2>Nieuwe poule</h2>
+    <div class="card">
+      <input id="pnaam" placeholder="Naam van de poule">
+      <p></p><button class="btn" id="maak">Aanmaken</button>
+    </div>
+    <p class="err" id="f"></p>`;
+
+  app.querySelector('#mee').onclick = async () => {
+    const code = app.querySelector('#code').value.trim().toUpperCase();
+    const { data, error } = await db.from('pools').select('*').eq('join_code', code).single();
+    if (error || !data) { app.querySelector('#f').textContent = 'Die poulecode bestaat niet'; return; }
+    S.poule = data;
+    const bekend = mijnId(S.poule.id);
+    await laad();
+    if (bekend && S.leden.some(l => l.member_id === bekend)) {
+      S.ik = { id: bekend, naam: S.leden.find(l => l.member_id === bekend).display_name };
+      toonRaces();
+    } else kiesSpeler();
+  };
+
+  app.querySelector('#maak').onclick = async () => {
+    const naam = app.querySelector('#pnaam').value.trim();
+    if (!naam) return;
+    const { data, error } = await db.from('pools')
+      .insert({ name: naam, season: SEIZOEN }).select().single();
+    if (error) { app.querySelector('#f').textContent = error.message; return; }
+    S.poule = data; S.leden = []; kiesSpeler();
+  };
+}
+
+// ============================================================
+//  Start
+// ============================================================
+
+if (DEMO) {
+  await laad();
+  const bekend = mijnId(S.poule.id);
+  if (bekend && S.leden.some(l => l.member_id === bekend)) {
+    S.ik = { id: bekend, naam: S.leden.find(l => l.member_id === bekend).display_name };
+  }
+  toonRaces();
+} else {
+  toonStart();
+}
+</script>
+</body>
+</html>

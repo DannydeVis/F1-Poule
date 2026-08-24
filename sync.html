@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Poule sync</title>
+<style>
+  body{background:#0d1117;color:#e8edf2;font-family:-apple-system,Segoe UI,sans-serif;
+       max-width:600px;margin:40px auto;padding:0 16px}
+  h1{font-size:20px}
+  button{background:#e8edf2;color:#0d1117;border:0;border-radius:8px;
+         padding:11px 18px;font-size:15px;font-weight:600;cursor:pointer;margin-right:8px}
+  button:disabled{opacity:.4;cursor:default}
+  pre{background:#161b22;border:1px solid #2a3440;border-radius:8px;
+      padding:12px 14px;font-size:12.5px;white-space:pre-wrap;min-height:120px}
+  .ok{color:#3fb950} .fout{color:#f0736a} .muted{color:#8b98a5;font-size:13px}
+</style>
+</head>
+<body>
+<h1>Poule sync</h1>
+<p class="muted">Haalt de kalender en de uitslagen uit OpenF1 en schrijft ze
+naar Supabase. Draait volledig in deze pagina, niks te installeren. Open dit
+bestand gewoon opnieuw wanneer er een nieuwe kwalificatie of race is geweest.</p>
+
+<button id="btnKalender">Kalender ophalen</button>
+<button id="btnUitslagen">Uitslagen bijwerken</button>
+<pre id="log">Klaar om te beginnen.</pre>
+
+<script type="module">
+// Zelfde gegevens als in index.html.
+const SUPABASE_URL = 'https://etifamdwqxjfaeaordlr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aWZhbWR3cXhqZmFlYW9yZGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzMzNTUsImV4cCI6MjEwMzE0OTM1NX0.dI0HMZsO0JcmhF9ibD81ivVl96UCYInoUz94r8cAqio';
+const SEIZOEN = 2026;
+
+const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const log = document.getElementById('log');
+const schrijf = (tekst, klasse = '') =>
+  log.innerHTML += `\n<span class="${klasse}">${tekst}</span>`;
+
+const API = 'https://api.openf1.org/v1';
+const get = async (pad, pogingen = 4) => {
+  for (let i = 0; i < pogingen; i++) {
+    const res = await fetch(`${API}/${pad}`);
+    if (res.ok) return res.json();
+    if (res.status === 429 && i < pogingen - 1) {
+      const wacht = 2000 * (i + 1);
+      schrijf(`OpenF1 vraagt om rustiger aan te doen, ${wacht/1000}s wachten...`);
+      await new Promise((r) => setTimeout(r, wacht));
+      continue;
+    }
+    throw new Error(`OpenF1 gaf ${res.status} terug op ${pad}`);
+  }
+};
+const rustig = (ms = 700) => new Promise((r) => setTimeout(r, ms));
+
+// ------------------------------------------------------------
+
+async function kalender() {
+  log.textContent = 'Kalender ophalen...';
+  const races  = await get(`sessions?year=${SEIZOEN}&session_name=Race`);
+  const qualis = await get(`sessions?year=${SEIZOEN}&session_name=Qualifying`);
+  const qualiPerMeeting = new Map(qualis.map((q) => [q.meeting_key, q]));
+
+  const rijen = races
+    .sort((a, b) => new Date(a.date_start) - new Date(b.date_start))
+    .map((race, i) => {
+      const quali = qualiPerMeeting.get(race.meeting_key);
+      return {
+        season: SEIZOEN, round: i + 1,
+        name: race.location ?? race.circuit_short_name,
+        country: race.country_name,
+        race_key: race.session_key,
+        quali_key: quali?.session_key ?? null,
+        deadline_quali: quali?.date_start ?? race.date_start,
+        deadline_race: race.date_start,
+      };
+    });
+
+  const { error } = await db.from('races').upsert(rijen, { onConflict: 'season,round' });
+  if (error) throw new Error(error.message);
+  schrijf(`${rijen.length} races weggeschreven voor ${SEIZOEN}`, 'ok');
+}
+
+// ------------------------------------------------------------
+
+async function uitslag(sessionKey) {
+  const rijen = await get(`session_result?session_key=${sessionKey}`);
+  return rijen.filter((r) => typeof r.position === 'number')
+    .sort((a, b) => a.position - b.position)
+    .map((r) => String(r.driver_number));
+}
+
+async function deelnemers(sessionKey) {
+  const rijen = await get(`drivers?session_key=${sessionKey}`);
+  const uniek = new Map();
+  for (const d of rijen) {
+    uniek.set(String(d.driver_number), {
+      nr: String(d.driver_number), code: d.name_acronym, naam: d.full_name,
+      team: d.team_name, kleur: d.team_colour ? `#${d.team_colour}` : '#888888',
+    });
+  }
+  return [...uniek.values()].sort((a, b) => a.team.localeCompare(b.team));
+}
+
+async function uitslagen() {
+  log.textContent = 'Uitslagen controleren...';
+  const { data: races, error } = await db.from('races').select('*').eq('season', SEIZOEN).order('round');
+  if (error) throw new Error(error.message);
+  if (!races?.length) { schrijf('Nog geen kalender. Haal die eerst op.', 'fout'); return; }
+
+  const grens = Date.now() - 45 * 60 * 1000;
+  let iets = false;
+
+  for (const race of races) {
+    try {
+      const patch = {};
+
+      // Deelnemerslijst mag los van de uitslag, en juist zo vroeg
+      // mogelijk: die heb je nodig om te kunnen invullen, niet pas
+      // achteraf. Zodra er een quali_key bekend is, proberen we het.
+      if (!race.drivers && race.quali_key) {
+        try { patch.drivers = await deelnemers(race.quali_key); await rustig(); }
+        catch { /* startlijst nog niet gepubliceerd, later opnieuw proberen */ }
+      }
+
+      if (!race.quali_result && race.quali_key && new Date(race.deadline_quali).getTime() < grens) {
+        patch.quali_result = await uitslag(race.quali_key); await rustig();
+      }
+      if (!race.race_result && race.race_key && new Date(race.deadline_race).getTime() < grens) {
+        patch.race_result = await uitslag(race.race_key); await rustig();
+      }
+      if (Object.keys(patch).length === 0) continue;
+
+      const { error: err } = await db.from('races').update(patch).eq('id', race.id);
+      if (err) throw new Error(err.message);
+      schrijf(`ronde ${race.round} ${race.name}: ${Object.keys(patch).join(', ')} bijgewerkt`, 'ok');
+      iets = true;
+    } catch (e) {
+      // Eén race die nog geen data heeft mag de rest niet blokkeren.
+      schrijf(`ronde ${race.round} ${race.name}: overgeslagen (${e.message})`, 'fout');
+    }
+  }
+  if (!iets) schrijf('Niks nieuws, alle uitslagen zijn al bij of de sessie is nog niet 45 min klaar.');
+}
+
+// ------------------------------------------------------------
+
+const knop = (id, fn) => {
+  const b = document.getElementById(id);
+  b.onclick = async () => {
+    b.disabled = true;
+    try { await fn(); }
+    catch (e) { schrijf('Mislukt: ' + e.message, 'fout'); }
+    b.disabled = false;
+  };
+};
+knop('btnKalender', kalender);
+knop('btnUitslagen', uitslagen);
+</script>
+</body>
+</html>
