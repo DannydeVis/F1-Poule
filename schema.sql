@@ -136,6 +136,65 @@ alter table public.predictions drop constraint if exists predictions_uniek;
 alter table public.predictions  add constraint predictions_uniek
   unique (pool_id, race_id, member_id);
 
+-- Een foreign key eist een unieke sleutel op precies de kolom waarnaar hij
+-- wijst. In een oudere tabelstructuur zit member_id soms in een samengestelde
+-- primaire sleutel (pool_id, member_id); dan is member_id op zichzelf niet
+-- uniek en weigert Postgres de foreign key met 42830. Hieronder wordt dat
+-- rechtgezet zonder de bestaande sleutel aan te tasten.
+do $$
+declare
+  doel   record;
+  leeg   bigint;
+  dubbel bigint;
+begin
+  for doel in
+    select * from (values
+      ('pool_members', 'member_id'),
+      ('pools',        'id'),
+      ('races',        'id')
+    ) as v(tabel, kolom)
+  loop
+    -- Al een sleutel op precies deze ene kolom? Dan is er niets te doen.
+    if exists (
+      select 1 from (
+        select tc.constraint_name,
+               count(*)                as aantal,
+               min(kcu.column_name)    as kolom
+        from information_schema.table_constraints tc
+        join information_schema.key_column_usage kcu
+          on  kcu.constraint_name   = tc.constraint_name
+          and kcu.constraint_schema = tc.constraint_schema
+        where tc.table_schema = 'public'
+          and tc.table_name   = doel.tabel
+          and tc.constraint_type in ('PRIMARY KEY', 'UNIQUE')
+        group by tc.constraint_name
+      ) s
+      where s.aantal = 1 and s.kolom = doel.kolom
+    ) then
+      continue;
+    end if;
+
+    execute format('select count(*) from public.%I where %I is null', doel.tabel, doel.kolom)
+      into leeg;
+    execute format(
+      'select count(*) from (select 1 from public.%I group by %I having count(*) > 1) d',
+      doel.tabel, doel.kolom) into dubbel;
+
+    if leeg > 0 or dubbel > 0 then
+      raise exception
+        'De kolom %.% kan geen sleutel worden: % lege en % dubbele waarden. '
+        'De tabel komt uit een oudere opzet die te ver afwijkt. '
+        'Draai reset.sql en daarna schema.sql opnieuw.',
+        doel.tabel, doel.kolom, leeg, dubbel;
+    end if;
+
+    execute format('alter table public.%I add constraint %I unique (%I)',
+                   doel.tabel, doel.tabel || '_' || doel.kolom || '_uniek', doel.kolom);
+    raise notice 'oudere structuur bijgewerkt: unieke sleutel toegevoegd op %.%',
+      doel.tabel, doel.kolom;
+  end loop;
+end $$;
+
 alter table public.pool_members drop constraint if exists pool_members_pool_fk;
 alter table public.pool_members  add constraint pool_members_pool_fk
   foreign key (pool_id) references public.pools(id) on delete cascade;

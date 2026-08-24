@@ -14,6 +14,7 @@ dus niets mee te doen; GitHub draait het bij elke pull request vanzelf.
 | `scorelijst.test.mjs` | De puntentelling, inclusief het cascade-geval waarvoor die formule is gekozen |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |
 | `schema-herstel.test.sql` | Of een tweede run van `schema.sql` een beschadigde tabel opruimt |
+| `oude-structuur.sql` + `-controle.sql` | Of `schema.sql` een oudere tabelopzet rechtzet zonder gegevens te raken (fout 42830) |
 
 De browsertests draaien `index.html` echt in Chromium, met de import van
 supabase-js vervangen door `nabootsing-supabase.mjs`: een kleine
