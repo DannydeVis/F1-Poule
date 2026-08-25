@@ -58,10 +58,11 @@ export async function startPagina({ aanpassen = (s) => s, indexPad } = {}) {
   const page = await browser.newPage();
   const jsFouten = [];
   page.on('pageerror', (e) => jsFouten.push(String(e)));
-  await page.goto(`http://127.0.0.1:${server.address().port}/`);
+  const url = `http://127.0.0.1:${server.address().port}/`;
+  await page.goto(url);
 
   return {
-    page, jsFouten,
+    page, jsFouten, url,
     async stoppen() { await browser.close(); server.close(); },
   };
 }

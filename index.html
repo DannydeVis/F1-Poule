@@ -184,17 +184,37 @@ if (!DEMO) {
 }
 
 // ============================================================
-//  Wie ben ik?
-//  Geen login. De browser onthoudt een willekeurig id per poule
-//  in localStorage. Dat is geen beveiliging, maar gemak: kom je
-//  terug op hetzelfde toestel, dan hoef je jezelf niet opnieuw
-//  aan te wijzen.
+//  Wie ben ik, en in welke poule?
+//  Geen login. De browser onthoudt welke poule je gebruikte en wie je
+//  daarin bent. Dat is geen beveiliging, maar gemak: kom je terug op
+//  hetzelfde toestel, dan hoef je de poulecode niet opnieuw te typen.
 // ============================================================
 
+// localStorage kan geblokkeerd zijn: privémodus, of een browser die opslag
+// per site dichtzet. De app moet dan blijven werken, maar wel eerlijk zijn
+// over wat er niet onthouden wordt.
+const opslagWerkt = (() => {
+  try {
+    localStorage.setItem('poule:test', '1');
+    localStorage.removeItem('poule:test');
+    return true;
+  } catch { return false; }
+})();
+const lees    = (k)    => { try { return localStorage.getItem(k); } catch { return null; } };
+const schrijf = (k, v) => { try { localStorage.setItem(k, v); } catch { /* niets te doen */ } };
+const wis     = (k)    => { try { localStorage.removeItem(k); } catch { /* niets te doen */ } };
+
 const sleutel = (poolId) => `poule:${poolId}:mijn_id`;
-const mijnId  = (poolId) => localStorage.getItem(sleutel(poolId));
-const onthoud = (poolId, memberId) => localStorage.setItem(sleutel(poolId), memberId);
-const vergeet = (poolId) => localStorage.removeItem(sleutel(poolId));
+const mijnId  = (poolId) => lees(sleutel(poolId));
+const onthoud = (poolId, memberId) => schrijf(sleutel(poolId), memberId);
+const vergeet = (poolId) => wis(sleutel(poolId));
+
+// Welke poule je het laatst gebruikte. Zonder dit begint de app elke keer
+// weer op het codescherm.
+const LAATSTE       = 'poule:laatste';
+const laatstePoule  = ()       => lees(LAATSTE);
+const onthoudPoule  = (poolId) => schrijf(LAATSTE, poolId);
+const vergeetPoule  = ()       => wis(LAATSTE);
 
 // ============================================================
 //  Scoren
@@ -394,9 +414,14 @@ function toonRaces() {
   hdr.textContent = S.poule.name;
   app.innerHTML = `
     ${DEMO ? `<div class="waarschuwing">Demomodus met verzonnen data.</div>` : ''}
+    ${!opslagWerkt ? `<div class="waarschuwing">Deze browser mag niets onthouden,
+      dus je moet de poulecode elke keer opnieuw invullen. Sta opslag voor deze
+      site toe, of gebruik geen privévenster.</div>` : ''}
     ${S.melding ? `<div class="melding">${esc(S.melding)}</div>` : ''}
-    <button class="btn ghost sm" id="wissel" style="margin-bottom:14px">
-      Wissel speler (nu: ${esc(S.ik.naam)})</button>
+    <div class="row" style="margin-bottom:14px">
+      <button class="btn ghost sm" id="wissel">Wissel speler (nu: ${esc(S.ik.naam)})</button>
+      <button class="btn ghost sm" id="anderePoule">Andere poule</button>
+    </div>
     <h2>Races</h2>
     <p class="sub">Poulecode <b style="font-family:var(--mono)">${esc(S.poule.join_code)}</b></p>
     ${S.races.map(r => {
@@ -419,6 +444,12 @@ function toonRaces() {
   S.melding = '';
   app.querySelectorAll('[data-race]').forEach(b => b.onclick = () => openRace(b.dataset.race));
   app.querySelector('#wissel').onclick = () => { vergeet(S.poule.id); kiesSpeler(); };
+  app.querySelector('#anderePoule').onclick = () => {
+    vergeetPoule();
+    S.poule = null; S.ik = null; S.races = []; S.leden = []; S.preds = [];
+    hdr.textContent = `seizoen ${SEIZOEN}`;
+    toonStart();
+  };
 }
 
 function stand() {
@@ -608,6 +639,21 @@ function kiesSpeler() {
   app.querySelector('#maak').onclick = async () => {
     const naam = app.querySelector('#naam').value.trim();
     if (!naam) { app.querySelector('#f').textContent = 'Vul een naam in'; return; }
+
+    // Bestaat die naam al in deze poule, dan is dit dezelfde persoon op een
+    // ander toestel. Een tweede speler aanmaken zou hem zijn voorspellingen
+    // kosten: die hangen aan het oude member_id en horen dan bij niemand meer.
+    const bestaand = S.leden.find(l =>
+      (l.display_name ?? '').trim().toLowerCase() === naam.toLowerCase());
+    if (bestaand) {
+      S.ik = { id: bestaand.member_id, naam: bestaand.display_name };
+      onthoud(S.poule.id, S.ik.id);
+      S.melding = `Welkom terug, ${bestaand.display_name}.`;
+      try { await laad(); toonRaces(); }
+      catch (e) { app.querySelector('#f').textContent = e.message; }
+      return;
+    }
+
     if (DEMO) {
       const id = 'm' + (S.leden.length + 1);
       S.leden.push({ member_id:id, display_name:naam });
@@ -647,6 +693,7 @@ function toonStart() {
     const { data, error } = await db.from('pools').select('*').eq('join_code', code).single();
     if (error || !data) { app.querySelector('#f').textContent = 'Die poulecode bestaat niet'; return; }
     S.poule = data;
+    onthoudPoule(S.poule.id);
     const bekend = mijnId(S.poule.id);
     try { await laad(); }
     catch (e) { app.querySelector('#f').textContent = e.message; return; }
@@ -662,7 +709,9 @@ function toonStart() {
     const { data, error } = await db.from('pools')
       .insert({ name: naam, season: SEIZOEN }).select().single();
     if (error) { app.querySelector('#f').textContent = uitleg(error); return; }
-    S.poule = data; S.leden = []; kiesSpeler();
+    S.poule = data; S.leden = [];
+    onthoudPoule(S.poule.id);
+    kiesSpeler();
   };
 }
 
@@ -678,7 +727,26 @@ if (DEMO) {
   }
   toonRaces();
 } else {
-  toonStart();
+  await hervat();
+}
+
+// Terug naar de poule die je het laatst gebruikte, zodat de poulecode niet
+// elke keer opnieuw ingetypt hoeft te worden.
+async function hervat() {
+  const id = laatstePoule();
+  if (!id) { toonStart(); return; }
+
+  const { data, error } = await db.from('pools').select('*').eq('id', id).single();
+  if (error || !data) { vergeetPoule(); toonStart(); return; }
+
+  S.poule = data;
+  try { await laad(); }
+  catch (e) { toonFout(e.message); return; }
+
+  const bekend = mijnId(S.poule.id);
+  const lid = bekend && S.leden.find(l => zelfde(l.member_id, bekend));
+  if (lid) { S.ik = { id: lid.member_id, naam: lid.display_name }; toonRaces(); }
+  else kiesSpeler();
 }
 </script>
 </body>

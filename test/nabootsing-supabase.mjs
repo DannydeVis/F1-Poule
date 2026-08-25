@@ -20,7 +20,7 @@ const DRIVERS = [
   { nr:'43', code:'COL', naam:'Franco Colapinto',team:'Alpine',   kleur:'#0093CC' },
 ];
 
-const store = {
+const beginstand = {
   pools: [{ id:'pool-1', name:'Vrijdagmiddagpoule', join_code:'RTM026', season:2026 }],
   pool_members: [{ member_id:'lid-1', pool_id:'pool-1', display_name:'Danny' }],
   races: [
@@ -32,11 +32,22 @@ const store = {
       // kwalificatie dicht, race nog open: hier moet bewaren blijven werken
       deadline_quali:uur(-2), deadline_race:uur(48), quali_result:null, race_result:null },
     { id:3, season:2026, round:3, name:'Suzuka', drivers:null,
-      // geen deelnemerslijst: de app hoort uit te leggen dat sync.html moet draaien
+      // geen deelnemerslijst: de app hoort uit te leggen dat die vanzelf komt
       deadline_quali:uur(72), deadline_race:uur(96), quali_result:null, race_result:null },
   ],
   predictions: [],
 };
+
+// Een echte database overleeft het herladen van de pagina, dus deze ook.
+// Bewust sessionStorage: de tests wissen localStorage om een ander toestel na
+// te bootsen, en dat hoort de "database" niet leeg te maken.
+const BEWAAR = 'nabootsing:db';
+let store;
+try {
+  const opgeslagen = sessionStorage.getItem(BEWAAR);
+  store = opgeslagen ? JSON.parse(opgeslagen) : JSON.parse(JSON.stringify(beginstand));
+} catch { store = JSON.parse(JSON.stringify(beginstand)); }
+const bewaren = () => { try { sessionStorage.setItem(BEWAAR, JSON.stringify(store)); } catch { /* niets */ } };
 
 // Wordt door ontbrekende-sleutel.test.mjs leeggemaakt om een database zonder
 // unieke sleutel na te bootsen.
@@ -63,6 +74,7 @@ function uitvoeren(tabel, q) {
       rijen.push(rij);
       return kopie(rij);
     });
+    bewaren();
     return q._single ? { data: nieuw[0] ?? null, error: null } : { data: nieuw, error: null };
   }
 
@@ -85,6 +97,7 @@ function uitvoeren(tabel, q) {
       rijen.push(rij);
       return kopie(rij);
     });
+    bewaren();
     return q._selectNa ? { data: uit, error: null } : { data: null, error: null };
   }
 
