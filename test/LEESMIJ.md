@@ -1,9 +1,11 @@
 # Tests
 
-Deze map is er voor de CI op GitHub. **De poule zelf heeft geen npm, Node of
+Deze map is er voor de CI op GitHub. **De poule zelf heeft geen npm of
 build-stap nodig** — `index.html` en `sync.html` blijven bestanden die je
 rechtstreeks in een browser opent. Wie geen Node kan installeren hoeft hier
 dus niets mee te doen; GitHub draait het bij elke pull request vanzelf.
+Hetzelfde geldt voor `scripts/sync.mjs`: dat draait op de runner, niet op
+je eigen computer.
 
 ## Wat er getest wordt
 
