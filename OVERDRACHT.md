@@ -16,11 +16,25 @@ voorspellingen bleven staan.
 
 Daarna bleek in de praktijk dat het opslaan nog steeds niet leek te werken,
 en dat de poulecode elke keer opnieuw ingevuld moest worden. Dat had een
-andere oorzaak dan de eerste bug; zie hieronder. Ook dat is opgelost, maar
-nog niet in de praktijk bevestigd.
+andere oorzaak dan de eerste bug; zie hieronder. Op 25 augustus 2026 is in
+de live app bevestigd dat een voorspelling nu blijft staan.
 
 Let op: er staan meerdere poules en spelers in de database die door die bug
-zijn ontstaan. Welke echt in gebruik is, is nog niet uitgezocht.
+zijn ontstaan. Welke echt in gebruik is, is nog niet uitgezocht. Oude
+voorspellingen kunnen dus onder een dubbele speler hangen en duiken niet
+vanzelf op. Deze query laat zien waar wat zit:
+
+```sql
+select p.name, p.join_code, p.id,
+       count(distinct m.member_id) as spelers,
+       count(distinct v.race_id)   as voorspellingen,
+       string_agg(distinct m.display_name, ', ') as namen
+from pools p
+left join pool_members m on m.pool_id = p.id
+left join predictions  v on v.pool_id = p.id
+group by p.id, p.name, p.join_code
+order by voorspellingen desc, spelers desc;
+```
 
 ## Architectuurkeuzes, en waarom
 
