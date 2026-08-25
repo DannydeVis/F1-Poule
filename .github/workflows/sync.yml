@@ -1,0 +1,34 @@
+name: Uitslagen synchroniseren
+
+on:
+  # Elke 3 uur. Tijden zijn UTC, dus in de Nederlandse zomertijd komt dat
+  # neer op 02:00, 05:00, 08:00 enzovoort. Ruim genoeg: een uitslag is
+  # sowieso pas 45 minuten na afloop van een sessie op te halen.
+  schedule:
+    - cron: '0 */3 * * *'
+
+  # Knop in het Actions-tabblad om hem handmatig te starten.
+  workflow_dispatch:
+    inputs:
+      kalender:
+        description: 'Ook de kalender opnieuw ophalen'
+        type: boolean
+        default: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Synchroniseren met OpenF1
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SEIZOEN: '2026'
+          KALENDER: ${{ inputs.kalender }}
+        run: node scripts/sync.mjs
