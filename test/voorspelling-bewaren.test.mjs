@@ -64,9 +64,11 @@ check('gesloten kwalificatie blijft leeg in plaats van overschreven',
 
 // --- race zonder deelnemerslijst ------------------------------------------
 await openRace(page, 'Suzuka');
-const uitleg = (await page.textContent('#paneel')).trim();
-check('race zonder deelnemerslijst legt uit wat er moet gebeuren',
-  uitleg.includes('sync.html'), uitleg.slice(0, 70) + '...');
+// witruimte platslaan: textContent houdt de regelafbrekingen uit de HTML,
+// dus een zin die over twee regels loopt matcht anders nooit
+const uitleg = (await page.textContent('#paneel')).replace(/\s+/g, ' ').trim();
+check('race zonder deelnemerslijst legt uit dat de lijst nog komt',
+  uitleg.includes('automatisch opgehaald'), uitleg.slice(0, 70) + '...');
 
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 

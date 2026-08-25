@@ -475,8 +475,8 @@ function invulWeergave(paneel, r, dicht) {
   // opslaanknop hangen op "nog 10 te kiezen" zonder uit te leggen waarom.
   if (!(r.drivers ?? []).length) {
     paneel.innerHTML = `<p class="muted">De deelnemerslijst voor deze race staat nog niet
-      in de database, dus er valt nog niets te kiezen. Draai sync.html
-      ("Uitslagen bijwerken") om hem op te halen.</p>`;
+      in de database, dus er valt nog niets te kiezen. Hij wordt automatisch
+      opgehaald zodra OpenF1 hem publiceert; de sync draait elke drie uur.</p>`;
     return;
   }
   const lijst = S.keuze[S.tab];

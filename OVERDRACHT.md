@@ -2,37 +2,22 @@
 
 Poule-app voor F1 kwalificatie- en race-top-10 voorspellen met vrienden.
 Single-file frontend (`index.html`), Supabase als backend (`schema.sql`),
-losse browser-tool om OpenF1-data te synchroniseren (`sync.html`).
+en een synchronisatie die de OpenF1-data binnenhaalt.
 
 Live op: https://dannydevis.github.io/F1-Poule/
 Repo: https://github.com/DannydeVis/F1-Poule
 
-## Eerst dit doen
+## Stand van zaken
 
-De bewaar-bug is opgelost, maar de fix gaat ervan uit dat de database de
-juiste sleutels heeft. **Draai `schema.sql` in de Supabase SQL editor voor
-je de app opnieuw test.** Onderaan dat script staat een controletabel; daar
-hoort overal `ok` te staan.
+De bewaar-bug is opgelost en staat live. `schema.sql` is op 24 augustus 2026
+tegen het echte Supabase-project gedraaid en kwam schoon door: de drie
+structurele controles op `ok`, en 7 poules, 7 spelers, 25 races en 4
+voorspellingen bleven staan.
 
-Blijft het daarna misgaan, draai dan `diagnose.sql`. Dat leest alleen en laat
-zien welke tabellen, kolommen en sleutels er werkelijk staan. Wijkt de
-structuur te ver af, dan is de volgorde: `reset.sql`, `schema.sql`,
-`sync.html` → "Kalender ophalen" en "Uitslagen bijwerken".
-
-### Al tegengekomen: fout 42830
-
-> ERROR: 42830: there is no unique constraint matching given keys for
-> referenced table "pool_members"
-
-De productiedatabase bleek een oudere opzet te hebben waarin `member_id` in
-een samengestelde primaire sleutel `(pool_id, member_id)` zat. `member_id` is
-dan op zichzelf niet uniek, en een foreign key ernaartoe wordt geweigerd.
-`create table if not exists` had die tabel ongemoeid gelaten.
-
-`schema.sql` zet dit nu zelf recht: het zet er een unieke sleutel op
-`member_id` bij en laat de bestaande primaire sleutel en alle gegevens
-staan. Dit pad wordt in CI nagespeeld (`test/oude-structuur.sql`), dus het
-kan niet stilzwijgend terugvallen.
+Wat nog niet is teruggekoppeld: of het opslaan in de live app daadwerkelijk
+blijft staan. Alle geautomatiseerde tests zeggen van wel, maar één keer
+handmatig invullen, opslaan, teruggaan en opnieuw openen is de laatste
+bevestiging.
 
 ## Architectuurkeuzes, en waarom
 
@@ -53,12 +38,18 @@ kan niet stilzwijgend terugvallen.
   alleen de top 10. Anders levert P10-die-P11-wordt onterecht 0 punten op
   in plaats van 3.
 
-- **Sync draait in de browser (`sync.html`)**, niet via Node/npm. Reden:
-  gebruiker zit op een werk-pc zonder mogelijkheid om Node.js te
-  installeren. Er was eerst een `sync.mjs` met service role key, die is
-  vervangen. Let op: dit betekent dat de `races`-tabel ook open staat voor
-  de anon key (schrijfbaar), wat een bewuste afwijking is van "alleen de
-  service role mag races wijzigen".
+- **Sync draait op GitHub Actions** (`scripts/sync.mjs`, elke 3 uur via
+  `.github/workflows/sync.yml`), met de service_role key als repository
+  secret. Er is lang bewust géén Node gebruikt omdat er op de werk-pc niets
+  te installeren valt; op een runner speelt dat bezwaar niet, dus daar kan
+  het wel. Het script gebruikt alleen de ingebouwde `fetch`, dus ook daar
+  geen `npm install`.
+
+- **`sync.html` bestaat nog als handmatige noodknop**, voor als je buiten
+  het schema om iets wilt ophalen. Die draait in de browser op de anon key,
+  en daarom staat de `races`-tabel ook voor `anon` schrijfbaar. Zou je
+  `sync.html` ooit uitfaseren, dan kan die policy strenger: de Actions-sync
+  gebruikt de service_role key en heeft hem niet nodig.
 
 ## Opgelost: opslaan van een voorspelling
 
@@ -71,7 +62,8 @@ commit bevatte hem niet.
 
 Nagespeeld in Chromium met een nagebootste Supabase: de oude versie schrijft
 de rij weg en toont daarna 0 van de 10 plekken ingevuld. Precies het gemelde
-symptoom.
+symptoom. Dat de controletabel later 4 bestaande voorspellingen liet zien,
+bevestigt het: er werd al die tijd wél weggeschreven.
 
 **Wat er nu gebeurt bij opslaan:**
 
@@ -96,45 +88,84 @@ RLS-policy die blokkeert, en een mislukte lees-actie in `laad()`.
   en de trigger in `schema.sql` vergelijkt `old` met `new`.
 - Staat de deelnemerslijst (`races.drivers`) nog niet in de database, dan
   bleef het scherm leeg met een knop die op "nog 10 te kiezen" bleef hangen.
-  Nu staat er wat er moet gebeuren: `sync.html` draaien.
+  Nu legt het scherm uit dat de lijst automatisch wordt opgehaald.
+
+## Opgelost: fout 42830 bij schema.sql
+
+> ERROR: 42830: there is no unique constraint matching given keys for
+> referenced table "pool_members"
+
+De productiedatabase had een oudere opzet waarin `member_id` in een
+samengestelde primaire sleutel `(pool_id, member_id)` zat. `member_id` is dan
+op zichzelf niet uniek, en een foreign key ernaartoe wordt geweigerd.
+`create table if not exists` had die tabel ongemoeid gelaten.
+
+`schema.sql` zet dit nu zelf recht: het zet er een unieke sleutel op
+`member_id` bij en laat de bestaande primaire sleutel en alle gegevens
+staan. Dit pad wordt in CI nagespeeld (`test/oude-structuur.sql`), dus het
+kan niet stilzwijgend terugvallen.
+
+## De database opnieuw opzetten
+
+Nodig na een schemawijziging, of als er iets grondig scheef staat:
+
+1. `schema.sql` in de Supabase SQL editor. Is opnieuw uit te voeren op een
+   bestaande database en laat onderaan een controletabel zien waar overal
+   `ok` hoort te staan.
+2. Gaat er iets mis, dan `diagnose.sql`. Dat leest alleen en toont welke
+   tabellen, kolommen, sleutels en rijaantallen er werkelijk staan.
+3. Wijkt de structuur te ver af: `reset.sql`, dan `schema.sql` opnieuw. Let
+   op, `reset.sql` gooit alles weg.
+4. Daarna de kalender terughalen: het Actions-tabblad → "Uitslagen
+   synchroniseren" → Run workflow, met "Ook de kalender opnieuw ophalen"
+   aangevinkt.
 
 ## Openstaande datakwaliteit
 
-- Twee races (rondes 4 en 5 volgens sync-log) geven een 404 op
-  `session_result` bij OpenF1 zelf. Niet oplosbaar vanuit de code, is een
-  gat aan de kant van OpenF1 (bevestigd via hun eigen GitHub-issues,
-  `session_result` is bij hen een beta-endpoint). Workaround: opnieuw
-  proberen via sync.html, of handmatig invullen in Supabase Table Editor.
+- 22 van de 25 races hebben een deelnemerslijst. Bij de andere 3 valt nog
+  niets in te vullen; de app legt dat inmiddels uit. De sync haalt de lijst
+  vanzelf op zodra OpenF1 hem publiceert. Welke races het zijn:
 
-## Nog niet getest tegen de echte database
+  ```sql
+  select round, name, quali_key is null as geen_quali_key
+  from races where season = 2026 and drivers is null order by round;
+  ```
 
-De fix is nagespeeld in Chromium tegen een nagebootste Supabase, en
-`schema.sql` is gedraaid tegen een echte PostgreSQL 16 (inclusief de
-deadline-trigger en het opruimen van dubbele rijen). Tegen het echte
-Supabase-project is niet getest, dus dat blijft de laatste stap.
+  Staat `geen_quali_key` op `true`, dan kent OpenF1 die kwalificatiesessie
+  niet en moet het handmatig via de Table Editor.
+
+- Eerder gaven twee races een 404 op `session_result` bij OpenF1 zelf. Niet
+  oplosbaar vanuit de code: `session_result` is bij hen een beta-endpoint,
+  bevestigd via hun eigen GitHub-issues. De sync probeert het elke run
+  opnieuw, dus dit lost zichzelf op zodra OpenF1 het gat dicht.
 
 ## Tests
 
-Bij elke pull request draait GitHub de tests uit `test/`: `index.html` wordt
-echt in Chromium nagespeeld tegen een nagebootste Supabase, en `schema.sql`
-wordt uitgevoerd tegen een echte PostgreSQL. De bewaar-bug hierboven kan dus
-niet stilzwijgend terugkomen.
+Bij elke pull request en elke push naar `main` draait GitHub de tests uit
+`test/`: `index.html` wordt echt in Chromium nagespeeld tegen een nagebootste
+Supabase, en `schema.sql` wordt uitgevoerd tegen een echte PostgreSQL 16 —
+inclusief het migratiepad van de oude tabelstructuur hierboven. De bewaar-bug
+kan dus niet stilzwijgend terugkomen.
 
-**De poule zelf heeft nog steeds geen npm of build-stap nodig.** Dat draait
-allemaal op de runner van GitHub; op de werk-pc verandert er niets. Zie
-`test/LEESMIJ.md`.
+**De poule zelf heeft geen npm of build-stap nodig.** `index.html` en
+`sync.html` blijven bestanden die je rechtstreeks in een browser opent. Node
+draait alleen op de runner van GitHub. Zie `test/LEESMIJ.md`.
 
 ## Bestanden in de repo
 
 | Bestand | Doel |
 |---|---|
 | `index.html` | De poule zelf: races bekijken, voorspellen, stand |
-| `sync.html` | Admin-tool, haalt kalender/uitslagen uit OpenF1, draait in de browser |
 | `schema.sql` | Volledig databaseschema, opnieuw te draaien in de Supabase SQL editor |
-| `reset.sql` | Gooit oude tabellen weg, draai vóór schema.sql bij een schone herstart |
 | `diagnose.sql` | Leest alleen: toont de werkelijke tabellen, kolommen en sleutels |
-| `test/` | Automatische tests, draaien in CI (zie `test/LEESMIJ.md`) |
+| `reset.sql` | Gooit oude tabellen weg, draai vóór schema.sql bij een schone herstart |
+| `scripts/sync.mjs` | Haalt kalender en uitslagen uit OpenF1, draait in GitHub Actions |
+| `sync.html` | Handmatige variant van de sync, draait in de browser |
+| `.github/workflows/sync.yml` | Draait de sync elke 3 uur, plus een knop om hem los te starten |
+| `.github/workflows/tests.yml` | Draait de tests bij elke pull request en push naar main |
+| `test/` | Automatische tests (zie `test/LEESMIJ.md`) |
 
-Supabase-project: `etifamdwqxjfaeaordlr` (URL en anon key staan bovenin
-`index.html` en `sync.html`, zijn bewust publiek want dat hoort bij de
-anon key).
+Supabase-project: `etifamdwqxjfaeaordlr`. De URL en de anon key staan bovenin
+`index.html` en `sync.html` en zijn bewust publiek; dat hoort bij de anon key.
+De service_role key die de Actions-sync gebruikt staat als repository secret
+(`SUPABASE_URL` en `SUPABASE_KEY`) en hoort nergens in de code te staan.
