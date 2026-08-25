@@ -14,10 +14,13 @@ tegen het echte Supabase-project gedraaid en kwam schoon door: de drie
 structurele controles op `ok`, en 7 poules, 7 spelers, 25 races en 4
 voorspellingen bleven staan.
 
-Wat nog niet is teruggekoppeld: of het opslaan in de live app daadwerkelijk
-blijft staan. Alle geautomatiseerde tests zeggen van wel, maar één keer
-handmatig invullen, opslaan, teruggaan en opnieuw openen is de laatste
-bevestiging.
+Daarna bleek in de praktijk dat het opslaan nog steeds niet leek te werken,
+en dat de poulecode elke keer opnieuw ingevuld moest worden. Dat had een
+andere oorzaak dan de eerste bug; zie hieronder. Ook dat is opgelost, maar
+nog niet in de praktijk bevestigd.
+
+Let op: er staan meerdere poules en spelers in de database die door die bug
+zijn ontstaan. Welke echt in gebruik is, is nog niet uitgezocht.
 
 ## Architectuurkeuzes, en waarom
 
@@ -89,6 +92,32 @@ RLS-policy die blokkeert, en een mislukte lees-actie in `laad()`.
 - Staat de deelnemerslijst (`races.drivers`) nog niet in de database, dan
   bleef het scherm leeg met een knop die op "nog 10 te kiezen" bleef hangen.
   Nu legt het scherm uit dat de lijst automatisch wordt opgehaald.
+
+## Opgelost: poulecode elke keer opnieuw, en "opslaan lukt niet"
+
+Twee klachten die dezelfde oorzaak deelden.
+
+**De poule werd nooit onthouden.** In `localStorage` stond alleen wie je was
+*binnen* een poule (`poule:<id>:mijn_id`), maar nergens wélke poule. De app
+startte daardoor altijd op het codescherm. Nu wordt de laatst gebruikte poule
+bewaard (`poule:laatste`) en begin je meteen weer in je eigen poule; met een
+knop "Andere poule" om eruit te stappen.
+
+**"Meedoen" maakte altijd een nieuwe speler aan.** Kwam je op het scherm
+"Wie ben jij?" en typte je je naam in plaats van hem aan te klikken, dan deed
+de app blind een `insert` en kreeg je een nieuw `member_id`. Je voorspellingen
+hangen aan het oude id en waren daarmee onvindbaar — dat is wat er als
+"opslaan lukt niet" uitzag, terwijl de rijen gewoon in de database stonden.
+Nu wordt een bestaande naam in dezelfde poule hergebruikt (hoofdletters maken
+niet uit) in plaats van gedupliceerd.
+
+Dit verklaart ook waarom er 7 poules en 7 spelers in de database stonden voor
+een kleine vriendengroep: elke keer opnieuw beginnen leverde een nieuwe.
+
+**Werkt `localStorage` niet** — privévenster, of een browser die opslag per
+site blokkeert — dan lukt onthouden sowieso niet. De app valt daar niet meer
+over om (alle toegang zit in een `try`), en zegt het nu met een waarschuwing
+op het overzicht in plaats van het stilzwijgend te laten mislukken.
 
 ## Opgelost: fout 42830 bij schema.sql
 
