@@ -1,0 +1,78 @@
+name: Automerge
+
+# Mergt een pull request van een claude/*-branch zodra de tests groen zijn,
+# zodat er niet handmatig op "Merge" geklikt hoeft te worden.
+#
+# Waarom via een pull request en niet rechtstreeks naar main: main is de live
+# site (GitHub Pages). De pull request is de plek waar de tests draaien vóór
+# de code live gaat. Deze workflow haalt alleen het wachten weg, niet de
+# controle.
+#
+# Bewust workflow_run: die draait met het workflowbestand van main, niet met
+# de versie uit de branch. Een branch kan zichzelf dus niet groen verklaren
+# door dit bestand aan te passen.
+
+on:
+  workflow_run:
+    workflows: ["Tests"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      startsWith(github.event.workflow_run.head_branch, 'claude/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const run = context.payload.workflow_run;
+            const sha = run.head_sha;
+
+            const { data: open } = await github.rest.pulls.list({
+              owner, repo, state: 'open', head: `${owner}:${run.head_branch}`,
+            });
+            const kort = open.find((p) => p.head.sha === sha);
+            if (!kort) {
+              core.info(`Geen open pull request op ${sha.slice(0, 7)} — niets te mergen.`);
+              return;
+            }
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner, repo, pull_number: kort.number,
+            });
+            if (pr.draft) {
+              core.info(`#${pr.number} is een concept, niet mergen.`);
+              return;
+            }
+            if (pr.head.sha !== sha) {
+              core.info(`#${pr.number} heeft inmiddels een nieuwere commit, deze run overslaan.`);
+              return;
+            }
+
+            // Elke andere check op deze commit moet ook goed zijn. De trigger
+            // dekt alleen de Tests-workflow af.
+            const { data: checks } = await github.rest.checks.listForRef({
+              owner, repo, ref: sha, per_page: 100,
+            });
+            const mislukt = checks.check_runs.filter(
+              (c) => c.status === 'completed'
+                && !['success', 'skipped', 'neutral'].includes(c.conclusion));
+            if (mislukt.length) {
+              core.info(`Niet groen: ${mislukt.map((c) => `${c.name}=${c.conclusion}`).join(', ')}`);
+              return;
+            }
+
+            await github.rest.pulls.merge({
+              owner, repo, pull_number: pr.number,
+              merge_method: 'merge',
+              commit_title: `Merge pull request #${pr.number} from ${pr.head.label}`,
+            });
+            core.info(`#${pr.number} gemerged.`);

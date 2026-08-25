@@ -180,6 +180,12 @@ kan dus niet stilzwijgend terugkomen.
 `sync.html` blijven bestanden die je rechtstreeks in een browser opent. Node
 draait alleen op de runner van GitHub. Zie `test/LEESMIJ.md`.
 
+Een pull request vanaf een `claude/*`-branch wordt automatisch gemerged zodra
+die tests groen zijn (`.github/workflows/automerge.yml`). De pull request
+blijft dus bestaan als plek waar de tests draaien vóór de code live gaat —
+`main` is de site — maar er hoeft niet meer met de hand op Merge geklikt te
+worden. Rood betekent geen merge.
+
 ## Bestanden in de repo
 
 | Bestand | Doel |
@@ -192,6 +198,7 @@ draait alleen op de runner van GitHub. Zie `test/LEESMIJ.md`.
 | `sync.html` | Handmatige variant van de sync, draait in de browser |
 | `.github/workflows/sync.yml` | Draait de sync elke 3 uur, plus een knop om hem los te starten |
 | `.github/workflows/tests.yml` | Draait de tests bij elke pull request en push naar main |
+| `.github/workflows/automerge.yml` | Mergt een `claude/*`-pull request zodra de tests groen zijn |
 | `test/` | Automatische tests (zie `test/LEESMIJ.md`) |
 
 Supabase-project: `etifamdwqxjfaeaordlr`. De URL en de anon key staan bovenin
