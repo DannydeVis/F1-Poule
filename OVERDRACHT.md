@@ -214,13 +214,42 @@ Nodig na een schemawijziging, of als er iets grondig scheef staat:
    synchroniseren" → Run workflow, met "Ook de kalender opnieuw ophalen"
    aangevinkt.
 
+## Weekendwinnaar, groepsapp en wie er nog moet invullen
+
+De eerste drie punten van `ROUTEKAART.md` staan erin. Alle drie zijn ze een
+berekening over gegevens die er al waren; er is niets aan de database
+veranderd.
+
+- **Weekendwinnaar.** Onder elke uitslag staat wie dat weekend de meeste
+  punten pakte, en op de standpagina een tweede ranglijst met het aantal
+  weekendoverwinningen. Dit is er om de reden die de routekaart noemt: wie
+  300 punten achterstaat kan nog steeds één weekend winnen, en zonder dat
+  is de poule voor de helft van de deelnemers in juni al afgelopen. Een
+  gelijke stand levert een gedeelde overwinning op — allebei een streepje
+  erbij is eerlijker dan er willekeurig één aanwijzen. Let op het verschil
+  met "de rest" eronder: dat blok telt één sessie, de weekendwinnaar telt
+  kwalificatie en race samen. Daarom staat dat in het kopje.
+
+- **Kopieerknop voor de groepsapp.** Onder een uitslag zet één knop de
+  weekendstand plus de seizoensstand als tekst op het klembord, in de opmaak
+  uit de routekaart. Lukt `navigator.clipboard` niet — een oude browser, of
+  een pagina die niet over https loopt — dan valt hij terug op
+  `document.execCommand('copy')`, en anders komt de tekst gewoon in beeld om
+  zelf te selecteren. Stil mislukken is hier het ergste wat er kan gebeuren.
+
+- **Wie heeft er nog niet ingevuld.** Op het racesoverzicht staat in de kaart
+  van de openstaande race wie er nog niks heeft ingeleverd. Alleen de
+  anderen: dat jij nog moet, zegt de knop eronder al. Samen met de
+  kopieerknop is dat het herinneringssysteem, zonder mailserver of
+  pushmeldingen.
+
 ## Wat er nog bij kan
 
-Niets van dit alles is nodig om de poule te laten draaien. Wat er aan
-functionaliteit besproken is — weekendwinnaar, een kopieerknop voor de
-groepsapp, onderlinge duels, extra vraagsoorten — staat met kosten en
-argumenten in `ROUTEKAART.md`, inclusief een voorgestelde volgorde en een
-lijstje van wat je beter kunt overslaan.
+Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
+zet met kosten en argumenten op een rij wat er nog kan — onderlinge duels,
+handmatige uitslag-invoer, extra vraagsoorten — inclusief een voorgestelde
+volgorde en een lijstje van wat je beter kunt overslaan. De eerste drie
+punten zijn gebouwd en staan hierboven beschreven.
 
 ## Openstaande datakwaliteit
 

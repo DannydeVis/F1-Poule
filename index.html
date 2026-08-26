@@ -193,6 +193,7 @@
   .lampjes{display:flex;gap:6px}
   .lampjes span{flex:1;height:6px;border-radius:3px;background:var(--gedempt)}
   .lampjes span.aan{background:var(--accent);animation:lampjes 1.6s infinite}
+  .wachtop{font-size:11px;letter-spacing:.06em}
 
   /* ---- kalender ------------------------------------------- */
   .race{
@@ -305,6 +306,10 @@
     text-transform:uppercase;flex:1;min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
   .rest .t{font-family:var(--cond);font-size:22px;font-weight:700;color:var(--ink2)}
+  .rest.winnaar{border-left:4px solid var(--accent);padding-left:12px}
+  .rest.winnaar .t{color:var(--ink)}
+  .tekstblok{min-height:0;padding:12px 14px;font-family:var(--mono);font-size:12px;
+    line-height:1.5;resize:vertical;white-space:pre}
 
   /* ---- stand ---------------------------------------------- */
   .podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end}
@@ -327,7 +332,7 @@
   .strij .nm{font-family:var(--cond);font-size:24px;font-weight:600;
     text-transform:uppercase;flex:1;min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
-  .strij .jij{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  .jij{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
     text-transform:none;color:var(--accent)}
   .strij .voor{font-family:var(--mono);font-size:11px;color:var(--ink3)}
   .strij .t{font-family:var(--cond);font-size:28px;font-weight:700}
@@ -763,6 +768,89 @@ function standRijen() {
 }
 
 const gereden = () => S.races.filter(r => r.quali_result || r.race_result).length;
+
+// ---- weekenden ----------------------------------------------
+// Een poule valt uit elkaar zodra de helft niet meer kan winnen. Wie 300
+// punten achterstaat kan nog steeds één weekend pakken, dus dat weekend
+// krijgt een eigen uitslag en een eigen ranglijst over het seizoen.
+
+// Iedereen met zijn punten over dit hele weekend (kwalificatie plus race),
+// of null zolang er nog niets te scoren valt.
+function weekendUitslag(race) {
+  if (!race.quali_result && !race.race_result) return null;
+  return S.leden.map(l => ({
+    id: l.member_id,
+    naam: l.display_name,
+    punten: scoreWeekend(vindPred(race.id, l.member_id), race),
+    mij: zelfde(l.member_id, S.ik.id),
+  })).sort((a,b) => b.punten - a.punten || String(a.naam).localeCompare(String(b.naam)));
+}
+
+// Bij een gelijke stand delen ze de overwinning; allebei een streepje erbij
+// is eerlijker dan er willekeurig één aanwijzen.
+function weekendWinnaars(race) {
+  const rijen = weekendUitslag(race);
+  if (!rijen?.length) return [];
+  const hoogste = rijen[0].punten;
+  return hoogste > 0 ? rijen.filter(r => r.punten === hoogste) : [];
+}
+
+function weekendOverwinningen() {
+  const telling = new Map(S.leden.map(l =>
+    [String(l.member_id), { naam:l.display_name, aantal:0, mij:zelfde(l.member_id, S.ik.id) }]));
+  for (const r of S.races) {
+    for (const w of weekendWinnaars(r)) {
+      const rij = telling.get(String(w.id));
+      if (rij) rij.aantal++;
+    }
+  }
+  return [...telling.values()].filter(x => x.aantal > 0)
+    .sort((a,b) => b.aantal - a.aantal || String(a.naam).localeCompare(String(b.naam)));
+}
+
+// Wie heeft er voor de nog openstaande lijst nog niks ingeleverd? Jezelf
+// laten we weg: daarvoor staat de knop "Top 10 invullen" er al.
+function nogNietIngevuld(race, welk) {
+  const kolom = welk === 'quali' ? 'quali_top10' : 'race_top10';
+  return S.leden.filter(l => !zelfde(l.member_id, S.ik.id))
+                .filter(l => !(vindPred(race.id, l.member_id)?.[kolom]?.length));
+}
+
+// ---- klembord -----------------------------------------------
+// De poule leeft in de groepsapp, niet in de app. Zonder een knop die de
+// uitslag als tekst klaarzet moet iemand actief de site openen om te zien
+// hoe het ging, en dat doet niemand na race vier nog uit zichzelf.
+
+function groepsappTekst(race) {
+  const rijen = weekendUitslag(race);
+  if (!rijen?.length) return '';
+  const breed = Math.max(...rijen.map(r => String(r.naam).length));
+  const seizoen = standRijen();
+  return `🏁 ${race.name}, uitslag poule\n\n`
+    + rijen.map((r, i) => `${i + 1}. ${String(r.naam).padEnd(breed + 2)}${r.punten}`).join('\n')
+    + `\n\nSeizoen: ${seizoen.map(r => `${r.naam} ${r.punten}`).join(', ')}`;
+}
+
+async function naarKlembord(tekst) {
+  try {
+    await navigator.clipboard.writeText(tekst);
+    return true;
+  } catch {
+    // Oudere browsers, en elke pagina die niet over https loopt, kennen de
+    // clipboard-API niet. Dan maar via de omweg van een tijdelijk veld.
+    try {
+      const veld = document.createElement('textarea');
+      veld.value = tekst;
+      veld.setAttribute('readonly', '');
+      veld.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(veld);
+      veld.select();
+      const gelukt = document.execCommand('copy');
+      veld.remove();
+      return gelukt;
+    } catch { return false; }
+  }
+}
 const laatsteMetUitslag = () =>
   [...S.races].reverse().find(r => r.quali_result || r.race_result) ?? null;
 
@@ -879,6 +967,7 @@ function racesPagina(volgend) {
 function hero(volgend) {
   const r = volgend.race;
   const aan = lampjes(volgend.iso);
+  const wacht = nogNietIngevuld(r, volgend.welk);
   return `
     <div class="hero">
       <div class="hero-kop">
@@ -888,6 +977,10 @@ function hero(volgend) {
       <div class="klok" data-tot="${esc(volgend.iso)}">${klokTekst(volgend.iso)}</div>
       <div class="lampjes">${Array.from({length:5}, (_,i) =>
         `<span class="${i < aan ? 'aan' : ''}" style="animation-delay:${(i * .12).toFixed(2)}s"></span>`).join('')}</div>
+      ${S.leden.length > 1 ? `<div class="wachtop mono ${wacht.length ? 'amber' : 'groen'}">${
+        wacht.length
+          ? `nog niks ingevuld: ${wacht.map(l => esc(l.display_name)).join(', ')}`
+          : 'iedereen heeft ingevuld'}</div>` : ''}
       <button class="knop primair" data-naar-race="${esc(r.id)}">Top 10 invullen</button>
     </div>`;
 }
@@ -972,8 +1065,22 @@ function standPagina(rijen) {
       <div class="scheiding"></div>` : ''}
     ${rijen.length ? rijen.map((r, i) => standRij(r, i, rijen)).join('')
       : `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
+    ${weekendRanglijst()}
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
-      <b>1</b> twee plekken ernaast.</div>`;
+      <b>1</b> twee plekken ernaast. Wie een weekend de meeste punten pakt wint dat
+      weekend, ook al sta je in het seizoen achter.</div>`;
+}
+
+// De tweede ranglijst: los van het seizoen valt er elk weekend iets te winnen.
+function weekendRanglijst() {
+  if (S.leden.length < 2) return '';
+  const winsten = weekendOverwinningen();
+  if (!winsten.length) return '';
+  return `<span class="label">weekendoverwinningen</span>
+    ${winsten.map(w => `<div class="rest ${w.mij ? 'winnaar' : ''}">
+      <span class="nm">${esc(w.naam)}${w.mij ? ` <span class="jij">jij</span>` : ''}</span>
+      <span class="t">${w.aantal}×</span>
+    </div>`).join('')}`;
 }
 
 // ---- poule --------------------------------------------------
@@ -1043,7 +1150,7 @@ function vulPaneel() {
   const paneel = app.querySelector('#paneel');
   if (!paneel) return;
   const lijstKlaar = S.tab === 'quali' ? r.quali_result : r.race_result;
-  if (lijstKlaar) paneel.innerHTML = uitslagWeergave(r, lijstKlaar);
+  if (lijstKlaar) { paneel.innerHTML = uitslagWeergave(r, lijstKlaar); knoopKopieer(paneel); }
   else if (dicht[S.tab]) paneel.innerHTML = `
     <div class="leeg"><span class="label">gesloten</span>
       <p class="zacht" style="margin:0">Inzendingen zijn gesloten.
@@ -1137,7 +1244,8 @@ function uitslagWeergave(r, werkelijk) {
   const lijst = S.tab === 'quali' ? mijn?.quali_top10 : mijn?.race_top10;
   if (!lijst?.length) return `
     <div class="leeg"><span class="label">niets ingevuld</span>
-      <p class="zacht" style="margin:0">Je hebt hier niks ingevuld.</p></div>${andermans(r)}`;
+      <p class="zacht" style="margin:0">Je hebt hier niks ingevuld.</p></div>
+    ${andermans(r)}${weekendVoet(r)}`;
   const { totaal, regels } = scoreLijst(lijst, werkelijk);
   const exact = regels.filter(x => x.punten === 5).length;
   return `
@@ -1164,7 +1272,46 @@ function uitslagWeergave(r, werkelijk) {
         </li>`;
       }).join('')}
     </ul>
-    ${andermans(r)}`;
+    ${andermans(r)}
+    ${weekendVoet(r)}`;
+}
+
+// Onder de uitslag: wie pakte dit weekend de meeste punten, en een knop die
+// het geheel als tekst klaarzet voor de groepsapp.
+function weekendVoet(r) {
+  const winnaars = S.leden.length > 1 ? weekendWinnaars(r) : [];
+  const ik = winnaars.some(w => w.mij);
+  return `
+    ${winnaars.length ? `<span class="label">weekendwinnaar · kwalificatie + race</span>
+      <div class="rest winnaar">
+        <span class="nm">${winnaars.map(w => esc(w.naam)).join(' &amp; ')}${
+          ik ? ` <span class="jij">jij</span>` : ''}</span>
+        <span class="t">${winnaars[0].punten}</span>
+      </div>` : ''}
+    <button class="knop klein" data-kopieer="${esc(r.id)}">Kopieer voor de groepsapp</button>
+    <textarea class="veld tekstblok hide" readonly rows="9"
+      aria-label="Uitslag om zelf te kopiëren"></textarea>`;
+}
+
+// Lukt het klembord niet — een oude browser, of een pagina die niet over
+// https loopt — dan komt de tekst gewoon in beeld om zelf te selecteren.
+function knoopKopieer(paneel) {
+  paneel.querySelectorAll('[data-kopieer]').forEach(knop => knop.onclick = async () => {
+    const race = S.races.find(x => zelfde(x.id, knop.dataset.kopieer));
+    const tekst = race ? groepsappTekst(race) : '';
+    if (!tekst) return;
+    const veld = paneel.querySelector('.tekstblok');
+    const gelukt = await naarKlembord(tekst);
+    if (gelukt) {
+      knop.textContent = 'Gekopieerd';
+      setTimeout(() => { knop.textContent = 'Kopieer voor de groepsapp'; }, 2400);
+    } else {
+      knop.textContent = 'Kopiëren lukt niet, selecteer hem zelf';
+      veld.value = tekst;
+      veld.classList.remove('hide');
+      veld.select();
+    }
+  });
 }
 
 function andermans(r) {
