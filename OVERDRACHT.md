@@ -36,6 +36,57 @@ group by p.id, p.name, p.join_code
 order by voorspellingen desc, spelers desc;
 ```
 
+## Het ontwerp
+
+`index.html` volgt sinds 26 augustus 2026 het ontwerp uit Claude Design
+(project "F1-geïnspireerde app redesign", bestand `F1 Poule ontwerp.dc.html`).
+Alles zit nog steeds in dat ene bestand: geen build, geen framework.
+
+**De vormtaal.** Barlow Condensed voor koppen, namen en coureurcodes,
+Space Mono voor alles wat een tijd of een plek is, Barlow voor lopende tekst.
+Ze komen van Google Fonts, maar via een niet-blokkerende `<link>`: zonder
+netwerk valt de app terug op de systeemletters en werkt hij gewoon door.
+Rood (`--accent`) is de enige signaalkleur, groen is "open", amber is
+"uitslag". De teamkleur van een coureur zit in de linkerrand van zijn rij,
+zoals hij ook uit de database komt.
+
+**Licht en donker** volgen het toestel via `prefers-color-scheme`. Beide
+paletten staan als variabelen bovenin; er is bewust geen knop om te
+wisselen, want die stond ook niet in het ontwerp.
+
+**Drie schermbreedtes uit één opmaak.** Onder 960px is het één kolom met de
+navigatie als segmentbalk bovenaan. Daarboven wordt diezelfde navigatie een
+zijbalk en splitst de inhoud in twee kolommen: links de kalender, rechts de
+race die je open hebt staan — of, als er geen race openstaat, de stand met
+de laatste uitslag. Dat is precies het verschil tussen de iPad- en de
+desktop-tekening: dezelfde opzet, andere vulling.
+
+**Wat er nieuw bij kwam, en waarom.**
+
+- Een **hero-kaart** met de tijd tot de eerstvolgende deadline, die blijft
+  lopen zonder herladen (elke 30 seconden). De vijf startlichten eronder
+  gaan één voor één aan naarmate de deadline dichterbij komt: boven de week
+  één lampje, onder de zes uur alle vijf.
+- De hero wijst naar de eerstvolgende race waar ook echt iets te kiezen
+  valt. Staat de deelnemerslijst er nog niet, dan wordt die race
+  overgeslagen — anders is het een knop naar een leeg scherm.
+- Het **startgrid**: de tien plekken staan om en om links en rechts
+  ingesprongen, zoals een echte startopstelling.
+- Een **Stand-pagina** met podium, en een **Poule-pagina** met de code om te
+  delen. Op mobiel waren dat losse tekeningen; de segmentbalk bovenaan is de
+  enige toevoeging aan het ontwerp, want zonder die knoppen is er op een
+  telefoon geen weg naar die twee schermen.
+- Het racedetail opent op het tabblad dat nog openstaat. Is de kwalificatie
+  al begonnen, dan begin je dus meteen bij de race in plaats van bij een
+  gesloten scherm.
+
+**Wat er niet veranderde.** Alle logica eronder: `scoreLijst()`, `laad()`,
+`bewaar()` met zijn expliciete `onConflict`, het onthouden van poule en
+speler, en alle foutmeldingen uit `uitleg()`. De haakjes waar de tests aan
+hangen (`#code`, `#opslaan`, `.slot.vol`, `.drv`, `.mk i`, `.melding`,
+`.err`) zijn met opzet blijven staan, dus de regressietests uit `test/`
+dekken de nieuwe opmaak net zo goed als de oude.
+
 ## Architectuurkeuzes, en waarom
 
 - **Geen Supabase Auth.** Eerst wel gebouwd met magic-link login, maar dat
@@ -71,8 +122,8 @@ order by voorspellingen desc, spelers desc;
 ## Opgelost: opslaan van een voorspelling
 
 **Wat er mis was.** `bewaar()` schreef netjes naar de database, maar werkte
-`S.preds` in het geheugen niet bij. `toonRaces()` en `openRace()` lezen de
-ingevulde top 10 uit `S.preds`, dus bij het opnieuw openen van de race stond
+`S.preds` in het geheugen niet bij. Het racesoverzicht en `openRace()` lezen
+de ingevulde top 10 uit `S.preds`, dus bij het opnieuw openen van de race stond
 er niets — terwijl de rij in Supabase gewoon klopte. De eerder bedachte fix
 (na `bewaar()` ook `laad()` aanroepen) stond nog niet in de repo; de laatste
 commit bevatte hem niet.
