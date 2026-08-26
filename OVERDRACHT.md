@@ -9,20 +9,44 @@ Repo: https://github.com/DannydeVis/F1-Poule
 
 ## Stand van zaken
 
-De bewaar-bug is opgelost en staat live. `schema.sql` is op 24 augustus 2026
-tegen het echte Supabase-project gedraaid en kwam schoon door: de drie
-structurele controles op `ok`, en 7 poules, 7 spelers, 25 races en 4
-voorspellingen bleven staan.
+De bewaar-bug is opgelost en staat live. `schema.sql` is op 26 augustus 2026
+opnieuw tegen het echte Supabase-project gedraaid, met de kolommen voor de
+handmatige uitslag en de losse winnaar erbij, en kwam schoon door: de drie
+structurele controles op `ok`, en 25 races met 22 deelnemerslijsten bleven
+staan.
 
 Daarna bleek in de praktijk dat het opslaan nog steeds niet leek te werken,
 en dat de poulecode elke keer opnieuw ingevuld moest worden. Dat had een
 andere oorzaak dan de eerste bug; zie hieronder. Op 25 augustus 2026 is in
 de live app bevestigd dat een voorspelling nu blijft staan.
 
-Let op: er staan meerdere poules en spelers in de database die door die bug
-zijn ontstaan. Welke echt in gebruik is, is nog niet uitgezocht. Oude
-voorspellingen kunnen dus onder een dubbele speler hangen en duiken niet
-vanzelf op. Deze query laat zien waar wat zit:
+**De dubbele poules zijn opgeruimd op 26 augustus 2026.** Er stonden er negen,
+met dertien "spelers". Bij het uitzoeken bleek er niets tussen te zitten dat
+bewaard moest worden: alle negen heetten Test, test, tres of danny, en alle
+dertien spelers waren dezelfde persoon vanaf verschillende toestellen —
+Danny, danny, Danny De Visser werk, Werk, 17pro. Er bestond dus nog geen
+echte poule; dit was allemaal aanloop.
+
+Opgeruimd met één regel, want alle foreign keys staan op `on delete cascade`:
+
+```sql
+delete from pools;
+```
+
+Spelers en voorspellingen gaan daarmee vanzelf mee. **De races bleven met
+opzet staan**: die 25 rijen met hun deelnemerslijsten zijn het echte werk en
+kosten een volledige sync om terug te halen. Gebruik hiervoor dus nooit
+`reset.sql`, want die gooit de races ook weg.
+
+Dat dit kon ontstaan lag aan de bug hieronder: de app onthield nooit in welke
+poule je zat, dus elke keer opnieuw beginnen leverde een nieuwe op. Sinds de
+uitnodigingslink (`?code=`) is er bovendien geen reden meer voor een vriend om
+zelf een poule aan te maken. Eén ding blijft gedrag en geen bug: wie op het ene
+toestel "Werk" intikt en op het andere "Danny" krijgt nog steeds twee spelers,
+want de app hergebruikt alleen dezelfde naam. Op "Wie ben jij?" staan nu punten
+bij elke naam, zodat je jezelf herkent en aantikt in plaats van typt.
+
+Zou je dit later opnieuw willen nakijken, dan laat deze query zien waar wat zit:
 
 ```sql
 select p.name, p.join_code, p.id,
@@ -362,6 +386,22 @@ volgorde en een lijstje van wat je beter kunt overslaan. Alle zeven punten
 uit die volgorde zijn gebouwd en staan hierboven beschreven; wat overblijft
 is groep 3 en verder — extra vraagsoorten en seizoensmechaniek.
 
+`BEDIENING.md` gaat over de stap daarna: de navigatie, een aanmaakproces in
+vier stappen, en het omzetten van de vaste kolommen `quali_top10` en
+`race_top10` naar een `questions`-tabel met een rij per vraag. Van dat
+document is de tabbalk gebouwd (stap 2 van zijn eigen volgorde); de migratie
+naar `questions` is de eerstvolgende en de grootste.
+
+Let op bij het lezen van dat document: een deel ervan beschrijft dingen die
+er inmiddels al zijn (de drie tabs, de strook met de eerstvolgende deadline,
+de drie onderdelen op Stand, de uitnodigingslink, de winnaar van 25 punten).
+En er zitten twee gaten in: §1 vraagt vier extra vragen terwijl de presets in
+§3 er zeven nodig hebben, en §6 verwijst naar "de scoringslogica" die als
+backend niet bestaat — alle punten worden in de browser berekend, dus
+`questions_locked` zal ergens anders vandaan moeten komen. `scripts/sync.mjs`
+is daarvoor de logische plek, want die draait toch al met de service_role key
+op het moment dat de eerste uitslag binnenkomt.
+
 ## Openstaande datakwaliteit
 
 - 22 van de 25 races hebben een deelnemerslijst. Bij de andere 3 valt nog
@@ -414,6 +454,7 @@ worden. Rood betekent geen merge.
 | `.github/workflows/automerge.yml` | Mergt een `claude/*`-pull request zodra de tests groen zijn |
 | `test/` | Automatische tests (zie `test/LEESMIJ.md`) |
 | `ROUTEKAART.md` | Wat er nog bij kan, op volgorde van opbrengst gedeeld door kosten |
+| `BEDIENING.md` | Ontwerp voor de navigatie, het aanmaakproces en de vragenset |
 
 Supabase-project: `etifamdwqxjfaeaordlr`. De URL en de anon key staan bovenin
 `index.html` en `sync.html` en zijn bewust publiek; dat hoort bij de anon key.
