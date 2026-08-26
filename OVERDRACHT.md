@@ -214,6 +214,14 @@ Nodig na een schemawijziging, of als er iets grondig scheef staat:
    synchroniseren" → Run workflow, met "Ook de kalender opnieuw ophalen"
    aangevinkt.
 
+## Wat er nog bij kan
+
+Niets van dit alles is nodig om de poule te laten draaien. Wat er aan
+functionaliteit besproken is — weekendwinnaar, een kopieerknop voor de
+groepsapp, onderlinge duels, extra vraagsoorten — staat met kosten en
+argumenten in `ROUTEKAART.md`, inclusief een voorgestelde volgorde en een
+lijstje van wat je beter kunt overslaan.
+
 ## Openstaande datakwaliteit
 
 - 22 van de 25 races hebben een deelnemerslijst. Bij de andere 3 valt nog
@@ -265,6 +273,7 @@ worden. Rood betekent geen merge.
 | `.github/workflows/tests.yml` | Draait de tests bij elke pull request en push naar main |
 | `.github/workflows/automerge.yml` | Mergt een `claude/*`-pull request zodra de tests groen zijn |
 | `test/` | Automatische tests (zie `test/LEESMIJ.md`) |
+| `ROUTEKAART.md` | Wat er nog bij kan, op volgorde van opbrengst gedeeld door kosten |
 
 Supabase-project: `etifamdwqxjfaeaordlr`. De URL en de anon key staan bovenin
 `index.html` en `sync.html` en zijn bewust publiek; dat hoort bij de anon key.
