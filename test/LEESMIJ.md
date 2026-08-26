@@ -26,8 +26,9 @@ je eigen computer.
 
 De browsertests draaien `index.html` echt in Chromium, met de import van
 supabase-js vervangen door `nabootsing-supabase.mjs`: een kleine
-nabootsing die net als Postgres een unieke sleutel op
-`(pool_id, race_id, member_id)` afdwingt.
+nabootsing die net als Postgres een unieke sleutel afdwingt — op `answers`
+is dat `(pool_id, race_id, member_id, question_id)`, één rij per ingevulde
+vraag.
 
 De SQL-tests draaien tegen een echte PostgreSQL 16 in de workflow, dus
 `schema.sql` wordt bij elke pull request daadwerkelijk uitgevoerd — twee keer

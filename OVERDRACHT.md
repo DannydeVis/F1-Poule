@@ -55,7 +55,7 @@ select p.name, p.join_code, p.id,
        string_agg(distinct m.display_name, ', ') as namen
 from pools p
 left join pool_members m on m.pool_id = p.id
-left join predictions  v on v.pool_id = p.id
+left join answers      v on v.pool_id = p.id
 group by p.id, p.name, p.join_code
 order by voorspellingen desc, spelers desc;
 ```
@@ -118,8 +118,8 @@ dekken de nieuwe opmaak net zo goed als de oude.
   accepteert. Nu: spelers kiezen zichzelf uit een lijst, hun keuze wordt
   onthouden in `localStorage` per pool. Geen wachtwoord, poulecode is de
   enige drempel. RLS-policies staan daarom open voor de `anon` rol op alle
-  tabellen (`using (true)`), behalve de deadline-trigger op `predictions`,
-  die is wel hard afgedwongen in de database.
+  tabellen (`using (true)`), behalve de deadline-triggers op `predictions`
+  en `answers`, die zijn wel hard afgedwongen in de database.
 
 - **Punten via `max(0, 5 - 2 * afstand)`**, niet 10/1. Reden: bij 10/1 straft
   een cascade (één coureur valt uit, de rest schuift op) een bijna perfecte
@@ -362,12 +362,13 @@ een gele regel onder die zegt dat daar 25 punten ligt. Niemand hoort te
 blijven hangen op een knop die niet werkt. Nog een keer op dezelfde coureur
 tikken haalt de keuze weer weg.
 
-**De kolom en de trigger.** `predictions.race_winnaar` hangt aan de
-race-deadline, precies zoals `race_top10`, en `poule_deadline_bewaken()`
-dwingt dat af — zowel bij een nieuwe rij als bij een wijziging. Zonder die
-uitbreiding zou je je winnaar nog kunnen omgooien terwijl de race al liep.
-`test/schema-gedrag.test.sql` speelt alle drie de gevallen na tegen een echte
-PostgreSQL.
+**De deadline.** De winnaar hangt aan de race-deadline, precies zoals de
+race-top-10, en de database dwingt dat af — zowel bij een nieuwe rij als bij
+een wijziging. Zonder die bewaking zou je je winnaar nog kunnen omgooien
+terwijl de race al liep. `test/schema-gedrag.test.sql` speelt alle drie de
+gevallen na tegen een echte PostgreSQL. (Sinds de overstap naar `answers`
+hieronder doet `poule_antwoord_deadline()` dat werk; de oude
+`poule_deadline_bewaken()` op `predictions` staat er nog voor die tabel.)
 
 **Draai `schema.sql` opnieuw** in de Supabase SQL editor voordat je dit
 gebruikt; zonder de kolom geeft opslaan de bestaande 42703-melding.
@@ -379,10 +380,10 @@ raster laten klikken.
 
 ## De vragenlijst in de database
 
-Stap 1 van `BEDIENING.md` §9, maar dan in twee helften. **Dit is de eerste:
-alleen het schema.** De app gebruikt voorlopig nog gewoon `quali_top10`,
-`race_top10` en `race_winnaar`; die kolommen zijn niet aangeraakt. Alles
-hieronder is additief en breekt dus niets.
+Stap 1 van `BEDIENING.md` §9, in twee helften gebouwd: eerst het schema,
+daarna de app. **Beide zijn er nu.** `index.html` leest en schrijft
+`answers`; de kolommen `quali_top10`, `race_top10` en `race_winnaar` op
+`predictions` staan er nog wel, maar worden niet meer gebruikt.
 
 **Waarom nu.** `BEDIENING.md` §1 zegt: doe die migratie nu, er is nog geen
 seizoen aan voorspellingen om over te zetten. Sinds het opruimen hierboven is
@@ -424,9 +425,41 @@ app moet namen en punten kunnen tonen, maar de lijst zelf hoort uit
 `reset.sql` gooit de drie nieuwe tabellen nu ook weg; anders bleven ze na een
 schone herstart achter met een vragenlijst die niet meer bij de rest past.
 
-**Nog niet draaien.** De frontend die deze tabellen gebruikt komt in een
-tweede stap. Draai `schema.sql` pas als die er is, dan hoeft het maar één
-keer.
+### En de app die erop draait
+
+De tweede helft. `index.html` haalt bij het laden vijf dingen tegelijk op —
+races, spelers, antwoorden, de vragenlijst en de vragen van deze poule — en
+schrijft voorspellingen weg als losse rijen in `answers`.
+
+**Het scherm hoefde niet mee te veranderen.** Tussen de opslag en de opmaak
+zit een vertaallaag van vijftien regels: `bouwPreds()` vouwt de losse
+antwoordrijen terug tot de vorm die de schermen al kenden
+(`{quali_top10, race_top10, race_winnaar}` per speler per race). Zo bleef de
+puntentelling, de stand, de duels en het overzicht ongemoeid, terwijl er
+onderaan een heel andere tabel ligt. Een vraag die dit scherm nog niet kent
+wordt daarbij overgeslagen, dus de zes nieuwe vraagsoorten kunnen alvast in
+de database staan zonder iets te breken.
+
+**Leeggemaakt is weg, niet leeg.** `waarde` is `not null`, dus een
+voorspelling die je helemaal wist krijgt geen lege rij maar geen rij. Dat is
+ook inhoudelijk goed: een lege top 10 zou als "alles fout" scoren in plaats
+van als "niet meegedaan". `bewaar()` doet daarom een upsert voor wat ingevuld
+is en een delete voor wat je hebt leeggemaakt.
+
+**Alleen wat open is.** Wat achter een verstreken deadline zit gaat niet mee
+in de upsert, en `vraagActief()` houdt vragen tegen die deze poule heeft
+uitgevinkt. De database controleert dat nog een keer zelf, per vraag, via
+`questions.sessie`.
+
+**Bestaande voorspellingen verhuizen mee.** `schema.sql` zet rijen uit
+`predictions` over naar `answers` (`on conflict do nothing`, dus opnieuw
+uitvoeren kan), met de deadline-trigger er even uit — die voorspellingen zijn
+destijds op tijd ingevuld en een race van vorige maand zou nu geweigerd
+worden. In deze database valt er niets over te zetten, maar het bestand moet
+ook kloppen voor een database waar dat wel zo is.
+
+**Draai `schema.sql` opnieuw** in de Supabase SQL editor voordat je dit
+gebruikt. Nu wel: deze keer hoort de app erbij.
 
 ## Wat er nog bij kan
 
@@ -440,14 +473,18 @@ is groep 3 en verder — extra vraagsoorten en seizoensmechaniek.
 `BEDIENING.md` gaat over de stap daarna: de navigatie, een aanmaakproces in
 vier stappen, en het omzetten van de vaste kolommen `quali_top10` en
 `race_top10` naar een `questions`-tabel met een rij per vraag. Van dat
-document is de tabbalk gebouwd (stap 2 van zijn eigen volgorde); de migratie
-naar `questions` is de eerstvolgende en de grootste.
+document zijn de tabbalk (stap 2) en de migratie naar `questions` (stap 1,
+de grootste) gebouwd. Wat er nog ligt: de zes vraagsoorten die alleen nog in
+de database staan — pole, snelste ronde, snelste pitstop, teamgenoot-duels,
+safety cars en de rode vlag — het aanmaakproces met de drie presets, en het
+beheerscherm onder Poule dat de vragen aan- en uitzet.
 
 Let op bij het lezen van dat document: een deel ervan beschrijft dingen die
 er inmiddels al zijn (de drie tabs, de strook met de eerstvolgende deadline,
 de drie onderdelen op Stand, de uitnodigingslink, de winnaar van 25 punten).
-En er zitten twee gaten in: §1 vraagt vier extra vragen terwijl de presets in
-§3 er zeven nodig hebben, en §6 verwijst naar "de scoringslogica" die als
+En er zitten twee gaten in. Het eerste is dichtgelopen: §1 vraagt vier extra
+vragen terwijl de presets in §3 er zeven nodig hebben, dus staan alle zeven
+in `schema.sql`. Het tweede staat nog open: §6 verwijst naar "de scoringslogica" die als
 backend niet bestaat — alle punten worden in de browser berekend, dus
 `questions_locked` zal ergens anders vandaan moeten komen. `scripts/sync.mjs`
 is daarvoor de logische plek, want die draait toch al met de service_role key

@@ -1,7 +1,7 @@
 // Minimale nabootsing van supabase-js, genoeg voor de aanroepen in
-// index.html. De predictions-tabel heeft net als Postgres een unieke sleutel
-// op (pool_id, race_id, member_id), zodat upsert zich hier hetzelfde gedraagt
-// als in de echte database.
+// index.html. De answers-tabel heeft net als Postgres een unieke sleutel
+// op (pool_id, race_id, member_id, question_id), zodat upsert zich hier net
+// zo gedraagt als in de echte database.
 
 const uur = (h) => new Date(Date.now() + h * 3600e3).toISOString();
 
@@ -36,6 +36,16 @@ const beginstand = {
       deadline_quali:uur(72), deadline_race:uur(96), quali_result:null, race_result:null },
   ],
   predictions: [],
+  // De vragenlijst zoals schema.sql hem wegschrijft. Alleen wat de app nu
+  // kan tonen; de rest van de negen doet er voor deze tests niet toe.
+  questions: [
+    { id:'quali_top10', naam:'Top 10 kwalificatie', punten:50, sessie:'quali', soort:'top10',   gok:false, volgorde:10 },
+    { id:'race_top10',  naam:'Top 10 race',         punten:50, sessie:'race',  soort:'top10',   gok:false, volgorde:20 },
+    { id:'winnaar',     naam:'Winnaar',             punten:25, sessie:'race',  soort:'coureur', gok:false, volgorde:30 },
+  ],
+  // Leeg: een poule zonder eigen keuze doet aan alles mee.
+  pool_questions: [],
+  answers: [],
 };
 
 // Een echte database overleeft het herladen van de pagina, dus deze ook.
@@ -51,7 +61,10 @@ const bewaren = () => { try { sessionStorage.setItem(BEWAAR, JSON.stringify(stor
 
 // Wordt door ontbrekende-sleutel.test.mjs leeggemaakt om een database zonder
 // unieke sleutel na te bootsen.
-const UNIEK = { predictions: ['pool_id', 'race_id', 'member_id'] };
+const UNIEK = {
+  predictions: ['pool_id', 'race_id', 'member_id'],
+  answers:     ['pool_id', 'race_id', 'member_id', 'question_id'],
+};
 
 // Alles wat het geheugen in gaat wordt gekopieerd, zodat de pagina nooit per
 // ongeluk dezelfde array-instantie deelt met de "database".
@@ -101,6 +114,16 @@ function uitvoeren(tabel, q) {
     return q._selectNa ? { data: uit, error: null } : { data: null, error: null };
   }
 
+  if (q._weg) {
+    // Een leeggemaakt antwoord haalt zijn rij weg: waarde mag niet null zijn.
+    const blijft = rijen.filter((r) => !q._filters.every(([k, v]) => gelijk(r[k], v)));
+    const verwijderd = rijen.length - blijft.length;
+    rijen.length = 0;
+    rijen.push(...blijft);
+    bewaren();
+    return { data: null, error: null, count: verwijderd };
+  }
+
   if (q._update) {
     // update(...).eq(...).is(kolom, null): de is-controle hoort bij de
     // schrijfactie zelf, zodat een rij die inmiddels gevuld is niet geraakt
@@ -133,6 +156,7 @@ function maakQuery(tabel) {
       q._isNull.push(k); return q;
     },
     update(r) { q._update = r; return q; },
+    delete() { q._weg = true; return q; },
     order() { return q; },
     single() { q._single = true; return q; },
     insert(r) { q._insert = Array.isArray(r) ? r : [r]; return q; },

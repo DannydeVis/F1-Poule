@@ -208,6 +208,43 @@ begin
 end $$;
 
 -- ------------------------------------------------------------
+--  Van predictions naar answers
+--  De app schrijft voorspellingen nu weg als één rij per vraag. Bestaande
+--  voorspellingen verhuizen hier mee, zodat niemand zijn ingevulde races
+--  kwijtraakt. Opnieuw uit te voeren: al verhuisde rijen blijven staan en
+--  worden niet overschreven, want daar staat inmiddels de nieuwste versie.
+--  De deadline-trigger gaat er even uit: deze voorspellingen zijn destijds
+--  op tijd ingevuld, en een race van vorig jaar zou nu geweigerd worden.
+--  Bij de allereerste run bestaat die trigger nog niet.
+-- ------------------------------------------------------------
+
+do $$
+declare over int; met_trigger boolean;
+begin
+  select exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.answers'::regclass and tgname = 'answers_deadline'
+  ) into met_trigger;
+  if met_trigger then alter table public.answers disable trigger answers_deadline; end if;
+
+  insert into public.answers (pool_id, race_id, member_id, question_id, waarde, updated_at)
+  select p.pool_id, p.race_id, p.member_id, v.question_id, v.waarde, p.updated_at
+  from public.predictions p
+  cross join lateral (values
+      ('quali_top10'::text, to_jsonb(p.quali_top10)),
+      ('race_top10',  to_jsonb(p.race_top10)),
+      ('winnaar',     to_jsonb(p.race_winnaar))
+    ) as v(question_id, waarde)
+  -- Een lege lijst is "niet ingevuld", geen antwoord van nul coureurs.
+  where v.waarde is not null and v.waarde <> 'null'::jsonb and v.waarde <> '[]'::jsonb
+  on conflict (pool_id, race_id, member_id, question_id) do nothing;
+  get diagnostics over = row_count;
+  if over > 0 then raise notice 'voorspellingen overgezet naar answers: %', over; end if;
+
+  if met_trigger then alter table public.answers enable trigger answers_deadline; end if;
+end $$;
+
+-- ------------------------------------------------------------
 --  Sleutels
 --  Zonder de unieke sleutel op predictions wordt elke "wijziging" een
 --  nieuwe rij en lijkt bewaren willekeurig wel en niet te werken.
@@ -378,6 +415,55 @@ create trigger predictions_deadline
   before insert or update on public.predictions
   for each row execute function public.poule_deadline_bewaken();
 
+-- Dezelfde bewaking voor answers. De deadline is het enige wat hier hard in
+-- de database is afgedwongen, dus die mag niet wegvallen doordat de app naar
+-- een andere tabel schrijft. Welke deadline geldt hangt af van de vraag:
+-- questions.sessie zegt of hij aan de kwalificatie of aan de race hangt.
+create or replace function public.poule_antwoord_deadline()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  sessie_van text;
+  deadline   timestamptz;
+begin
+  -- Een ongewijzigd antwoord opnieuw wegschrijven mag altijd; anders
+  -- blokkeert een verstreken deadline het opslaan van een ándere vraag.
+  if tg_op = 'UPDATE' and new.waarde is not distinct from old.waarde then
+    new.updated_at = now();
+    return new;
+  end if;
+
+  -- Kent de database deze vraag of race niet, dan weigeren de foreign keys
+  -- de rij zo meteen zelf met een nette 23503, waar index.html een leesbare
+  -- melding van maakt. Hier al een eigen fout gooien zou die overschaduwen.
+  select q.sessie into sessie_van from public.questions q where q.id = new.question_id;
+  if not found then return new; end if;
+
+  select case when sessie_van = 'quali' then r.deadline_quali else r.deadline_race end
+    into deadline
+  from public.races r where r.id = new.race_id;
+  if not found then return new; end if;
+
+  if deadline is not null and now() > deadline then
+    if sessie_van = 'quali' then
+      raise exception 'De kwalificatie van deze race is gesloten';
+    else
+      raise exception 'De race is gesloten';
+    end if;
+  end if;
+
+  new.updated_at = now();
+  return new;
+end $$;
+
+drop trigger if exists answers_deadline on public.answers;
+create trigger answers_deadline
+  before insert or update on public.answers
+  for each row execute function public.poule_antwoord_deadline();
+
 -- ------------------------------------------------------------
 --  Toegang
 --  Er is geen login: de poulecode is de enige drempel. Alles staat dus
@@ -441,6 +527,13 @@ select 'deadline-trigger',
            and tgname = 'predictions_deadline'
        ) then 'ok' else 'ONTBREEKT' end
 union all
+select 'deadline-trigger op answers',
+       case when exists (
+         select 1 from pg_trigger
+         where tgrelid = 'public.answers'::regclass
+           and tgname = 'answers_deadline'
+       ) then 'ok' else 'ONTBREEKT' end
+union all
 select 'dubbele voorspellingen',
        case when (select count(*) from (
          select 1 from public.predictions
@@ -473,6 +566,10 @@ select 'punten Simpel / Klassiek / Gevorderd',
           (select sum(punten)::text from public.questions))
 union all
 select 'winnaar ingevuld',
-       (select count(*)::text from public.predictions where race_winnaar is not null)
+       (select count(*)::text from public.answers where question_id = 'winnaar')
 union all
-select 'opgeslagen voorspellingen', (select count(*)::text from public.predictions);
+select 'ingevulde antwoorden',   (select count(*)::text from public.answers)
+union all
+-- Blijft staan zolang niet zeker is dat alles goed is overgezet; de app
+-- leest deze tabel niet meer.
+select 'oude voorspellingen (ongebruikt)', (select count(*)::text from public.predictions);
