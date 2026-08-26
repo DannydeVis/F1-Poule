@@ -26,9 +26,12 @@ await page.waitForSelector('[data-race]');
 const melding = await page.$('.melding');
 check('bevestiging na opslaan', !!melding, melding ? (await melding.textContent()).trim() : 'geen melding');
 
-const inDb = await page.evaluate(() => globalThis.__db.predictions);
+// answers bewaart een rij per vraag, dus één rij voor de kwalificatie-top-10.
+const inDb = await page.evaluate(() => globalThis.__db.answers);
 check('rij staat in de database',
-  inDb.length === 1 && inDb[0].quali_top10?.length === 10, `${inDb.length} rij(en)`);
+  inDb.length === 1 && inDb[0].question_id === 'quali_top10'
+    && inDb[0].waarde?.length === 10,
+  `${inDb.length} rij(en): ${inDb.map((a) => a.question_id).join(', ')}`);
 
 const vinkjes = await page.$$eval('[data-race]:has(.nm:text-is("Melbourne")) .mk i',
   (n) => n.map((x) => x.textContent + ':' + (x.className || 'uit')));
@@ -45,7 +48,7 @@ await page.click('.slot.vol .x');            // haal P1 weg
 await page.click('.drv:not([disabled])');    // kies een andere
 await page.click('#opslaan');
 await page.waitForSelector('[data-race]');
-const na = await page.evaluate(() => globalThis.__db.predictions);
+const na = await page.evaluate(() => globalThis.__db.answers);
 check('wijzigen maakt geen tweede rij aan', na.length === 1, `${na.length} rijen`);
 
 // --- kwalificatie dicht, race nog open ------------------------------------
@@ -60,14 +63,20 @@ await kiesTien(page);
 await page.click('#opslaan');
 await page.waitForSelector('[data-race]');
 const shanghai = await page.evaluate(() =>
-  globalThis.__db.predictions.find((p) => String(p.race_id) === '2'));
+  globalThis.__db.answers.filter((a) => String(a.race_id) === '2'));
+const vraag = (id) => shanghai.find((a) => a.question_id === id);
+
 check('race-top-10 opslaan lukt terwijl de kwalificatie dicht is',
-  shanghai?.race_top10?.length === 10, JSON.stringify(shanghai?.race_top10));
-check('gesloten kwalificatie blijft leeg in plaats van overschreven',
-  shanghai?.quali_top10 === null, `quali_top10: ${JSON.stringify(shanghai?.quali_top10)}`);
+  vraag('race_top10')?.waarde?.length === 10, JSON.stringify(vraag('race_top10')?.waarde));
+// De kwalificatie is dicht, dus daar hoort helemaal geen rij voor te komen.
+// Een lege rij wegschrijven zou als "alles fout" scoren in plaats van als
+// "niet meegedaan".
+check('gesloten kwalificatie krijgt geen rij in plaats van een lege',
+  vraag('quali_top10') === undefined,
+  `rijen voor race 2: ${shanghai.map((a) => a.question_id).join(', ')}`);
 check('de apart gekozen winnaar wordt meegeslagen',
-  shanghai?.race_winnaar === winnaar && !!winnaar,
-  `race_winnaar: ${shanghai?.race_winnaar}, gekozen: ${winnaar}`);
+  vraag('winnaar')?.waarde === winnaar && !!winnaar,
+  `winnaar: ${vraag('winnaar')?.waarde}, gekozen: ${winnaar}`);
 
 // --- race zonder deelnemerslijst ------------------------------------------
 await openRace(page, 'Suzuka');

@@ -1,5 +1,5 @@
 // Wat ziet de speler als de database de unieke sleutel op
-// (pool_id, race_id, member_id) mist?
+// (pool_id, race_id, member_id, question_id) op answers mist?
 //
 // Zonder die sleutel maakt elke "wijziging" een nieuwe rij aan en lijkt
 // bewaren willekeurig wel en niet te werken. Dat moet een leesbare melding
@@ -22,7 +22,7 @@ await page.waitForSelector('.err:not(:empty)', { timeout: 10000 });
 const melding = (await page.textContent('.err')).trim();
 check('de melding wijst naar schema.sql', melding.includes('schema.sql'), melding);
 
-const rijen = await page.evaluate(() => globalThis.__db.predictions.length);
+const rijen = await page.evaluate(() => globalThis.__db.answers.length);
 check('er wordt niets stilzwijgend weggeschreven', rijen === 0, `${rijen} rijen`);
 
 const nogIngevuld = await page.$$eval('.slot.vol', (n) => n.length);

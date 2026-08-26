@@ -22,7 +22,7 @@ await kiesTien(page);
 await page.click('#opslaan');
 await page.waitForSelector('[data-race]');
 check('voorspelling opgeslagen als startpunt',
-  (await page.evaluate(() => globalThis.__db.predictions.length)) === 1);
+  (await page.evaluate(() => globalThis.__db.answers.length)) === 1);
 
 // --- na herladen niet opnieuw de code hoeven typen -------------------------
 await page.reload();
