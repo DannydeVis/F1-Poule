@@ -299,13 +299,37 @@ De telling zit als losse functie `duelStand()` bovenin het script, net als
 `scoreLijst()`, en wordt in `test/duel.test.mjs` apart getest — die knipt hem
 uit `index.html` zodat de test de echte code controleert.
 
+## Uitnodigingslink
+
+Punt 7 van `ROUTEKAART.md`. `https://dannydevis.github.io/F1-Poule/?code=RTM026`
+brengt je meteen in die poule, zonder het codescherm. Op de Poule-pagina
+zet één knop die link plus de poulenaam op het klembord, met dezelfde
+terugval als de kopieerknop voor de groepsapp.
+
+Drie dingen die daarbij goed moesten:
+
+- **De link wint van de onthouden poule.** Wie zo'n link aanklikt wil naar
+  díé poule, niet naar zijn vorige.
+- **De code gaat daarna uit de adresbalk** (`history.replaceState`). Anders
+  trekt elke herlaadactie je terug naar die poule, ook nadat je met "Andere
+  poule" bewust bent overgestapt. Het maakt herladen meteen de vluchtweg als
+  de link een verkeerde code bevatte.
+- **Een code die niet bestaat zegt dat ook.** Stilzwijgend doorgaan naar je
+  eigen poule zou betekenen dat je nooit merkt dat de uitnodiging kapot was.
+  De code wordt in het veld gezet om te verbeteren, maar alleen als hij in
+  het veld past: een poulecode is zes tekens, en `maxlength` knipt een waarde
+  uit het attribuut niet af.
+
+`test/hulp.mjs` serveerde `/` alleen zonder querystring, dus de testserver
+kon `/?code=...` niet vinden. Dat is meteen rechtgezet.
+
 ## Wat er nog bij kan
 
 Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
 zet met kosten en argumenten op een rij wat er nog kan — extra vraagsoorten,
 seizoensmechaniek, een uitnodigingslink — inclusief een voorgestelde
-volgorde en een lijstje van wat je beter kunt overslaan. De eerste vijf
-punten zijn gebouwd en staan hierboven beschreven.
+volgorde en een lijstje van wat je beter kunt overslaan. Alles behalve punt
+6 (winnaar als aparte vraag) is gebouwd en staat hierboven beschreven.
 
 ## Openstaande datakwaliteit
 

@@ -570,7 +570,7 @@ const S = {
   races: [], leden: [], preds: [],
   race:  null, tab: 'quali', keuze: { quali: [], race: [] },
   uitslag: { welk: null, lijst: [] },
-  weergave: 'races', fout: '', melding: '',
+  weergave: 'races', fout: '', melding: '', linkCode: '', linkFout: '',
 };
 
 const app = document.getElementById('app');
@@ -869,6 +869,33 @@ function nogNietIngevuld(race, welk) {
                 .filter(l => !(vindPred(race.id, l.member_id)?.[kolom]?.length));
 }
 
+// ---- uitnodigingslink ---------------------------------------
+// ?code=RTM026 slaat het codescherm over. Scheelt je vrienden een stap en
+// een typefout, en is de enige manier om een poule te delen zonder dat
+// iemand zes tekens moet overtikken uit een groepsapp.
+
+function codeUitLink() {
+  try {
+    const code = new URLSearchParams(location.search).get('code');
+    return code ? code.trim().toUpperCase() : '';
+  } catch { return ''; }
+}
+
+// De code weer uit de adresbalk halen zodra hij gebruikt is. Anders trekt
+// een herlaadactie je terug naar die poule, ook nadat je met "Andere poule"
+// bewust bent overgestapt — en werkt herladen juist wél als vluchtweg
+// wanneer de link een verkeerde code bevatte.
+function vergeetLinkCode() {
+  try { history.replaceState(null, '', location.pathname); } catch { /* niets te doen */ }
+}
+
+function uitnodigingsTekst() {
+  const basis = location.origin && location.origin !== 'null'
+    ? location.origin + location.pathname
+    : String(location.href).split('?')[0];
+  return `Doe mee met ${S.poule.name}:\n${basis}?code=${S.poule.join_code}`;
+}
+
 // ---- handmatige uitslag -------------------------------------
 // OpenF1 heeft niet elke sessie. De sync vult alleen een lege uitslag, dus
 // wat hier met de hand in gaat blijft voorgoed staan — vandaar de vlag.
@@ -1025,6 +1052,21 @@ function toonApp() {
   const terug = app.querySelector('#terug');
   if (terug) terug.onclick = () => { S.race = null; render(); };
   app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; render(); });
+  const uitnodiging = app.querySelector('#uitnodiging');
+  if (uitnodiging) uitnodiging.onclick = async () => {
+    const tekst = uitnodigingsTekst();
+    const veld = app.querySelector('#uitnodigingveld');
+    if (await naarKlembord(tekst)) {
+      uitnodiging.textContent = 'Gekopieerd';
+      setTimeout(() => { uitnodiging.textContent = 'Kopieer uitnodigingslink'; }, 2400);
+    } else {
+      uitnodiging.textContent = 'Kopiëren lukt niet, selecteer hem zelf';
+      veld.value = tekst;
+      veld.classList.remove('hide');
+      veld.select();
+    }
+  };
+
   const wissel = app.querySelector('#wissel');
   if (wissel) wissel.onclick = () => { vergeet(S.poule.id); S.ik = null; render(); };
   const anders = app.querySelector('#anderePoule');
@@ -1205,7 +1247,11 @@ function poulePagina(rijen) {
     <div class="hero">
       <span class="label">poulecode</span>
       <div class="veld code" style="display:grid;place-items:center">${esc(S.poule.join_code ?? '—')}</div>
-      <p class="zacht" style="margin:0">Deel deze code met wie mee wil doen.</p>
+      <p class="zacht" style="margin:0">Deel deze code met wie mee wil doen, of stuur
+        de link hieronder — dan hoeft niemand hem over te tikken.</p>
+      <button class="knop klein" id="uitnodiging">Kopieer uitnodigingslink</button>
+      <textarea class="veld tekstblok hide" id="uitnodigingveld" readonly rows="3"
+        aria-label="Uitnodiging om zelf te kopiëren"></textarea>
     </div>
     <span class="label">spelers</span>
     ${rijen.map((r, i) => `<div class="speler ${r.mij ? 'zelf' : ''}" style="animation:none">
@@ -1653,6 +1699,7 @@ function toonStart() {
         <div class="veldblok">
           <span class="label">poulecode</span>
           <input class="veld code" id="code" maxlength="6" placeholder="ABC123"
+            value="${esc(S.linkCode)}"
             autocomplete="off" autocapitalize="characters" spellcheck="false">
           <button class="knop primair" id="mee" style="min-height:64px;font-size:24px">Naar de poule</button>
         </div>
@@ -1665,10 +1712,11 @@ function toonStart() {
             <button class="knop spook" id="maak">Aanmaken</button>
           </div>
         </div>
-        <p class="err" id="f"></p>
+        <p class="err" id="f">${esc(S.linkFout)}</p>
       </div>
     </div></div>`;
 
+  S.linkCode = ''; S.linkFout = '';
   const fout = (t) => { app.querySelector('#f').textContent = t; };
 
   app.querySelector('#nieuw').onclick = (ev) => {
@@ -1724,6 +1772,34 @@ if (DEMO) {
 // Terug naar de poule die je het laatst gebruikte, zodat de poulecode niet
 // elke keer opnieuw ingetypt hoeft te worden.
 async function hervat() {
+  // Een link met een code gaat voor op de poule die je het laatst gebruikte:
+  // wie zo'n link aanklikt wil naar díé poule, niet naar zijn vorige.
+  const uitLink = codeUitLink();
+  if (uitLink) {
+    vergeetLinkCode();
+    const { data } = await db.from('pools').select('*').eq('join_code', uitLink).single();
+    if (data) {
+      S.poule = data;
+      onthoudPoule(data.id);
+      try { await laad(); }
+      catch (e) { toonFout(e.message); return; }
+      const bekend = mijnId(S.poule.id);
+      const lid = bekend && S.leden.find(l => zelfde(l.member_id, bekend));
+      if (lid) S.ik = { id: lid.member_id, naam: lid.display_name };
+      render();
+      return;
+    }
+    // Klopt de code niet, dan is stilzwijgend doorgaan naar je eigen poule
+    // verwarrend: je zou nooit merken dat de uitnodiging kapot was.
+    // Alleen voorvullen wat in het veld past: een poulecode is zes tekens,
+    // en maxlength knipt een waarde uit het attribuut niet af.
+    S.linkCode = uitLink.length <= 6 ? uitLink : '';
+    S.linkFout = `De code ${uitLink} uit die link bestaat niet. `
+      + 'Herlaad de pagina om terug te gaan naar je eigen poule.';
+    toonStart();
+    return;
+  }
+
   const id = laatstePoule();
   if (!id) { toonStart(); return; }
 

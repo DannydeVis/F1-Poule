@@ -60,7 +60,7 @@ Op het racesoverzicht: "Davy heeft nog niks ingevuld voor Monza". Gecombineerd
 met de kopieerknop hierboven heb je daarmee je herinneringssysteem, zonder
 mailserver of pushmeldingen.
 
-### Uitnodigingslink met de code erin
+### ~~Uitnodigingslink met de code erin~~ — gebouwd
 `https://dannydevis.github.io/F1-Poule/?code=10D4FD` en de app vult de
 poulecode automatisch in. Scheelt je vrienden een stap en een typefout.
 
@@ -198,13 +198,13 @@ Gebruik safety cars en VSC in plaats daarvan.
 4. ~~Handmatige uitslag-invoer~~ — gebouwd
 5. ~~Onderlinge duels~~ — gebouwd
 6. Winnaar als aparte vraag
-7. Uitnodigingslink met code
+7. ~~Uitnodigingslink met code~~ — gebouwd
 
 Punt 1 tot en met 3 samen zijn waarschijnlijk een avond werk en hebben meer
 effect op of je poule het seizoen haalt dan de hele rest van deze lijst bij
 elkaar. Die drie staan er nu in, en punt 4 inmiddels ook; zie
 `OVERDRACHT.md` voor hoe ze werken. Let op: punt 4 heeft twee nieuwe
 kolommen in `races`, dus draai `schema.sql` opnieuw voordat je het gebruikt.
-Punt 5 staat er inmiddels ook in. Wat overblijft is punt 6 (winnaar als
-aparte vraag, één extra kolom) en punt 7 (uitnodigingslink met de code
-erin, geen databasewijziging).
+Punt 5 en 7 staan er inmiddels ook in. Van deze lijst blijft alleen punt 6
+over: de winnaar als aparte vraag, met één extra kolom in `predictions` en
+dus een nieuwe `schema.sql`-run. Daarna is wat rest groep 3 en verder.
