@@ -75,7 +75,7 @@ komen.
 
 ## Groep 2: maakt het leuker om terug te komen
 
-### Onderlinge duels
+### ~~Onderlinge duels~~ — gebouwd
 "Jij tegen Davy dit seizoen: 8 tegen 6." Per raceweekend wie van twee spelers
 meer punten pakte, opgeteld over het seizoen. Puur een berekening over data die
 je al hebt.
@@ -196,7 +196,7 @@ Gebruik safety cars en VSC in plaats daarvan.
 2. ~~WhatsApp-kopieerknop~~ — gebouwd
 3. ~~Wie heeft nog niet ingevuld~~ — gebouwd
 4. ~~Handmatige uitslag-invoer~~ — gebouwd
-5. Onderlinge duels
+5. ~~Onderlinge duels~~ — gebouwd
 6. Winnaar als aparte vraag
 7. Uitnodigingslink met code
 
@@ -205,5 +205,6 @@ effect op of je poule het seizoen haalt dan de hele rest van deze lijst bij
 elkaar. Die drie staan er nu in, en punt 4 inmiddels ook; zie
 `OVERDRACHT.md` voor hoe ze werken. Let op: punt 4 heeft twee nieuwe
 kolommen in `races`, dus draai `schema.sql` opnieuw voordat je het gebruikt.
-Punt 5 (onderlinge duels) is de eerstvolgende en heeft weer geen
-databasewijziging nodig.
+Punt 5 staat er inmiddels ook in. Wat overblijft is punt 6 (winnaar als
+aparte vraag, één extra kolom) en punt 7 (uitnodigingslink met de code
+erin, geen databasewijziging).
