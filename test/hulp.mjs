@@ -45,7 +45,10 @@ export async function startPagina({ aanpassen = (s) => s, indexPad } = {}) {
 
   const types = { '.html': 'text/html', '.mjs': 'text/javascript' };
   const server = createServer((req, res) => {
-    const naam = req.url === '/' ? '/index.html' : req.url.split('?')[0];
+    // Eerst de querystring eraf: de app leest ?code= uit de link, dus '/'
+    // komt hier ook binnen als '/?code=RTM026'.
+    const pad = req.url.split('?')[0];
+    const naam = pad === '/' ? '/index.html' : pad;
     try {
       const body = readFileSync(join(map, naam));
       res.writeHead(200, { 'Content-Type': types[naam.slice(naam.lastIndexOf('.'))] ?? 'text/plain' });
