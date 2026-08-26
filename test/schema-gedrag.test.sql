@@ -77,6 +77,36 @@ begin
     if sqlerrm not like '%race is gesloten%' then raise; end if;
     raise notice 'ok: gesloten race geweigerd (%)', sqlerrm;
   end;
+
+  -- 8. de losse winnaar hangt aan dezelfde deadline als de race-top-10.
+  --    De exception hierboven draait zijn eigen blok terug, dus de deadline
+  --    van race 2 staat hier weer in de toekomst.
+  update predictions set race_winnaar = '1' where race_id = 2;
+  if (select race_winnaar from predictions where race_id = 2) is distinct from '1' then
+    raise exception 'gezakt: winnaar niet opgeslagen terwijl de race openstond';
+  end if;
+  raise notice 'ok: winnaar invullen mag zolang de race openstaat';
+
+  begin
+    update races set deadline_race = now() - interval '1 hour' where id = 2;
+    update predictions set race_winnaar = '4' where race_id = 2;
+    raise exception 'gezakt: de winnaar werd na de deadline toch gewijzigd';
+  exception when others then
+    if sqlerrm not like '%race is gesloten%' then raise; end if;
+    raise notice 'ok: winnaar wijzigen na de deadline geweigerd (%)', sqlerrm;
+  end;
+
+  -- 9. en bij een nieuwe rij telt de winnaar net zo goed mee
+  insert into races (id, season, round, name, deadline_quali, deadline_race)
+  values (3, 2026, 3, 'Suzuka', now() - interval '2 days', now() - interval '1 day');
+  begin
+    insert into predictions (pool_id, race_id, member_id, race_winnaar)
+    values (poule, 3, lid, '1');
+    raise exception 'gezakt: een winnaar voor een gesloten race werd toch aangenomen';
+  exception when others then
+    if sqlerrm not like '%race is gesloten%' then raise; end if;
+    raise notice 'ok: winnaar voor een gesloten race geweigerd (%)', sqlerrm;
+  end;
 end $$;
 
 -- Beschadig de tabel voor de hersteltest: dubbele rij, geen unieke sleutel.

@@ -323,13 +323,44 @@ Drie dingen die daarbij goed moesten:
 `test/hulp.mjs` serveerde `/` alleen zonder querystring, dus de testserver
 kon `/?code=...` niet vinden. Dat is meteen rechtgezet.
 
+## De winnaar als aparte vraag
+
+Punt 6 van `ROUTEKAART.md`, en daarmee de laatste van die lijst. Op het
+race-tabblad staat bovenaan "wie wint de race?" met het hele deelnemersveld;
+goed is 25 punten.
+
+**Bewust zwaar.** Een perfecte top 10 levert 50 op, dus deze ene keuze is het
+halve weekend waard. Dat is de bedoeling: het houdt een weekend spannend voor
+wie op punten al ver achterloopt, net als de weekendwinnaar hierboven.
+
+**Niet verplicht.** Wie geen winnaar kiest kan gewoon opslaan; er staat wel
+een gele regel onder die zegt dat daar 25 punten ligt. Niemand hoort te
+blijven hangen op een knop die niet werkt. Nog een keer op dezelfde coureur
+tikken haalt de keuze weer weg.
+
+**De kolom en de trigger.** `predictions.race_winnaar` hangt aan de
+race-deadline, precies zoals `race_top10`, en `poule_deadline_bewaken()`
+dwingt dat af — zowel bij een nieuwe rij als bij een wijziging. Zonder die
+uitbreiding zou je je winnaar nog kunnen omgooien terwijl de race al liep.
+`test/schema-gedrag.test.sql` speelt alle drie de gevallen na tegen een echte
+PostgreSQL.
+
+**Draai `schema.sql` opnieuw** in de Supabase SQL editor voordat je dit
+gebruikt; zonder de kolom geeft opslaan de bestaande 42703-melding.
+
+**Let op bij de knoppen.** De winnaarkeuze gebruikt bewust de klasse `wknop`
+en niet `drv`. Ze zien er hetzelfde uit, maar `.drv` is de top-10-kiezer waar
+`test/hulp.mjs` op klikt; één gedeelde klasse zou die tests op het verkeerde
+raster laten klikken.
+
 ## Wat er nog bij kan
 
 Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
 zet met kosten en argumenten op een rij wat er nog kan — extra vraagsoorten,
 seizoensmechaniek, een uitnodigingslink — inclusief een voorgestelde
-volgorde en een lijstje van wat je beter kunt overslaan. Alles behalve punt
-6 (winnaar als aparte vraag) is gebouwd en staat hierboven beschreven.
+volgorde en een lijstje van wat je beter kunt overslaan. Alle zeven punten
+uit die volgorde zijn gebouwd en staan hierboven beschreven; wat overblijft
+is groep 3 en verder — extra vraagsoorten en seizoensmechaniek.
 
 ## Openstaande datakwaliteit
 

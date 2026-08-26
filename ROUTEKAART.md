@@ -111,7 +111,7 @@ vier of vijf.
 
 | Vraag | Waarom deze |
 |---|---|
-| **Winnaar apart, 25 punten** | Meest gevraagde toevoeging, één extra kolom |
+| ~~**Winnaar apart, 25 punten**~~ — gebouwd | Meest gevraagde toevoeging, één extra kolom |
 | **Teamgenoot-duels** | Bijna 50/50, dus de poule splitst zich altijd. Beste verhouding tussen spreiding en kennis van alle vraagsoorten |
 | **Aantal safety cars** | Hard te tellen, geen discussie over de uitslag |
 | **Rode vlag ja/nee** | Simpel, en een goed gevoel als je hem goed hebt |
@@ -197,7 +197,7 @@ Gebruik safety cars en VSC in plaats daarvan.
 3. ~~Wie heeft nog niet ingevuld~~ — gebouwd
 4. ~~Handmatige uitslag-invoer~~ — gebouwd
 5. ~~Onderlinge duels~~ — gebouwd
-6. Winnaar als aparte vraag
+6. ~~Winnaar als aparte vraag~~ — gebouwd
 7. ~~Uitnodigingslink met code~~ — gebouwd
 
 Punt 1 tot en met 3 samen zijn waarschijnlijk een avond werk en hebben meer
@@ -205,6 +205,9 @@ effect op of je poule het seizoen haalt dan de hele rest van deze lijst bij
 elkaar. Die drie staan er nu in, en punt 4 inmiddels ook; zie
 `OVERDRACHT.md` voor hoe ze werken. Let op: punt 4 heeft twee nieuwe
 kolommen in `races`, dus draai `schema.sql` opnieuw voordat je het gebruikt.
-Punt 5 en 7 staan er inmiddels ook in. Van deze lijst blijft alleen punt 6
-over: de winnaar als aparte vraag, met één extra kolom in `predictions` en
-dus een nieuwe `schema.sql`-run. Daarna is wat rest groep 3 en verder.
+Alle zeven staan er inmiddels in; zie `OVERDRACHT.md` voor hoe ze werken.
+Punt 4 en 6 hebben nieuwe kolommen, dus draai `schema.sql` opnieuw voordat je
+ze gebruikt. Wat nog openligt is groep 3 en verder: extra vraagsoorten en
+seizoensmechaniek. Denk aan de waarschuwing bovenaan deze lijst voordat je
+daaraan begint — meer vraagsoorten is niet wat een vriendenpoule beter
+maakt.
