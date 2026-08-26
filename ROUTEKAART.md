@@ -26,7 +26,7 @@ deze lijst gaat daarom over sociale mechaniek, niet over voorspellingen.
 
 ## Groep 1: klein werk, groot effect
 
-### Weekendwinnaar naast de seizoensstand
+### ~~Weekendwinnaar naast de seizoensstand~~ — gebouwd
 Toon per race wie dat weekend de meeste punten pakte, met een eigen kleine
 ranglijst "weekendoverwinningen" over het seizoen.
 
@@ -36,7 +36,7 @@ helft van je deelnemers in juni al afgelopen.
 
 Kosten: een sortering op bestaande data, geen databasewijziging.
 
-### Stand kopiëren als WhatsApp-tekst
+### ~~Stand kopiëren als WhatsApp-tekst~~ — gebouwd
 Een knop die dit op je klembord zet:
 
 ```
@@ -55,7 +55,7 @@ meer uit zichzelf.
 
 Kosten: een template-functie en `navigator.clipboard.writeText()`.
 
-### Wie heeft nog niet ingevuld
+### ~~Wie heeft nog niet ingevuld~~ — gebouwd
 Op het racesoverzicht: "Davy heeft nog niks ingevuld voor Monza". Gecombineerd
 met de kopieerknop hierboven heb je daarmee je herinneringssysteem, zonder
 mailserver of pushmeldingen.
@@ -192,9 +192,9 @@ Gebruik safety cars en VSC in plaats daarvan.
 
 ## Voorgestelde volgorde
 
-1. Weekendwinnaar
-2. WhatsApp-kopieerknop
-3. Wie heeft nog niet ingevuld
+1. ~~Weekendwinnaar~~ — gebouwd
+2. ~~WhatsApp-kopieerknop~~ — gebouwd
+3. ~~Wie heeft nog niet ingevuld~~ — gebouwd
 4. Handmatige uitslag-invoer
 5. Onderlinge duels
 6. Winnaar als aparte vraag
@@ -202,4 +202,6 @@ Gebruik safety cars en VSC in plaats daarvan.
 
 Punt 1 tot en met 3 samen zijn waarschijnlijk een avond werk en hebben meer
 effect op of je poule het seizoen haalt dan de hele rest van deze lijst bij
-elkaar.
+elkaar. Die drie staan er nu in; zie `OVERDRACHT.md` voor hoe ze werken.
+Punt 4 is de eerstvolgende, en de enige op deze lijst die de app iets naar
+de database laat schrijven wat er nu nog niet in gaat.
