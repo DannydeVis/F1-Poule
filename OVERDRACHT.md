@@ -282,12 +282,29 @@ Supabase SQL editor voordat je dit gebruikt. Doe je dat niet, dan geeft het
 opslaan de bestaande melding voor een ontbrekende kolom (42703), die naar
 `schema.sql` verwijst. De rest van de app blijft gewoon werken.
 
+## Onderlinge duels
+
+Punt 5 van `ROUTEKAART.md`, op de standpagina onder de weekendoverwinningen.
+Per raceweekend wie van twee spelers de meeste punten pakte, opgeteld over
+het seizoen: "jij tegen Davy: 8 – 6". Dat is waar mensen elkaar in de
+groepsapp op aanspreken, veel meer dan op plek 4 van de 6.
+
+Het scherpe punt zit in wat níét meetelt. Een weekend waarin geen van beiden
+iets heeft ingeleverd is geen gelijkspel maar een weekend dat er voor dit
+duel niet was; zonder die regel staat het na een winterstop 12–12 zonder dat
+er iets gebeurd is. Hebben ze allebei wél ingeleverd en scoren ze allebei
+nul, dan is dat wel een gelijkspel.
+
+De telling zit als losse functie `duelStand()` bovenin het script, net als
+`scoreLijst()`, en wordt in `test/duel.test.mjs` apart getest — die knipt hem
+uit `index.html` zodat de test de echte code controleert.
+
 ## Wat er nog bij kan
 
 Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
-zet met kosten en argumenten op een rij wat er nog kan — onderlinge duels,
-extra vraagsoorten, seizoensmechaniek — inclusief een voorgestelde
-volgorde en een lijstje van wat je beter kunt overslaan. De eerste vier
+zet met kosten en argumenten op een rij wat er nog kan — extra vraagsoorten,
+seizoensmechaniek, een uitnodigingslink — inclusief een voorgestelde
+volgorde en een lijstje van wat je beter kunt overslaan. De eerste vijf
 punten zijn gebouwd en staan hierboven beschreven.
 
 ## Openstaande datakwaliteit

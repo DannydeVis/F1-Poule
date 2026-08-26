@@ -309,6 +309,17 @@
     text-overflow:ellipsis;white-space:nowrap}
   .rest .t{font-family:var(--cond);font-size:22px;font-weight:700;color:var(--ink2)}
   .rest.winnaar{border-left:4px solid var(--accent);padding-left:12px}
+  .duel{padding-left:12px;border-left:4px solid var(--lijn)}
+  .duel.voor{border-left-color:var(--groen)}
+  .duel.gelijkop{border-left-color:var(--ink3)}
+  .gelijkop-tel{font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink3);flex:none}
+  .duelscore{font-family:var(--cond);font-size:24px;font-weight:700;flex:none;
+    display:flex;align-items:baseline;gap:5px}
+  .duelscore .streep{font-style:normal;font-size:15px;color:var(--ink3)}
+  .duel.voor .mijn{color:var(--groen)}
+  .duel.voor .hun{color:var(--ink2)}
+  .duel.achter .mijn{color:var(--ink2)}
   .rest.winnaar .t{color:var(--ink)}
   .tekstblok{min-height:0;padding:12px 14px;font-family:var(--mono);font-size:12px;
     line-height:1.5;resize:vertical;white-space:pre}
@@ -479,6 +490,21 @@ export function scoreLijst(voorspeld = [], werkelijk = []) {
     return { nr, voorspeld: i + 1, werkelijk: echt === -1 ? null : echt + 1, punten };
   });
   return { totaal, regels };
+}
+
+// Onderling duel: per raceweekend wie van twee spelers de meeste punten
+// pakte, opgeteld over het seizoen. Een weekend waarin geen van beiden iets
+// heeft ingeleverd telt niet mee; dat is geen gelijkspel maar een weekend
+// dat er voor dit duel niet was.
+export function duelStand(regels = []) {
+  let ik = 0, ander = 0, gelijk = 0;
+  for (const r of regels) {
+    if (!r.meegedaan) continue;
+    if (r.ik > r.ander) ik++;
+    else if (r.ander > r.ik) ander++;
+    else gelijk++;
+  }
+  return { ik, ander, gelijk, gespeeld: ik + ander + gelijk };
 }
 
 const scoreWeekend = (p, race) =>
@@ -800,6 +826,28 @@ function weekendWinnaars(race) {
   return hoogste > 0 ? rijen.filter(r => r.punten === hoogste) : [];
 }
 
+const heeftVoorspeld = (r, id) => {
+  const p = vindPred(r.id, id);
+  return !!(p?.quali_top10?.length || p?.race_top10?.length);
+};
+
+function duels() {
+  const gescoord = S.races.filter(r => r.quali_result || r.race_result);
+  return S.leden
+    .filter(l => !zelfde(l.member_id, S.ik.id))
+    .map(l => ({
+      naam: l.display_name,
+      ...duelStand(gescoord.map(r => ({
+        ik:    scoreWeekend(vindPred(r.id, S.ik.id), r),
+        ander: scoreWeekend(vindPred(r.id, l.member_id), r),
+        meegedaan: heeftVoorspeld(r, S.ik.id) || heeftVoorspeld(r, l.member_id),
+      }))),
+    }))
+    .filter(d => d.gespeeld > 0)
+    .sort((a,b) => (b.ik - b.ander) - (a.ik - a.ander)
+                || String(a.naam).localeCompare(String(b.naam)));
+}
+
 function weekendOverwinningen() {
   const telling = new Map(S.leden.map(l =>
     [String(l.member_id), { naam:l.display_name, aantal:0, mij:zelfde(l.member_id, S.ik.id) }]));
@@ -1111,6 +1159,7 @@ function standPagina(rijen) {
     ${rijen.length ? rijen.map((r, i) => standRij(r, i, rijen)).join('')
       : `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
     ${weekendRanglijst()}
+    ${duelLijst()}
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
       <b>1</b> twee plekken ernaast. Wie een weekend de meeste punten pakt wint dat
       weekend, ook al sta je in het seizoen achter.</div>`;
@@ -1126,6 +1175,23 @@ function weekendRanglijst() {
       <span class="nm">${esc(w.naam)}${w.mij ? ` <span class="jij">jij</span>` : ''}</span>
       <span class="t">${w.aantal}×</span>
     </div>`).join('')}`;
+}
+
+// Waar mensen elkaar in de groepsapp op aanspreken, veel meer dan op de
+// totaalstand: het gaat om jou tegen hem, niet om plek 4 van de 6.
+function duelLijst() {
+  if (S.leden.length < 2) return '';
+  const rijen = duels();
+  if (!rijen.length) return '';
+  return `<span class="label">onderlinge duels · jij tegen</span>
+    ${rijen.map(d => {
+      const stand = d.ik > d.ander ? 'voor' : d.ik < d.ander ? 'achter' : 'gelijkop';
+      return `<div class="rest duel ${stand}">
+        <span class="nm">${esc(d.naam)}</span>
+        ${d.gelijk ? `<span class="gelijkop-tel">${d.gelijk}× gelijk</span>` : ''}
+        <span class="duelscore"><b class="mijn">${d.ik}</b><i class="streep">–</i><b class="hun">${d.ander}</b></span>
+      </div>`;
+    }).join('')}`;
 }
 
 // ---- poule --------------------------------------------------
