@@ -377,6 +377,57 @@ en niet `drv`. Ze zien er hetzelfde uit, maar `.drv` is de top-10-kiezer waar
 `test/hulp.mjs` op klikt; één gedeelde klasse zou die tests op het verkeerde
 raster laten klikken.
 
+## De vragenlijst in de database
+
+Stap 1 van `BEDIENING.md` §9, maar dan in twee helften. **Dit is de eerste:
+alleen het schema.** De app gebruikt voorlopig nog gewoon `quali_top10`,
+`race_top10` en `race_winnaar`; die kolommen zijn niet aangeraakt. Alles
+hieronder is additief en breekt dus niets.
+
+**Waarom nu.** `BEDIENING.md` §1 zegt: doe die migratie nu, er is nog geen
+seizoen aan voorspellingen om over te zetten. Sinds het opruimen hierboven is
+dat niet "weinig" maar letterlijk nul, dus er valt niets te migreren.
+Goedkoper wordt het niet meer.
+
+**Drie tabellen:**
+
+- `questions` — één rij per vraagsoort, met naam, punten, aan welke deadline
+  hij hangt (`sessie`), wat voor antwoord hij verwacht (`soort`), en of hij
+  als gokvraag telt. Die laatste vlag is er voor de waarschuwing uit §8: die
+  moet kunnen weten wélke vragen van geluk afhangen.
+- `pool_questions` — welke vragen meedoen in een poule. Aanwezig is aan; dat
+  scheelt een boolean die toch altijd op `true` zou staan.
+- `answers` — één rij per ingevulde vraag, met `waarde` als `jsonb`. Dat moest
+  wel: een top 10 is een lijst, een winnaar een tekst, het aantal safety cars
+  een getal en de rode vlag een ja of nee.
+
+**De negen vragen en hun punten** staan in `schema.sql` zelf, met een
+`on conflict do update` zodat het bestand opnieuw uit te voeren blijft. De
+presets uit §3 tellen daarmee op tot precies **100 / 145 / 202**.
+
+Dat laatste is geen toeval maar ook geen garantie, en daar zit
+`test/vragen.test.sql` op: de presets staan in een document en de punten in
+de database, en zonder die test lopen die twee stil uit elkaar zodra iemand
+aan een vraag sleutelt. Die test draait in CI op een eigen verse database,
+zodat de gedragstest er niet doorheen loopt.
+
+**Twee kolommen op `pools`** erbij: `owner_member_id` en `questions_locked`.
+Over die eerste is `BEDIENING.md` §7 terecht eerlijk — zonder login kan de
+database niet controleren wie de poulebaas is, dus het voorkomt ongelukken en
+geen kwaadwilligheid.
+
+**Eén afwijking van de rest van het schema:** `questions` is de enige tabel
+die niet openstaat voor schrijven vanaf de anon-sleutel. Lezen mag, want de
+app moet namen en punten kunnen tonen, maar de lijst zelf hoort uit
+`schema.sql` te komen en niet uit de app.
+
+`reset.sql` gooit de drie nieuwe tabellen nu ook weg; anders bleven ze na een
+schone herstart achter met een vragenlijst die niet meer bij de rest past.
+
+**Nog niet draaien.** De frontend die deze tabellen gebruikt komt in een
+tweede stap. Draai `schema.sql` pas als die er is, dan hoeft het maar één
+keer.
+
 ## Wat er nog bij kan
 
 Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
