@@ -83,6 +83,15 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f reset.sql
           psql -v ON_ERROR_STOP=1 -f schema.sql
 
+      # De vragenlijst op een verse database, zodat de gedragstest hierboven
+      # er niet doorheen loopt. Bewaakt vooral dat de puntentotalen blijven
+      # kloppen met de presets die in BEDIENING.md beloofd worden.
+      - name: De vragenlijst en de tabellen eromheen
+        run: |
+          createdb vragen
+          psql -d vragen -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d vragen -v ON_ERROR_STOP=1 -f test/vragen.test.sql
+
       # Een tweede database met de tabelstructuur zoals die in productie
       # bleek te staan: member_id in een samengestelde primaire sleutel.
       # Daar gaf schema.sql eerst 42830 op.

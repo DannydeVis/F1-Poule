@@ -66,6 +66,50 @@ create table if not exists public.predictions (
 );
 
 -- ------------------------------------------------------------
+--  Vragen
+--  Zie BEDIENING.md. Vaste kolommen werken tot een stuk of drie vragen;
+--  daarboven is een rij per vraag eenvoudiger, en pas dan kan een poule
+--  zelf kiezen wat er meedoet.
+--
+--  Deze tabellen staan er alvast; de app gebruikt voorlopig nog de
+--  kolommen hierboven. Ze zijn additief, dus dit breekt niets.
+-- ------------------------------------------------------------
+
+create table if not exists public.questions (
+  id       text primary key,   -- 'quali_top10', 'winnaar', ...
+  naam     text not null,
+  punten   int  not null,      -- maximaal haalbaar per weekend
+  sessie   text not null,      -- 'quali' of 'race': aan welke deadline hij hangt
+  soort    text not null,      -- 'top10' | 'coureur' | 'getal' | 'janee' | 'duels'
+  -- Gokvragen scoren hoog per stuk maar hangen van geluk af. BEDIENING.md §8
+  -- wil waarschuwen zodra ze samen boven 30% van het maximum uitkomen, en
+  -- daarvoor moet ergens vastliggen wélke dat zijn.
+  gok      boolean not null default false,
+  volgorde int  not null default 0
+);
+
+-- Welke vragen doen mee in een poule. Aanwezig = aan; dat scheelt een
+-- boolean die altijd op true zou staan.
+create table if not exists public.pool_questions (
+  pool_id     uuid not null,
+  question_id text not null,
+  primary key (pool_id, question_id)
+);
+
+-- Eén rij per ingevulde vraag, in plaats van een kolom per vraagsoort.
+-- waarde is jsonb omdat een top 10 een lijst is, een winnaar een tekst,
+-- het aantal safety cars een getal en de rode vlag een ja of nee.
+create table if not exists public.answers (
+  pool_id     uuid   not null,
+  race_id     bigint not null,
+  member_id   uuid   not null,
+  question_id text   not null,
+  waarde      jsonb  not null,
+  updated_at  timestamptz not null default now(),
+  primary key (pool_id, race_id, member_id, question_id)
+);
+
+-- ------------------------------------------------------------
 --  Kolommen bijwerken
 --  Het schema is tijdens de bouw meerdere keren veranderd en
 --  "create table if not exists" past een bestaande tabel niet aan.
@@ -74,6 +118,14 @@ create table if not exists public.predictions (
 alter table public.pools        add column if not exists season     int not null default 2026;
 alter table public.pools        add column if not exists join_code  text;
 alter table public.pools        add column if not exists created_at timestamptz not null default now();
+-- Wie de poule heeft aangemaakt. Zonder login kan de database dit niet
+-- afdwingen; het is er om ongelukken te voorkomen, niet kwaadwilligheid.
+-- Wie de anon key uit de broncode plukt komt er alsnog omheen. Zie
+-- BEDIENING.md §7.
+alter table public.pools        add column if not exists owner_member_id uuid;
+-- Zodra de eerste race gescoord is ligt de vragenset vast, anders zijn de
+-- races onderling niet meer vergelijkbaar.
+alter table public.pools        add column if not exists questions_locked boolean not null default false;
 
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
@@ -94,6 +146,27 @@ alter table public.predictions  add column if not exists quali_top10 text[];
 alter table public.predictions  add column if not exists race_top10  text[];
 alter table public.predictions  add column if not exists race_winnaar text;
 alter table public.predictions  add column if not exists updated_at  timestamptz not null default now();
+
+-- ------------------------------------------------------------
+--  De vragenlijst
+--  Punten per weekend. De presets uit BEDIENING.md §3 tellen hiermee op
+--  tot 100 (Simpel), 145 (Klassiek) en 202 (Gevorderd).
+--  Opnieuw uit te voeren: bestaande rijen worden bijgewerkt, niet gedupliceerd.
+-- ------------------------------------------------------------
+
+insert into public.questions (id, naam, punten, sessie, soort, gok, volgorde) values
+  ('quali_top10',      'Top 10 kwalificatie', 50, 'quali', 'top10',   false, 10),
+  ('race_top10',       'Top 10 race',         50, 'race',  'top10',   false, 20),
+  ('winnaar',          'Winnaar',             25, 'race',  'coureur', false, 30),
+  ('pole',             'Pole position',       10, 'quali', 'coureur', false, 40),
+  ('snelste_ronde',    'Snelste ronde',       10, 'race',  'coureur', false, 50),
+  ('snelste_pitstop',  'Snelste pitstop',     10, 'race',  'coureur', false, 60),
+  ('teamgenoot_duels', 'Teamgenoot-duels',    15, 'race',  'duels',   false, 70),
+  ('safety_cars',      'Aantal safety cars',  12, 'race',  'getal',   true,  80),
+  ('rode_vlag',        'Rode vlag',           20, 'race',  'janee',   true,  90)
+on conflict (id) do update set
+  naam = excluded.naam, punten = excluded.punten, sessie = excluded.sessie,
+  soort = excluded.soort, gok = excluded.gok, volgorde = excluded.volgorde;
 
 -- poules zonder code kunnen niet gevonden worden
 update public.pools set join_code = upper(substr(md5(random()::text), 1, 6))
@@ -222,6 +295,29 @@ alter table public.predictions drop constraint if exists predictions_member_fk;
 alter table public.predictions  add constraint predictions_member_fk
   foreign key (member_id) references public.pool_members(member_id) on delete cascade;
 
+-- Alles wat aan een poule hangt gaat mee als die poule weggaat, net als
+-- pool_members en predictions hierboven.
+alter table public.pool_questions drop constraint if exists pool_questions_pool_fk;
+alter table public.pool_questions  add constraint pool_questions_pool_fk
+  foreign key (pool_id) references public.pools(id) on delete cascade;
+alter table public.pool_questions drop constraint if exists pool_questions_vraag_fk;
+alter table public.pool_questions  add constraint pool_questions_vraag_fk
+  foreign key (question_id) references public.questions(id) on delete cascade;
+
+alter table public.answers drop constraint if exists answers_pool_fk;
+alter table public.answers  add constraint answers_pool_fk
+  foreign key (pool_id) references public.pools(id) on delete cascade;
+alter table public.answers drop constraint if exists answers_race_fk;
+alter table public.answers  add constraint answers_race_fk
+  foreign key (race_id) references public.races(id) on delete cascade;
+alter table public.answers drop constraint if exists answers_member_fk;
+alter table public.answers  add constraint answers_member_fk
+  foreign key (member_id) references public.pool_members(member_id) on delete cascade;
+alter table public.answers drop constraint if exists answers_vraag_fk;
+alter table public.answers  add constraint answers_vraag_fk
+  foreign key (question_id) references public.questions(id) on delete cascade;
+
+create index if not exists answers_pool_race_idx on public.answers (pool_id, race_id);
 create index if not exists predictions_pool_idx on public.predictions (pool_id);
 create index if not exists pool_members_pool_idx on public.pool_members (pool_id);
 create index if not exists races_seizoen_idx on public.races (season, round);
@@ -293,12 +389,18 @@ alter table public.pools        enable row level security;
 alter table public.pool_members enable row level security;
 alter table public.races        enable row level security;
 alter table public.predictions  enable row level security;
+alter table public.questions      enable row level security;
+alter table public.pool_questions enable row level security;
+alter table public.answers        enable row level security;
 
 drop policy if exists pools_open        on public.pools;
 drop policy if exists pool_members_open on public.pool_members;
 drop policy if exists races_open        on public.races;
 drop policy if exists races_all         on public.races;
 drop policy if exists predictions_open  on public.predictions;
+drop policy if exists questions_lezen   on public.questions;
+drop policy if exists pool_questions_open on public.pool_questions;
+drop policy if exists answers_open      on public.answers;
 
 create policy pools_open        on public.pools
   for all to anon, authenticated using (true) with check (true);
@@ -309,6 +411,15 @@ create policy pool_members_open on public.pool_members
 create policy races_open        on public.races
   for all to anon, authenticated using (true) with check (true);
 create policy predictions_open  on public.predictions
+  for all to anon, authenticated using (true) with check (true);
+-- De vragenlijst zelf is de enige tabel die niet openstaat voor schrijven:
+-- die hoort uit schema.sql te komen, niet uit de app. Lezen mag wel, want
+-- de app moet de namen en punten kunnen tonen.
+create policy questions_lezen   on public.questions
+  for select to anon, authenticated using (true);
+create policy pool_questions_open on public.pool_questions
+  for all to anon, authenticated using (true) with check (true);
+create policy answers_open      on public.answers
   for all to anon, authenticated using (true) with check (true);
 
 -- ------------------------------------------------------------
@@ -348,6 +459,18 @@ union all
 select 'handmatig ingevulde uitslagen',
        (select count(*)::text from public.races
         where season = 2026 and (quali_handmatig or race_handmatig))
+union all
+select 'vragen in de lijst',
+       case when (select count(*) from public.questions) = 9
+       then 'ok' else (select count(*)::text from public.questions) end
+union all
+select 'punten Simpel / Klassiek / Gevorderd',
+       (select
+          (select sum(punten)::text from public.questions
+           where id in ('quali_top10','race_top10')) || ' / ' ||
+          (select sum(punten)::text from public.questions
+           where id in ('quali_top10','race_top10','winnaar','pole','snelste_ronde')) || ' / ' ||
+          (select sum(punten)::text from public.questions))
 union all
 select 'winnaar ingevuld',
        (select count(*)::text from public.predictions where race_winnaar is not null)
