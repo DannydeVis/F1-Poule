@@ -52,6 +52,10 @@ check('wijzigen maakt geen tweede rij aan', na.length === 1, `${na.length} rijen
 await openRace(page, 'Shanghai');
 await page.click('[data-tab="race"]');
 await page.waitForSelector('.drv');
+
+// De losse winnaar staat op dezelfde tab en hangt aan dezelfde deadline.
+await page.click('[data-winnaar]');
+const winnaar = await page.getAttribute('.wknop.gekozen', 'data-winnaar');
 await kiesTien(page);
 await page.click('#opslaan');
 await page.waitForSelector('[data-race]');
@@ -61,6 +65,9 @@ check('race-top-10 opslaan lukt terwijl de kwalificatie dicht is',
   shanghai?.race_top10?.length === 10, JSON.stringify(shanghai?.race_top10));
 check('gesloten kwalificatie blijft leeg in plaats van overschreven',
   shanghai?.quali_top10 === null, `quali_top10: ${JSON.stringify(shanghai?.quali_top10)}`);
+check('de apart gekozen winnaar wordt meegeslagen',
+  shanghai?.race_winnaar === winnaar && !!winnaar,
+  `race_winnaar: ${shanghai?.race_winnaar}, gekozen: ${winnaar}`);
 
 // --- race zonder deelnemerslijst ------------------------------------------
 await openRace(page, 'Suzuka');

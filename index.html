@@ -269,16 +269,23 @@
     transition:background .18s,color .18s}
   .x:hover{background:var(--accent);color:var(--accent-ink)}
 
+  .winnaarblok{display:flex;flex-direction:column;gap:10px;background:var(--paneel);
+    border:1px solid var(--lijn);border-radius:14px;padding:16px}
+  .winnaarkop{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
   .coureurs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .drv{
+  .wknop.gekozen{background:var(--accent);color:var(--accent-ink);
+    border-color:var(--accent);border-left-color:var(--accent-ink)}
+  .wknop.gekozen:hover{background:var(--accent)}
+  .wknop.gekozen .tm{color:var(--accent-ink);opacity:.8}
+  .drv,.wknop{
     display:flex;align-items:center;gap:10px;min-height:60px;padding:0 12px;
     background:var(--paneel);border:1px solid var(--lijn);border-left:4px solid var(--lijn);
     border-radius:10px;text-align:left;transition:transform .18s var(--soepel),background .18s;
   }
-  .drv:hover:not(:disabled){transform:translateY(-2px);background:var(--paneel2)}
+  .drv:hover:not(:disabled),.wknop:hover{transform:translateY(-2px);background:var(--paneel2)}
   .drv:disabled{opacity:.3;cursor:default}
-  .drv .code{font-family:var(--cond);font-size:22px;font-weight:700}
-  .drv .tm{font-family:var(--mono);font-size:10px;color:var(--ink2);margin-left:auto}
+  .drv .code,.wknop .code{font-family:var(--cond);font-size:22px;font-weight:700}
+  .drv .tm,.wknop .tm{font-family:var(--mono);font-size:10px;color:var(--ink2);margin-left:auto}
 
   .opslaanbalk{position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px;
     padding-top:10px;background:linear-gradient(transparent,var(--bg) 40%)}
@@ -408,7 +415,7 @@
     .kolommen.enkel .kol.links{border-right:0;max-width:760px;width:100%;margin:0 auto}
     .terug,.smalkop{display:none}
     .coureurs{grid-template-columns:1fr 1fr 1fr}
-    .drv .tm{display:none}
+    .drv .tm,.wknop .tm{display:none}
     .opslaanbalk{background:linear-gradient(transparent,var(--bg) 40%)}
   }
   @media (min-width:1280px){
@@ -507,9 +514,18 @@ export function duelStand(regels = []) {
   return { ik, ander, gelijk, gespeeld: ik + ander + gelijk };
 }
 
+// De winnaar apart. Zwaar met opzet: een perfecte top 10 levert 50 op, dus
+// deze ene keuze is het halve weekend waard. Dat houdt een weekend spannend
+// voor wie op punten al ver achterloopt.
+export function scoreWinnaar(gekozen, uitslag = []) {
+  if (!gekozen || !uitslag?.length) return 0;
+  return String(uitslag[0]) === String(gekozen) ? 25 : 0;
+}
+
 const scoreWeekend = (p, race) =>
     scoreLijst(p?.quali_top10 ?? [], race.quali_result ?? []).totaal
-  + scoreLijst(p?.race_top10  ?? [], race.race_result  ?? []).totaal;
+  + scoreLijst(p?.race_top10  ?? [], race.race_result  ?? []).totaal
+  + scoreWinnaar(p?.race_winnaar, race.race_result ?? []);
 
 // ============================================================
 //  Demodata (alleen als er geen Supabase-gegevens zijn ingevuld)
@@ -568,7 +584,7 @@ const S = {
   poule: DEMO ? { id:'p1', name:'Vrijdagmiddagpoule', join_code:'RTM026' } : null,
   ik:    DEMO ? { id:'m1', naam:'Danny' } : null,
   races: [], leden: [], preds: [],
-  race:  null, tab: 'quali', keuze: { quali: [], race: [] },
+  race:  null, tab: 'quali', keuze: { quali: [], race: [], winnaar: '' },
   uitslag: { welk: null, lijst: [] },
   weergave: 'races', fout: '', melding: '', linkCode: '', linkFout: '',
 };
@@ -727,7 +743,10 @@ async function bewaar() {
   // op "kolom aanwezig" test in plaats van op "kolom gewijzigd" — dan kun je
   // je race-top-10 niet meer opslaan zodra de kwalificatie is begonnen.
   if (!dicht.quali) rij.quali_top10 = S.keuze.quali.length ? S.keuze.quali : null;
-  if (!dicht.race)  rij.race_top10  = S.keuze.race.length  ? S.keuze.race  : null;
+  if (!dicht.race) {
+    rij.race_top10   = S.keuze.race.length ? S.keuze.race : null;
+    rij.race_winnaar = S.keuze.winnaar || null;
+  }
 
   if (DEMO) {
     const i = S.preds.findIndex(p => zelfde(p.race_id, rij.race_id) && zelfde(p.member_id, S.ik.id));
@@ -1275,7 +1294,8 @@ function openRace(id) {
   S.race = r;
   S.weergave = 'races';
   const mijn = vindPred(id, S.ik.id);
-  S.keuze = { quali:[...(mijn?.quali_top10 ?? [])], race:[...(mijn?.race_top10 ?? [])] };
+  S.keuze = { quali:[...(mijn?.quali_top10 ?? [])], race:[...(mijn?.race_top10 ?? [])],
+              winnaar: mijn?.race_winnaar ?? '' };
   S.tab = openLijst(r) === 'race' ? 'race' : 'quali';
   S.uitslag = { welk: null, lijst: [] };
   S.fout = '';
@@ -1428,6 +1448,7 @@ function invulWeergave(paneel, r, dicht) {
   const deadline = S.tab === 'quali' ? r.deadline_quali : r.deadline_race;
 
   paneel.innerHTML = `
+    ${S.tab === 'race' ? winnaarKiezer(r) : ''}
     ${kanKopieren ? `<button class="knop klein" id="kopieer">Neem de kwalificatie over</button>` : ''}
     <ol class="grid10">
       ${Array.from({length:10}, (_,i) => {
@@ -1461,6 +1482,12 @@ function invulWeergave(paneel, r, dicht) {
       <p class="err">${esc(S.fout)}</p>
     </div>`;
 
+  paneel.querySelectorAll('[data-winnaar]').forEach(b => b.onclick = () => {
+    // Nog een keer op dezelfde tikken haalt de keuze weg; zonder dat zit je
+    // eraan vast zodra je een keer misklikt.
+    S.keuze.winnaar = zelfde(b.dataset.winnaar, S.keuze.winnaar) ? '' : b.dataset.winnaar;
+    invulWeergave(paneel, r, dicht);
+  });
   paneel.querySelectorAll('[data-add]').forEach(b => b.onclick = () => {
     if (lijst.length < 10) { lijst.push(b.dataset.add); invulWeergave(paneel, r, dicht); }
   });
@@ -1490,6 +1517,32 @@ function invulWeergave(paneel, r, dicht) {
   };
 }
 
+// De grootste losse keuze van het weekend, dus die staat bovenaan en niet
+// verstopt onder de top 10. Bewust niet verplicht: niemand hoort te blijven
+// hangen op een knop die niet werkt.
+function winnaarKiezer(r) {
+  const gekozen = S.keuze.winnaar;
+  const d = gekozen ? drv(r, gekozen) : null;
+  return `
+    <div class="winnaarblok">
+      <div class="winnaarkop">
+        <span class="label">wie wint de race?</span>
+        <span class="mono" style="color:var(--ink3)">25 punten</span>
+      </div>
+      <div class="coureurs winnaars">
+        ${(r.drivers ?? []).map(c => `
+          <button class="wknop ${zelfde(c.nr, gekozen) ? 'gekozen' : ''}"
+            data-winnaar="${esc(c.nr)}" style="border-left-color:${esc(c.kleur)}"
+            aria-pressed="${zelfde(c.nr, gekozen)}">
+            <span class="code">${esc(c.code)}</span><span class="tm">${esc(stal(c.team))}</span>
+          </button>`).join('')}
+      </div>
+      ${d
+        ? `<p class="mono groen" style="margin:0">jouw winnaar: ${esc(d.naam)}</p>`
+        : `<p class="mono amber" style="margin:0">nog niemand gekozen · hier ligt 25 punten</p>`}
+    </div>`;
+}
+
 function uitslagWeergave(r, werkelijk) {
   const mijn = vindPred(r.id, S.ik.id);
   const lijst = S.tab === 'quali' ? mijn?.quali_top10 : mijn?.race_top10;
@@ -1504,14 +1557,18 @@ function uitslagWeergave(r, werkelijk) {
     ${andermans(r)}${weekendVoet(r)}`;
   const { totaal, regels } = scoreLijst(lijst, werkelijk);
   const exact = regels.filter(x => x.punten === 5).length;
+  // Op de race-tab hoort de winnaar bij het totaal, anders klopt dit getal
+  // niet met wat er in de stand bijgeteld wordt.
+  const winnaarPunten = S.tab === 'race' ? scoreWinnaar(mijn?.race_winnaar, werkelijk) : 0;
   return `
     ${noot}
+    ${S.tab === 'race' ? winnaarUitslag(r, mijn, werkelijk) : ''}
     <div class="score">
       <span style="display:flex;flex-direction:column;gap:4px">
         <span class="label">jouw punten</span>
         <span class="zacht">${exact} van ${regels.length} exact voorspeld</span>
       </span>
-      <b class="getal">${totaal}</b>
+      <b class="getal">${totaal + winnaarPunten}</b>
     </div>
     <ul class="strip">
       ${regels.map(x => {
@@ -1571,6 +1628,29 @@ function knoopKopieer(paneel) {
   });
 }
 
+function winnaarUitslag(r, mijn, werkelijk) {
+  const gekozen = mijn?.race_winnaar;
+  const echteWinnaar = werkelijk?.[0];
+  if (!gekozen) {
+    return echteWinnaar
+      ? `<p class="label amber" style="margin:0">geen winnaar gekozen · 25 punten laten liggen</p>`
+      : '';
+  }
+  const d = drv(r, gekozen);
+  const punten = scoreWinnaar(gekozen, werkelijk);
+  const plek = (werkelijk ?? []).indexOf(gekozen);
+  return `
+    <span class="label">winnaar · 25 punten</span>
+    <div class="sr" style="border-left-color:${esc(d.kleur)}">
+      <span class="pos">W</span>
+      <span class="code">${esc(d.code)}</span>
+      <span class="werd">${punten
+        ? 'won de race'
+        : plek === -1 ? 'niet gefinisht' : 'werd P' + (plek + 1)}</span>
+      <span class="pts ${punten ? 'v5' : 'v0'}">${punten}</span>
+    </div>`;
+}
+
 function andermans(r) {
   const anderen = S.leden.filter(l => !zelfde(l.member_id, S.ik.id));
   if (!anderen.length) return '';
@@ -1578,7 +1658,9 @@ function andermans(r) {
   const rijen = anderen.map(l => {
     const p = vindPred(r.id, l.member_id);
     const v = S.tab === 'quali' ? p?.quali_top10 : p?.race_top10;
-    return { naam:l.display_name, punten: werkelijk && v ? scoreLijst(v, werkelijk).totaal : null };
+    const extra = S.tab === 'race' && werkelijk ? scoreWinnaar(p?.race_winnaar, werkelijk) : 0;
+    return { naam:l.display_name,
+             punten: werkelijk && v ? scoreLijst(v, werkelijk).totaal + extra : null };
   }).sort((a,b) => (b.punten ?? -1) - (a.punten ?? -1));
   return `<span class="label">de rest</span>
     ${rijen.map(x => `<div class="rest">

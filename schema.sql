@@ -59,6 +59,9 @@ create table if not exists public.predictions (
   member_id   uuid   not null,
   quali_top10 text[],
   race_top10  text[],
+  -- De winnaar apart, 25 punten. Hangt aan de race-deadline, net als
+  -- race_top10, en wordt door dezelfde trigger bewaakt.
+  race_winnaar text,
   updated_at  timestamptz not null default now()
 );
 
@@ -89,6 +92,7 @@ alter table public.races        add column if not exists race_handmatig  boolean
 
 alter table public.predictions  add column if not exists quali_top10 text[];
 alter table public.predictions  add column if not exists race_top10  text[];
+alter table public.predictions  add column if not exists race_winnaar text;
 alter table public.predictions  add column if not exists updated_at  timestamptz not null default now();
 
 -- poules zonder code kunnen niet gevonden worden
@@ -253,7 +257,8 @@ begin
     if new.quali_top10 is not null and d_quali is not null and now() > d_quali then
       raise exception 'De kwalificatie van deze race is gesloten';
     end if;
-    if new.race_top10 is not null and d_race is not null and now() > d_race then
+    if (new.race_top10 is not null or new.race_winnaar is not null)
+       and d_race is not null and now() > d_race then
       raise exception 'De race is gesloten';
     end if;
   else
@@ -261,7 +266,8 @@ begin
        and d_quali is not null and now() > d_quali then
       raise exception 'De kwalificatie van deze race is gesloten';
     end if;
-    if new.race_top10 is distinct from old.race_top10
+    if (new.race_top10   is distinct from old.race_top10
+        or new.race_winnaar is distinct from old.race_winnaar)
        and d_race is not null and now() > d_race then
       raise exception 'De race is gesloten';
     end if;
@@ -342,5 +348,8 @@ union all
 select 'handmatig ingevulde uitslagen',
        (select count(*)::text from public.races
         where season = 2026 and (quali_handmatig or race_handmatig))
+union all
+select 'winnaar ingevuld',
+       (select count(*)::text from public.predictions where race_winnaar is not null)
 union all
 select 'opgeslagen voorspellingen', (select count(*)::text from public.predictions);
