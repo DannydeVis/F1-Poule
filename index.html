@@ -101,6 +101,8 @@
   .scheiding{height:1px;background:var(--lijn)}
 
   /* ---- meldingen ------------------------------------------ */
+  .meldingbalk{padding:16px 16px 0}
+  .meldingbalk .melding{margin-bottom:0}
   .melding{
     display:flex;align-items:center;gap:12px;background:var(--groen-vlak);
     border:1px solid var(--groen-rand);border-radius:12px;padding:14px 16px;
@@ -383,6 +385,7 @@
     .pil .mono{color:var(--groen)}
     .kop .knop{width:auto;min-height:52px;font-size:19px;flex:none}
     .kop .meta{display:none}
+    .meldingbalk{padding:18px 28px 0}
     .tabs button{font-size:17px;padding:0 8px;min-width:0}
     .kolommen{display:grid;grid-template-columns:1.1fr .9fr;overflow:hidden}
     .kolommen.enkel{grid-template-columns:1fr}
@@ -401,6 +404,7 @@
     .zijbalk{width:264px;padding:24px 18px}
     .kop{padding:24px 32px}
     .kop .meta{display:block}
+    .meldingbalk{padding:20px 32px 0}
     .kop .ptitel{font-size:38px}
     .tabs button{font-size:19px}
     .kol{padding:26px 32px 40px}
@@ -539,6 +543,7 @@ const S = {
   ik:    DEMO ? { id:'m1', naam:'Danny' } : null,
   races: [], leden: [], preds: [],
   race:  null, tab: 'quali', keuze: { quali: [], race: [] },
+  uitslag: { welk: null, lijst: [] },
   weergave: 'races', fout: '', melding: '',
 };
 
@@ -816,6 +821,45 @@ function nogNietIngevuld(race, welk) {
                 .filter(l => !(vindPred(race.id, l.member_id)?.[kolom]?.length));
 }
 
+// ---- handmatige uitslag -------------------------------------
+// OpenF1 heeft niet elke sessie. De sync vult alleen een lege uitslag, dus
+// wat hier met de hand in gaat blijft voorgoed staan — vandaar de vlag.
+
+const UITSLAGKOLOM = { quali: 'quali_result',    race: 'race_result' };
+const HANDVLAG     = { quali: 'quali_handmatig', race: 'race_handmatig' };
+
+// Alleen een lege uitslag mag ingevuld worden. Nooit overschrijven: races
+// zijn gedeeld met elke poule in de database, dus een verkeerde correctie
+// raakt iedereen.
+const magInvullen = (r, welk) => !r[UITSLAGKOLOM[welk]] && (r.drivers ?? []).length > 0;
+
+async function bewaarUitslag() {
+  const r = S.race, welk = S.uitslag.welk;
+  const kolom = UITSLAGKOLOM[welk], vlag = HANDVLAG[welk];
+  const alle = r.drivers ?? [];
+
+  if (S.uitslag.lijst.length !== alle.length) {
+    throw new Error('Zet eerst alle coureurs op een plek.');
+  }
+  if (r[kolom]) {
+    throw new Error('Er staat inmiddels al een uitslag voor deze sessie.');
+  }
+
+  if (DEMO) { r[kolom] = [...S.uitslag.lijst]; r[vlag] = true; return; }
+
+  // is(kolom, null) hoort bij de update zelf: heeft iemand anders hem in de
+  // tussentijd ingevuld, dan raakt deze schrijfactie niets en komt er niets
+  // terug. Dat is beter dan een controle vooraf, die die race verliest.
+  const { data, error } = await db.from('races')
+    .update({ [kolom]: S.uitslag.lijst, [vlag]: true })
+    .eq('id', r.id).is(kolom, null).select();
+
+  if (error) throw new Error(uitleg(error));
+  if (!data?.length) throw new Error(
+    'Er staat inmiddels al een uitslag voor deze sessie, dus die van jou is niet '
+    + 'weggeschreven. Ga terug en bekijk hem.');
+}
+
 // ---- klembord -----------------------------------------------
 // De poule leeft in de groepsapp, niet in de app. Zonder een knop die de
 // uitslag als tekst klaarzet moet iemand actief de site openen om te zien
@@ -909,6 +953,8 @@ function toonApp() {
           ${volgend && !detail ? `<button class="knop primair" data-naar-race="${esc(volgend.race.id)}">Top 10 invullen</button>` : ''}
         </div>
 
+        ${S.melding ? `<div class="meldingbalk"><div class="melding">${esc(S.melding)}</div></div>` : ''}
+
         <div class="kolommen${enkel ? ' enkel' : ''}">
           <section class="kol links">${
             S.weergave === 'stand' ? standPagina(rijen)
@@ -952,7 +998,6 @@ function racesPagina(volgend) {
     ${!opslagWerkt ? `<div class="waarschuwing"><span class="label">gele vlag</span>
       Deze browser mag niets onthouden, dus je moet de poulecode elke keer opnieuw
       invullen. Sta opslag voor deze site toe, of gebruik geen privévenster.</div>` : ''}
-    ${S.melding ? `<div class="melding">${esc(S.melding)}</div>` : ''}
     ${volgend ? hero(volgend) : ''}
     <span class="label">kalender</span>
     <div class="kalender">${S.races.map(kalenderRij).join('')
@@ -1120,19 +1165,22 @@ function openRace(id) {
   const mijn = vindPred(id, S.ik.id);
   S.keuze = { quali:[...(mijn?.quali_top10 ?? [])], race:[...(mijn?.race_top10 ?? [])] };
   S.tab = openLijst(r) === 'race' ? 'race' : 'quali';
+  S.uitslag = { welk: null, lijst: [] };
   S.fout = '';
   render();
 }
 
 function raceDetailKop() {
   const r = S.race;
-  const welk = openLijst(r);
-  const iso = welk === 'quali' ? r.deadline_quali : welk === 'race' ? r.deadline_race : null;
+  // De teller hoort bij het tabblad dat je open hebt. Anders staat er een
+  // groene tijd naast een kwalificatie die allang gereden is.
+  const iso = S.tab === 'quali' ? r.deadline_quali : r.deadline_race;
+  const nogOpen = Date.now() < new Date(iso).getTime();
   return `
     <div class="detailkop">
       <button class="terug" id="terug" aria-label="Terug naar het overzicht">←</button>
       <span class="dtitel">${esc(r.name)}</span>
-      ${iso
+      ${nogOpen
         ? `<span class="mono groen" data-tot="${esc(iso)}" data-kort="1">${klokTekst(iso, true)}</span>`
         : `<span class="vlag"></span>`}
     </div>
@@ -1151,11 +1199,102 @@ function vulPaneel() {
   if (!paneel) return;
   const lijstKlaar = S.tab === 'quali' ? r.quali_result : r.race_result;
   if (lijstKlaar) { paneel.innerHTML = uitslagWeergave(r, lijstKlaar); knoopKopieer(paneel); }
-  else if (dicht[S.tab]) paneel.innerHTML = `
-    <div class="leeg"><span class="label">gesloten</span>
-      <p class="zacht" style="margin:0">Inzendingen zijn gesloten.
-        De uitslag volgt zodra de sessie is verwerkt.</p></div>${andermans(r)}`;
+  else if (dicht[S.tab]) geslotenWeergave(paneel, r);
   else invulWeergave(paneel, r, dicht);
+}
+
+function geslotenWeergave(paneel, r) {
+  if (S.uitslag.welk === S.tab) { uitslagInvoer(paneel, r); return; }
+  paneel.innerHTML = `
+    <div class="leeg"><span class="label">gesloten</span>
+      <p class="zacht" style="margin:0">Inzendingen zijn gesloten. De uitslag volgt zodra
+        de sync hem bij OpenF1 heeft opgehaald; die draait elke drie uur.</p></div>
+    ${magInvullen(r, S.tab)
+      ? `<button class="knop spook" id="zelfinvullen">Uitslag zelf invullen</button>` : ''}
+    ${andermans(r)}`;
+
+  const knop = paneel.querySelector('#zelfinvullen');
+  if (knop) knop.onclick = () => {
+    S.uitslag = { welk: S.tab, lijst: [] };
+    S.fout = '';
+    uitslagInvoer(paneel, r);
+  };
+}
+
+// Dezelfde handeling als het voorspellen: aantikken op volgorde. Slepen is
+// op een telefoon veel onbetrouwbaarder, en dit kent iedereen al.
+function uitslagInvoer(paneel, r) {
+  const alle = r.drivers ?? [];
+  const lijst = S.uitslag.lijst;
+  const nog = alle.length - lijst.length;
+
+  paneel.innerHTML = `
+    <div class="waarschuwing">
+      <span class="label">let op</span>
+      Deze uitslag geldt voor iedereen die dit seizoen volgt, niet alleen voor jouw poule.
+      En de sync haalt hem daarna niet meer op. Vul hem dus alleen in als je hem zeker weet.
+    </div>
+    <span class="label">volgorde van finish · ${S.tab === 'quali' ? 'kwalificatie' : 'race'}</span>
+    <ol class="grid10">
+      ${alle.map((_, i) => {
+        const nr = lijst[i], d = nr ? drv(r, nr) : null;
+        const kant = i % 2 === 0 ? 'links' : 'rechts';
+        return d
+          ? `<li class="slotrij ${kant}"><div class="slot vol" style="border-left-color:${esc(d.kleur)}">
+              <span class="pos">P${i+1}</span>
+              <span class="who"><b class="code">${esc(d.code)}</b><small>${esc(d.naam)}</small></span>
+              <button class="x" data-uitweg="${i}" aria-label="Haal ${esc(d.code)} weg">×</button>
+            </div></li>`
+          : `<li class="slotrij ${kant}"><div class="slot leegplek">
+              <span class="pos">P${i+1}</span>
+              <span class="who">nog leeg</span>
+            </div></li>`;
+      }).join('')}
+    </ol>
+    <span class="label">nog te plaatsen</span>
+    <div class="coureurs">
+      ${alle.map(d => `
+        <button class="drv" data-uitadd="${esc(d.nr)}" style="border-left-color:${esc(d.kleur)}"
+          ${lijst.includes(d.nr) ? 'disabled' : ''}>
+          <span class="code">${esc(d.code)}</span><span class="tm">${esc(stal(d.team))}</span>
+        </button>`).join('')}
+    </div>
+    <div class="opslaanbalk">
+      <button class="knop primair" id="uitslagOpslaan" ${nog ? 'disabled' : ''}>${
+        nog ? `Nog ${nog} te plaatsen` : 'Uitslag opslaan'}</button>
+      <button class="knop klein" id="uitslagStop">Annuleren</button>
+      <p class="err">${esc(S.fout)}</p>
+    </div>`;
+
+  paneel.querySelectorAll('[data-uitadd]').forEach(b => b.onclick = () => {
+    if (lijst.length < alle.length) { lijst.push(b.dataset.uitadd); uitslagInvoer(paneel, r); }
+  });
+  paneel.querySelectorAll('[data-uitweg]').forEach(b => b.onclick = () => {
+    lijst.splice(Number(b.dataset.uitweg), 1); uitslagInvoer(paneel, r);
+  });
+  paneel.querySelector('#uitslagStop').onclick = () => {
+    S.uitslag = { welk: null, lijst: [] }; S.fout = '';
+    geslotenWeergave(paneel, r);
+  };
+  paneel.querySelector('#uitslagOpslaan').onclick = async (ev) => {
+    const knop = ev.currentTarget;
+    knop.disabled = true;
+    knop.textContent = 'Bezig met opslaan...';
+    S.fout = '';
+    try {
+      await bewaarUitslag();
+      await laad();
+      // laad() vervangt S.races, dus de race waar we naar kijken is een oud
+      // object geworden; zonder dit toont het scherm de uitslag niet.
+      S.race = S.races.find(x => zelfde(x.id, r.id)) ?? S.race;
+      S.uitslag = { welk: null, lijst: [] };
+      S.melding = `Uitslag voor ${r.name} opgeslagen.`;
+      render();
+    } catch (e) {
+      S.fout = e.message;
+      uitslagInvoer(paneel, r);
+    }
+  };
 }
 
 function invulWeergave(paneel, r, dicht) {
@@ -1242,13 +1381,19 @@ function invulWeergave(paneel, r, dicht) {
 function uitslagWeergave(r, werkelijk) {
   const mijn = vindPred(r.id, S.ik.id);
   const lijst = S.tab === 'quali' ? mijn?.quali_top10 : mijn?.race_top10;
+  // Deze uitslag komt niet van OpenF1 en wordt door de sync ook niet meer
+  // bijgewerkt, dus dat hoort er gewoon bij te staan.
+  const noot = r[HANDVLAG[S.tab]]
+    ? `<p class="label amber" style="margin:0">handmatig ingevuld · niet van openf1</p>` : '';
   if (!lijst?.length) return `
+    ${noot}
     <div class="leeg"><span class="label">niets ingevuld</span>
       <p class="zacht" style="margin:0">Je hebt hier niks ingevuld.</p></div>
     ${andermans(r)}${weekendVoet(r)}`;
   const { totaal, regels } = scoreLijst(lijst, werkelijk);
   const exact = regels.filter(x => x.punten === 5).length;
   return `
+    ${noot}
     <div class="score">
       <span style="display:flex;flex-direction:column;gap:4px">
         <span class="label">jouw punten</span>

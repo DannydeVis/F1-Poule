@@ -243,12 +243,51 @@ veranderd.
   kopieerknop is dat het herinneringssysteem, zonder mailserver of
   pushmeldingen.
 
+## Een uitslag met de hand invullen
+
+Punt 4 van `ROUTEKAART.md`. Twee races kregen eerder een 404 op
+`session_result` bij OpenF1 en moesten via de Supabase Table Editor worden
+rechtgezet; dat kan nu in de app zelf.
+
+**Waar het zit.** Op een sessie waarvan de deadline voorbij is en waar nog
+geen uitslag staat, verschijnt op het racescherm de knop "Uitslag zelf
+invullen". Je tikt de coureurs aan op volgorde van finish — dezelfde
+handeling als het voorspellen, want slepen is op een telefoon een stuk
+onbetrouwbaarder. Pas als iedereen een plek heeft kan er opgeslagen worden;
+een halve uitslag zou de puntentelling laten denken dat de rest is
+uitgevallen.
+
+**De hele uitslag, niet de top 10.** `quali_result` en `race_result`
+bevatten de volledige volgorde, om dezelfde reden als hierboven onder
+Architectuurkeuzes: anders levert P10-die-P11-wordt onterecht 0 punten op.
+De invoer vraagt daarom om het hele deelnemersveld.
+
+**Nooit overschrijven.** `races` is niet van één poule — die tabel is gedeeld
+met elke poule in de database, en er is geen login, dus de poulecode is de
+enige drempel. Een verkeerde correctie zou dus bij iedereen aankomen. Daarom
+kan alleen een lége uitslag ingevuld worden. De controle zit in de
+schrijfactie zelf (`update(...).eq(id).is(kolom, null)`), niet in een
+controle vooraf: vult iemand anders hem in terwijl jouw scherm openstaat,
+dan raakt jouw opslag niets en krijg je dat te zien.
+
+**Waarom er een vlag bij hoort.** `scripts/sync.mjs` vult alleen een uitslag
+die nog `null` is. Wat hier met de hand in gaat wordt dus nooit meer
+automatisch gecorrigeerd. De kolommen `quali_handmatig` en `race_handmatig`
+in `races` houden bij welke dat zijn; het racescherm zet er "handmatig
+ingevuld · niet van openf1" boven en `schema.sql` telt ze onderaan in de
+controletabel.
+
+**Dit vraagt wel een schemawijziging.** Draai `schema.sql` opnieuw in de
+Supabase SQL editor voordat je dit gebruikt. Doe je dat niet, dan geeft het
+opslaan de bestaande melding voor een ontbrekende kolom (42703), die naar
+`schema.sql` verwijst. De rest van de app blijft gewoon werken.
+
 ## Wat er nog bij kan
 
 Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
 zet met kosten en argumenten op een rij wat er nog kan — onderlinge duels,
-handmatige uitslag-invoer, extra vraagsoorten — inclusief een voorgestelde
-volgorde en een lijstje van wat je beter kunt overslaan. De eerste drie
+extra vraagsoorten, seizoensmechaniek — inclusief een voorgestelde
+volgorde en een lijstje van wat je beter kunt overslaan. De eerste vier
 punten zijn gebouwd en staan hierboven beschreven.
 
 ## Openstaande datakwaliteit

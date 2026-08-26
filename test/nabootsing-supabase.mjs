@@ -101,6 +101,18 @@ function uitvoeren(tabel, q) {
     return q._selectNa ? { data: uit, error: null } : { data: null, error: null };
   }
 
+  if (q._update) {
+    // update(...).eq(...).is(kolom, null): de is-controle hoort bij de
+    // schrijfactie zelf, zodat een rij die inmiddels gevuld is niet geraakt
+    // wordt. Zonder dat kan de app niet nagespeeld worden.
+    const doel = rijen.filter((r) =>
+      q._filters.every(([k, v]) => gelijk(r[k], v)) &&
+      q._isNull.every((k) => (r[k] ?? null) === null));
+    for (const r of doel) Object.assign(r, kopie(q._update));
+    bewaren();
+    return q._selectNa ? { data: kopie(doel), error: null } : { data: null, error: null };
+  }
+
   const uit = kopie(rijen.filter((r) => q._filters.every(([k, v]) => gelijk(r[k], v))));
   if (q._single) {
     if (uit.length !== 1) {
@@ -113,9 +125,14 @@ function uitvoeren(tabel, q) {
 
 function maakQuery(tabel) {
   const q = {
-    _filters: [], _single: false, _selectNa: false,
-    select() { if (q._insert || q._upsert) q._selectNa = true; return q; },
+    _filters: [], _isNull: [], _single: false, _selectNa: false,
+    select() { if (q._insert || q._upsert || q._update) q._selectNa = true; return q; },
     eq(k, v) { q._filters.push([k, v]); return q; },
+    is(k, v) {
+      if (v !== null) throw new Error('de nabootsing kent alleen is(kolom, null)');
+      q._isNull.push(k); return q;
+    },
+    update(r) { q._update = r; return q; },
     order() { return q; },
     single() { q._single = true; return q; },
     insert(r) { q._insert = Array.isArray(r) ? r : [r]; return q; },
