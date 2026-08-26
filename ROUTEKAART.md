@@ -64,7 +64,7 @@ mailserver of pushmeldingen.
 `https://dannydevis.github.io/F1-Poule/?code=10D4FD` en de app vult de
 poulecode automatisch in. Scheelt je vrienden een stap en een typefout.
 
-### Handmatig een uitslag invullen in de app
+### ~~Handmatig een uitslag invullen in de app~~ — gebouwd
 Je bent al twee keer tegen ontbrekende OpenF1-data aangelopen en moest toen de
 Supabase Table Editor in. Een simpel schermpje waarin je de volgorde van
 coureurs kunt slepen en opslaan lost dat voorgoed op. Zet er een vinkje
@@ -195,13 +195,15 @@ Gebruik safety cars en VSC in plaats daarvan.
 1. ~~Weekendwinnaar~~ — gebouwd
 2. ~~WhatsApp-kopieerknop~~ — gebouwd
 3. ~~Wie heeft nog niet ingevuld~~ — gebouwd
-4. Handmatige uitslag-invoer
+4. ~~Handmatige uitslag-invoer~~ — gebouwd
 5. Onderlinge duels
 6. Winnaar als aparte vraag
 7. Uitnodigingslink met code
 
 Punt 1 tot en met 3 samen zijn waarschijnlijk een avond werk en hebben meer
 effect op of je poule het seizoen haalt dan de hele rest van deze lijst bij
-elkaar. Die drie staan er nu in; zie `OVERDRACHT.md` voor hoe ze werken.
-Punt 4 is de eerstvolgende, en de enige op deze lijst die de app iets naar
-de database laat schrijven wat er nu nog niet in gaat.
+elkaar. Die drie staan er nu in, en punt 4 inmiddels ook; zie
+`OVERDRACHT.md` voor hoe ze werken. Let op: punt 4 heeft twee nieuwe
+kolommen in `races`, dus draai `schema.sql` opnieuw voordat je het gebruikt.
+Punt 5 (onderlinge duels) is de eerstvolgende en heeft weer geen
+databasewijziging nodig.

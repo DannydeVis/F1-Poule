@@ -45,7 +45,12 @@ create table if not exists public.races (
   deadline_race  timestamptz,
   drivers        jsonb,
   quali_result   text[],
-  race_result    text[]
+  race_result    text[],
+  -- Met de hand ingevoerd in plaats van opgehaald bij OpenF1. De sync vult
+  -- alleen lege uitslagen, dus zo'n uitslag wordt nooit meer automatisch
+  -- gecorrigeerd; daarom moet zichtbaar zijn welke het zijn.
+  quali_handmatig boolean not null default false,
+  race_handmatig  boolean not null default false
 );
 
 create table if not exists public.predictions (
@@ -79,6 +84,8 @@ alter table public.races        add column if not exists deadline_race  timestam
 alter table public.races        add column if not exists drivers        jsonb;
 alter table public.races        add column if not exists quali_result   text[];
 alter table public.races        add column if not exists race_result    text[];
+alter table public.races        add column if not exists quali_handmatig boolean not null default false;
+alter table public.races        add column if not exists race_handmatig  boolean not null default false;
 
 alter table public.predictions  add column if not exists quali_top10 text[];
 alter table public.predictions  add column if not exists race_top10  text[];
@@ -331,5 +338,9 @@ select 'races in 2026',        (select count(*)::text from public.races where se
 union all
 select 'races met deelnemerslijst',
        (select count(*)::text from public.races where season = 2026 and drivers is not null)
+union all
+select 'handmatig ingevulde uitslagen',
+       (select count(*)::text from public.races
+        where season = 2026 and (quali_handmatig or race_handmatig))
 union all
 select 'opgeslagen voorspellingen', (select count(*)::text from public.predictions);
