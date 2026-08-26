@@ -166,22 +166,35 @@
     display:flex;flex-direction:column;gap:12px;
   }
   .zijbalk .merknaam{display:none}
-  .nav{display:flex;gap:6px;background:var(--bg);border:1px solid var(--lijn);
-    border-radius:12px;padding:5px}
+  /* Vast onderin: daar zit je duim. De balk staat in de DOM nog in de
+     zijbalk, want op een breed scherm hoort hij daar wel gewoon in mee te
+     lopen; position:fixed haalt hem hier alleen even uit de stroom. */
+  .nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    display:flex;gap:6px;background:var(--paneel);
+    border-top:1px solid var(--lijn);
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+  }
   .navknop{
-    flex:1;min-height:44px;border-radius:8px;font-family:var(--cond);
+    flex:1;min-height:48px;border-radius:10px;font-family:var(--cond);
     font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
     color:var(--ink2);transition:background .18s,color .18s;
   }
   .navknop:hover{background:var(--paneel2);color:var(--ink)}
   .navknop[aria-current="true"]{background:var(--omkeer);color:var(--omkeer-ink)}
+  /* In een race weg: daar staat de Opslaan-balk al vastgeplakt onderaan, en
+     twee vaste balken onder elkaar eten een telefoonscherm op. De pijl
+     linksboven is daar de weg terug. */
+  .shell.detail .nav{display:none}
   .zijvoet{display:none}
 
   .hoofd{flex:1;display:flex;flex-direction:column;min-width:0}
   .kop{display:none}
   .kolommen{flex:1;display:block;min-height:0}
-  .kol{padding:20px 16px calc(40px + env(safe-area-inset-bottom));
+  /* Ruimte onderaan voor de vaste tabbalk, zodat die niets afdekt. */
+  .kol{padding:20px 16px calc(96px + env(safe-area-inset-bottom));
     display:flex;flex-direction:column;gap:18px;min-width:0}
+  .shell.detail .kol{padding-bottom:calc(40px + env(safe-area-inset-bottom))}
   .kol.rechts{display:none}
   .shell.detail .kol.links{display:none}
   .shell.detail .kol.rechts{display:flex}
@@ -375,7 +388,11 @@
     }
     .zijbalk .merknaam{display:block}
     .zijbalk .merkpoule{display:none}
-    .nav{flex-direction:column;background:transparent;border:0;padding:0;gap:6px}
+    /* Breed genoeg voor een zijbalk: dan hoort de navigatie daar gewoon in
+       mee te lopen, niet als vaste balk over de inhoud heen. */
+    .nav{position:static;flex-direction:column;background:transparent;
+      border:0;border-top:0;padding:0;gap:6px}
+    .shell.detail .nav{display:flex}
     .navknop{min-height:56px;padding:0 14px;text-align:left;justify-content:flex-start;
       font-size:21px;font-weight:600;border-left:4px solid transparent;border-radius:10px}
     .navknop[aria-current="true"]{background:var(--paneel2);color:var(--ink);

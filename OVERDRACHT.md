@@ -386,6 +386,22 @@ volgorde en een lijstje van wat je beter kunt overslaan. Alle zeven punten
 uit die volgorde zijn gebouwd en staan hierboven beschreven; wat overblijft
 is groep 3 en verder — extra vraagsoorten en seizoensmechaniek.
 
+`BEDIENING.md` gaat over de stap daarna: de navigatie, een aanmaakproces in
+vier stappen, en het omzetten van de vaste kolommen `quali_top10` en
+`race_top10` naar een `questions`-tabel met een rij per vraag. Van dat
+document is de tabbalk gebouwd (stap 2 van zijn eigen volgorde); de migratie
+naar `questions` is de eerstvolgende en de grootste.
+
+Let op bij het lezen van dat document: een deel ervan beschrijft dingen die
+er inmiddels al zijn (de drie tabs, de strook met de eerstvolgende deadline,
+de drie onderdelen op Stand, de uitnodigingslink, de winnaar van 25 punten).
+En er zitten twee gaten in: §1 vraagt vier extra vragen terwijl de presets in
+§3 er zeven nodig hebben, en §6 verwijst naar "de scoringslogica" die als
+backend niet bestaat — alle punten worden in de browser berekend, dus
+`questions_locked` zal ergens anders vandaan moeten komen. `scripts/sync.mjs`
+is daarvoor de logische plek, want die draait toch al met de service_role key
+op het moment dat de eerste uitslag binnenkomt.
+
 ## Openstaande datakwaliteit
 
 - 22 van de 25 races hebben een deelnemerslijst. Bij de andere 3 valt nog
@@ -438,6 +454,7 @@ worden. Rood betekent geen merge.
 | `.github/workflows/automerge.yml` | Mergt een `claude/*`-pull request zodra de tests groen zijn |
 | `test/` | Automatische tests (zie `test/LEESMIJ.md`) |
 | `ROUTEKAART.md` | Wat er nog bij kan, op volgorde van opbrengst gedeeld door kosten |
+| `BEDIENING.md` | Ontwerp voor de navigatie, het aanmaakproces en de vragenset |
 
 Supabase-project: `etifamdwqxjfaeaordlr`. De URL en de anon key staan bovenin
 `index.html` en `sync.html` en zijn bewust publiek; dat hoort bij de anon key.
