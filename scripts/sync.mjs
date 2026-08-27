@@ -180,6 +180,38 @@ async function uitslagen(races) {
 }
 
 // ------------------------------------------------------------
+//  De vragenset op slot
+//  BEDIENING.md §6: zodra er voor een poule een race gescoord is ligt zijn
+//  vragenset vast, anders zijn de races onderling niet meer te vergelijken.
+//  Dit hoort hier omdat dit het enige stuk is dat draait op het moment dat
+//  een uitslag binnenkomt — de punten worden verder allemaal in de browser
+//  geteld. Per poule en niet per seizoen: wie halverwege een nieuwe poule
+//  begint hoort niet meteen op slot te zitten.
+// ------------------------------------------------------------
+
+async function vragensetOpSlot(races) {
+  const gescoord = races.filter((r) => r.quali_result?.length || r.race_result?.length);
+  if (!gescoord.length) return;
+
+  const ids = gescoord.map((r) => r.id).join(',');
+  const antwoorden = await sb(`answers?race_id=in.(${ids})&select=pool_id`);
+  const poules = [...new Set((antwoorden ?? []).map((a) => a.pool_id))];
+  if (!poules.length) return;
+
+  // questions_locked=is.false houdt het bij de poules die het nog niet zijn,
+  // zodat een dagelijkse run geen rijen aanraakt die al goed staan.
+  const gewijzigd = await sb(
+    `pools?id=in.(${poules.join(',')})&questions_locked=is.false&select=id`,
+    { method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ questions_locked: true }) });
+
+  if (gewijzigd?.length) {
+    console.log(`Vragenset op slot voor ${gewijzigd.length} poule(s)`);
+  }
+}
+
+// ------------------------------------------------------------
 
 try {
   let races = await haalRaces();
@@ -193,6 +225,10 @@ try {
 
   console.log(`Uitslagen controleren voor ${races.length} races`);
   await uitslagen(races);
+
+  // Opnieuw ophalen: uitslagen() heeft er net uitslagen bij gezet, en die
+  // bepalen welke poules op slot gaan.
+  await vragensetOpSlot(await haalRaces());
 } catch (e) {
   console.error('Mislukt:', e.message);
   process.exit(1);
