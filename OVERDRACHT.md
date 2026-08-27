@@ -504,6 +504,45 @@ Wat daar niet in staat wordt overgeslagen, ook als de poule hem heeft
 aangevinkt. Zo kan de vragenlijst in de database vooruitlopen op de app
 zonder dat er halve schermen ontstaan.
 
+## Een poule aanmaken in vier stappen
+
+`BEDIENING.md` §3. Voorheen was aanmaken één invoerveld op het codescherm:
+naam invullen, klaar. Nu is het een eigen scherm met vier stappen — naam van
+de poule, jouw naam, wat jullie gaan voorspellen, en de code om te delen.
+
+**Waarom een eigen scherm en niet één formulier.** Om die derde stap. De
+vragenset ligt vast zodra de eerste race gescoord is, dus dat is het enige
+moment waarop je er nog rustig naar kunt kijken. Weggestopt onder een
+naamveld zou iedereen hem overslaan en het pas een half seizoen later
+merken.
+
+**De drie voorstellen** komen uit §3 en tellen op tot 100 / 145 / 202. Die
+getallen staan niet in `index.html` maar worden opgeteld uit `questions`,
+dus als de punten in de database veranderen verandert het scherm mee.
+Klassiek staat voorgeselecteerd: wie doorklikt zonder na te denken krijgt
+iets dat leuker is dan twee top-tienen, zonder overweldigd te raken.
+
+**Zelf samenstellen** zit achter een knop, met alle negen vragen, hun punten
+en een totaal dat live meetelt. Vragen die de app nog niet stelt staan er wel
+bij — ze horen bij de presets — maar zijn gemerkt als **binnenkort**, en
+eronder staat hoeveel van het totaal nu al echt gevraagd wordt. Anders belooft
+het scherm punten die er dit seizoen nog niet zijn.
+
+**De gokwaarschuwing** uit §8 verschijnt zodra de gokvragen samen boven 30%
+van het maximum uitkomen. Hij blokkeert niets — het is hun poule — maar hij
+staat er wel, want anders kiest iemand vroeg of laat alleen de gokvragen en
+wint de gelukkigste in plaats van wie de sport volgt. Bij Gevorderd komt hij
+niet op: 32 van de 202 punten is 16%.
+
+**Wat er bij stap 3 naar de database gaat:** de poule, jezelf als eerste lid,
+`owner_member_id` op jou, en een rij in `pool_questions` per gekozen vraag.
+Wat al gelukt is blijft in `S.maak` staan, zodat een tweede poging na een
+mislukte stap geen tweede poule aanmaakt.
+
+**Bestaande poules merken hier niets van.** Een poule zonder rijen in
+`pool_questions` doet aan alles mee wat de app kan; dat was al zo en is niet
+veranderd.
+
 ## Wat er nog bij kan
 
 Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
@@ -516,12 +555,12 @@ is groep 3 en verder — extra vraagsoorten en seizoensmechaniek.
 `BEDIENING.md` gaat over de stap daarna: de navigatie, een aanmaakproces in
 vier stappen, en het omzetten van de vaste kolommen `quali_top10` en
 `race_top10` naar een `questions`-tabel met een rij per vraag. Van dat
-document zijn de tabbalk (stap 2) en de migratie naar `questions` (stap 1,
-de grootste) gebouwd, en van de zeven extra vragen doen de pole en de
-teamgenoot-duels inmiddels mee. Wat er nog ligt: de vier vragen die nieuwe
-uitslaggegevens nodig hebben (snelste ronde, snelste pitstop, safety cars,
-rode vlag), het aanmaakproces met de drie presets, en het beheerscherm onder
-Poule dat de vragen aan- en uitzet.
+document zijn de tabbalk (stap 2), de migratie naar `questions` (stap 1, de
+grootste), de uitnodiglink (stap 4) en het aanmaakproces (stap 3) gebouwd, en
+van de zeven extra vragen doen de pole en de teamgenoot-duels inmiddels mee.
+Wat er nog ligt: het beheergedeelte onder Poule (stap 5) met `questions_locked`
+uit §6, en de vier vragen die nieuwe uitslaggegevens nodig hebben — snelste
+ronde, snelste pitstop, safety cars en rode vlag.
 
 Let op bij het lezen van dat document: een deel ervan beschrijft dingen die
 er inmiddels al zijn (de drie tabs, de strook met de eerstvolgende deadline,
