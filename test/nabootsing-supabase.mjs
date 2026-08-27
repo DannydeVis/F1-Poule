@@ -36,14 +36,18 @@ const beginstand = {
       deadline_quali:uur(72), deadline_race:uur(96), quali_result:null, race_result:null },
   ],
   predictions: [],
-  // De vragenlijst zoals schema.sql hem wegschrijft. Alleen wat de app nu
-  // kan tonen; de rest van de negen doet er voor deze tests niet toe.
+  // De negen vragen zoals schema.sql ze wegschrijft. Compleet, want het
+  // aanmaakscherm laat ze allemaal zien — ook die de app nog niet stelt.
   questions: [
-    { id:'quali_top10', naam:'Top 10 kwalificatie', punten:50, sessie:'quali', soort:'top10',   gok:false, volgorde:10 },
-    { id:'race_top10',  naam:'Top 10 race',         punten:50, sessie:'race',  soort:'top10',   gok:false, volgorde:20 },
-    { id:'winnaar',     naam:'Winnaar',             punten:25, sessie:'race',  soort:'coureur', gok:false, volgorde:30 },
-    { id:'pole',        naam:'Pole position',       punten:10, sessie:'quali', soort:'coureur', gok:false, volgorde:40 },
-    { id:'teamgenoot_duels', naam:'Teamgenoot-duels', punten:15, sessie:'race', soort:'duels',  gok:false, volgorde:70 },
+    { id:'quali_top10',      naam:'Top 10 kwalificatie', punten:50, sessie:'quali', soort:'top10',   gok:false, volgorde:10 },
+    { id:'race_top10',       naam:'Top 10 race',         punten:50, sessie:'race',  soort:'top10',   gok:false, volgorde:20 },
+    { id:'winnaar',          naam:'Winnaar',             punten:25, sessie:'race',  soort:'coureur', gok:false, volgorde:30 },
+    { id:'pole',             naam:'Pole position',       punten:10, sessie:'quali', soort:'coureur', gok:false, volgorde:40 },
+    { id:'snelste_ronde',    naam:'Snelste ronde',       punten:10, sessie:'race',  soort:'coureur', gok:false, volgorde:50 },
+    { id:'snelste_pitstop',  naam:'Snelste pitstop',     punten:10, sessie:'race',  soort:'coureur', gok:false, volgorde:60 },
+    { id:'teamgenoot_duels', naam:'Teamgenoot-duels',    punten:15, sessie:'race',  soort:'duels',   gok:false, volgorde:70 },
+    { id:'safety_cars',      naam:'Aantal safety cars',  punten:12, sessie:'race',  soort:'getal',   gok:true,  volgorde:80 },
+    { id:'rode_vlag',        naam:'Rode vlag',           punten:20, sessie:'race',  soort:'janee',   gok:true,  volgorde:90 },
   ],
   // Leeg: een poule zonder eigen keuze doet aan alles mee.
   pool_questions: [],

@@ -309,6 +309,40 @@
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .duelknop{min-height:52px;justify-content:center}
 
+  /* Poule aanmaken: de vier stappen, de drie voorstellen en de losse vragen. */
+  .stappen{display:flex;gap:6px}
+  .stap{flex:1;height:4px;border-radius:2px;background:var(--lijn);transition:background .3s}
+  .stap.aan{background:var(--accent)}
+  .presets{display:flex;flex-direction:column;gap:8px}
+  .preset{display:grid;grid-template-columns:1fr auto;gap:2px 12px;text-align:left;
+    padding:14px 16px;background:var(--paneel);border:1px solid var(--lijn);
+    border-left:4px solid var(--lijn);border-radius:12px;
+    transition:transform .18s var(--soepel),background .18s}
+  .preset:hover{transform:translateY(-2px);background:var(--paneel2)}
+  .preset.aan{border-color:var(--accent);border-left-color:var(--accent);background:var(--paneel2)}
+  .preset .nm{font-family:var(--cond);font-size:22px;font-weight:700;letter-spacing:.02em}
+  .preset .zacht{grid-column:1;font-size:13px}
+  .preset .ptn{grid-row:1/3;align-self:center;font-family:var(--mono);font-size:20px;
+    color:var(--ink2)}
+  .preset.aan .ptn{color:var(--accent)}
+  .vragenlijst{display:flex;flex-direction:column;gap:6px}
+  .vraagregel{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:10px;
+    text-align:left;padding:12px 14px;background:var(--paneel);border:1px solid var(--lijn);
+    border-radius:10px;transition:background .18s}
+  .vraagregel:hover:not(:disabled){background:var(--paneel2)}
+  .vraagregel:disabled{opacity:.55;cursor:default}
+  .vraagregel .vink{display:grid;place-items:center;width:24px;height:24px;border-radius:6px;
+    border:1px solid var(--lijn);font-size:14px;color:var(--accent-ink)}
+  .vraagregel.aan .vink{background:var(--accent);border-color:var(--accent)}
+  .vraagregel .nm{font-family:var(--cond);font-size:18px}
+  .vraagregel .ptn{font-family:var(--mono);font-size:14px;color:var(--ink2)}
+  .binnenkort{font-family:var(--mono);font-size:9px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink3);border:1px solid var(--lijn);
+    border-radius:4px;padding:1px 5px;vertical-align:2px}
+  .somregel{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding-top:4px}
+  .somregel .getal{font-family:var(--mono);font-size:28px}
+
   .opslaanbalk{position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px;
     padding-top:10px;background:linear-gradient(transparent,var(--bg) 40%)}
   .opslaanbalk .knop{min-height:64px}
@@ -668,11 +702,15 @@ const demoPreds = [
 // De vragenlijst zoals schema.sql hem wegschrijft, maar dan alleen wat dit
 // scherm al kan tonen. De rest komt zodra die schermen er zijn.
 const demoVragen = [
-  { id:'quali_top10', naam:'Top 10 kwalificatie', punten:50, sessie:'quali', soort:'top10',   gok:false, volgorde:10 },
-  { id:'race_top10',  naam:'Top 10 race',         punten:50, sessie:'race',  soort:'top10',   gok:false, volgorde:20 },
-  { id:'winnaar',     naam:'Winnaar',             punten:25, sessie:'race',  soort:'coureur', gok:false, volgorde:30 },
-  { id:'pole',        naam:'Pole position',       punten:10, sessie:'quali', soort:'coureur', gok:false, volgorde:40 },
-  { id:'teamgenoot_duels', naam:'Teamgenoot-duels', punten:15, sessie:'race', soort:'duels', gok:false, volgorde:70 },
+  { id:'quali_top10',      naam:'Top 10 kwalificatie', punten:50, sessie:'quali', soort:'top10',   gok:false, volgorde:10 },
+  { id:'race_top10',       naam:'Top 10 race',         punten:50, sessie:'race',  soort:'top10',   gok:false, volgorde:20 },
+  { id:'winnaar',          naam:'Winnaar',             punten:25, sessie:'race',  soort:'coureur', gok:false, volgorde:30 },
+  { id:'pole',             naam:'Pole position',       punten:10, sessie:'quali', soort:'coureur', gok:false, volgorde:40 },
+  { id:'snelste_ronde',    naam:'Snelste ronde',       punten:10, sessie:'race',  soort:'coureur', gok:false, volgorde:50 },
+  { id:'snelste_pitstop',  naam:'Snelste pitstop',     punten:10, sessie:'race',  soort:'coureur', gok:false, volgorde:60 },
+  { id:'teamgenoot_duels', naam:'Teamgenoot-duels',    punten:15, sessie:'race',  soort:'duels',   gok:false, volgorde:70 },
+  { id:'safety_cars',      naam:'Aantal safety cars',  punten:12, sessie:'race',  soort:'getal',   gok:true,  volgorde:80 },
+  { id:'rode_vlag',        naam:'Rode vlag',           punten:20, sessie:'race',  soort:'janee',   gok:true,  volgorde:90 },
 ];
 
 // Dezelfde demovoorspellingen, maar als rijen zoals answers ze bewaart.
@@ -696,6 +734,7 @@ const S = {
   keuze: { quali: [], race: [], winnaar: '', pole: '', duels: [] },
   uitslag: { welk: null, lijst: [] },
   weergave: 'races', fout: '', melding: '', linkCode: '', linkFout: '',
+  maak: null,           // het aanmaakscherm, zolang dat openstaat
 };
 
 const app = document.getElementById('app');
@@ -1114,6 +1153,99 @@ function uitnodigingsTekst() {
   return `Doe mee met ${S.poule.name}:\n${basis}?code=${S.poule.join_code}`;
 }
 
+// Dezelfde knop staat op de poulepagina en op de laatste stap van het
+// aanmaken. Lukt het klembord niet, dan komt de tekst in beeld om zelf te
+// selecteren — zie naarKlembord() hieronder.
+function knoopUitnodiging(waar) {
+  const knop = waar.querySelector('#uitnodiging');
+  if (!knop) return;
+  const oorspronkelijk = knop.textContent;
+  knop.onclick = async () => {
+    const tekst = uitnodigingsTekst();
+    const veld = waar.querySelector('#uitnodigingveld');
+    if (await naarKlembord(tekst)) {
+      knop.textContent = 'Gekopieerd';
+      setTimeout(() => { knop.textContent = oorspronkelijk; }, 2400);
+    } else {
+      knop.textContent = 'Kopiëren lukt niet, selecteer hem zelf';
+      veld.value = tekst;
+      veld.classList.remove('hide');
+      veld.select();
+    }
+  };
+}
+
+// ---- de vragenset -------------------------------------------
+// De drie voorstellen uit BEDIENING.md §3. Hier staat alleen wélke vragen
+// meedoen; wat ze waard zijn staat in de database, zodat een wijziging daar
+// niet stilzwijgend langs dit bestand loopt.
+
+const PRESETS = {
+  simpel:    { naam:'Simpel',    uitleg:'alleen de twee top-tienen',
+               vragen:['quali_top10', 'race_top10'] },
+  klassiek:  { naam:'Klassiek',  uitleg:'de top-tienen plus drie losse vragen',
+               vragen:['quali_top10', 'race_top10', 'winnaar', 'pole', 'snelste_ronde'] },
+  gevorderd: { naam:'Gevorderd', uitleg:'alles wat er is',
+               vragen:['quali_top10', 'race_top10', 'winnaar', 'pole', 'snelste_ronde',
+                       'snelste_pitstop', 'teamgenoot_duels', 'safety_cars', 'rode_vlag'] },
+};
+
+const puntenSom = (ids) => ids.reduce((n, id) => n + puntenVoor(id), 0);
+const isGok = (id) => !!S.vragen.find(v => v.id === id)?.gok;
+const welkPreset = (ids) => Object.keys(PRESETS).find(k =>
+  PRESETS[k].vragen.length === ids.length && PRESETS[k].vragen.every(v => ids.includes(v)));
+
+// De vragenlijst staat los van een poule, dus die kan al opgehaald worden
+// voordat er een poule bestaat. Zonder deze lijst zijn de punten in het
+// aanmaakscherm niet te tonen.
+async function laadVragen() {
+  if (S.vragen.length) return;
+  if (DEMO) { S.vragen = demoVragen; return; }
+  const { data, error } = await db.from('questions').select('*').order('volgorde');
+  if (error) throw new Error(uitleg(error));
+  S.vragen = data ?? [];
+}
+
+// De lijst met vinkjes, gedeeld door het aanmaakscherm en straks het
+// beheergedeelte. `uit` maakt hem alleen-lezen; dat is wat er gebeurt zodra
+// de vragenset op slot gaat.
+function vragenLijst(gekozen, { uit = false } = {}) {
+  return S.vragen.map(v => {
+    const aan = gekozen.includes(v.id);
+    const komt = !GEBOUWD.includes(v.id);
+    return `
+      <button class="vraagregel ${aan ? 'aan' : ''}" data-vraag-aan="${esc(v.id)}"
+        aria-pressed="${aan}" ${uit ? 'disabled' : ''}>
+        <span class="vink">${aan ? '✓' : ''}</span>
+        <span class="nm">${esc(v.naam)}${komt
+          ? ` <span class="binnenkort">binnenkort</span>` : ''}</span>
+        <span class="ptn">${v.punten}</span>
+      </button>`;
+  }).join('');
+}
+
+// Onder de lijst: wat het bij elkaar waard is, en de twee dingen waar je op
+// moet letten. De gokwaarschuwing komt uit BEDIENING.md §8 — blokkeren doen
+// we niet, het is hun poule.
+function vragenVoet(gekozen) {
+  const totaal = puntenSom(gekozen);
+  const gok = puntenSom(gekozen.filter(isGok));
+  const nu = puntenSom(gekozen.filter(id => GEBOUWD.includes(id)));
+  return `
+    <div class="somregel">
+      <span class="label">maximaal per weekend</span>
+      <b class="getal">${totaal}</b>
+    </div>
+    ${nu < totaal ? `<p class="zacht" style="margin:0">Daarvan wordt nu ${nu} punten
+      al gevraagd. De rest staat klaar en gaat vanzelf meetellen zodra hij er is.</p>` : ''}
+    ${!gekozen.length ? `<p class="mono amber" style="margin:0">Kies er minstens één.</p>` : ''}
+    ${totaal && gok / totaal > 0.3 ? `<div class="waarschuwing">
+      <span class="label">gele vlag</span>
+      Meer dan een derde van de punten hangt nu van geluk af (${gok} van de ${totaal}).
+      Overweeg er een paar uit te zetten, anders wint de gelukkigste in plaats van
+      wie de sport volgt.</div>` : ''}`;
+}
+
 // ---- handmatige uitslag -------------------------------------
 // OpenF1 heeft niet elke sessie. De sync vult alleen een lege uitslag, dus
 // wat hier met de hand in gaat blijft voorgoed staan — vandaar de vlag.
@@ -1196,6 +1328,7 @@ const laatsteMetUitslag = () =>
 // ============================================================
 
 function render() {
+  if (S.maak)   { maakPagina(); return; }
   if (!S.poule) { toonStart(); return; }
   if (!S.ik)    { kiesSpeler(); return; }
   toonApp();
@@ -1270,20 +1403,7 @@ function toonApp() {
   const terug = app.querySelector('#terug');
   if (terug) terug.onclick = () => { S.race = null; render(); };
   app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; render(); });
-  const uitnodiging = app.querySelector('#uitnodiging');
-  if (uitnodiging) uitnodiging.onclick = async () => {
-    const tekst = uitnodigingsTekst();
-    const veld = app.querySelector('#uitnodigingveld');
-    if (await naarKlembord(tekst)) {
-      uitnodiging.textContent = 'Gekopieerd';
-      setTimeout(() => { uitnodiging.textContent = 'Kopieer uitnodigingslink'; }, 2400);
-    } else {
-      uitnodiging.textContent = 'Kopiëren lukt niet, selecteer hem zelf';
-      veld.value = tekst;
-      veld.classList.remove('hide');
-      veld.select();
-    }
-  };
+  knoopUitnodiging(app);
 
   const wissel = app.querySelector('#wissel');
   if (wissel) wissel.onclick = () => { vergeet(S.poule.id); S.ik = null; render(); };
@@ -2074,6 +2194,187 @@ function kiesSpeler() {
 }
 
 // ============================================================
+//  Poule aanmaken in vier stappen
+//  Eén vraag per scherm. Werkt op een telefoon beter dan één lang
+//  formulier, en de vragenset krijgt zo de aandacht die hij nodig heeft:
+//  hij ligt vast zodra de eerste race gescoord is.
+// ============================================================
+
+const MAAKSTAPPEN = ['Hoe heet de poule?', 'Hoe heet jij?',
+                     'Wat gaan jullie voorspellen?', 'Klaar'];
+
+function startAanmaken() {
+  S.maak = { stap: 1, naam: '', speler: '', vragen: [...PRESETS.klassiek.vragen],
+             eigen: false, bezig: false, fout: '', poule: null, ik: null };
+  laadVragen()
+    .then(render)
+    .catch(e => { S.maak.fout = e.message; render(); });
+  render();
+}
+
+function maakPagina() {
+  const m = S.maak;
+  const preset = welkPreset(m.vragen);
+  app.innerHTML = `
+    <div class="toegang"><div class="kaart"><div class="baan"></div>
+      <div class="kaart-in">
+        <div class="merk">
+          <span class="blok"></span>
+          <span class="naam">Poule</span>
+          <span class="code">stap ${m.stap} van 4</span>
+        </div>
+        <div class="stappen">
+          ${MAAKSTAPPEN.map((_, i) => `<span class="stap ${i + 1 <= m.stap ? 'aan' : ''}"></span>`).join('')}
+        </div>
+        <h1 class="groot">${esc(MAAKSTAPPEN[m.stap - 1])}</h1>
+        ${maakStap(m, preset)}
+        <p class="err" id="f">${esc(m.fout)}</p>
+      </div>
+    </div></div>`;
+  maakKnoppen(m);
+}
+
+function maakStap(m, preset) {
+  if (m.stap === 1) return `
+    <div class="veldblok">
+      <input class="veld" id="pnaam" placeholder="Vrijdagmiddagpoule"
+        value="${esc(m.naam)}" autocomplete="off">
+      <p class="zacht" style="margin:0">Zo heet hij in de app en in de uitnodiging.</p>
+      <button class="knop primair" id="verder">Volgende</button>
+      <button class="knop spook" id="terugstap">Terug</button>
+    </div>`;
+
+  if (m.stap === 2) return `
+    <div class="veldblok">
+      <input class="veld" id="snaam" placeholder="Jouw naam"
+        value="${esc(m.speler)}" autocomplete="name">
+      <p class="zacht" style="margin:0">Je wordt meteen het eerste lid, en de
+        poulebaas — die kan later de vragenset aanpassen.</p>
+      <button class="knop primair" id="verder">Volgende</button>
+      <button class="knop spook" id="terugstap">Terug</button>
+    </div>`;
+
+  if (m.stap === 3) return `
+    <div class="veldblok">
+      <div class="presets">
+        ${Object.entries(PRESETS).map(([sleutel, p]) => `
+          <button class="preset ${preset === sleutel ? 'aan' : ''}" data-preset="${sleutel}"
+            aria-pressed="${preset === sleutel}">
+            <span class="nm">${p.naam}</span>
+            <span class="zacht">${p.uitleg}</span>
+            <span class="ptn">${puntenSom(p.vragen)}</span>
+          </button>`).join('')}
+      </div>
+      <button class="knop spook" id="eigen">${m.eigen
+        ? 'Verberg de losse vragen' : 'Zelf samenstellen'}</button>
+      <div class="vragenlijst ${m.eigen ? '' : 'hide'}">${vragenLijst(m.vragen)}</div>
+      ${vragenVoet(m.vragen)}
+      <button class="knop primair" id="verder" ${m.vragen.length && !m.bezig ? '' : 'disabled'}>${
+        m.bezig ? 'Bezig met aanmaken...' : 'Poule aanmaken'}</button>
+      <button class="knop spook" id="terugstap" ${m.bezig ? 'disabled' : ''}>Terug</button>
+    </div>`;
+
+  return `
+    <div class="veldblok">
+      <span class="label">poulecode</span>
+      <div class="veld code" style="display:grid;place-items:center">${esc(m.poule.join_code)}</div>
+      <p class="zacht" style="margin:0">Deel deze code, of stuur de link — dan hoeft
+        niemand hem over te tikken.</p>
+      <button class="knop spook" id="uitnodiging">Kopieer uitnodigingslink</button>
+      <textarea class="veld tekstblok hide" id="uitnodigingveld" readonly rows="3"
+        aria-label="Uitnodiging om zelf te kopiëren"></textarea>
+      <button class="knop primair" id="klaar">Naar de poule</button>
+    </div>`;
+}
+
+function maakKnoppen(m) {
+  const fout = (t) => { S.maak.fout = t; app.querySelector('#f').textContent = t; };
+  const terug = app.querySelector('#terugstap');
+  if (terug) terug.onclick = () => {
+    // Vanaf de eerste stap terug is: toch maar meedoen met een bestaande poule.
+    if (m.stap === 1) { S.maak = null; render(); return; }
+    m.stap -= 1; m.fout = ''; render();
+  };
+
+  const naamveld = app.querySelector('#pnaam') ?? app.querySelector('#snaam');
+  if (naamveld) {
+    naamveld.focus();
+    naamveld.oninput = () => {
+      if (m.stap === 1) m.naam = naamveld.value; else m.speler = naamveld.value;
+    };
+    naamveld.onkeydown = (ev) => { if (ev.key === 'Enter') app.querySelector('#verder').click(); };
+  }
+
+  app.querySelectorAll('[data-preset]').forEach(b => b.onclick = () => {
+    m.vragen = [...PRESETS[b.dataset.preset].vragen]; m.fout = ''; render();
+  });
+  const eigen = app.querySelector('#eigen');
+  if (eigen) eigen.onclick = () => { m.eigen = !m.eigen; render(); };
+  app.querySelectorAll('[data-vraag-aan]').forEach(b => b.onclick = () => {
+    const id = b.dataset.vraagAan;
+    m.vragen = m.vragen.includes(id) ? m.vragen.filter(x => x !== id) : [...m.vragen, id];
+    m.fout = ''; render();
+  });
+
+  const verder = app.querySelector('#verder');
+  if (verder) verder.onclick = async () => {
+    if (m.stap === 1) {
+      if (!m.naam.trim()) { fout('Vul een naam voor de poule in'); return; }
+      m.stap = 2; m.fout = ''; render(); return;
+    }
+    if (m.stap === 2) {
+      if (!m.speler.trim()) { fout('Vul je eigen naam in'); return; }
+      m.stap = 3; m.fout = ''; render(); return;
+    }
+    if (!m.vragen.length) { fout('Kies minstens één vraag'); return; }
+    m.bezig = true; m.fout = ''; render();
+    try { await pouleAanmaken(m); }
+    catch (e) { m.bezig = false; fout(e.message); return; }
+    m.bezig = false; m.stap = 4; render();
+  };
+
+  knoopUitnodiging(app);
+  const klaar = app.querySelector('#klaar');
+  if (klaar) klaar.onclick = async () => {
+    S.poule = m.poule; S.ik = m.ik;
+    onthoudPoule(S.poule.id); onthoud(S.poule.id, S.ik.id);
+    S.maak = null; S.weergave = 'races'; S.race = null;
+    try { await laad(); } catch (e) { toonFout(e.message); }
+    render();
+  };
+}
+
+// De vier schrijfacties achter stap 3. Wat al gelukt is blijft staan in m,
+// zodat een tweede poging na een fout geen tweede poule aanmaakt.
+async function pouleAanmaken(m) {
+  if (DEMO) {
+    m.poule = { id:'p-nieuw', name:m.naam.trim(), join_code:'DEMO01', season:SEIZOEN };
+    m.ik = { id:'m-nieuw', naam:m.speler.trim() };
+    return;
+  }
+  if (!m.poule) {
+    const { data, error } = await db.from('pools')
+      .insert({ name: m.naam.trim(), season: SEIZOEN }).select().single();
+    if (error) throw new Error(uitleg(error));
+    m.poule = data;
+  }
+  if (!m.ik) {
+    const { data, error } = await db.from('pool_members')
+      .insert({ pool_id: m.poule.id, display_name: m.speler.trim() }).select().single();
+    if (error) throw new Error(uitleg(error));
+    m.ik = { id: data.member_id, naam: m.speler.trim() };
+    // Wie de poule aanmaakt is de poulebaas. Zonder login kan de database dat
+    // niet afdwingen; het houdt de beheerknoppen weg bij wie ze niet nodig
+    // heeft. Zie BEDIENING.md §7.
+    await db.from('pools').update({ owner_member_id: m.ik.id }).eq('id', m.poule.id);
+    m.poule.owner_member_id = m.ik.id;
+  }
+  const { error } = await db.from('pool_questions')
+    .insert(m.vragen.map(id => ({ pool_id: m.poule.id, question_id: id })));
+  if (error) throw new Error(uitleg(error));
+}
+
+// ============================================================
 //  Poule vinden of aanmaken
 // ============================================================
 
@@ -2102,10 +2403,6 @@ function toonStart() {
         <div class="veldblok">
           <p class="zacht" style="margin:0">Nog geen poule? Begin er zelf een.</p>
           <button class="knop spook" id="nieuw">Nieuwe poule maken</button>
-          <div class="veldblok hide" id="nieuwblok">
-            <input class="veld" id="pnaam" placeholder="Naam van de poule">
-            <button class="knop spook" id="maak">Aanmaken</button>
-          </div>
         </div>
         <p class="err" id="f">${esc(S.linkFout)}</p>
       </div>
@@ -2114,11 +2411,7 @@ function toonStart() {
   S.linkCode = ''; S.linkFout = '';
   const fout = (t) => { app.querySelector('#f').textContent = t; };
 
-  app.querySelector('#nieuw').onclick = (ev) => {
-    ev.currentTarget.classList.add('hide');
-    app.querySelector('#nieuwblok').classList.remove('hide');
-    app.querySelector('#pnaam').focus();
-  };
+  app.querySelector('#nieuw').onclick = () => startAanmaken();
 
   app.querySelector('#mee').onclick = async () => {
     const code = app.querySelector('#code').value.trim().toUpperCase();
@@ -2136,18 +2429,6 @@ function toonStart() {
     render();
   };
 
-  app.querySelector('#maak').onclick = async () => {
-    const naam = app.querySelector('#pnaam').value.trim();
-    if (!naam) { fout('Vul een naam voor de poule in'); return; }
-    const { data, error } = await db.from('pools')
-      .insert({ name: naam, season: SEIZOEN }).select().single();
-    if (error) { fout(uitleg(error)); return; }
-    S.poule = data; S.leden = []; S.races = []; S.preds = [];
-    S.antwoorden = []; S.poulevragen = [];
-    S.weergave = 'races'; S.race = null;
-    onthoudPoule(S.poule.id);
-    render();
-  };
 }
 
 // ============================================================
