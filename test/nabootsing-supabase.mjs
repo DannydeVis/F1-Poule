@@ -28,15 +28,15 @@ const beginstand = {
     // niet uit elkaar lopen bij het terugzoeken van een voorspelling.
     { id:1, season:2026, round:1, name:'Melbourne', drivers:DRIVERS,
       deadline_quali:uur(24), deadline_race:uur(48), quali_result:null, race_result:null,
-      fastest_lap:null, fastest_pitstop:null },
+      fastest_lap:null, fastest_pitstop:null, safety_cars:null, rode_vlag:null },
     { id:2, season:2026, round:2, name:'Shanghai', drivers:DRIVERS,
       // kwalificatie dicht, race nog open: hier moet bewaren blijven werken
       deadline_quali:uur(-2), deadline_race:uur(48), quali_result:null, race_result:null,
-      fastest_lap:null, fastest_pitstop:null },
+      fastest_lap:null, fastest_pitstop:null, safety_cars:null, rode_vlag:null },
     { id:3, season:2026, round:3, name:'Suzuka', drivers:null,
       // geen deelnemerslijst: de app hoort uit te leggen dat die vanzelf komt
       deadline_quali:uur(72), deadline_race:uur(96), quali_result:null, race_result:null,
-      fastest_lap:null, fastest_pitstop:null },
+      fastest_lap:null, fastest_pitstop:null, safety_cars:null, rode_vlag:null },
   ],
   predictions: [],
   // De negen vragen zoals schema.sql ze wegschrijft. Compleet, want het
