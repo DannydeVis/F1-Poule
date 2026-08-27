@@ -543,6 +543,18 @@ mislukte stap geen tweede poule aanmaakt.
 `pool_questions` doet aan alles mee wat de app kan; dat was al zo en is niet
 veranderd.
 
+**Bug gevonden bij het echte draaien (na PR #24):** de uitnodigingsknop op
+stap 4 deed niets. `knoopUitnodiging()` was er al — hij staat ook op de
+poulepagina — maar las daar altijd `S.poule`. Op stap 4 bestaat die nog niet;
+die wordt pas gezet zodra je op "Naar de poule" klikt. De knop klapte dus
+stil op een `null`-verwijzing en er kwam geen foutmelding op het scherm te
+zien, alleen niets. `knoopUitnodiging()` en `uitnodigingsTekst()` nemen nu
+een `poule`-parameter (die op de poulepagina gewoon op `S.poule` blijft
+staan), en stap 4 geeft de net aangemaakte poule expliciet mee.
+`poule-aanmaken.test.mjs` klikt de knop nu ook echt aan; zonder de fix loopt
+die test vast op een timeout in plaats van gewoon te zakken, want de knop
+verandert dan letterlijk nooit.
+
 ## De vragenset beheren, en wanneer hij op slot gaat
 
 `BEDIENING.md` §5 t/m §8, de laatste stap van dat document. Onder **Poule**

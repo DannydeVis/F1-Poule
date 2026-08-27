@@ -1263,22 +1263,25 @@ function vergeetLinkCode() {
   try { history.replaceState(null, '', location.pathname); } catch { /* niets te doen */ }
 }
 
-function uitnodigingsTekst() {
+function uitnodigingsTekst(poule = S.poule) {
   const basis = location.origin && location.origin !== 'null'
     ? location.origin + location.pathname
     : String(location.href).split('?')[0];
-  return `Doe mee met ${S.poule.name}:\n${basis}?code=${S.poule.join_code}`;
+  return `Doe mee met ${poule.name}:\n${basis}?code=${poule.join_code}`;
 }
 
 // Dezelfde knop staat op de poulepagina en op de laatste stap van het
-// aanmaken. Lukt het klembord niet, dan komt de tekst in beeld om zelf te
+// aanmaken. Op de poulepagina gaat het om S.poule; tijdens het aanmaken
+// bestaat die nog niet (die wordt pas gezet zodra je op "Naar de poule"
+// klikt), dus geeft stap 4 de net aangemaakte poule expliciet mee.
+// Lukt het klembord niet, dan komt de tekst in beeld om zelf te
 // selecteren — zie naarKlembord() hieronder.
-function knoopUitnodiging(waar) {
+function knoopUitnodiging(waar, poule = S.poule) {
   const knop = waar.querySelector('#uitnodiging');
   if (!knop) return;
   const oorspronkelijk = knop.textContent;
   knop.onclick = async () => {
-    const tekst = uitnodigingsTekst();
+    const tekst = uitnodigingsTekst(poule);
     const veld = waar.querySelector('#uitnodigingveld');
     if (await naarKlembord(tekst)) {
       knop.textContent = 'Gekopieerd';
@@ -2711,7 +2714,7 @@ function maakKnoppen(m) {
     m.bezig = false; m.stap = 4; render();
   };
 
-  knoopUitnodiging(app);
+  knoopUitnodiging(app, m.poule);
   const klaar = app.querySelector('#klaar');
   if (klaar) klaar.onclick = async () => {
     S.poule = m.poule; S.ik = m.ik;
