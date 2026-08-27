@@ -4,10 +4,10 @@
 // het halve weekend waard. Dat is precies de bedoeling — het houdt een
 // weekend spannend voor wie op punten al ver achterloopt.
 //
-// scoreWinnaar() wordt uit index.html geknipt, zodat de test de echte code
-// controleert en niet een kopie die uit de pas kan lopen. Hij leunt op
-// scoreEerste(), de gedeelde regel voor "wijs de bovenste van een lijst aan",
-// dus die gaat mee naar het tijdelijke bestand.
+// scoreEerste() wordt uit index.html geknipt, zodat de test de echte code
+// controleert en niet een kopie die uit de pas kan lopen. Dat is de gedeelde
+// regel voor "wijs de bovenste van een lijst aan"; hoeveel punten dat waard
+// is komt uit de vragenlijst in de database, dus dat geeft de test mee.
 
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -15,15 +15,16 @@ import { join } from 'node:path';
 import { maakControle, wortel } from './hulp.mjs';
 
 const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
-const stukken = ['scoreEerste', 'scoreWinnaar'].map((naam) => {
-  const stuk = bron.match(new RegExp(`export function ${naam}[\\s\\S]*?\\n\\}`));
-  if (!stuk) { console.error(`FOUT: ${naam}() niet gevonden in index.html`); process.exit(2); }
-  return stuk[0];
-});
+const stuk = bron.match(/export function scoreEerste[\s\S]*?\n\}/);
+if (!stuk) { console.error('FOUT: scoreEerste() niet gevonden in index.html'); process.exit(2); }
 
 const map = mkdtempSync(join(tmpdir(), 'poule-winnaar-'));
-writeFileSync(join(map, 'winnaar.mjs'), stukken.join('\n\n'));
-const { scoreWinnaar } = await import(join(map, 'winnaar.mjs'));
+writeFileSync(join(map, 'winnaar.mjs'), stuk[0]);
+const { scoreEerste } = await import(join(map, 'winnaar.mjs'));
+
+// De winnaar is 25 punten waard; dat staat in schema.sql en wordt daar door
+// vragen.test.sql vastgehouden.
+const scoreWinnaar = (gekozen, uitslag) => scoreEerste(gekozen, uitslag, 25);
 
 const { check, afronden } = maakControle('winnaar apart');
 const uitslag = ['4', '1', '81', '12', '63'];

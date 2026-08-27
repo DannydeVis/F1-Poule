@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { maakControle, wortel } from './hulp.mjs';
 
 const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
-const stukken = ['scoreEerste', 'scorePole', 'scoreDuels', 'teamParen'].map((naam) => {
+const stukken = ['scoreEerste', 'scoreDuels', 'teamParen'].map((naam) => {
   const stuk = bron.match(new RegExp(`export function ${naam}[\\s\\S]*?\\n\\}`));
   if (!stuk) { console.error(`FOUT: ${naam}() niet gevonden in index.html`); process.exit(2); }
   return stuk[0];
@@ -23,7 +23,11 @@ const stukken = ['scoreEerste', 'scorePole', 'scoreDuels', 'teamParen'].map((naa
 
 const map = mkdtempSync(join(tmpdir(), 'poule-vraagsoorten-'));
 writeFileSync(join(map, 'vragen.mjs'), stukken.join('\n\n'));
-const { scorePole, scoreDuels, teamParen } = await import(join(map, 'vragen.mjs'));
+const { scoreEerste, scoreDuels, teamParen } = await import(join(map, 'vragen.mjs'));
+
+// De pole is 10 punten waard, de snelste ronde en de snelste pitstop ook.
+// Die getallen staan in schema.sql; vragen.test.sql houdt ze daar vast.
+const scorePole = (gekozen, quali) => scoreEerste(gekozen, quali, 10);
 
 const { check, afronden } = maakControle('pole en teamgenoot-duels');
 
