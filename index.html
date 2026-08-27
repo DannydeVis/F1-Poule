@@ -704,6 +704,16 @@ const EXTRAVRAAG = {
   },
 };
 
+// De vragen op deze tab die een eigen uitslagkolom hebben die nog leeg is.
+// Die mag iedereen aanvullen, ook wie zelf niets heeft voorspeld — anders
+// kan niemand er meer bij zodra de hele poule een race heeft overgeslagen.
+const openUitslagen = (r, welk) =>
+  [...coureurVragen(welk), ...extraVragen(welk)]
+    .filter(id => {
+      const v = COUREURVRAAG[id] ?? EXTRAVRAAG[id];
+      return v.kolom && leegAntwoord(r[v.kolom]);
+    });
+
 // Welke van die vragen op deze tab horen, en meedoen in deze poule.
 const coureurVragen = (welk) =>
   Object.keys(COUREURVRAAG).filter(id => COUREURVRAAG[id].sessie === welk && vraagActief(id));
@@ -1189,8 +1199,10 @@ function weekendWinnaars(race) {
 // iemand wél meedeed niet meetellen voor het onderlinge duel.
 const heeftVoorspeld = (r, id) => {
   const p = vindPred(r.id, id);
-  return !!(p?.quali_top10?.length || p?.race_top10?.length
-         || p?.race_winnaar || p?.pole || p?.teamgenoot_duels?.length);
+  return !!p && GEBOUWD.some(vraag => {
+    const w = p[VRAAG_VELD[vraag] ?? vraag];
+    return Array.isArray(w) ? w.length > 0 : !leegAntwoord(w);
+  });
 };
 
 function duels() {
@@ -1565,8 +1577,8 @@ function hero(volgend) {
         `<span class="${i < aan ? 'aan' : ''}" style="animation-delay:${(i * .12).toFixed(2)}s"></span>`).join('')}</div>
       ${S.leden.length > 1 ? `<div class="wachtop mono ${wacht.length ? 'amber' : 'groen'}">${
         wacht.length
-          ? `nog niks ingevuld: ${wacht.map(l => esc(l.display_name)).join(', ')}`
-          : 'iedereen heeft ingevuld'}</div>` : ''}
+          ? `nog geen top 10: ${wacht.map(l => esc(l.display_name)).join(', ')}`
+          : 'iedereen heeft zijn top 10'}</div>` : ''}
       <button class="knop primair" data-naar-race="${esc(r.id)}">Top 10 invullen</button>
     </div>`;
 }
@@ -2194,6 +2206,7 @@ function uitslagWeergave(r, werkelijk) {
     ${noot}
     <div class="leeg"><span class="label">niets ingevuld</span>
       <p class="zacht" style="margin:0">Je hebt hier niks ingevuld.</p></div>
+    ${openUitslagen(r, S.tab).map(id => losseInvoer(r, id)).join('')}
     ${andermans(r)}${weekendVoet(r)}`;
   const { regels } = scoreLijst(lijst ?? [], werkelijk);
   const exact = regels.filter(x => x.punten === 5).length;

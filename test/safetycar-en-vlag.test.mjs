@@ -121,6 +121,28 @@ check('een fout ja-of-nee levert niets op, en zegt wat het wel werd',
   /rode vlag · 20 punten RV nee het werd ja, rode vlag 0/.test(vlagScherm),
   vlagScherm.match(/rode vlag .{0,60}/)?.[0] ?? 'die regel staat er niet');
 
+// --- ook wie niets voorspelde mag een ontbrekende uitslag aanvullen -------
+// Suzuka heeft geen enkele voorspelling. Zonder dit blok kan niemand er meer
+// bij zodra de hele poule een race heeft overgeslagen — en dan blijft die
+// uitslag voor iedereen leeg.
+await page.evaluate(() => {
+  const r = globalThis.__db.races.find((x) => String(x.id) === '3');
+  r.drivers = globalThis.__db.races.find((x) => String(x.id) === '1').drivers;
+  r.race_result = ['1', '12', '63'];
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
+});
+await page.reload();
+await openRace(page, 'Suzuka');
+await page.click('[data-tab="race"]');
+await page.waitForSelector('#paneel');
+const leeg = await tekst('#paneel');
+check('een race waarin je niets invulde zegt dat ook',
+  leeg.includes('Je hebt hier niks ingevuld'), leeg.slice(0, 70) + '...');
+check('maar de ontbrekende uitslagen zijn er wel in te vullen',
+  (await page.$('[data-losse-start="safety_cars"]')) !== null
+    && (await page.$('[data-losse-start="snelste_ronde"]')) !== null,
+  leeg.slice(0, 110) + '...');
+
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
 await stoppen();
