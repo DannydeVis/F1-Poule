@@ -16,8 +16,10 @@ je eigen computer.
 | `ontbrekende-sleutel.test.mjs` | Of een database zonder de unieke sleutel een leesbare melding geeft in plaats van stille dubbele rijen |
 | `uitslag-invoeren.test.mjs` | Handmatig een uitslag invullen: de vlag komt mee, en een bestaande uitslag wordt niet overschreven |
 | `uitnodiging.test.mjs` | De link met `?code=`: hij wint van de onthouden poule, verdwijnt daarna uit de adresbalk, en een kapotte code zegt dat |
-| `duel.test.mjs` | De onderlinge duels, vooral welke weekenden níét meetellen |
+| `duel.test.mjs` | De onderlinge duels tussen spelers, vooral welke weekenden níét meetellen |
 | `winnaar.test.mjs` | De losse winnaar van 25 punten |
+| `vraagsoorten.test.mjs` | De pole en de teamgenoot-duels: vooral dat alleen invullen wat je weet niet minder oplevert dan alles gokken |
+| `pole-en-duels.test.mjs` | Diezelfde twee in de app: kiezen, opslaan, terugzien, en dat één keuze per team blijft staan |
 | `scorelijst.test.mjs` | De puntentelling, inclusief het cascade-geval waarvoor die formule is gekozen |
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |

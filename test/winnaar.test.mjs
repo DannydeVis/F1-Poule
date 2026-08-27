@@ -5,7 +5,9 @@
 // weekend spannend voor wie op punten al ver achterloopt.
 //
 // scoreWinnaar() wordt uit index.html geknipt, zodat de test de echte code
-// controleert en niet een kopie die uit de pas kan lopen.
+// controleert en niet een kopie die uit de pas kan lopen. Hij leunt op
+// scoreEerste(), de gedeelde regel voor "wijs de bovenste van een lijst aan",
+// dus die gaat mee naar het tijdelijke bestand.
 
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -13,11 +15,14 @@ import { join } from 'node:path';
 import { maakControle, wortel } from './hulp.mjs';
 
 const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
-const stuk = bron.match(/export function scoreWinnaar[\s\S]*?\n\}/);
-if (!stuk) { console.error('FOUT: scoreWinnaar() niet gevonden in index.html'); process.exit(2); }
+const stukken = ['scoreEerste', 'scoreWinnaar'].map((naam) => {
+  const stuk = bron.match(new RegExp(`export function ${naam}[\\s\\S]*?\\n\\}`));
+  if (!stuk) { console.error(`FOUT: ${naam}() niet gevonden in index.html`); process.exit(2); }
+  return stuk[0];
+});
 
 const map = mkdtempSync(join(tmpdir(), 'poule-winnaar-'));
-writeFileSync(join(map, 'winnaar.mjs'), stuk[0]);
+writeFileSync(join(map, 'winnaar.mjs'), stukken.join('\n\n'));
 const { scoreWinnaar } = await import(join(map, 'winnaar.mjs'));
 
 const { check, afronden } = maakControle('winnaar apart');

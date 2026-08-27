@@ -461,6 +461,49 @@ ook kloppen voor een database waar dat wel zo is.
 **Draai `schema.sql` opnieuw** in de Supabase SQL editor voordat je dit
 gebruikt. Nu wel: deze keer hoort de app erbij.
 
+## De pole en de teamgenoot-duels
+
+De eerste twee van de zes vraagsoorten die alleen nog in de database stonden.
+Deze twee eerst, omdat ze aan uitslagen hangen die er al zijn: de pole is
+gewoon P1 van de kwalificatie, en wie zijn teamgenoot verslaat lees je af uit
+de finishvolgorde. De andere vier (snelste ronde, snelste pitstop, safety
+cars, rode vlag) hebben gegevens nodig die nog nergens staan; die vragen om
+een kolom op `races` en een uitbreiding van de sync.
+
+**De pole, 10 punten.** Dezelfde keuze als de winnaar maar dan aan de
+kwalificatiekant, en een stuk lichter — hij is veel beter te raden.
+`scoreEerste()` is de gedeelde regel voor "wijs de bovenste van een lijst
+aan"; `scoreWinnaar()` en `scorePole()` zijn er allebei een laagje omheen met
+hun eigen aantal punten.
+
+**De teamgenoot-duels, 15 punten.** Per team met precies twee coureurs één
+duel: wie eindigt er voor de ander? Bij een invaller staan er drie in de
+lijst en verdwijnt dat team uit de duels, want dan is "de teamgenoot" niet
+meer één iemand.
+
+De punten gaan **naar rato van wat je invult**, en dat is de belangrijkste
+keuze in dit stuk. Vier duels invullen en alle vier goed hebben levert
+evenveel op als tien van de tien. Zou de deling over álle teams gaan, dan was
+overal maar iets aantikken altijd beter dan alleen invullen wat je weet — en
+dat maakt van een kennisvraag een gokvraag. Een duel waarin geen van beiden
+finishte telt niet mee; dat is pech, geen fout antwoord.
+
+**Alleen de pole invullen mag ook.** De opslaanknop hing aan "tien coureurs
+gekozen", en dat zou wie alleen de pole of een paar duels invult buitensluiten.
+Nu mag opslaan zodra de top 10 vol is óf leeg is en er iets anders gekozen is.
+Een halve top 10 gaat er nog steeds niet in: negen namen zeggen niets.
+
+**Eén plek waar punten opgeteld worden.** `scoreTab()` telt wat een speler op
+één tab scoort — de top 10 plus de losse vragen die aan diezelfde deadline
+hangen — en "jouw punten", "de rest" en de seizoensstand lezen alle drie
+daaruit. Ze liepen anders vroeg of laat uit elkaar, en dat zie je pas als
+iemand het navraagt.
+
+**`GEBOUWD`** is de lijst met vragen die dit scherm kan stellen en scoren.
+Wat daar niet in staat wordt overgeslagen, ook als de poule hem heeft
+aangevinkt. Zo kan de vragenlijst in de database vooruitlopen op de app
+zonder dat er halve schermen ontstaan.
+
 ## Wat er nog bij kan
 
 Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
@@ -474,10 +517,11 @@ is groep 3 en verder — extra vraagsoorten en seizoensmechaniek.
 vier stappen, en het omzetten van de vaste kolommen `quali_top10` en
 `race_top10` naar een `questions`-tabel met een rij per vraag. Van dat
 document zijn de tabbalk (stap 2) en de migratie naar `questions` (stap 1,
-de grootste) gebouwd. Wat er nog ligt: de zes vraagsoorten die alleen nog in
-de database staan — pole, snelste ronde, snelste pitstop, teamgenoot-duels,
-safety cars en de rode vlag — het aanmaakproces met de drie presets, en het
-beheerscherm onder Poule dat de vragen aan- en uitzet.
+de grootste) gebouwd, en van de zeven extra vragen doen de pole en de
+teamgenoot-duels inmiddels mee. Wat er nog ligt: de vier vragen die nieuwe
+uitslaggegevens nodig hebben (snelste ronde, snelste pitstop, safety cars,
+rode vlag), het aanmaakproces met de drie presets, en het beheerscherm onder
+Poule dat de vragen aan- en uitzet.
 
 Let op bij het lezen van dat document: een deel ervan beschrijft dingen die
 er inmiddels al zijn (de drie tabs, de strook met de eerstvolgende deadline,
