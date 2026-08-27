@@ -9,7 +9,14 @@
 import { maakControle, startPagina } from './hulp.mjs';
 
 const { check, afronden } = maakControle('poule aanmaken');
-const { page, jsFouten, stoppen } = await startPagina();
+
+// Een verzonnen tiende vraag, die de app dus niet kan stellen. Zo blijft de
+// "binnenkort"-markering getest, ook nu alle negen echte vragen gebouwd zijn.
+const { page, jsFouten, stoppen } = await startPagina({
+  aanpassen: (bron) => bron.replace(
+    /(\{ id:'rode_vlag',[^\n]*\n)/,
+    `$1    { id:'regen', naam:'Regen tijdens de race', punten:8, sessie:'race', soort:'janee', gok:true, volgorde:100 },\n`),
+});
 
 const tekst = async (kies) => (await page.textContent(kies)).replace(/\s+/g, ' ').trim();
 
@@ -68,8 +75,9 @@ await page.click('#eigen');
 check('en klappen open als je erom vraagt',
   await page.$eval('.vragenlijst', (n) => !n.classList.contains('hide')));
 
-const regels = await page.$$eval('.vraagregel', (n) => n.length);
-check('alle negen vragen staan in de lijst', regels === 9, `${regels} regels`);
+const regels = await page.$$eval('.vraagregel', (n) => n.map((b) => b.dataset.vraagAan));
+check('elke vraag uit de database staat in de lijst',
+  regels.length === 10 && regels.includes('regen'), `${regels.length}: ${regels.join(', ')}`);
 
 const aanVoor = await page.textContent('.somregel .getal');
 await page.click('[data-vraag-aan="safety_cars"]');
@@ -80,17 +88,22 @@ check('een vraag aanzetten telt live bij',
 // Vragen die de app nog niet stelt worden als zodanig gemarkeerd, en de
 // voet zegt wat er nu al gevraagd wordt. Anders beloof je punten die er
 // dit seizoen nog niet zijn.
-// Welke dat zijn schuift op zodra er een vraag bij gebouwd wordt; dat er een
-// markering staat en dat hij bij de juiste regels hoort is het punt.
+// Alleen wat de app nog niet kan stellen krijgt die markering; de negen
+// echte vragen zijn allemaal gebouwd, dus alleen de verzonnen tiende.
 const binnenkort = await page.$$eval('.vraagregel', (n) =>
   n.filter((b) => b.querySelector('.binnenkort')).map((b) => b.dataset.vraagAan));
-check('nog niet gebouwde vragen zijn gemarkeerd als binnenkort',
-  binnenkort.length > 0 && binnenkort.every((id) => ['safety_cars', 'rode_vlag'].includes(id)),
+check('een vraag die de app nog niet kan stellen heet binnenkort',
+  binnenkort.length === 1 && binnenkort[0] === 'regen',
   binnenkort.join(', ') || 'niets gemarkeerd');
+// Klassiek plus safety cars is 157, en dat wordt allemaal al gevraagd; pas
+// als je de verzonnen vraag aanzet klopt het totaal niet meer met wat er
+// echt gevraagd wordt.
+await page.click('[data-vraag-aan="regen"]');
 const voet = await tekst('.veldblok');
 check('en de voet zegt hoeveel er nu al gevraagd wordt',
-  /Daarvan wordt nu \d+ punten al gevraagd/.test(voet),
+  /Daarvan wordt nu 157 punten al gevraagd/.test(voet),
   voet.match(/Daarvan wordt nu[^.]*\./)?.[0] ?? 'die regel staat er niet');
+await page.click('[data-vraag-aan="regen"]');
 
 // --- de gokwaarschuwing uit BEDIENING.md §8 -------------------------------
 check('bij een gewone set staat er geen waarschuwing',

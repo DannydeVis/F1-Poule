@@ -1,5 +1,5 @@
-// De twee vragen die naast de top 10 gescoord worden: de pole en de
-// teamgenoot-duels.
+// De vragen die naast de top 10 gescoord worden: de pole, de
+// teamgenoot-duels, het aantal safety cars en de rode vlag.
 //
 // Bij de duels zit het scherpe punt in wat je *niet* invult. De punten gaan
 // naar rato van het aantal duels waar je een keuze in maakte, dus vier van de
@@ -15,7 +15,8 @@ import { join } from 'node:path';
 import { maakControle, wortel } from './hulp.mjs';
 
 const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
-const stukken = ['scoreEerste', 'scoreDuels', 'teamParen'].map((naam) => {
+const stukken = ['scoreEerste', 'scoreGetal', 'scoreJaNee', 'scoreDuels', 'teamParen']
+  .map((naam) => {
   const stuk = bron.match(new RegExp(`export function ${naam}[\\s\\S]*?\\n\\}`));
   if (!stuk) { console.error(`FOUT: ${naam}() niet gevonden in index.html`); process.exit(2); }
   return stuk[0];
@@ -23,13 +24,14 @@ const stukken = ['scoreEerste', 'scoreDuels', 'teamParen'].map((naam) => {
 
 const map = mkdtempSync(join(tmpdir(), 'poule-vraagsoorten-'));
 writeFileSync(join(map, 'vragen.mjs'), stukken.join('\n\n'));
-const { scoreEerste, scoreDuels, teamParen } = await import(join(map, 'vragen.mjs'));
+const { scoreEerste, scoreGetal, scoreJaNee, scoreDuels, teamParen } =
+  await import(join(map, 'vragen.mjs'));
 
 // De pole is 10 punten waard, de snelste ronde en de snelste pitstop ook.
 // Die getallen staan in schema.sql; vragen.test.sql houdt ze daar vast.
 const scorePole = (gekozen, quali) => scoreEerste(gekozen, quali, 10);
 
-const { check, afronden } = maakControle('pole en teamgenoot-duels');
+const { check, afronden } = maakControle('de losse vragen');
 
 // --- de pole ---------------------------------------------------------------
 const quali = ['16', '4', '1', '81'];
@@ -107,5 +109,43 @@ check('een nummer en dezelfde tekst tellen ook hier als dezelfde coureur',
 check('het aantal punten is instelbaar',
   scoreDuels(['1', '12', '44'], race, paren, 30) === 20,
   String(scoreDuels(['1', '12', '44'], race, paren, 30)));
+
+// --- het aantal safety cars ------------------------------------------------
+// Twaalf punten, en eentje ernaast zitten is niet hetzelfde als een verkeerd
+// antwoord: de punten lopen af met de afstand, net als bij de top 10.
+check('precies goed levert de volle punten op', scoreGetal(2, 2, 12) === 12);
+check('eentje ernaast levert de helft op',
+  scoreGetal(1, 2, 12) === 6 && scoreGetal(3, 2, 12) === 6,
+  `${scoreGetal(1, 2, 12)} / ${scoreGetal(3, 2, 12)}`);
+check('twee ernaast levert niets meer op',
+  scoreGetal(0, 2, 12) === 0 && scoreGetal(4, 2, 12) === 0);
+check('en verder weg blijft nul, het wordt nooit negatief',
+  scoreGetal(6, 0, 12) === 0 && scoreGetal(0, 6, 12) === 0);
+
+// Nul is een antwoord, geen leeg veld. Als dit misgaat scoort een terechte
+// gok op een saaie race als niet meegedaan.
+check('nul safety cars goed hebben levert gewoon punten op',
+  scoreGetal(0, 0, 12) === 12, String(scoreGetal(0, 0, 12)));
+check('geen antwoord levert niets op, en klapt niet',
+  scoreGetal(null, 2, 12) === 0 && scoreGetal(undefined, 2, 12) === 0);
+check('zonder uitslag valt er nog niets te scoren',
+  scoreGetal(2, null, 12) === 0 && scoreGetal(2, undefined, 12) === 0);
+check('onzin levert niets op in plaats van NaN',
+  scoreGetal('twee', 2, 12) === 0, String(scoreGetal('twee', 2, 12)));
+
+// --- de rode vlag ----------------------------------------------------------
+// Hier bestaat geen "bijna", dus alles of niets.
+check('goed geraden levert de volle punten op',
+  scoreJaNee(true, true, 20) === 20 && scoreJaNee(false, false, 20) === 20);
+check('fout geraden levert niets op',
+  scoreJaNee(true, false, 20) === 0 && scoreJaNee(false, true, 20) === 0);
+// "nee" is een antwoord; als dit misgaat verdwijnt de helft van de gevallen.
+check('nee is een antwoord en geen leeg veld', scoreJaNee(false, false, 20) === 20);
+check('geen antwoord of geen uitslag levert niets op',
+  scoreJaNee(null, true, 20) === 0 && scoreJaNee(true, null, 20) === 0
+    && scoreJaNee(undefined, undefined, 20) === 0);
+// Zonder de typecontrole zou 'false' (tekst) als waar tellen.
+check('alleen echte ja-of-nee telt mee',
+  scoreJaNee('true', true, 20) === 0 && scoreJaNee(1, true, 20) === 0);
 
 process.exit(afronden() ? 0 : 1);

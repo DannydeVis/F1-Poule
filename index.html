@@ -308,6 +308,10 @@
   .duel .tm{font-family:var(--mono);font-size:10px;color:var(--ink2);
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .duelknop{min-height:52px;justify-content:center}
+  /* Een getal of een ja/nee kiezen: kleinere vakken, hetzelfde gedrag. */
+  .getallen{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .extraknop{min-height:56px;justify-content:center}
+  .extraknop .code{font-size:20px}
 
   /* Poule aanmaken: de vier stappen, de drie voorstellen en de losse vragen. */
   .stappen{display:flex;gap:6px}
@@ -612,6 +616,24 @@ export function scoreDuels(gekozen = [], uitslag = [], paren = [], punten = 15) 
   return geteld ? Math.round(punten * goed / geteld) : 0;
 }
 
+// Een getal raden, zoals het aantal safety cars. Eén ernaast zitten is niet
+// hetzelfde als een verkeerd antwoord, dus de punten lopen af met de afstand
+// in plaats van in één keer naar nul — dezelfde gedachte als bij de top 10.
+// Exact is vol, één ernaast de helft, twee ernaast niets meer.
+export function scoreGetal(gekozen, werkelijk, punten = 0) {
+  if (gekozen === null || gekozen === undefined) return 0;
+  if (werkelijk === null || werkelijk === undefined) return 0;
+  const afstand = Math.abs(Number(gekozen) - Number(werkelijk));
+  if (!Number.isFinite(afstand)) return 0;
+  return Math.max(0, Math.round(punten * (1 - afstand / 2)));
+}
+
+// Ja of nee. Hier bestaat geen "bijna", dus alles of niets.
+export function scoreJaNee(gekozen, werkelijk, punten = 0) {
+  if (typeof gekozen !== 'boolean' || typeof werkelijk !== 'boolean') return 0;
+  return gekozen === werkelijk ? punten : 0;
+}
+
 // De teams uit een deelnemerslijst, als paren. Alleen teams met precies twee
 // coureurs: bij een invaller staan er drie in de lijst en is "de teamgenoot"
 // niet meer één iemand.
@@ -661,9 +683,36 @@ const COUREURVRAAG = {
   },
 };
 
+// De twee vragen die niet over een coureur gaan. Ze delen de opbouw met de
+// vragen hierboven, maar hun antwoord is een getal of een ja/nee en hun
+// uitslag staat in een eigen kolom. `leeg` is null en niet '' of false: nul
+// safety cars en "nee" zijn echte antwoorden.
+const EXTRAVRAAG = {
+  safety_cars: {
+    sessie:'race', soort:'getal', kop:'hoeveel safety cars komen er?',
+    label:'safety cars', letter:'SC', mis:'geen aantal gekozen',
+    kolom:'safety_cars', vlag:'safety_cars_handmatig',
+    toon: (w) => `${w}${w === 1 ? ' safety car' : ' safety cars'}`,
+    score: (g, w, p) => scoreGetal(g, w, p),
+  },
+  rode_vlag: {
+    sessie:'race', soort:'janee', kop:'komt er een rode vlag?',
+    label:'rode vlag', letter:'RV', mis:'niets ingevuld',
+    kolom:'rode_vlag', vlag:'rode_vlag_handmatig',
+    toon: (w) => w ? 'ja, rode vlag' : 'nee, geen rode vlag',
+    score: (g, w, p) => scoreJaNee(g, w, p),
+  },
+};
+
 // Welke van die vragen op deze tab horen, en meedoen in deze poule.
 const coureurVragen = (welk) =>
   Object.keys(COUREURVRAAG).filter(id => COUREURVRAAG[id].sessie === welk && vraagActief(id));
+const extraVragen = (welk) =>
+  Object.keys(EXTRAVRAAG).filter(id => EXTRAVRAAG[id].sessie === welk && vraagActief(id));
+
+// Een antwoord dat er niet is. Voor deze twee vragen is dat null en niet ''
+// of false, want 0 en "nee" zijn wél antwoorden.
+const leegAntwoord = (w) => w === null || w === undefined || w === '';
 
 // De winnaar heeft om historische redenen een andere veldnaam dan zijn vraag.
 const antwoordVan = (p, id) => id === 'winnaar' ? p?.race_winnaar : p?.[id];
@@ -679,7 +728,11 @@ const scoreTab = (p, race, welk) => {
                    teamParen(race.drivers), puntenVoor('teamgenoot_duels'));
   const los = coureurVragen(welk).reduce((n, id) =>
     n + scoreEerste(antwoordVan(p, id), COUREURVRAAG[id].uitslag(race), puntenVoor(id)), 0);
-  return lijst + los;
+  const extra = extraVragen(welk).reduce((n, id) => {
+    const v = EXTRAVRAAG[id];
+    return n + v.score(p?.[id] ?? null, race[v.kolom] ?? null, puntenVoor(id));
+  }, 0);
+  return lijst + los + extra;
 };
 
 const scoreWeekend = (p, race) => scoreTab(p, race, 'quali') + scoreTab(p, race, 'race');
@@ -766,7 +819,8 @@ const S = {
   antwoorden: [], vragen: [], poulevragen: [],
   race:  null, tab: 'quali',
   keuze: { quali: [], race: [], winnaar: '', pole: '', duels: [],
-           snelste_ronde: '', snelste_pitstop: '' },
+           snelste_ronde: '', snelste_pitstop: '',
+           safety_cars: null, rode_vlag: null },
   uitslag: { welk: null, lijst: [] },
   weergave: 'races', fout: '', melding: '', linkCode: '', linkFout: '',
   maak: null,           // het aanmaakscherm, zolang dat openstaat
@@ -922,7 +976,7 @@ const VRAAG_VELD = { quali_top10:'quali_top10', race_top10:'race_top10', winnaar
 // die worden overgeslagen tot ze hier ook gebouwd zijn. Zo kan de vragenlijst
 // vooruitlopen op de app zonder dat er halve schermen ontstaan.
 const GEBOUWD = ['quali_top10', 'race_top10', 'winnaar', 'pole', 'teamgenoot_duels',
-                 'snelste_ronde', 'snelste_pitstop'];
+                 'snelste_ronde', 'snelste_pitstop', 'safety_cars', 'rode_vlag'];
 
 function bouwPreds() {
   const per = new Map();
@@ -933,7 +987,8 @@ function bouwPreds() {
       per.set(sleutel, { pool_id:a.pool_id, race_id:a.race_id, member_id:a.member_id,
                          quali_top10:null, race_top10:null, race_winnaar:null,
                          pole:null, teamgenoot_duels:null,
-                         snelste_ronde:null, snelste_pitstop:null });
+                         snelste_ronde:null, snelste_pitstop:null,
+                         safety_cars:null, rode_vlag:null });
     }
     per.get(sleutel)[VRAAG_VELD[a.question_id] ?? a.question_id] = a.waarde;
   }
@@ -949,7 +1004,8 @@ const vraagActief = (id) =>
 // getallen hieronder zijn het vangnet voor de demomodus en voor een poule
 // die de lijst nog niet heeft geladen.
 const VRAAG_PUNTEN = { quali_top10:50, race_top10:50, winnaar:25, pole:10,
-                       teamgenoot_duels:15, snelste_ronde:10, snelste_pitstop:10 };
+                       teamgenoot_duels:15, snelste_ronde:10, snelste_pitstop:10,
+                       safety_cars:12, rode_vlag:20 };
 const puntenVoor = (id) =>
   S.vragen.find(v => v.id === id)?.punten ?? VRAAG_PUNTEN[id] ?? 0;
 
@@ -1009,6 +1065,11 @@ async function bewaar() {
   // hangen aan de deadline van hun eigen sessie.
   for (const [id, v] of Object.entries(COUREURVRAAG)) {
     if (!dicht[v.sessie]) wil.push([id, S.keuze[id] || null]);
+  }
+  // Hier bewust ?? en niet ||: nul safety cars en "nee, geen rode vlag" zijn
+  // antwoorden, en die zouden met || als leeg wegvallen en hun rij wissen.
+  for (const [id, v] of Object.entries(EXTRAVRAAG)) {
+    if (!dicht[v.sessie]) wil.push([id, S.keuze[id] ?? null]);
   }
   const opslaan = wil.filter(([id, w]) => vraagActief(id) && w !== null);
   // Een leeggemaakt antwoord is een rij die weg moet: waarde mag niet null
@@ -1756,7 +1817,9 @@ function openRace(id) {
               winnaar: mijn?.race_winnaar ?? '', pole: mijn?.pole ?? '',
               duels: [...(mijn?.teamgenoot_duels ?? [])],
               snelste_ronde: mijn?.snelste_ronde ?? '',
-              snelste_pitstop: mijn?.snelste_pitstop ?? '' };
+              snelste_pitstop: mijn?.snelste_pitstop ?? '',
+              safety_cars: mijn?.safety_cars ?? null,
+              rode_vlag: mijn?.rode_vlag ?? null };
   S.tab = openLijst(r) === 'race' ? 'race' : 'quali';
   S.uitslag = { welk: null, lijst: [] };
   S.losse = { vraag: null, keuze: '', fout: '' };
@@ -1914,12 +1977,14 @@ function invulWeergave(paneel, r, dicht) {
   // Een halve top 10 zegt niets, dus die gaat er niet in. Maar wie alleen de
   // pole of een paar duels invult heeft wel degelijk iets in te leveren.
   const losGekozen = coureurVragen(S.tab).some(id => !!S.keuze[id])
+    || extraVragen(S.tab).some(id => !leegAntwoord(S.keuze[id]))
     || (S.tab === 'race' && vraagActief('teamgenoot_duels') && S.keuze.duels.length > 0);
   const magOpslaan = lijst.length === 10 || (lijst.length === 0 && losGekozen);
   const deadline = S.tab === 'quali' ? r.deadline_quali : r.deadline_race;
 
   paneel.innerHTML = `
     ${coureurVragen(S.tab).map(id => coureurKiezer(r, id)).join('')}
+    ${extraVragen(S.tab).map(id => extraKiezer(r, id)).join('')}
     ${S.tab === 'race' ? duelKiezer(r) : ''}
     ${kanKopieren ? `<button class="knop klein" id="kopieer">Neem de kwalificatie over</button>` : ''}
     <ol class="grid10">
@@ -1961,6 +2026,15 @@ function invulWeergave(paneel, r, dicht) {
     // eraan vast zodra je een keer misklikt.
     const veld = b.dataset.vraag;
     S.keuze[veld] = zelfde(b.dataset.kies, S.keuze[veld]) ? '' : b.dataset.kies;
+    invulWeergave(paneel, r, dicht);
+  });
+  paneel.querySelectorAll('[data-extra]').forEach(b => b.onclick = () => {
+    const id = b.dataset.extra;
+    const waarde = EXTRAVRAAG[id].soort === 'getal'
+      ? Number(b.dataset.waarde) : b.dataset.waarde === 'true';
+    // Nog een keer op hetzelfde tikken haalt de keuze weg, net als bij de
+    // coureurvragen. Zonder dat kun je een misklik niet meer terugnemen.
+    S.keuze[id] = S.keuze[id] === waarde ? null : waarde;
     invulWeergave(paneel, r, dicht);
   });
   paneel.querySelectorAll('[data-duel]').forEach(b => b.onclick = () => {
@@ -2030,6 +2104,42 @@ function coureurKiezer(r, id) {
     </div>`;
 }
 
+// De knoppen voor een getal en voor ja/nee. Ze worden twee keer gebruikt: om
+// te voorspellen, en om de uitslag met de hand in te vullen. Alleen het
+// data-attribuut verschilt, want de twee hangen aan een andere klik.
+const AANTALLEN = [0, 1, 2, 3, 4, 5, 6];
+
+function extraKnoppen(id, gekozen, attribuut) {
+  const knop = (waarde, tekst) => `
+    <button class="wknop extraknop ${waarde === gekozen ? 'gekozen' : ''}"
+      data-${attribuut}="${id}" data-waarde="${waarde}"
+      aria-pressed="${waarde === gekozen}">
+      <span class="code">${tekst}</span>
+    </button>`;
+  return EXTRAVRAAG[id].soort === 'getal'
+    ? `<div class="getallen">${AANTALLEN.map(n => knop(n, n === 6 ? '6+' : n)).join('')}</div>`
+    : `<div class="coureurs">${knop(true, 'ja') + knop(false, 'nee')}</div>`;
+}
+
+function extraKiezer(r, id) {
+  if (!vraagActief(id)) return '';
+  const v = EXTRAVRAAG[id];
+  const punten = puntenVoor(id);
+  const gekozen = S.keuze[id];
+  return `
+    <div class="winnaarblok">
+      <div class="winnaarkop">
+        <span class="label">${v.kop}</span>
+        <span class="mono" style="color:var(--ink3)">${punten} punten</span>
+      </div>
+      ${extraKnoppen(id, gekozen, 'extra')}
+      ${leegAntwoord(gekozen)
+        ? `<p class="mono amber" style="margin:0">nog niets gekozen · hier liggen ${punten} punten</p>`
+        : `<p class="mono groen" style="margin:0">jouw antwoord: ${esc(String(v.toon(gekozen)))}${
+            v.soort === 'getal' ? ' · eentje ernaast levert nog de helft op' : ''}</p>`}
+    </div>`;
+}
+
 // Teamgenoot-duels: per team wie van de twee voor de ander eindigt. Je hoeft
 // ze niet allemaal in te vullen — alleen wat je kiest telt mee, en de punten
 // gaan naar rato. Een duel waar je niets van weet laat je dus gewoon staan.
@@ -2073,10 +2183,12 @@ function uitslagWeergave(r, werkelijk) {
     ? `<p class="label amber" style="margin:0">handmatig ingevuld · niet van openf1</p>` : '';
   // De losse vragen hangen aan dezelfde deadline als de top 10 van deze tab.
   const losse = coureurVragen(S.tab).map(id => coureurUitslag(r, mijn, id)).join('')
+    + extraVragen(S.tab).map(id => extraUitslag(r, mijn, id)).join('')
     + (S.tab === 'race' ? duelUitslag(r, mijn, werkelijk) : '');
   // Wie alleen de losse vragen invulde heeft wél iets ingeleverd; die mag
   // hier niet "je hebt hier niks ingevuld" te zien krijgen.
   const losIngevuld = coureurVragen(S.tab).some(id => !!antwoordVan(mijn, id))
+    || extraVragen(S.tab).some(id => !leegAntwoord(mijn?.[id]))
     || (S.tab === 'race' && !!mijn?.teamgenoot_duels?.length);
   if (!lijst?.length && !losIngevuld) return `
     ${noot}
@@ -2186,12 +2298,37 @@ function coureurUitslag(r, mijn, id) {
     </div>`;
 }
 
-// De snelste ronde en de snelste pitstop staan niet in de finishvolgorde, en
-// OpenF1 heeft ze niet altijd. Net als bij een hele uitslag mag je ze daarom
-// zelf invullen — en net als daar geldt: wat er staat blijft staan, want de
-// sync vult alleen wat leeg is.
+function extraUitslag(r, mijn, id) {
+  if (!vraagActief(id)) return '';
+  const v = EXTRAVRAAG[id];
+  const punten = puntenVoor(id);
+  const werkelijk = r[v.kolom] ?? null;
+  const gekozen = mijn?.[id] ?? null;
+  if (leegAntwoord(werkelijk)) return losseInvoer(r, id);
+  if (leegAntwoord(gekozen)) {
+    return `<p class="label amber" style="margin:0">${v.mis} · ${punten} punten laten liggen</p>`;
+  }
+  const gescoord = v.score(gekozen, werkelijk, punten);
+  return `
+    <span class="label">${v.label} · ${punten} punten${
+      r[v.vlag] ? ' · handmatig ingevuld' : ''}</span>
+    <div class="sr">
+      <span class="pos">${v.letter}</span>
+      <span class="code">${esc(String(v.soort === 'getal' ? gekozen : (gekozen ? 'ja' : 'nee')))}</span>
+      <span class="werd">${gescoord === punten
+        ? 'precies goed'
+        : `het werd ${esc(String(v.toon(werkelijk)))}`}</span>
+      <span class="pts ${gescoord === punten ? 'v5' : gescoord ? 'v3' : 'v0'}">${gescoord}</span>
+    </div>`;
+}
+
+// Vier uitslagen staan niet in de finishvolgorde — de snelste ronde, de
+// snelste pitstop, het aantal safety cars en de rode vlag — en OpenF1 heeft
+// ze niet altijd. Net als bij een hele uitslag mag je ze daarom zelf
+// invullen, en net als daar geldt: wat er staat blijft staan, want de sync
+// vult alleen wat leeg is.
 function losseInvoer(r, id) {
-  const v = COUREURVRAAG[id];
+  const v = COUREURVRAAG[id] ?? EXTRAVRAAG[id];
   const bezig = S.losse.vraag === id;
   const gekozen = S.losse.keuze;
   return `
@@ -2207,16 +2344,19 @@ function losseInvoer(r, id) {
           en de sync haalt hem daarna niet meer op. Vul hem dus alleen in als je het
           zeker weet.
         </div>
-        <div class="coureurs winnaars">
-          ${(r.drivers ?? []).map(c => `
-            <button class="wknop ${zelfde(c.nr, gekozen) ? 'gekozen' : ''}"
-              data-losse="${esc(c.nr)}" style="border-left-color:${esc(c.kleur)}"
-              aria-pressed="${zelfde(c.nr, gekozen)}">
-              <span class="code">${esc(c.code)}</span><span class="tm">${esc(stal(c.team))}</span>
-            </button>`).join('')}
-        </div>
+        ${EXTRAVRAAG[id]
+          ? extraKnoppen(id, gekozen, 'losse-extra')
+          : `<div class="coureurs winnaars">
+              ${(r.drivers ?? []).map(c => `
+                <button class="wknop ${zelfde(c.nr, gekozen) ? 'gekozen' : ''}"
+                  data-losse="${esc(c.nr)}" style="border-left-color:${esc(c.kleur)}"
+                  aria-pressed="${zelfde(c.nr, gekozen)}">
+                  <span class="code">${esc(c.code)}</span><span class="tm">${esc(stal(c.team))}</span>
+                </button>`).join('')}
+            </div>`}
         <div style="display:flex;gap:8px">
-          <button class="knop klein" id="losseOpslaan" ${gekozen ? '' : 'disabled'}>Opslaan</button>
+          <button class="knop klein" id="losseOpslaan" ${
+            leegAntwoord(gekozen) ? 'disabled' : ''}>Opslaan</button>
           <button class="knop klein" id="losseStop">Annuleren</button>
         </div>
         <p class="err">${esc(S.losse.fout)}</p>`
@@ -2227,7 +2367,7 @@ function losseInvoer(r, id) {
 }
 
 async function losseBewaren(r, id, nr) {
-  const v = COUREURVRAAG[id];
+  const v = COUREURVRAAG[id] ?? EXTRAVRAAG[id];
   if (DEMO) { r[v.kolom] = nr; r[v.vlag] = true; return; }
   // Dezelfde race als bij een hele uitslag: is(kolom, null) hoort bij de
   // schrijfactie zelf, zodat een waarde die er inmiddels staat blijft staan.
@@ -2242,11 +2382,18 @@ async function losseBewaren(r, id, nr) {
 
 function knoopLosse(paneel, r) {
   paneel.querySelectorAll('[data-losse-start]').forEach(b => b.onclick = () => {
-    S.losse = { vraag: b.dataset.losseStart, keuze: '', fout: '' };
+    S.losse = { vraag: b.dataset.losseStart, keuze: null, fout: '' };
     render();
   });
   paneel.querySelectorAll('[data-losse]').forEach(b => b.onclick = () => {
     S.losse.keuze = zelfde(b.dataset.losse, S.losse.keuze) ? '' : b.dataset.losse;
+    render();
+  });
+  paneel.querySelectorAll('[data-losse-extra]').forEach(b => b.onclick = () => {
+    const id = b.dataset.losseExtra;
+    const waarde = EXTRAVRAAG[id].soort === 'getal'
+      ? Number(b.dataset.waarde) : b.dataset.waarde === 'true';
+    S.losse.keuze = S.losse.keuze === waarde ? null : waarde;
     render();
   });
   const stop = paneel.querySelector('#losseStop');

@@ -55,7 +55,12 @@ create table if not exists public.races (
   fastest_lap               text,
   fastest_pitstop           text,
   fastest_lap_handmatig     boolean not null default false,
-  fastest_pitstop_handmatig boolean not null default false
+  fastest_pitstop_handmatig boolean not null default false,
+  -- Twee uitslagen die niets met een coureur te maken hebben.
+  safety_cars               int,
+  rode_vlag                 boolean,
+  safety_cars_handmatig     boolean not null default false,
+  rode_vlag_handmatig       boolean not null default false
 );
 
 create table if not exists public.predictions (
@@ -153,6 +158,12 @@ alter table public.races        add column if not exists fastest_lap            
 alter table public.races        add column if not exists fastest_pitstop           text;
 alter table public.races        add column if not exists fastest_lap_handmatig     boolean not null default false;
 alter table public.races        add column if not exists fastest_pitstop_handmatig boolean not null default false;
+-- En twee die niets met een coureur te maken hebben. Allebei mogen ze null
+-- zijn: dat betekent "nog niet bekend", en 0 safety cars is iets anders.
+alter table public.races        add column if not exists safety_cars               int;
+alter table public.races        add column if not exists rode_vlag                 boolean;
+alter table public.races        add column if not exists safety_cars_handmatig     boolean not null default false;
+alter table public.races        add column if not exists rode_vlag_handmatig       boolean not null default false;
 
 alter table public.predictions  add column if not exists quali_top10 text[];
 alter table public.predictions  add column if not exists race_top10  text[];

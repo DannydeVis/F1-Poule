@@ -627,6 +627,43 @@ die stil niets doet is slechter dan hem er nog niet in hebben. Dit is de
 volgende stap, en die moet één keer tegen de echte API gedraaid worden voor
 hij te vertrouwen is. Tot dan is zelf invullen de weg.
 
+## Safety cars en de rode vlag
+
+De laatste twee, en de enige die niet over een coureur gaan. Het aantal
+safety cars is een getal, de rode vlag is ja of nee. `EXTRAVRAAG` beschrijft
+ze net zoals `COUREURVRAAG` de andere vier beschrijft; ze delen de opbouw van
+het blok, het zelf invullen en de plek in de puntentelling.
+
+**Hier zit de valkuil van deze twee.** "Nul safety cars" en "nee, geen rode
+vlag" zijn échte antwoorden, geen leeg veld. Overal waar de rest van de code
+`|| null` gebruikt om te zien of er iets is ingevuld, zou dat deze twee
+wegvegen: `0 || null` is `null` en `false || null` ook. Bij het opslaan
+betekent dat "haal de rij weg", en dan scoort een terechte gok op een saaie
+race als niet meegedaan — zonder dat het scherm iets afwijkends laat zien.
+Vandaar `leegAntwoord()` en `?? null` op de plekken die over deze twee gaan,
+en drie tests die precies daarop mikken.
+
+**De puntentelling.** Bij het aantal safety cars lopen de punten af met de
+afstand, net als bij de top 10: precies goed is 12, eentje ernaast 6, twee
+ernaast niets meer. Eén safety car ernaast zitten is nu eenmaal niet
+hetzelfde als een verkeerd antwoord. Bij de rode vlag bestaat geen "bijna",
+dus daar is het alles of niets — en 20 punten voor een ja-of-nee is veel,
+maar hij staat als gokvraag gemarkeerd en daar hangt de waarschuwing uit §8
+aan.
+
+**Het aantal loopt van 0 tot 6+**, waarbij 6 letterlijk 6 is. Een race met
+meer dan zes safety cars bestaat in de praktijk niet; komt hij er ooit, dan
+scoort niemand hem en dat is dan terecht.
+
+Ook deze twee worden nog niet door de sync opgehaald, om dezelfde reden als
+hierboven. Ze zijn wel het makkelijkst met de hand in te vullen van alle
+vier: een getal en een ja-of-nee.
+
+**Hiermee doen alle negen vragen mee.** `GEBOUWD` is compleet, dus de
+"binnenkort"-markering in het aanmaakscherm heeft niets meer te markeren. Het
+mechanisme staat er nog voor de volgende vraag, en `poule-aanmaken.test.mjs`
+houdt het in de gaten met een verzonnen tiende vraag in de nabootsing.
+
 ## Wat er nog bij kan
 
 Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
@@ -639,16 +676,17 @@ is groep 3 en verder — extra vraagsoorten en seizoensmechaniek.
 `BEDIENING.md` gaat over de stap daarna: de navigatie, een aanmaakproces in
 vier stappen, en het omzetten van de vaste kolommen `quali_top10` en
 `race_top10` naar een `questions`-tabel met een rij per vraag. Van dat
-document zijn alle vijf de stappen gebouwd, en van de zeven extra vragen doen
-er vijf mee: winnaar, pole, teamgenoot-duels, snelste ronde en snelste
-pitstop. Wat er nog ligt:
+document zijn alle vijf de stappen gebouwd, en alle negen vragen worden
+gesteld en gescoord. Wat er nog ligt is één ding:
 
-- **Safety cars en de rode vlag.** De laatste twee vragen. Ze zijn geen
-  coureurkeuze maar een getal en een ja-of-nee, dus ze vragen een eigen
-  invoer en een eigen puntenregel — hoeveel levert er één naast op?
-- **De sync voor de losse uitslagen.** `fastest_lap` en `fastest_pitstop`
-  worden nu alleen met de hand gevuld. Zie hierboven waarom dat zo is
-  gebleven.
+- **De sync voor de vier losse uitslagen.** `fastest_lap`, `fastest_pitstop`,
+  `safety_cars` en `rode_vlag` worden nu alleen met de hand gevuld. De
+  gegevens zitten bij OpenF1 in `laps`, `pit` en `race_control`, maar die
+  endpoints zijn vanuit de bouwomgeving niet te bereiken en dus ook niet te
+  controleren. Wie dit oppakt: draai de aanroepen één keer met de hand tegen
+  de echte API voor je ze in `scripts/sync.mjs` zet, en laat de sync bij
+  twijfel niets invullen in plaats van iets — de handmatige invoer werkt, een
+  verkeerd gevulde kolom is niet meer terug te draaien.
 
 Let op bij het lezen van dat document: een deel ervan beschrijft dingen die
 er inmiddels al zijn (de drie tabs, de strook met de eerstvolgende deadline,
