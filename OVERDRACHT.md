@@ -543,6 +543,46 @@ mislukte stap geen tweede poule aanmaakt.
 `pool_questions` doet aan alles mee wat de app kan; dat was al zo en is niet
 veranderd.
 
+## De vragenset beheren, en wanneer hij op slot gaat
+
+`BEDIENING.md` §5 t/m §8, de laatste stap van dat document. Onder **Poule**
+staat nu dezelfde vragenlijst als bij het aanmaken, met een opslaanknop en
+een knop om je wijziging ongedaan te maken zolang je nog niet bewaard hebt.
+
+**Alleen het verschil wordt weggeschreven** — de nieuwe vinkjes erbij, de
+weggehaalde eraf. Alles weggooien en opnieuw invoeren zou tussendoor een
+poule opleveren die even aan alles meedoet, en dat is precies het moment
+waarop iemand anders zijn scherm ververst.
+
+**Een poule zonder rijen toont alle vinkjes aan.** Geen rijen betekent "doet
+aan alles mee", dus dat is wat er op het scherm hoort te staan. Zou het
+scherm dat als "niets aangevinkt" tonen, dan zet je met één keer opslaan de
+hele poule uit. Daar staat een test op.
+
+**Wie mag erbij.** De poulebaas, dus `owner_member_id`. Poules van vóór het
+aanmaakscherm hebben er geen, en die op slot doen zou niemand meer bij de
+vragenset laten — daar mag dus iedereen aan, met een regel eronder die
+uitlegt waarom.
+
+**Op slot** gaat het via `questions_locked`. De lijst wordt dan alleen-lezen
+met de regel uit §6 eronder, en die noemt de race waarna het gebeurde. Dat
+komt niet uit een extra kolom maar uit de eerste race van het seizoen met
+een uitslag; dat is per definitie het moment waarop de sync hem heeft
+dichtgezet.
+
+**Wie zet dat slot om.** `scripts/sync.mjs`, want dat is het enige stuk dat
+draait op het moment dat een uitslag binnenkomt — alle punten worden verder
+in de browser geteld. §6 noemt "de scoringslogica"; die bestaat als backend
+niet, dus dit is de plek. Het gaat **per poule en niet per seizoen**: een
+poule wordt op slot gezet zodra er een antwoord van hem aan een race hangt
+die inmiddels een uitslag heeft. Wie halverwege het seizoen een nieuwe poule
+begint zit dus niet meteen vast.
+
+Dat laatste stukje draait alleen op de runner en heeft geen test — de rest
+van `sync.mjs` ook niet, en er is geen harnas voor. Met de hand na te kijken
+met: `select name, questions_locked from pools;` na een run waarin een
+uitslag binnenkwam.
+
 ## Wat er nog bij kan
 
 Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
@@ -555,23 +595,22 @@ is groep 3 en verder — extra vraagsoorten en seizoensmechaniek.
 `BEDIENING.md` gaat over de stap daarna: de navigatie, een aanmaakproces in
 vier stappen, en het omzetten van de vaste kolommen `quali_top10` en
 `race_top10` naar een `questions`-tabel met een rij per vraag. Van dat
-document zijn de tabbalk (stap 2), de migratie naar `questions` (stap 1, de
-grootste), de uitnodiglink (stap 4) en het aanmaakproces (stap 3) gebouwd, en
-van de zeven extra vragen doen de pole en de teamgenoot-duels inmiddels mee.
-Wat er nog ligt: het beheergedeelte onder Poule (stap 5) met `questions_locked`
-uit §6, en de vier vragen die nieuwe uitslaggegevens nodig hebben — snelste
-ronde, snelste pitstop, safety cars en rode vlag.
+document zijn alle vijf de stappen gebouwd, en van de zeven extra vragen doen
+de pole en de teamgenoot-duels inmiddels mee. Wat er nog ligt zijn de vier
+vragen die nieuwe uitslaggegevens nodig hebben: snelste ronde, snelste
+pitstop, safety cars en rode vlag. Die vragen om een kolom op `races`, een
+uitbreiding van `scripts/sync.mjs` en een manier om ze met de hand in te
+vullen als OpenF1 ze niet heeft.
 
 Let op bij het lezen van dat document: een deel ervan beschrijft dingen die
 er inmiddels al zijn (de drie tabs, de strook met de eerstvolgende deadline,
 de drie onderdelen op Stand, de uitnodigingslink, de winnaar van 25 punten).
-En er zitten twee gaten in. Het eerste is dichtgelopen: §1 vraagt vier extra
-vragen terwijl de presets in §3 er zeven nodig hebben, dus staan alle zeven
-in `schema.sql`. Het tweede staat nog open: §6 verwijst naar "de scoringslogica" die als
-backend niet bestaat — alle punten worden in de browser berekend, dus
-`questions_locked` zal ergens anders vandaan moeten komen. `scripts/sync.mjs`
-is daarvoor de logische plek, want die draait toch al met de service_role key
-op het moment dat de eerste uitslag binnenkomt.
+Er zaten twee gaten in, en die zijn allebei dichtgelopen. §1 vraagt vier
+extra vragen terwijl de presets in §3 er zeven nodig hebben: alle zeven staan
+nu in `schema.sql`. En §6 verwijst naar "de scoringslogica" die als backend
+niet bestaat — alle punten worden in de browser berekend. `questions_locked`
+komt daarom uit `scripts/sync.mjs`, dat toch al met de service_role key
+draait op het moment dat een uitslag binnenkomt.
 
 ## Openstaande datakwaliteit
 

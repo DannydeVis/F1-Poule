@@ -21,6 +21,7 @@ je eigen computer.
 | `vraagsoorten.test.mjs` | De pole en de teamgenoot-duels: vooral dat alleen invullen wat je weet niet minder oplevert dan alles gokken |
 | `pole-en-duels.test.mjs` | Diezelfde twee in de app: kiezen, opslaan, terugzien, en dat één keuze per team blijft staan |
 | `poule-aanmaken.test.mjs` | Het aanmaken in vier stappen: de presets, de losse vragen met hun live puntentotaal, de gokwaarschuwing, en wat er in de database belandt |
+| `vragen-beheren.test.mjs` | De vragenset aanpassen onder Poule, en dat er niets meer verandert zodra hij op slot zit |
 | `scorelijst.test.mjs` | De puntentelling, inclusief het cascade-geval waarvoor die formule is gekozen |
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |

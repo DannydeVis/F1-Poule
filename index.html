@@ -735,6 +735,8 @@ const S = {
   uitslag: { welk: null, lijst: [] },
   weergave: 'races', fout: '', melding: '', linkCode: '', linkFout: '',
   maak: null,           // het aanmaakscherm, zolang dat openstaat
+  beheer: null,         // gewijzigde vragenset, zolang die nog niet bewaard is
+  beheerFout: '',
 };
 
 const app = document.getElementById('app');
@@ -1396,7 +1398,9 @@ function toonApp() {
   if (detail) vulPaneel();
 
   app.querySelectorAll('[data-weergave]').forEach(b => b.onclick = () => {
-    S.weergave = b.dataset.weergave; S.race = null; render();
+    S.weergave = b.dataset.weergave; S.race = null;
+    S.beheer = null; S.beheerFout = '';
+    render();
   });
   app.querySelectorAll('[data-race]').forEach(b => b.onclick = () => openRace(b.dataset.race));
   app.querySelectorAll('[data-naar-race]').forEach(b => b.onclick = () => openRace(b.dataset.naarRace));
@@ -1404,6 +1408,7 @@ function toonApp() {
   if (terug) terug.onclick = () => { S.race = null; render(); };
   app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; render(); });
   knoopUitnodiging(app);
+  knoopBeheer();
 
   const wissel = app.querySelector('#wissel');
   if (wissel) wissel.onclick = () => { vergeet(S.poule.id); S.ik = null; render(); };
@@ -1411,7 +1416,7 @@ function toonApp() {
   if (anders) anders.onclick = () => {
     vergeetPoule();
     S.poule = null; S.ik = null; S.races = []; S.leden = []; S.preds = [];
-    S.antwoorden = []; S.poulevragen = [];
+    S.antwoorden = []; S.poulevragen = []; S.beheer = null; S.beheerFout = '';
     S.race = null; S.weergave = 'races';
     render();
   };
@@ -1600,10 +1605,97 @@ function poulePagina(rijen) {
     </div>`).join('') || `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
       <b>1</b> twee plekken ernaast.</div>
+    ${beheerBlok()}
     <div style="display:flex;gap:8px">
       <button class="knop klein" id="wissel">Speler wisselen</button>
       <button class="knop klein" id="anderePoule">Andere poule</button>
     </div>`;
+}
+
+// ---- beheer: welke vragen doen mee --------------------------
+// BEDIENING.md §5 t/m §8. Zonder login kan de database niet controleren wie
+// de poulebaas is; owner_member_id houdt deze knoppen weg bij wie ze niet
+// nodig heeft, meer niet. Zie §7.
+
+// Poules van vóór het aanmaakscherm hebben geen eigenaar. Die op slot doen
+// zou niemand meer bij de vragenset laten; dan maar iedereen.
+const magBeheren = () =>
+  !S.poule.owner_member_id || zelfde(S.poule.owner_member_id, S.ik.id);
+
+// Geen rijen in pool_questions betekent "doet aan alles mee". In het
+// beheerscherm staan dan ook alle vinkjes aan: dat is wat er nu geldt.
+const pouleVragen = () =>
+  S.poulevragen.length ? [...S.poulevragen] : S.vragen.map(v => v.id);
+
+// Sinds wanneer ligt de set vast? De eerste race met een uitslag, want dat
+// is het moment waarop de sync hem op slot heeft gezet.
+const eersteGescoord = () =>
+  S.races.find(r => r.quali_result?.length || r.race_result?.length);
+
+function beheerBlok() {
+  if (!magBeheren() || !S.vragen.length) return '';
+  const opSlot = !!S.poule.questions_locked;
+  const gekozen = S.beheer ?? pouleVragen();
+  const race = eersteGescoord();
+  return `
+    <div class="scheiding"></div>
+    <span class="label">welke vragen doen mee</span>
+    ${opSlot ? `<p class="zacht" style="margin:0">De vragenset ligt vast${
+      race ? ` sinds ${esc(race.name)}` : ''}. Zo blijven alle races vergelijkbaar.</p>` : ''}
+    ${!S.poule.owner_member_id ? `<p class="zacht" style="margin:0">Deze poule heeft geen
+      poulebaas — hij is aangemaakt voordat dat bestond. Iedereen kan hem dus aanpassen.</p>` : ''}
+    <div class="vragenlijst">${vragenLijst(gekozen, { uit: opSlot })}</div>
+    ${opSlot ? '' : `${vragenVoet(gekozen)}
+      <div style="display:flex;gap:8px">
+        <button class="knop klein" id="vragenBewaren" ${gekozen.length ? '' : 'disabled'}>Opslaan</button>
+        ${S.beheer ? `<button class="knop klein" id="vragenTerug">Ongedaan maken</button>` : ''}
+      </div>`}
+    <p class="err" id="vragenfout">${esc(S.beheerFout)}</p>`;
+}
+
+function knoopBeheer() {
+  app.querySelectorAll('[data-vraag-aan]').forEach(b => b.onclick = () => {
+    const id = b.dataset.vraagAan;
+    const nu = S.beheer ?? pouleVragen();
+    S.beheer = nu.includes(id) ? nu.filter(x => x !== id) : [...nu, id];
+    S.beheerFout = '';
+    render();
+  });
+  const terug = app.querySelector('#vragenTerug');
+  if (terug) terug.onclick = () => { S.beheer = null; S.beheerFout = ''; render(); };
+
+  const bewaren = app.querySelector('#vragenBewaren');
+  if (bewaren) bewaren.onclick = async () => {
+    if (!S.beheer) { S.melding = 'Er was niets veranderd.'; render(); return; }
+    bewaren.disabled = true;
+    bewaren.textContent = 'Bezig...';
+    try {
+      await vragenBewaren(S.beheer);
+      S.beheer = null; S.beheerFout = '';
+      S.melding = 'De vragenset is bijgewerkt.';
+      await laad();
+    } catch (e) { S.beheerFout = e.message; }
+    render();
+  };
+}
+
+// Alleen het verschil wegschrijven. Alles weggooien en opnieuw invoeren zou
+// tussendoor een poule opleveren die even aan alles meedoet.
+async function vragenBewaren(gekozen) {
+  const nu = S.poulevragen;
+  const erbij = gekozen.filter(id => !nu.includes(id));
+  const eraf  = nu.filter(id => !gekozen.includes(id));
+  if (DEMO) { S.poulevragen = [...gekozen]; return; }
+  if (erbij.length) {
+    const { error } = await db.from('pool_questions')
+      .insert(erbij.map(id => ({ pool_id: S.poule.id, question_id: id })));
+    if (error) throw new Error(uitleg(error));
+  }
+  for (const id of eraf) {
+    const { error } = await db.from('pool_questions').delete()
+      .eq('pool_id', S.poule.id).eq('question_id', id);
+    if (error) throw new Error(uitleg(error));
+  }
 }
 
 // ---- racedetail ---------------------------------------------
