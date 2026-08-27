@@ -300,6 +300,15 @@
   .drv .code,.wknop .code{font-family:var(--cond);font-size:22px;font-weight:700}
   .drv .tm,.wknop .tm{font-family:var(--mono);font-size:10px;color:var(--ink2);margin-left:auto}
 
+  /* Teamgenoot-duels: per team een regel met de twee coureurs naast elkaar.
+     De teamnaam staat links vast, zodat de knoppen op één lijn blijven. */
+  .duels{display:flex;flex-direction:column;gap:8px}
+  .duel{display:grid;grid-template-columns:64px 1fr 1fr;align-items:center;gap:8px;
+    border-left:4px solid var(--lijn);padding-left:10px}
+  .duel .tm{font-family:var(--mono);font-size:10px;color:var(--ink2);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .duelknop{min-height:52px;justify-content:center}
+
   .opslaanbalk{position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px;
     padding-top:10px;background:linear-gradient(transparent,var(--bg) 40%)}
   .opslaanbalk .knop{min-height:64px}
@@ -531,18 +540,81 @@ export function duelStand(regels = []) {
   return { ik, ander, gelijk, gespeeld: ik + ander + gelijk };
 }
 
+// Eén coureur aanwijzen die bovenaan een lijst hoort te eindigen: dat is de
+// winnaar van de race, en het is ook de pole van de kwalificatie. Alleen het
+// aantal punten en de lijst verschillen, dus staat de regel hier één keer.
+export function scoreEerste(gekozen, uitslag = [], punten = 0) {
+  if (!gekozen || !uitslag?.length) return 0;
+  return String(uitslag[0]) === String(gekozen) ? punten : 0;
+}
+
 // De winnaar apart. Zwaar met opzet: een perfecte top 10 levert 50 op, dus
 // deze ene keuze is het halve weekend waard. Dat houdt een weekend spannend
 // voor wie op punten al ver achterloopt.
 export function scoreWinnaar(gekozen, uitslag = []) {
-  if (!gekozen || !uitslag?.length) return 0;
-  return String(uitslag[0]) === String(gekozen) ? 25 : 0;
+  return scoreEerste(gekozen, uitslag, 25);
 }
 
-const scoreWeekend = (p, race) =>
-    scoreLijst(p?.quali_top10 ?? [], race.quali_result ?? []).totaal
-  + scoreLijst(p?.race_top10  ?? [], race.race_result  ?? []).totaal
-  + scoreWinnaar(p?.race_winnaar, race.race_result ?? []);
+// De pole is dezelfde keuze aan de kwalificatiekant, maar veel lichter: hij
+// is een stuk beter te raden dan de racewinnaar.
+export function scorePole(gekozen, quali = []) {
+  return scoreEerste(gekozen, quali, 10);
+}
+
+// Teamgenoot-duels: per team wie van de twee als eerste eindigt. Je kiest er
+// zoveel als je wilt; alleen de duels waar je een keuze in hebt gemaakt
+// tellen mee voor je score, en de punten gaan naar rato van het aantal duels
+// dat je hebt aangedurfd. Zo levert vier van de vier goed evenveel op als
+// tien van de tien, en kost een gokje op een elfde duel je niets als de rest
+// klopt.
+//
+// paren is wat teamParen() hieronder teruggeeft: per team de twee coureurs.
+// uitslag is de volledige finishvolgorde. Wie daar niet in staat is niet
+// gefinisht en verliest zijn duel van een teamgenoot die dat wel deed.
+export function scoreDuels(gekozen = [], uitslag = [], paren = [], punten = 15) {
+  if (!gekozen?.length || !uitslag?.length || !paren.length) return 0;
+  const plek = (nr) => {
+    const i = uitslag.findIndex((x) => String(x) === String(nr));
+    return i === -1 ? Infinity : i;
+  };
+  let goed = 0, geteld = 0;
+  for (const { a, b } of paren) {
+    const keuze = gekozen.find((g) => String(g) === String(a.nr) || String(g) === String(b.nr));
+    if (!keuze) continue;                      // dit duel heb je overgeslagen
+    const pa = plek(a.nr), pb = plek(b.nr);
+    if (pa === Infinity && pb === Infinity) continue;   // geen van beiden gefinisht
+    geteld++;
+    if (String(keuze) === String(pa < pb ? a.nr : b.nr)) goed++;
+  }
+  return geteld ? Math.round(punten * goed / geteld) : 0;
+}
+
+// De teams uit een deelnemerslijst, als paren. Alleen teams met precies twee
+// coureurs: bij een invaller staan er drie in de lijst en is "de teamgenoot"
+// niet meer één iemand.
+export function teamParen(drivers = []) {
+  const per = new Map();
+  for (const d of drivers ?? []) {
+    if (!per.has(d.team)) per.set(d.team, []);
+    per.get(d.team).push(d);
+  }
+  return [...per.entries()]
+    .filter(([, ds]) => ds.length === 2)
+    .map(([team, ds]) => ({ team, a: ds[0], b: ds[1] }));
+}
+
+// Wat één speler op één tab scoort: de top 10 plus de losse vragen die aan
+// dezelfde deadline hangen. Staat hier één keer, zodat "jouw punten", "de
+// rest" en de stand nooit uit elkaar kunnen lopen.
+const scoreTab = (p, race, welk) => welk === 'quali'
+  ? scoreLijst(p?.quali_top10 ?? [], race.quali_result ?? []).totaal
+    + scorePole(p?.pole, race.quali_result ?? [])
+  : scoreLijst(p?.race_top10 ?? [], race.race_result ?? []).totaal
+    + scoreWinnaar(p?.race_winnaar, race.race_result ?? [])
+    + scoreDuels(p?.teamgenoot_duels ?? [], race.race_result ?? [],
+                 teamParen(race.drivers), puntenVoor('teamgenoot_duels'));
+
+const scoreWeekend = (p, race) => scoreTab(p, race, 'quali') + scoreTab(p, race, 'race');
 
 // ============================================================
 //  Demodata (alleen als er geen Supabase-gegevens zijn ingevuld)
@@ -599,6 +671,8 @@ const demoVragen = [
   { id:'quali_top10', naam:'Top 10 kwalificatie', punten:50, sessie:'quali', soort:'top10',   gok:false, volgorde:10 },
   { id:'race_top10',  naam:'Top 10 race',         punten:50, sessie:'race',  soort:'top10',   gok:false, volgorde:20 },
   { id:'winnaar',     naam:'Winnaar',             punten:25, sessie:'race',  soort:'coureur', gok:false, volgorde:30 },
+  { id:'pole',        naam:'Pole position',       punten:10, sessie:'quali', soort:'coureur', gok:false, volgorde:40 },
+  { id:'teamgenoot_duels', naam:'Teamgenoot-duels', punten:15, sessie:'race', soort:'duels', gok:false, volgorde:70 },
 ];
 
 // Dezelfde demovoorspellingen, maar als rijen zoals answers ze bewaart.
@@ -618,7 +692,8 @@ const S = {
   ik:    DEMO ? { id:'m1', naam:'Danny' } : null,
   races: [], leden: [], preds: [],
   antwoorden: [], vragen: [], poulevragen: [],
-  race:  null, tab: 'quali', keuze: { quali: [], race: [], winnaar: '' },
+  race:  null, tab: 'quali',
+  keuze: { quali: [], race: [], winnaar: '', pole: '', duels: [] },
   uitslag: { welk: null, lijst: [] },
   weergave: 'races', fout: '', melding: '', linkCode: '', linkFout: '',
 };
@@ -762,20 +837,26 @@ function toonFout(bericht) {
 // vraag — dat leest een stuk prettiger dan overal door een lijst zoeken.
 // Deze twee stukjes vertalen daartussen; verder verandert er niets aan de
 // schermen.
+// De drie oudste vragen hebben een eigen veldnaam die overal in de schermen
+// staat; de rest komt onder zijn eigen question_id te staan.
 const VRAAG_VELD = { quali_top10:'quali_top10', race_top10:'race_top10', winnaar:'race_winnaar' };
-const VELD_VRAAG = Object.fromEntries(Object.entries(VRAAG_VELD).map(([v, k]) => [k, v]));
+
+// Welke vragen dit scherm kan stellen en scoren. De database kent er meer;
+// die worden overgeslagen tot ze hier ook gebouwd zijn. Zo kan de vragenlijst
+// vooruitlopen op de app zonder dat er halve schermen ontstaan.
+const GEBOUWD = ['quali_top10', 'race_top10', 'winnaar', 'pole', 'teamgenoot_duels'];
 
 function bouwPreds() {
   const per = new Map();
   for (const a of S.antwoorden) {
-    const veld = VRAAG_VELD[a.question_id];
-    if (!veld) continue;   // een vraag die dit scherm nog niet kent
+    if (!GEBOUWD.includes(a.question_id)) continue;
     const sleutel = `${a.race_id}|${a.member_id}`;
     if (!per.has(sleutel)) {
       per.set(sleutel, { pool_id:a.pool_id, race_id:a.race_id, member_id:a.member_id,
-                         quali_top10:null, race_top10:null, race_winnaar:null });
+                         quali_top10:null, race_top10:null, race_winnaar:null,
+                         pole:null, teamgenoot_duels:null });
     }
-    per.get(sleutel)[veld] = a.waarde;
+    per.get(sleutel)[VRAAG_VELD[a.question_id] ?? a.question_id] = a.waarde;
   }
   S.preds = [...per.values()];
 }
@@ -783,7 +864,14 @@ function bouwPreds() {
 // Welke vragen doen mee in deze poule? Nog geen keuze gemaakt (of een poule
 // van vóór de vragenlijst) betekent: alles wat dit scherm kan tonen.
 const vraagActief = (id) =>
-  !!VRAAG_VELD[id] && (!S.poulevragen.length || S.poulevragen.includes(id));
+  GEBOUWD.includes(id) && (!S.poulevragen.length || S.poulevragen.includes(id));
+
+// Wat een vraag oplevert, volgens de vragenlijst uit de database. De
+// getallen hieronder zijn het vangnet voor de demomodus en voor een poule
+// die de lijst nog niet heeft geladen.
+const VRAAG_PUNTEN = { quali_top10:50, race_top10:50, winnaar:25, pole:10, teamgenoot_duels:15 };
+const puntenVoor = (id) =>
+  S.vragen.find(v => v.id === id)?.punten ?? VRAAG_PUNTEN[id] ?? 0;
 
 async function laad() {
   if (DEMO) {
@@ -830,10 +918,14 @@ async function bewaar() {
   // op "aanwezig" test in plaats van op "gewijzigd" — dan kun je je
   // race-top-10 niet meer opslaan zodra de kwalificatie is begonnen.
   const wil = [];
-  if (!dicht.quali) wil.push(['quali_top10', S.keuze.quali.length ? S.keuze.quali : null]);
+  if (!dicht.quali) {
+    wil.push(['quali_top10', S.keuze.quali.length ? S.keuze.quali : null]);
+    wil.push(['pole',        S.keuze.pole || null]);
+  }
   if (!dicht.race) {
     wil.push(['race_top10', S.keuze.race.length ? S.keuze.race : null]);
     wil.push(['winnaar',    S.keuze.winnaar || null]);
+    wil.push(['teamgenoot_duels', S.keuze.duels.length ? S.keuze.duels : null]);
   }
   const opslaan = wil.filter(([id, w]) => vraagActief(id) && w !== null);
   // Een leeggemaakt antwoord is een rij die weg moet: waarde mag niet null
@@ -948,9 +1040,13 @@ function weekendWinnaars(race) {
   return hoogste > 0 ? rijen.filter(r => r.punten === hoogste) : [];
 }
 
+// Heeft deze speler dit weekend iets ingeleverd? Elk antwoord telt, ook als
+// het alleen de pole of een paar duels was — anders zou een weekend waarin
+// iemand wél meedeed niet meetellen voor het onderlinge duel.
 const heeftVoorspeld = (r, id) => {
   const p = vindPred(r.id, id);
-  return !!(p?.quali_top10?.length || p?.race_top10?.length);
+  return !!(p?.quali_top10?.length || p?.race_top10?.length
+         || p?.race_winnaar || p?.pole || p?.teamgenoot_duels?.length);
 };
 
 function duels() {
@@ -1399,7 +1495,8 @@ function openRace(id) {
   S.weergave = 'races';
   const mijn = vindPred(id, S.ik.id);
   S.keuze = { quali:[...(mijn?.quali_top10 ?? [])], race:[...(mijn?.race_top10 ?? [])],
-              winnaar: mijn?.race_winnaar ?? '' };
+              winnaar: mijn?.race_winnaar ?? '', pole: mijn?.pole ?? '',
+              duels: [...(mijn?.teamgenoot_duels ?? [])] };
   S.tab = openLijst(r) === 'race' ? 'race' : 'quali';
   S.uitslag = { welk: null, lijst: [] };
   S.fout = '';
@@ -1549,10 +1646,17 @@ function invulWeergave(paneel, r, dicht) {
   }
   const lijst = S.keuze[S.tab];
   const kanKopieren = S.tab === 'race' && !S.keuze.race.length && S.keuze.quali.length;
+  // Een halve top 10 zegt niets, dus die gaat er niet in. Maar wie alleen de
+  // pole of een paar duels invult heeft wel degelijk iets in te leveren.
+  const losGekozen = S.tab === 'race'
+    ? !!S.keuze.winnaar || S.keuze.duels.length > 0
+    : !!S.keuze.pole;
+  const magOpslaan = lijst.length === 10 || (lijst.length === 0 && losGekozen);
   const deadline = S.tab === 'quali' ? r.deadline_quali : r.deadline_race;
 
   paneel.innerHTML = `
-    ${S.tab === 'race' ? winnaarKiezer(r) : ''}
+    ${coureurKiezer(r, S.tab === 'race' ? 'winnaar' : 'pole')}
+    ${S.tab === 'race' ? duelKiezer(r) : ''}
     ${kanKopieren ? `<button class="knop klein" id="kopieer">Neem de kwalificatie over</button>` : ''}
     <ol class="grid10">
       ${Array.from({length:10}, (_,i) => {
@@ -1581,15 +1685,27 @@ function invulWeergave(paneel, r, dicht) {
     </div>
     <p class="label" style="margin:0">sluit ${esc(sluitTekst(deadline))}</p>
     <div class="opslaanbalk">
-      <button class="knop primair" id="opslaan" ${lijst.length < 10 ? 'disabled' : ''}>${
-        lijst.length < 10 ? `Nog ${10 - lijst.length} te kiezen` : 'Opslaan'}</button>
+      <button class="knop primair" id="opslaan" ${magOpslaan ? '' : 'disabled'}>${
+        magOpslaan ? 'Opslaan'
+          : lijst.length ? `Nog ${10 - lijst.length} te kiezen`
+          : 'Nog niets gekozen'}</button>
       <p class="err">${esc(S.fout)}</p>
     </div>`;
 
-  paneel.querySelectorAll('[data-winnaar]').forEach(b => b.onclick = () => {
+  paneel.querySelectorAll('[data-kies]').forEach(b => b.onclick = () => {
     // Nog een keer op dezelfde tikken haalt de keuze weg; zonder dat zit je
     // eraan vast zodra je een keer misklikt.
-    S.keuze.winnaar = zelfde(b.dataset.winnaar, S.keuze.winnaar) ? '' : b.dataset.winnaar;
+    const veld = b.dataset.vraag;
+    S.keuze[veld] = zelfde(b.dataset.kies, S.keuze[veld]) ? '' : b.dataset.kies;
+    invulWeergave(paneel, r, dicht);
+  });
+  paneel.querySelectorAll('[data-duel]').forEach(b => b.onclick = () => {
+    const { duel, tegen } = b.dataset;
+    const alGekozen = S.keuze.duels.some(g => zelfde(g, duel));
+    // Binnen één team kan er maar één de teamgenoot verslaan, dus de ander
+    // gaat er hoe dan ook uit.
+    S.keuze.duels = S.keuze.duels.filter(g => !zelfde(g, duel) && !zelfde(g, tegen));
+    if (!alGekozen) S.keuze.duels.push(duel);
     invulWeergave(paneel, r, dicht);
   });
   paneel.querySelectorAll('[data-add]').forEach(b => b.onclick = () => {
@@ -1624,26 +1740,73 @@ function invulWeergave(paneel, r, dicht) {
 // De grootste losse keuze van het weekend, dus die staat bovenaan en niet
 // verstopt onder de top 10. Bewust niet verplicht: niemand hoort te blijven
 // hangen op een knop die niet werkt.
-function winnaarKiezer(r) {
-  const gekozen = S.keuze.winnaar;
+// De vragen waarbij je één coureur aanwijst. Ze delen hetzelfde raster;
+// alleen de tekst, de lijst waarin gescoord wordt en het aantal punten
+// verschillen. S.keuze heeft per vraag een veld met dezelfde naam.
+const COUREURVRAAG = {
+  pole:    { kop:'wie pakt de pole?', label:'pole', letter:'P', mijn:'jouw pole',
+             goed:'pakte de pole', mis:'geen pole gekozen' },
+  winnaar: { kop:'wie wint de race?', label:'winnaar', letter:'W', mijn:'jouw winnaar',
+             goed:'won de race',   mis:'geen winnaar gekozen' },
+};
+
+function coureurKiezer(r, id) {
+  if (!vraagActief(id)) return '';
+  const v = COUREURVRAAG[id];
+  const punten = puntenVoor(id);
+  const gekozen = S.keuze[id];
   const d = gekozen ? drv(r, gekozen) : null;
   return `
     <div class="winnaarblok">
       <div class="winnaarkop">
-        <span class="label">wie wint de race?</span>
-        <span class="mono" style="color:var(--ink3)">25 punten</span>
+        <span class="label">${v.kop}</span>
+        <span class="mono" style="color:var(--ink3)">${punten} punten</span>
       </div>
       <div class="coureurs winnaars">
         ${(r.drivers ?? []).map(c => `
           <button class="wknop ${zelfde(c.nr, gekozen) ? 'gekozen' : ''}"
-            data-winnaar="${esc(c.nr)}" style="border-left-color:${esc(c.kleur)}"
+            data-kies="${esc(c.nr)}" data-vraag="${id}" style="border-left-color:${esc(c.kleur)}"
             aria-pressed="${zelfde(c.nr, gekozen)}">
             <span class="code">${esc(c.code)}</span><span class="tm">${esc(stal(c.team))}</span>
           </button>`).join('')}
       </div>
       ${d
-        ? `<p class="mono groen" style="margin:0">jouw winnaar: ${esc(d.naam)}</p>`
-        : `<p class="mono amber" style="margin:0">nog niemand gekozen · hier ligt 25 punten</p>`}
+        ? `<p class="mono groen" style="margin:0">${v.mijn}: ${esc(d.naam)}</p>`
+        : `<p class="mono amber" style="margin:0">nog niemand gekozen · hier liggen ${punten} punten</p>`}
+    </div>`;
+}
+
+// Teamgenoot-duels: per team wie van de twee voor de ander eindigt. Je hoeft
+// ze niet allemaal in te vullen — alleen wat je kiest telt mee, en de punten
+// gaan naar rato. Een duel waar je niets van weet laat je dus gewoon staan.
+function duelKiezer(r) {
+  if (!vraagActief('teamgenoot_duels')) return '';
+  const paren = teamParen(r.drivers);
+  if (!paren.length) return '';
+  const punten = puntenVoor('teamgenoot_duels');
+  const gekozen = S.keuze.duels;
+  const isGekozen = (nr) => gekozen.some(g => zelfde(g, nr));
+  const klaar = paren.filter(p => isGekozen(p.a.nr) || isGekozen(p.b.nr)).length;
+  return `
+    <div class="winnaarblok">
+      <div class="winnaarkop">
+        <span class="label">wie verslaat zijn teamgenoot?</span>
+        <span class="mono" style="color:var(--ink3)">${punten} punten</span>
+      </div>
+      <div class="duels">
+        ${paren.map(p => `
+          <div class="duel" style="border-left-color:${esc(p.a.kleur)}">
+            <span class="tm">${esc(stal(p.team))}</span>
+            ${[[p.a, p.b], [p.b, p.a]].map(([c, tegen]) => `
+              <button class="wknop duelknop ${isGekozen(c.nr) ? 'gekozen' : ''}"
+                data-duel="${esc(c.nr)}" data-tegen="${esc(tegen.nr)}"
+                aria-pressed="${isGekozen(c.nr)}">
+                <span class="code">${esc(c.code)}</span>
+              </button>`).join('')}
+          </div>`).join('')}
+      </div>
+      <p class="duelteller mono ${klaar ? 'groen' : 'amber'}" style="margin:0">${klaar} van de
+        ${paren.length} duels gekozen · alleen wat je kiest telt mee</p>
     </div>`;
 }
 
@@ -1654,25 +1817,33 @@ function uitslagWeergave(r, werkelijk) {
   // bijgewerkt, dus dat hoort er gewoon bij te staan.
   const noot = r[HANDVLAG[S.tab]]
     ? `<p class="label amber" style="margin:0">handmatig ingevuld · niet van openf1</p>` : '';
-  if (!lijst?.length) return `
+  // De losse vragen hangen aan dezelfde deadline als de top 10 van deze tab.
+  const losse = S.tab === 'race'
+    ? coureurUitslag(r, mijn, werkelijk, 'winnaar') + duelUitslag(r, mijn, werkelijk)
+    : coureurUitslag(r, mijn, werkelijk, 'pole');
+  // Wie alleen de losse vragen invulde heeft wél iets ingeleverd; die mag
+  // hier niet "je hebt hier niks ingevuld" te zien krijgen.
+  const losIngevuld = S.tab === 'race'
+    ? !!mijn?.race_winnaar || !!mijn?.teamgenoot_duels?.length
+    : !!mijn?.pole;
+  if (!lijst?.length && !losIngevuld) return `
     ${noot}
     <div class="leeg"><span class="label">niets ingevuld</span>
       <p class="zacht" style="margin:0">Je hebt hier niks ingevuld.</p></div>
     ${andermans(r)}${weekendVoet(r)}`;
-  const { totaal, regels } = scoreLijst(lijst, werkelijk);
+  const { regels } = scoreLijst(lijst ?? [], werkelijk);
   const exact = regels.filter(x => x.punten === 5).length;
-  // Op de race-tab hoort de winnaar bij het totaal, anders klopt dit getal
-  // niet met wat er in de stand bijgeteld wordt.
-  const winnaarPunten = S.tab === 'race' ? scoreWinnaar(mijn?.race_winnaar, werkelijk) : 0;
   return `
     ${noot}
-    ${S.tab === 'race' ? winnaarUitslag(r, mijn, werkelijk) : ''}
+    ${losse}
     <div class="score">
       <span style="display:flex;flex-direction:column;gap:4px">
         <span class="label">jouw punten</span>
-        <span class="zacht">${exact} van ${regels.length} exact voorspeld</span>
+        <span class="zacht">${regels.length
+          ? `${exact} van ${regels.length} exact voorspeld`
+          : 'geen top 10 ingevuld'}</span>
       </span>
-      <b class="getal">${totaal + winnaarPunten}</b>
+      <b class="getal">${scoreTab(mijn, r, S.tab)}</b>
     </div>
     <ul class="strip">
       ${regels.map(x => {
@@ -1732,27 +1903,66 @@ function knoopKopieer(paneel) {
   });
 }
 
-function winnaarUitslag(r, mijn, werkelijk) {
-  const gekozen = mijn?.race_winnaar;
-  const echteWinnaar = werkelijk?.[0];
+function coureurUitslag(r, mijn, werkelijk, id) {
+  if (!vraagActief(id)) return '';
+  const v = COUREURVRAAG[id];
+  const punten = puntenVoor(id);
+  const gekozen = id === 'winnaar' ? mijn?.race_winnaar : mijn?.[id];
   if (!gekozen) {
-    return echteWinnaar
-      ? `<p class="label amber" style="margin:0">geen winnaar gekozen · 25 punten laten liggen</p>`
+    return werkelijk?.length
+      ? `<p class="label amber" style="margin:0">${v.mis} · ${punten} punten laten liggen</p>`
       : '';
   }
   const d = drv(r, gekozen);
-  const punten = scoreWinnaar(gekozen, werkelijk);
-  const plek = (werkelijk ?? []).indexOf(gekozen);
+  const gescoord = scoreEerste(gekozen, werkelijk, punten);
+  const plek = (werkelijk ?? []).findIndex(x => zelfde(x, gekozen));
   return `
-    <span class="label">winnaar · 25 punten</span>
+    <span class="label">${v.label} · ${punten} punten</span>
     <div class="sr" style="border-left-color:${esc(d.kleur)}">
-      <span class="pos">W</span>
+      <span class="pos">${v.letter}</span>
       <span class="code">${esc(d.code)}</span>
-      <span class="werd">${punten
-        ? 'won de race'
+      <span class="werd">${gescoord
+        ? v.goed
         : plek === -1 ? 'niet gefinisht' : 'werd P' + (plek + 1)}</span>
-      <span class="pts ${punten ? 'v5' : 'v0'}">${punten}</span>
+      <span class="pts ${gescoord ? 'v5' : 'v0'}">${gescoord}</span>
     </div>`;
+}
+
+// De duels na afloop: per team wie het werd, en of jouw keuze klopte. Alleen
+// de duels waar je een keuze in maakte staan erbij; de rest heb je niet
+// gespeeld en telt ook niet mee.
+function duelUitslag(r, mijn, werkelijk) {
+  if (!vraagActief('teamgenoot_duels')) return '';
+  const paren = teamParen(r.drivers);
+  const gekozen = mijn?.teamgenoot_duels ?? [];
+  const punten = puntenVoor('teamgenoot_duels');
+  if (!paren.length || !werkelijk?.length) return '';
+  if (!gekozen.length) {
+    return `<p class="label amber" style="margin:0">geen duels gekozen · ${punten} punten laten liggen</p>`;
+  }
+  const plek = (nr) => {
+    const i = werkelijk.findIndex(x => zelfde(x, nr));
+    return i === -1 ? Infinity : i;
+  };
+  const gespeeld = paren
+    .map(p => ({ p, keuze: gekozen.find(g => zelfde(g, p.a.nr) || zelfde(g, p.b.nr)) }))
+    .filter(x => x.keuze && !(plek(x.p.a.nr) === Infinity && plek(x.p.b.nr) === Infinity));
+  const totaal = scoreDuels(gekozen, werkelijk, paren, punten);
+  return `
+    <span class="label">teamgenoot-duels · ${totaal} van ${punten} punten</span>
+    <ul class="strip">
+      ${gespeeld.map(({ p, keuze }) => {
+        const won = plek(p.a.nr) < plek(p.b.nr) ? p.a : p.b;
+        const mijnD = drv(r, keuze);
+        const raak = zelfde(keuze, won.nr);
+        return `<li class="sr" style="border-left-color:${esc(p.a.kleur)}">
+          <span class="pos">${esc(stal(p.team)).slice(0, 3)}</span>
+          <span class="code">${esc(mijnD.code)}</span>
+          <span class="werd">${raak ? 'won het duel' : `verloor van ${esc(won.code)}`}</span>
+          <span class="pts ${raak ? 'v5' : 'v0'}">${raak ? '✓' : '✗'}</span>
+        </li>`;
+      }).join('')}
+    </ul>`;
 }
 
 function andermans(r) {
@@ -1762,9 +1972,8 @@ function andermans(r) {
   const rijen = anderen.map(l => {
     const p = vindPred(r.id, l.member_id);
     const v = S.tab === 'quali' ? p?.quali_top10 : p?.race_top10;
-    const extra = S.tab === 'race' && werkelijk ? scoreWinnaar(p?.race_winnaar, werkelijk) : 0;
     return { naam:l.display_name,
-             punten: werkelijk && v ? scoreLijst(v, werkelijk).totaal + extra : null };
+             punten: werkelijk && v ? scoreTab(p, r, S.tab) : null };
   }).sort((a,b) => (b.punten ?? -1) - (a.punten ?? -1));
   return `<span class="label">de rest</span>
     ${rijen.map(x => `<div class="rest">

@@ -42,6 +42,8 @@ const beginstand = {
     { id:'quali_top10', naam:'Top 10 kwalificatie', punten:50, sessie:'quali', soort:'top10',   gok:false, volgorde:10 },
     { id:'race_top10',  naam:'Top 10 race',         punten:50, sessie:'race',  soort:'top10',   gok:false, volgorde:20 },
     { id:'winnaar',     naam:'Winnaar',             punten:25, sessie:'race',  soort:'coureur', gok:false, volgorde:30 },
+    { id:'pole',        naam:'Pole position',       punten:10, sessie:'quali', soort:'coureur', gok:false, volgorde:40 },
+    { id:'teamgenoot_duels', naam:'Teamgenoot-duels', punten:15, sessie:'race', soort:'duels',  gok:false, volgorde:70 },
   ],
   // Leeg: een poule zonder eigen keuze doet aan alles mee.
   pool_questions: [],

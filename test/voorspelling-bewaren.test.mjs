@@ -57,8 +57,8 @@ await page.click('[data-tab="race"]');
 await page.waitForSelector('.drv');
 
 // De losse winnaar staat op dezelfde tab en hangt aan dezelfde deadline.
-await page.click('[data-winnaar]');
-const winnaar = await page.getAttribute('.wknop.gekozen', 'data-winnaar');
+await page.click('[data-vraag="winnaar"]');
+const winnaar = await page.getAttribute('.wknop.gekozen', 'data-kies');
 await kiesTien(page);
 await page.click('#opslaan');
 await page.waitForSelector('[data-race]');
