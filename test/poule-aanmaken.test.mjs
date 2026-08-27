@@ -139,6 +139,22 @@ await page.waitForSelector('#klaar');
 check('stap 4 laat de poulecode zien',
   (await tekst('.veld.code')).length >= 5, await tekst('.veld.code'));
 
+// De uitnodigingslink op dit scherm gaat over de net aangemaakte poule, niet
+// over S.poule — die bestaat nog niet, want je bent nog niet "naar de poule"
+// geweest. Zonder dat de knop expliciet die poule krijgt doorgegeven klapt
+// hij stil op een null: de knop verandert dan niets en er komt geen tekst.
+const code = await tekst('.veld.code');
+await page.click('#uitnodiging');
+await page.waitForFunction(
+  () => document.querySelector('#uitnodiging')?.textContent !== 'Kopieer uitnodigingslink');
+const geklikt = await tekst('#uitnodiging');
+check('de uitnodigingsknop op stap 4 doet iets als je erop klikt',
+  geklikt !== 'Kopieer uitnodigingslink', geklikt);
+const veldTekst = await page.inputValue('#uitnodigingveld').catch(() => '');
+check('en de tekst gaat over de zojuist aangemaakte poule, met de juiste code',
+  geklikt === 'Gekopieerd' || veldTekst.includes(code),
+  `knop: "${geklikt}", veld: "${veldTekst}"`);
+
 const poules = await page.evaluate(() => globalThis.__db.pools);
 const nieuw = poules.find((p) => p.name === 'Donderdagavondpoule');
 check('de poule staat in de database', !!nieuw, poules.map((p) => p.name).join(', '));
