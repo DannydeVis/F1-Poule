@@ -50,7 +50,12 @@ create table if not exists public.races (
   -- alleen lege uitslagen, dus zo'n uitslag wordt nooit meer automatisch
   -- gecorrigeerd; daarom moet zichtbaar zijn welke het zijn.
   quali_handmatig boolean not null default false,
-  race_handmatig  boolean not null default false
+  race_handmatig  boolean not null default false,
+  -- Losse uitslagen: één coureurnummer per stuk.
+  fastest_lap               text,
+  fastest_pitstop           text,
+  fastest_lap_handmatig     boolean not null default false,
+  fastest_pitstop_handmatig boolean not null default false
 );
 
 create table if not exists public.predictions (
@@ -71,8 +76,8 @@ create table if not exists public.predictions (
 --  daarboven is een rij per vraag eenvoudiger, en pas dan kan een poule
 --  zelf kiezen wat er meedoet.
 --
---  Deze tabellen staan er alvast; de app gebruikt voorlopig nog de
---  kolommen hierboven. Ze zijn additief, dus dit breekt niets.
+--  De app leest en schrijft deze tabellen sinds de migratie; de kolommen
+--  op predictions hierboven staan er alleen nog voor de oude gegevens.
 -- ------------------------------------------------------------
 
 create table if not exists public.questions (
@@ -141,6 +146,13 @@ alter table public.races        add column if not exists quali_result   text[];
 alter table public.races        add column if not exists race_result    text[];
 alter table public.races        add column if not exists quali_handmatig boolean not null default false;
 alter table public.races        add column if not exists race_handmatig  boolean not null default false;
+-- Losse uitslagen die niet uit een volgorde te halen zijn: één coureurnummer.
+-- De sync vult alleen wat leeg is, dus wat hier met de hand in gaat blijft
+-- staan; de vlag is er om dat op het scherm te kunnen zeggen.
+alter table public.races        add column if not exists fastest_lap               text;
+alter table public.races        add column if not exists fastest_pitstop           text;
+alter table public.races        add column if not exists fastest_lap_handmatig     boolean not null default false;
+alter table public.races        add column if not exists fastest_pitstop_handmatig boolean not null default false;
 
 alter table public.predictions  add column if not exists quali_top10 text[];
 alter table public.predictions  add column if not exists race_top10  text[];

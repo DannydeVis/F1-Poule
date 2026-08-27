@@ -34,6 +34,20 @@ begin
   end if;
   raise notice 'ok: presets tellen op tot 100 / 145 / % punten', n;
 
+  -- 2b. de losse punten zelf. index.html telt niet meer met eigen getallen
+  --     maar leest ze hiervandaan, dus dit is de enige plek waar ze staan —
+  --     en de teksten in de app en in BEDIENING.md gaan ervan uit.
+  select punten into n from questions where id = 'quali_top10';
+  if n <> 50 then raise exception 'gezakt: een perfecte top 10 is % punten, niet 50', n; end if;
+  select punten into n from questions where id = 'winnaar';
+  if n <> 25 then raise exception 'gezakt: de winnaar is % punten, niet 25', n; end if;
+  select punten into n from questions where id = 'teamgenoot_duels';
+  if n <> 15 then raise exception 'gezakt: de duels zijn % punten, niet 15', n; end if;
+  select count(*) into n from questions
+  where id in ('pole','snelste_ronde','snelste_pitstop') and punten = 10;
+  if n <> 3 then raise exception 'gezakt: pole, snelste ronde en snelste pitstop staan niet alle drie op 10'; end if;
+  raise notice 'ok: de losse puntenwaarden staan zoals de app ze verwacht';
+
   -- 3. elke vraag hangt aan een bestaande sessie en een bekend soort
   select count(*) into n from questions where sessie not in ('quali','race');
   if n <> 0 then raise exception 'gezakt: % vragen met een onbekende sessie', n; end if;

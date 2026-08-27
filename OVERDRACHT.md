@@ -583,6 +583,50 @@ van `sync.mjs` ook niet, en er is geen harnas voor. Met de hand na te kijken
 met: `select name, questions_locked from pools;` na een run waarin een
 uitslag binnenkwam.
 
+## De snelste ronde en de snelste pitstop
+
+Vraag drie en vier van de zeven. Ze werken als de winnaar en de pole — je
+wijst één coureur aan — maar ze verschillen op één punt dat door de hele
+code doorwerkt: **ze staan niet in de finishvolgorde.** Er is dus een eigen
+kolom voor nodig: `races.fastest_lap` en `races.fastest_pitstop`, allebei één
+coureurnummer, elk met een `_handmatig`-vlag ernaast.
+
+**Eén tabel voor alle vier.** `COUREURVRAAG` beschrijft nu per vraag aan
+welke sessie hij hangt, welke teksten erbij horen en — het belangrijkste —
+welke lijst de uitslag is. Bij de winnaar en de pole is dat de hele
+finishvolgorde; bij deze twee is die lijst één naam lang. Daarmee is het
+overal dezelfde regel: klopt de bovenste van de lijst met jouw keuze, dan
+krijg je de punten. De schermen lopen die tabel af in plaats van per vraag
+een eigen tak te hebben, dus de volgende vraag van dit soort is een regel in
+die tabel.
+
+**`scoreWinnaar()` en `scorePole()` zijn weg.** Ze deden hetzelfde als
+`scoreEerste()` met een hardgecodeerd aantal punten — en dat was een tweede
+waarheid naast `questions.punten`, waar de rest van de app inmiddels uit
+leest. Zou je de punten in de database aanpassen, dan bleef de app 25 tellen.
+Nu leest alles uit `puntenVoor()`. De losse waarden liggen daarmee alleen nog
+in `schema.sql` vast, en `test/vragen.test.sql` houdt ze daar op hun plek —
+inclusief de 50 en de 25, want daar leunen de teksten in de app op.
+
+**"Werd P4" zegt niets bij een uitslag van één naam.** Een misser laat
+daarom zien wie het wél werd.
+
+**Zelf invullen.** OpenF1 heeft deze twee niet altijd, en zonder waarde valt
+er niets te scoren. Naast de uitslag staat daarom dezelfde mogelijkheid als
+bij een hele uitslag: zelf invullen, met dezelfde waarschuwing (het geldt
+voor iedereen, niet alleen voor jouw poule) en dezelfde bescherming
+— `is(kolom, null)` hoort bij de schrijfactie zelf, zodat een waarde die er
+inmiddels staat blijft staan. Zolang de uitslag er niet is staat er geen
+"je hebt punten laten liggen": dat zou een verwijt zijn voor iets waar de
+speler niets aan kan doen.
+
+**De sync haalt ze nog niet op.** Dat is bewust: `api.openf1.org` is vanuit
+de bouwomgeving niet bereikbaar, dus de veldnamen van `laps` en `pit` zijn
+hier niet te controleren. Ongecontroleerde code in een dagelijkse job zetten
+die stil niets doet is slechter dan hem er nog niet in hebben. Dit is de
+volgende stap, en die moet één keer tegen de echte API gedraaid worden voor
+hij te vertrouwen is. Tot dan is zelf invullen de weg.
+
 ## Wat er nog bij kan
 
 Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
@@ -596,11 +640,15 @@ is groep 3 en verder — extra vraagsoorten en seizoensmechaniek.
 vier stappen, en het omzetten van de vaste kolommen `quali_top10` en
 `race_top10` naar een `questions`-tabel met een rij per vraag. Van dat
 document zijn alle vijf de stappen gebouwd, en van de zeven extra vragen doen
-de pole en de teamgenoot-duels inmiddels mee. Wat er nog ligt zijn de vier
-vragen die nieuwe uitslaggegevens nodig hebben: snelste ronde, snelste
-pitstop, safety cars en rode vlag. Die vragen om een kolom op `races`, een
-uitbreiding van `scripts/sync.mjs` en een manier om ze met de hand in te
-vullen als OpenF1 ze niet heeft.
+er vijf mee: winnaar, pole, teamgenoot-duels, snelste ronde en snelste
+pitstop. Wat er nog ligt:
+
+- **Safety cars en de rode vlag.** De laatste twee vragen. Ze zijn geen
+  coureurkeuze maar een getal en een ja-of-nee, dus ze vragen een eigen
+  invoer en een eigen puntenregel — hoeveel levert er één naast op?
+- **De sync voor de losse uitslagen.** `fastest_lap` en `fastest_pitstop`
+  worden nu alleen met de hand gevuld. Zie hierboven waarom dat zo is
+  gebleven.
 
 Let op bij het lezen van dat document: een deel ervan beschrijft dingen die
 er inmiddels al zijn (de drie tabs, de strook met de eerstvolgende deadline,

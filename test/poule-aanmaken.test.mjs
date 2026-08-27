@@ -80,9 +80,13 @@ check('een vraag aanzetten telt live bij',
 // Vragen die de app nog niet stelt worden als zodanig gemarkeerd, en de
 // voet zegt wat er nu al gevraagd wordt. Anders beloof je punten die er
 // dit seizoen nog niet zijn.
-const binnenkort = await page.$$eval('.binnenkort', (n) => n.length);
+// Welke dat zijn schuift op zodra er een vraag bij gebouwd wordt; dat er een
+// markering staat en dat hij bij de juiste regels hoort is het punt.
+const binnenkort = await page.$$eval('.vraagregel', (n) =>
+  n.filter((b) => b.querySelector('.binnenkort')).map((b) => b.dataset.vraagAan));
 check('nog niet gebouwde vragen zijn gemarkeerd als binnenkort',
-  binnenkort === 4, `${binnenkort} gemarkeerd`);
+  binnenkort.length > 0 && binnenkort.every((id) => ['safety_cars', 'rode_vlag'].includes(id)),
+  binnenkort.join(', ') || 'niets gemarkeerd');
 const voet = await tekst('.veldblok');
 check('en de voet zegt hoeveel er nu al gevraagd wordt',
   /Daarvan wordt nu \d+ punten al gevraagd/.test(voet),
