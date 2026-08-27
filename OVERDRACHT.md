@@ -664,6 +664,30 @@ vier: een getal en een ja-of-nee.
 mechanisme staat er nog voor de volgende vraag, en `poule-aanmaken.test.mjs`
 houdt het in de gaten met een verzonnen tiende vraag in de nabootsing.
 
+### Drie dingen die met negen vragen niet meer klopten
+
+Bij het nalezen van de schermen met alle negen vragen erin bleken er drie
+plekken uit de pas te lopen. Geen van drieën gaf een foutmelding; ze deden
+gewoon iets anders dan ze zeiden.
+
+**Een race die niemand invulde was niet meer aan te vullen.** Wie zelf niets
+had voorspeld kreeg "je hebt hier niks ingevuld" en verder niets — inclusief
+geen knop om de ontbrekende snelste ronde of het aantal safety cars in te
+vullen. Sloeg de hele poule een race over, dan kon niemand er meer bij en
+bleef die uitslag voorgoed leeg. `openUitslagen()` zet die knoppen er nu ook
+bij als je zelf niets hebt ingeleverd.
+
+**`heeftVoorspeld()` liep achter op de vragenlijst.** Hij noemde de vragen
+één voor één op, en de vier nieuwste stonden er niet bij. Iemand die alleen
+het aantal safety cars invulde telde daarmee niet mee voor het onderlinge
+duel — een weekend waarin hij wél meedeed werd overgeslagen. Hij loopt nu
+langs `GEBOUWD`, zodat een nieuwe vraag hier niet meer vergeten kan worden.
+
+**"Nog niks ingevuld: Danny"** klopte niet meer zodra Danny wél iets had
+ingevuld, alleen geen top 10. Dat lijstje kijkt bewust alleen naar de top 10
+— daar ligt het meeste, en de knop eronder zegt "Top 10 invullen" — dus nu
+zegt de tekst dat ook: "nog geen top 10".
+
 ## Wat er nog bij kan
 
 Niets van dit alles is nodig om de poule te laten draaien. `ROUTEKAART.md`
