@@ -5,7 +5,7 @@
 // het geheugen niet bij; het scherm las daarna nog de oude, lege stand.
 // Deze test zakte op de oude versie met 0 van de 10 plekken ingevuld.
 
-import { maakControle, startPagina, meedoen, openRace, kiesTien, naarDeel } from './hulp.mjs';
+import { maakControle, startPagina, meedoen, openRace, kiesTien, kiesVoor } from './hulp.mjs';
 
 const { check, afronden } = maakControle('voorspelling bewaren');
 const { page, jsFouten, stoppen } = await startPagina();
@@ -44,8 +44,10 @@ check('voorspelling staat er nog na opnieuw openen',
   terug.length === 10 && terug.join() === gekozen.join(), `${terug.length} van 10 ingevuld`);
 
 // --- wijzigen maakt geen tweede rij ---------------------------------------
-await page.click('.slot.vol .x');            // haal P1 weg
-await page.click('.drv:not([disabled])');    // kies een andere
+// P1 vervangen door iemand anders: plek aantikken, andere coureur kiezen.
+await page.click('.slot.vol');
+await page.waitForSelector('#kiesblad');
+await page.click('#kiesblad .kiesknop:not([disabled]):not(.gekozen)');
 await page.click('#opslaan');
 await page.waitForSelector('[data-race]');
 const na = await page.evaluate(() => globalThis.__db.answers);
@@ -54,13 +56,13 @@ check('wijzigen maakt geen tweede rij aan', na.length === 1, `${na.length} rijen
 // --- kwalificatie dicht, race nog open ------------------------------------
 await openRace(page, 'Shanghai');
 await page.click('[data-tab="race"]');
-await page.waitForSelector('.drv');
+await page.waitForSelector('.slot');
 
-// De losse winnaar staat op dezelfde tab en hangt aan dezelfde deadline,
-// maar wel achter het vragen-tabblad naast de top 10.
-await naarDeel(page, 'vragen');
-await page.click('[data-vraag="winnaar"]');
-const winnaar = await page.getAttribute('.wknop.gekozen', 'data-kies');
+// De losse winnaar staat op dezelfde tab en hangt aan dezelfde deadline.
+const nummers = await page.evaluate(() => globalThis.__db.races
+  .find((r) => String(r.id) === '2').drivers.map((d) => d.nr));
+const winnaar = nummers[0];
+await kiesVoor(page, '[data-vraagplek="winnaar"]', winnaar);
 await kiesTien(page);
 await page.click('#opslaan');
 await page.waitForSelector('[data-race]');

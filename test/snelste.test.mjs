@@ -6,7 +6,7 @@
 //   2. De "uitslag" is één naam lang. "Werd P4" zegt dan niets; wie het wél
 //      werd is wat je wilt weten.
 
-import { maakControle, startPagina, meedoen, openRace, naarDeel } from './hulp.mjs';
+import { maakControle, startPagina, meedoen, openRace, kiesVoor, opPlek } from './hulp.mjs';
 
 const { check, afronden } = maakControle('snelste ronde en snelste pitstop');
 const { page, jsFouten, stoppen } = await startPagina();
@@ -19,25 +19,21 @@ const tekst = async (kies) => (await page.textContent(kies)).replace(/\s+/g, ' '
 await meedoen(page);
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
-// De losse vragen zitten achter hun eigen tabblad naast de top 10.
-await naarDeel(page, 'vragen');
-await page.waitForSelector('[data-vraag="snelste_ronde"]');
+await page.waitForSelector('[data-vraagplek="snelste_ronde"]');
 
 // --- kiezen en opslaan -----------------------------------------------------
-const koppen = await page.$$eval('.winnaarkop .label', (n) => n.map((x) => x.textContent.trim()));
+const regels = await page.$$eval('[data-vraagplek]', (n) => n.map((b) => b.dataset.vraagplek));
 check('beide vragen staan op de race-tab',
-  koppen.includes('wie rijdt de snelste ronde?')
-    && koppen.includes('wie heeft de snelste pitstop?'),
-  koppen.join(' | '));
-check('en niet op de kwalificatie-tab', !koppen.includes('wie pakt de pole?'));
+  regels.includes('snelste_ronde') && regels.includes('snelste_pitstop'),
+  regels.join(' | '));
+check('en niet op de kwalificatie-tab', !regels.includes('pole'));
 
-await page.click('[data-vraag="snelste_ronde"]');
-const ronde = await page.getAttribute('[data-vraag="snelste_ronde"].gekozen', 'data-kies');
-// Een andere coureur voor de pitstop, zodat de twee niet door elkaar lopen.
-const pitKnoppen = await page.$$eval('[data-vraag="snelste_pitstop"]',
-  (n) => n.map((b) => b.dataset.kies));
-const pit = pitKnoppen.find((nr) => nr !== ronde);
-await page.click(`[data-vraag="snelste_pitstop"][data-kies="${pit}"]`);
+// Twee verschillende coureurs, zodat de twee vragen niet door elkaar lopen.
+const nummers = await page.evaluate(() => globalThis.__db.races
+  .find((r) => String(r.id) === '1').drivers.map((d) => d.nr));
+const ronde = nummers[0], pit = nummers[1];
+await kiesVoor(page, '[data-vraagplek="snelste_ronde"]', ronde);
+await kiesVoor(page, '[data-vraagplek="snelste_pitstop"]', pit);
 
 await page.click('#opslaan');
 await page.waitForSelector('[data-race]');
@@ -50,10 +46,11 @@ check('en ze zijn niet door elkaar geraakt', ronde !== pit, `${ronde} / ${pit}`)
 
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
-await naarDeel(page, 'vragen');
-await page.waitForSelector('[data-vraag="snelste_ronde"]');
-const terug = await page.getAttribute('[data-vraag="snelste_ronde"].gekozen', 'data-kies');
-check('ze staan er nog na opnieuw openen', terug === ronde, `${terug} tegen ${ronde}`);
+await page.waitForSelector('[data-vraagplek="snelste_ronde"]');
+const rondeCode = await page.evaluate((nr) => globalThis.__db.races
+  .find((r) => String(r.id) === '1').drivers.find((d) => d.nr === nr).code, ronde);
+const terug = await opPlek(page, '[data-vraagplek="snelste_ronde"]');
+check('ze staan er nog na opnieuw openen', terug === rondeCode, `${terug} tegen ${rondeCode}`);
 
 // --- de uitslag komt binnen, maar zonder snelste ronde --------------------
 await page.evaluate(() => {

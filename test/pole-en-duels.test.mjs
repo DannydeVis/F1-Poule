@@ -10,7 +10,7 @@
 //      knop van hetzelfde team tikken hoort de eerste te vervangen, niet
 //      allebei mee te sturen.
 
-import { maakControle, startPagina, meedoen, openRace, kiesTien, naarDeel } from './hulp.mjs';
+import { maakControle, startPagina, meedoen, openRace, kiesTien, kiesVoor, opPlek } from './hulp.mjs';
 
 const { check, afronden } = maakControle('pole en duels in de app');
 const { page, jsFouten, stoppen } = await startPagina();
@@ -24,11 +24,11 @@ await openRace(page, 'Melbourne');          // kwalificatie staat open
 // --- alleen de pole, zonder top 10 ----------------------------------------
 const leegKnop = (await page.textContent('#opslaan')).trim();
 check('zonder iets gekozen kun je niet opslaan', leegKnop === 'Nog niets gekozen', leegKnop);
-
-// De losse vragen zitten achter hun eigen tabblad naast de top 10.
-await naarDeel(page, 'vragen');
-await page.click('[data-vraag="pole"]');
-const pole = await page.getAttribute('.wknop.gekozen', 'data-kies');
+await kiesVoor(page, '[data-vraagplek="pole"]');
+const poleCode = await opPlek(page, '[data-vraagplek="pole"]');
+const pole = await page.evaluate(() => globalThis.__db.races
+  .find((r) => String(r.id) === '1').drivers
+  .find((d) => d.code === document.querySelector('[data-vraagplek="pole"] .code').textContent.trim()).nr);
 const poleKnop = (await page.textContent('#opslaan')).trim();
 check('alleen de pole invullen is genoeg om op te slaan', poleKnop === 'Opslaan', poleKnop);
 
@@ -41,9 +41,8 @@ check('de pole staat als eigen rij in de database',
 
 // --- de pole staat er nog, en de top 10 komt erbij -------------------------
 await openRace(page, 'Melbourne');
-await naarDeel(page, 'vragen');
-const terug = await page.getAttribute('.wknop.gekozen', 'data-kies');
-check('de pole staat er nog na opnieuw openen', terug === pole, `${terug} tegen ${pole}`);
+const terug = await opPlek(page, '[data-vraagplek="pole"]');
+check('de pole staat er nog na opnieuw openen', terug === poleCode, `${terug} tegen ${poleCode}`);
 
 await kiesTien(page);
 await page.click('#opslaan');
@@ -56,10 +55,12 @@ check('de top 10 komt erbij zonder de pole te raken',
 
 // --- nog een keer op dezelfde tikken haalt de keuze weg --------------------
 await openRace(page, 'Melbourne');
-await naarDeel(page, 'vragen');
-await page.click(`[data-vraag="pole"][data-kies="${pole}"]`);
-check('op je eigen pole tikken haalt hem weer weg',
-  (await page.$('.wknop.gekozen')) === null);
+// In het keuzeblad zit een knop om de plek weer leeg te maken.
+await page.click('[data-vraagplek="pole"]');
+await page.waitForSelector('#kiesblad');
+await page.click('#kiesleeg');
+check('een gekozen pole is weer leeg te maken',
+  (await opPlek(page, '[data-vraagplek="pole"]')) === '');
 await page.click('#opslaan');
 await page.waitForSelector('[data-race]');
 rijen = await antwoorden();
@@ -70,7 +71,6 @@ check('een weggehaalde pole laat geen lege rij achter',
 // --- de duels op de race-tab ----------------------------------------------
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
-await naarDeel(page, 'vragen');
 await page.waitForSelector('[data-duel]');
 
 const duels = await page.$$eval('.duel', (n) => n.length);
@@ -108,7 +108,6 @@ check('alleen de ingevulde duels gaan mee naar de database',
 // --- en ze staan er nog na opnieuw openen ----------------------------------
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
-await naarDeel(page, 'vragen');
 await page.waitForSelector('[data-duel]');
 const naHerlaad = await page.$$eval('.duelknop.gekozen', (n) => n.map((b) => b.dataset.duel));
 check('de duels staan er nog na opnieuw openen',

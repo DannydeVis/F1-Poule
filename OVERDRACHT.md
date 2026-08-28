@@ -793,42 +793,63 @@ Supabase-project: `etifamdwqxjfaeaordlr`. De URL en de anon key staan bovenin
 De service_role key die de Actions-sync gebruikt staat als repository secret
 (`SUPABASE_URL` en `SUPABASE_KEY`) en hoort nergens in de code te staan.
 
-## Het invulscherm in twee helften
+## Het invulscherm: tikken op een plek, dan kiezen
 
-Feedback uit de poule zelf, na de eerste keer echt gebruiken. Joey: *"Ik vind
-het opstellen van de top 10 een beetje onduidelijk."* Danny: *"Ja ik ook nog.
-Is veel te groot."* En Joey's eigen voorstel: *"Ik zou daar een apart tabblad
-van maken."*
+Feedback uit de poule zelf, in twee rondes. Eerst: *"Ik vind het opstellen
+van de top 10 een beetje onduidelijk"* en *"is veel te groot"*. En daarna het
+voorstel dat het echt oploste: **"als je drukt op het lege vak dat je dan
+iemand kan kiezen, en alles op 1 scherm."**
 
-**Wat er misging.** Alle vragen stonden onder elkaar op één scherm. Met
-Klassiek aan betekende dat op een telefoon: de winnaar (twaalf coureurs), de
-snelste ronde (nog eens twaalf), de duels — ruim duizend pixels — en pás
-daarna de top 10, met de coureurlijst nog eens zeshonderd pixels dáár weer
-onder. Je tikte iemand aan en zag niet waar hij landde, want dat gebeurde
-buiten beeld.
+**Wat er misging.** Alle vragen stonden onder elkaar, elk met twaalf
+coureurknoppen. Met alle negen vragen aan was dat op een telefoon ruim
+drieduizend pixels, en de coureurlijst voor de top 10 stond zeshonderd pixels
+onder de plekken waar je keuze landde. Je tikte iemand aan en zag niet waar
+hij heen ging.
 
-**De twee helften.** De top 10 en de losse vragen zitten nu achter hun eigen
-tabblad, met een teller erop (`Top 10 3/10`, `Vragen 1/4`) zodat je zonder
-klikken ziet wat er nog open staat. De opslaanknop staat op allebei en slaat
-allebei tegelijk op — het blijft één voorspelling.
+**De eerste poging waren twee tabbladen** — de top 10 achter het ene, de
+losse vragen achter het andere. Dat halveerde de lengte, maar het verplaatste
+het probleem: je zag nog steeds niet waar je keuze landde, en de helft van je
+voorspelling was nu onzichtbaar. Die tabbladen zijn er weer uit.
 
-**De coureurlijst staat nu bóven de top 10.** Dat is de eigenlijke reden dat
-het onduidelijk was: je tikt aan de onderkant en het resultaat verschijnt aan
-de bovenkant. Andersom zie je je keuze meteen landen.
+**Nu: er staat nergens een coureurlijst open.** Elke keuze is één regel — een
+plek in de top 10, of een losse vraag — en pas als je die aantikt schuift het
+keuzeblad omhoog met de twaalf coureurs erin. Je hebt dus zelf al gezegd
+waar je keuze heen gaat vóór je hem maakt, en na het kiezen sta je weer
+precies waar je was.
 
-**Het scherm zegt welke plek je invult** — "tik aan wie P3 wordt" — en die
-plek is in de lijst gemarkeerd. Zonder dat moet je zelf uittellen waar de
-volgende tik heen gaat.
+Dat scheelt genoeg om alles weer op één scherm te krijgen:
 
-**De opslaanknop legt uit waar hij op wacht.** "Nog 7 te kiezen" werd "Maak de
-top 10 af · nog 7". Met tabjes erbij is het anders niet te zien waaróm hij uit
-staat als je aan de vragenkant bezig bent.
+| | vóór | nu |
+|---|---|---|
+| alle negen vragen | ± 3200 px | 1608 px |
+| Klassiek (de standaard) | ± 1900 px | 850 px |
+
+**De top 10 heeft nu gaten.** `S.keuze[tab]` is een vaste lijst van tien
+plekken waarin `null` "nog leeg" betekent, in plaats van een lijst die je
+alleen achteraan kon aanvullen. Daardoor kun je P7 invullen zonder eerst P1
+tot P6 te doen — je tikt de plek aan die je bedoelt. `naarPlekken()`,
+`gevuld()` en `compleet()` vertalen tussen die vorm en de dichte lijst van
+tien die de database wil.
+
+Let op bij `naarPlekken()`: daar staat `(uit ?? [])` en niet een
+standaardwaarde `uit = []`. Een niet-ingevulde top 10 komt als `null` uit de
+database, en een standaardwaarde vangt alleen `undefined`. Dat kostte een
+ronde debuggen.
+
+**Een halve top 10 wordt niet bewaard.** Met gaten erin kan `bewaar()` niet
+meer op de lengte afgaan, dus die kijkt nu naar `compleet()`: tien plekken of
+niets. Tien lege plekken wegschrijven zou als "alles fout" scoren in plaats
+van als "niet meegedaan".
+
+**Dezelfde coureur kan niet twee keer.** Wie al ergens in je top 10 staat is
+in het blad uitgeschakeld — behalve op zijn eigen plek, want daar mag je hem
+laten staan.
 
 **Twee dingen die hierbij boven water kwamen.** Een poule die de top 10 heeft
 uitgezet kreeg het volledige raster tóch te zien, vulde het in, en het werd
-bij het opslaan stilzwijgend overgeslagen omdat de vraag niet meedeed — nu
-staat hij er niet. En de opslaanknop begon over een top 10 bij een poule die
-er geen heeft.
+bij het opslaan stilzwijgend overgeslagen omdat de vraag niet meedeed. En de
+opslaanknop begon over een top 10 bij een poule die er geen heeft.
 
-**Geen tabjes als er niets te wisselen valt:** een sessie met alleen een top
-10 (Simpel) of alleen losse vragen houdt één scherm.
+**Het handmatig invoeren van een uitslag is niet meegegaan.** Dat scherm
+gebruikt nog steeds de lijst met `.drv`-knoppen: daar zet je twintig coureurs
+op volgorde, en dan is een blad per plek juist omslachtig.
