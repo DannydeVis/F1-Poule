@@ -258,36 +258,70 @@
   .tabs button:hover{background:var(--paneel2);color:var(--ink)}
   .tabs button[aria-selected="true"]{background:var(--omkeer);color:var(--omkeer-ink)}
 
-  /* Twee helften binnen een sessie: de top 10 en de losse vragen. Onder
-     elkaar werd dat op een telefoon een muur waar niets meer bij elkaar
-     hoorde. De teller zegt wat er achter het andere tabblad ligt. */
-  .deeltabs{display:flex;gap:6px;background:var(--paneel2);padding:4px;border-radius:10px}
-  .deeltabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
-    min-height:46px;border-radius:7px;font-family:var(--cond);font-size:17px;
-    font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);
-    transition:background .18s,color .18s}
-  .deeltabs button[aria-selected="true"]{background:var(--paneel);color:var(--ink);
-    box-shadow:0 1px 3px rgba(0,0,0,.18)}
-  .deeltabs .teller{font-family:var(--mono);font-size:12px;font-weight:400;
-    letter-spacing:0;color:var(--ink3)}
-  .deeltabs button[aria-selected="true"] .teller{color:var(--accent)}
+  /* Een vraag als één regel: naam, keuze, punten. Twaalf coureurknoppen per
+     vraag maakte het scherm onbruikbaar lang op een telefoon. */
+  .kiesregels{display:flex;flex-direction:column;gap:6px}
+  .kiesregel{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;
+    min-height:52px;padding:0 14px;text-align:left;background:var(--paneel2);
+    border:1px solid var(--lijn);border-left:4px solid var(--lijn);border-radius:10px;
+    transition:background .18s}
+  .kiesregel:hover{background:var(--paneel)}
+  .kiesregel .nm{font-family:var(--cond);font-size:17px;color:var(--ink2)}
+  .kiesregel.vol .nm{color:var(--ink)}
+  .kiesregel .code{font-family:var(--cond);font-size:21px;font-weight:700;letter-spacing:.03em}
+  .kiesregel .nogleeg{font-family:var(--mono);font-size:11px;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--accent)}
+  .kiesregel .ptn{font-family:var(--mono);font-size:12px;color:var(--ink3);min-width:22px;
+    text-align:right}
+
+  .topkop{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+
+  /* Het keuzeblad. Het legt zich over het scherm zodat je na het kiezen weer
+     precies terugkomt waar je was, in plaats van ergens in een lange lijst. */
+  .kiesblad{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;
+    justify-content:center;background:rgba(0,0,0,.55);animation:invagen .18s both}
+  .kiesblad-in{width:100%;max-width:560px;max-height:82vh;overflow-y:auto;
+    display:flex;flex-direction:column;gap:12px;background:var(--bg);
+    border:1px solid var(--lijn);border-radius:16px 16px 0 0;
+    padding:16px 16px calc(20px + env(safe-area-inset-bottom));
+    animation:omhoog .22s var(--soepel) both}
+  .kiesblad-kop{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  /* Drie op een rij: klein genoeg om alle coureurs in beeld te houden. */
+  .kieslijst{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .kiesknop{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+    gap:1px;min-height:50px;padding:0 9px;background:var(--paneel2);
+    border:1px solid var(--lijn);border-left:4px solid var(--lijn);border-radius:10px;
+    transition:background .15s}
+  .kiesknop:hover:not(:disabled){background:var(--paneel)}
+  .kiesknop:disabled{opacity:.3}
+  .kiesknop .code{font-family:var(--cond);font-size:19px;font-weight:700;letter-spacing:.03em}
+  .kiesknop .tm{font-family:var(--mono);font-size:9px;color:var(--ink2);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+  .kiesknop.gekozen{background:var(--accent);color:var(--accent-ink);
+    border-color:var(--accent);border-left-color:var(--accent-ink)}
+  .kiesknop.gekozen .tm{color:var(--accent-ink);opacity:.8}
+  @keyframes omhoog{from{transform:translateY(24px)}to{transform:translateY(0)}}
+  @keyframes invagen{from{opacity:0}to{opacity:1}}
+  @media (min-width:960px){ .kiesblad{align-items:center}
+    .kiesblad-in{border-radius:16px;padding:20px} }
 
   /* ---- startgrid ------------------------------------------ */
   .grid10{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
   .slotrij{display:flex}
   .slotrij.rechts{justify-content:flex-end}
   .slot{
-    width:86%;display:flex;align-items:center;gap:12px;min-height:56px;
-    padding:0 14px;border-radius:10px;border:1px solid var(--lijn);
+    width:86%;display:flex;align-items:center;gap:12px;min-height:48px;
+    padding:0 12px;border-radius:10px;border:1px solid var(--lijn);
     border-left:5px solid var(--lijn);background:var(--paneel2);
+    text-align:left;transition:background .15s;
   }
+  .slot:hover{background:var(--paneel)}
   .slot.vol{animation:inrij .4s both}
-  .slot.leegplek{background:transparent;border:1px dashed var(--stippel);min-height:44px}
-  /* De plek waar de volgende tik landt. Zonder dit is niet te zien waar je
-     keuze heen gaat, en dat was precies de klacht. */
-  .slot.leegplek.beurt{border-style:solid;border-color:var(--accent);
-    border-left-color:var(--accent);min-height:56px}
-  .slot.leegplek.beurt .pos,.slot.leegplek.beurt .who{color:var(--accent)}
+  .slot.leegplek{background:transparent;border:1px dashed var(--stippel);
+    border-left:5px dashed var(--stippel)}
+  .slot.leegplek .who{font-family:var(--mono);font-size:11px;text-transform:uppercase;
+    letter-spacing:.06em;color:var(--ink3)}
+  .slot .who .code{font-size:21px}
   .slot .pos{font-family:var(--mono);font-size:13px;font-weight:700;
     color:var(--ink3);min-width:32px;flex:none}
   .slot .who{flex:1;display:flex;align-items:baseline;gap:10px;min-width:0;
@@ -301,8 +335,8 @@
     transition:background .18s,color .18s}
   .x:hover{background:var(--accent);color:var(--accent-ink)}
 
-  .winnaarblok{display:flex;flex-direction:column;gap:10px;background:var(--paneel);
-    border:1px solid var(--lijn);border-radius:14px;padding:16px}
+  .winnaarblok{display:flex;flex-direction:column;gap:8px;background:var(--paneel);
+    border:1px solid var(--lijn);border-radius:14px;padding:12px 14px}
   .winnaarkop{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
   .coureurs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .wknop.gekozen{background:var(--accent);color:var(--accent-ink);
@@ -321,16 +355,17 @@
 
   /* Teamgenoot-duels: per team een regel met de twee coureurs naast elkaar.
      De teamnaam staat links vast, zodat de knoppen op één lijn blijven. */
-  .duels{display:flex;flex-direction:column;gap:8px}
-  .duel{display:grid;grid-template-columns:64px 1fr 1fr;align-items:center;gap:8px;
-    border-left:4px solid var(--lijn);padding-left:10px}
+  .duels{display:flex;flex-direction:column;gap:6px}
+  .duel{display:grid;grid-template-columns:52px 1fr 1fr;align-items:center;gap:6px;
+    border-left:4px solid var(--lijn);padding-left:8px}
   .duel .tm{font-family:var(--mono);font-size:10px;color:var(--ink2);
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .duelknop{min-height:52px;justify-content:center}
+  .duelknop{min-height:42px;justify-content:center}
+  .duelknop .code{font-size:18px}
   /* Een getal of een ja/nee kiezen: kleinere vakken, hetzelfde gedrag. */
-  .getallen{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-  .extraknop{min-height:56px;justify-content:center}
-  .extraknop .code{font-size:20px}
+  .getallen{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .extraknop{min-height:44px;justify-content:center}
+  .extraknop .code{font-size:18px}
 
   /* Poule aanmaken: de vier stappen, de drie voorstellen en de losse vragen. */
   .stappen{display:flex;gap:6px}
@@ -747,28 +782,15 @@ const leegAntwoord = (w) => w === null || w === undefined || w === '';
 const TOP10VRAAG = { quali: 'quali_top10', race: 'race_top10' };
 const top10Actief = (welk) => vraagActief(TOP10VRAAG[welk]);
 
-// Hoeveel losse vragen staan er op deze tab, en hoeveel heb je er al
-// ingevuld? Dat aantal staat op het tabblad, zodat je zonder klikken ziet of
-// daar nog iets ligt.
-function vragenStand(welk) {
-  let klaar = 0, totaal = 0;
-  for (const id of coureurVragen(welk)) { totaal++; if (S.keuze[id]) klaar++; }
-  for (const id of extraVragen(welk)) { totaal++; if (!leegAntwoord(S.keuze[id])) klaar++; }
-  if (welk === 'race' && vraagActief('teamgenoot_duels')) {
-    totaal++;
-    if (S.keuze.duels.length) klaar++;
-  }
-  return { klaar, totaal };
-}
+// Tien vaste plekken met gaten erin, in plaats van een lijst die je alleen
+// achteraan kon aanvullen. Zo kun je P7 invullen zonder eerst P1 tot P6 te
+// doen — je tikt de plek aan die je bedoelt.
+// Let op de ?? [] en niet een standaardwaarde: een niet-ingevulde top 10 komt
+// als null uit de database, en daar helpt `uit = []` niet tegen.
+const naarPlekken = (uit) => Array.from({ length: 10 }, (_, i) => (uit ?? [])[i] ?? null);
+const gevuld = (lijst) => lijst.filter(Boolean).length;
+const compleet = (lijst) => gevuld(lijst) === 10;
 
-// Welke helft van het invulscherm staat open. Zonder losse vragen valt er
-// niets te kiezen en blijft het bij de top 10; zonder top 10 andersom.
-function welkDeel(welk) {
-  const stand = vragenStand(welk);
-  if (!stand.totaal) return 'top10';
-  if (!top10Actief(welk)) return 'vragen';
-  return S.deel;
-}
 
 // De winnaar heeft om historische redenen een andere veldnaam dan zijn vraag.
 const antwoordVan = (p, id) => id === 'winnaar' ? p?.race_winnaar : p?.[id];
@@ -877,13 +899,13 @@ const S = {
   keuze: { quali: [], race: [], winnaar: '', pole: '', duels: [],
            snelste_ronde: '', snelste_pitstop: '',
            safety_cars: null, rode_vlag: null },
+  kiesplek: null,       // welke plek of vraag er nu gekozen wordt
   uitslag: { welk: null, lijst: [] },
   weergave: 'races', fout: '', melding: '', linkCode: '', linkFout: '',
   maak: null,           // het aanmaakscherm, zolang dat openstaat
   beheer: null,         // gewijzigde vragenset, zolang die nog niet bewaard is
   beheerFout: '',
   losse: { vraag: null, keuze: '', fout: '' },   // losse uitslag zelf invullen
-  deel: 'top10',        // welke helft van het invulscherm openstaat
 };
 
 const app = document.getElementById('app');
@@ -1111,11 +1133,12 @@ async function bewaar() {
   // op "aanwezig" test in plaats van op "gewijzigd" — dan kun je je
   // race-top-10 niet meer opslaan zodra de kwalificatie is begonnen.
   const wil = [];
+  // Een halve top 10 gaat er niet in: tien plekken of niets.
   if (!dicht.quali) {
-    wil.push(['quali_top10', S.keuze.quali.length ? S.keuze.quali : null]);
+    wil.push(['quali_top10', compleet(S.keuze.quali) ? S.keuze.quali : null]);
   }
   if (!dicht.race) {
-    wil.push(['race_top10', S.keuze.race.length ? S.keuze.race : null]);
+    wil.push(['race_top10', compleet(S.keuze.race) ? S.keuze.race : null]);
     wil.push(['teamgenoot_duels', S.keuze.duels.length ? S.keuze.duels : null]);
   }
   // De vragen waarbij je één coureur aanwijst gaan allemaal hetzelfde: ze
@@ -1875,7 +1898,7 @@ function openRace(id) {
   S.race = r;
   S.weergave = 'races';
   const mijn = vindPred(id, S.ik.id);
-  S.keuze = { quali:[...(mijn?.quali_top10 ?? [])], race:[...(mijn?.race_top10 ?? [])],
+  S.keuze = { quali:naarPlekken(mijn?.quali_top10), race:naarPlekken(mijn?.race_top10),
               winnaar: mijn?.race_winnaar ?? '', pole: mijn?.pole ?? '',
               duels: [...(mijn?.teamgenoot_duels ?? [])],
               snelste_ronde: mijn?.snelste_ronde ?? '',
@@ -1885,7 +1908,7 @@ function openRace(id) {
   S.tab = openLijst(r) === 'race' ? 'race' : 'quali';
   S.uitslag = { welk: null, lijst: [] };
   S.losse = { vraag: null, keuze: '', fout: '' };
-  S.deel = 'top10';
+  S.kiesplek = null;
   S.fout = '';
   render();
 }
@@ -2036,8 +2059,8 @@ function invulWeergave(paneel, r, dicht) {
     return;
   }
   const lijst = S.keuze[S.tab];
-  const vol = lijst.length >= 10;
-  const kanKopieren = S.tab === 'race' && !S.keuze.race.length && S.keuze.quali.length;
+  const klaar = gevuld(lijst);
+  const kanKopieren = S.tab === 'race' && !gevuld(S.keuze.race) && gevuld(S.keuze.quali);
   // Een halve top 10 zegt niets, dus die gaat er niet in. Maar wie alleen de
   // pole of een paar duels invult heeft wel degelijk iets in te leveren.
   const losGekozen = coureurVragen(S.tab).some(id => !!S.keuze[id])
@@ -2046,73 +2069,77 @@ function invulWeergave(paneel, r, dicht) {
   // Doet de top 10 niet mee, dan valt er ook niets af te maken.
   const magOpslaan = !top10Actief(S.tab)
     ? losGekozen
-    : vol || (lijst.length === 0 && losGekozen);
+    : compleet(lijst) || (klaar === 0 && losGekozen);
   const deadline = S.tab === 'quali' ? r.deadline_quali : r.deadline_race;
 
-  // De twee helften van dit scherm. Alles onder elkaar was op een telefoon
-  // een muur van duizend pixels aan vragen vóór je bij de top 10 was; dan is
-  // niet meer te zien wat waarbij hoort. Zie OVERDRACHT.md.
-  const stand = vragenStand(S.tab);
-  const deel = welkDeel(S.tab);
-  const beideDelen = stand.totaal > 0 && top10Actief(S.tab);
-
+  // Alles op één scherm. Dat kan doordat er nergens meer een lijst van twaalf
+  // coureurs openstaat: je tikt de plek of de vraag aan die je bedoelt, en
+  // pas dan gaat het keuzeblad open. Zie OVERDRACHT.md.
   paneel.innerHTML = `
-    ${beideDelen ? `
-      <div class="deeltabs">
-        <button data-deel="top10" aria-selected="${deel === 'top10'}">
-          Top 10 <span class="teller">${lijst.length}/10</span></button>
-        <button data-deel="vragen" aria-selected="${deel === 'vragen'}">
-          Vragen <span class="teller">${stand.klaar}/${stand.totaal}</span></button>
-      </div>` : ''}
-    ${deel === 'vragen' ? `
-      ${coureurVragen(S.tab).map(id => coureurKiezer(r, id)).join('')}
-      ${extraVragen(S.tab).map(id => extraKiezer(r, id)).join('')}
-      ${S.tab === 'race' ? duelKiezer(r) : ''}`
-    : `
-      ${kanKopieren ? `<button class="knop klein" id="kopieer">Neem de kwalificatie over</button>` : ''}
-      <span class="label">${vol
-        ? 'je top 10 is compleet'
-        : `tik aan wie P${lijst.length + 1} wordt`}</span>
-      <div class="coureurs">
-        ${(r.drivers ?? []).map(d => `
-          <button class="drv" data-add="${esc(d.nr)}" style="border-left-color:${esc(d.kleur)}"
-            ${lijst.includes(d.nr) || vol ? 'disabled' : ''}>
-            <span class="code">${esc(d.code)}</span><span class="tm">${esc(stal(d.team))}</span>
-          </button>`).join('')}
+    ${kanKopieren ? `<button class="knop klein" id="kopieer">Neem de kwalificatie over</button>` : ''}
+    ${top10Actief(S.tab) ? `
+      <div class="topkop">
+        <span class="label">jouw top 10</span>
+        <span class="mono ${compleet(lijst) ? 'groen' : 'amber'}">${klaar}/10</span>
       </div>
-      <span class="label">jouw top 10</span>
       <ol class="grid10">
-        ${Array.from({length:10}, (_,i) => {
-          const nr = lijst[i], d = nr ? drv(r, nr) : null;
+        ${lijst.map((nr, i) => {
+          const d = nr ? drv(r, nr) : null;
           const kant = i % 2 === 0 ? 'links' : 'rechts';
-          return d
-            ? `<li class="slotrij ${kant}"><div class="slot vol"
-                 style="border-left-color:${esc(d.kleur)};animation-delay:${(i * .06).toFixed(2)}s">
-                <span class="pos">P${i+1}</span>
-                <span class="who"><b class="code">${esc(d.code)}</b><small>${esc(d.naam)}</small></span>
-                <button class="x" data-weg="${i}" aria-label="Haal ${esc(d.code)} weg">×</button>
-              </div></li>`
-            : `<li class="slotrij ${kant}"><div class="slot leegplek ${
-                 i === lijst.length ? 'beurt' : ''}">
-                <span class="pos">P${i+1}</span>
-                <span class="who">${i === lijst.length ? 'hier komt je keuze' : ''}</span>
-              </div></li>`;
+          return `<li class="slotrij ${kant}">
+            <button class="slot ${d ? 'vol' : 'leegplek'}" data-plek="${i}"
+              style="border-left-color:${d ? esc(d.kleur) : 'var(--stippel)'}"
+              aria-label="P${i+1}${d ? `, nu ${esc(d.naam)}` : ', nog leeg'}">
+              <span class="pos">P${i+1}</span>
+              ${d
+                ? `<span class="who"><b class="code">${esc(d.code)}</b><small>${esc(d.naam)}</small></span>`
+                : `<span class="who">tik om te kiezen</span>`}
+            </button></li>`;
         }).join('')}
-      </ol>`}
+      </ol>` : ''}
+    ${coureurVragen(S.tab).length ? `<span class="label">losse vragen</span>
+      <div class="kiesregels">${coureurVragen(S.tab).map(id => coureurKiezer(r, id)).join('')}</div>` : ''}
+    ${extraVragen(S.tab).map(id => extraKiezer(r, id)).join('')}
+    ${S.tab === 'race' ? duelKiezer(r) : ''}
     <p class="label" style="margin:0">sluit ${esc(sluitTekst(deadline))}</p>
     <div class="opslaanbalk">
       <button class="knop primair" id="opslaan" ${magOpslaan ? '' : 'disabled'}>${
         magOpslaan ? 'Opslaan'
-          : top10Actief(S.tab) && lijst.length
-            ? `Maak de top 10 af · nog ${10 - lijst.length}`
+          : top10Actief(S.tab) && klaar
+            ? `Maak de top 10 af · nog ${10 - klaar}`
           : 'Nog niets gekozen'}</button>
       <p class="err">${esc(S.fout)}</p>
-    </div>`;
+    </div>
+    ${kiesblad(r)}`;
 
-  paneel.querySelectorAll('[data-deel]').forEach(b => b.onclick = () => {
-    S.deel = b.dataset.deel;
+  const sluitBlad = () => { S.kiesplek = null; invulWeergave(paneel, r, dicht); };
+  paneel.querySelectorAll('[data-plek]').forEach(b => b.onclick = () => {
+    S.kiesplek = { soort: 'top10', index: Number(b.dataset.plek) };
     invulWeergave(paneel, r, dicht);
   });
+  paneel.querySelectorAll('[data-vraagplek]').forEach(b => b.onclick = () => {
+    S.kiesplek = { soort: 'vraag', id: b.dataset.vraagplek };
+    invulWeergave(paneel, r, dicht);
+  });
+  paneel.querySelectorAll('[data-kiesdrv]').forEach(b => b.onclick = () => {
+    const k = S.kiesplek;
+    if (k.soort === 'top10') S.keuze[S.tab][k.index] = b.dataset.kiesdrv;
+    else S.keuze[k.id] = b.dataset.kiesdrv;
+    sluitBlad();
+  });
+  const dicht2 = paneel.querySelector('#kiesdicht');
+  if (dicht2) dicht2.onclick = sluitBlad;
+  const leegKnop = paneel.querySelector('#kiesleeg');
+  if (leegKnop) leegKnop.onclick = () => {
+    const k = S.kiesplek;
+    if (k.soort === 'top10') S.keuze[S.tab][k.index] = null;
+    else S.keuze[k.id] = '';
+    sluitBlad();
+  };
+  // Naast het blad tikken sluit het ook; anders zit je vast als je van
+  // gedachten verandert en het kruisje niet ziet.
+  const blad = paneel.querySelector('#kiesblad');
+  if (blad) blad.onclick = (ev) => { if (ev.target === blad) sluitBlad(); };
   paneel.querySelectorAll('[data-kies]').forEach(b => b.onclick = () => {
     // Nog een keer op dezelfde tikken haalt de keuze weg; zonder dat zit je
     // eraan vast zodra je een keer misklikt.
@@ -2137,12 +2164,6 @@ function invulWeergave(paneel, r, dicht) {
     S.keuze.duels = S.keuze.duels.filter(g => !zelfde(g, duel) && !zelfde(g, tegen));
     if (!alGekozen) S.keuze.duels.push(duel);
     invulWeergave(paneel, r, dicht);
-  });
-  paneel.querySelectorAll('[data-add]').forEach(b => b.onclick = () => {
-    if (lijst.length < 10) { lijst.push(b.dataset.add); invulWeergave(paneel, r, dicht); }
-  });
-  paneel.querySelectorAll('[data-weg]').forEach(b => b.onclick = () => {
-    lijst.splice(Number(b.dataset.weg), 1); invulWeergave(paneel, r, dicht);
   });
   const kop = paneel.querySelector('#kopieer');
   if (kop) kop.onclick = () => { S.keuze.race = [...S.keuze.quali]; invulWeergave(paneel, r, dicht); };
@@ -2170,29 +2191,54 @@ function invulWeergave(paneel, r, dicht) {
 // De grootste losse keuze van het weekend, dus die staat bovenaan en niet
 // verstopt onder de top 10. Bewust niet verplicht: niemand hoort te blijven
 // hangen op een knop die niet werkt.
+// Een vraag waarbij je één coureur aanwijst, als één regel. Twaalf knoppen
+// per vraag maakte het scherm onbruikbaar lang; het kiezen gebeurt nu in het
+// keuzeblad, dat pas opengaat als je de regel aantikt.
 function coureurKiezer(r, id) {
   if (!vraagActief(id)) return '';
   const v = COUREURVRAAG[id];
-  const punten = puntenVoor(id);
   const gekozen = S.keuze[id];
   const d = gekozen ? drv(r, gekozen) : null;
   return `
-    <div class="winnaarblok">
-      <div class="winnaarkop">
-        <span class="label">${v.kop}</span>
-        <span class="mono" style="color:var(--ink3)">${punten} punten</span>
+    <button class="kiesregel ${d ? 'vol' : ''}" data-vraagplek="${esc(id)}"
+      style="border-left-color:${d ? esc(d.kleur) : 'var(--lijn)'}">
+      <span class="nm">${v.label}</span>
+      ${d ? `<span class="code">${esc(d.code)}</span>`
+          : `<span class="nogleeg">kies</span>`}
+      <span class="ptn">${puntenVoor(id)}</span>
+    </button>`;
+}
+
+// Het keuzeblad: één plek of één vraag, en de coureurs om uit te kiezen.
+// Doordat je eerst de plek aantikt weet je waar je keuze landt — dat was het
+// probleem met een losse lijst onderaan het scherm.
+function kiesblad(r) {
+  const k = S.kiesplek;
+  if (!k) return '';
+  const lijst = S.keuze[S.tab];
+  const top10 = k.soort === 'top10';
+  const huidig = top10 ? lijst[k.index] : S.keuze[k.id];
+  // Binnen een top 10 kan dezelfde coureur maar op één plek staan.
+  const bezet = (nr) => top10 && lijst.some((x, i) => i !== k.index && zelfde(x, nr));
+  const kop = top10 ? `wie wordt P${k.index + 1}?` : COUREURVRAAG[k.id].kop;
+  return `
+    <div class="kiesblad" id="kiesblad" role="dialog" aria-modal="true" aria-label="${esc(kop)}">
+      <div class="kiesblad-in">
+        <div class="kiesblad-kop">
+          <span class="label">${esc(kop)}</span>
+          <button class="x" id="kiesdicht" aria-label="Sluiten">×</button>
+        </div>
+        <div class="kieslijst">
+          ${(r.drivers ?? []).map(d => `
+            <button class="kiesknop ${zelfde(d.nr, huidig) ? 'gekozen' : ''}"
+              data-kiesdrv="${esc(d.nr)}" style="border-left-color:${esc(d.kleur)}"
+              ${bezet(d.nr) ? 'disabled' : ''}>
+              <span class="code">${esc(d.code)}</span>
+              <span class="tm">${esc(stal(d.team))}</span>
+            </button>`).join('')}
+        </div>
+        ${huidig ? `<button class="knop klein" id="kiesleeg">Maak leeg</button>` : ''}
       </div>
-      <div class="coureurs winnaars">
-        ${(r.drivers ?? []).map(c => `
-          <button class="wknop ${zelfde(c.nr, gekozen) ? 'gekozen' : ''}"
-            data-kies="${esc(c.nr)}" data-vraag="${id}" style="border-left-color:${esc(c.kleur)}"
-            aria-pressed="${zelfde(c.nr, gekozen)}">
-            <span class="code">${esc(c.code)}</span><span class="tm">${esc(stal(c.team))}</span>
-          </button>`).join('')}
-      </div>
-      ${d
-        ? `<p class="mono groen" style="margin:0">${v.mijn}: ${esc(d.naam)}</p>`
-        : `<p class="mono amber" style="margin:0">nog niemand gekozen · hier liggen ${punten} punten</p>`}
     </div>`;
 }
 
@@ -2213,6 +2259,8 @@ function extraKnoppen(id, gekozen, attribuut) {
     : `<div class="coureurs">${knop(true, 'ja') + knop(false, 'nee')}</div>`;
 }
 
+// Een getal of een ja-of-nee is met een paar knoppen klaar; die passen gewoon
+// op het scherm en gaan dus niet achter het keuzeblad.
 function extraKiezer(r, id) {
   if (!vraagActief(id)) return '';
   const v = EXTRAVRAAG[id];

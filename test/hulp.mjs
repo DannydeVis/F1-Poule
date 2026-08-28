@@ -85,18 +85,31 @@ export async function openRace(page, naam) {
   await page.waitForSelector('#paneel');
 }
 
-// Vult de top 10 af tot hij vol is, ook als er al iets in stond. Tien keer
-// blind klikken liep vast zodra een test er zelf al een had gekozen.
+// Vult de top 10 af: tik een lege plek aan, kies de eerste coureur die nog
+// mag, herhaal. Sinds het keuzeblad staat er geen coureurlijst meer los op
+// het scherm — je wijst eerst de plek aan die je bedoelt.
 export async function kiesTien(page) {
-  await naarDeel(page, 'top10');
-  const nog = await page.$$eval('.slot.leegplek', (n) => n.length);
-  for (let i = 0; i < nog; i++) await page.click('.drv:not([disabled])');
+  for (let i = 0; i < 10; i++) {
+    const leeg = await page.$('.slot.leegplek');
+    if (!leeg) break;
+    await leeg.click();
+    await page.waitForSelector('#kiesblad .kiesknop:not([disabled])');
+    await page.click('#kiesblad .kiesknop:not([disabled])');
+    await page.waitForSelector('#kiesblad', { state: 'detached' });
+  }
 }
 
-// Het invulscherm heeft twee helften: de top 10 en de losse vragen. Staan er
-// geen losse vragen op deze tab, dan zijn er ook geen tabjes en is er niets
-// te wisselen.
-export async function naarDeel(page, deel) {
-  const knop = await page.$(`[data-deel="${deel}"]`);
-  if (knop) await knop.click();
+// Eén plek of één vraag invullen via het keuzeblad. Zonder `nr` pakt hij de
+// eerste coureur die nog te kiezen is.
+export async function kiesVoor(page, kies, nr) {
+  await page.click(kies);
+  await page.waitForSelector('#kiesblad');
+  await page.click(nr
+    ? `#kiesblad [data-kiesdrv="${nr}"]`
+    : '#kiesblad .kiesknop:not([disabled])');
+  await page.waitForSelector('#kiesblad', { state: 'detached' });
 }
+
+// Welke coureur staat er nu op een plek of bij een vraag?
+export const opPlek = (page, kies) =>
+  page.$eval(kies, (n) => n.querySelector('.code')?.textContent.trim() ?? '');
