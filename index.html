@@ -258,6 +258,20 @@
   .tabs button:hover{background:var(--paneel2);color:var(--ink)}
   .tabs button[aria-selected="true"]{background:var(--omkeer);color:var(--omkeer-ink)}
 
+  /* Twee helften binnen een sessie: de top 10 en de losse vragen. Onder
+     elkaar werd dat op een telefoon een muur waar niets meer bij elkaar
+     hoorde. De teller zegt wat er achter het andere tabblad ligt. */
+  .deeltabs{display:flex;gap:6px;background:var(--paneel2);padding:4px;border-radius:10px}
+  .deeltabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+    min-height:46px;border-radius:7px;font-family:var(--cond);font-size:17px;
+    font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);
+    transition:background .18s,color .18s}
+  .deeltabs button[aria-selected="true"]{background:var(--paneel);color:var(--ink);
+    box-shadow:0 1px 3px rgba(0,0,0,.18)}
+  .deeltabs .teller{font-family:var(--mono);font-size:12px;font-weight:400;
+    letter-spacing:0;color:var(--ink3)}
+  .deeltabs button[aria-selected="true"] .teller{color:var(--accent)}
+
   /* ---- startgrid ------------------------------------------ */
   .grid10{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
   .slotrij{display:flex}
@@ -268,7 +282,12 @@
     border-left:5px solid var(--lijn);background:var(--paneel2);
   }
   .slot.vol{animation:inrij .4s both}
-  .slot.leegplek{background:transparent;border:1px dashed var(--stippel)}
+  .slot.leegplek{background:transparent;border:1px dashed var(--stippel);min-height:44px}
+  /* De plek waar de volgende tik landt. Zonder dit is niet te zien waar je
+     keuze heen gaat, en dat was precies de klacht. */
+  .slot.leegplek.beurt{border-style:solid;border-color:var(--accent);
+    border-left-color:var(--accent);min-height:56px}
+  .slot.leegplek.beurt .pos,.slot.leegplek.beurt .who{color:var(--accent)}
   .slot .pos{font-family:var(--mono);font-size:13px;font-weight:700;
     color:var(--ink3);min-width:32px;flex:none}
   .slot .who{flex:1;display:flex;align-items:baseline;gap:10px;min-width:0;
@@ -724,6 +743,33 @@ const extraVragen = (welk) =>
 // of false, want 0 en "nee" zijn wél antwoorden.
 const leegAntwoord = (w) => w === null || w === undefined || w === '';
 
+// De top 10 is ook gewoon een vraag die een poule kan uitzetten.
+const TOP10VRAAG = { quali: 'quali_top10', race: 'race_top10' };
+const top10Actief = (welk) => vraagActief(TOP10VRAAG[welk]);
+
+// Hoeveel losse vragen staan er op deze tab, en hoeveel heb je er al
+// ingevuld? Dat aantal staat op het tabblad, zodat je zonder klikken ziet of
+// daar nog iets ligt.
+function vragenStand(welk) {
+  let klaar = 0, totaal = 0;
+  for (const id of coureurVragen(welk)) { totaal++; if (S.keuze[id]) klaar++; }
+  for (const id of extraVragen(welk)) { totaal++; if (!leegAntwoord(S.keuze[id])) klaar++; }
+  if (welk === 'race' && vraagActief('teamgenoot_duels')) {
+    totaal++;
+    if (S.keuze.duels.length) klaar++;
+  }
+  return { klaar, totaal };
+}
+
+// Welke helft van het invulscherm staat open. Zonder losse vragen valt er
+// niets te kiezen en blijft het bij de top 10; zonder top 10 andersom.
+function welkDeel(welk) {
+  const stand = vragenStand(welk);
+  if (!stand.totaal) return 'top10';
+  if (!top10Actief(welk)) return 'vragen';
+  return S.deel;
+}
+
 // De winnaar heeft om historische redenen een andere veldnaam dan zijn vraag.
 const antwoordVan = (p, id) => id === 'winnaar' ? p?.race_winnaar : p?.[id];
 
@@ -837,6 +883,7 @@ const S = {
   beheer: null,         // gewijzigde vragenset, zolang die nog niet bewaard is
   beheerFout: '',
   losse: { vraag: null, keuze: '', fout: '' },   // losse uitslag zelf invullen
+  deel: 'top10',        // welke helft van het invulscherm openstaat
 };
 
 const app = document.getElementById('app');
@@ -1838,6 +1885,7 @@ function openRace(id) {
   S.tab = openLijst(r) === 'race' ? 'race' : 'quali';
   S.uitslag = { welk: null, lijst: [] };
   S.losse = { vraag: null, keuze: '', fout: '' };
+  S.deel = 'top10';
   S.fout = '';
   render();
 }
@@ -1988,54 +2036,83 @@ function invulWeergave(paneel, r, dicht) {
     return;
   }
   const lijst = S.keuze[S.tab];
+  const vol = lijst.length >= 10;
   const kanKopieren = S.tab === 'race' && !S.keuze.race.length && S.keuze.quali.length;
   // Een halve top 10 zegt niets, dus die gaat er niet in. Maar wie alleen de
   // pole of een paar duels invult heeft wel degelijk iets in te leveren.
   const losGekozen = coureurVragen(S.tab).some(id => !!S.keuze[id])
     || extraVragen(S.tab).some(id => !leegAntwoord(S.keuze[id]))
     || (S.tab === 'race' && vraagActief('teamgenoot_duels') && S.keuze.duels.length > 0);
-  const magOpslaan = lijst.length === 10 || (lijst.length === 0 && losGekozen);
+  // Doet de top 10 niet mee, dan valt er ook niets af te maken.
+  const magOpslaan = !top10Actief(S.tab)
+    ? losGekozen
+    : vol || (lijst.length === 0 && losGekozen);
   const deadline = S.tab === 'quali' ? r.deadline_quali : r.deadline_race;
 
+  // De twee helften van dit scherm. Alles onder elkaar was op een telefoon
+  // een muur van duizend pixels aan vragen vóór je bij de top 10 was; dan is
+  // niet meer te zien wat waarbij hoort. Zie OVERDRACHT.md.
+  const stand = vragenStand(S.tab);
+  const deel = welkDeel(S.tab);
+  const beideDelen = stand.totaal > 0 && top10Actief(S.tab);
+
   paneel.innerHTML = `
-    ${coureurVragen(S.tab).map(id => coureurKiezer(r, id)).join('')}
-    ${extraVragen(S.tab).map(id => extraKiezer(r, id)).join('')}
-    ${S.tab === 'race' ? duelKiezer(r) : ''}
-    ${kanKopieren ? `<button class="knop klein" id="kopieer">Neem de kwalificatie over</button>` : ''}
-    <ol class="grid10">
-      ${Array.from({length:10}, (_,i) => {
-        const nr = lijst[i], d = nr ? drv(r, nr) : null;
-        const kant = i % 2 === 0 ? 'links' : 'rechts';
-        return d
-          ? `<li class="slotrij ${kant}"><div class="slot vol"
-               style="border-left-color:${esc(d.kleur)};animation-delay:${(i * .06).toFixed(2)}s">
-              <span class="pos">P${i+1}</span>
-              <span class="who"><b class="code">${esc(d.code)}</b><small>${esc(d.naam)}</small></span>
-              <button class="x" data-weg="${i}" aria-label="Haal ${esc(d.code)} weg">×</button>
-            </div></li>`
-          : `<li class="slotrij ${kant}"><div class="slot leegplek">
-              <span class="pos">P${i+1}</span>
-              <span class="who">kies een coureur</span>
-            </div></li>`;
-      }).join('')}
-    </ol>
-    <span class="label">nog te kiezen</span>
-    <div class="coureurs">
-      ${(r.drivers ?? []).map(d => `
-        <button class="drv" data-add="${esc(d.nr)}" style="border-left-color:${esc(d.kleur)}"
-          ${lijst.includes(d.nr) ? 'disabled' : ''}>
-          <span class="code">${esc(d.code)}</span><span class="tm">${esc(stal(d.team))}</span>
-        </button>`).join('')}
-    </div>
+    ${beideDelen ? `
+      <div class="deeltabs">
+        <button data-deel="top10" aria-selected="${deel === 'top10'}">
+          Top 10 <span class="teller">${lijst.length}/10</span></button>
+        <button data-deel="vragen" aria-selected="${deel === 'vragen'}">
+          Vragen <span class="teller">${stand.klaar}/${stand.totaal}</span></button>
+      </div>` : ''}
+    ${deel === 'vragen' ? `
+      ${coureurVragen(S.tab).map(id => coureurKiezer(r, id)).join('')}
+      ${extraVragen(S.tab).map(id => extraKiezer(r, id)).join('')}
+      ${S.tab === 'race' ? duelKiezer(r) : ''}`
+    : `
+      ${kanKopieren ? `<button class="knop klein" id="kopieer">Neem de kwalificatie over</button>` : ''}
+      <span class="label">${vol
+        ? 'je top 10 is compleet'
+        : `tik aan wie P${lijst.length + 1} wordt`}</span>
+      <div class="coureurs">
+        ${(r.drivers ?? []).map(d => `
+          <button class="drv" data-add="${esc(d.nr)}" style="border-left-color:${esc(d.kleur)}"
+            ${lijst.includes(d.nr) || vol ? 'disabled' : ''}>
+            <span class="code">${esc(d.code)}</span><span class="tm">${esc(stal(d.team))}</span>
+          </button>`).join('')}
+      </div>
+      <span class="label">jouw top 10</span>
+      <ol class="grid10">
+        ${Array.from({length:10}, (_,i) => {
+          const nr = lijst[i], d = nr ? drv(r, nr) : null;
+          const kant = i % 2 === 0 ? 'links' : 'rechts';
+          return d
+            ? `<li class="slotrij ${kant}"><div class="slot vol"
+                 style="border-left-color:${esc(d.kleur)};animation-delay:${(i * .06).toFixed(2)}s">
+                <span class="pos">P${i+1}</span>
+                <span class="who"><b class="code">${esc(d.code)}</b><small>${esc(d.naam)}</small></span>
+                <button class="x" data-weg="${i}" aria-label="Haal ${esc(d.code)} weg">×</button>
+              </div></li>`
+            : `<li class="slotrij ${kant}"><div class="slot leegplek ${
+                 i === lijst.length ? 'beurt' : ''}">
+                <span class="pos">P${i+1}</span>
+                <span class="who">${i === lijst.length ? 'hier komt je keuze' : ''}</span>
+              </div></li>`;
+        }).join('')}
+      </ol>`}
     <p class="label" style="margin:0">sluit ${esc(sluitTekst(deadline))}</p>
     <div class="opslaanbalk">
       <button class="knop primair" id="opslaan" ${magOpslaan ? '' : 'disabled'}>${
         magOpslaan ? 'Opslaan'
-          : lijst.length ? `Nog ${10 - lijst.length} te kiezen`
+          : top10Actief(S.tab) && lijst.length
+            ? `Maak de top 10 af · nog ${10 - lijst.length}`
           : 'Nog niets gekozen'}</button>
       <p class="err">${esc(S.fout)}</p>
     </div>`;
 
+  paneel.querySelectorAll('[data-deel]').forEach(b => b.onclick = () => {
+    S.deel = b.dataset.deel;
+    invulWeergave(paneel, r, dicht);
+  });
   paneel.querySelectorAll('[data-kies]').forEach(b => b.onclick = () => {
     // Nog een keer op dezelfde tikken haalt de keuze weg; zonder dat zit je
     // eraan vast zodra je een keer misklikt.

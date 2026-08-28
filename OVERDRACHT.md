@@ -792,3 +792,43 @@ Supabase-project: `etifamdwqxjfaeaordlr`. De URL en de anon key staan bovenin
 `index.html` en `sync.html` en zijn bewust publiek; dat hoort bij de anon key.
 De service_role key die de Actions-sync gebruikt staat als repository secret
 (`SUPABASE_URL` en `SUPABASE_KEY`) en hoort nergens in de code te staan.
+
+## Het invulscherm in twee helften
+
+Feedback uit de poule zelf, na de eerste keer echt gebruiken. Joey: *"Ik vind
+het opstellen van de top 10 een beetje onduidelijk."* Danny: *"Ja ik ook nog.
+Is veel te groot."* En Joey's eigen voorstel: *"Ik zou daar een apart tabblad
+van maken."*
+
+**Wat er misging.** Alle vragen stonden onder elkaar op één scherm. Met
+Klassiek aan betekende dat op een telefoon: de winnaar (twaalf coureurs), de
+snelste ronde (nog eens twaalf), de duels — ruim duizend pixels — en pás
+daarna de top 10, met de coureurlijst nog eens zeshonderd pixels dáár weer
+onder. Je tikte iemand aan en zag niet waar hij landde, want dat gebeurde
+buiten beeld.
+
+**De twee helften.** De top 10 en de losse vragen zitten nu achter hun eigen
+tabblad, met een teller erop (`Top 10 3/10`, `Vragen 1/4`) zodat je zonder
+klikken ziet wat er nog open staat. De opslaanknop staat op allebei en slaat
+allebei tegelijk op — het blijft één voorspelling.
+
+**De coureurlijst staat nu bóven de top 10.** Dat is de eigenlijke reden dat
+het onduidelijk was: je tikt aan de onderkant en het resultaat verschijnt aan
+de bovenkant. Andersom zie je je keuze meteen landen.
+
+**Het scherm zegt welke plek je invult** — "tik aan wie P3 wordt" — en die
+plek is in de lijst gemarkeerd. Zonder dat moet je zelf uittellen waar de
+volgende tik heen gaat.
+
+**De opslaanknop legt uit waar hij op wacht.** "Nog 7 te kiezen" werd "Maak de
+top 10 af · nog 7". Met tabjes erbij is het anders niet te zien waaróm hij uit
+staat als je aan de vragenkant bezig bent.
+
+**Twee dingen die hierbij boven water kwamen.** Een poule die de top 10 heeft
+uitgezet kreeg het volledige raster tóch te zien, vulde het in, en het werd
+bij het opslaan stilzwijgend overgeslagen omdat de vraag niet meedeed — nu
+staat hij er niet. En de opslaanknop begon over een top 10 bij een poule die
+er geen heeft.
+
+**Geen tabjes als er niets te wisselen valt:** een sessie met alleen een top
+10 (Simpel) of alleen losse vragen houdt één scherm.
