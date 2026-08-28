@@ -6,7 +6,7 @@
 // en scoort ze als niet meegedaan. Dat is niet aan het scherm te zien; je
 // merkt het pas als de punten niet kloppen.
 
-import { maakControle, startPagina, meedoen, openRace } from './hulp.mjs';
+import { maakControle, startPagina, meedoen, openRace, naarDeel } from './hulp.mjs';
 
 const { check, afronden } = maakControle('safety cars en rode vlag');
 const { page, jsFouten, stoppen } = await startPagina();
@@ -20,6 +20,8 @@ const vraag = async (id) => (await antwoorden()).find((a) => a.question_id === i
 await meedoen(page);
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
+// De losse vragen zitten achter hun eigen tabblad naast de top 10.
+await naarDeel(page, 'vragen');
 await page.waitForSelector('[data-extra="safety_cars"]');
 
 // --- de twee kiezers -------------------------------------------------------
@@ -49,6 +51,7 @@ check('en "nee" op de rode vlag ook',
 
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
+await naarDeel(page, 'vragen');
 await page.waitForSelector('[data-extra="safety_cars"]');
 const terug = await page.$$eval('.extraknop.gekozen',
   (n) => n.map((b) => `${b.dataset.extra}=${b.dataset.waarde}`));
@@ -67,6 +70,7 @@ check('een teruggenomen antwoord laat geen lege rij achter',
 // --- opnieuw invullen, nu met een aantal dat te scoren is -----------------
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
+await naarDeel(page, 'vragen');
 await page.click('[data-extra="safety_cars"][data-waarde="2"]');
 await page.click('#opslaan');
 await page.waitForSelector('[data-race]');

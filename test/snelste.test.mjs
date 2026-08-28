@@ -6,7 +6,7 @@
 //   2. De "uitslag" is één naam lang. "Werd P4" zegt dan niets; wie het wél
 //      werd is wat je wilt weten.
 
-import { maakControle, startPagina, meedoen, openRace } from './hulp.mjs';
+import { maakControle, startPagina, meedoen, openRace, naarDeel } from './hulp.mjs';
 
 const { check, afronden } = maakControle('snelste ronde en snelste pitstop');
 const { page, jsFouten, stoppen } = await startPagina();
@@ -19,6 +19,8 @@ const tekst = async (kies) => (await page.textContent(kies)).replace(/\s+/g, ' '
 await meedoen(page);
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
+// De losse vragen zitten achter hun eigen tabblad naast de top 10.
+await naarDeel(page, 'vragen');
 await page.waitForSelector('[data-vraag="snelste_ronde"]');
 
 // --- kiezen en opslaan -----------------------------------------------------
@@ -48,6 +50,7 @@ check('en ze zijn niet door elkaar geraakt', ronde !== pit, `${ronde} / ${pit}`)
 
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
+await naarDeel(page, 'vragen');
 await page.waitForSelector('[data-vraag="snelste_ronde"]');
 const terug = await page.getAttribute('[data-vraag="snelste_ronde"].gekozen', 'data-kies');
 check('ze staan er nog na opnieuw openen', terug === ronde, `${terug} tegen ${ronde}`);

@@ -85,6 +85,18 @@ export async function openRace(page, naam) {
   await page.waitForSelector('#paneel');
 }
 
+// Vult de top 10 af tot hij vol is, ook als er al iets in stond. Tien keer
+// blind klikken liep vast zodra een test er zelf al een had gekozen.
 export async function kiesTien(page) {
-  for (let i = 0; i < 10; i++) await page.click('.drv:not([disabled])');
+  await naarDeel(page, 'top10');
+  const nog = await page.$$eval('.slot.leegplek', (n) => n.length);
+  for (let i = 0; i < nog; i++) await page.click('.drv:not([disabled])');
+}
+
+// Het invulscherm heeft twee helften: de top 10 en de losse vragen. Staan er
+// geen losse vragen op deze tab, dan zijn er ook geen tabjes en is er niets
+// te wisselen.
+export async function naarDeel(page, deel) {
+  const knop = await page.$(`[data-deel="${deel}"]`);
+  if (knop) await knop.click();
 }
