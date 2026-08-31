@@ -1090,9 +1090,9 @@ Drie dingen die de gegevens zelf lieten zien en die je niet verzint:
 - **Gelijke tijden bestaan echt.** Zandvoort had twee coureurs op 74.321, en
   `pit_duration` komt soms in hele seconden terug. Bij gelijk wint wie hem het
   eerst reed.
-- **OpenF1 heeft gaten.** Van de kwalificatie én de race van Sakhir en Jeddah
-  2026 bestaat geen enkele rij — alleen de sessie in de kalender. Handmatig
-  invoeren blijft dus bestaan, en dat is geen restje maar de vangnet.
+- **Niet elke race in de kalender wordt gereden.** Van de kwalificatie én de
+  race van Sakhir en Jeddah 2026 bestaat geen enkele rij — alleen de sessie in
+  de kalender. Zie de sectie hieronder: die races zijn afgelast.
 
 ### Telt een virtual safety car mee?
 
@@ -1130,3 +1130,52 @@ geen omslachtigheid. Nul safety cars en "geen rode vlag" zijn echte uitslagen.
 Met een gewone `!`-controle zou de sync ze elke drie uur opnieuw ophalen, en —
 erger — een met de hand ingevulde nul niet als ingevuld herkennen en
 overschrijven. Dezelfde valstrik als `leegAntwoord()` in de app.
+
+---
+
+## Afgelaste races
+
+Correctie op de vorige sectie. Daar staat dat OpenF1 "gaten" heeft omdat er van
+Sakhir en Jeddah 2026 geen enkele rij bestaat. Dat klopt als waarneming, maar de
+verklaring erbij was verkeerd: **die races zijn afgelast.** Er is niets te
+missen, er is nooit iets geweest.
+
+Dat is geen detail, want het leidde tot de verkeerde oplossing. Bij een gat in
+de gegevens is handmatig invoeren het antwoord. Bij een afgelaste race is dat
+juist níét het antwoord — er is geen uitslag om in te voeren, en het probleem
+is dat de race eeuwig op "wacht op uitslag" bleef staan. Voor iemand in de
+poule is dat niet te onderscheiden van een app die stuk is, en op een kalender
+van vijfentwintig races met twee zulke regels is dat het eerste wat opvalt.
+
+**Hoe de sync het merkt.** OpenF1 heeft geen veld dat "afgelast" zegt. Wat je
+ziet is een sessie die in de kalender staat en waar verder niets van bestaat.
+`lijktAfgelast()` maakt daar een regel van: een race die zeven dagen na zijn
+geplande tijd nog steeds een 404 geeft, is niet doorgegaan.
+
+Twee dingen die die regel voorzichtig houden:
+
+- **Alleen een 404 telt als bewijs.** Een 429 betekent dat wij te snel vroegen,
+  en de gegevens er wél zijn. Zonder dat onderscheid zou een drukke run races
+  als afgelast markeren — precies de fout die de droogloop eerder maakte toen
+  hij zei dat Zandvoort niets had.
+- **Zeven dagen.** Een echte uitslag staat er binnen een uur. Een week is ruim
+  genoeg om nooit een gewone vertraging te raken.
+
+**Een uitslag wint altijd van de vlag.** Overal waar het ertoe doet staat
+`afgelastEnLeeg(r)`: afgelast én zonder uitslag. Blijkt de race toch verreden,
+of vult iemand hem met de hand in, dan telt hij gewoon weer mee zonder dat er
+een vlaggetje omgezet hoeft te worden. Dat is de weg terug als de regel er een
+keer naast zit, en die moest er zijn — een automatische gevolgtrekking zonder
+handmatige uitweg is een val.
+
+**`new Date(null)` is 1 januari 1970.** Dat kostte een test. De eerste versie
+van `lijktAfgelast()` controleerde alleen met `Number.isFinite()`, en nul is
+een keurig eindig getal dat ruim een week geleden ligt — een race zonder
+geplande tijd zou dus stilzwijgend als afgelast eindigen.
+
+**En één die de browsertest ving.** De afgelast-melding stond eerst in
+`geslotenWeergave()`, de tak voor een race waarvan de deadline verstreken is.
+Maar een race kan afgelast worden terwijl zijn deadline nog loopt, en dan komt
+hij daar nooit langs: je kreeg gewoon het invulscherm voor een race die nooit
+gereden wordt. Nu is `afgelastEnLeeg(r)` in `vulPaneel()` genoeg om hem dicht
+te zetten, wat de klok ook zegt.

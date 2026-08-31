@@ -257,6 +257,11 @@
   .race.open{border-left-color:var(--groen)}
   .race.open:hover{border-left-color:var(--groen)}
   .race.komt{background:transparent;border:1px dashed var(--stippel);color:var(--ink3)}
+  /* Een afgelaste race blijft staan maar hoort niet meer om aandacht te
+     vragen: doorgestreept nummer, gedempt, en geen groene rand. */
+  .race.afgelast{opacity:.55}
+  .race.afgelast .rnd{text-decoration:line-through}
+  .st.afgelast{color:var(--ink3)}
   .race .rnd{font-family:var(--cond);font-size:34px;font-weight:700;
     color:var(--ink3);min-width:44px;line-height:1}
   .race.open .rnd{color:var(--ink)}
@@ -1267,6 +1272,9 @@ async function bewaar() {
 
 // Welke lijst van deze race staat nog open? De kwalificatie sluit eerst.
 function openLijst(r, nu = Date.now()) {
+  // Aan een afgelaste race valt niets meer te verdienen, dus hij hoort ook
+  // niet meer open te staan — en niet meer mee te tellen als "nog invullen".
+  if (afgelastEnLeeg(r)) return null;
   if (nu < new Date(r.deadline_quali).getTime()) return 'quali';
   if (nu < new Date(r.deadline_race).getTime())  return 'race';
   return null;
@@ -1290,6 +1298,9 @@ function raceStand(r, nu = Date.now()) {
   if (r.quali_result || r.race_result) {
     return { soort:'klaar', tekst:`uitslag · ${scoreWeekend(mijn, r)} ptn` };
   }
+  // Een uitslag wint van de vlag: staat er toch een uitslag (met de hand
+  // ingevuld, of OpenF1 die hem later alsnog kreeg), dan is hij niet afgelast.
+  if (afgelastEnLeeg(r)) return { soort:'afgelast', tekst:'niet doorgegaan' };
   const welk = openLijst(r, nu);
   if (!welk) return { soort:'wacht', tekst:'wacht op uitslag' };
   if (!(r.drivers ?? []).length) return { soort:'komt', tekst:'deelnemers volgen' };
@@ -2399,13 +2410,32 @@ function vulPaneel() {
     knoopKopieer(paneel);
     knoopLosse(paneel, r);
   }
-  else if (dicht[S.tab]) geslotenWeergave(paneel, r);
+  // Een afgelaste race is dicht, wat de klok ook zegt. Een race kan afgelast
+  // worden terwijl zijn deadline nog loopt — dan blijven mensen anders een
+  // top 10 invullen voor iets wat nooit gereden wordt.
+  else if (afgelastEnLeeg(r) || dicht[S.tab]) geslotenWeergave(paneel, r);
   else invulWeergave(paneel, r, dicht);
 }
 
+// Afgelast én zonder uitslag. Die tweede voorwaarde staat er zodat een
+// uitslag altijd wint van de vlag: is hij tóch verreden en ingevuld, dan
+// telt hij gewoon mee.
+const afgelastEnLeeg = (r) => !!r.afgelast && !r.quali_result && !r.race_result;
+
 function geslotenWeergave(paneel, r) {
   if (S.uitslag.welk === S.tab) { uitslagInvoer(paneel, r); return; }
-  paneel.innerHTML = `
+  // Een afgelaste race blijft in de kalender staan — er kunnen voorspellingen
+  // aan hangen — maar hij levert niets op, en dat hoort hier te staan in
+  // plaats van "de uitslag volgt".
+  paneel.innerHTML = afgelastEnLeeg(r) ? `
+    <div class="leeg"><span class="label">afgelast</span>
+      <p class="zacht" style="margin:0">Deze race is niet doorgegaan, dus hij telt voor
+        niemand mee. Wat je had ingevuld blijft staan.</p></div>
+    ${magInvullen(r, S.tab)
+      ? `<p class="zacht" style="margin:12px 0 0">Is hij tóch verreden? Vul de uitslag
+           hieronder in, dan telt hij weer gewoon mee.</p>
+         <button class="knop spook" id="zelfinvullen">Uitslag zelf invullen</button>` : ''}
+  ` : `
     <div class="leeg"><span class="label">gesloten</span>
       <p class="zacht" style="margin:0">Inzendingen zijn gesloten. De uitslag volgt zodra
         de sync hem bij OpenF1 heeft opgehaald; die draait elke drie uur.</p></div>

@@ -21,6 +21,7 @@ je eigen computer.
 | `vraagsoorten.test.mjs` | De puntentelling van de losse vragen: vooral dat alleen invullen wat je weet niet minder oplevert dan alles gokken |
 | `pole-en-duels.test.mjs` | Diezelfde twee in de app: kiezen, opslaan, terugzien, en dat één keuze per team blijft staan |
 | `invulscherm.test.mjs` | Het keuzeblad: een plek aantikken en dán kiezen, P7 vóór P1 kunnen invullen, en dat een halve top 10 niet bewaard wordt |
+| `afgelast.test.mjs` | Een race die niet doorgegaan is: hij zegt dat, is niet in te vullen, en een uitslag wint alsnog van de vlag |
 | `uitslagen.test.mjs` | De vier losse uitslagen uit de gegevens van OpenF1: vooral welke berichten van de wedstrijdleiding wél en niet een safety car zijn |
 | `inleg.test.mjs` | De inleg en het betaalverzoek: hoe een bedrag gelezen wordt, dat alleen http(s) als betaalknop doorkomt (ook uit de database), en het afvinken wie betaald heeft |
 | `poules-en-omschrijving.test.mjs` | De omschrijving van een poule, en meer dan één poule op hetzelfde toestel: wisselen zonder de code, en een poule die weg is |

@@ -70,6 +70,10 @@ create table if not exists public.races (
   -- Twee uitslagen die niets met een coureur te maken hebben.
   safety_cars               int,
   rode_vlag                 boolean,
+  -- Een race die niet doorgegaan is. Hij blijft in de kalender staan omdat
+  -- mensen er al iets voor ingevuld kunnen hebben, maar hij scoort niet en
+  -- hij hoort niet eeuwig op "wacht op uitslag" te blijven staan.
+  afgelast                  boolean not null default false,
   safety_cars_handmatig     boolean not null default false,
   rode_vlag_handmatig       boolean not null default false
 );
@@ -175,6 +179,7 @@ alter table public.races        add column if not exists fastest_lap_handmatig  
 alter table public.races        add column if not exists fastest_pitstop_handmatig boolean not null default false;
 -- En twee die niets met een coureur te maken hebben. Allebei mogen ze null
 -- zijn: dat betekent "nog niet bekend", en 0 safety cars is iets anders.
+alter table public.races        add column if not exists afgelast                  boolean not null default false;
 alter table public.races        add column if not exists safety_cars               int;
 alter table public.races        add column if not exists rode_vlag                 boolean;
 alter table public.races        add column if not exists safety_cars_handmatig     boolean not null default false;
