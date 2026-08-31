@@ -92,3 +92,32 @@ export function snelstePitstop(stops = []) {
   geldig.sort((a, b) => a.pit_duration - b.pit_duration || a.lap_number - b.lap_number);
   return String(geldig[0].driver_number);
 }
+
+/**
+ * Is deze race niet doorgegaan?
+ *
+ * OpenF1 heeft geen veld dat dit zegt. Wat je ziet is een sessie die in de
+ * kalender staat en waar verder niets van bestaat: 404 op alles. Sakhir en
+ * Jeddah 2026 zijn zo — die races zijn afgelast.
+ *
+ * Alleen een 404 telt als bewijs, en pas een week na de geplande tijd. Een
+ * 429 betekent dat wij te snel vroegen, en een uitslag die een uur later
+ * komt is normaal; een race die na zeven dagen nog nergens staat is dat niet.
+ *
+ * Deze functie kijkt bewust naar de ráce en niet naar de kwalificatie. Een
+ * afgelaste kwalificatie met een race die wel doorgaat bestaat — dan is het
+ * weekend niet afgelast.
+ */
+export const AFGELAST_NA_DAGEN = 7;
+
+export function lijktAfgelast({ raceGevonden, deadline, nu = Date.now() }) {
+  if (raceGevonden) return false;
+  // Eerst op leegte controleren en niet alleen op Number.isFinite: new
+  // Date(null) is 1 januari 1970, en dat is een keurig eindig getal dat ruim
+  // een week geleden ligt. Een race zonder geplande tijd zou zo stilzwijgend
+  // als afgelast gemarkeerd worden.
+  if (deadline === null || deadline === undefined || deadline === '') return false;
+  const gepland = new Date(deadline).getTime();
+  if (!Number.isFinite(gepland)) return false;
+  return nu - gepland > AFGELAST_NA_DAGEN * 24 * 3600 * 1000;
+}

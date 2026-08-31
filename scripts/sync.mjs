@@ -22,7 +22,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
-import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop }
+import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast }
   from './uitslagen.mjs';
 
 const API = 'https://api.openf1.org/v1';
@@ -196,12 +196,30 @@ async function uitslagen(races) {
     if (!race.quali_result && race.quali_key && rijp(race.deadline_quali)) {
       await probeer(patch, 'quali_result', () => uitslag(race.quali_key), gemist);
     }
+    // Of de race-uitslag er is, houden we apart bij: als OpenF1 hem niet
+    // heeft is dat straks het bewijs dat de race is afgelast.
+    let raceGevonden = !!race.race_result;
+    let raceOntbreekt = false;
     if (!race.race_result && race.race_key && rijp(race.deadline_race)) {
       await probeer(patch, 'race_result', () => uitslag(race.race_key), gemist);
+      raceGevonden = !!patch.race_result;
+      // Alleen een 404 is bewijs. Een 429 betekent dat wij te snel vroegen.
+      raceOntbreekt = !raceGevonden
+        && gemist.some((g) => g.startsWith('race_result') && g.includes('404'));
     }
 
-    // De vier losse uitslagen komen allemaal uit de race zelf.
-    if (race.race_key && rijp(race.deadline_race)) {
+    // Een race die er een week na dato nog steeds niet is, is niet doorgegaan.
+    // Zonder dit blijft hij eeuwig op "wacht op uitslag" staan, en dat is voor
+    // iedereen in de poule niet te onderscheiden van een app die stuk is.
+    if (!race.afgelast && raceOntbreekt
+        && lijktAfgelast({ raceGevonden: false, deadline: race.deadline_race })) {
+      patch.afgelast = true;
+      console.log(`  ronde ${race.round} ${race.name}: afgelast, OpenF1 heeft hem niet`);
+    }
+
+    // De vier losse uitslagen komen allemaal uit de race zelf. Bij een
+    // afgelaste race valt er niets op te halen, dus die slaan we over.
+    if (race.race_key && rijp(race.deadline_race) && !race.afgelast && !raceOntbreekt) {
       if (leeg(race.fastest_lap)) {
         await probeer(patch, 'fastest_lap',
           async () => snelsteRonde(await openf1(`laps?session_key=${race.race_key}`)), gemist);

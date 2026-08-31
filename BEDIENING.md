@@ -285,11 +285,26 @@ niet alleen hier.
 straf voor een "red flag infringement" is er geen — dat gaat over een
 overtreding ná afloop.
 
-**Handmatig invoeren blijft bestaan**, en dat is geen restje. OpenF1 heeft
-gaten: van de kwalificatie én de race van Sakhir en Jeddah 2026 bestaat geen
-enkele rij, alleen de sessie zelf in de kalender. Zulke races zijn met de hand
-in te vullen onder Poule, en de sync raakt ze daarna niet meer aan — hij vult
-alleen wat leeg is.
+**Afgelaste races.** Sakhir en Jeddah 2026 zijn niet doorgegaan. Ze staan wel
+in de kalender van OpenF1, maar er bestaat geen enkele rij van, dus er komt
+nooit een uitslag. Zonder iets te doen bleven ze eeuwig op "wacht op uitslag"
+staan, en dat is voor iemand in de poule niet te onderscheiden van een app die
+stuk is.
+
+OpenF1 heeft geen veld dat zegt dat een race is afgelast, dus de sync leidt het
+af: een race die zeven dagen na de geplande tijd nog steeds een 404 geeft, is
+niet doorgegaan. Alleen een 404 telt als bewijs — een 429 betekent dat wíj te
+snel vroegen. Zeven dagen is ruim: een echte uitslag staat er binnen een uur.
+
+Zo'n race blijft in de kalender staan, want er kunnen voorspellingen aan
+hangen. Hij is alleen niet meer in te vullen, telt niet mee als iets wat je nog
+moet doen, en zegt "niet doorgegaan" in plaats van "de uitslag volgt".
+
+**Handmatig invoeren blijft bestaan**, en dat is geen restje. Als OpenF1 een
+uitslag mist of te laat is, vul je hem onder Poule zelf in; de sync raakt hem
+daarna niet meer aan, want die vult alleen wat leeg is. Dat is ook de weg terug
+bij een race die ten onrechte als afgelast is gemarkeerd: **een uitslag wint
+altijd van de vlag.** Staat er een uitslag, dan telt de race gewoon mee.
 
 **Als een uitslag niet binnenkomt**: draai de verkenner (Actions → *OpenF1
 verkennen*), eventueel met een `session_key`. Die laat zien of OpenF1 de race

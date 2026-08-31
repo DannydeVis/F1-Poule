@@ -9,7 +9,7 @@
 // had achttien berichten met dat woord erin en één echte safety car. De rest
 // waren stewards die een straf uitdeelden voor een "SAFETY CAR INFRINGEMENT".
 
-import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop }
+import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast }
   from '../scripts/uitslagen.mjs';
 import { maakControle } from './hulp.mjs';
 
@@ -108,5 +108,29 @@ check('ook hier wint bij gelijk de eerste',
     { driver_number: 63, lap_number: 14, pit_duration: 12 },
   ]) === '63');
 check('zonder pitstops komt er niets uit', snelstePitstop([]) === null);
+
+// --- een race die niet doorgegaan is -------------------------------------
+// Sakhir en Jeddah 2026 zijn afgelast. Ze staan wel in de kalender van
+// OpenF1, maar er bestaat geen enkele rij van — 404 op alles. Zonder dit
+// blijven ze eeuwig op "wacht op uitslag" staan, en dat is niet te
+// onderscheiden van een app die stuk is.
+const dagen = (n) => Date.now() - n * 24 * 3600 * 1000;
+
+check('een race die er na een week nog niet is, is afgelast',
+  lijktAfgelast({ raceGevonden: false, deadline: dagen(10) }));
+check('een race van gisteren nog niet: een uitslag mag even op zich laten wachten',
+  !lijktAfgelast({ raceGevonden: false, deadline: dagen(1) }));
+check('en eentje van zes dagen geleden ook nog niet',
+  !lijktAfgelast({ raceGevonden: false, deadline: dagen(6) }));
+check('een race die wél een uitslag heeft is nooit afgelast',
+  !lijktAfgelast({ raceGevonden: true, deadline: dagen(100) }));
+check('een race die nog moet komen al helemaal niet',
+  !lijktAfgelast({ raceGevonden: false, deadline: dagen(-7) }));
+// new Date(null) is 1 januari 1970: een eindig getal dat ruim een week
+// geleden ligt. Een race zonder geplande tijd zou zo als afgelast eindigen.
+check('een race zonder geplande tijd laat hij met rust',
+  !lijktAfgelast({ raceGevonden: false, deadline: null }));
+check('en een deadline die geen datum is ook',
+  !lijktAfgelast({ raceGevonden: false, deadline: 'weet ik veel' }));
 
 process.exit(afronden() ? 0 : 1);
