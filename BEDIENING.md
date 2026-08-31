@@ -59,8 +59,8 @@ Bovenaan de knop **Kopieer voor WhatsApp**.
 Leden, poulecode, uitnodiglink met deelknop, en de instellingen. Voor de
 poulebaas staat hier ook het beheergedeelte: welke vragen meedoen, de
 omschrijving van de poule, en handmatig een uitslag invoeren als OpenF1 het
-laat afweten. Verder de inleg (zie §10), je eigen link (zie §4) en, onderaan,
-je andere poules om naar over te stappen.
+laat afweten (zie §11). Verder de inleg (zie §10), je eigen link (zie §4) en,
+onderaan, je andere poules om naar over te stappen.
 
 ---
 
@@ -256,3 +256,42 @@ speler om hem af te vinken. Achter elke naam staat dan `open` of `betaald`.
 
 Zelf zie je alleen dat je afgevinkt bent als dat zo is. "Nog niet afgevinkt"
 bij elk bezoek is zeuren van een machine, en de poulebaas heeft de lijst al.
+
+---
+
+## 11. Waar de uitslagen vandaan komen
+
+Alles komt uit OpenF1, opgehaald door `scripts/sync.mjs` op een GitHub-runner,
+elke drie uur. Niemand hoeft iets in te voeren.
+
+| Wat | Waar het vandaan komt |
+|---|---|
+| Kalender en deadlines | `sessions` |
+| Deelnemerslijst met teamkleuren | `drivers` |
+| Top 10 kwalificatie en race | `session_result` |
+| Snelste ronde | `laps`, de kortste `lap_duration` |
+| Snelste pitstop | `pit`, de kortste `pit_duration` |
+| Safety cars | `race_control` |
+| Rode vlag | `race_control` |
+
+**Wat telt als safety car.** Een virtual safety car telt mee, en dat staat er
+in de app bij de vraag ook bij. Dat is een keuze: acht van de veertien races
+van 2026 hadden geen énkele echte safety car, en dan is "0" bijna altijd goed
+en valt er niets te voorspellen. Een vraag waarvan de spelers de telregel niet
+kennen is geen eerlijke vraag, dus die regel hoort op het scherm te staan en
+niet alleen hier.
+
+**Wat telt als rode vlag.** Alleen een race die echt stilgelegd wordt. Een
+straf voor een "red flag infringement" is er geen — dat gaat over een
+overtreding ná afloop.
+
+**Handmatig invoeren blijft bestaan**, en dat is geen restje. OpenF1 heeft
+gaten: van de kwalificatie én de race van Sakhir en Jeddah 2026 bestaat geen
+enkele rij, alleen de sessie zelf in de kalender. Zulke races zijn met de hand
+in te vullen onder Poule, en de sync raakt ze daarna niet meer aan — hij vult
+alleen wat leeg is.
+
+**Als een uitslag niet binnenkomt**: draai de verkenner (Actions → *OpenF1
+verkennen*), eventueel met een `session_key`. Die laat zien of OpenF1 de race
+niet heeft (404) of dat we te snel vroegen (429). Dat verschil is belangrijk —
+een 429 lost zichzelf op, een 404 niet.

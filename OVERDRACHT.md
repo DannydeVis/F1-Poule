@@ -1036,3 +1036,97 @@ omschrijving; er nog twee velden bij zou van "één vraag per scherm" een
 formulier maken. Stap 4 is het scherm waarop je de uitnodiging kopieert, en de
 tekst een regel lager verandert meteen mee als je hier iets invult. Dat is ook
 precies het moment waarop het ertoe doet.
+
+---
+
+## De laatste vier uitslagen: automatisch, en wat dat kostte
+
+Aanleiding: *"Ik wil dat alles automatisch gaat. Dit wordt geen app die ik
+alleen ga gebruiken."*
+
+**Eerst een rechtzetting, want die staat ook in de eerdere secties fout.** Ik
+heb hier meerdere keren geschreven dat de sync voor snelste ronde, snelste
+pitstop, safety cars en rode vlag "geblokkeerd" was omdat `api.openf1.org`
+onbereikbaar is. Dat is onjuist over dit project. `sync.mjs` draait al
+negenentwintig keer met succes op een GitHub-runner en praat daar prima met
+OpenF1 — zo zijn de deelnemerslijsten binnengekomen. Wat onbereikbaar is, is
+de bouwomgeving waarin deze code geschreven wordt: daar zijn zowel OpenF1 als
+Supabase geblokkeerd. Dat is een beperking van de werkplek, geen eigenschap
+van het product, en die twee zijn hier door elkaar gehaald.
+
+De uitweg staat nu in de repo: `scripts/verkennen.mjs` plus een workflow. Die
+draait waar OpenF1 wél bereikbaar is en zet in de log wat er terugkomt.
+
+### Waarom zoeken op "safety car" fout gaat
+
+De verkenner haalde de berichten van de wedstrijdleiding op over veertien
+races. Dit is wat er langskomt:
+
+| Wat | Hoe vaak |
+|---|---|
+| `SafetyCar \| VSC DEPLOYED` | 17× in 8 races |
+| `SafetyCar \| SAFETY CAR DEPLOYED` | 8× in 6 races |
+| `Other \| SAFETY CAR LIGHTS ON` | 3× in 2 races |
+| `SafetyCar \| SAFETY CAR IN THIS LAP` | 7× (het einde) |
+| `Other \| LAPPED CARS MAY NOW OVERTAKE THE SAFETY CAR: 77` | — |
+| `Other \| SAFETY CAR WILL USE START/FINISH STRAIGHT` | — |
+| `Other \| … NOTED - SAFETY CAR INFRINGEMENT` | tientallen |
+| `Other \| … NOTED - CAR SAFETY LIGHTS` | — |
+
+Monte Carlo had achttien berichten met "safety car" erin en drie echte safety
+cars. Een filter op het losse woord zou daar zes keer te veel tellen, en het
+zou nooit opvallen omdat er geen tweede bron is om het tegen af te zetten.
+
+Vandaar dat `SAFETYCAR_START` de zinnen met naam en toenaam noemt, verankerd
+aan het begin van het bericht. Hetzelfde bij de rode vlag: `RED FLAG - RACE
+SUSPENDED` telt, `… - RED FLAG INFRINGEMENT` niet.
+
+Drie dingen die de gegevens zelf lieten zien en die je niet verzint:
+
+- **Dezelfde gebeurtenis heeft twee namen.** Zandvoort meldde zijn safety cars
+  als `SAFETY CAR LIGHTS ON` (category `Other`), andere races als `SAFETY CAR
+  DEPLOYED` (category `SafetyCar`). Daarom telt `telSafetyCars()` per ronde en
+  niet per bericht: twee zinnen over hetzelfde moment zijn één safety car.
+- **Gelijke tijden bestaan echt.** Zandvoort had twee coureurs op 74.321, en
+  `pit_duration` komt soms in hele seconden terug. Bij gelijk wint wie hem het
+  eerst reed.
+- **OpenF1 heeft gaten.** Van de kwalificatie én de race van Sakhir en Jeddah
+  2026 bestaat geen enkele rij — alleen de sessie in de kalender. Handmatig
+  invoeren blijft dus bestaan, en dat is geen restje maar de vangnet.
+
+### Telt een virtual safety car mee?
+
+Ja, en dat is een keuze geweest. Acht van de veertien races hadden geen enkele
+échte safety car; met alleen die telling is "0" bijna altijd het goede antwoord
+en is de vraag niet de moeite waard. Met de virtual erbij zit een race meestal
+op één tot drie.
+
+Belangrijker dan welke kant het opvalt: **de regel staat nu in de app**, bij de
+vraag zelf. Een vraag waarvan de spelers de telregel niet kennen is geen
+eerlijke vraag, en dit is precies het soort ding waar in een groepsapp ruzie
+over ontstaat. Andersom willen? Het VSC-deel uit `SAFETYCAR_START` halen en de
+zin in `EXTRAVRAAG.safety_cars.uitleg` aanpassen.
+
+### Twee bugs die hierbij boven water kwamen
+
+**Sakhir en Jeddah kregen nooit hun race-uitslag.** Alle ophaalacties van een
+race stonden in één `try`. Hun kwalificatie geeft een 404, en daardoor sloeg de
+sync de rest van diezelfde race over — inclusief de race-uitslag, die er wel
+had kunnen zijn. Twee weekenden lang geen punten, en in de log stond alleen dat
+de kwalificatie ontbrak. Elk stukje gaat nu apart via `probeer()`.
+
+**Een 429 is geen ontbrekende data.** De eerste droogloop meldde dat OpenF1
+voor Budapest en Zandvoort niets had — terwijl Zandvoort 333 berichten en 1369
+rondes heeft. Het waren rate limits: zes verzoeken per race, met `laps` als
+zware. Vier pogingen van maximaal acht seconden waren te kort. Nu zes pogingen
+met oplopende pauzes, en de log zegt erbij dat de gegevens er wél zijn. Zonder
+dat onderscheid lijkt een drukke run op een gat in de data, en ga je zoeken
+waar niets te vinden is.
+
+### `leeg()` en de valstrik met nul
+
+In `sync.mjs` staat `leeg = (w) => w === null || w === undefined`, en dat is
+geen omslachtigheid. Nul safety cars en "geen rode vlag" zijn echte uitslagen.
+Met een gewone `!`-controle zou de sync ze elke drie uur opnieuw ophalen, en —
+erger — een met de hand ingevulde nul niet als ingevuld herkennen en
+overschrijven. Dezelfde valstrik als `leegAntwoord()` in de app.
