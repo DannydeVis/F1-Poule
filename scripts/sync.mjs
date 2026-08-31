@@ -39,17 +39,30 @@ const wacht = (ms) => new Promise((r) => setTimeout(r, ms));
 //  OpenF1, met geduld voor de rate limit (3 per seconde)
 // ------------------------------------------------------------
 
-async function openf1(pad, pogingen = 4) {
+/**
+ * OpenF1 laat een paar verzoeken per seconde toe en zegt "te snel" met een
+ * 429. Belangrijk verschil met een 404: een 429 betekent dat de gegevens er
+ * wél zijn en dat wij te ongeduldig waren. Dat moet uit elkaar te houden
+ * zijn in de log, anders lijkt een drukke run op ontbrekende data.
+ *
+ * Zes pogingen met oplopende pauzes: bij een volledige inhaalslag over een
+ * heel seizoen zijn het zes verzoeken per race, en `laps` is er daar één van
+ * met ruim dertienhonderd rijen. Vier pogingen van maximaal acht seconden
+ * bleken dan te kort — de verkenner miste zo twee races die OpenF1 gewoon had.
+ */
+async function openf1(pad, pogingen = 6) {
   for (let i = 0; i < pogingen; i++) {
     const res = await fetch(`${API}/${pad}`);
     if (res.ok) return res.json();
     if (res.status === 429 && i < pogingen - 1) {
-      const pauze = 2000 * (i + 1);
+      const pauze = 3000 * (i + 1);
       console.log(`  rate limit, ${pauze / 1000}s wachten`);
       await wacht(pauze);
       continue;
     }
-    throw new Error(`OpenF1 gaf ${res.status} op ${pad}`);
+    throw new Error(res.status === 429
+      ? `OpenF1 hield ons tegen (429) op ${pad} — de gegevens zijn er wel`
+      : `OpenF1 gaf ${res.status} op ${pad}`);
   }
 }
 

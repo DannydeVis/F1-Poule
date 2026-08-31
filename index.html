@@ -805,6 +805,12 @@ const COUREURVRAAG = {
 const EXTRAVRAAG = {
   safety_cars: {
     sessie:'race', soort:'getal', kop:'hoeveel safety cars komen er?',
+    // De regel moet erbij staan. De uitslag komt uit de berichten van de
+    // wedstrijdleiding, en die telt een virtual safety car mee — zonder dat
+    // erbij zou de helft van de poule iets anders voorspellen dan er geteld
+    // wordt, en dat is geen eerlijke vraag. Zie scripts/uitslagen.mjs voor
+    // waarom de virtual meetelt.
+    uitleg:'Een virtual safety car telt ook mee.',
     label:'safety cars', letter:'SC', mis:'geen aantal gekozen',
     kolom:'safety_cars', vlag:'safety_cars_handmatig',
     toon: (w) => `${w}${w === 1 ? ' safety car' : ' safety cars'}`,
@@ -812,6 +818,7 @@ const EXTRAVRAAG = {
   },
   rode_vlag: {
     sessie:'race', soort:'janee', kop:'komt er een rode vlag?',
+    uitleg:'Alleen als de race echt stilgelegd wordt.',
     label:'rode vlag', letter:'RV', mis:'niets ingevuld',
     kolom:'rode_vlag', vlag:'rode_vlag_handmatig',
     toon: (w) => w ? 'ja, rode vlag' : 'nee, geen rode vlag',
@@ -2718,6 +2725,7 @@ function extraKiezer(r, id) {
         <span class="label">${v.kop}</span>
         <span class="mono" style="color:var(--ink3)">${punten} punten</span>
       </div>
+      ${v.uitleg ? `<p class="zacht" style="margin:0 0 8px">${esc(v.uitleg)}</p>` : ''}
       ${extraKnoppen(id, gekozen, 'extra')}
       ${leegAntwoord(gekozen)
         ? `<p class="mono amber" style="margin:0">nog niets gekozen · hier liggen ${punten} punten</p>`

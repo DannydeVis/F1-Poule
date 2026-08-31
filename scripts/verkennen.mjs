@@ -26,11 +26,11 @@ const wacht = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Dezelfde bescheidenheid als in sync.mjs: OpenF1 laat drie verzoeken per
 // seconde toe en zegt dat met een 429.
-async function haal(pad, pogingen = 4) {
+async function haal(pad, pogingen = 6) {
   for (let i = 0; i < pogingen; i++) {
     const res = await fetch(`${API}/${pad}`);
     if (res.ok) return res.json();
-    if (res.status === 429 && i < pogingen - 1) { await wacht(2000 * (i + 1)); continue; }
+    if (res.status === 429 && i < pogingen - 1) { await wacht(3000 * (i + 1)); continue; }
     return { fout: `${res.status}` };
   }
 }
@@ -141,13 +141,20 @@ async function droogloop(races) {
   console.log(`  ${'race'.padEnd(20)} ronde  pit  SC  rode vlag`);
   for (const r of races) {
     const rondes = await haal(`laps?session_key=${r.session_key}`);
-    await wacht(700);
+    await wacht(1200);
     const stops = await haal(`pit?session_key=${r.session_key}`);
-    await wacht(700);
+    await wacht(1200);
     const rc = await haal(`race_control?session_key=${r.session_key}`);
-    await wacht(700);
-    if (isFout(rondes) || isFout(stops) || isFout(rc)) {
-      console.log(`  ${String(r.location).padEnd(20)} OpenF1 heeft hier niets`);
+    await wacht(1200);
+    // 404 en 429 zijn twee heel verschillende verhalen: het eerste betekent
+    // dat OpenF1 deze race niet heeft, het tweede dat wij te snel vroegen.
+    // Ze op één hoop gooien maakte dat Zandvoort hier "niets" leek te hebben
+    // terwijl er 333 berichten in stonden.
+    const fouten = [rondes, stops, rc].filter(isFout).map((x) => x.fout);
+    if (fouten.length) {
+      console.log(`  ${String(r.location).padEnd(20)} ${fouten.includes('429')
+        ? 'te snel gevraagd (429), niets over de race te zeggen'
+        : `OpenF1 heeft hier niets (${[...new Set(fouten)].join(', ')})`}`);
       continue;
     }
     const sc = telSafetyCars(rc);
