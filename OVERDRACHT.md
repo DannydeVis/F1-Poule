@@ -853,3 +853,84 @@ opslaanknop begon over een top 10 bij een poule die er geen heeft.
 **Het handmatig invoeren van een uitslag is niet meegegaan.** Dat scherm
 gebruikt nog steeds de lijst met `.drv`-knoppen: daar zet je twintig coureurs
 op volgorde, en dan is een blad per plek juist omslachtig.
+
+---
+
+## Omschrijving per poule, en meer dan één poule tegelijk
+
+Aanleiding: *"Graag ook omschrijvingen aan de poule toevoegen. En mensen
+moeten meerdere poules kunnen beheren. Dus wellicht een inlog bouwen?"*
+
+**De omschrijving.** Eén tekstkolom erbij, `pools.beschrijving`, en een veld
+in stap 1 van het aanmaken. De poulebaas kan hem later aanpassen onder Poule,
+naast de vragenset en om dezelfde reden alleen hij: zonder login kan de
+database niet controleren wie dat is, dus `magBeheren()` houdt de knop weg bij
+wie hem niet nodig heeft (zie BEDIENING.md §7 voor wat dat wel en niet is).
+
+Leeg opslaan zet `null`, niet een lege tekst. Anders staat er straks een lege
+regel onder de naam, en is "hij heeft er geen" niet te onderscheiden van "hij
+heeft er een die toevallig leeg is".
+
+Het veld tekent niet opnieuw bij elke toetsaanslag — dat zou de cursor uit het
+veld gooien. De opslaanknop wordt daarom met de hand aan- en uitgezet in
+`knoopOmschrijving()`. Dat is de enige plek in de app waar dat zo gaat; overal
+elders is een klik het startsein voor `render()`, en dan is dit niet nodig.
+
+**Meer dan één poule.** De app onthield tot nu toe alleen `poule:laatste`: één
+id. Wie met het werk in de ene en met vrienden in de andere zit moest de code
+elke keer opnieuw intypen om te wisselen. Naast `poule:laatste` staat nu
+`poule:poules`: een lijstje van maximaal twaalf poules waar je bij hoort, met
+naam, code en omschrijving erbij zodat het zonder database te tonen is. Het
+wordt bijgewerkt op de drie plekken waar je in een poule belandt — aanmaken,
+code intypen, en de uitnodigingslink.
+
+`naarPoule()` haalt de poule daarna wél opnieuw op. Het lijstje is een
+adresboekje, geen kopie van de database: de naam kan veranderd zijn, en een
+poule die verwijderd is hoort eruit te vallen (`vergeetUitLijst()`) in plaats
+van je op een leeg scherm te zetten.
+
+**"Andere poule" wist alleen `poule:laatste`.** Het lijstje blijft staan. Zou
+die knop het lijstje leegmaken, dan raak je al je poules kwijt door één keer
+te kijken of er nog een andere was.
+
+**Waar het lijstje staat.** Onderaan de Poule-tab, en op het startscherm. Niet
+als tussenscherm bij binnenkomst: je speelt vrijwel altijd in dezelfde poule
+verder, en dan is een keuzescherm ertussen een extra tik. BEDIENING.md §5 is
+op dat punt bijgewerkt, want daar stond het oorspronkelijke plan.
+
+**Lange poulenamen.** `.smalkop` heeft `overflow-wrap:anywhere` gekregen.
+"Vrijdagmiddagpoule" is één woord van achttien letters in een 34px condensed
+hoofdletterfont; op een telefoon viel het eind er stilletjes af.
+
+### En die inlog?
+
+Nog niet gebouwd, en het is de moeite waard om te weten waarom niet — het is
+een keuze, geen vergeten punt.
+
+Wat je hierboven krijgt is *meerdere poules op dit toestel*. Dat is wat de
+vraag in de praktijk was: wisselen zonder de code op te zoeken. Een inlog lost
+iets anders op: *één identiteit over meerdere toestellen*. Dat is een echt
+probleem in deze poule — dezelfde persoon staat er nu als vijf spelers in,
+omdat hij op zijn telefoon, zijn laptop en het werk apart heeft meegedaan —
+maar het is een ander probleem, en het lijstje in `localStorage` maakt het
+niet erger.
+
+De oude reden om geen inlog te bouwen is vervallen. Die was dat Supabase geen
+magic link naar een `file://`-pagina wil sturen; de app draait nu op GitHub
+Pages, dus op een echte https-origin, en Supabase Auth zou het gewoon doen.
+
+Wat het wél kost, zodat de afweging op tafel ligt:
+
+- `pool_members` moet aan een `auth.users`-id gekoppeld worden, met een pad
+  voor de spelers die er nu al in staan zonder account.
+- De RLS-policies staan nu wagenwijd open (`using (true)`), omdat iedereen met
+  de anon key alles mag. Met een login moeten die allemaal herschreven worden,
+  en dat is het moment waarop een fout niet "iemand ziet iets te veel" is maar
+  "niemand kan meer bij zijn eigen poule".
+- Meedoen kost dan een e-mail en een mailtje openen, in plaats van een code
+  intypen. Voor een vriendenpoule is dat de duurste knop in de hele app.
+
+Een tussenweg die dit alles niet vraagt: dezelfde speler op een tweede toestel
+laten binnenkomen via een persoonlijke link (`?code=...&speler=...`), zodat je
+jezelf niet opnieuw aanmaakt. Dat lost het echte probleem op — vijf keer
+dezelfde persoon in de stand — zonder RLS aan te raken.

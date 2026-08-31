@@ -57,8 +57,9 @@ Bovenaan de knop **Kopieer voor WhatsApp**.
 
 ### Poule
 Leden, poulecode, uitnodiglink met deelknop, en de instellingen. Voor de
-poulebaas staat hier ook het beheergedeelte: welke vragen meedoen, en
-handmatig een uitslag invoeren als OpenF1 het laat afweten.
+poulebaas staat hier ook het beheergedeelte: welke vragen meedoen, de
+omschrijving van de poule, en handmatig een uitslag invoeren als OpenF1 het
+laat afweten. Onderaan staan je andere poules, om naar over te stappen.
 
 ---
 
@@ -67,7 +68,12 @@ handmatig een uitslag invoeren als OpenF1 het laat afweten.
 Eén vraag per scherm. Werkt beter op een telefoon dan een lang formulier.
 
 ### Stap 1: Hoe heet de poule
-Eén invoerveld. Voorbeeld eronder als hint: "Vrijdagmiddagpoule".
+Twee velden: de naam, met "Vrijdagmiddagpoule" als voorbeeld eronder, en een
+omschrijving die leeg mag blijven ("Met de collega's, 5 euro inleg"). Die
+omschrijving is er voor wie in meer dan één poule zit: twee poules die allebei
+"Poule 2026" heten zijn uit elkaar te houden aan waar ze over gaan. Hij staat
+onder de naam en in het lijstje waarmee je tussen poules wisselt, en de
+poulebaas kan hem later aanpassen onder Poule.
 
 ### Stap 2: Hoe heet jij
 Je wordt meteen het eerste lid, en de eigenaar van de poule.
@@ -121,8 +127,24 @@ De app onthoudt in `localStorage` in welke poules je zit. Bij binnenkomst:
 
 - **Nul poules bekend**: keuze tussen meedoen en aanmaken, met meedoen bovenaan
   (dat is verreweg het vaakste geval)
-- **Eén poule bekend**: direct naar de Races-tab van die poule
-- **Meerdere poules bekend**: korte lijst om uit te kiezen
+- **Eén of meer poules bekend**: direct naar de Races-tab van de poule die je
+  het laatst gebruikte
+
+Dat laatste wijkt af van het oorspronkelijke plan, waarin je bij meer dan één
+poule eerst een lijstje kreeg. In de praktijk speel je vrijwel altijd in
+dezelfde poule verder, en dan is een keuzescherm ertussen een extra tik. Het
+lijstje staat er wel, op de twee plekken waar je het nodig hebt: onderaan de
+Poule-tab ("jouw andere poules"), en op het startscherm zodra je op **Andere
+poule** hebt gedrukt.
+
+Wisselen haalt de poule opnieuw uit de database op in plaats van uit het
+lijstje: de naam of de omschrijving kan veranderd zijn, en een poule die
+verwijderd is hoort uit het lijstje te verdwijnen in plaats van je op een leeg
+scherm te zetten.
+
+Let op wat dit lijstje **niet** is: het staat in `localStorage`, dus het is per
+toestel. Wie op zijn telefoon én op zijn laptop speelt heeft twee lijstjes. Eén
+lijst over al je toestellen vraagt om een login; zie OVERDRACHT.md.
 
 ---
 
@@ -142,7 +164,7 @@ zodra de eerste race een uitslag krijgt.
 
 Zonder login kan de database niet controleren wie de poulebaas is. Praktische
 oplossing: sla `owner_member_id` op bij de poule, en toon het beheergedeelte
-alleen aan die speler.
+alleen aan die speler. Dat geldt voor de vragenset én voor de omschrijving.
 
 Wees eerlijk over wat dat is: dit voorkomt ongelukken, geen kwaadwilligheid.
 Iemand die de anon key uit de broncode plukt kan er alsnog omheen. Voor een

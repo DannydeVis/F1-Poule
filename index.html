@@ -88,6 +88,21 @@
     text-transform:none;letter-spacing:0;color:var(--ink2);border:1px solid var(--lijn)}
   .knop.klein:hover{border-color:var(--ink3);color:var(--ink)}
 
+  /* Een poule om naartoe te gaan: naam groot, waar hij over gaat eronder, de
+     code rechts. Drie regels naast elkaar zou op een telefoon niet passen. */
+  .knop.poulekeuze{
+    display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;
+    justify-content:stretch;text-align:left;padding:12px 14px;min-height:0;
+    margin-bottom:8px;border:1px solid var(--lijn);background:var(--paneel);
+    font-family:var(--sans);text-transform:none;letter-spacing:0;
+  }
+  .knop.poulekeuze:hover:not(:disabled){border-color:var(--accent)}
+  .knop.poulekeuze .nm{font-size:17px;font-weight:700;color:var(--ink)}
+  .knop.poulekeuze .zacht{grid-column:1;font-size:13px}
+  .knop.poulekeuze .mono{grid-row:1/span 2;grid-column:2;
+    font-size:14px;letter-spacing:.08em;color:var(--ink3)}
+  .knop.poulekeuze:has(.zacht) .nm{align-self:end}
+
   .veld{
     width:100%;min-height:60px;padding:0 16px;border-radius:10px;
     border:1px solid var(--lijn);background:var(--paneel);color:var(--ink);
@@ -141,6 +156,9 @@
     text-transform:uppercase;margin:0}
   .middel{font-family:var(--cond);font-size:34px;font-weight:700;line-height:1;
     text-transform:uppercase;margin:0}
+  /* Een poulenaam is vaak één lang woord ("Vrijdagmiddagpoule") en past op een
+     telefoon niet op één regel. Zonder dit valt het eind er stilletjes af. */
+  .smalkop{overflow-wrap:anywhere}
   .veldblok{display:flex;flex-direction:column;gap:12px}
 
   /* ---- spelerkeuze ---------------------------------------- */
@@ -602,6 +620,31 @@ const laatstePoule  = ()       => lees(LAATSTE);
 const onthoudPoule  = (poolId) => schrijf(LAATSTE, poolId);
 const vergeetPoule  = ()       => wis(LAATSTE);
 
+// Alle poules waar je op dit toestel bij hoort. Eerder onthield de app er
+// maar één, en moest je de code opnieuw intypen om te wisselen — terwijl je
+// met werk en vrienden zomaar in twee of drie poules zit.
+//
+// Let op: dit staat in localStorage, dus het is per toestel. Wie op zijn
+// telefoon én op zijn laptop speelt ziet twee verschillende lijstjes. Voor
+// één lijst over al je toestellen is een login nodig; zie OVERDRACHT.md.
+const POULES = 'poule:poules';
+function mijnPoules() {
+  try {
+    const uit = JSON.parse(lees(POULES) ?? '[]');
+    return Array.isArray(uit) ? uit.filter(p => p && p.id) : [];
+  } catch { return []; }
+}
+function onthoudInLijst(poule) {
+  if (!poule?.id) return;
+  const lijst = mijnPoules().filter(p => !zelfde(p.id, poule.id));
+  lijst.unshift({ id: poule.id, name: poule.name,
+                  join_code: poule.join_code, beschrijving: poule.beschrijving ?? null });
+  // Twaalf is ruim; zonder grens groeit dit lijstje eindeloos door.
+  schrijf(POULES, JSON.stringify(lijst.slice(0, 12)));
+}
+const vergeetUitLijst = (poolId) =>
+  schrijf(POULES, JSON.stringify(mijnPoules().filter(p => !zelfde(p.id, poolId))));
+
 // ============================================================
 //  Scoren
 // ============================================================
@@ -905,6 +948,8 @@ const S = {
   maak: null,           // het aanmaakscherm, zolang dat openstaat
   beheer: null,         // gewijzigde vragenset, zolang die nog niet bewaard is
   beheerFout: '',
+  omschrijving: null,   // getypte omschrijving, zolang die nog niet bewaard is
+  omschrijvingFout: '',
   losse: { vraag: null, keuze: '', fout: '' },   // losse uitslag zelf invullen
 };
 
@@ -1588,7 +1633,12 @@ function toonApp() {
   app.querySelectorAll('[data-weergave]').forEach(b => b.onclick = () => {
     S.weergave = b.dataset.weergave; S.race = null;
     S.beheer = null; S.beheerFout = '';
+    S.omschrijving = null; S.omschrijvingFout = '';
     render();
+  });
+  app.querySelectorAll('[data-naar-poule]').forEach(b => b.onclick = () => {
+    b.disabled = true;
+    naarPoule(b.dataset.naarPoule);
   });
   app.querySelectorAll('[data-race]').forEach(b => b.onclick = () => openRace(b.dataset.race));
   app.querySelectorAll('[data-naar-race]').forEach(b => b.onclick = () => openRace(b.dataset.naarRace));
@@ -1601,14 +1651,18 @@ function toonApp() {
   });
   knoopUitnodiging(app);
   knoopBeheer();
+  knoopOmschrijving();
 
   const wissel = app.querySelector('#wissel');
   if (wissel) wissel.onclick = () => { vergeet(S.poule.id); S.ik = null; render(); };
   const anders = app.querySelector('#anderePoule');
   if (anders) anders.onclick = () => {
+    // Alleen "welke poule sta je nu in" vergeten. Het lijstje met al je
+    // poules blijft staan, anders raak je ze kwijt door één keer te kijken.
     vergeetPoule();
     S.poule = null; S.ik = null; S.races = []; S.leden = []; S.preds = [];
     S.antwoorden = []; S.poulevragen = []; S.beheer = null; S.beheerFout = '';
+    S.omschrijving = null; S.omschrijvingFout = '';
     S.race = null; S.weergave = 'races';
     render();
   };
@@ -1780,6 +1834,8 @@ function poulePagina(rijen) {
       Deze browser mag niets onthouden, dus je moet de poulecode elke keer opnieuw
       invullen. Sta opslag voor deze site toe, of gebruik geen privévenster.</div>` : ''}
     <h1 class="middel smalkop">${esc(S.poule.name)}</h1>
+    ${S.poule.beschrijving ? `<p class="zacht pouletekst" style="margin:-10px 0 0">${
+      esc(S.poule.beschrijving)}</p>` : ''}
     <div class="hero">
       <span class="label">poulecode</span>
       <div class="veld code" style="display:grid;place-items:center">${esc(S.poule.join_code ?? '—')}</div>
@@ -1797,11 +1853,126 @@ function poulePagina(rijen) {
     </div>`).join('') || `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
       <b>1</b> twee plekken ernaast.</div>
+    ${omschrijvingBlok()}
     ${beheerBlok()}
+    ${pouleLijstBlok()}
     <div style="display:flex;gap:8px">
       <button class="knop klein" id="wissel">Speler wisselen</button>
       <button class="knop klein" id="anderePoule">Andere poule</button>
     </div>`;
+}
+
+// ---- omschrijving -------------------------------------------
+// Eén regel over waar de poule voor is. Wie in twee of drie poules zit heeft
+// er iets aan: "Vrijdagmiddagpoule" en "Poule 2026" zijn allebei geen antwoord
+// op de vraag welke van de twee die van het werk is. Hij staat onder de naam
+// en bij het wisselen tussen poules.
+//
+// Alleen de poulebaas kan hem aanpassen, om dezelfde reden als bij de
+// vragenset: zonder login kan de database niet controleren wie dat is, dus
+// dit houdt de knop weg bij wie hem niet nodig heeft. Zie BEDIENING.md §7.
+function omschrijvingBlok() {
+  if (!magBeheren()) return '';
+  const nu = S.omschrijving ?? S.poule.beschrijving ?? '';
+  return `
+    <div class="scheiding"></div>
+    <span class="label">waar gaat het over?</span>
+    <input class="veld" id="pouleomschrijving" maxlength="120" autocomplete="off"
+      placeholder="Met de collega's, 5 euro inleg" value="${esc(nu)}">
+    <div style="display:flex;gap:8px">
+      <button class="knop klein" id="omschrijvingBewaren"
+        ${schoon(nu) === schoon(S.poule.beschrijving) ? 'disabled' : ''}>Omschrijving opslaan</button>
+    </div>
+    <p class="err" id="omschrijvingfout">${esc(S.omschrijvingFout)}</p>`;
+}
+
+const schoon = (t) => String(t ?? '').trim();
+
+function knoopOmschrijving() {
+  const veld = app.querySelector('#pouleomschrijving');
+  const bewaren = app.querySelector('#omschrijvingBewaren');
+  if (!veld || !bewaren) return;
+
+  // Bij elke toetsaanslag opnieuw tekenen zou de cursor uit het veld gooien,
+  // dus de knop wordt hier met de hand aan- en uitgezet.
+  veld.oninput = () => {
+    S.omschrijving = veld.value;
+    bewaren.disabled = schoon(veld.value) === schoon(S.poule.beschrijving);
+  };
+  veld.onkeydown = (ev) => { if (ev.key === 'Enter' && !bewaren.disabled) bewaren.click(); };
+
+  bewaren.onclick = async () => {
+    const tekst = schoon(veld.value);
+    bewaren.disabled = true;
+    bewaren.textContent = 'Bezig...';
+    try {
+      // Leeg opslaan is de omschrijving weghalen, niet een lege regel bewaren:
+      // anders staat er straks een leeg zinnetje onder de naam.
+      await omschrijvingBewaren(tekst || null);
+      S.omschrijving = null; S.omschrijvingFout = '';
+      S.melding = tekst ? 'De omschrijving is bijgewerkt.' : 'De omschrijving is weggehaald.';
+    } catch (e) { S.omschrijvingFout = e.message; }
+    render();
+  };
+}
+
+async function omschrijvingBewaren(tekst) {
+  if (!DEMO) {
+    const { error } = await db.from('pools')
+      .update({ beschrijving: tekst }).eq('id', S.poule.id);
+    if (error) throw new Error(uitleg(error));
+  }
+  S.poule.beschrijving = tekst;
+  // Ook in het lijstje op dit toestel, anders staat de oude tekst er nog bij
+  // als je straks tussen je poules wisselt.
+  onthoudInLijst(S.poule);
+}
+
+// ---- meer dan één poule -------------------------------------
+// Met het werk in de ene en de vrienden in de andere zit je zo in twee of
+// drie poules. Eerder onthield de app er maar één en moest je de code
+// opnieuw intypen om te wisselen; nu staan ze hier gewoon naast elkaar.
+function pouleLijstBlok() {
+  const anderen = mijnPoules().filter(p => !zelfde(p.id, S.poule.id));
+  if (!anderen.length) return '';
+  return `
+    <div class="scheiding"></div>
+    <span class="label">jouw andere poules</span>
+    ${anderen.map(pouleKnop).join('')}
+    <p class="zacht" style="margin:0">Dit lijstje staat op dit toestel. Op je
+      telefoon én je laptop zijn het dus twee lijstjes.</p>`;
+}
+
+const pouleKnop = (p) => `
+  <button class="knop poulekeuze" data-naar-poule="${esc(p.id)}">
+    <span class="nm">${esc(p.name)}</span>
+    ${p.beschrijving ? `<span class="zacht">${esc(p.beschrijving)}</span>` : ''}
+    <span class="mono">${esc(p.join_code ?? '')}</span>
+  </button>`;
+
+// Naar een andere poule waar je al bij hoort. Hij wordt opnieuw opgehaald in
+// plaats van uit het lijstje gelezen: de naam kan veranderd zijn, en de poule
+// kan weg zijn — dan moet hij ook uit het lijstje.
+async function naarPoule(poolId) {
+  const { data, error } = await db.from('pools').select('*').eq('id', poolId).single();
+  if (error || !data) {
+    vergeetUitLijst(poolId);
+    if (zelfde(laatstePoule(), poolId)) vergeetPoule();
+    S.melding = 'Die poule bestaat niet meer.';
+    if (S.poule) { render(); } else { toonStart(); }
+    return;
+  }
+  S.poule = data;
+  S.ik = null; S.race = null; S.weergave = 'races';
+  S.beheer = null; S.beheerFout = '';
+  S.omschrijving = null; S.omschrijvingFout = '';
+  onthoudPoule(data.id); onthoudInLijst(data);
+  try { await laad(); }
+  catch (e) { toonFout(e.message); return; }
+  const bekend = mijnId(S.poule.id);
+  const lid = bekend && S.leden.find(l => zelfde(l.member_id, bekend));
+  if (lid) S.ik = { id: lid.member_id, naam: lid.display_name };
+  render();
 }
 
 // ---- beheer: welke vragen doen mee --------------------------
@@ -2710,7 +2881,8 @@ const MAAKSTAPPEN = ['Hoe heet de poule?', 'Hoe heet jij?',
                      'Wat gaan jullie voorspellen?', 'Klaar'];
 
 function startAanmaken() {
-  S.maak = { stap: 1, naam: '', speler: '', vragen: [...PRESETS.klassiek.vragen],
+  S.maak = { stap: 1, naam: '', beschrijving: '', speler: '',
+             vragen: [...PRESETS.klassiek.vragen],
              eigen: false, bezig: false, fout: '', poule: null, ik: null };
   laadVragen()
     .then(render)
@@ -2746,6 +2918,11 @@ function maakStap(m, preset) {
       <input class="veld" id="pnaam" placeholder="Vrijdagmiddagpoule"
         value="${esc(m.naam)}" autocomplete="off">
       <p class="zacht" style="margin:0">Zo heet hij in de app en in de uitnodiging.</p>
+      <span class="label">waar gaat het over? (mag leeg)</span>
+      <input class="veld" id="pomschrijving" placeholder="Met de collega's, 5 euro inleg"
+        value="${esc(m.beschrijving)}" autocomplete="off" maxlength="120">
+      <p class="zacht" style="margin:0">Handig als je in meer dan één poule zit: dit
+        staat erbij als je wisselt.</p>
       <button class="knop primair" id="verder">Volgende</button>
       <button class="knop spook" id="terugstap">Terug</button>
     </div>`;
@@ -2810,6 +2987,13 @@ function maakKnoppen(m) {
     };
     naamveld.onkeydown = (ev) => { if (ev.key === 'Enter') app.querySelector('#verder').click(); };
   }
+  const omschrijving = app.querySelector('#pomschrijving');
+  if (omschrijving) {
+    omschrijving.oninput = () => { m.beschrijving = omschrijving.value; };
+    omschrijving.onkeydown = (ev) => {
+      if (ev.key === 'Enter') app.querySelector('#verder').click();
+    };
+  }
 
   app.querySelectorAll('[data-preset]').forEach(b => b.onclick = () => {
     m.vragen = [...PRESETS[b.dataset.preset].vragen]; m.fout = ''; render();
@@ -2843,7 +3027,7 @@ function maakKnoppen(m) {
   const klaar = app.querySelector('#klaar');
   if (klaar) klaar.onclick = async () => {
     S.poule = m.poule; S.ik = m.ik;
-    onthoudPoule(S.poule.id); onthoud(S.poule.id, S.ik.id);
+    onthoudPoule(S.poule.id); onthoudInLijst(S.poule); onthoud(S.poule.id, S.ik.id);
     S.maak = null; S.weergave = 'races'; S.race = null;
     try { await laad(); } catch (e) { toonFout(e.message); }
     render();
@@ -2854,13 +3038,15 @@ function maakKnoppen(m) {
 // zodat een tweede poging na een fout geen tweede poule aanmaakt.
 async function pouleAanmaken(m) {
   if (DEMO) {
-    m.poule = { id:'p-nieuw', name:m.naam.trim(), join_code:'DEMO01', season:SEIZOEN };
+    m.poule = { id:'p-nieuw', name:m.naam.trim(), beschrijving:m.beschrijving.trim() || null,
+                join_code:'DEMO01', season:SEIZOEN };
     m.ik = { id:'m-nieuw', naam:m.speler.trim() };
     return;
   }
   if (!m.poule) {
     const { data, error } = await db.from('pools')
-      .insert({ name: m.naam.trim(), season: SEIZOEN }).select().single();
+      .insert({ name: m.naam.trim(), beschrijving: m.beschrijving.trim() || null,
+                season: SEIZOEN }).select().single();
     if (error) throw new Error(uitleg(error));
     m.poule = data;
   }
@@ -2885,6 +3071,9 @@ async function pouleAanmaken(m) {
 // ============================================================
 
 function toonStart() {
+  // Je poules van dit toestel bovenaan: wie er al bij hoort hoeft de code niet
+  // opnieuw in te tikken, en wie in meer dan één poule zit kiest hier welke.
+  const bekend = mijnPoules();
   app.innerHTML = `
     <div class="toegang"><div class="kaart"><div class="baan"></div>
       <div class="kaart-in">
@@ -2894,10 +3083,16 @@ function toonStart() {
           <span class="code">${SEIZOEN}</span>
         </div>
         <div>
-          <h1 class="groot">Doe mee<br>met je poule</h1>
-          <p class="zacht" style="margin:12px 0 0">Je hebt alleen de code van je poule
-            nodig. Geen wachtwoord.</p>
+          <h1 class="groot">${bekend.length ? 'Naar je<br>poule' : 'Doe mee<br>met je poule'}</h1>
+          <p class="zacht" style="margin:12px 0 0">${bekend.length
+            ? 'Kies er een, of tik de code van een andere poule in.'
+            : 'Je hebt alleen de code van je poule nodig. Geen wachtwoord.'}</p>
         </div>
+        ${bekend.length ? `<div class="veldblok">
+          <span class="label">jouw poules</span>
+          ${bekend.map(pouleKnop).join('')}
+        </div>
+        <div class="scheiding"></div>` : ''}
         <div class="veldblok">
           <span class="label">poulecode</span>
           <input class="veld code" id="code" maxlength="6" placeholder="ABC123"
@@ -2916,6 +3111,12 @@ function toonStart() {
 
   S.linkCode = ''; S.linkFout = '';
   const fout = (t) => { app.querySelector('#f').textContent = t; };
+  if (S.melding) { fout(S.melding); S.melding = ''; }
+
+  app.querySelectorAll('[data-naar-poule]').forEach(b => b.onclick = () => {
+    b.disabled = true;
+    naarPoule(b.dataset.naarPoule);
+  });
 
   app.querySelector('#nieuw').onclick = () => startAanmaken();
 
@@ -2924,7 +3125,7 @@ function toonStart() {
     const { data, error } = await db.from('pools').select('*').eq('join_code', code).single();
     if (error || !data) { fout('Die poulecode bestaat niet'); return; }
     S.poule = data;
-    onthoudPoule(S.poule.id);
+    onthoudPoule(S.poule.id); onthoudInLijst(S.poule);
     const bekend = mijnId(S.poule.id);
     try { await laad(); }
     catch (e) { fout(e.message); return; }
@@ -2963,7 +3164,7 @@ async function hervat() {
     const { data } = await db.from('pools').select('*').eq('join_code', uitLink).single();
     if (data) {
       S.poule = data;
-      onthoudPoule(data.id);
+      onthoudPoule(data.id); onthoudInLijst(data);
       try { await laad(); }
       catch (e) { toonFout(e.message); return; }
       const bekend = mijnId(S.poule.id);

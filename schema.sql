@@ -21,6 +21,8 @@ create extension if not exists pgcrypto;
 create table if not exists public.pools (
   id         uuid primary key default gen_random_uuid(),
   name       text not null,
+  -- Een regel over waar deze poule voor is: "met de collega's, 5 euro inleg".
+  beschrijving text,
   season     int  not null default 2026,
   join_code  text not null unique default upper(substr(md5(random()::text), 1, 6)),
   created_at timestamptz not null default now()
@@ -125,6 +127,7 @@ create table if not exists public.answers (
 --  "create table if not exists" past een bestaande tabel niet aan.
 -- ------------------------------------------------------------
 
+alter table public.pools        add column if not exists beschrijving text;
 alter table public.pools        add column if not exists season     int not null default 2026;
 alter table public.pools        add column if not exists join_code  text;
 alter table public.pools        add column if not exists created_at timestamptz not null default now();

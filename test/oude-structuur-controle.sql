@@ -62,5 +62,13 @@ begin
   ) then
     raise exception 'gezakt: races.drivers is niet bijgemaakt';
   end if;
+  -- pools.beschrijving is er later bij gekomen; een bestaande database moet
+  -- hem er dus bij krijgen, niet pas bij een nieuwe installatie.
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'pools' and column_name = 'beschrijving'
+  ) then
+    raise exception 'gezakt: pools.beschrijving is niet bijgemaakt';
+  end if;
   raise notice 'ok: ontbrekende kolommen zijn bijgemaakt';
 end $$;
