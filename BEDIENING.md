@@ -59,8 +59,8 @@ Bovenaan de knop **Kopieer voor WhatsApp**.
 Leden, poulecode, uitnodiglink met deelknop, en de instellingen. Voor de
 poulebaas staat hier ook het beheergedeelte: welke vragen meedoen, de
 omschrijving van de poule, en handmatig een uitslag invoeren als OpenF1 het
-laat afweten. Verder je eigen link (zie §4) en, onderaan, je andere poules om
-naar over te stappen.
+laat afweten. Verder de inleg (zie §10), je eigen link (zie §4) en, onderaan,
+je andere poules om naar over te stappen.
 
 ---
 
@@ -98,6 +98,10 @@ krijgt daarmee iets dat leuker is dan alleen twee top-tienen, zonder overweldigd
 te worden.
 
 ### Stap 4: Klaar, nodig je vrienden uit
+
+Hier staat ook de inleg (§10). Dat is geen toeval: dit is het scherm waarop je
+de uitnodiging kopieert, en wat je hier invult gaat mee in die tekst. Zet je
+het er niet bij, dan is de eerste vraag in de groepsapp toch "en wat kost het?".
 Toont de poulecode groot, plus een deelknop met de uitnodiglink erin:
 
 ```
@@ -211,3 +215,44 @@ Blokkeer het niet, alleen een melding. Het is hun poule.
 
 Stap 1 en 2 zijn los van elkaar te doen en raken elkaar nauwelijks. Stap 3 heeft
 stap 1 nodig.
+
+---
+
+## 10. Inleg en betaalverzoek
+
+Uit de groepsapp: *"Doe gelijk een betaalverzoek er in 😉 Of ook wat de inleg
+moet zijn enzo."* Twee dingen dus: wat het kost om mee te doen, en waar je dat
+naartoe stuurt.
+
+Allebei optioneel, en allebei alleen te zetten door de poulebaas. Een poule om
+de eer is de gewone poule; staat er niets ingevuld, dan is er ook niets van te
+zien — geen bedrag, geen betaalknop, en geen open/betaald achter de namen.
+
+**Waar het staat**: op stap 4 van het aanmaken (§3) en onder Poule. Wat er staat
+gaat mee in de uitnodigingstekst:
+
+> Doe mee met Vrijdagmiddagpoule:
+> https://…/?code=RTM026
+>
+> Inleg: € 5,00
+> Betalen: https://tikkie.me/pay/…
+
+**Het bedrag** mag als `5`, `5,00` of `€ 12,50` ingetypt worden. Staat er wel
+iets maar geen cijfer ("vijf euro"), dan is dat een melding en geen lege inleg:
+anders vul je iets in, druk je op opslaan, en gebeurt er niets.
+
+**De betaallink** wordt alleen als knop getoond als het een `http`- of
+`https`-adres is. Wie `tikkie.me/pay/abc` intypt krijgt er `https://` voor; wie
+een ander protocol intypt krijgt dat niet stilzwijgend vervangen, maar een
+melding. Dat is geen overdreven voorzichtigheid: een `javascript:`-adres in dat
+veld wordt uitgevoerd zodra een lid op de knop tikt, en volgens §7 kan iedereen
+met de anon key in `pools` schrijven. Daarom wordt er niet alleen bij het
+opslaan gecontroleerd maar ook bij het tonen — een adres dat buiten de app om in
+de database is gezet komt er zo alsnog niet door.
+
+**Wie heeft betaald** is een lijstje van de poulebaas, geen boekhouding. De app
+ziet geen betalingen; hij gelooft alleen het vinkje. Tik als poulebaas op een
+speler om hem af te vinken. Achter elke naam staat dan `open` of `betaald`.
+
+Zelf zie je alleen dat je afgevinkt bent als dat zo is. "Nog niet afgevinkt"
+bij elk bezoek is zeuren van een machine, en de poulebaas heeft de lijst al.

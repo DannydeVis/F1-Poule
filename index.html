@@ -176,6 +176,24 @@
     text-overflow:ellipsis;white-space:nowrap}
   .speler .ptn{font-family:var(--mono);font-size:11px;color:var(--ink2)}
 
+  /* ---- inleg ---------------------------------------------- */
+  /* Of iemand zijn inleg heeft betaald. Klein en grijs zolang het openstaat:
+     het is een lijstje van de poulebaas, geen aanmaning aan de speler. */
+  .betaalvink{
+    font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink3);
+    border:1px solid var(--lijn);border-radius:999px;padding:3px 8px;
+  }
+  .betaalvink.af{color:var(--accent);border-color:var(--accent)}
+  .inlegbedrag{
+    display:flex;align-items:baseline;gap:10px;
+    font-family:var(--cond);font-size:34px;font-weight:700;line-height:1;
+  }
+  .inlegbedrag .zacht{font-family:var(--sans);font-size:13px;font-weight:400}
+  /* De betaalknop is een <a>, want hij gaat echt ergens naartoe. Zonder dit
+     staat de tekst links in plaats van gecentreerd zoals bij de knoppen. */
+  a.knop{text-decoration:none}
+
   /* ---- de app: zijbalk + inhoud --------------------------- */
   .shell{display:flex;flex-direction:column;min-height:100%}
   .zijbalk{
@@ -950,6 +968,8 @@ const S = {
   beheerFout: '',
   omschrijving: null,   // getypte omschrijving, zolang die nog niet bewaard is
   omschrijvingFout: '',
+  inleg: null,          // getypt bedrag en betaallink, zolang niet bewaard
+  inlegFout: '',
   losse: { vraag: null, keuze: '', fout: '' },   // losse uitslag zelf invullen
 };
 
@@ -1143,7 +1163,7 @@ async function laad() {
   }
   const [races, leden, antwoorden, vragen, poulevragen] = await Promise.all([
     db.from('races').select('*').eq('season', SEIZOEN).order('round'),
-    db.from('pool_members').select('member_id,display_name').eq('pool_id', S.poule.id),
+    db.from('pool_members').select('member_id,display_name,betaald').eq('pool_id', S.poule.id),
     db.from('answers').select('*').eq('pool_id', S.poule.id),
     db.from('questions').select('*').order('volgorde'),
     db.from('pool_questions').select('question_id').eq('pool_id', S.poule.id),
@@ -1277,7 +1297,8 @@ function standRijen() {
       if (!r.race_result && !r.quali_result) continue;
       punten += scoreWeekend(vindPred(r.id, l.member_id), r);
     }
-    return { id:l.member_id, naam:l.display_name, punten, mij:zelfde(l.member_id, S.ik.id) };
+    return { id:l.member_id, naam:l.display_name, punten, betaald:!!l.betaald,
+             mij:zelfde(l.member_id, S.ik.id) };
   }).sort((a,b) => b.punten - a.punten || String(a.naam).localeCompare(String(b.naam)));
 }
 
@@ -1391,7 +1412,18 @@ const linkBasis = () => location.origin && location.origin !== 'null'
   : String(location.href).split('?')[0];
 
 function uitnodigingsTekst(poule = S.poule) {
-  return `Doe mee met ${poule.name}:\n${linkBasis()}?code=${poule.join_code}`;
+  // De inleg hoort in de uitnodiging: anders is de eerste vraag in de
+  // groepsapp altijd "en wat kost het?", en de tweede "waar maak ik het
+  // naartoe over?".
+  const bedrag = euro(poule.inleg);
+  const link = veiligeLink(poule.betaallink);
+  return [
+    `Doe mee met ${poule.name}:`,
+    `${linkBasis()}?code=${poule.join_code}`,
+    bedrag || link ? '' : null,
+    bedrag ? `Inleg: ${bedrag}` : null,
+    link ? `Betalen: ${link}` : null,
+  ].filter(r => r !== null).join('\n');
 }
 
 // Je eigen link, om jezelf mee te nemen naar een ander toestel. Bewust geen
@@ -1657,6 +1689,7 @@ function toonApp() {
     S.weergave = b.dataset.weergave; S.race = null;
     S.beheer = null; S.beheerFout = '';
     S.omschrijving = null; S.omschrijvingFout = '';
+    S.inleg = null; S.inlegFout = '';
     render();
   });
   app.querySelectorAll('[data-naar-poule]').forEach(b => b.onclick = () => {
@@ -1675,6 +1708,15 @@ function toonApp() {
   knoopUitnodiging(app);
   knoopBeheer();
   knoopOmschrijving();
+  knoopInleg();
+  app.querySelectorAll('[data-betaald]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.betaald;
+    const nu = b.getAttribute('aria-pressed') === 'true';
+    b.disabled = true;
+    try { await betaaldZetten(id, !nu); }
+    catch (e) { S.inlegFout = e.message; }
+    render();
+  });
 
   const wissel = app.querySelector('#wissel');
   if (wissel) wissel.onclick = () => { vergeet(S.poule.id); S.ik = null; render(); };
@@ -1686,6 +1728,7 @@ function toonApp() {
     S.poule = null; S.ik = null; S.races = []; S.leden = []; S.preds = [];
     S.antwoorden = []; S.poulevragen = []; S.beheer = null; S.beheerFout = '';
     S.omschrijving = null; S.omschrijvingFout = '';
+    S.inleg = null; S.inlegFout = '';
     S.race = null; S.weergave = 'races';
     render();
   };
@@ -1869,21 +1912,205 @@ function poulePagina(rijen) {
         aria-label="Uitnodiging om zelf te kopiëren"></textarea>
     </div>
     <span class="label">spelers</span>
-    ${rijen.map((r, i) => `<div class="speler ${r.mij ? 'zelf' : ''}" style="animation:none">
-      <span class="nr">${String(i + 1).padStart(2,'0')}</span>
-      <span class="nm">${esc(r.naam)}</span>
-      <span class="ptn">${r.punten} ptn</span>
-    </div>`).join('') || `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
+    ${rijen.map((r, i) => spelerRij(r, i)).join('')
+      || `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
       <b>1</b> twee plekken ernaast.</div>
+    ${inlegBlok()}
     ${eigenLinkBlok()}
     ${omschrijvingBlok()}
+    ${inlegBeheerBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}
     <div style="display:flex;gap:8px">
       <button class="knop klein" id="wissel">Speler wisselen</button>
       <button class="knop klein" id="anderePoule">Andere poule</button>
     </div>`;
+}
+
+// Een speler in de lijst onder Poule. Vraagt de poule inleg en ben jij de
+// poulebaas, dan is de rij een knop om iemand af te vinken; anders is het
+// gewoon een regel, want dan valt er niets aan te tikken.
+function spelerRij(r, i) {
+  const vinken = magBeheren() && heeftInleg();
+  const binnen = `
+    <span class="nr">${String(i + 1).padStart(2,'0')}</span>
+    <span class="nm">${esc(r.naam)}</span>
+    ${heeftInleg() ? `<span class="betaalvink ${r.betaald ? 'af' : ''}"
+      >${r.betaald ? 'betaald' : 'open'}</span>` : ''}
+    <span class="ptn">${r.punten} ptn</span>`;
+  return vinken
+    ? `<button class="speler ${r.mij ? 'zelf' : ''}" style="animation:none"
+        data-betaald="${esc(r.id)}" aria-pressed="${!!r.betaald}">${binnen}</button>`
+    : `<div class="speler ${r.mij ? 'zelf' : ''}" style="animation:none">${binnen}</div>`;
+}
+
+// ---- inleg en betaalverzoek ---------------------------------
+// Joey, in de groepsapp: "Doe gelijk een betaalverzoek er in. Of ook wat de
+// inleg moet zijn enzo." Twee dingen dus: wat het kost om mee te doen, en
+// waar je dat naartoe stuurt. Allebei mogen leeg blijven — een poule om de
+// eer is de gewone poule, en dan hoort hier niets te staan.
+
+const euro = (n) => n === null || n === undefined || n === '' || !Number.isFinite(Number(n))
+  ? '' : new Intl.NumberFormat('nl-NL', { style:'currency', currency:'EUR' }).format(Number(n));
+
+// Wat de poulebaas intypt is "5", "5,00", "€ 5" of "€ 12,50". Terug komt het
+// bedrag, `null` als het veld leeg is, of NaN als er iets staat wat geen
+// bedrag is — dat is een melding waard en niet stilzwijgend nul.
+// Andersom: het bedrag terug in het invoerveld. Met een komma, want dat is
+// wat er ingetypt was; "12.5" in beeld krijgen na het opslaan van "€ 12,50"
+// leest als een fout van de app.
+const bedragTekst = (n) =>
+  n === null || n === undefined || n === '' ? '' : String(n).replace('.', ',');
+
+function leesBedrag(tekst) {
+  const ruw = String(tekst ?? '').trim();
+  if (!ruw) return null;
+  // Wel iets ingetypt maar geen cijfer erin ("vijf euro"): dat is een fout en
+  // geen lege inleg. Stilzwijgend als "geen inleg" opslaan zou betekenen dat
+  // de poulebaas iets invult, op opslaan drukt, en er niets gebeurt.
+  let t = ruw.replace(/[^0-9.,]/g, '');
+  if (!/[0-9]/.test(t)) return NaN;
+  if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+  const n = Number(t);
+  if (!Number.isFinite(n) || n < 0 || n >= 1000000) return NaN;
+  return Math.round(n * 100) / 100;
+}
+
+// De betaallink komt uit een tekstveld en belandt in een href. Alleen http en
+// https komen er als link door; al het andere wordt niet getoond.
+//
+// Dat is geen overdreven voorzichtigheid: een 'javascript:'-adres in dat veld
+// wordt uitgevoerd zodra een lid erop tikt, en de database laat op dit moment
+// iedereen met de anon key in `pools` schrijven. Zie BEDIENING.md §7.
+//
+// Wie "tikkie.me/abc" intypt bedoelt https; wie "javascript:" intypt heeft
+// zijn protocol al gekozen en krijgt dat niet stilzwijgend vervangen.
+function veiligeLink(tekst) {
+  const t = String(tekst ?? '').trim();
+  if (!t) return '';
+  const heel = /^[a-z][a-z0-9+.-]*:/i.test(t) ? t : 'https://' + t;
+  try {
+    const u = new URL(heel);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : '';
+  } catch { return ''; }
+}
+
+const heeftInleg = (poule = S.poule) =>
+  !!euro(poule?.inleg) || !!veiligeLink(poule?.betaallink);
+
+// Wat iedereen ziet: het bedrag en de knop om te betalen. Je eigen streepje
+// staat er alleen als het gezet is — "nog niet afgevinkt" bij elk bezoek is
+// zeuren van een machine, en de poulebaas heeft de lijst.
+function inlegBlok() {
+  if (!heeftInleg()) return '';
+  const bedrag = euro(S.poule.inleg);
+  const link = veiligeLink(S.poule.betaallink);
+  const ik = S.leden.find(l => zelfde(l.member_id, S.ik?.id));
+  return `
+    <div class="scheiding"></div>
+    <span class="label">inleg</span>
+    ${bedrag ? `<div class="inlegbedrag">${esc(bedrag)}<span class="zacht">per persoon</span></div>` : ''}
+    ${ik?.betaald ? `<p class="zacht" style="margin:0">Jij staat afgevinkt als betaald.</p>` : ''}
+    ${link ? `<a class="knop klein" id="betalen" href="${esc(link)}"
+        target="_blank" rel="noopener noreferrer">Betalen</a>` : ''}
+    ${!link && S.poule.betaallink ? `<p class="zacht" style="margin:0">Er staat een
+      betaallink ingevuld die niet als adres te lezen is, dus die wordt niet
+      getoond. De poulebaas kan hem hieronder verbeteren.</p>` : ''}`;
+}
+
+// Wat alleen de poulebaas ziet: de twee velden, en hoeveel er binnen is.
+function inlegBeheerBlok(poule = S.poule) {
+  if (poule === S.poule && !magBeheren()) return '';
+  const bedrag = S.inleg?.bedrag ?? bedragTekst(poule.inleg);
+  const link   = S.inleg?.link   ?? (poule.betaallink ?? '');
+  const af = S.leden.filter(l => l.betaald).length;
+  return `
+    <div class="scheiding"></div>
+    <span class="label">inleg en betaalverzoek</span>
+    <input class="veld" id="inlegbedrag" inputmode="decimal" maxlength="12"
+      autocomplete="off" placeholder="5,00" value="${esc(bedrag)}">
+    <input class="veld" id="inleglink" maxlength="300" autocomplete="off"
+      inputmode="url" placeholder="tikkie.me/pay/..." value="${esc(link)}">
+    <p class="zacht" style="margin:0">Allebei mogen leeg. Wat hier staat komt in
+      de uitnodiging te staan, zodat niemand er nog naar hoeft te vragen.
+      ${poule === S.poule && heeftInleg() ? `Afgevinkt: ${af} van de ${S.leden.length}.
+        Tik op een speler hierboven om hem af te vinken.` : ''}</p>
+    <div style="display:flex;gap:8px">
+      <button class="knop klein" id="inlegBewaren" disabled>Inleg opslaan</button>
+    </div>
+    <p class="err" id="inlegfout">${esc(S.inlegFout)}</p>`;
+}
+
+function knoopInleg(poule = S.poule) {
+  const bedragveld = app.querySelector('#inlegbedrag');
+  const linkveld   = app.querySelector('#inleglink');
+  const bewaren    = app.querySelector('#inlegBewaren');
+  if (!bedragveld || !linkveld || !bewaren) return;
+
+  // Net als bij de omschrijving: opnieuw tekenen bij elke toetsaanslag zou de
+  // cursor uit het veld gooien, dus de knop gaat hier met de hand aan.
+  //
+  // De vergelijking gaat over de getypte tekst en niet over het gelezen
+  // bedrag. Anders blijft de knop uit als je "vijf euro" intikt — daar zitten
+  // geen cijfers in, dus dat leest als leeg — en heb je een veld waarin je
+  // typt naast een knop die niets doet, zonder dat iemand je vertelt waarom.
+  const anders = () => bedragveld.value.trim() !== bedragTekst(poule.inleg)
+    || linkveld.value.trim() !== String(poule.betaallink ?? '');
+  const bijwerken = () => {
+    S.inleg = { bedrag: bedragveld.value, link: linkveld.value };
+    bewaren.disabled = !anders();
+  };
+  bedragveld.oninput = bijwerken;
+  linkveld.oninput = bijwerken;
+
+  bewaren.onclick = async () => {
+    const bedrag = leesBedrag(bedragveld.value);
+    if (Number.isNaN(bedrag)) {
+      S.inlegFout = 'Dat is geen bedrag. Schrijf het als 5 of 5,00.';
+      app.querySelector('#inlegfout').textContent = S.inlegFout;
+      return;
+    }
+    const getypt = linkveld.value.trim();
+    if (getypt && !veiligeLink(getypt)) {
+      S.inlegFout = 'Die betaallink is geen webadres. Plak de link uit Tikkie of je bank.';
+      app.querySelector('#inlegfout').textContent = S.inlegFout;
+      return;
+    }
+    bewaren.disabled = true;
+    bewaren.textContent = 'Bezig...';
+    try {
+      await inlegBewaren(bedrag, veiligeLink(getypt) || null, poule);
+      S.inleg = null; S.inlegFout = '';
+      S.melding = 'De inleg is bijgewerkt.';
+    } catch (e) { S.inlegFout = e.message; }
+    render();
+  };
+}
+
+async function inlegBewaren(bedrag, link, poule = S.poule) {
+  if (!DEMO) {
+    const { error } = await db.from('pools')
+      .update({ inleg: bedrag, betaallink: link }).eq('id', poule.id);
+    if (error) throw new Error(uitleg(error));
+  }
+  poule.inleg = bedrag;
+  // Wat bewaard wordt is de link zoals hij straks getoond wordt, niet zoals
+  // hij ingetypt was. Anders staat er in de database iets anders dan wat de
+  // poulebaas op zijn scherm heeft goedgekeurd.
+  poule.betaallink = link;
+}
+
+// Afvinken wie betaald heeft. Dit is een lijstje voor de poulebaas, geen
+// boekhouding: de app ziet geen betalingen en gelooft alleen dit vinkje.
+async function betaaldZetten(memberId, waarde) {
+  if (!DEMO) {
+    const { error } = await db.from('pool_members')
+      .update({ betaald: waarde }).eq('member_id', memberId);
+    if (error) throw new Error(uitleg(error));
+  }
+  const lid = S.leden.find(l => zelfde(l.member_id, memberId));
+  if (lid) lid.betaald = waarde;
 }
 
 // ---- jezelf meenemen naar een ander toestel -----------------
@@ -2013,6 +2240,7 @@ async function naarPoule(poolId) {
   S.ik = null; S.race = null; S.weergave = 'races';
   S.beheer = null; S.beheerFout = '';
   S.omschrijving = null; S.omschrijvingFout = '';
+  S.inleg = null; S.inlegFout = '';
   onthoudPoule(data.id); onthoudInLijst(data);
   try { await laad(); }
   catch (e) { toonFout(e.message); return; }
@@ -3010,6 +3238,8 @@ function maakStap(m, preset) {
       <div class="veld code" style="display:grid;place-items:center">${esc(m.poule.join_code)}</div>
       <p class="zacht" style="margin:0">Deel deze code, of stuur de link — dan hoeft
         niemand hem over te tikken.</p>
+      ${inlegBeheerBlok(m.poule)}
+      <div class="scheiding"></div>
       <button class="knop spook" id="uitnodiging">Kopieer uitnodigingslink</button>
       <textarea class="veld tekstblok hide" id="uitnodigingveld" readonly rows="3"
         aria-label="Uitnodiging om zelf te kopiëren"></textarea>
@@ -3071,6 +3301,10 @@ function maakKnoppen(m) {
   };
 
   knoopUitnodiging(app, m.poule);
+  // Hier vragen ze er in de groepsapp meteen naar, dus staat de inleg op
+  // hetzelfde scherm als de uitnodiging: wat je hier zet gaat mee in de
+  // tekst die je een regel lager kopieert.
+  if (m.poule) knoopInleg(m.poule);
   const klaar = app.querySelector('#klaar');
   if (klaar) klaar.onclick = async () => {
     S.poule = m.poule; S.ik = m.ik;
