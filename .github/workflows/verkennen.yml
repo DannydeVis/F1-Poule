@@ -1,0 +1,37 @@
+name: OpenF1 verkennen
+
+# Handmatig te starten vanuit het Actions-tabblad, en hij draait mee op een
+# pull request die scripts/verkennen.mjs aanpast. Hij schrijft niets weg —
+# alleen kijken wat OpenF1 voor een race heeft, en dat in de log zetten.
+#
+# Nodig omdat api.openf1.org niet vanaf elke plek bereikbaar is; op een
+# GitHub-runner wel. Dit is de manier om te zien wat er echt terugkomt in
+# plaats van te gokken wat er in staat.
+
+on:
+  workflow_dispatch:
+    inputs:
+      jaar:
+        description: 'Welk seizoen'
+        default: '2026'
+      sessie:
+        description: 'Eén session_key (leeg = de laatste gereden race)'
+        default: ''
+  pull_request:
+    paths:
+      - 'scripts/verkennen.mjs'
+      - '.github/workflows/verkennen.yml'
+
+jobs:
+  verkennen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Kijken wat OpenF1 heeft
+        env:
+          JAAR: ${{ inputs.jaar || '2026' }}
+          SESSIE: ${{ inputs.sessie }}
+        run: node scripts/verkennen.mjs
