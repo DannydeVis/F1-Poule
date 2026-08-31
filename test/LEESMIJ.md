@@ -21,6 +21,7 @@ je eigen computer.
 | `vraagsoorten.test.mjs` | De puntentelling van de losse vragen: vooral dat alleen invullen wat je weet niet minder oplevert dan alles gokken |
 | `pole-en-duels.test.mjs` | Diezelfde twee in de app: kiezen, opslaan, terugzien, en dat één keuze per team blijft staan |
 | `invulscherm.test.mjs` | Het keuzeblad: een plek aantikken en dán kiezen, P7 vóór P1 kunnen invullen, en dat een halve top 10 niet bewaard wordt |
+| `uitslagen.test.mjs` | De vier losse uitslagen uit de gegevens van OpenF1: vooral welke berichten van de wedstrijdleiding wél en niet een safety car zijn |
 | `inleg.test.mjs` | De inleg en het betaalverzoek: hoe een bedrag gelezen wordt, dat alleen http(s) als betaalknop doorkomt (ook uit de database), en het afvinken wie betaald heeft |
 | `poules-en-omschrijving.test.mjs` | De omschrijving van een poule, en meer dan één poule op hetzelfde toestel: wisselen zonder de code, en een poule die weg is |
 | `poule-aanmaken.test.mjs` | Het aanmaken in vier stappen: de presets, de losse vragen met hun live puntentotaal, de gokwaarschuwing, en wat er in de database belandt |
@@ -38,6 +39,17 @@ supabase-js vervangen door `nabootsing-supabase.mjs`: een kleine
 nabootsing die net als Postgres een unieke sleutel afdwingt — op `answers`
 is dat `(pool_id, race_id, member_id, question_id)`, één rij per ingevulde
 vraag.
+
+`uitslagen.test.mjs` is de enige die geen browser nodig heeft: die draait de
+functies uit `scripts/uitslagen.mjs` op berichten die letterlijk uit OpenF1
+komen. Ze staan los van `sync.mjs` omdat dat bestand zichzelf uitdraait zodra
+je het importeert — een test die dat deed zou de echte database aanraken.
+
+Naast deze tests staat er een verkenner: `scripts/verkennen.mjs`, met een knop
+in het Actions-tabblad. Die schrijft niets weg en laat zien wat OpenF1 voor een
+race heeft. Nodig omdat `api.openf1.org` niet vanaf elke plek bereikbaar is; op
+een GitHub-runner wel. Draai hem als een uitslag niet binnenkomt: dan zie je of
+OpenF1 hem niet heeft, of dat wij ernaast kijken.
 
 De SQL-tests draaien tegen een echte PostgreSQL 16 in de workflow, dus
 `schema.sql` wordt bij elke pull request daadwerkelijk uitgevoerd — twee keer

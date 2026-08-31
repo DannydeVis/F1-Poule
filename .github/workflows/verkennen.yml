@@ -62,9 +62,3 @@ jobs:
           DROOG: '1'
         run: node scripts/verkennen.mjs
 
-      # De twee sleutels waarop de gewone sync een 404 kreeg.
-      - name: De twee sessies die de sync oversloeg
-        if: github.event_name == 'pull_request'
-        run: |
-          SESSIE=11257 node scripts/verkennen.mjs
-          SESSIE=11265 node scripts/verkennen.mjs
