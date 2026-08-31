@@ -51,6 +51,17 @@ jobs:
           ALLE: '1'
         run: node scripts/verkennen.mjs
 
+      # De controle die er echt toe doet: dezelfde functies die de sync
+      # gebruikt, losgelaten op alle gereden races, zonder iets weg te
+      # schrijven. Een test met verzonnen berichten zegt dat de code doet wat
+      # ik bedacht heb; dit zegt of dat klopt met wat er echt gebeurd is.
+      - name: Droogloop over alle races
+        if: github.event_name == 'pull_request' || inputs.alle == true
+        env:
+          JAAR: ${{ inputs.jaar || '2026' }}
+          DROOG: '1'
+        run: node scripts/verkennen.mjs
+
       # De twee sleutels waarop de gewone sync een 404 kreeg.
       - name: De twee sessies die de sync oversloeg
         if: github.event_name == 'pull_request'

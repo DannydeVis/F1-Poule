@@ -22,6 +22,9 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
+import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop }
+  from './uitslagen.mjs';
+
 const API = 'https://api.openf1.org/v1';
 const REST = `${SUPABASE_URL}/rest/v1`;
 const kop = {
@@ -133,46 +136,92 @@ async function deelnemers(sessionKey) {
   return [...uniek.values()].sort((a, b) => a.team.localeCompare(b.team));
 }
 
+// Leeg is null of undefined, en nadrukkelijk niet 0 of false: nul safety
+// cars en "geen rode vlag" zijn echte uitslagen. Met een gewone !-controle
+// zou de sync die elke drie uur opnieuw ophalen, en erger: hij zou een met
+// de hand ingevulde nul niet als ingevuld zien.
+const leeg = (w) => w === null || w === undefined;
+
+/**
+ * Eén ding ophalen en in de patch zetten. Elk stukje apart, want één ding
+ * dat OpenF1 niet heeft mag de rest van dezelfde race niet tegenhouden.
+ *
+ * Dat ging eerder mis: de kwalificaties van Sakhir en Jeddah bestaan wel in
+ * de kalender maar hebben bij OpenF1 geen enkele rij — 404 op alles. Omdat
+ * alle drie de ophaalacties in één try stonden, sloeg de sync die twee races
+ * daarna helemaal over, inclusief hun ráceuitslag. Twee weekenden lang geen
+ * punten, en in de log stond alleen dat de kwalificatie ontbrak.
+ */
+async function probeer(patch, veld, ophalen, gemist) {
+  try {
+    const waarde = await ophalen();
+    // null betekent "OpenF1 heeft het nog niet", en dat is iets anders dan
+    // een uitslag die nul is. Niet wegschrijven, volgende keer opnieuw.
+    if (!leeg(waarde)) patch[veld] = waarde;
+    await wacht(700);
+  } catch (e) {
+    gemist.push(`${veld} (${e.message})`);
+  }
+}
+
 async function uitslagen(races) {
   // OpenF1 rekent data als live tot 30 min na afloop. We wachten 45 min,
   // dan is het historisch en vrij op te vragen.
   const grens = Date.now() - 45 * 60 * 1000;
+  const rijp = (wanneer) => new Date(wanneer).getTime() < grens;
   let veranderd = 0;
 
   for (const race of races) {
     const patch = {};
-    try {
-      // Deelnemerslijst zo vroeg mogelijk: die heb je nodig om te kunnen
-      // invullen, dus vóór de kwalificatie, niet pas erna.
-      if (!race.drivers && race.quali_key) {
+    const gemist = [];
+
+    // Deelnemerslijst zo vroeg mogelijk: die heb je nodig om te kunnen
+    // invullen, dus vóór de kwalificatie, niet pas erna.
+    if (!race.drivers && race.quali_key) {
+      await probeer(patch, 'drivers', () => deelnemers(race.quali_key), gemist);
+    }
+    if (!race.quali_result && race.quali_key && rijp(race.deadline_quali)) {
+      await probeer(patch, 'quali_result', () => uitslag(race.quali_key), gemist);
+    }
+    if (!race.race_result && race.race_key && rijp(race.deadline_race)) {
+      await probeer(patch, 'race_result', () => uitslag(race.race_key), gemist);
+    }
+
+    // De vier losse uitslagen komen allemaal uit de race zelf.
+    if (race.race_key && rijp(race.deadline_race)) {
+      if (leeg(race.fastest_lap)) {
+        await probeer(patch, 'fastest_lap',
+          async () => snelsteRonde(await openf1(`laps?session_key=${race.race_key}`)), gemist);
+      }
+      if (leeg(race.fastest_pitstop)) {
+        await probeer(patch, 'fastest_pitstop',
+          async () => snelstePitstop(await openf1(`pit?session_key=${race.race_key}`)), gemist);
+      }
+      // Safety cars en rode vlag komen uit dezelfde lijst berichten, dus die
+      // halen we één keer op als er iets van de twee nog ontbreekt.
+      if (leeg(race.safety_cars) || leeg(race.rode_vlag)) {
         try {
-          patch.drivers = await deelnemers(race.quali_key);
+          const berichten = await openf1(`race_control?session_key=${race.race_key}`);
           await wacht(700);
-        } catch {
-          // startlijst nog niet gepubliceerd, volgende keer opnieuw
+          if (leeg(race.safety_cars)) patch.safety_cars = telSafetyCars(berichten);
+          if (leeg(race.rode_vlag))   patch.rode_vlag   = hadRodeVlag(berichten);
+        } catch (e) {
+          gemist.push(`safety_cars/rode_vlag (${e.message})`);
         }
       }
+    }
 
-      if (!race.quali_result && race.quali_key &&
-          new Date(race.deadline_quali).getTime() < grens) {
-        patch.quali_result = await uitslag(race.quali_key);
-        await wacht(700);
-      }
+    if (gemist.length) {
+      console.log(`  ronde ${race.round} ${race.name}: nog niets voor ${gemist.join(', ')}`);
+    }
+    if (Object.keys(patch).length === 0) continue;
 
-      if (!race.race_result && race.race_key &&
-          new Date(race.deadline_race).getTime() < grens) {
-        patch.race_result = await uitslag(race.race_key);
-        await wacht(700);
-      }
-
-      if (Object.keys(patch).length === 0) continue;
-
+    try {
       await updateRace(race.id, patch);
       console.log(`  ronde ${race.round} ${race.name}: ${Object.keys(patch).join(', ')}`);
       veranderd++;
     } catch (e) {
-      // Eén race zonder data mag de rest niet blokkeren.
-      console.log(`  ronde ${race.round} ${race.name}: overgeslagen (${e.message})`);
+      console.log(`  ronde ${race.round} ${race.name}: wegschrijven mislukt (${e.message})`);
     }
   }
 

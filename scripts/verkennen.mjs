@@ -8,10 +8,14 @@
  *   node scripts/verkennen.mjs               de laatste gereden race
  *   SESSIE=11353 node scripts/verkennen.mjs  die ene sessie
  *   ALLE=1 node scripts/verkennen.mjs        het woordenboek over alle races
+ *   DROOG=1 node scripts/verkennen.mjs       wat de sync zou wegschrijven
  *   JAAR=2025 node scripts/verkennen.mjs     een seizoen dat al af is
  *
  * Er is geen sleutel voor nodig: OpenF1 is openbaar.
  */
+
+import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop }
+  from './uitslagen.mjs';
 
 const API = 'https://api.openf1.org/v1';
 const JAAR = Number(process.env.JAAR ?? 2026);
@@ -126,6 +130,34 @@ async function woordenboek(races) {
   }
 }
 
+/**
+ * Droogloop: dezelfde functies die de sync gebruikt, over alle gereden
+ * races, zonder ook maar iets weg te schrijven. Dit is de controle die er
+ * echt toe doet — een test met verzonnen berichten zegt dat de code doet wat
+ * ik bedacht heb, dit zegt of dat ook klopt met wat er dit seizoen gebeurd is.
+ */
+async function droogloop(races) {
+  console.log(`\n=== wat de sync zou wegschrijven, ${races.length} races ===`);
+  console.log(`  ${'race'.padEnd(20)} ronde  pit  SC  rode vlag`);
+  for (const r of races) {
+    const rondes = await haal(`laps?session_key=${r.session_key}`);
+    await wacht(700);
+    const stops = await haal(`pit?session_key=${r.session_key}`);
+    await wacht(700);
+    const rc = await haal(`race_control?session_key=${r.session_key}`);
+    await wacht(700);
+    if (isFout(rondes) || isFout(stops) || isFout(rc)) {
+      console.log(`  ${String(r.location).padEnd(20)} OpenF1 heeft hier niets`);
+      continue;
+    }
+    const sc = telSafetyCars(rc);
+    console.log(`  ${String(r.location).padEnd(20)}`
+      + ` #${String(snelsteRonde(rondes) ?? '-').padEnd(5)}`
+      + ` #${String(snelstePitstop(stops) ?? '-').padEnd(4)}`
+      + ` ${String(sc).padEnd(3)} ${hadRodeVlag(rc) ? 'ja' : 'nee'}`);
+  }
+}
+
 const races = await haal(`sessions?year=${JAAR}&session_name=Race`);
 if (isFout(races)) { console.log(`sessions gaf ${races.fout}`); process.exit(1); }
 const op = races.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
@@ -133,6 +165,8 @@ const geweest = op.filter((r) => new Date(r.date_start).getTime() < Date.now() -
 
 if (SESSIE) {
   await verken(SESSIE, 'opgegeven sessie');
+} else if (process.env.DROOG) {
+  await droogloop(geweest);
 } else if (ALLE) {
   await woordenboek(geweest);
 } else {
