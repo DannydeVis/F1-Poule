@@ -5,6 +5,9 @@
 // nadat je met "Andere poule" bewust bent overgestapt. En een link met een
 // code die niet bestaat mag je niet stilzwijgend in je eigen poule zetten,
 // want dan merk je nooit dat de uitnodiging kapot was.
+//
+// Onderaan de eigen link (?code=...&speler=...), waarmee je jezelf meeneemt
+// naar een tweede toestel in plaats van jezelf daar opnieuw aan te maken.
 
 import { maakControle, startPagina } from './hulp.mjs';
 
@@ -66,6 +69,38 @@ const klembord = await page.evaluate(() => navigator.clipboard.readText());
 check('de uitnodiging bevat de poulenaam en een link met de code',
   klembord.includes('Vrijdagmiddagpoule') && klembord.includes('?code=RTM026'),
   JSON.stringify(klembord));
+
+// --- je eigen link -------------------------------------------------------
+// Het probleem hierachter: dezelfde persoon op zijn telefoon én zijn laptop
+// stond twee keer in de stand, met zijn punten over die twee verdeeld.
+await page.waitForSelector('#eigenlink');
+await page.click('#eigenlink');
+await page.waitForTimeout(200);
+const eigen = await page.evaluate(() => navigator.clipboard.readText());
+const mijnId = await page.evaluate(() => globalThis.__db.pool_members[0].member_id);
+check('je eigen link bevat de poulecode én wie je bent',
+  eigen.includes('?code=RTM026') && eigen.includes('speler=' + mijnId), eigen);
+check('en het is een kale link, geen uitnodigingstekst',
+  !eigen.includes('Doe mee'), eigen);
+
+// Een tweede toestel: alles vergeten wat deze browser wist, en dan de link
+// openen. Zonder ?speler= zou je hier op "wie ben jij?" uitkomen.
+await page.evaluate(() => localStorage.clear());
+await page.goto(eigen);
+await page.waitForSelector('[data-race], [data-lid], #code');
+check('je eigen link zet je op een leeg toestel meteen als jezelf neer',
+  (await page.$('[data-race]')) !== null && (await page.$('[data-lid]')) === null);
+check('en dat toestel onthoudt je daarna zelf',
+  (await page.evaluate(() => Object.keys(localStorage)
+    .some((k) => k.endsWith(':mijn_id')))));
+
+// Een speler die niet in deze poule zit is geen foutmelding waard: dan doet
+// de link gewoon wat een gewone uitnodiging doet.
+await page.evaluate(() => localStorage.clear());
+await page.goto(url + '?code=RTM026&speler=bestaat-niet');
+await page.waitForSelector('[data-lid], #code');
+check('een onbekende speler in de link valt terug op "wie ben jij?"',
+  (await page.$('[data-lid]')) !== null && (await page.$('#code')) === null);
 
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 

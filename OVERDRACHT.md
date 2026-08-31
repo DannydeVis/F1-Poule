@@ -934,3 +934,44 @@ Een tussenweg die dit alles niet vraagt: dezelfde speler op een tweede toestel
 laten binnenkomen via een persoonlijke link (`?code=...&speler=...`), zodat je
 jezelf niet opnieuw aanmaakt. Dat lost het echte probleem op — vijf keer
 dezelfde persoon in de stand — zonder RLS aan te raken.
+
+---
+
+## Je eigen link: jezelf meenemen naar een tweede toestel
+
+De vervolgstap op de vorige sectie, en het antwoord op het echte probleem
+daaronder: dezelfde persoon stond vijf keer in de stand, omdat hij op zijn
+telefoon, zijn laptop en op het werk apart had meegedaan. De app weet alleen
+per toestel wie je bent — `poule:<id>:mijn_id` in `localStorage` — dus op een
+nieuw toestel maak je jezelf opnieuw aan, en je punten staan vanaf dat moment
+op twee spelers.
+
+Onder Poule staat nu **Kopieer je eigen link**: `?code=...&speler=<member_id>`.
+Open je die op je laptop, dan ben je daar dezelfde speler.
+
+**Waarom dit geen inlog is, en toch genoeg.** Wie deze link heeft speelt onder
+jouw naam. Dat klinkt eng tot je bedenkt dat wie de poulecode heeft sowieso in
+de poule kan, en dat de anon key in de broncode staat: de app beschermt tegen
+ongelukken, niet tegen kwaadwilligheid, en dat staat zo in BEDIENING.md §7. De
+knoptekst zegt het er daarom expliciet bij — deel hem met niemand. Voor een
+vriendenpoule is dat de goede afweging; bouw er geen dingen op die echt
+beschermd moeten zijn.
+
+**Een onbekende speler in de link is geen fout.** Staat dat id niet (meer) in
+de poule, dan valt de link stilletjes terug op wat een gewone uitnodiging doet:
+"wie ben jij?". Een melding over een id dat niemand herkent helpt niemand, en
+de link werkt dan nog steeds voor het deel dat er wél toe doet.
+
+**Waarom `onthoud()` én de expliciete keuze.** In `hervat()` staan twee regels
+die op elkaar lijken: eerst `onthoud(pool, uitLid.member_id)`, daarna
+`const bekend = uitLid ? uitLid.member_id : mijnId(...)`. Die tweede lijkt
+overbodig — `mijnId()` leest immers terug wat er net is weggeschreven — en een
+test die alleen de tweede weghaalt blijft dan ook groen. Maar in een browser
+die niets mag opslaan doet `onthoud()` niets, en dan is die tweede regel het
+enige wat je nog als jezelf binnenlaat. `opslagWerkt` is precies het geval
+waarin je zo'n link nodig hebt.
+
+**`knoopKopieer` heette al zo.** Die bestond al voor de groepsapp-tekst, dus de
+gedeelde versie voor de twee links heet `kopieerknop`. Beide doen hetzelfde
+terugvalgedrag: lukt het klembord niet, dan komt de tekst in een veld dat je
+zelf kunt selecteren.

@@ -15,7 +15,7 @@ je eigen computer.
 | `poule-onthouden.test.mjs` | Of de poule na herladen onthouden wordt, en of een bestaande naam intypen geen tweede speler aanmaakt |
 | `ontbrekende-sleutel.test.mjs` | Of een database zonder de unieke sleutel een leesbare melding geeft in plaats van stille dubbele rijen |
 | `uitslag-invoeren.test.mjs` | Handmatig een uitslag invullen: de vlag komt mee, en een bestaande uitslag wordt niet overschreven |
-| `uitnodiging.test.mjs` | De link met `?code=`: hij wint van de onthouden poule, verdwijnt daarna uit de adresbalk, en een kapotte code zegt dat |
+| `uitnodiging.test.mjs` | De link met `?code=`: hij wint van de onthouden poule, verdwijnt daarna uit de adresbalk, en een kapotte code zegt dat. Plus je eigen link met `&speler=`, waarmee je op een tweede toestel dezelfde speler bent |
 | `duel.test.mjs` | De onderlinge duels tussen spelers, vooral welke weekenden níét meetellen |
 | `winnaar.test.mjs` | De losse winnaar van 25 punten |
 | `vraagsoorten.test.mjs` | De puntentelling van de losse vragen: vooral dat alleen invullen wat je weet niet minder oplevert dan alles gokken |

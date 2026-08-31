@@ -59,7 +59,8 @@ Bovenaan de knop **Kopieer voor WhatsApp**.
 Leden, poulecode, uitnodiglink met deelknop, en de instellingen. Voor de
 poulebaas staat hier ook het beheergedeelte: welke vragen meedoen, de
 omschrijving van de poule, en handmatig een uitslag invoeren als OpenF1 het
-laat afweten. Onderaan staan je andere poules, om naar over te stappen.
+laat afweten. Verder je eigen link (zie §4) en, onderaan, je andere poules om
+naar over te stappen.
 
 ---
 
@@ -118,6 +119,17 @@ intypen. Dit wordt de standaardroute, want zo deel je hem in de groepsapp.
 
 Daarna in beide gevallen: kies jezelf uit de lijst als je er al in staat, of
 maak jezelf aan als nieuwe speler.
+
+**Via je eigen link** (`?code=...&speler=...`): voor jezelf, niet om te delen.
+De app weet alleen per toestel wie je bent, dus wie op zijn telefoon én op zijn
+laptop meedoet maakt zichzelf twee keer aan en ziet zijn punten over twee
+spelers verdeeld. Deze link zet je op het tweede toestel meteen als dezelfde
+speler neer. Hij staat onder Poule, met de waarschuwing erbij: wie hem heeft
+speelt onder jouw naam.
+
+Staat de speler uit de link niet (meer) in de poule, dan gedraagt hij zich als
+een gewone uitnodiging en kom je op "wie ben jij?" uit. Een foutmelding over
+een id dat niemand herkent helpt niemand.
 
 ---
 
