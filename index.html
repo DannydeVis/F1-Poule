@@ -1370,6 +1370,14 @@ function codeUitLink() {
   } catch { return ''; }
 }
 
+// Wie de link opent. Zonder dit maakt dezelfde persoon zichzelf op zijn
+// laptop opnieuw aan en staat hij twee keer in de stand, met zijn punten
+// verdeeld over de twee. Zie OVERDRACHT.md over waarom dit geen inlog is.
+function spelerUitLink() {
+  try { return (new URLSearchParams(location.search).get('speler') ?? '').trim(); }
+  catch { return ''; }
+}
+
 // De code weer uit de adresbalk halen zodra hij gebruikt is. Anders trekt
 // een herlaadactie je terug naar die poule, ook nadat je met "Andere poule"
 // bewust bent overgestapt — en werkt herladen juist wél als vluchtweg
@@ -1378,12 +1386,18 @@ function vergeetLinkCode() {
   try { history.replaceState(null, '', location.pathname); } catch { /* niets te doen */ }
 }
 
+const linkBasis = () => location.origin && location.origin !== 'null'
+  ? location.origin + location.pathname
+  : String(location.href).split('?')[0];
+
 function uitnodigingsTekst(poule = S.poule) {
-  const basis = location.origin && location.origin !== 'null'
-    ? location.origin + location.pathname
-    : String(location.href).split('?')[0];
-  return `Doe mee met ${poule.name}:\n${basis}?code=${poule.join_code}`;
+  return `Doe mee met ${poule.name}:\n${linkBasis()}?code=${poule.join_code}`;
 }
+
+// Je eigen link, om jezelf mee te nemen naar een ander toestel. Bewust geen
+// uitnodiging: wie hem heeft speelt onder jouw naam.
+const eigenLinkTekst = () =>
+  `${linkBasis()}?code=${S.poule.join_code}&speler=${encodeURIComponent(S.ik.id)}`;
 
 // Dezelfde knop staat op de poulepagina en op de laatste stap van het
 // aanmaken. Op de poulepagina gaat het om S.poule; tijdens het aanmaken
@@ -1392,12 +1406,21 @@ function uitnodigingsTekst(poule = S.poule) {
 // Lukt het klembord niet, dan komt de tekst in beeld om zelf te
 // selecteren — zie naarKlembord() hieronder.
 function knoopUitnodiging(waar, poule = S.poule) {
-  const knop = waar.querySelector('#uitnodiging');
+  kopieerknop(waar, '#uitnodiging', '#uitnodigingveld', () => uitnodigingsTekst(poule));
+  if (S.poule && S.ik) kopieerknop(waar, '#eigenlink', '#eigenlinkveld', eigenLinkTekst);
+}
+
+// Kopiëren naar het klembord mag niet overal — een oudere browser, of een
+// pagina zonder https. Lukt het niet, dan komt de tekst in een veld te staan
+// dat je zelf kunt selecteren; dat is altijd nog beter dan een knop die niets
+// lijkt te doen.
+function kopieerknop(waar, knopKies, veldKies, maakTekst) {
+  const knop = waar.querySelector(knopKies);
   if (!knop) return;
   const oorspronkelijk = knop.textContent;
   knop.onclick = async () => {
-    const tekst = uitnodigingsTekst(poule);
-    const veld = waar.querySelector('#uitnodigingveld');
+    const tekst = maakTekst();
+    const veld = waar.querySelector(veldKies);
     if (await naarKlembord(tekst)) {
       knop.textContent = 'Gekopieerd';
       setTimeout(() => { knop.textContent = oorspronkelijk; }, 2400);
@@ -1853,6 +1876,7 @@ function poulePagina(rijen) {
     </div>`).join('') || `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
       <b>1</b> twee plekken ernaast.</div>
+    ${eigenLinkBlok()}
     ${omschrijvingBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}
@@ -1860,6 +1884,29 @@ function poulePagina(rijen) {
       <button class="knop klein" id="wissel">Speler wisselen</button>
       <button class="knop klein" id="anderePoule">Andere poule</button>
     </div>`;
+}
+
+// ---- jezelf meenemen naar een ander toestel -----------------
+// Het probleem dat dit oplost: dezelfde persoon die op zijn telefoon, zijn
+// laptop en op het werk meedoet, staat drie keer in de stand met zijn punten
+// over die drie verdeeld. De app weet namelijk alleen per toestel wie je bent.
+//
+// Dit is nadrukkelijk géén inlog. Wie deze link heeft speelt onder jouw naam,
+// net zoals wie de poulecode heeft in de poule kan. Het lost het echte
+// probleem op zonder dat er accounts en rechten bij komen kijken; wat een
+// echte inlog zou kosten staat in OVERDRACHT.md.
+function eigenLinkBlok() {
+  if (!S.ik) return '';
+  return `
+    <div class="scheiding"></div>
+    <span class="label">jezelf meenemen</span>
+    <p class="zacht" style="margin:0">Speel je ook op je laptop of tablet? Open
+      deze link daar, dan ben je daar dezelfde ${esc(S.ik.naam)} en niet een
+      nieuwe speler. <b>Deel hem met niemand</b> — wie hem heeft speelt onder
+      jouw naam.</p>
+    <button class="knop klein" id="eigenlink">Kopieer je eigen link</button>
+    <textarea class="veld tekstblok hide" id="eigenlinkveld" readonly rows="3"
+      aria-label="Je eigen link om zelf te kopiëren"></textarea>`;
 }
 
 // ---- omschrijving -------------------------------------------
@@ -3160,6 +3207,7 @@ async function hervat() {
   // wie zo'n link aanklikt wil naar díé poule, niet naar zijn vorige.
   const uitLink = codeUitLink();
   if (uitLink) {
+    const spelerLink = spelerUitLink();
     vergeetLinkCode();
     const { data } = await db.from('pools').select('*').eq('join_code', uitLink).single();
     if (data) {
@@ -3167,7 +3215,17 @@ async function hervat() {
       onthoudPoule(data.id); onthoudInLijst(data);
       try { await laad(); }
       catch (e) { toonFout(e.message); return; }
-      const bekend = mijnId(S.poule.id);
+      // Wie je eigen link opent is jou, ook op een toestel dat dat nog niet
+      // wist. Staat die speler niet (meer) in deze poule, dan gaat het gewoon
+      // door naar het keuzescherm: doen alsof er niets stond is beter dan een
+      // foutmelding over een id dat niemand herkent.
+      const uitLid = spelerLink && S.leden.find(l => zelfde(l.member_id, spelerLink));
+      if (uitLid) onthoud(S.poule.id, uitLid.member_id);
+      // Wie uit de link komt gaat vóór wat dit toestel al wist. Niet alleen
+      // omdat de link recenter is, maar ook omdat onthoud() hierboven niets
+      // doet in een browser die niets mag opslaan; dan is dit het enige wat
+      // je nog als jezelf binnenlaat.
+      const bekend = uitLid ? uitLid.member_id : mijnId(S.poule.id);
       const lid = bekend && S.leden.find(l => zelfde(l.member_id, bekend));
       if (lid) S.ik = { id: lid.member_id, naam: lid.display_name };
       render();
