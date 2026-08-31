@@ -975,3 +975,64 @@ waarin je zo'n link nodig hebt.
 gedeelde versie voor de twee links heet `kopieerknop`. Beide doen hetzelfde
 terugvalgedrag: lukt het klembord niet, dan komt de tekst in een veld dat je
 zelf kunt selecteren.
+
+---
+
+## Inleg en betaalverzoek
+
+Joey, in de groepsapp: *"Doe gelijk een betaalverzoek er in 😉 Of ook wat de
+inleg moet zijn enzo."* Twee kolommen op `pools` (`inleg numeric(8,2)` en
+`betaallink text`), één op `pool_members` (`betaald boolean`), en een blok onder
+Poule plus een blok op stap 4 van het aanmaken. Zie BEDIENING.md §10 voor wat
+het doet; hier staat waarom het zo gebouwd is.
+
+**`numeric`, geen float.** Geld in een float geeft vroeg of laat 4,999999 in
+beeld. Acht cijfers met er twee achter de komma is ruim voor een vriendenpoule
+en houdt het bedrag exact.
+
+**De betaallink is het enige stukje in deze app dat echt gevaarlijk kon zijn.**
+Hij komt uit een tekstveld en belandt in een `href`. Een `javascript:`-adres
+daar wordt uitgevoerd zodra een lid op de knop tikt — en de RLS-policies staan
+open (`using (true)`), dus iedereen met de anon key uit de broncode kan zo'n
+adres rechtstreeks in `pools` zetten. Vandaar `veiligeLink()`, en vandaar dat
+die niet alleen bij het opslaan draait maar ook bij het tónen. Een controle die
+alleen bij het invoeren zit is geen controle als de invoer ook buiten de app om
+kan. `test/inleg.test.mjs` test allebei de kanten; sloop je `veiligeLink()`,
+dan vallen er drie controles om.
+
+Wat opgeslagen wordt is de link zoals hij getoond gaat worden (`https://` er al
+voor), niet zoals hij ingetypt was. Anders staat er in de database iets anders
+dan wat de poulebaas op zijn scherm heeft goedgekeurd.
+
+**"vijf euro" is een fout, geen lege inleg.** `leesBedrag()` gooit eerst alles
+weg wat geen cijfer, punt of komma is. Dat betekent dat "vijf euro" als lege
+tekst overblijft, en dan zou hij als "geen inleg" opgeslagen worden: je vult
+iets in, drukt op opslaan, en er gebeurt niets. Nu is dat NaN en dus een
+melding.
+
+Dat gaf trouwens een tweede bug in dezelfde hoek. De opslaanknop vergeleek
+eerst het *gelezen* bedrag met wat er in de database stond. "vijf euro" leest
+als leeg, leeg is gelijk aan leeg, dus de knop bleef uit — een veld waarin je
+typt naast een knop die niets doet, zonder uitleg. De vergelijking gaat nu over
+de getypte tekst.
+
+**Het bedrag gaat met een komma terug het veld in.** `12.5` in beeld krijgen
+nadat je "€ 12,50" hebt opgeslagen leest als een fout van de app.
+
+**Wie heeft betaald is een lijstje, geen boekhouding.** De app ziet geen
+betalingen en gelooft alleen het vinkje van de poulebaas. Dat staat er expliciet
+bij, want een app die "betaald" toont wekt makkelijk de indruk dat hij het
+gecontroleerd heeft.
+
+Je eigen streepje zie je alleen als het gezet is. "Nog niet afgevinkt" bij elk
+bezoek is zeuren van een machine, en de poulebaas heeft de lijst al.
+
+**De spelerrij is een `<button>` of een `<div>`.** Alleen als er inleg is én jij
+de poulebaas bent valt er iets te tikken; anders zou er een knop staan die
+niets doet. Zie `spelerRij()`.
+
+**Waarom het op stap 4 staat en niet op stap 1.** Stap 1 is al naam plus
+omschrijving; er nog twee velden bij zou van "één vraag per scherm" een
+formulier maken. Stap 4 is het scherm waarop je de uitnodiging kopieert, en de
+tekst een regel lager verandert meteen mee als je hier iets invult. Dat is ook
+precies het moment waarop het ertoe doet.

@@ -23,6 +23,11 @@ create table if not exists public.pools (
   name       text not null,
   -- Een regel over waar deze poule voor is: "met de collega's, 5 euro inleg".
   beschrijving text,
+  -- Wat het kost om mee te doen, en waar je dat naartoe stuurt. numeric en
+  -- niet float: geld in een float geeft 4,999999 en dat wil je nergens zien.
+  -- Beide mogen leeg blijven; een poule om de eer is de normale poule.
+  inleg      numeric(8,2),
+  betaallink text,
   season     int  not null default 2026,
   join_code  text not null unique default upper(substr(md5(random()::text), 1, 6)),
   created_at timestamptz not null default now()
@@ -32,6 +37,10 @@ create table if not exists public.pool_members (
   member_id    uuid primary key default gen_random_uuid(),
   pool_id      uuid not null,
   display_name text not null,
+  -- Afgevinkt door de poulebaas als de inleg binnen is. Dit is een lijstje,
+  -- geen boekhouding: de app ziet geen betalingen en gelooft alleen wat de
+  -- poulebaas aanvinkt.
+  betaald      boolean not null default false,
   created_at   timestamptz not null default now()
 );
 
@@ -128,6 +137,8 @@ create table if not exists public.answers (
 -- ------------------------------------------------------------
 
 alter table public.pools        add column if not exists beschrijving text;
+alter table public.pools        add column if not exists inleg      numeric(8,2);
+alter table public.pools        add column if not exists betaallink text;
 alter table public.pools        add column if not exists season     int not null default 2026;
 alter table public.pools        add column if not exists join_code  text;
 alter table public.pools        add column if not exists created_at timestamptz not null default now();
@@ -142,6 +153,7 @@ alter table public.pools        add column if not exists questions_locked boolea
 
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
+alter table public.pool_members add column if not exists betaald      boolean not null default false;
 alter table public.pool_members add column if not exists created_at   timestamptz not null default now();
 
 alter table public.races        add column if not exists country        text;
