@@ -1179,3 +1179,32 @@ Maar een race kan afgelast worden terwijl zijn deadline nog loopt, en dan komt
 hij daar nooit langs: je kreeg gewoon het invulscherm voor een race die nooit
 gereden wordt. Nu is `afgelastEnLeeg(r)` in `vulPaneel()` genoeg om hem dicht
 te zetten, wat de klok ook zegt.
+
+---
+
+## Het onderlinge duel: van wie is "1 – 0"?
+
+Aanleiding: een screenshot met de rij "JOE" en daarnaast "1 – 0", met de
+vraag "als het 1-0 voor Danny is, waarom staat er dan 1-0 bij Joe?"
+
+Het antwoord was niet een rekenfout — `scores/controle-stand.mjs` (zie de
+vorige sectie) had de 1-0 al bevestigd tegen de echte database. Het was de
+weergave: de rij heet naar de tegenstander ("onderlinge duels · jij tegen
+JOE"), en dan lijkt het eerste cijfer van "1 – 0" bij die naam te horen.
+Feitelijk is het eerste cijfer altijd `d.ik` (jouw score) en het tweede
+`d.ander` — maar die volgorde staat nergens met woorden bij, alleen als een
+kleurtje op het cijfer (`.duel.voor .mijn{color:var(--groen)}`), en een
+kleurtje lees je niet hardop voor jezelf terug als "dit is van mij".
+
+De oplossing is één woord: een `.jij`-label (dezelfde badge die al overal
+elders in de app naast je eigen naam staat) vlak ná je eigen cijfer, zodat
+er "1 jij – 0" staat in plaats van kaal "1 – 0". Geen kleur nodig om het te
+snappen, en het staat vast aan jouw cijfer — ook als dat cijfer toevallig het
+laagste is (dus "0 jij – 1" als je achterstaat), niet aan het grootste getal.
+`test/duel-weergave.test.mjs` test beide kanten expliciet, en is gecontroleerd
+tegen de oude weergave: zonder het label faalt hij op precies dit punt.
+
+Dit relativeert niets aan de vorige sectie: de rekenkern was en is correct.
+Het is een herinnering dat "de code klopt" en "de gebruiker snapt het scherm"
+twee verschillende dingen zijn, en bij een app voor het grote publiek is het
+tweede net zo belangrijk.

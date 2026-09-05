@@ -1902,10 +1902,13 @@ function duelLijst() {
   return `<span class="label">onderlinge duels · jij tegen</span>
     ${rijen.map(d => {
       const stand = d.ik > d.ander ? 'voor' : d.ik < d.ander ? 'achter' : 'gelijkop';
+      // De rij heet naar de tegenstander ("Joe"), en dan lijkt het eerste
+      // getal van "1 – 0" bij die naam te horen — terwijl het juist jouw
+      // score is. Vandaar het "jij" vlak achter je eigen cijfer.
       return `<div class="rest duel ${stand}">
         <span class="nm">${esc(d.naam)}</span>
         ${d.gelijk ? `<span class="gelijkop-tel">${d.gelijk}× gelijk</span>` : ''}
-        <span class="duelscore"><b class="mijn">${d.ik}</b><i class="streep">–</i><b class="hun">${d.ander}</b></span>
+        <span class="duelscore"><b class="mijn">${d.ik}</b><span class="jij">jij</span><i class="streep">–</i><b class="hun">${d.ander}</b></span>
       </div>`;
     }).join('')}`;
 }
