@@ -9,6 +9,7 @@
  *   SESSIE=11353 node scripts/verkennen.mjs  die ene sessie
  *   ALLE=1 node scripts/verkennen.mjs        het woordenboek over alle races
  *   DROOG=1 node scripts/verkennen.mjs       wat de sync zou wegschrijven
+ *   LOCATIE=Monza node scripts/verkennen.mjs alle sessies van dat weekend
  *   JAAR=2025 node scripts/verkennen.mjs     een seizoen dat al af is
  *
  * Er is geen sleutel voor nodig: OpenF1 is openbaar.
@@ -163,6 +164,31 @@ async function droogloop(races) {
       + ` #${String(snelstePitstop(stops) ?? '-').padEnd(4)}`
       + ` ${String(sc).padEnd(3)} ${hadRodeVlag(rc) ? 'ja' : 'nee'}`);
   }
+}
+
+// Alle sessies van één weekend (FP1 t/m race), niet alleen de race zelf.
+// Nodig zodra het de kwalificatie is die net voorbij is en de race nog moet
+// komen — de rest van dit script gaat uit van session_name=Race, en die
+// bestaat dan nog niet als "gereden".
+async function weekend(locatie) {
+  const alles = await haal(`sessions?year=${JAAR}&location=${encodeURIComponent(locatie)}`);
+  if (isFout(alles)) { console.log(`sessions gaf ${alles.fout}`); return; }
+  const op = alles.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+  console.log(`\n=== ${locatie} ${JAAR}: ${op.length} sessies ===`);
+  const nu = Date.now();
+  for (const s of op) {
+    const voorbij = new Date(s.date_start).getTime() < nu;
+    console.log(`  ${String(s.session_key).padEnd(7)} ${String(s.session_name).padEnd(12)}`
+      + ` ${s.date_start}  ${voorbij ? 'geweest' : 'moet nog komen'}`);
+  }
+  const quali = op.find((s) => s.session_name === 'Qualifying');
+  if (quali) await verken(quali.session_key, `${locatie} — kwalificatie`);
+}
+
+const LOCATIE = process.env.LOCATIE;
+if (LOCATIE) {
+  await weekend(LOCATIE);
+  process.exit(0);
 }
 
 const races = await haal(`sessions?year=${JAAR}&session_name=Race`);

@@ -17,6 +17,9 @@ on:
       sessie:
         description: 'Eén session_key (leeg = de laatste gereden race)'
         default: ''
+      locatie:
+        description: 'Heel weekend van deze plaats (bv. Monza), ook als de race nog moet komen'
+        default: ''
       alle:
         description: 'Het woordenboek over alle gereden races'
         type: boolean
@@ -38,6 +41,7 @@ jobs:
         env:
           JAAR: ${{ inputs.jaar || '2026' }}
           SESSIE: ${{ inputs.sessie }}
+          LOCATIE: ${{ inputs.locatie }}
         run: node scripts/verkennen.mjs
 
       # Op een pull request ook meteen het woordenboek: welke zinnen OpenF1
