@@ -1,0 +1,34 @@
+name: Klopt de stand?
+
+# Handmatig te starten vanuit het Actions-tabblad. Draait de echte
+# scoreregels (letterlijk uit index.html geknipt) tegen een verse kopie van
+# de echte database, en print elke tussenstap. Alleen lezen — er wordt niets
+# weggeschreven, en er is geen geheime sleutel voor nodig: de anon key staat
+# toch al open in index.html.
+#
+# Nodig omdat Supabase niet vanaf elke plek bereikbaar is; op een
+# GitHub-runner wel.
+
+on:
+  workflow_dispatch:
+    inputs:
+      poule:
+        description: 'Naam van de poule'
+        default: 'Vrijdagmiddagpoule'
+      ik:
+        description: 'Stukje van jouw spelernaam'
+        default: 'danny'
+
+jobs:
+  controleren:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: De stand herberekenen uit de ruwe data
+        env:
+          POULE: ${{ inputs.poule }}
+          IK: ${{ inputs.ik }}
+        run: node scripts/controle-stand.mjs
