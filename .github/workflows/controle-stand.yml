@@ -40,6 +40,9 @@ jobs:
       # Staat er in de database nog dezelfde deelnemerslijst als die OpenF1
       # nu geeft? De sync haalt die lijst maar één keer op, dus een wissel
       # halverwege het seizoen zou er nooit in terechtkomen.
+      - name: Wat staat er in de kalender
+        run: node scripts/controle-kalender.mjs
+
       - name: Kloppen de deelnemerslijsten nog
         if: inputs.coureurs != false
         run: node scripts/controle-coureurs.mjs
