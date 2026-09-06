@@ -445,6 +445,10 @@
   .opslaanbalk{position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px;
     padding-top:10px;background:linear-gradient(transparent,var(--bg) 40%)}
   .opslaanbalk .knop{min-height:64px}
+  /* Wis alles hoort niet even zwaar te wegen als opslaan, tot hij vraagt of
+     je het zeker weet — dan mag hij wel opvallen. */
+  .opslaanbalk .wisknop{min-height:48px}
+  .wisknop.zeker{color:var(--accent);border-color:var(--accent)}
   #paneel{display:flex;flex-direction:column;gap:14px;min-width:0}
   .kalender{display:flex;flex-direction:column;gap:8px}
 
@@ -471,6 +475,22 @@
     text-overflow:ellipsis;white-space:nowrap}
   .rest .t{font-family:var(--cond);font-size:22px;font-weight:700;color:var(--ink2)}
   .rest.winnaar{border-left:4px solid var(--accent);padding-left:12px}
+  /* Sinds je op een naam kunt tikken is dit een <button>, en die erft niets:
+     geen breedte, geen letter, geen tekstkleur. */
+  button.rest{width:100%;border:0;color:inherit;text-align:left;cursor:pointer;
+    font:inherit;transition:background .12s}
+  button.rest:hover{background:var(--gedempt)}
+  .rest.inkijk .zacht{font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink3);flex:none}
+  .rest.inkijk .t{min-width:26px;text-align:right}
+  /* De kop van het inkijkscherm: dezelfde vorm als een rest-regel, met de
+     terugknop erin, zodat je meteen ziet dat je bij iemand anders kijkt. */
+  .inkijkkop{display:flex;align-items:center;gap:12px}
+  .inkijkkop .knop{flex:none;min-height:44px;padding:0 14px}
+  .inkijkkop .nm{font-family:var(--cond);font-size:22px;font-weight:700;
+    text-transform:uppercase;flex:1;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .inkijkkop .t{font-family:var(--cond);font-size:26px;font-weight:700;flex:none}
   .duel{padding-left:12px;border-left:4px solid var(--lijn)}
   .duel.voor{border-left-color:var(--groen)}
   .duel.gelijkop{border-left-color:var(--ink3)}
@@ -973,6 +993,7 @@ const S = {
            snelste_ronde: '', snelste_pitstop: '',
            safety_cars: null, rode_vlag: null },
   kiesplek: null,       // welke plek of vraag er nu gekozen wordt
+  bekijk: null,         // member_id van de speler wiens inzending je inkijkt
   uitslag: { welk: null, lijst: [] },
   weergave: 'races', fout: '', melding: '', linkCode: '', linkFout: '',
   maak: null,           // het aanmaakscherm, zolang dat openstaat
@@ -2408,10 +2429,18 @@ function vulPaneel() {
   const paneel = app.querySelector('#paneel');
   if (!paneel) return;
   const lijstKlaar = S.tab === 'quali' ? r.quali_result : r.race_result;
+  // Andermans inzending inkijken mag alleen als deze tab gesloten is. De knop
+  // ernaartoe staat al alleen op de gesloten schermen, maar dit is de plek
+  // waar het ook echt afgedwongen wordt: sta je bij iemands kwalificatie en
+  // klik je naar de race die nog openstaat, dan val je hier vanzelf terug.
+  const gesloten = !!lijstKlaar || afgelastEnLeeg(r) || dicht[S.tab];
+  if (S.bekijk && !gesloten) S.bekijk = null;
+  if (S.bekijk) { bekijkWeergave(paneel, r); return; }
   if (lijstKlaar) {
     paneel.innerHTML = uitslagWeergave(r, lijstKlaar);
     knoopKopieer(paneel);
     knoopLosse(paneel, r);
+    knoopBekijk(paneel);
   }
   // Een afgelaste race is dicht, wat de klok ook zegt. Een race kan afgelast
   // worden terwijl zijn deadline nog loopt — dan blijven mensen anders een
@@ -2430,6 +2459,14 @@ function geslotenWeergave(paneel, r) {
   // Een afgelaste race blijft in de kalender staan — er kunnen voorspellingen
   // aan hangen — maar hij levert niets op, en dat hoort hier te staan in
   // plaats van "de uitslag volgt".
+  // Wat jij had ingevuld hoort altijd zichtbaar te blijven. Dat was het niet:
+  // zodra de kwalificatie begon zag je alleen nog "gesloten" en kon je
+  // nergens meer nakijken wat je gekozen had — terwijl dat juist het moment
+  // is waarop je het wilt weten.
+  const mijnBlok = `
+    <span class="label">jouw inzending · alleen om terug te kijken</span>
+    ${keuzeOverzicht(r, vindPred(r.id, S.ik.id), S.tab)}`;
+
   paneel.innerHTML = afgelastEnLeeg(r) ? `
     <div class="leeg"><span class="label">afgelast</span>
       <p class="zacht" style="margin:0">Deze race is niet doorgegaan, dus hij telt voor
@@ -2438,14 +2475,18 @@ function geslotenWeergave(paneel, r) {
       ? `<p class="zacht" style="margin:12px 0 0">Is hij tóch verreden? Vul de uitslag
            hieronder in, dan telt hij weer gewoon mee.</p>
          <button class="knop spook" id="zelfinvullen">Uitslag zelf invullen</button>` : ''}
+    ${mijnBlok}
+    ${andermans(r)}
   ` : `
     <div class="leeg"><span class="label">gesloten</span>
       <p class="zacht" style="margin:0">Inzendingen zijn gesloten. De uitslag volgt zodra
         de sync hem bij OpenF1 heeft opgehaald; die draait elk uur.</p></div>
     ${magInvullen(r, S.tab)
       ? `<button class="knop spook" id="zelfinvullen">Uitslag zelf invullen</button>` : ''}
+    ${mijnBlok}
     ${andermans(r)}`;
 
+  knoopBekijk(paneel);
   const knop = paneel.querySelector('#zelfinvullen');
   if (knop) knop.onclick = () => {
     S.uitslag = { welk: S.tab, lijst: [] };
@@ -2594,6 +2635,8 @@ function invulWeergave(paneel, r, dicht) {
           : top10Actief(S.tab) && klaar
             ? `Maak de top 10 af · nog ${10 - klaar}`
           : 'Nog niets gekozen'}</button>
+      ${klaar || losGekozen
+        ? `<button class="knop klein wisknop" id="wisalles">Wis alles</button>` : ''}
       <p class="err">${esc(S.fout)}</p>
     </div>
     ${kiesblad(r)}`;
@@ -2653,6 +2696,38 @@ function invulWeergave(paneel, r, dicht) {
   });
   const kop = paneel.querySelector('#kopieer');
   if (kop) kop.onclick = () => { S.keuze.race = [...S.keuze.quali]; invulWeergave(paneel, r, dicht); };
+  // Opnieuw beginnen zonder tien keer een kruisje te zoeken. Wist alleen dit
+  // tabblad: de kwalificatie en de race zijn twee losse inzendingen, en wie
+  // zijn race overdoet wil zijn kwalificatie niet kwijt.
+  //
+  // Twee tikken in plaats van een confirm(). Die popup is op een telefoon
+  // lelijk, hij wordt in sommige browsers geblokkeerd, en hij ziet er precies
+  // zo uit als de meldingen die mensen geleerd hebben blind weg te klikken.
+  // De knop stelt de vraag gewoon zelf, en vergeet hem na een paar seconden
+  // weer — dan is een losse misklik nooit gevaarlijk.
+  const wis = paneel.querySelector('#wisalles');
+  if (wis) wis.onclick = () => {
+    if (wis.dataset.zeker !== 'ja') {
+      wis.dataset.zeker = 'ja';
+      wis.textContent = 'Alles wissen? Tik nog een keer';
+      wis.classList.add('zeker');
+      setTimeout(() => {
+        // Het scherm kan intussen hertekend zijn; dan is deze knop weg en is
+        // er niets meer terug te zetten.
+        if (!wis.isConnected) return;
+        wis.dataset.zeker = '';
+        wis.textContent = 'Wis alles';
+        wis.classList.remove('zeker');
+      }, 5000);
+      return;
+    }
+    S.keuze[S.tab] = naarPlekken([]);
+    for (const id of coureurVragen(S.tab)) S.keuze[id] = '';
+    for (const id of extraVragen(S.tab)) S.keuze[id] = null;
+    if (S.tab === 'race') S.keuze.duels = [];
+    S.fout = '';
+    invulWeergave(paneel, r, dicht);
+  };
   paneel.querySelector('#opslaan').onclick = async (ev) => {
     const knop = ev.currentTarget;
     knop.disabled = true;                       // dubbeltikken op mobiel
@@ -3084,14 +3159,172 @@ function andermans(r) {
   const werkelijk = S.tab === 'quali' ? r.quali_result : r.race_result;
   const rijen = anderen.map(l => {
     const p = vindPred(r.id, l.member_id);
-    const v = S.tab === 'quali' ? p?.quali_top10 : p?.race_top10;
-    return { naam:l.display_name,
-             punten: werkelijk && v ? scoreTab(p, r, S.tab) : null };
+    // Eerder hing dit aan een ingevulde top 10. Wie alleen de pole of een
+    // paar duels invulde stond dan op "—" terwijl hij gewoon punten had.
+    const deed = heeftVoorspeld(r, l.member_id);
+    return { id: l.member_id, naam: l.display_name, deed,
+             punten: werkelijk && deed ? scoreTab(p, r, S.tab) : null };
   }).sort((a,b) => (b.punten ?? -1) - (a.punten ?? -1));
-  return `<span class="label">de rest</span>
-    ${rijen.map(x => `<div class="rest">
-      <span class="nm">${esc(x.naam)}</span><span class="t">${x.punten ?? '—'}</span>
-    </div>`).join('')}`;
+  // De rijen zijn knoppen: hierachter zit de hele inzending van die speler.
+  // Dat kan pas nu — deze functie wordt alleen op een gesloten scherm
+  // getekend, en vulPaneel() controleert het nog een keer.
+  return `<span class="label">de rest · tik op een naam om hun voorspelling te zien</span>
+    ${rijen.map(x => `<button class="rest inkijk" data-bekijk="${esc(x.id)}">
+      <span class="nm">${esc(x.naam)}</span>
+      <span class="zacht">${x.deed ? 'bekijken' : 'niets ingevuld'}</span>
+      <span class="t">${x.punten ?? '—'}</span>
+    </button>`).join('')}`;
+}
+
+function knoopBekijk(paneel) {
+  paneel.querySelectorAll('[data-bekijk]').forEach(b => b.onclick = () => {
+    S.bekijk = b.dataset.bekijk;
+    vulPaneel();
+  });
+}
+
+// Het scherm achter een naam: wat die speler heeft ingeleverd, en wat het
+// opleverde. Precies hetzelfde overzicht als van jezelf — daarom staat het
+// maar één keer in keuzeOverzicht().
+function bekijkWeergave(paneel, r) {
+  const lid = S.leden.find(l => zelfde(l.member_id, S.bekijk));
+  if (!lid) { S.bekijk = null; vulPaneel(); return; }
+  const pred = vindPred(r.id, lid.member_id);
+  const werkelijk = S.tab === 'quali' ? r.quali_result : r.race_result;
+  paneel.innerHTML = `
+    <div class="inkijkkop">
+      <button class="knop klein" id="inkijkterug">← terug</button>
+      <span class="nm">${esc(lid.display_name)}</span>
+      ${werkelijk ? `<span class="t">${scoreTab(pred, r, S.tab)}</span>` : ''}
+    </div>
+    ${keuzeOverzicht(r, pred, S.tab)}`;
+  paneel.querySelector('#inkijkterug').onclick = () => { S.bekijk = null; vulPaneel(); };
+}
+
+// ============================================================
+//  Een inzending terugkijken, zonder eraan te kunnen zitten
+// ============================================================
+
+/**
+ * Twee vragen die eigenlijk dezelfde zijn:
+ *
+ *   "Als de kwalificatie begint kan ik niet meer zien wat ik gekozen had."
+ *   "Ik wil zien wat de andere spelers gekozen hebben."
+ *
+ * Allebei willen ze een ingeleverde voorspelling zien zonder eraan te kunnen
+ * zitten. Dus staat dat hier één keer, met één verschil erin: is de uitslag
+ * binnen, dan komt er per regel bij wat het werd en wat het opleverde. Is hij
+ * er nog niet, dan is dit puur een spiegel van wat er ingeleverd is — dan
+ * staat er geen puntenkolom, want die bestaat op dat moment nog niet.
+ *
+ * Bewust niet uitslagWeergave() hergebruikt: die is van jou, gaat over de
+ * uitslag en heeft er de weekendwinnaar, de knop voor de groepsapp en de
+ * losse invoervelden omheen. Dit is van iemand, gaat over de inzending, en
+ * mag nergens een knop hebben.
+ */
+function keuzeOverzicht(r, pred, welk) {
+  const werkelijk = welk === 'quali' ? r.quali_result : r.race_result;
+  const lijst = welk === 'quali' ? pred?.quali_top10 : pred?.race_top10;
+  const wat = welk === 'quali' ? 'de kwalificatie' : 'de race';
+
+  const iets = !!lijst?.length
+    || coureurVragen(welk).some(id => !!antwoordVan(pred, id))
+    || extraVragen(welk).some(id => !leegAntwoord(pred?.[id]))
+    || (welk === 'race' && !!pred?.teamgenoot_duels?.length);
+  if (!iets) return `<div class="leeg"><span class="label">niets ingevuld</span>
+    <p class="zacht" style="margin:0">Voor ${wat} is hier niets ingeleverd.</p></div>`;
+
+  const { regels } = scoreLijst(lijst ?? [], werkelijk ?? []);
+  const top10 = top10Actief(welk) && regels.length ? `
+    <span class="label">top 10</span>
+    <ul class="strip">
+      ${regels.filter(x => x.nr).map(x => {
+        const d = drv(r, x.nr);
+        return `<li class="sr" style="border-left-color:${esc(d.kleur)}">
+          <span class="pos">P${x.voorspeld}</span>
+          <span class="code">${esc(d.code)}</span>
+          <span class="werd">${werkelijk
+            ? (x.werkelijk ? 'werd P' + x.werkelijk : 'DNF')
+            : esc(d.naam)}</span>
+          ${werkelijk ? `<span class="pts ${puntKlasse(x.punten)}">${x.punten}</span>` : ''}
+        </li>`;
+      }).join('')}
+    </ul>` : '';
+
+  const los = coureurVragen(welk).map(id => {
+    const v = COUREURVRAAG[id];
+    const gekozen = antwoordVan(pred, id);
+    if (!gekozen) return `<p class="label" style="margin:0">${v.label} · niets gekozen</p>`;
+    const d = drv(r, gekozen);
+    const uit = v.uitslag(r);
+    // null betekent "daar valt nog niets over te zeggen" en is iets anders
+    // dan nul punten. Zonder dat onderscheid staat er een dikke 0 bij een
+    // vraag waarvan de uitslag simpelweg nog niet binnen is.
+    const gescoord = uit.length ? scoreEerste(gekozen, uit, puntenVoor(id)) : null;
+    return `
+      <span class="label">${v.label}</span>
+      <div class="sr" style="border-left-color:${esc(d.kleur)}">
+        <span class="pos">${v.letter}</span>
+        <span class="code">${esc(d.code)}</span>
+        <span class="werd">${gescoord === null ? esc(d.naam)
+          : gescoord ? v.goed : `het werd ${esc(drv(r, uit[0]).code)}`}</span>
+        ${gescoord === null ? '' : `<span class="pts ${gescoord ? 'v5' : 'v0'}">${gescoord}</span>`}
+      </div>`;
+  }).join('');
+
+  const extra = extraVragen(welk).map(id => {
+    const v = EXTRAVRAAG[id];
+    const punten = puntenVoor(id);
+    const gekozen = pred?.[id] ?? null;
+    if (leegAntwoord(gekozen)) return `<p class="label" style="margin:0">${v.label} · niets gekozen</p>`;
+    const echt = r[v.kolom] ?? null;
+    const gescoord = leegAntwoord(echt) ? null : v.score(gekozen, echt, punten);
+    return `
+      <span class="label">${v.label}</span>
+      <div class="sr">
+        <span class="pos">${v.letter}</span>
+        <span class="code">${esc(String(v.toon(gekozen)))}</span>
+        <span class="werd">${gescoord === null ? 'uitslag volgt nog'
+          : gescoord === punten ? 'precies goed'
+          : `het werd ${esc(String(v.toon(echt)))}`}</span>
+        ${gescoord === null ? ''
+          : `<span class="pts ${gescoord === punten ? 'v5' : gescoord ? 'v3' : 'v0'}">${gescoord}</span>`}
+      </div>`;
+  }).join('');
+
+  const duelblok = welk !== 'race' || !vraagActief('teamgenoot_duels') ? '' : (() => {
+    const gekozen = pred?.teamgenoot_duels ?? [];
+    if (!gekozen.length) return `<p class="label" style="margin:0">teamgenoot-duels · niets gekozen</p>`;
+    const paren = teamParen(r.drivers)
+      .filter(p => gekozen.some(g => zelfde(g, p.a.nr) || zelfde(g, p.b.nr)));
+    if (!paren.length) return '';
+    const plek = (nr) => {
+      const i = (werkelijk ?? []).findIndex(x => zelfde(x, nr));
+      return i === -1 ? Infinity : i;
+    };
+    return `
+      <span class="label">teamgenoot-duels · ${paren.length} gekozen</span>
+      <ul class="strip">
+        ${paren.map(p => {
+          const keuze = gekozen.find(g => zelfde(g, p.a.nr) || zelfde(g, p.b.nr));
+          const d = drv(r, keuze);
+          const tegen = zelfde(keuze, p.a.nr) ? p.b : p.a;
+          // Twee coureurs die allebei uitvielen leveren geen winnaar op.
+          const beslist = !!werkelijk && !(plek(p.a.nr) === Infinity && plek(p.b.nr) === Infinity);
+          const won = beslist ? (plek(p.a.nr) < plek(p.b.nr) ? p.a : p.b) : null;
+          const raak = !!won && zelfde(keuze, won.nr);
+          return `<li class="sr" style="border-left-color:${esc(p.a.kleur)}">
+            <span class="pos">${esc(stal(p.team)).slice(0, 3)}</span>
+            <span class="code">${esc(d.code)}</span>
+            <span class="werd">${!beslist ? `tegen ${esc(tegen.code)}`
+              : raak ? 'won het duel' : `verloor van ${esc(won.code)}`}</span>
+            ${beslist ? `<span class="pts ${raak ? 'v5' : 'v0'}">${raak ? '✓' : '✗'}</span>` : ''}
+          </li>`;
+        }).join('')}
+      </ul>`;
+  })();
+
+  return `${top10}${los}${extra}${duelblok}`;
 }
 
 // ============================================================
