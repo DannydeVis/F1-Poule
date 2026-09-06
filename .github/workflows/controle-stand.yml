@@ -18,6 +18,10 @@ on:
       ik:
         description: 'Stukje van jouw spelernaam'
         default: 'danny'
+      coureurs:
+        description: 'Ook de deelnemerslijsten nakijken tegen OpenF1'
+        type: boolean
+        default: true
 
 jobs:
   controleren:
@@ -32,3 +36,10 @@ jobs:
           POULE: ${{ inputs.poule }}
           IK: ${{ inputs.ik }}
         run: node scripts/controle-stand.mjs
+
+      # Staat er in de database nog dezelfde deelnemerslijst als die OpenF1
+      # nu geeft? De sync haalt die lijst maar één keer op, dus een wissel
+      # halverwege het seizoen zou er nooit in terechtkomen.
+      - name: Kloppen de deelnemerslijsten nog
+        if: inputs.coureurs != false
+        run: node scripts/controle-coureurs.mjs
