@@ -11,6 +11,7 @@
  *   DROOG=1 node scripts/verkennen.mjs       wat de sync zou wegschrijven
  *   LOCATIE=Monza node scripts/verkennen.mjs alle sessies van dat weekend
  *   COUREURS=Monza node scripts/verkennen.mjs wie reed er, quali naast race
+ *   KALENDER=1 node scripts/verkennen.mjs    de kalender, met wat eruit springt
  *   JAAR=2025 node scripts/verkennen.mjs     een seizoen dat al af is
  *
  * Er is geen sleutel voor nodig: OpenF1 is openbaar.
@@ -262,6 +263,64 @@ async function coureurs(locatie) {
     const b = (tr.get(team) ?? []).sort().join(',') || '-';
     console.log(`    ${String(team).padEnd(26)} ${a.padEnd(10)} | ${b}${a === b ? '' : '   <- ANDERS'}`);
   }
+}
+
+/**
+ * De kalender zoals de sync hem overneemt, met naast elke race het meeting
+ * waar hij bij hoort.
+ *
+ * Aanleiding: "Ik weet niet hoe je aan Kuala Lumpur komt maar volgens mij is
+ * dat geen race." Klopt — sync.mjs neemt letterlijk over wat OpenF1 op
+ * `sessions?year=2026&session_name=Race` teruggeeft, zonder één controle. Zit
+ * daar een testrecord tussen, dan staat dat gewoon in de poule.
+ *
+ * De vraag is of er een signaal in de gegevens zit waaraan je zoiets kunt
+ * herkennen, of dat het met de hand moet. Daarom: alle races op een rij, met
+ * hun session_key en meeting_key, en de sprongen daarin uitgerekend. Een
+ * weekend dat qua nummering ver buiten de rest valt is verdacht, want OpenF1
+ * deelt die sleutels op volgorde uit.
+ */
+async function kalenderproef() {
+  const races = await haal(`sessions?year=${JAAR}&session_name=Race`);
+  if (isFout(races)) { console.log(`sessions gaf ${races.fout}`); return; }
+  await wacht(700);
+  const meetings = await haal(`meetings?year=${JAAR}`);
+  const perKey = new Map(Array.isArray(meetings)
+    ? meetings.map((m) => [m.meeting_key, m]) : []);
+
+  const op = races.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+  console.log(`\n=== kalender ${JAAR}: ${op.length} races, ${Array.isArray(meetings) ? meetings.length : '?'} meetings ===`);
+  console.log(`  ${'datum'.padEnd(11)} ${'sessie'.padEnd(7)} ${'meeting'.padEnd(8)}`
+    + ` ${'plaats'.padEnd(20)} officiële naam`);
+  let vorige = null;
+  const sprongen = [];
+  for (const r of op) {
+    const m = perKey.get(r.meeting_key);
+    const sprong = vorige === null ? 0 : r.session_key - vorige;
+    sprongen.push({ r, sprong });
+    console.log(`  ${String(r.date_start).slice(0, 10)} ${String(r.session_key).padEnd(7)}`
+      + ` ${String(r.meeting_key).padEnd(8)} ${String(r.location).padEnd(20)}`
+      + ` ${m?.meeting_official_name ?? '(geen meeting gevonden)'}`);
+    vorige = r.session_key;
+  }
+
+  // De mediaan van de sprongen is hoe ver twee opeenvolgende raceweekenden
+  // normaal uit elkaar liggen. Alles wat daar een orde van grootte boven zit
+  // hoort ergens anders thuis in de nummering van OpenF1.
+  const echte = sprongen.slice(1).map((x) => x.sprong).sort((a, b) => a - b);
+  const midden = echte[Math.floor(echte.length / 2)];
+  console.log(`\n  normale sprong tussen twee races: ${midden} (mediaan van ${echte.length})`);
+  const raar = sprongen.filter((x, i) => i > 0 && Math.abs(x.sprong) > midden * 10);
+  if (!raar.length) console.log('  geen enkele race valt qua nummering uit de toon');
+  for (const x of raar) {
+    console.log(`  ${x.r.location} (${x.r.session_key}) springt ${x.sprong}`
+      + ` — dat is ${Math.round(Math.abs(x.sprong) / midden)}x de normale afstand`);
+  }
+}
+
+if (process.env.KALENDER) {
+  await kalenderproef();
+  process.exit(0);
 }
 
 const COUREURS = process.env.COUREURS;
