@@ -144,13 +144,31 @@ export function lijktAfgelast({ raceGevonden, deadline, nu = Date.now() }) {
  * Het venster voorkomt dat we elk uur de deelnemers van een race in december
  * ophalen. Buiten het venster halen we hem alleen op als hij er nog niet is,
  * zodat er wel iets te kiezen valt zodra OpenF1 hem publiceert.
+ *
+ * Op één plek kijken we ook naar een race die al gereden is, en dat is de
+ * reparatie van wat er in Monza misging: staat er in de uitslag een coureur
+ * die niet in onze lijst voorkomt, dan is die lijst aantoonbaar verouderd.
+ * Daar is geen verzoek aan OpenF1 voor nodig om dat vast te stellen — het
+ * volgt uit gegevens die we al hebben — en niemand kan een race finishen
+ * zonder aan de start te staan.
  */
 export const VERVERS_VENSTER_DAGEN = 14;
 
 export function deelnemersUit(race, nu = Date.now()) {
-  // Gereden en gescoord: klaar. sync.mjs ververst op het moment dat de
-  // uitslag binnenkomt uit de racesessie; daarna valt er niets meer te halen.
-  if (race.race_result) return null;
+  if (race.race_result) {
+    // Gereden en gescoord: normaal gesproken klaar. sync.mjs ververst op het
+    // moment dat de uitslag binnenkomt uit de racesessie.
+    //
+    // Behalve als de lijst aantoonbaar niet klopt. In Monza stond in de
+    // database Hadjar (#6, die dit seizoen bij OpenF1 helemaal niet voorkomt),
+    // Lawson bij het verkeerde team, en Tsunoda (#22) helemaal niet — terwijl
+    // die de race gewoon uitreed. Zo'n lijst repareert zichzelf niet, en hij
+    // scoort ondertussen de teamgenoot-duels op de verkeerde paren.
+    if (!race.race_key) return null;
+    const kennen = new Set((race.drivers ?? []).map((d) => String(d.nr)));
+    const onbekend = race.race_result.some((nr) => !kennen.has(String(nr)));
+    return onbekend ? race.race_key : null;
+  }
 
   const sessie = race.quali_key ?? race.race_key ?? null;
   if (!sessie) return null;

@@ -1338,12 +1338,46 @@ nee: de kwalificatie (11357) en de race (11361) geven exact dezelfde 22
 coureurs met exact dezelfde teams. In OpenF1's velddata voor 2026 rijdt Lawson
 het hele seizoen voor Red Bull en komt Hadjar helemaal niet voor.
 
-Dat is de eerlijke stand van zaken: **een wissel die OpenF1 zelf niet
-registreert, kan de app ook niet laten zien.** Wat wél opgelost is, is het
-bevriezen — verandert OpenF1 zijn lijst nog, dan komt dat nu binnen in plaats
-van dat het blijft hangen op de eerste versie. `scripts/controle-coureurs.mjs`
-legt per race naast elkaar wat er in de database staat en wat OpenF1 er nu over
-zegt, zodat dit voortaan meetbaar is en niet een vermoeden.
+### Wat er dan wél mis was, en hoe het zichzelf repareert
+
+`scripts/controle-coureurs.mjs` over alle 25 races gaf één afwijking, en die
+was raak. Alleen Monza:
+
+```
+=== ronde 15 Monza ===
+  opgeslagen: 22 coureurs
+  kwalificatie (11357): 22 coureurs bij OpenF1
+      #30 LAW: database Racing Bulls -> openf1-kwalificatie Red Bull Racing
+      #6 HAD (Red Bull Racing) staat alleen in database
+      #22 TSU (Racing Bulls) staat alleen in openf1-kwalificatie
+  race (11361): ... hetzelfde
+      LET OP: #22 staat in de race-uitslag maar niet in onze deelnemerslijst
+```
+
+De andere 24 races komen exact overeen. Dus de klacht klopte, alleen zat de
+oorzaak niet waar hij leek te zitten: **OpenF1 heeft geen wissel geregistreerd
+tussen kwalificatie en race — de opgeslagen lijst van Monza was al verouderd
+voordat het weekend begon.** Hij is opgehaald op een moment dat OpenF1's
+opgave nog de oude was, en daarna bevroren. Hadjar stond erin terwijl hij dit
+seizoen bij OpenF1 nergens voorkomt, Lawson stond bij het verkeerde team, en
+Tsunoda ontbrak volledig — terwijl die de race gewoon uitreed.
+
+Dat laatste is het aanknopingspunt. **Niemand finisht een race zonder aan de
+start te staan**, dus een uitslag met een coureur die niet in onze lijst staat
+bewijst dat de lijst kapot is — en dat is vast te stellen zonder OpenF1 ook
+maar iets te vragen, uit gegevens die we al hebben. `deelnemersUit()` maakt
+daar één uitzondering voor op "een gereden race laten we met rust", en haalt de
+lijst dan alsnog uit de racesessie. Monza repareert zichzelf zo bij de
+eerstvolgende sync, en dezelfde vergissing kan nergens blijven staan.
+
+Wat dit *niet* vangt is een lijst met alleen een teveel — een coureur die er
+niet meer bij hoort maar wiens afwezigheid nergens uit blijkt. Daar is geen
+bewijs voor zonder het aan OpenF1 te vragen, en dat elk uur voor elke gereden
+race doen is het niet waard. `controle-coureurs.mjs` meldt het wel, en dan is
+één sync met de kalenderknop genoeg.
+
+De eerlijke restrictie blijft staan: **een wissel die OpenF1 zelf niet
+registreert, kan de app ook niet laten zien.**
 
 ## Kuala Lumpur bestaat niet
 

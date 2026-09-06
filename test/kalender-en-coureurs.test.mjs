@@ -101,9 +101,31 @@ check(`een race over ${VERVERS_VENSTER_DAGEN + 30} dagen niet, die kost alleen v
 // Op dat moment heeft sync.mjs hem al uit de rácesessie gehaald, en dat is
 // de enige lijst die zegt wie er echt gereden heeft.
 check('een gereden race wordt niet meer ververst',
-  deelnemersUit(race({ race_result: ['1', '44'] }), NU) === null);
-check('ook niet als de deelnemerslijst leeg is — er valt niets meer te kiezen',
-  deelnemersUit(race({ race_result: ['1'], drivers: null }), NU) === null);
+  deelnemersUit(race({ race_result: ['1'], drivers: [{ nr: '1' }] }), NU) === null);
+
+// De reparatie van wat er in Monza misging. In de database stond Hadjar (#6,
+// die dit seizoen bij OpenF1 niet voorkomt), Lawson bij het verkeerde team en
+// Tsunoda (#22) helemaal niet — terwijl die de race uitreed. Dat is uit de
+// gegevens zelf vast te stellen: wie finisht, stond aan de start.
+const monza = {
+  quali_key: 11357, race_key: 11361,
+  deadline_quali: dagen(-60), deadline_race: dagen(-60),
+  drivers: [{ nr: '1' }, { nr: '30' }, { nr: '6' }],
+  race_result: ['1', '22', '30'],
+};
+check('een gescoorde race met een onbekende naam in de uitslag wordt hersteld',
+  deelnemersUit(monza, NU) === 11361);
+check('en dan uit de rácesessie, want die zegt wie er echt gereden heeft',
+  deelnemersUit(monza, NU) !== monza.quali_key);
+check('klopt de lijst wel met de uitslag, dan blijft hij met rust',
+  deelnemersUit({ ...monza, drivers: [{ nr: '1' }, { nr: '22' }, { nr: '30' }] }, NU) === null);
+check('nummers als getal en als tekst zijn dezelfde coureur',
+  deelnemersUit({ ...monza, drivers: [{ nr: 1 }, { nr: 22 }, { nr: 30 }],
+                  race_result: [1, 22, 30] }, NU) === null);
+check('zonder racesleutel valt er niets te herstellen',
+  deelnemersUit({ ...monza, race_key: null }, NU) === null);
+check('een lege deelnemerslijst bij een gereden race telt ook als kapot',
+  deelnemersUit({ ...monza, drivers: null }, NU) === 11361);
 
 check('zonder session_key valt er niets op te halen',
   deelnemersUit(race({ quali_key: null, race_key: null, drivers: null }), NU) === null);

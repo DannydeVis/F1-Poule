@@ -338,9 +338,18 @@ gereden is wordt de lijst ververst, en op het moment dat de race-uitslag
 binnenkomt wordt hij één keer uit de rácesessie gehaald. Dat is de enige lijst
 die zegt wie er echt gereden heeft.
 
+En er zit een reparatie in: staat er in een race-uitslag een coureur die niet
+in onze deelnemerslijst voorkomt, dan is die lijst aantoonbaar verouderd —
+niemand finisht een race zonder aan de start te staan — en wordt hij alsnog
+opgehaald. Zo herstelde Monza zich: daar stond Hadjar in de lijst terwijl hij
+dit seizoen bij OpenF1 nergens voorkomt, Lawson bij het verkeerde team, en
+Tsunoda helemaal niet, terwijl die de race uitreed. Van alle 25 races was dat
+de enige met een afwijking.
+
 Let op wat dit niet kan: **een wissel die OpenF1 zelf niet registreert, kan de
 app ook niet laten zien.** Voor Monza 2026 geeft OpenF1 voor de kwalificatie en
-de race exact dezelfde 22 coureurs met dezelfde teams. Of dat klopt is met
+de race exact dezelfde 22 coureurs met dezelfde teams — daar zat het probleem
+dus niet, de opgeslagen lijst was al verouderd voordat het weekend begon. Of dat klopt is met
 Actions → *Klopt de stand?* na te kijken; die draait ook
 `scripts/controle-coureurs.mjs`, dat per race naast elkaar zet wat er in de
 database staat en wat OpenF1 er nu over zegt.
