@@ -2441,7 +2441,7 @@ function geslotenWeergave(paneel, r) {
   ` : `
     <div class="leeg"><span class="label">gesloten</span>
       <p class="zacht" style="margin:0">Inzendingen zijn gesloten. De uitslag volgt zodra
-        de sync hem bij OpenF1 heeft opgehaald; die draait elke drie uur.</p></div>
+        de sync hem bij OpenF1 heeft opgehaald; die draait elk uur.</p></div>
     ${magInvullen(r, S.tab)
       ? `<button class="knop spook" id="zelfinvullen">Uitslag zelf invullen</button>` : ''}
     ${andermans(r)}`;
@@ -2540,7 +2540,7 @@ function invulWeergave(paneel, r, dicht) {
         <h2 class="middel">Deelnemerslijst<br>volgt nog</h2>
         <p class="zacht" style="margin:0">De deelnemerslijst voor deze race staat nog niet
           in de database. Hij wordt automatisch opgehaald zodra OpenF1 hem publiceert;
-          de sync draait elke drie uur.</p>
+          de sync draait elk uur.</p>
       </div>`;
     return;
   }

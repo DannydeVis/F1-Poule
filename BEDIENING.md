@@ -262,7 +262,7 @@ bij elk bezoek is zeuren van een machine, en de poulebaas heeft de lijst al.
 ## 11. Waar de uitslagen vandaan komen
 
 Alles komt uit OpenF1, opgehaald door `scripts/sync.mjs` op een GitHub-runner,
-elke drie uur. Niemand hoeft iets in te voeren.
+elk uur. Niemand hoeft iets in te voeren.
 
 | Wat | Waar het vandaan komt |
 |---|---|

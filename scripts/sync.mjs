@@ -151,7 +151,7 @@ async function deelnemers(sessionKey) {
 
 // Leeg is null of undefined, en nadrukkelijk niet 0 of false: nul safety
 // cars en "geen rode vlag" zijn echte uitslagen. Met een gewone !-controle
-// zou de sync die elke drie uur opnieuw ophalen, en erger: hij zou een met
+// zou de sync die elk uur opnieuw ophalen, en erger: hij zou een met
 // de hand ingevulde nul niet als ingevuld zien.
 const leeg = (w) => w === null || w === undefined;
 

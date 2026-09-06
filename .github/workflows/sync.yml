@@ -1,11 +1,15 @@
 name: Uitslagen synchroniseren
 
 on:
-  # Elke 3 uur. Tijden zijn UTC, dus in de Nederlandse zomertijd komt dat
-  # neer op 02:00, 05:00, 08:00 enzovoort. Ruim genoeg: een uitslag is
-  # sowieso pas 45 minuten na afloop van een sessie op te halen.
+  # Elk uur. Was eerst elke 3 uur, maar GitHub Actions garandeert een
+  # geplande tijd niet — bij drukte (en dat is precies tijdens elke
+  # kwalificatie en race) kan een run een paar uur later starten dan
+  # gepland. Bij elke 3 uur duurde het dan soms 5 tot 6 uur voor een
+  # uitslag binnenkwam. Elk uur maakt zo'n vertraging minder erg voelen,
+  # zonder dat het iets extra's kost: bij niks nieuws doet de run toch
+  # niets.
   schedule:
-    - cron: '0 */3 * * *'
+    - cron: '0 * * * *'
 
   # Knop in het Actions-tabblad om hem handmatig te starten.
   workflow_dispatch:

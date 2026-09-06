@@ -130,7 +130,7 @@ dekken de nieuwe opmaak net zo goed als de oude.
   alleen de top 10. Anders levert P10-die-P11-wordt onterecht 0 punten op
   in plaats van 3.
 
-- **Sync draait op GitHub Actions** (`scripts/sync.mjs`, elke 3 uur via
+- **Sync draait op GitHub Actions** (`scripts/sync.mjs`, elk uur via
   `.github/workflows/sync.yml`), met de service_role key als repository
   secret. Er is lang bewust géén Node gebruikt omdat er op de werk-pc niets
   te installeren valt; op een runner speelt dat bezwaar niet, dus daar kan
@@ -781,7 +781,7 @@ worden. Rood betekent geen merge.
 | `reset.sql` | Gooit oude tabellen weg, draai vóór schema.sql bij een schone herstart |
 | `scripts/sync.mjs` | Haalt kalender en uitslagen uit OpenF1, draait in GitHub Actions |
 | `sync.html` | Handmatige variant van de sync, draait in de browser |
-| `.github/workflows/sync.yml` | Draait de sync elke 3 uur, plus een knop om hem los te starten |
+| `.github/workflows/sync.yml` | Draait de sync elk uur, plus een knop om hem los te starten |
 | `.github/workflows/tests.yml` | Draait de tests bij elke pull request en push naar main |
 | `.github/workflows/automerge.yml` | Mergt een `claude/*`-pull request zodra de tests groen zijn |
 | `test/` | Automatische tests (zie `test/LEESMIJ.md`) |
@@ -1127,7 +1127,7 @@ waar niets te vinden is.
 
 In `sync.mjs` staat `leeg = (w) => w === null || w === undefined`, en dat is
 geen omslachtigheid. Nul safety cars en "geen rode vlag" zijn echte uitslagen.
-Met een gewone `!`-controle zou de sync ze elke drie uur opnieuw ophalen, en —
+Met een gewone `!`-controle zou de sync ze elk uur opnieuw ophalen, en —
 erger — een met de hand ingevulde nul niet als ingevuld herkennen en
 overschrijven. Dezelfde valstrik als `leegAntwoord()` in de app.
 
@@ -1208,3 +1208,32 @@ Dit relativeert niets aan de vorige sectie: de rekenkern was en is correct.
 Het is een herinnering dat "de code klopt" en "de gebruiker snapt het scherm"
 twee verschillende dingen zijn, en bij een app voor het grote publiek is het
 tweede net zo belangrijk.
+
+---
+
+## De sync draait nu elk uur, niet elke drie uur
+
+Aanleiding: twee keer achter elkaar "de race/kwalificatie is klaar maar de
+sync heeft het nog niet gedaan". Beide keren bleek de uitslag bij OpenF1 al
+lang klaar te staan; de sync had 'm alleen nog niet opgehaald. Niet omdat er
+iets stuk was aan `sync.mjs` — hij had het prima gevonden zodra hij draaide —
+maar omdat de geplande run zelf te laat kwam.
+
+`workflow_dispatch`-cron in GitHub Actions is best-effort: bij drukte op
+GitHub's platform kan een geplande run een tijd later starten dan gepland, en
+dat "een tijd later" bleek in de praktijk 2 tot 5 uur te kunnen zijn — zie de
+tijdstippen van de runs in het Actions-tabblad, die met een schema van elke 3
+uur soms 5 uur uit elkaar lagen in plaats van 3. Uitgerekend tijdens een
+raceweekend, als er het meest te zien valt, is dat wanneer GitHub Actions het
+drukst is.
+
+Elk uur in plaats van elke 3 uur maakt zo'n vertraging minder erg voelen. Het
+kost niets extra: draait de sync en is er niets nieuws, dan schrijft hij ook
+niets weg (`console.log('Niks nieuws')` en klaar). Het is geen garantie — een
+geplande run kan nog steeds laat komen — maar de bandbreedte van de
+vertraging wordt kleiner.
+
+**Wat dit niet oplost:** als iemand precies pech heeft en de eerstvolgende
+geplande run zelf ook laat is, duurt het nog steeds langer dan een uur. Voor
+dat moment is er de knop in het Actions-tabblad (`Uitslagen synchroniseren` →
+Run workflow) om hem meteen te laten draaien.
