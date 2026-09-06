@@ -236,3 +236,79 @@ export function hoortNietInDeKalender(races) {
   // Dan liever niets doen dan alles weggooien.
   return verdacht.length > op.length / 4 ? [] : verdacht;
 }
+
+/**
+ * Welk rondenummer krijgt elke race?
+ *
+ * Dit lijkt een formaliteit maar is het niet. De upsert van de kalender gaat
+ * op (season, round), dus het rondenummer is in de praktijk de identiteit van
+ * een rij — en aan die rij hangen via races.id alle voorspellingen.
+ *
+ * Dat ging mis op het moment dat er voor het eerst een race uit de kalender
+ * viel (het testrecord Kuala Lumpur). De nummering liep gewoon door over de
+ * overgebleven races, dus alles ná Kuala Lumpur schoof een plaats op: de rij
+ * die Kuala Lumpur was werd Marina Bay, de rij die Marina Bay was werd
+ * Austin, en de laatste ronde bleef als wees achter. Had er iemand al voor
+ * Marina Bay voorspeld, dan stond die voorspelling ineens bij Austin.
+ *
+ * De echte identiteit van een race is zijn race_key: dat is de sessie bij
+ * OpenF1 en die verandert nooit. Dus een race die we al kennen houdt het
+ * rondenummer dat hij had, wat er ook vóór hem gebeurt. Alleen een race die
+ * we nog nooit gezien hebben krijgt een nieuw nummer, en dan één hoger dan
+ * het hoogste dat al bestaat.
+ *
+ * Niet het laagste vrije nummer, en dat is met opzet. Een gat in de nummering
+ * is precies de plek waar ooit een race stond die eruit gehaald is; daar een
+ * nieuwe race in schuiven maakt van dat gat weer een verwarring. Bovendien
+ * levert het rare uitkomsten op: een race die in december wordt toegevoegd
+ * zou dan ronde 1 kunnen krijgen. Doortellen is saai en voorspelbaar, en dat
+ * is hier de bedoeling.
+ *
+ * kalenderRaces moet op datum gesorteerd zijn; alleen daaruit volgt de
+ * nummering van een database die nog leeg is.
+ */
+export function rondeToewijzing(kalenderRaces, bestaand = []) {
+  const bekend = new Map();
+  const gebruikt = new Set();
+  for (const r of bestaand) {
+    if (Number.isFinite(r.round)) gebruikt.add(r.round);
+    if (r.race_key === null || r.race_key === undefined) continue;
+    bekend.set(String(r.race_key), r.round);
+  }
+
+  const uit = new Map();
+  let volgende = Math.max(0, ...gebruikt) + 1;
+  for (const race of kalenderRaces) {
+    const key = String(race.session_key);
+    if (bekend.has(key)) { uit.set(key, bekend.get(key)); continue; }
+    uit.set(key, volgende++);
+  }
+  return uit;
+}
+
+/**
+ * Rijen die naar dezelfde OpenF1-sessie wijzen: welke houden we, en welke
+ * kunnen weg?
+ *
+ * Zulke dubbelen zijn het spoor van de verschuiving hierboven. Ze zijn niet
+ * zomaar te verwijderen: answers.race_id heeft `on delete cascade`, dus een
+ * rij weggooien gooit de voorspellingen die eraan hangen mee weg. Vandaar dat
+ * deze functie alleen zegt wát er dubbel is en welke rij de oudste is; de
+ * beslissing om te verwijderen valt pas nadat is vastgesteld dat er niets aan
+ * hangt.
+ */
+export function dubbeleRaces(rijen) {
+  const per = new Map();
+  for (const r of rijen) {
+    if (r.race_key === null || r.race_key === undefined) continue;
+    const k = String(r.race_key);
+    if (!per.has(k)) per.set(k, []);
+    per.get(k).push(r);
+  }
+  return [...per.values()]
+    .filter((groep) => groep.length > 1)
+    // De laagste ronde is de rij die er het langst staat, en dus degene waar
+    // eventuele voorspellingen aan hangen.
+    .map((groep) => [...groep].sort((a, b) => a.round - b.round))
+    .map(([houden, ...weg]) => ({ houden, weg }));
+}

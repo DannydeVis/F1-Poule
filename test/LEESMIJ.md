@@ -33,7 +33,7 @@ je eigen computer.
 | `scorelijst.test.mjs` | De puntentelling, inclusief het cascade-geval waarvoor die formule is gekozen |
 | `terugkijken.test.mjs` | Dat je eigen inzending na de deadline zichtbaar blijft maar niet meer te wijzigen is, en dat andermans keuze pas na sluiting open gaat |
 | `wis-alles.test.mjs` | De wis-allesknop: twee tikken, en dat hij alleen het tabblad wist waar je op staat |
-| `kalender-en-coureurs.test.mjs` | Het testrecord Kuala Lumpur uit de kalender van OpenF1, en wanneer de deelnemerslijst opnieuw opgehaald wordt |
+| `kalender-en-coureurs.test.mjs` | Het testrecord Kuala Lumpur uit de kalender van OpenF1, wanneer de deelnemerslijst opnieuw opgehaald wordt, en dat een rondenummer nooit van race wisselt |
 | `knipsel.test.mjs` | Dat de rekenkern nog uit `index.html` te knippen is en klopt — de audit draait erop |
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |

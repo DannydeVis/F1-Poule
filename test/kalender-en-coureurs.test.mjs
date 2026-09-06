@@ -14,8 +14,8 @@
 // zoals OpenF1 ze op 6 september 2026 teruggaf.
 
 import { maakControle } from './hulp.mjs';
-import { deelnemersUit, hoortNietInDeKalender, VERVERS_VENSTER_DAGEN }
-  from '../scripts/uitslagen.mjs';
+import { deelnemersUit, hoortNietInDeKalender, VERVERS_VENSTER_DAGEN,
+         rondeToewijzing, dubbeleRaces } from '../scripts/uitslagen.mjs';
 
 const { check, afronden } = maakControle('kalender en deelnemerslijst');
 
@@ -138,5 +138,88 @@ check('een race zonder geplande tijd wordt niet elk uur opnieuw opgehaald',
   deelnemersUit(race({ deadline_quali: null, deadline_race: null }), NU) === null);
 check('en een onleesbare datum ook niet',
   deelnemersUit(race({ deadline_quali: 'ergens in oktober', deadline_race: null }), NU) === null);
+
+
+// ------------------------------------------------------------------
+//  Rondenummers zijn identiteit, geen volgnummers
+// ------------------------------------------------------------------
+//
+// Dit is de fout die pas zichtbaar werd toen er voor het eerst echt een race
+// uit de kalender viel. De upsert gaat op (season, round), dus het
+// rondenummer is in de praktijk de identiteit van een rij — en aan die rij
+// hangen via races.id alle voorspellingen. Doorgeteld over de overgebleven
+// races schoof alles ná Kuala Lumpur een plaats op: de rij die Kuala Lumpur
+// was werd Marina Bay, en de laatste ronde bleef als wees achter. Had er
+// iemand al voor Marina Bay voorspeld, dan stond die voorspelling daarna bij
+// Austin.
+
+const sessie = (session_key, date_start) => ({ session_key, date_start });
+const KALENDER = [
+  sessie(11377, '2026-09-26'), sessie(11388, '2026-10-11'),
+  sessie(11396, '2026-10-25'), sessie(11404, '2026-11-01'),
+];
+
+check('een lege database nummert gewoon op datum door',
+  [...rondeToewijzing(KALENDER, []).values()].join(',') === '1,2,3,4',
+  [...rondeToewijzing(KALENDER, []).values()].join(','));
+
+// De situatie zoals hij was: Kuala Lumpur (11731) stond op ronde 18, en
+// alles erachter een plaats verder.
+const DB = [
+  { round: 17, race_key: 11377 }, { round: 18, race_key: 11731 },
+  { round: 19, race_key: 11388 }, { round: 20, race_key: 11396 },
+  { round: 21, race_key: 11404 },
+];
+const nieuw = rondeToewijzing(KALENDER, DB);
+check('Marina Bay houdt ronde 19 en schuift niet naar 18',
+  nieuw.get('11388') === 19, String(nieuw.get('11388')));
+check('en de rest schuift dus ook niet op',
+  nieuw.get('11377') === 17 && nieuw.get('11396') === 20 && nieuw.get('11404') === 21,
+  [...nieuw].map(([k, v]) => `${k}=${v}`).join(' '));
+
+// Een race die er echt bij komt krijgt het laagste vrije nummer, en pakt
+// nooit een nummer af van een race die al bestaat.
+const metNieuwe = rondeToewijzing([...KALENDER, sessie(11500, '2026-12-06')], DB);
+check('een nieuwe race telt door boven het hoogste bestaande nummer',
+  metNieuwe.get('11500') === 22, String(metNieuwe.get('11500')));
+check('en pakt dus geen nummer af van een race die al bestaat',
+  ![17, 18, 19, 20, 21].includes(metNieuwe.get('11500')));
+
+// Nadrukkelijk niet het laagste vrije nummer. Een gat is de plek waar ooit
+// een race stond die eruit gehaald is; daar een nieuwe in schuiven maakt van
+// dat gat weer een verwarring — en een race in december zou zo ronde 1
+// kunnen krijgen.
+const metGat = rondeToewijzing([sessie(11500, '2026-12-06')],
+  [{ round: 20, race_key: 11396 }, { round: 21, race_key: 11404 }]);
+check('een gat in de nummering wordt niet opgevuld',
+  metGat.get('11500') === 22, String(metGat.get('11500')));
+
+// Een rij zonder race_key is niet terug te vinden, maar zijn ronde is wel bezet.
+const zonderKey = rondeToewijzing([sessie(999, '2026-03-01')], [{ round: 4, race_key: null }]);
+check('een rij zonder race_key houdt zijn ronde bezet',
+  zonderKey.get('999') === 5, String(zonderKey.get('999')));
+
+// ------------------------------------------------------------------
+//  Dubbele rijen naar dezelfde sessie
+// ------------------------------------------------------------------
+const geen = dubbeleRaces([{ round: 1, race_key: 1 }, { round: 2, race_key: 2 }]);
+check('een gezonde kalender heeft geen dubbelen', geen.length === 0);
+
+// Precies wat er in de database stond: Yas Marina op ronde 24 én 25.
+const dubbel = dubbeleRaces([
+  { round: 23, race_key: 11428, name: 'Lusail' },
+  { round: 24, race_key: 11436, name: 'Yas Marina' },
+  { round: 25, race_key: 11436, name: 'Yas Marina' },
+]);
+check('twee rijen naar dezelfde sessie worden gevonden', dubbel.length === 1);
+check('de laagste ronde wordt gehouden, want daar hangen de voorspellingen aan',
+  dubbel[0]?.houden.round === 24 && dubbel[0]?.weg.length === 1
+    && dubbel[0]?.weg[0].round === 25,
+  JSON.stringify(dubbel));
+
+// Een race zonder race_key is niet dubbel met een andere zonder race_key —
+// null is geen sleutel.
+check('rijen zonder race_key tellen niet als dubbel',
+  dubbeleRaces([{ round: 1, race_key: null }, { round: 2, race_key: null }]).length === 0);
 
 process.exit(afronden() ? 0 : 1);

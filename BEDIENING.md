@@ -323,6 +323,13 @@ daarmee het enige record dat die volgorde breekt. Zo'n race wordt overgeslagen
 bij het opnieuw ophalen van de kalender, en als hij er al in stond wordt hij
 doorgestreept — niet verwijderd, want er kunnen voorspellingen aan hangen.
 
+Wat daarbij níét gebeurt is opnieuw doornummeren. Het rondenummer is de
+sleutel waarmee een rij in de database wordt teruggevonden, en aan die rij
+hangen alle voorspellingen. Zou de nummering opschuiven omdat er een race
+tussenuit valt, dan stond je voorspelling ineens bij de volgende race. Een
+race die we al kennen houdt daarom zijn rondenummer, wat er ook vóór hem
+gebeurt.
+
 Er zit een rem op: wijst die regel meer dan een kwart van de kalender aan, dan
 gebeurt er niets. Dan is niet de kalender raar maar de regel niet van
 toepassing, en dan is niets doen beter dan een seizoen weggooien.

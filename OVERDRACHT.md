@@ -1452,3 +1452,58 @@ de audit en de test hetzelfde gebruiken, en `test/knipsel.test.mjs` bouwt de
 rekenkern bij elke pull request op en rekent er een uitkomst mee na die met de
 hand na te rekenen is. Zakt die, dan is de audit stuk — nog vóór iemand hem
 start.
+
+## Het rondenummer bleek een identiteit te zijn
+
+Dit kwam pas boven water toen het kalenderfilter van hierboven voor het eerst
+echt draaide. De log zag er goed uit:
+
+```
+overgeslagen: Kuala Lumpur 2026-10-04 — meeting 1308 valt buiten de reeks
+24 races weggeschreven
+Uitslagen controleren voor 25 races      <- 25?
+ronde 18 Marina Bay: drivers             <- Marina Bay stond op 19
+```
+
+De upsert gaat op `(season, round)`:
+
+```js
+sb('races?on_conflict=season,round', ...)
+```
+
+en het rondenummer werd doorgeteld over de races die overbleven. Haal je er
+halverwege één uit, dan schuift alles erachter een plaats op. De rij die Kuala
+Lumpur was werd Marina Bay, de rij die Marina Bay was werd Austin, en de
+laatste ronde bleef als wees achter — een tweede Yas Marina.
+
+**Het rondenummer is in de praktijk de identiteit van een rij**, en aan die rij
+hangen via `races.id` alle voorspellingen. Schuift het nummer, dan komt een
+voorspelling bij een andere race te staan. Dit keer viel dat mee: alle 26
+antwoorden zaten op Monza en op de verschoven races stond nog niets. Maar dat
+is geluk en geen ontwerp — was dit twee weken later gebeurd, dan had iedereen
+zijn Marina Bay-voorspelling bij Austin teruggevonden.
+
+De echte identiteit van een race is zijn `race_key`: dat is de sessie bij
+OpenF1 en die verandert nooit. `rondeToewijzing()` houdt dat vast — een race
+die we al kennen houdt het rondenummer dat hij had, wat er ook vóór hem
+gebeurt. Alleen een race die we nog nooit gezien hebben krijgt een nieuw
+nummer, en dan één hoger dan het hoogste dat al bestaat.
+
+Nadrukkelijk niet het laagste vrije nummer. Een gat in de nummering is precies
+de plek waar ooit een race stond die eruit gehaald is; daar een nieuwe race in
+schuiven maakt van dat gat weer een verwarring. En het geeft rare uitkomsten:
+een race die in december wordt toegevoegd zou zo ronde 1 kunnen krijgen. Dat
+was ook precies wat de test liet zien — de eerste versie deed het wel zo.
+
+De achtergebleven dubbele rij ruimt `ruimDubbelenOp()` op, maar met een rem
+die er echt toe doet: `answers.race_id` heeft `on delete cascade`, dus een rij
+weggooien gooit de voorspellingen die eraan hangen mee weg. Hangt er iets aan,
+dan wordt hij doorgestreept in plaats van verwijderd en staat er hardop in de
+log dat er een mens naar moet kijken.
+
+Wat hier eigenlijk misging is een schemakeuze: `(season, round)` als sleutel
+van de upsert terwijl `race_key` de sleutel is die betekenis heeft. Dat
+rechtzetten in `schema.sql` is netter dan dit, maar het is een migratie op een
+draaiende database met voorspellingen erin. `rondeToewijzing()` maakt de fout
+onbereikbaar zonder dat risico; de schemawijziging is een aparte klus voor als
+er ooit toch aan die tabel gewerkt wordt.

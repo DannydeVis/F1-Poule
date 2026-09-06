@@ -23,7 +23,8 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 }
 
 import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast,
-         deelnemersUit, hoortNietInDeKalender } from './uitslagen.mjs';
+         deelnemersUit, hoortNietInDeKalender, rondeToewijzing, dubbeleRaces }
+  from './uitslagen.mjs';
 
 const API = 'https://api.openf1.org/v1';
 const REST = `${SUPABASE_URL}/rest/v1`;
@@ -89,6 +90,12 @@ const upsertRaces = (rijen) =>
 const updateRace = (id, patch) =>
   sb(`races?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
 
+const verwijderRace = (id) => sb(`races?id=eq.${id}`, { method: 'DELETE' });
+
+/** Hangt er ook maar één voorspelling aan deze race? */
+const heeftAntwoorden = async (raceId) =>
+  ((await sb(`answers?race_id=eq.${raceId}&select=race_id&limit=1`)) ?? []).length > 0;
+
 // ------------------------------------------------------------
 //  Kalender
 // ------------------------------------------------------------
@@ -112,13 +119,30 @@ async function kalender() {
   }
   const echt = races.filter((r) => !nep.includes(r));
 
-  const rijen = echt
-    .sort((a, b) => new Date(a.date_start) - new Date(b.date_start))
-    .map((race, i) => {
+  const opDatum = echt.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+
+  // Rondenummers zijn geen volgnummers maar de identiteit van een rij: de
+  // upsert gaat op (season, round), en aan races.id hangen de voorspellingen.
+  // Doorgeteld over de overgebleven races schuift alles ná een weggevallen
+  // race een plaats op, en dan komt een voorspelling bij de verkeerde race te
+  // staan. Een race die we al kennen houdt daarom zijn nummer.
+  const bestaand = await haalRaces();
+  const ronde = rondeToewijzing(opDatum, bestaand);
+  for (const race of opDatum) {
+    const key = String(race.session_key);
+    const oud = bestaand.find((b) => String(b.race_key) === key);
+    if (oud && oud.round !== ronde.get(key)) {
+      console.log(`  let op: ${race.location} zou van ronde ${oud.round} naar`
+        + ` ${ronde.get(key)} gaan; dat doen we niet`);
+    }
+  }
+
+  const rijen = opDatum
+    .map((race) => {
       const quali = perMeeting.get(race.meeting_key);
       return {
         season: SEIZOEN,
-        round: i + 1,
+        round: ronde.get(String(race.session_key)),
         name: race.location ?? race.circuit_short_name,
         country: race.country_name,
         race_key: race.session_key,
@@ -131,11 +155,43 @@ async function kalender() {
   await upsertRaces(rijen);
   console.log(`  ${rijen.length} races weggeschreven`);
 
-  // Stond zo'n record er al in, dan blijft het staan met een ronde die nu
-  // van een andere race is. Doorstrepen is hier het juiste, en niet
-  // verwijderen: er kunnen voorspellingen aan hangen, en 'afgelast' vertelt
-  // in de app precies het goede verhaal — hij telt voor niemand mee.
+  // Stond zo'n record er al in, dan blijft de rij staan. Doorstrepen is hier
+  // het juiste, en niet verwijderen: er kunnen voorspellingen aan hangen, en
+  // 'afgelast' vertelt in de app precies het goede verhaal — hij telt voor
+  // niemand mee.
   if (nep.length) await streepDoor(nep);
+
+  await ruimDubbelenOp();
+}
+
+/**
+ * Twee rijen die naar dezelfde OpenF1-sessie wijzen. Dat is het spoor van de
+ * verschuiving die hierboven nu voorkomen wordt: toen Kuala Lumpur uit de
+ * kalender viel schoof alles erachter een plaats op en bleef de laatste ronde
+ * als wees achter — een tweede Yas Marina.
+ *
+ * Verwijderen mag alleen als er niets aan hangt: answers.race_id heeft
+ * `on delete cascade`, dus een rij weggooien gooit de voorspellingen mee weg.
+ * Hangt er wel iets aan, dan strepen we hem door en zeggen het hardop; dan
+ * kan een mens beslissen wat er met die voorspellingen moet gebeuren.
+ */
+async function ruimDubbelenOp() {
+  const groepen = dubbeleRaces(await haalRaces());
+  if (!groepen.length) return;
+  for (const { houden, weg } of groepen) {
+    for (const rij of weg) {
+      if (await heeftAntwoorden(rij.id)) {
+        console.log(`  LET OP: ronde ${rij.round} (${rij.name}) is dezelfde sessie als`
+          + ` ronde ${houden.round}, maar er hangen voorspellingen aan. Doorgestreept`
+          + ` in plaats van verwijderd — kijk hier zelf naar.`);
+        await updateRace(rij.id, { afgelast: true });
+        continue;
+      }
+      await verwijderRace(rij.id);
+      console.log(`  ronde ${rij.round} verwijderd: dubbel met ronde ${houden.round}`
+        + ` (${rij.name}, sessie ${rij.race_key})`);
+    }
+  }
 }
 
 async function streepDoor(nep) {
