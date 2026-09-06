@@ -10,6 +10,7 @@
  *   ALLE=1 node scripts/verkennen.mjs        het woordenboek over alle races
  *   DROOG=1 node scripts/verkennen.mjs       wat de sync zou wegschrijven
  *   LOCATIE=Monza node scripts/verkennen.mjs alle sessies van dat weekend
+ *   COUREURS=Monza node scripts/verkennen.mjs wie reed er, quali naast race
  *   JAAR=2025 node scripts/verkennen.mjs     een seizoen dat al af is
  *
  * Er is geen sleutel voor nodig: OpenF1 is openbaar.
@@ -60,6 +61,15 @@ async function verken(sessie, wat) {
     console.log(`  dit is: ${s.session_name} — ${s.location} ${String(s.date_start).slice(0, 10)}`);
   } else {
     console.log(`  sessions gaf ${isFout(wie) ? wie.fout : 'niets'} — deze sleutel bestaat niet`);
+  }
+  await wacht(700);
+
+  const rijders = toon('drivers', await haal(`drivers?session_key=${sessie}`));
+  if (rijders?.length) {
+    for (const d of [...rijders].sort((a, b) => String(a.team_name).localeCompare(String(b.team_name)))) {
+      console.log(`      #${String(d.driver_number).padEnd(3)} ${String(d.name_acronym).padEnd(4)}`
+        + ` ${String(d.full_name).padEnd(24)} ${d.team_name}`);
+    }
   }
   await wacht(700);
 
@@ -183,6 +193,81 @@ async function weekend(locatie) {
   }
   const quali = op.find((s) => s.session_name === 'Qualifying');
   if (quali) await verken(quali.session_key, `${locatie} — kwalificatie`);
+}
+
+/**
+ * Wisselt het deelnemersveld tussen de kwalificatie en de race?
+ *
+ * Aanleiding: in Monza viel Hadjar uit en reed Lawson in zijn plaats, en dat
+ * was in de app nergens te zien. De sync haalt de deelnemerslijst één keer op
+ * — bij de kwalificatie — en kijkt daarna nooit meer. Als OpenF1 het verschil
+ * wél weet, dan is de oplossing simpel: opnieuw ophalen bij de race. Weet
+ * OpenF1 het niet, dan moeten we het ergens anders vandaan halen. Dat is het
+ * verschil tussen twee heel andere oplossingen, dus eerst kijken.
+ */
+async function coureurs(locatie) {
+  const alles = await haal(`sessions?year=${JAAR}&location=${encodeURIComponent(locatie)}`);
+  if (isFout(alles)) { console.log(`sessions gaf ${alles.fout}`); return; }
+  const op = alles.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+  console.log(`\n=== ${locatie} ${JAAR}: deelnemers per sessie ===`);
+
+  const perSessie = [];
+  for (const s of op) {
+    const ds = await haal(`drivers?session_key=${s.session_key}`);
+    await wacht(900);
+    if (isFout(ds)) { console.log(`  ${String(s.session_name).padEnd(12)} FOUT ${ds.fout}`); continue; }
+    // OpenF1 geeft per sessie soms meerdere rijen per coureur terug.
+    const uniek = new Map();
+    for (const d of ds) uniek.set(String(d.driver_number), d);
+    console.log(`  ${String(s.session_name).padEnd(12)} ${uniek.size} coureurs (session_key ${s.session_key})`);
+    perSessie.push({ sessie: s, coureurs: uniek });
+  }
+
+  const quali = perSessie.find((p) => p.sessie.session_name === 'Qualifying');
+  const race = perSessie.find((p) => p.sessie.session_name === 'Race');
+  if (!quali || !race) {
+    console.log('\n  geen kwalificatie én race gevonden om te vergelijken');
+    return;
+  }
+
+  console.log(`\n=== kwalificatie (${quali.sessie.session_key}) naast race (${race.sessie.session_key}) ===`);
+  const nummers = new Set([...quali.coureurs.keys(), ...race.coureurs.keys()]);
+  let verschillen = 0;
+  for (const nr of [...nummers].sort((a, b) => Number(a) - Number(b))) {
+    const q = quali.coureurs.get(nr);
+    const r = race.coureurs.get(nr);
+    const zelfdeTeam = q && r && q.team_name === r.team_name;
+    if (q && r && zelfdeTeam) continue;
+    verschillen++;
+    if (!q) console.log(`  #${nr} ${r.full_name} (${r.team_name}) reed alleen de RACE`);
+    else if (!r) console.log(`  #${nr} ${q.full_name} (${q.team_name}) reed alleen de KWALIFICATIE`);
+    else console.log(`  #${nr} ${q.full_name}: kwalificatie ${q.team_name} -> race ${r.team_name}`);
+  }
+  if (!verschillen) console.log('  geen enkel verschil: zelfde nummers, zelfde teams');
+
+  // De teamindeling is wat de duelvraag stuurt. Als die tussen quali en race
+  // verschuift, scoort een duel op de verkeerde paren.
+  const teams = (m) => {
+    const per = new Map();
+    for (const d of m.values()) {
+      if (!per.has(d.team_name)) per.set(d.team_name, []);
+      per.get(d.team_name).push(String(d.driver_number));
+    }
+    return per;
+  };
+  const tq = teams(quali.coureurs); const tr = teams(race.coureurs);
+  console.log('\n  teamindeling (quali | race):');
+  for (const team of new Set([...tq.keys(), ...tr.keys()])) {
+    const a = (tq.get(team) ?? []).sort().join(',') || '-';
+    const b = (tr.get(team) ?? []).sort().join(',') || '-';
+    console.log(`    ${String(team).padEnd(26)} ${a.padEnd(10)} | ${b}${a === b ? '' : '   <- ANDERS'}`);
+  }
+}
+
+const COUREURS = process.env.COUREURS;
+if (COUREURS) {
+  await coureurs(COUREURS);
+  process.exit(0);
 }
 
 const LOCATIE = process.env.LOCATIE;
