@@ -31,6 +31,10 @@ je eigen computer.
 | `snelste.test.mjs` | De snelste ronde en de snelste pitstop, inclusief zelf invullen als OpenF1 ze niet heeft |
 | `safetycar-en-vlag.test.mjs` | De laatste twee vragen, en vooral dat "nul" en "nee" echte antwoorden zijn |
 | `scorelijst.test.mjs` | De puntentelling, inclusief het cascade-geval waarvoor die formule is gekozen |
+| `terugkijken.test.mjs` | Dat je eigen inzending na de deadline zichtbaar blijft maar niet meer te wijzigen is, en dat andermans keuze pas na sluiting open gaat |
+| `wis-alles.test.mjs` | De wis-allesknop: twee tikken, en dat hij alleen het tabblad wist waar je op staat |
+| `kalender-en-coureurs.test.mjs` | Het testrecord Kuala Lumpur uit de kalender van OpenF1, en wanneer de deelnemerslijst opnieuw opgehaald wordt |
+| `knipsel.test.mjs` | Dat de rekenkern nog uit `index.html` te knippen is en klopt — de audit draait erop |
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |
 | `schema-herstel.test.sql` | Of een tweede run van `schema.sql` een beschadigde tabel opruimt |
@@ -47,8 +51,25 @@ functies uit `scripts/uitslagen.mjs` op berichten die letterlijk uit OpenF1
 komen. Ze staan los van `sync.mjs` omdat dat bestand zichzelf uitdraait zodra
 je het importeert — een test die dat deed zou de echte database aanraken.
 
-Naast deze tests staat er een verkenner: `scripts/verkennen.mjs`, met een knop
-in het Actions-tabblad. Die schrijft niets weg en laat zien wat OpenF1 voor een
+Naast deze tests staan er drie gereedschappen met een knop in het
+Actions-tabblad, die geen van drieën iets wegschrijven:
+
+- `scripts/verkennen.mjs` — wat heeft OpenF1 voor een race? Ook
+  `COUREURS=Monza` (deelnemers van de kwalificatie naast die van de race) en
+  `KALENDER=1` (de kalender nakijken op races die er niet in horen).
+- `scripts/controle-stand.mjs` — de echte scoreregels, uit `index.html`
+  geknipt, tegen een verse kopie van de echte database.
+- `scripts/controle-coureurs.mjs` — staat er in de database nog dezelfde
+  deelnemerslijst als die OpenF1 nu geeft?
+
+Over dat knippen: `index.html` heeft geen bouwstap, dus de rekenkern is niet te
+importeren. `scripts/knipsel.mjs` haalt hem eruit tussen merktekens
+(`// <knip primitieven>`). Dat ging eerder op regelnummers en die schoven mee
+met elke bewerking erboven, tot het blok midden in een functie begon.
+`knipsel.test.mjs` bouwt de kern nu bij elke pull request op en rekent er een
+uitkomst mee na, zodat die breuk niet meer pas op een runner zichtbaar wordt.
+
+Over `scripts/verkennen.mjs`: Die schrijft niets weg en laat zien wat OpenF1 voor een
 race heeft. Nodig omdat `api.openf1.org` niet vanaf elke plek bereikbaar is; op
 een GitHub-runner wel. Draai hem als een uitslag niet binnenkomt: dan zie je of
 OpenF1 hem niet heeft, of dat wij ernaast kijken.

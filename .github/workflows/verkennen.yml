@@ -20,6 +20,13 @@ on:
       locatie:
         description: 'Heel weekend van deze plaats (bv. Monza), ook als de race nog moet komen'
         default: ''
+      coureurs:
+        description: 'Deelnemers van dit weekend, kwalificatie naast race (bv. Monza)'
+        default: ''
+      kalender:
+        description: 'De kalender nakijken op races die er niet in horen'
+        type: boolean
+        default: false
       alle:
         description: 'Het woordenboek over alle gereden races'
         type: boolean
@@ -42,6 +49,8 @@ jobs:
           JAAR: ${{ inputs.jaar || '2026' }}
           SESSIE: ${{ inputs.sessie }}
           LOCATIE: ${{ inputs.locatie }}
+          COUREURS: ${{ inputs.coureurs }}
+          KALENDER: ${{ inputs.kalender && '1' || '' }}
         run: node scripts/verkennen.mjs
 
       # Op een pull request ook meteen het woordenboek: welke zinnen OpenF1

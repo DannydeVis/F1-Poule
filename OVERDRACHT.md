@@ -1237,3 +1237,218 @@ vertraging wordt kleiner.
 geplande run zelf ook laat is, duurt het nog steeds langer dan een uur. Voor
 dat moment is er de knop in het Actions-tabblad (`Uitslagen synchroniseren` →
 Run workflow) om hem meteen te laten draaien.
+
+## Terugkijken: je eigen inzending en die van de anderen
+
+Twee klachten die onder water hetzelfde probleem waren.
+
+*"Als de kwalificatie begint kan ik niet meer zien wat ik gekozen had."* Klopte.
+Zodra de deadline voorbij was viel je in `geslotenWeergave()`, en daar stond
+alleen "Inzendingen zijn gesloten" plus de punten van de rest. Je eigen keuze
+was tot de uitslag binnenkwam nergens meer te vinden — precies op het moment
+dat je hem wilt nakijken.
+
+*"Ik wil zien wat de andere spelers gekozen hebben."* De namen onder "de rest"
+waren dode tekstregels met een getal erachter.
+
+Allebei willen ze een ingeleverde voorspelling zien zonder eraan te kunnen
+zitten. Dat staat nu één keer in `keuzeOverzicht()`: de top 10, de losse
+vragen, de extra vragen en de duels, met per regel wat het werd en wat het
+opleverde zodra de uitslag er is.
+
+Twee keuzes daarin die het uitleggen waard zijn:
+
+**Geen puntenkolom zolang de uitslag er niet is.** Een dikke `0` bij een vraag
+waarvan de uitslag simpelweg nog niet binnen is leest als "fout", terwijl er
+nog niets beslist is. `null` betekent hier "daar valt nog niets over te
+zeggen", en dat is iets anders dan nul punten — dezelfde onderscheiding die
+`leeg()` in de sync maakt.
+
+**Niet `uitslagWeergave()` hergebruikt.** Die is van jou, gaat over de uitslag,
+en heeft de weekendwinnaar, de knop voor de groepsapp en de losse invoervelden
+om zich heen. `keuzeOverzicht()` is van iemand, gaat over de inzending, en mag
+nergens een knop hebben. Ze delen de scoreregels, niet het scherm.
+
+De grendel op andermans keuze zit in `vulPaneel()` en niet alleen op de knop:
+
+```js
+const gesloten = !!lijstKlaar || afgelastEnLeeg(r) || dicht[S.tab];
+if (S.bekijk && !gesloten) S.bekijk = null;
+```
+
+Sta je bij iemands gesloten kwalificatie en klik je door naar de race die nog
+openstaat, dan val je er vanzelf uit. Vóór de deadline is andermans keuze
+geheim, en dat hoort niet van één knop af te hangen.
+
+Meegenomen: "de rest" hing zijn puntenaantal op aan een ingevulde top 10. Wie
+alleen de pole of een paar duels invulde stond daardoor op `—` terwijl hij
+gewoon punten had. Nu telt `heeftVoorspeld()`, net als in de stand.
+
+## Wis alles, met twee tikken in plaats van een confirm()
+
+*"Ik wilde een nieuwe voorspelling doen maar er stond geen wis alles knop. Ik
+moest het 1 voor 1."*
+
+De knop wist alleen het tabblad waar je op staat. De kwalificatie en de race
+zijn twee losse inzendingen; wie zijn race overdoet mag zijn kwalificatie niet
+kwijtraken.
+
+Geen `confirm()`. Die popup is op een telefoon lelijk, hij wordt in sommige
+browsers geblokkeerd, en hij ziet er precies zo uit als de meldingen die mensen
+geleerd hebben blind weg te klikken — dus beschermt hij niet tegen de misklik
+waar hij voor bedoeld is. De knop stelt de vraag zelf ("Alles wissen? Tik nog
+een keer"), en vergeet hem na vijf seconden weer. Een losse misklik is daarmee
+nooit gevaarlijk, en het is te testen zonder dialoogafhandeling.
+
+## De deelnemerslijst bevroor op de eerste keer dat we hem ophaalden
+
+*"Soms valt er wel eens een coureur uit. Dan komt er een reserve coureur of ze
+gaan wisselen van team. Dat zag ik niet gebeuren."*
+
+Eén regel in `sync.mjs` verklaarde dat:
+
+```js
+if (!race.drivers && race.quali_key) { ... }
+```
+
+De lijst werd één keer opgehaald — bij de kwalificatie — en daarna nooit meer
+aangeraakt. Wat er die ene keer in stond, stond er de rest van het seizoen in.
+Dat is meer dan een verkeerde naam op het scherm: de teamgenoot-duels worden
+gescoord op `teamParen(race.drivers)`, dus een verouderde lijst scoort de duels
+op de verkeerde paren.
+
+`deelnemersUit()` beslist nu per race waar de lijst vandaan moet komen:
+
+- Geen lijst? Ophalen, hoe ver de race ook weg is — anders valt er niets te
+  kiezen zodra OpenF1 hem publiceert.
+- Weekend nog niet gereden en binnen veertien dagen? Verversen. De lijst mag
+  in die periode nog schuiven.
+- Race gereden? Met rust laten. `sync.mjs` heeft hem op het moment dat de
+  uitslag binnenkwam één keer uit de **rácesessie** gehaald, en dat is de enige
+  lijst die zegt wie er echt gereden heeft.
+
+Het venster van veertien dagen staat er om te voorkomen dat we elk uur de
+deelnemers van een race in december ophalen.
+
+### Wat OpenF1 hier wél en niet weet
+
+Voor Monza is nagekeken of OpenF1 het verschil zelf kent, met
+`COUREURS=Monza node scripts/verkennen.mjs` op een runner. Het antwoord is
+nee: de kwalificatie (11357) en de race (11361) geven exact dezelfde 22
+coureurs met exact dezelfde teams. In OpenF1's velddata voor 2026 rijdt Lawson
+het hele seizoen voor Red Bull en komt Hadjar helemaal niet voor.
+
+### Wat er dan wél mis was, en hoe het zichzelf repareert
+
+`scripts/controle-coureurs.mjs` over alle 25 races gaf één afwijking, en die
+was raak. Alleen Monza:
+
+```
+=== ronde 15 Monza ===
+  opgeslagen: 22 coureurs
+  kwalificatie (11357): 22 coureurs bij OpenF1
+      #30 LAW: database Racing Bulls -> openf1-kwalificatie Red Bull Racing
+      #6 HAD (Red Bull Racing) staat alleen in database
+      #22 TSU (Racing Bulls) staat alleen in openf1-kwalificatie
+  race (11361): ... hetzelfde
+      LET OP: #22 staat in de race-uitslag maar niet in onze deelnemerslijst
+```
+
+De andere 24 races komen exact overeen. Dus de klacht klopte, alleen zat de
+oorzaak niet waar hij leek te zitten: **OpenF1 heeft geen wissel geregistreerd
+tussen kwalificatie en race — de opgeslagen lijst van Monza was al verouderd
+voordat het weekend begon.** Hij is opgehaald op een moment dat OpenF1's
+opgave nog de oude was, en daarna bevroren. Hadjar stond erin terwijl hij dit
+seizoen bij OpenF1 nergens voorkomt, Lawson stond bij het verkeerde team, en
+Tsunoda ontbrak volledig — terwijl die de race gewoon uitreed.
+
+Dat laatste is het aanknopingspunt. **Niemand finisht een race zonder aan de
+start te staan**, dus een uitslag met een coureur die niet in onze lijst staat
+bewijst dat de lijst kapot is — en dat is vast te stellen zonder OpenF1 ook
+maar iets te vragen, uit gegevens die we al hebben. `deelnemersUit()` maakt
+daar één uitzondering voor op "een gereden race laten we met rust", en haalt de
+lijst dan alsnog uit de racesessie. Monza repareert zichzelf zo bij de
+eerstvolgende sync, en dezelfde vergissing kan nergens blijven staan.
+
+Wat dit *niet* vangt is een lijst met alleen een teveel — een coureur die er
+niet meer bij hoort maar wiens afwezigheid nergens uit blijkt. Daar is geen
+bewijs voor zonder het aan OpenF1 te vragen, en dat elk uur voor elke gereden
+race doen is het niet waard. `controle-coureurs.mjs` meldt het wel, en dan is
+één sync met de kalenderknop genoeg.
+
+De eerlijke restrictie blijft staan: **een wissel die OpenF1 zelf niet
+registreert, kan de app ook niet laten zien.**
+
+## Kuala Lumpur bestaat niet
+
+*"Ik weet niet hoe je aan Kuala Lumpur komt maar volgens mij is dat geen race."*
+
+Terecht. `sync.mjs` nam letterlijk over wat OpenF1 op
+`sessions?year=2026&session_name=Race` teruggeeft, zonder één controle. Daar
+zit een testrecord tussen:
+
+```
+2026-09-26  meeting 1295  Baku          ... AZERBAIJAN GRAND PRIX 2026
+2026-10-04  meeting 1308  Kuala Lumpur  ... BAHRAIN GRAND PRIX IN MALAYSIA 2026
+2026-10-11  meeting 1296  Marina Bay    ... SINGAPORE GRAND PRIX 2026
+```
+
+"Bahrain Grand Prix in Malaysia" bestaat niet, en de `meeting_key` valt buiten
+de hele reeks van het seizoen (1279 t/m 1302). Dat tweede is het bruikbare
+signaal, want daar hoef je geen namen voor te lezen: OpenF1 deelt `meeting_key`
+op kalendervolgorde uit, dus bij de echte races loopt hij gelijk op met de
+datum. Precies één record breekt dat.
+
+`hoortNietInDeKalender()` rekent per race uit welk deel van de races vóór hem
+een hogere `meeting_key` heeft, en welk deel van de races ná hem een lagere.
+Bewust een **aandeel** en geen aantal: Kuala Lumpur staat op vier na achteraan,
+dus er kunnen maar zeven races na hem misstaan. Met een vaste drempel verdwijnt
+zo'n record precies daar waar het staat — en niemand zet een testrecord bij
+voorkeur in het midden. Als aandeel is het glashelder: van de zeven races die
+erna komen, staan er zeven fout. Bij de echte kalender van 2026 komt geen
+enkele race boven 0,06 uit; Kuala Lumpur zit op 1,00.
+
+Daarachter zit een rem. Deze uitkomst leidt tot het doorstrepen van races, dus
+hij mag nooit een heel seizoen meenemen. Wijst hij meer dan een kwart van de
+kalender aan, dan is niet de kalender raar maar deze regel niet van toepassing
+— bijvoorbeeld als OpenF1 ooit aflopend gaat nummeren. Dan liever niets doen
+dan alles weggooien. Dat is precies wat de test aantoonde: zonder die rem
+haalde een aflopend genummerde kalender alle 24 races onderuit.
+
+Niet op de naam gefilterd, en bewust. Een lijst van "echte" circuits zou elk
+jaar bijgewerkt moeten worden en zou een nieuwe Grand Prix weggooien — en juist
+een nieuwe race is er een die niemand verwacht.
+
+Een record dat er al in stond wordt **doorgestreept en niet verwijderd**: er
+kunnen voorspellingen aan hangen, en `afgelast` vertelt in de app precies het
+goede verhaal — hij telt voor niemand mee, en wat je had ingevuld blijft staan.
+
+## De knip op regelnummers brak, en dat hoorde een test te vangen
+
+`scripts/controle-stand.mjs` knipt de rekenkern letterlijk uit `index.html`, om
+de audit op de productiecode te laten draaien in plaats van op een kopie. Dat
+ging op regelnummers:
+
+```js
+const primitieven = knip(675, 769);
+```
+
+Die schoven mee met elke bewerking erboven. Na een wijziging van 247 regels
+begon het blok midden in een functie en viel het script om op `SyntaxError:
+Illegal return statement` — een foutmelding die niets zegt over wat er echt aan
+de hand was, en pas zichtbaar op een GitHub-runner, want hier is Supabase niet
+bereikbaar.
+
+Nu staan er merktekens in `index.html`:
+
+```js
+// <knip primitieven>
+...
+// </knip primitieven>
+```
+
+Namen schuiven niet mee. Het knippen zelf staat in `scripts/knipsel.mjs`, zodat
+de audit en de test hetzelfde gebruiken, en `test/knipsel.test.mjs` bouwt de
+rekenkern bij elke pull request op en rekent er een uitkomst mee na die met de
+hand na te rekenen is. Zakt die, dan is de audit stuk — nog vóór iemand hem
+start.

@@ -310,3 +310,46 @@ altijd van de vlag.** Staat er een uitslag, dan telt de race gewoon mee.
 verkennen*), eventueel met een `session_key`. Die laat zien of OpenF1 de race
 niet heeft (404) of dat we te snel vroegen (429). Dat verschil is belangrijk —
 een 429 lost zichzelf op, een 404 niet.
+
+**Races die niet bestaan.** OpenF1 heeft in 2026 een testrecord tussen de races
+staan: Kuala Lumpur op 4 oktober, officieel "FORMULA 1 GULF AIR BAHRAIN GRAND
+PRIX IN MALAYSIA 2026". De kalender nam dat gewoon over, en dan laat de app
+mensen een voorspelling doen voor een race die nooit gereden wordt.
+
+De sync herkent zoiets aan de nummering: OpenF1 deelt `meeting_key` op
+kalendervolgorde uit, dus bij echte races loopt die gelijk op met de datum.
+Kuala Lumpur heeft 1308 terwijl het hele seizoen tussen 1279 en 1302 zit, en is
+daarmee het enige record dat die volgorde breekt. Zo'n race wordt overgeslagen
+bij het opnieuw ophalen van de kalender, en als hij er al in stond wordt hij
+doorgestreept — niet verwijderd, want er kunnen voorspellingen aan hangen.
+
+Er zit een rem op: wijst die regel meer dan een kwart van de kalender aan, dan
+gebeurt er niets. Dan is niet de kalender raar maar de regel niet van
+toepassing, en dan is niets doen beter dan een seizoen weggooien.
+
+Nakijken kan met Actions → *OpenF1 verkennen* → *De kalender nakijken op races
+die er niet in horen*.
+
+**De deelnemerslijst wordt bijgewerkt.** Die werd vroeger één keer opgehaald,
+bij de kwalificatie, en daarna nooit meer. Viel er daarna een coureur uit en
+kwam er een reserve, dan zag je dat nergens — en de teamgenoot-duels werden dan
+ook nog op de verkeerde paren gescoord. Nu geldt: zolang het weekend nog niet
+gereden is wordt de lijst ververst, en op het moment dat de race-uitslag
+binnenkomt wordt hij één keer uit de rácesessie gehaald. Dat is de enige lijst
+die zegt wie er echt gereden heeft.
+
+En er zit een reparatie in: staat er in een race-uitslag een coureur die niet
+in onze deelnemerslijst voorkomt, dan is die lijst aantoonbaar verouderd —
+niemand finisht een race zonder aan de start te staan — en wordt hij alsnog
+opgehaald. Zo herstelde Monza zich: daar stond Hadjar in de lijst terwijl hij
+dit seizoen bij OpenF1 nergens voorkomt, Lawson bij het verkeerde team, en
+Tsunoda helemaal niet, terwijl die de race uitreed. Van alle 25 races was dat
+de enige met een afwijking.
+
+Let op wat dit niet kan: **een wissel die OpenF1 zelf niet registreert, kan de
+app ook niet laten zien.** Voor Monza 2026 geeft OpenF1 voor de kwalificatie en
+de race exact dezelfde 22 coureurs met dezelfde teams — daar zat het probleem
+dus niet, de opgeslagen lijst was al verouderd voordat het weekend begon. Of dat klopt is met
+Actions → *Klopt de stand?* na te kijken; die draait ook
+`scripts/controle-coureurs.mjs`, dat per race naast elkaar zet wat er in de
+database staat en wat OpenF1 er nu over zegt.
