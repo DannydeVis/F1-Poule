@@ -121,3 +121,100 @@ export function lijktAfgelast({ raceGevonden, deadline, nu = Date.now() }) {
   if (!Number.isFinite(gepland)) return false;
   return nu - gepland > AFGELAST_NA_DAGEN * 24 * 3600 * 1000;
 }
+
+/**
+ * Uit welke sessie moet de deelnemerslijst komen, en moet dat nú?
+ * null betekent: laat staan wat er staat.
+ *
+ * Aanleiding: "Soms valt er wel eens een coureur uit. Dan komt er een reserve
+ * coureur of ze gaan wisselen van team. Dat zag ik niet gebeuren."
+ *
+ * De sync haalde de lijst één keer op — `if (!race.drivers && race.quali_key)`
+ * — en keek daarna nooit meer. Wat er die ene keer in stond, stond er de rest
+ * van het seizoen in. Een wissel na dat moment was dus per definitie
+ * onzichtbaar, en dat is meer dan een verkeerde naam op het scherm: de
+ * teamgenoot-duels worden gescoord op teamParen(race.drivers), dus een
+ * verouderde lijst scoort de duels op de verkeerde paren.
+ *
+ * De regel is nu: zolang het weekend nog niet gereden is mag de lijst nog
+ * schuiven, dus dan verversen we hem. Is de race wel gereden, dan is de
+ * lijst wat hij is — sync.mjs haalt hem op dat moment één keer uit de
+ * rácesessie, want dat is de enige die zegt wie er echt gereden heeft.
+ *
+ * Het venster voorkomt dat we elk uur de deelnemers van een race in december
+ * ophalen. Buiten het venster halen we hem alleen op als hij er nog niet is,
+ * zodat er wel iets te kiezen valt zodra OpenF1 hem publiceert.
+ */
+export const VERVERS_VENSTER_DAGEN = 14;
+
+export function deelnemersUit(race, nu = Date.now()) {
+  // Gereden en gescoord: klaar. sync.mjs ververst op het moment dat de
+  // uitslag binnenkomt uit de racesessie; daarna valt er niets meer te halen.
+  if (race.race_result) return null;
+
+  const sessie = race.quali_key ?? race.race_key ?? null;
+  if (!sessie) return null;
+  if (!(race.drivers ?? []).length) return sessie;
+
+  // Zelfde valkuil als bij lijktAfgelast(): eerst op leegte controleren, want
+  // new Date(null) is 1 januari 1970 en dat is een keurig eindig getal.
+  const wanneer = race.deadline_quali ?? race.deadline_race ?? null;
+  if (wanneer === null || wanneer === undefined || wanneer === '') return null;
+  const start = new Date(wanneer).getTime();
+  if (!Number.isFinite(start)) return null;
+
+  return start - nu < VERVERS_VENSTER_DAGEN * 24 * 3600 * 1000 ? sessie : null;
+}
+
+/**
+ * Welke races uit OpenF1 horen niet bij dit seizoen?
+ *
+ * Aanleiding: "Ik weet niet hoe je aan Kuala Lumpur komt maar volgens mij is
+ * dat geen race." Klopt. sync.mjs nam letterlijk over wat OpenF1 op
+ * `sessions?year=2026&session_name=Race` teruggeeft, zonder één controle, en
+ * daar zit een testrecord tussen:
+ *
+ *     2026-09-26  meeting 1295  Baku          ... AZERBAIJAN GRAND PRIX 2026
+ *     2026-10-04  meeting 1308  Kuala Lumpur  ... BAHRAIN GRAND PRIX IN MALAYSIA 2026
+ *     2026-10-11  meeting 1296  Marina Bay    ... SINGAPORE GRAND PRIX 2026
+ *
+ * "Bahrain Grand Prix in Malaysia" bestaat niet, en de meeting_key valt
+ * buiten de hele reeks van het seizoen (1279 t/m 1302). Dat tweede is het
+ * bruikbare signaal, want daar hoef je geen namen voor te lezen: OpenF1 deelt
+ * meeting_key op kalendervolgorde uit, dus bij de echte races loopt hij
+ * gelijk op met de datum. Precies één record breekt dat.
+ *
+ * Bewust niet op de naam gefilterd. Een lijst van "echte" circuits zou elk
+ * jaar bijgewerkt moeten worden en zou een nieuwe Grand Prix weggooien —
+ * en juist een nieuwe race is er een die niemand verwacht.
+ */
+export function hoortNietInDeKalender(races) {
+  if (races.length < 6) return [];   // te weinig om een volgorde uit te lezen
+  const op = [...races].sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+
+  // Voor elke race: welk deel van de races vóór hem heeft een hógere
+  // meeting_key, en welk deel van de races ná hem een lágere? Bij een
+  // kalender die netjes oploopt is dat allebei nul.
+  //
+  // Bewust een aandeel en geen aantal. Kuala Lumpur staat op vier na
+  // achteraan, dus er kunnen maar zeven races na hem misstaan — met een
+  // vaste drempel verdwijnt zo'n record precies daar waar het staat, en
+  // niemand zet een testrecord bij voorkeur in het midden. Als aandeel is
+  // het glashelder: van de zeven races die erna komen, staan er zeven fout.
+  const scheef = op.map((r, i) => {
+    const voor = op.slice(0, i).filter((x) => x.meeting_key > r.meeting_key).length;
+    const na = op.slice(i + 1).filter((x) => x.meeting_key < r.meeting_key).length;
+    return Math.max(i ? voor / i : 0, i < op.length - 1 ? na / (op.length - 1 - i) : 0);
+  });
+
+  // De helft is ruim: bij de echte kalender van 2026 komt geen enkele race
+  // boven 0,06 uit en Kuala Lumpur zit op 1,00.
+  const verdacht = op.filter((_, i) => scheef[i] > 0.5);
+
+  // En dan de rem. Deze uitkomst leidt tot het doorstrepen van races, dus
+  // hij mag nooit een heel seizoen meenemen. Wijst hij meer dan een kwart
+  // van de kalender aan, dan is niet de kalender raar maar deze regel niet
+  // van toepassing — bijvoorbeeld als OpenF1 ooit aflopend gaat nummeren.
+  // Dan liever niets doen dan alles weggooien.
+  return verdacht.length > op.length / 4 ? [] : verdacht;
+}

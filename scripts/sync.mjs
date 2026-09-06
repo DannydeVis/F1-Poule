@@ -22,8 +22,8 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
-import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast }
-  from './uitslagen.mjs';
+import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast,
+         deelnemersUit, hoortNietInDeKalender } from './uitslagen.mjs';
 
 const API = 'https://api.openf1.org/v1';
 const REST = `${SUPABASE_URL}/rest/v1`;
@@ -100,7 +100,19 @@ async function kalender() {
   const qualis = await openf1(`sessions?year=${SEIZOEN}&session_name=Qualifying`);
   const perMeeting = new Map(qualis.map((q) => [q.meeting_key, q]));
 
-  const rijen = races
+  // OpenF1 heeft in 2026 een testrecord tussen de races staan: Kuala Lumpur,
+  // officieel "FORMULA 1 GULF AIR BAHRAIN GRAND PRIX IN MALAYSIA 2026", met
+  // een meeting_key (1308) buiten de hele reeks van het seizoen. Zonder deze
+  // controle staat dat gewoon in ieders poule, en laat de app mensen een
+  // voorspelling doen voor een race die nooit gereden wordt.
+  const nep = hoortNietInDeKalender(races);
+  for (const r of nep) {
+    console.log(`  overgeslagen: ${r.location} ${String(r.date_start).slice(0, 10)}`
+      + ` — meeting ${r.meeting_key} valt buiten de reeks van dit seizoen`);
+  }
+  const echt = races.filter((r) => !nep.includes(r));
+
+  const rijen = echt
     .sort((a, b) => new Date(a.date_start) - new Date(b.date_start))
     .map((race, i) => {
       const quali = perMeeting.get(race.meeting_key);
@@ -118,6 +130,22 @@ async function kalender() {
 
   await upsertRaces(rijen);
   console.log(`  ${rijen.length} races weggeschreven`);
+
+  // Stond zo'n record er al in, dan blijft het staan met een ronde die nu
+  // van een andere race is. Doorstrepen is hier het juiste, en niet
+  // verwijderen: er kunnen voorspellingen aan hangen, en 'afgelast' vertelt
+  // in de app precies het goede verhaal — hij telt voor niemand mee.
+  if (nep.length) await streepDoor(nep);
+}
+
+async function streepDoor(nep) {
+  const bestaand = await haalRaces();
+  for (const r of nep) {
+    const staat = bestaand.find((b) => b.race_key === r.session_key && !b.afgelast);
+    if (!staat) continue;
+    await updateRace(staat.id, { afgelast: true });
+    console.log(`  ${staat.name} doorgestreept: die race bestaat niet`);
+  }
 }
 
 // ------------------------------------------------------------
@@ -189,10 +217,13 @@ async function uitslagen(races) {
     const gemist = [];
 
     // Deelnemerslijst zo vroeg mogelijk: die heb je nodig om te kunnen
-    // invullen, dus vóór de kwalificatie, niet pas erna.
-    if (!race.drivers && race.quali_key) {
-      await probeer(patch, 'drivers', () => deelnemers(race.quali_key), gemist);
-    }
+    // invullen, dus vóór de kwalificatie, niet pas erna. En zolang het
+    // weekend nog niet gereden is blijven we hem verversen — een coureur valt
+    // uit, een reserve stapt in, iemand wisselt van team. Dat stond hier
+    // eerder als `if (!race.drivers ...)`, en dan bevriest de lijst voorgoed
+    // op wat er de allereerste keer in stond.
+    const bron = deelnemersUit(race, Date.now());
+    if (bron) await probeer(patch, 'drivers', () => deelnemers(bron), gemist);
     if (!race.quali_result && race.quali_key && rijp(race.deadline_quali)) {
       await probeer(patch, 'quali_result', () => uitslag(race.quali_key), gemist);
     }
@@ -203,6 +234,13 @@ async function uitslagen(races) {
     if (!race.race_result && race.race_key && rijp(race.deadline_race)) {
       await probeer(patch, 'race_result', () => uitslag(race.race_key), gemist);
       raceGevonden = !!patch.race_result;
+      // Precies nu, en maar één keer: de rácesessie is de enige lijst die
+      // zegt wie er echt gereden heeft. Daarna laat deelnemersUit() hem met
+      // rust. Dit is ook de lijst waarop de teamgenoot-duels gescoord worden,
+      // dus een verouderde lijst scoort de duels op de verkeerde paren.
+      if (raceGevonden) {
+        await probeer(patch, 'drivers', () => deelnemers(race.race_key), gemist);
+      }
       // Alleen een 404 is bewijs. Een 429 betekent dat wij te snel vroegen.
       raceOntbreekt = !raceGevonden
         && gemist.some((g) => g.startsWith('race_result') && g.includes('404'));

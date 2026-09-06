@@ -692,6 +692,16 @@ const vergeetUitLijst = (poolId) =>
 //  Scoren
 // ============================================================
 
+// Tussen deze twee merktekens knipt scripts/controle-stand.mjs de rekenkern
+// letterlijk uit dit bestand, om hem tegen een verse kopie van de echte
+// database te draaien. Zo controleert die controle de productiecode en niet
+// een kopie die uit de pas kan lopen.
+//
+// Het stond eerder op regelnummers, en die schoven mee met elke bewerking
+// erboven — één keer zo ver dat het geknipte blok midden in een functie
+// begon. Namen schuiven niet mee.
+// <knip primitieven>
+
 export function scoreLijst(voorspeld = [], werkelijk = []) {
   let totaal = 0;
   const regels = voorspeld.map((nr, i) => {
@@ -787,6 +797,9 @@ export function teamParen(drivers = []) {
     .filter(([, ds]) => ds.length === 2)
     .map(([team, ds]) => ({ team, a: ds[0], b: ds[1] }));
 }
+
+// </knip primitieven>
+// <knip vragen>
 
 // De vragen waarbij je één coureur aanwijst. Ze delen hetzelfde raster, de
 // puntentelling en de uitslagregel; alleen de tekst, de sessie waaraan ze
@@ -908,6 +921,8 @@ const scoreTab = (p, race, welk) => {
 
 const scoreWeekend = (p, race) => scoreTab(p, race, 'quali') + scoreTab(p, race, 'race');
 
+// </knip vragen>
+
 // ============================================================
 //  Demodata (alleen als er geen Supabase-gegevens zijn ingevuld)
 // ============================================================
@@ -1015,9 +1030,11 @@ const drv = (race, nr) => (race.drivers ?? []).find(d => d.nr === nr)
 // Ids komen als getal of als tekst terug, afhankelijk van het kolomtype in
 // Postgres. Overal als tekst vergelijken scheelt een klasse fouten waarbij
 // een voorspelling "verdwijnt" omdat 3 !== '3'.
+// <knip zoeken>
 const zelfde = (a, b) => String(a) === String(b);
 const vindPred = (raceId, memberId) =>
   S.preds.find(p => zelfde(p.race_id, raceId) && zelfde(p.member_id, memberId));
+// </knip zoeken>
 
 const vindAntwoord = (raceId, memberId, vraagId) =>
   S.antwoorden.find(a => zelfde(a.race_id, raceId) && zelfde(a.member_id, memberId)
@@ -1147,6 +1164,7 @@ function toonFout(bericht) {
 // schermen.
 // De drie oudste vragen hebben een eigen veldnaam die overal in de schermen
 // staat; de rest komt onder zijn eigen question_id te staan.
+// <knip optellen>
 const VRAAG_VELD = { quali_top10:'quali_top10', race_top10:'race_top10', winnaar:'race_winnaar' };
 
 // Welke vragen dit scherm kan stellen en scoren. De database kent er meer;
@@ -1409,6 +1427,7 @@ function weekendOverwinningen() {
   return [...telling.values()].filter(x => x.aantal > 0)
     .sort((a,b) => b.aantal - a.aantal || String(a.naam).localeCompare(String(b.naam)));
 }
+// </knip optellen>
 
 // Wie heeft er voor de nog openstaande lijst nog niks ingeleverd? Jezelf
 // laten we weg: daarvoor staat de knop "Top 10 invullen" er al.

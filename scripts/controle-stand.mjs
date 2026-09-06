@@ -23,36 +23,12 @@
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { rekenkern } from './knipsel.mjs';
 
 const POULE = process.env.POULE ?? 'Vrijdagmiddagpoule';
 const IK = (process.env.IK ?? 'danny').toLowerCase();
 
 const bron = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-const regels = bron.split('\n');
-// sed/awk-stijl 1-op-1 met de regelnummers hierboven: eind exclusief.
-const knip = (van, tot) => regels.slice(van - 1, tot).join('\n');
-
-// Vier stukken, in de volgorde waarin ze in index.html staan. Verderop
-// worden ze aan elkaar geplakt; volgorde onderling doet er niet toe, want
-// geen van deze consts roept een andere aan op het moment van declareren —
-// pas als straks standRijen() enzovoort echt worden aangeroepen, staat alles
-// er al.
-const primitieven = knip(675, 769);   // scoreLijst, duelStand, scoreEerste,
-                                       // scoreDuels, scoreGetal, scoreJaNee,
-                                       // teamParen — puur, geen S nodig.
-const vragenBlok  = knip(779, 889);   // COUREURVRAAG, EXTRAVRAAG, leegAntwoord,
-                                       // coureurVragen, scoreTab, scoreWeekend.
-const zelfdeEnPred = knip(997, 999);  // zelfde, vindPred.
-const optelBlok    = knip(1129, 1390); // VRAAG_VELD, GEBOUWD, bouwPreds,
-                                        // vraagActief, puntenVoor, standRijen,
-                                        // weekendUitslag, weekendWinnaars,
-                                        // heeftVoorspeld, duels,
-                                        // weekendOverwinningen.
-
-for (const [naam, stuk] of Object.entries(
-  { primitieven, vragenBlok, zelfdeEnPred, optelBlok })) {
-  if (!stuk.trim()) { console.error(`FOUT: ${naam} is leeg — regelnummers kloppen niet meer`); process.exit(2); }
-}
 
 const SUPABASE_URL = bron.match(/const SUPABASE_URL = '([^']+)'/)?.[1];
 const SUPABASE_ANON_KEY = bron.match(/const SUPABASE_ANON_KEY = '([^']+)'/)?.[1];
@@ -100,26 +76,11 @@ console.log(`Races: ${races.length}, waarvan gescoord: ${races.filter((r) => r.q
 // De module die de echte code draait, met de echte data erin.
 const map = mkdtempSync(join(tmpdir(), 'poule-controle-'));
 const pad = join(map, 'rekenen.mjs');
-writeFileSync(pad, `
-const S = {
-  leden: ${JSON.stringify(leden)},
-  races: ${JSON.stringify(races)},
-  antwoorden: ${JSON.stringify(antwoorden)},
-  poulevragen: ${JSON.stringify(poulevragen.map((q) => q.question_id))},
-  vragen: ${JSON.stringify(vragen)},
-  ik: { id: ${JSON.stringify(ikLid.member_id)} },
-  preds: [],
-};
-
-${primitieven}
-
-${vragenBlok}
-
-${zelfdeEnPred}
-
-${optelBlok}
-
-bouwPreds();
+writeFileSync(pad, `${rekenkern(bron, {
+  leden, races, antwoorden, vragen,
+  poulevragen: poulevragen.map((q) => q.question_id),
+  ik: { id: ikLid.member_id },
+})}
 
 export function draai() {
   return {
