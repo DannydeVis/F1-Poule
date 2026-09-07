@@ -139,6 +139,71 @@ const punten = await page.$$eval('#paneel .strip .sr .pts', (els) => els.map((e)
 check('met per regel wat het opleverde',
   punten.slice(0, 10).every((p) => p === '5'), punten.join(','));
 
+// ------------------------------------------------------------------
+// 6. Layout van de kop: de naam en score mogen niet van het scherm lopen.
+// ------------------------------------------------------------------
+//
+// Aanleiding: een screenshot waarin de terugknop de hele breedte van de rij
+// innam en de score ver naar rechts uit beeld verdween. .knop is standaard
+// width:100%, en zonder een expliciete override in .inkijkkop bleef dat zo.
+const kopMaten = await page.evaluate(() => {
+  const kop = document.querySelector('.inkijkkop');
+  const knop = kop.querySelector('.knop');
+  const naam = kop.querySelector('.nm');
+  const score = kop.querySelector('.t');
+  return {
+    kopBreedte: kop.getBoundingClientRect().width,
+    knopBreedte: knop.getBoundingClientRect().width,
+    naamZichtbaar: naam.getBoundingClientRect().width > 0,
+    scoreRechts: score.getBoundingClientRect().right,
+    vensterBreedte: window.innerWidth,
+  };
+});
+check('de terugknop neemt niet de hele breedte van de kop in',
+  kopMaten.knopBreedte < kopMaten.kopBreedte * 0.5,
+  `knop ${kopMaten.knopBreedte} van ${kopMaten.kopBreedte}`);
+check('de naam is zichtbaar naast de knop', kopMaten.naamZichtbaar);
+check('de score valt binnen het scherm, niet erbuiten',
+  kopMaten.scoreRechts <= kopMaten.vensterBreedte,
+  `score eindigt op ${kopMaten.scoreRechts}, venster is ${kopMaten.vensterBreedte} breed`);
+
+await page.click('#inkijkterug');
+await page.waitForSelector('[data-bekijk]');
+
+// ------------------------------------------------------------------
+// 7. Geen top 10 ingevuld is ook een antwoord, en verdient een regel.
+// ------------------------------------------------------------------
+//
+// Aanleiding: een speler had wel de winnaar en een duel ingevuld, maar geen
+// top 10 — en dan liet het scherm daar helemaal niets van zien. Geen top 10,
+// maar ook geen woord erover, dus leek het alsof er iets mislukt was in
+// plaats van dat er simpelweg niets ingeleverd was.
+await page.evaluate(() => {
+  const r = globalThis.__db.races.find((x) => String(x.id) === '1');
+  r.race_result = ['1', '6', '63', '16', '44', '4', '81', '10', '14', '18', '12', '43'];
+  globalThis.__db.answers.push(
+    { pool_id: 'pool-1', race_id: 1, member_id: 'lid-2', question_id: 'winnaar', waarde: '1' },
+    { pool_id: 'pool-1', race_id: 1, member_id: 'lid-2', question_id: 'teamgenoot_duels', waarde: ['1'] });
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
+});
+await page.reload();
+await page.waitForSelector('[data-race]');
+await openRace(page, 'Melbourne');
+await page.click('[data-tab="race"]');
+await page.waitForSelector('[data-bekijk]');
+await page.click('button.rest[data-bekijk="lid-2"]');
+await page.waitForSelector('#inkijkterug');
+
+const raceTekst = await page.textContent('#paneel');
+check('winnaar en duel staan er wel', raceTekst.includes('won de race'));
+check('top 10 laat weten dat er niets is ingevuld, in plaats van niets te zeggen',
+  raceTekst.includes('top 10') && raceTekst.includes('niets ingevuld'));
+// Het duelblok tekent ook een <ul class="strip">, dus dat element bestaat
+// hier wel — de top 10 is te herkennen aan zijn "P1".."P10"-labels.
+const posLabels = await page.$$eval('.sr .pos', (els) => els.map((e) => e.textContent.trim()));
+check('geen top-10-rijen aanwezig, want die is niet ingevuld',
+  !posLabels.some((p) => /^P\d+$/.test(p)), posLabels.join(', '));
+
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
 await stoppen();

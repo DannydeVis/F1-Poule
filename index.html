@@ -486,7 +486,9 @@
   /* De kop van het inkijkscherm: dezelfde vorm als een rest-regel, met de
      terugknop erin, zodat je meteen ziet dat je bij iemand anders kijkt. */
   .inkijkkop{display:flex;align-items:center;gap:12px}
-  .inkijkkop .knop{flex:none;min-height:44px;padding:0 14px}
+  /* .knop is standaard width:100%; zonder deze override eist de terugknop
+     de hele breedte van de rij op en verdwijnen naam en score uit beeld. */
+  .inkijkkop .knop{flex:none;width:auto;min-height:44px;padding:0 14px}
   .inkijkkop .nm{font-family:var(--cond);font-size:22px;font-weight:700;
     text-transform:uppercase;flex:1;min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
@@ -3254,7 +3256,12 @@ function keuzeOverzicht(r, pred, welk) {
     <p class="zacht" style="margin:0">Voor ${wat} is hier niets ingeleverd.</p></div>`;
 
   const { regels } = scoreLijst(lijst ?? [], werkelijk ?? []);
-  const top10 = top10Actief(welk) && regels.length ? `
+  // Geen top 10 ingevuld is net zo goed een antwoord als "niets gekozen" bij
+  // een losse vraag, en verdient dezelfde regel. Zonder dit stond er hier
+  // simpelweg niets — geen top 10, maar ook geen woord over waarom niet, dus
+  // leek het alsof het scherm iets kwijt was in plaats van dat er niets was
+  // ingeleverd.
+  const top10 = !top10Actief(welk) ? '' : regels.length ? `
     <span class="label">top 10</span>
     <ul class="strip">
       ${regels.filter(x => x.nr).map(x => {
@@ -3268,7 +3275,7 @@ function keuzeOverzicht(r, pred, welk) {
           ${werkelijk ? `<span class="pts ${puntKlasse(x.punten)}">${x.punten}</span>` : ''}
         </li>`;
       }).join('')}
-    </ul>` : '';
+    </ul>` : `<p class="label" style="margin:0">top 10 · niets ingevuld</p>`;
 
   const los = coureurVragen(welk).map(id => {
     const v = COUREURVRAAG[id];
