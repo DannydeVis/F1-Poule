@@ -690,6 +690,35 @@ function onthoudInLijst(poule) {
 const vergeetUitLijst = (poolId) =>
   schrijf(POULES, JSON.stringify(mijnPoules().filter(p => !zelfde(p.id, poolId))));
 
+// Welk scherm je open had staan, per speler in deze poule. Zonder dit gooide
+// een refresh je terug naar het racesoverzicht, ook als je net een paar
+// tikken diep in een racescherm zat — "elke keer weer het beginscherm".
+const schermSleutel = (poolId, memberId) => `poule:${poolId}:${memberId}:scherm`;
+
+function onthoudScherm() {
+  if (!S.poule || !S.ik) return;
+  schrijf(schermSleutel(S.poule.id, S.ik.id),
+    JSON.stringify({ weergave: S.weergave, raceId: S.race?.id ?? null, tab: S.tab }));
+}
+
+// Geeft true als dit al gerenderd heeft (via openRace), zodat de aanroeper
+// geen tweede keer hoeft te renderen.
+function herstelScherm() {
+  if (!S.poule || !S.ik) return false;
+  let scherm;
+  try { scherm = JSON.parse(lees(schermSleutel(S.poule.id, S.ik.id)) ?? 'null'); }
+  catch { scherm = null; }
+  if (!scherm) return false;
+  // Een race die er niet meer is — bijvoorbeeld eentje die inmiddels is
+  // doorgestreept — mag niet alsnog geopend worden.
+  if (scherm.raceId && S.races.some(r => zelfde(r.id, scherm.raceId))) {
+    openRace(scherm.raceId, scherm.tab);
+    return true;
+  }
+  if (['races', 'stand', 'poule'].includes(scherm.weergave)) S.weergave = scherm.weergave;
+  return false;
+}
+
 // ============================================================
 //  Scoren
 // ============================================================
@@ -1693,6 +1722,7 @@ function render() {
 const NAVNAMEN = { races:'Races', stand:'Stand', poule:'Poule' };
 
 function toonApp() {
+  onthoudScherm();
   const detail = S.weergave === 'races' && !!S.race;
   const enkel  = S.weergave !== 'races';
   const rijen  = standRijen();
@@ -2407,7 +2437,10 @@ async function vragenBewaren(gekozen) {
 
 // ---- racedetail ---------------------------------------------
 
-function openRace(id) {
+// startTab: alleen gebruikt om een onthouden tab terug te zetten (zie
+// herstelScherm hierboven). Zonder opgave kiest hij zelf het tabblad dat nog
+// openstaat, zoals altijd.
+function openRace(id, startTab = null) {
   const r = S.races.find(x => zelfde(x.id, id));
   if (!r) { toonFout('Deze race staat niet meer in de lijst.'); return; }
   S.race = r;
@@ -2420,7 +2453,8 @@ function openRace(id) {
               snelste_pitstop: mijn?.snelste_pitstop ?? '',
               safety_cars: mijn?.safety_cars ?? null,
               rode_vlag: mijn?.rode_vlag ?? null };
-  S.tab = openLijst(r) === 'race' ? 'race' : 'quali';
+  S.tab = startTab === 'quali' || startTab === 'race'
+    ? startTab : (openLijst(r) === 'race' ? 'race' : 'quali');
   S.uitslag = { welk: null, lijst: [] };
   S.losse = { vraag: null, keuze: '', fout: '' };
   S.kiesplek = null;
@@ -3735,7 +3769,7 @@ if (DEMO) {
   if (bekend && S.leden.some(l => zelfde(l.member_id, bekend))) {
     S.ik = { id: bekend, naam: S.leden.find(l => zelfde(l.member_id, bekend)).display_name };
   }
-  render();
+  if (!herstelScherm()) render();
 } else {
   await hervat();
 }
@@ -3768,7 +3802,7 @@ async function hervat() {
       const bekend = uitLid ? uitLid.member_id : mijnId(S.poule.id);
       const lid = bekend && S.leden.find(l => zelfde(l.member_id, bekend));
       if (lid) S.ik = { id: lid.member_id, naam: lid.display_name };
-      render();
+      if (!herstelScherm()) render();
       return;
     }
     // Klopt de code niet, dan is stilzwijgend doorgaan naar je eigen poule
@@ -3795,7 +3829,7 @@ async function hervat() {
   const bekend = mijnId(S.poule.id);
   const lid = bekend && S.leden.find(l => zelfde(l.member_id, bekend));
   if (lid) S.ik = { id: lid.member_id, naam: lid.display_name };
-  render();
+  if (!herstelScherm()) render();
 }
 </script>
 </body>

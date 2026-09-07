@@ -67,5 +67,58 @@ check('de top 10 staat weer volledig ingevuld', ingevuld === 10, `${ingevuld}/10
 
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
+// ------------------------------------------------------------------
+// "Als ik op refresh druk gaat hij altijd terug naar het begin scherm."
+// ------------------------------------------------------------------
+//
+// De poule en de speler werden al onthouden (hierboven), maar niet wáár je
+// stond: een refresh gooide je altijd terug naar het racesoverzicht, ook als
+// je net een tabblad diep in een racescherm zat of op de standpagina keek.
+// We staan hier al op het racescherm van Melbourne (de vorige stap opende
+// het), dus alleen nog het tabblad wisselen.
+await page.click('[data-tab="race"]');
+await page.waitForSelector('#paneel');
+
+await page.reload();
+await page.waitForSelector('[data-race], #paneel');
+check('een refresh midden in een racescherm blijft daar staan',
+  (await page.$('#paneel')) !== null && (await page.textContent('.dtitel')) === 'Melbourne',
+  await page.$('.dtitel') ? await page.textContent('.dtitel') : 'racescherm niet gevonden');
+check('en het juiste tabblad staat nog aan',
+  (await page.getAttribute('[data-tab="race"]', 'aria-selected')) === 'true');
+
+// Terug naar het overzicht, en dat blijft ook staan na een refresh.
+// (#terug is het mobiele pijltje en staat op deze breedte op display:none;
+// de navigatieknop werkt op elke schermgrootte.)
+await page.click('[data-weergave="races"]');
+await page.waitForSelector('[data-race]');
+await page.reload();
+await page.waitForSelector('[data-race]');
+check('terug naar het overzicht blijft ook staan na een refresh',
+  (await page.$('#paneel')) === null && (await page.$('[data-race]')) !== null);
+
+// De standpagina is een aparte S.weergave, geen racescherm.
+await page.click('[data-weergave="stand"]');
+await page.waitForSelector('[data-weergave="stand"][aria-current="true"]');
+await page.reload();
+await page.waitForSelector('[aria-current="true"]');
+check('de standpagina staat nog open na een refresh',
+  (await page.getAttribute('[data-weergave="stand"]', 'aria-current')) === 'true');
+
+// Een race die inmiddels is doorgestreept (afgelast, zie #37) mag niet
+// alsnog geopend worden alleen omdat hij toevallig de laatst bekekene was.
+await page.click('[data-weergave="races"]');
+await page.waitForSelector('[data-race]');
+await openRace(page, 'Melbourne');
+await page.evaluate(() => {
+  globalThis.__db.races = globalThis.__db.races.filter((r) => String(r.id) !== '1');
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
+});
+await page.reload();
+await page.waitForSelector('[data-race], .leeg');
+check('een verdwenen race wordt niet alsnog geopend na een refresh',
+  (await page.$('#paneel')) === null);
+check('geen javascriptfouten daarna', jsFouten.length === 0, jsFouten.join(' | '));
+
 await stoppen();
 process.exit(afronden() ? 0 : 1);

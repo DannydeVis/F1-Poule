@@ -143,8 +143,11 @@ De app onthoudt in `localStorage` in welke poules je zit. Bij binnenkomst:
 
 - **Nul poules bekend**: keuze tussen meedoen en aanmaken, met meedoen bovenaan
   (dat is verreweg het vaakste geval)
-- **Eén of meer poules bekend**: direct naar de Races-tab van de poule die je
-  het laatst gebruikte
+- **Eén of meer poules bekend**: direct terug naar precies het scherm waar je
+  was — de kwalificatie of race die je open had staan, met het juiste
+  tabblad, of de Stand- of Poule-tab. Een verdwenen race (bijvoorbeeld eentje
+  die inmiddels is doorgestreept) wordt overgeslagen; dan land je op de
+  Races-tab
 
 Dat laatste wijkt af van het oorspronkelijke plan, waarin je bij meer dan één
 poule eerst een lijstje kreeg. In de praktijk speel je vrijwel altijd in
