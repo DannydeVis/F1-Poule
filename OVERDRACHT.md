@@ -1507,3 +1507,47 @@ rechtzetten in `schema.sql` is netter dan dit, maar het is een migratie op een
 draaiende database met voorspellingen erin. `rondeToewijzing()` maakt de fout
 onbereikbaar zonder dat risico; de schemawijziging is een aparte klus voor als
 er ooit toch aan die tabel gewerkt wordt.
+
+## Refresh gooide je terug naar het beginscherm
+
+*"Als ik op refresh druk gaat hij altijd terug naar het begin scherm."*
+
+Klopte. `hervat()` onthield al **welke poule** en **welke speler** je was
+— dat probleem was eerder al opgelost (zie hierboven, "poule en speler
+onthouden") — maar niet **waar je stond**. Elke keer begon `S.weergave` weer
+op `'races'` met `S.race = null`, dus een refresh midden in een racescherm,
+op de Stand-tab, of op een specifiek tabblad (kwalificatie/race) zette je
+terug op het overzicht.
+
+`onthoudScherm()` schrijft bij elke render van de app-schil (`toonApp()`)
+weg wat er nu op het scherm staat: de actieve tab (races/stand/poule), welke
+race open is (als dat zo is) en welk tabblad (kwalificatie/race) daarbinnen.
+`herstelScherm()` leest dat terug zodra de poule en de speler bekend zijn, en
+zet je terug op precies dat scherm.
+
+Twee dingen die het uitleggen waard zijn:
+
+**Geknoopt aan `openRace()`, niet ernaast.** Bij het herstellen wordt gewoon
+`openRace(raceId, tab)` aangeroepen — dezelfde functie die ook een klik op
+een racekaart afhandelt. Dat bouwt `S.keuze` opnieuw op uit de actuele
+voorspelling, in plaats van een tweede kopie van die logica te onderhouden
+die uit de pas kan gaan lopen. `openRace()` kreeg er een optioneel
+`startTab`-argument bij zodat het onthouden tabblad het standaardgedrag
+(het eerstvolgende tabblad dat nog openstaat) kan overstemmen.
+
+**Een race die er niet meer is, wordt niet alsnog geopend.** Sinds #37/#38
+kan een race doorgestreept worden (het testrecord Kuala Lumpur, een
+verdwenen dubbele rij). Was die race de laatst bekekene, dan checkt
+`herstelScherm()` eerst of hij nog in `S.races` voorkomt voor hij hem opent
+— anders val je terug op het overzicht in plaats van op een foutmelding of
+een leeg scherm.
+
+Bewust **niet** onthouden: een halverwege ingevulde maar niet-opgeslagen
+top 10 (`S.keuze`). Dat is short-lived werk in de browser, geen navigatie,
+en het risico op een stale of dubbele invoer na een refresh weegt niet op
+tegen het gemak. Wie halverwege ververst is zijn getikte keuzes kwijt, net
+als voorheen — alleen het racescherm zelf blijft nu openstaan.
+
+Vier controles erbij in `poule-onthouden.test.mjs` (14 nu), gecontroleerd
+door de drie `herstelScherm()`-aanroepen terug te draaien: zonder de
+aanpassing verdween het racescherm inderdaad na een refresh.

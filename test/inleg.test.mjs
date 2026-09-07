@@ -102,9 +102,9 @@ await page.evaluate(() => {
   globalThis.__db.pools[0].betaallink = 'javascript:alert(1)';
   sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
 });
+// De app onthoudt welk scherm je open had (hier: de Poule-tab), dus een
+// refresh landt daar nu meteen weer op.
 await page.reload();
-await page.waitForSelector('[data-race]');
-await page.click('[data-weergave="poule"]');
 await page.waitForSelector('.inlegbedrag');
 check('een javascript-adres uit de database wordt niet als knop getoond',
   (await page.$('#betalen')) === null);

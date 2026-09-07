@@ -61,9 +61,10 @@ await page.evaluate(() => {
     { pool_id: 'pool-1', race_id: 1, member_id: 'lid-2', question_id: 'winnaar', waarde: '1' });
   sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
 });
+// De app onthoudt welk scherm je open had, dus een refresh landt nu meteen
+// weer op de standpagina in plaats van eerst terug te vallen op het
+// racesoverzicht.
 await page.reload();
-await page.waitForSelector('[data-race]');
-await page.click('[data-weergave="stand"]');
 await page.waitForSelector('.duel');
 
 check('nu staat de tegenstander voor',
