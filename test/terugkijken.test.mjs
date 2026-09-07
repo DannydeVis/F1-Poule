@@ -204,6 +204,46 @@ const posLabels = await page.$$eval('.sr .pos', (els) => els.map((e) => e.textCo
 check('geen top-10-rijen aanwezig, want die is niet ingevuld',
   !posLabels.some((p) => /^P\d+$/.test(p)), posLabels.join(', '));
 
+// ------------------------------------------------------------------
+// 8. Een voorspelling die een coureur noemt die niet meer in de lijst staat.
+// ------------------------------------------------------------------
+//
+// Aanleiding: een screenshot van Joe's top 10 waarin P7 alleen "6" liet zien
+// in plaats van een coureurscode. Dat is Hadjar (#6) bij Monza: hij is nooit
+// uit de kwalificatie gehaald, maar OpenF1 registreert de wissel naar Lawson
+// niet — Hadjar komt in OpenF1's gegevens voor 2026 nergens voor, dus de
+// deelnemerslijst is hem kwijt terwijl Joe's voorspelling hem nog noemt.
+// drv() viel dan terug op het kale nummer, en dat las als een kapot scherm
+// in plaats van een coureur die niet meer bekend is.
+await page.evaluate(() => {
+  const r = globalThis.__db.races.find((x) => String(x.id) === '1');
+  // De deelnemerslijst zoals hij na een reparatie zou zijn: #6 is eruit.
+  r.drivers = r.drivers.filter((d) => d.nr !== '6');
+  r.race_result = r.race_result.filter((nr) => nr !== '6');
+  globalThis.__db.answers = globalThis.__db.answers.filter((a) =>
+    !(a.race_id === 1 && a.member_id === 'lid-2' && a.question_id === 'race_top10'));
+  globalThis.__db.answers.push({
+    pool_id: 'pool-1', race_id: 1, member_id: 'lid-2', question_id: 'race_top10',
+    // P7 (index 6) is #6 — de coureur die er niet meer bij hoort.
+    waarde: ['1', '63', '16', '44', '4', '81', '6', '14', '18', '12'],
+  });
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
+});
+await page.reload();
+await page.waitForSelector('[data-race]');
+await openRace(page, 'Melbourne');
+await page.click('[data-tab="race"]');
+await page.waitForSelector('[data-bekijk]');
+await page.click('button.rest[data-bekijk="lid-2"]');
+await page.waitForSelector('#inkijkterug');
+
+const p7 = await page.$$eval('.strip .sr', (rijen) => {
+  const rij = rijen.find((r) => r.querySelector('.pos')?.textContent.trim() === 'P7');
+  return rij ? rij.querySelector('.code')?.textContent.trim() : null;
+});
+check('de ontbrekende coureur toont "#6", geen kaal getal',
+  p7 === '#6', String(p7));
+
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
 await stoppen();

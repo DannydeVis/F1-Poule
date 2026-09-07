@@ -1026,8 +1026,14 @@ const S = {
 const app = document.getElementById('app');
 const esc = (s) => String(s ?? '').replace(/[<>&"]/g, c =>
   ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+// Een voorspelling kan een coureur noemen die niet meer in de deelnemerslijst
+// staat — bijvoorbeeld Hadjar bij Monza: hij is nooit uit de kwalificatie
+// weggehaald, want OpenF1 registreert die wissel niet, hij komt in OpenF1's
+// gegevens voor 2026 domweg nergens voor. Zonder deze val viel `code` dan
+// terug op het kale nummer, en dat las als een kapot scherm ("er staat een
+// losse 6") in plaats van een coureur die niet meer bekend is.
 const drv = (race, nr) => (race.drivers ?? []).find(d => d.nr === nr)
-                         ?? { nr, code:nr, naam:`#${nr}`, team:'', kleur:'#888' };
+                         ?? { nr, code:`#${nr}`, naam:`onbekende coureur #${nr}`, team:'', kleur:'#888' };
 
 // Ids komen als getal of als tekst terug, afhankelijk van het kolomtype in
 // Postgres. Overal als tekst vergelijken scheelt een klasse fouten waarbij
