@@ -177,14 +177,46 @@ zodra de eerste race een uitslag krijgt.
 
 ## 7. Wie mag wat
 
-Zonder login kan de database niet controleren wie de poulebaas is. Praktische
-oplossing: sla `owner_member_id` op bij de poule, en toon het beheergedeelte
-alleen aan die speler. Dat geldt voor de vragenset én voor de omschrijving.
+De poulebaas staat als `owner_member_id` bij de poule, en het beheergedeelte
+staat alleen bij die speler op het scherm. Dat geldt voor de vragenset én voor
+de omschrijving.
 
-Wees eerlijk over wat dat is: dit voorkomt ongelukken, geen kwaadwilligheid.
-Iemand die de anon key uit de broncode plukt kan er alsnog omheen. Voor een
-vriendenpoule is dat prima, maar bouw er geen dingen op die echt beschermd
-moeten zijn.
+Wees eerlijk over wat dat op dit moment is: het voorkomt ongelukken, geen
+kwaadwilligheid. Iemand die de anon key uit de broncode plukt kan er alsnog
+omheen. Voor een vriendenpoule is dat prima, maar bouw er geen dingen op die
+echt beschermd moeten zijn.
+
+### Elke speler hoort bij een account
+
+Sinds kort krijgt iedereen die meedoet een **anoniem account** bij Supabase.
+Geen inlogscherm, geen wachtwoord, geen mailadres: je merkt er niets van. Het
+staat er zodat de database straks iets heeft om op te controleren — nu is de
+anon key uit `index.html` het enige wat er nodig is om andermans voorspelling
+te overschrijven.
+
+Drie regels die daarbij horen:
+
+- **Rondkijken maakt geen account aan.** Dat gebeurt pas op het moment dat er
+  echt iets aan jou gehangen moet worden. Anders staat er straks een account
+  in de database voor elke bot die de pagina opvraagt.
+- **Een speler die al van iemand is wordt nooit overgenomen.** Claimen kan
+  alleen als `user_id` nog leeg is.
+- **Eén account is één speler per poule.** Die sleutel staat in `schema.sql`.
+  Op een gedeeld toestel — één telefoon die rondgaat bij het inschrijven —
+  betekent dat: de tweede speler wordt zonder account aangemaakt. Hij doet
+  gewoon mee en wordt geclaimd zodra hij de app op zijn eigen toestel opent.
+  Een foutmelding zou daar veel erger zijn.
+
+**Eenmalig aanzetten in Supabase.** Anoniem inloggen staat standaard uit.
+Dashboard → Authentication → Sign In / Providers → **Anonymous sign-ins** aan.
+Doe je dat niet, dan blijft de app gewoon werken — elke aanmeldpoging faalt
+stilletjes en er wordt niets geclaimd — maar dan staat het fundament er ook
+niet als de policies dichtgaan.
+
+Wat er nog niet is: de policies staan nog open, dus de database dwingt hier nog
+niets af. En zonder mailadres reist je account niet mee naar een tweede
+toestel; daarvoor is de eigen link er nog. Beide staan op de rol in
+`OVERDRACHT.md`.
 
 ---
 
