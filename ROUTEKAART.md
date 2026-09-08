@@ -89,18 +89,19 @@ plekken naast zat, in zinnen die je in de groepsapp kunt plakken, met wat het
 scheelde. Wie er drie of meer naast zat komt er niet in — dat "zo dichtbij"
 noemen zou spot zijn.
 
-### Je persoonlijke blinde vlek
-Over een heel seizoen aan voorspellingen: "Je zet Verstappen gemiddeld 2
-plekken te laag" of "Je bent het scherpst op het middenveld, P7 tot P10 heb je
-vaker goed dan de rest van de poule."
+### ~~Je persoonlijke blinde vlek~~ — gebouwd
+Op de standpagina, onder "terugblik": welke coureur je structureel te hoog of
+te laag zet, en op welk stuk van de lijst je juist scherp bent.
 
-Dit soort inzicht bestaat alleen omdat jij alle historische voorspellingen
-bewaart. Geen enkele standaard poule-app heeft dit, en het is niet meer dan een
-gemiddelde over bestaande rijen.
+Met twee drempels erin, want dit is het soort getal waarmee een app makkelijk
+met gezag onzin verkoopt: onder zes ingeleverde lijsten zegt hij niets, een
+coureur telt pas mee vanaf vier voorspellingen mét uitslag, en een afwijking
+van minder dan een hele plek is geen blinde vlek maar gewoon goed spelen.
 
-### Moeilijkste race van het seizoen
-Toon per race het gemiddelde aantal punten van de hele poule. Zo zie je welk
-weekend iedereen verrastte. Leuk voor de terugblik in december.
+### ~~Moeilijkste race van het seizoen~~ — gebouwd
+Staat in hetzelfde terugblikblok: welk weekend het zwaarst was voor de poule,
+met het makkelijkste ernaast. Een race telt pas mee vanaf twee inzendingen —
+het gemiddelde van één speler is geen poulegemiddelde.
 
 ---
 

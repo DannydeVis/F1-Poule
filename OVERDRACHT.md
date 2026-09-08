@@ -2493,3 +2493,64 @@ Twee dingen uit dezelfde groep, allebei rekenwerk over bestaande rijen:
   alle historische voorspellingen bewaard blijven.
 - **Moeilijkste race van het seizoen** — het poulegemiddelde per race, zodat je
   ziet welk weekend iedereen verraste.
+
+---
+
+## Terugblik: je blinde vlek, en het weekend waarin iedereen tegenviel
+
+De laatste twee punten uit groep 2 van `ROUTEKAART.md`, en daarmee is die groep
+leeg. Allebei rekenwerk over rijen die er al staan — ze bestaan alleen omdát
+elke voorspelling bewaard blijft.
+
+Op de standpagina staat nu een blok **terugblik** met tot drie zinnen:
+
+> Je zet **HAM** gemiddeld 4,0 plekken te hoog, over 6 voorspellingen.
+> Je bent het scherpst op **P1 tot P3**: gemiddeld 4,2 van de 5 punten per plek.
+> **Monza** was het zwaarste weekend voor de poule: gemiddeld 31 punten, tegen 58 in Melbourne.
+
+### Het echte werk zat in wanneer de app zijn mond houdt
+
+Dit is precies het soort getal waarmee een app makkelijk met gezag onzin
+verkoopt. "Je zet Verstappen structureel te laag" klinkt als inzicht, maar na
+twee weekenden is het toeval met een lettertype eromheen.
+
+Drie drempels, en die zijn het punt van de hele wijziging:
+
+- **Onder zes ingeleverde lijsten zegt hij niets.** De kwalificatie en de race
+  tellen als aparte lijsten, dus dat is drie raceweekenden.
+- **Een coureur telt pas mee vanaf vier voorspellingen mét uitslag.** Anders is
+  één uitschieter genoeg voor een "patroon".
+- **Onder een hele plek afwijking is er geen blinde vlek.** Dat is geen fout,
+  dat is goed spelen.
+
+En bij de poulegemiddelden: een race telt pas mee vanaf twee inzendingen. Het
+gemiddelde van één speler is geen poulegemiddelde.
+
+De test controleert die stiltes even hard als de uitspraken: met één gescoorde
+race mag er niets over jouw patronen staan, met drie wél — en dan met de juiste
+coureur en het juiste aantal erbij.
+
+### Twee kleine keuzes met een reden
+
+**Kwalificatie en race tellen apart.** Het zijn twee voorspellingen, en je kunt
+in de ene scherper zijn dan in de andere. Ze optellen tot één "weekendlijst"
+zou dat verschil wegpoetsen.
+
+**Een uitvaller telt nergens mee.** Staat een coureur niet in de uitslag, dan
+valt er geen afwijking uit af te leiden — je weet niet waar hij geëindigd zou
+zijn. Hetzelfde principe als bij "zo dichtbij".
+
+### En een test die een fout van mij ving
+
+Ik had in de opzet geschreven dat de speler coureur 44 "drie plekken te hoog"
+zette. Het waren er vier: P1 bij mij, P5 in het echt. De code had gelijk, de
+test had gelijk, mijn commentaar niet — en dat is precies waarom de verwachte
+waarde in de test een exact getal is en geen "ongeveer".
+
+### Wat er nog in de routekaart staat
+
+Groep 2 is leeg. Wat overblijft is groep 3 (extra vraagsoorten: die vragen wél
+schemawerk en een keuze over de puntenverdeling) en groep 4
+(seizoensmechaniek). Plus de dingen die op een beslissing van de eigenaar
+wachten: het contactadres in de privacyverklaring, de regio van de database, en
+de instellingen in het Supabase-dashboard.
