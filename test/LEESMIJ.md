@@ -36,6 +36,8 @@ je eigen computer.
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |
 | `schema-herstel.test.sql` | Of een tweede run van `schema.sql` een beschadigde tabel opruimt |
+| `lidmaatschap.test.sql` | `is_member()`: je eigen poule wel en die van een ander niet, dat een speler zonder account niemand binnenlaat, en dat je account verwijderen je spelers meeneemt |
+| `auth-nabootsing.sql` | Geen test maar gereedschap: bootst `auth.users` en `auth.uid()` na zoals Supabase ze levert, zodat de policies lokaal en in de CI te draaien zijn |
 | `races-alleen-lezen.test.sql` | Dat `anon` en `authenticated` de uitslagen wel mogen lezen maar niet schrijven — races wordt door alle poules gedeeld |
 | `oude-structuur.sql` + `-controle.sql` | Of `schema.sql` een oudere tabelopzet rechtzet zonder gegevens te raken (fout 42830) |
 

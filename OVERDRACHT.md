@@ -1664,3 +1664,85 @@ repareert een verouderde deelnemerslijst, en er is een knop in het
 Actions-tabblad om hem meteen te draaien. Blijft er tóch iets ontbreken, dan is
 dat nu een klus voor de beheerder met de `service_role` key — niet iets wat
 elke bezoeker kan.
+
+## Fundament voor de login: wie ben je, en waar hoor je bij
+
+Eerste stap van `PUBLIEK.md` §1.1, en met opzet een stap die **niets aan het
+gedrag verandert**. De policies staan nog precies zoals ze stonden; wat erbij
+komt is het gereedschap om ze straks te kunnen dichtzetten. Reden: zou ik de
+policies omzetten terwijl de gedeployde app nog geen login heeft, dan sluit ik
+iedereen buiten zijn eigen poule — inclusief de Vrijdagmiddagpoule die nu
+gewoon draait. Dat is een storing, geen migratie.
+
+Eén verwachting die niet uitkwam: `PUBLIEK.md` zegt "herstel de policies uit de
+oorspronkelijke `schema.sql`". Die bestaan niet in deze repo. Nagekeken met
+`git log -S "auth.uid"` over alle 99 commits, tot en met de allereerste upload:
+er is nooit een versie met `auth.uid()` of `is_member()` geweest. Dit is dus
+nieuw schrijven, niet terugzetten.
+
+### auth bestaat niet in gewone PostgreSQL
+
+`auth.uid()` komt van Supabase. Lokaal en in de CI draait kale PostgreSQL, dus
+zodra er een policy op `auth.uid()` staat is `schema.sql` daar niet eens meer
+uit te voeren. Dat is precies de val waar #42 al langs schampte: een test die
+niet kan draaien bewijst niets.
+
+`test/auth-nabootsing.sql` maakt `auth.users` en `auth.uid()` na, en volgt
+daarbij de echte implementatie: `auth.uid()` leest de `sub` uit de JWT-claims
+die PostgREST per verzoek als session-instelling meegeeft. Een test wordt
+daarmee iemand:
+
+```sql
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"<uuid>"}';
+```
+
+Zonder claims is `auth.uid()` null — precies wat een niet-ingelogde bezoeker
+hoort te zijn. Dit bestand hoort **niet** in `schema.sql`: bij Supabase bestaat
+dit al, en het daar nog eens aanmaken is op zijn best overbodig.
+
+### user_id, en waarom hij leeg mag zijn
+
+`pool_members.user_id` verwijst naar `auth.users(id)` met `on delete cascade`.
+Nullable, en dat is geen slordigheid: de app werkte een half seizoen zonder
+login, en die spelers bestaan nog. Zij krijgen straks de kans hun eigen naam te
+claimen; tot die tijd staat de kolom leeg.
+
+Daar hangt een subtiliteit aan die de test expliciet vastlegt: een speler
+zonder `user_id` mag níémand lid maken. In SQL is `null = null` niet waar, dus
+dat klopt vanzelf — maar het is precies het soort ding dat je per ongeluk
+weggooit met een `coalesce`, en dan kan iedereen zonder account in elke oude
+poule. Vandaar een controle die er speciaal op staat.
+
+De unieke index staat op `(pool_id, user_id) where user_id is not null`. Eén
+account kan dus niet twee keer dezelfde poule in — anders sta je twee keer in
+de stand met je punten verdeeld, precies het probleem dat de eigen link ooit
+moest oplossen. Twee spelers zónder account naast elkaar mag wel, want de index
+slaat lege waarden over.
+
+### security definer, en de lus die anders ontstaat
+
+```sql
+create or replace function public.is_member(p_pool uuid)
+returns boolean language sql stable
+security definer set search_path = public
+as $$ select exists (select 1 from public.pool_members
+                     where pool_id = p_pool and user_id = auth.uid()); $$;
+```
+
+`security definer` is hier geen luxe. Deze functie leest `pool_members`, en
+straks staat er een policy óp `pool_members` die deze functie aanroept. Zonder
+definer gaat die select opnieuw door RLS, roept de policy zichzelf aan, en
+draait Postgres in een oneindige lus. Dat is de klassieke RLS-valkuil in
+Supabase, en hij kost je een uur als je hem pas in productie tegenkomt.
+
+`set search_path = public` hoort er onlosmakelijk bij: zonder dat kan iemand
+met een eigen schema in zijn `search_path` een ándere `pool_members` laten
+vinden dan bedoeld.
+
+### Wat er nog moet
+
+De policies zelf, en de frontend die anonieme sessies opzet en bestaande
+spelers laat claimen via het `member_id` dat al in `localStorage` staat. In die
+volgorde: eerst de frontend die inlogt, dán de policies dicht. Andersom sluit
+je de deur terwijl iedereen nog buiten staat.
