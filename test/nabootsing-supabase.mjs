@@ -411,4 +411,48 @@ globalThis.__mail = {
   aantalVerstuurd() { return store.otp.length; },
 };
 
-export const createClient = () => ({ from: maakQuery, auth });
+// ------------------------------------------------------------
+//  rpc
+//  Eén functie maar: verwijder_mijn_account(). Hij hoort hier omdat het
+//  verschil tussen de twee smaken — wel of niet je spelers mee — precies is
+//  wat het scherm belooft, en dat moet een browsertest kunnen nalopen.
+// ------------------------------------------------------------
+const functies = {
+  verwijder_mijn_account({ p_ook_spelers = false } = {}) {
+    const ik = wieBenIk();
+    if (!ik) return { data: null, error: { message: 'Er is geen account om te verwijderen.' } };
+    const mijne = store.pool_members.filter((m) => gelijk(m.user_id, ik));
+    let weg = 0;
+    if (p_ook_spelers) {
+      weg = mijne.length;
+      // De poules waarvan ik de baas ben raken hun eigenaar kwijt; anders
+      // wijst owner_member_id naar een speler die niet meer bestaat.
+      for (const p of store.pools) {
+        if (mijne.some((m) => gelijk(m.member_id, p.owner_member_id))) p.owner_member_id = null;
+      }
+      const ids = mijne.map((m) => String(m.member_id));
+      for (const tabel of ['answers', 'predictions']) {
+        store[tabel] = (store[tabel] ?? []).filter((r) => !ids.includes(String(r.member_id)));
+      }
+      store.pool_members = store.pool_members.filter((m) => !gelijk(m.user_id, ik));
+    } else {
+      for (const m of mijne) m.user_id = null;
+    }
+    store.auth_users = store.auth_users.filter((u) => u.id !== ik);
+    store.otp = store.otp.filter((o) => o.user_id !== ik);
+    bewaren();
+    try { localStorage.removeItem(SESSIE); } catch { /* niets */ }
+    return { data: weg, error: null };
+  },
+};
+
+async function rpc(naam, argumenten) {
+  const fn = functies[naam];
+  if (!fn) {
+    return { data: null, error: { code: 'PGRST202',
+      message: `Could not find the function public.${naam} in the schema cache` } };
+  }
+  return fn(argumenten ?? {});
+}
+
+export const createClient = () => ({ from: maakQuery, auth, rpc });

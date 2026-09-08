@@ -2137,3 +2137,96 @@ allebei op en maakt er hetzelfde leesbare antwoord van.
 - Een privacyverklaring en "verwijder mijn account" — dat laatste is
   technisch al voorbereid (`on delete cascade` op `pool_members.user_id`),
   maar er zit nog geen knop aan.
+
+---
+
+## Wat de app van je weet, en hoe je het weer weg krijgt
+
+Sinds de mailkoppeling slaat deze app een persoonsgegeven op. Daarmee is een
+privacyverklaring en een verwijderknop geen vinkje meer op een lijstje, maar
+iets dat er hoort te zijn — en dat ook echt moet doen wat het belooft.
+
+### Twee smaken, en het verschil is niet cosmetisch
+
+In een poule is "alles weg" niet vanzelf de vriendelijke keuze. Je
+voorspellingen zitten in de stand van je medespelers; gooi je ze weg, dan klopt
+hun seizoen niet meer. Dat is jouw recht, maar het mag geen verrassing zijn.
+
+Dus staan er twee knoppen, met er onder wat ze doen:
+
+| | Wat er gebeurt |
+| --- | --- |
+| **Mijn account verwijderen** | Het account en het mailadres gaan weg. Je spelers blijven staan met hun naam en punten, maar horen bij niemand meer. |
+| **Alles verwijderen** | Ook je spelers en al je voorspellingen, in elke poule. Onomkeerbaar. |
+
+De eerste is de standaard in de zin dat hij bovenaan staat en de zachtste
+formulering heeft. Beide vragen twee tikken, met dezelfde knop-stelt-zijn-
+eigen-vraag als "Wis alles".
+
+### Waarom het een databasefunctie is
+
+Alleen de `service_role` mag in `auth.users` schrijven, en die sleutel hoort
+nooit in de frontend — hij staat in dit project alleen als GitHub secret voor
+de sync. Dus:
+
+```sql
+create or replace function public.verwijder_mijn_account(p_ook_spelers boolean default false)
+returns integer language plpgsql security definer set search_path = public
+```
+
+`security definer` laat hem draaien met de rechten van wie hem aanmaakt (de
+`postgres`-rol in de SQL editor), en `auth.uid()` zorgt dat je alleen jezelf
+kunt verwijderen. Er is geen parameter waarin je iemand anders kunt aanwijzen —
+dat is bewust, niet toevallig.
+
+Het verschil tussen de smaken zit in de volgorde:
+
+- **Niet ook de spelers:** eerst `user_id = null` zetten, dán het account
+  verwijderen. De cascade vindt daarna niets meer.
+- **Wel:** meteen verwijderen; `on delete cascade` neemt de spelers mee, en de
+  foreign key op `answers.member_id` neemt de antwoorden mee.
+
+### Het detail dat je pas later zou vinden
+
+`pools.owner_member_id` heeft **geen** foreign key. Verwijdert de poulebaas
+alles, dan wijst die kolom naar een speler die niet meer bestaat, en dan geeft
+`mag_beheren()` voor iedereen `false`: de poule wordt onbeheerbaar. Niemand kan
+nog aan de vragenset of de omschrijving komen, en er is geen foutmelding die
+uitlegt waarom.
+
+De functie zet `owner_member_id` daarom op `null`. Dan valt de poule terug op
+het geval "poule van vóór het aanmaakscherm", waar elk lid mag beheren. Dat
+gedrag stond er al; het hoefde alleen aangesloten te worden.
+
+### De eerlijke regel over Google Fonts
+
+De verklaring zegt: geen advertenties, geen analytics, geen trackers. Dat is
+waar en te controleren — er staat niets van dien aard in `index.html`.
+
+Maar de app haalt wel drie lettertypen op bij `fonts.googleapis.com`, en
+daarbij ziet Google het IP-adres van de bezoeker. Dat weglaten zou de
+verklaring onwaar maken, dus staat het erbij. Het weghalen is een betere
+oplossing dan het opschrijven: de woff2-bestanden in de repo zetten en er
+relatief naar verwijzen. Dat is een aparte wijziging, niet deze.
+
+### Wat er niet mee opgelost is
+
+`verwijder_mijn_account()` kan falen als de `postgres`-rol in een Supabase-
+project niet aan `auth.users` komt. Dat is hier niet te testen — het sandbox-
+netwerk komt niet bij Supabase — dus de app vangt het af met een melding die
+zegt dat het aan de beheerder ligt en niet aan de speler, en `BEDIENING.md §12`
+noemt de uitweg (een Edge Function met de service_role key).
+
+`test/verwijderen.test.sql` draait wél tegen een echte PostgreSQL 16 met de
+auth-nabootsing, dus de *logica* ligt vast: 12 controles over beide smaken, het
+baasschap, en dat je zonder sessie niets kunt verwijderen.
+
+### Twee dingen die de beheerder nog moet invullen
+
+`PRIVACY_CONTACT` bovenin `index.html` is leeg. Zolang dat zo is staat er geen
+contactregel in de verklaring, en dat hoort er wel te staan. Bewust leeg
+gelaten: die pagina is publiek, en een mailadres publiceren is niet iets om
+namens iemand te beslissen.
+
+En de regio van de database staat in het Supabase-dashboard; voor Nederlandse
+gebruikers is het het vermelden waard waar hun gegevens staan.

@@ -106,6 +106,16 @@ jobs:
           psql -d policies -v ON_ERROR_STOP=1 -f schema.sql
           psql -d policies -v ON_ERROR_STOP=1 -f test/policies.test.sql
 
+      # "Verwijder mijn account" moet precies doen wat het scherm belooft, en
+      # het verschil tussen de twee smaken is niet cosmetisch: de ene laat de
+      # stand van je medespelers heel, de andere niet.
+      - name: je account verwijderen, in twee smaken
+        run: |
+          createdb verwijderen
+          psql -d verwijderen -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d verwijderen -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d verwijderen -v ON_ERROR_STOP=1 -f test/verwijderen.test.sql
+
       # De vorige stap heeft de tabel opzettelijk beschadigd. schema.sql hoort
       # dat te herstellen zonder dat er data verloren gaat die de app gebruikt.
       - name: schema.sql opnieuw draaien op de beschadigde database
