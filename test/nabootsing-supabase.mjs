@@ -109,6 +109,65 @@ const past = (rij, [k, v, op]) =>
 
 globalThis.__db = store;
 
+// ------------------------------------------------------------
+//  De policies uit schema.sql, voor zover de app ze kan raken
+//
+//  Niet compleet, en dat hoeft ook niet: test/policies.test.sql draait tegen
+//  een echte PostgreSQL en legt de policies zelf vast. Wat híér moet kloppen
+//  is dat een browsertest niet stiekem door een open deur loopt — anders
+//  zouden de schermen die uitleggen "deze speler hoort bij een ander toestel"
+//  nooit te zien zijn.
+// ------------------------------------------------------------
+
+const wieBenIk = () => huidigeSessie()?.user?.id ?? null;
+
+// mag_voor_speler(): mijn eigen speler, of eentje die van niemand is.
+function magVoorSpeler(memberId) {
+  const lid = store.pool_members.find((l) => gelijk(l.member_id, memberId));
+  if (!lid) return true;   // bestaat niet: de foreign key mag erover klagen
+  return !lid.user_id || gelijk(lid.user_id, wieBenIk());
+}
+
+// mag_beheren(): de poulebaas, of elk lid als de poule geen eigenaar heeft.
+function magBeheren(poolId) {
+  const ik = wieBenIk();
+  if (!ik) return false;
+  const poule = store.pools.find((p) => gelijk(p.id, poolId));
+  if (!poule) return false;
+  const lid = store.pool_members.some((m) => gelijk(m.pool_id, poolId) && gelijk(m.user_id, ik));
+  if (!lid) return false;
+  if (!poule.owner_member_id) return true;
+  return store.pool_members.some((m) =>
+    gelijk(m.member_id, poule.owner_member_id) && gelijk(m.user_id, ik));
+}
+
+// Postgres weigert een verboden insert met 42501; een verboden update of
+// delete raakt gewoon nul rijen en geeft géén fout. Dat verschil is precies
+// wat index.html moet opvangen, dus bootst de nabootsing het na.
+const geweigerd = { data: null, error: { code: '42501',
+  message: 'new row violates row-level security policy' } };
+
+function magSchrijven(tabel, rij) {
+  if (tabel === 'answers' || tabel === 'predictions') return magVoorSpeler(rij.member_id);
+  // Een speler inschrijven op andermans account kan niet.
+  if (tabel === 'pool_members' && rij.user_id) return gelijk(rij.user_id, wieBenIk());
+  if (tabel === 'pool_questions') return magBeheren(rij.pool_id);
+  return true;
+}
+
+// Welke bestaande rijen mag ik überhaupt aanraken?
+function magRaken(tabel, rij) {
+  if (tabel === 'answers' || tabel === 'predictions') return magVoorSpeler(rij.member_id);
+  if (tabel === 'pool_members') {
+    // Claimen wat van niemand is, je eigen speler loslaten, of — als
+    // poulebaas — een speler losmaken die aan het verkeerde account hangt.
+    return !rij.user_id || gelijk(rij.user_id, wieBenIk()) || magBeheren(rij.pool_id);
+  }
+  if (tabel === 'pool_questions') return magBeheren(rij.pool_id);
+  if (tabel === 'pools') return magBeheren(rij.id);
+  return true;
+}
+
 function uitvoeren(tabel, q) {
   const rijen = store[tabel];
   if (!rijen) {
@@ -116,6 +175,7 @@ function uitvoeren(tabel, q) {
   }
 
   if (q._insert) {
+    if (q._insert.some((r) => !magSchrijven(tabel, r))) return geweigerd;
     if (tabel === 'pool_members'
         && q._insert.some((r) => botstMetAccount(rijen, r, null))) return dubbelAccount;
     const nieuw = q._insert.map((r) => {
@@ -137,6 +197,7 @@ function uitvoeren(tabel, q) {
       return { data: null, error: { code: '42P10',
         message: 'there is no unique or exclusion constraint matching the ON CONFLICT specification' } };
     }
+    if (q._upsert.some((r) => !magSchrijven(tabel, r) || !magRaken(tabel, r))) return geweigerd;
     const uit = q._upsert.map((r) => {
       const bestaand = sleutel && rijen.find((x) => sleutel.every((k) => gelijk(x[k], r[k])));
       if (bestaand) {
@@ -154,7 +215,8 @@ function uitvoeren(tabel, q) {
 
   if (q._weg) {
     // Een leeggemaakt antwoord haalt zijn rij weg: waarde mag niet null zijn.
-    const blijft = rijen.filter((r) => !q._filters.every((f) => past(r, f)));
+    const blijft = rijen.filter((r) =>
+      !(q._filters.every((f) => past(r, f)) && magRaken(tabel, r)));
     const verwijderd = rijen.length - blijft.length;
     rijen.length = 0;
     rijen.push(...blijft);
@@ -168,7 +230,9 @@ function uitvoeren(tabel, q) {
     // wordt. Zonder dat kan de app niet nagespeeld worden.
     const doel = rijen.filter((r) =>
       q._filters.every((f) => past(r, f)) &&
-      q._isNull.every((k) => (r[k] ?? null) === null));
+      q._isNull.every((k) => (r[k] ?? null) === null) &&
+      // Een update die niets mag raken geeft geen fout, hij raakt nul rijen.
+      magRaken(tabel, r) && magSchrijven(tabel, { ...r, ...q._update }));
     if (tabel === 'pool_members' && doel.some((r) =>
         botstMetAccount(rijen, { ...r, ...q._update }, r))) return dubbelAccount;
     for (const r of doel) Object.assign(r, kopie(q._update));

@@ -535,57 +535,6 @@ create trigger answers_deadline
   for each row execute function public.poule_antwoord_deadline();
 
 -- ------------------------------------------------------------
---  Toegang
---  Er is geen login: de poulecode is de enige drempel. Alles staat dus
---  open voor de anon-sleutel. Dat is een bewuste keuze, zie OVERDRACHT.md.
---  De deadline hierboven is wel hard afgedwongen.
--- ------------------------------------------------------------
-
-alter table public.pools        enable row level security;
-alter table public.pool_members enable row level security;
-alter table public.races        enable row level security;
-alter table public.predictions  enable row level security;
-alter table public.questions      enable row level security;
-alter table public.pool_questions enable row level security;
-alter table public.answers        enable row level security;
-
-drop policy if exists pools_open        on public.pools;
-drop policy if exists pool_members_open on public.pool_members;
-drop policy if exists races_open        on public.races;
-drop policy if exists races_all         on public.races;
-drop policy if exists races_lezen       on public.races;
-drop policy if exists predictions_open  on public.predictions;
-drop policy if exists questions_lezen   on public.questions;
-drop policy if exists pool_questions_open on public.pool_questions;
-drop policy if exists answers_open      on public.answers;
-
-create policy pools_open        on public.pools
-  for all to anon, authenticated using (true) with check (true);
-create policy pool_members_open on public.pool_members
-  for all to anon, authenticated using (true) with check (true);
--- races is de enige tabel die door álle poules gedeeld wordt: één rij per
--- race per seizoen, geen pool_id. Wie hier schreef, veranderde de uitslag
--- voor iedereen die dit seizoen volgt. Dat was te verdedigen zolang het
--- vrienden waren en sync.html in de browser draaide; publiek is het een knop
--- waarmee één iemand elke poule in de app sloopt.
---
--- Nu: alleen lezen. Schrijven doet de sync op een GitHub-runner, en die
--- gebruikt de service_role key — die gaat overal langs, ook langs RLS.
-create policy races_lezen       on public.races
-  for select to anon, authenticated using (true);
-create policy predictions_open  on public.predictions
-  for all to anon, authenticated using (true) with check (true);
--- De vragenlijst zelf is de enige tabel die niet openstaat voor schrijven:
--- die hoort uit schema.sql te komen, niet uit de app. Lezen mag wel, want
--- de app moet de namen en punten kunnen tonen.
-create policy questions_lezen   on public.questions
-  for select to anon, authenticated using (true);
-create policy pool_questions_open on public.pool_questions
-  for all to anon, authenticated using (true) with check (true);
-create policy answers_open      on public.answers
-  for all to anon, authenticated using (true) with check (true);
-
--- ------------------------------------------------------------
 --  Wie ben je, en waar hoor je bij
 --  auth.uid() komt van Supabase; in de tests wordt hij nagebootst door
 --  test/auth-nabootsing.sql.
@@ -617,6 +566,208 @@ $$;
 
 revoke all on function public.is_member(uuid) from public;
 grant execute on function public.is_member(uuid) to anon, authenticated;
+
+-- Mag ik voor deze speler schrijven?
+--
+-- Twee gevallen, en het tweede is er met opzet:
+--
+--   1. De speler hoort bij mijn account. Dat is het normale geval.
+--   2. De speler hoort bij niemand. Dat is iedereen die de app nog niet
+--      geopend heeft sinds er accounts zijn, plus de tweede speler die op
+--      een gedeeld toestel is ingeschreven.
+--
+-- Zonder dat tweede geval zou het dichtzetten van deze policies een halve
+-- poule buitensluiten op de dag dat het live gaat, zonder enige melding —
+-- RLS geeft namelijk geen fout op een geblokkeerde schrijfactie, hij raakt
+-- gewoon nul rijen. Nu groeit de bescherming mee: zodra iemand de app opent
+-- claimt hij zichzelf, en vanaf dat moment kan niemand anders meer bij zijn
+-- inzending.
+--
+-- Zodra `spelers zonder account` in de controle onderaan op 0 staat kan de
+-- tweede regel weg. Zie OVERDRACHT.md.
+create or replace function public.mag_voor_speler(p_member uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.pool_members
+    where member_id = p_member
+      and (user_id = auth.uid() or user_id is null)
+  );
+$$;
+
+-- Mag ik deze poule beheren: de vragenset, de omschrijving, en een speler
+-- losmaken van het account waar hij per ongeluk aan hing?
+--
+-- De poulebaas, dus. Met dezelfde uitzondering die de app maakt: een poule
+-- van vóór het aanmaakscherm heeft geen eigenaar, en die op slot doen zou
+-- niemand meer bij de vragenset laten. Dan mag elk lid het. Wat er in beide
+-- gevallen bij hoort: je moet wél lid zijn.
+create or replace function public.mag_beheren(p_pool uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.pools p
+    where p.id = p_pool
+      and exists (select 1 from public.pool_members eigen
+                  where eigen.pool_id = p.id and eigen.user_id = auth.uid())
+      and (p.owner_member_id is null
+           or exists (select 1 from public.pool_members baas
+                      where baas.member_id = p.owner_member_id
+                        and baas.user_id = auth.uid()))
+  );
+$$;
+
+revoke all on function public.mag_voor_speler(uuid) from public;
+revoke all on function public.mag_beheren(uuid)     from public;
+grant execute on function public.mag_voor_speler(uuid) to anon, authenticated;
+grant execute on function public.mag_beheren(uuid)     to anon, authenticated;
+
+-- ------------------------------------------------------------
+--  Toegang
+--
+--  Wat hier vastligt, en wat nadrukkelijk níét.
+--
+--  Vast: **je eigen inzending is van jou**. Zodra je speler aan je account
+--  hangt kan niemand anders hem nog overschrijven of weggooien, ook niet met
+--  de anon key uit index.html — en die staat daar publiek, dat hoort zo.
+--  Dat was tot nu toe de echte schade die iemand kon aanrichten.
+--
+--  Niet vast: **lezen**. Iedereen mag alles lezen. Dat is geen slordigheid
+--  maar een gevolg van hoe de app werkt: je moet een poule kunnen vinden op
+--  zijn code voordat je lid bent, en je moet de spelerslijst kunnen zien om
+--  jezelf aan te wijzen. Beide gebeuren vóór er van lidmaatschap sprake is.
+--  Wie de anon key uit de broncode plukt kan dus poules en namen uitlezen.
+--
+--  Daar hoort de eerlijke consequentie bij: hij kan zich ook aanmelden bij
+--  een poule die niet van hem is. Vervelend, maar niet destructief — hij
+--  staat er dan als extra speler in en kan nog steeds bij niemands antwoord.
+--  Dichttimmeren daarvan vraagt om een aparte functie voor "poule zoeken op
+--  code", en dat is een volgende stap; zie OVERDRACHT.md.
+--
+--  De deadline is en blijft hard afgedwongen door de trigger hierboven.
+-- ------------------------------------------------------------
+
+alter table public.pools        enable row level security;
+alter table public.pool_members enable row level security;
+alter table public.races        enable row level security;
+alter table public.predictions  enable row level security;
+alter table public.questions      enable row level security;
+alter table public.pool_questions enable row level security;
+alter table public.answers        enable row level security;
+
+-- Alle namen die dit bestand ooit gebruikt heeft, zodat een tweede run niet
+-- struikelt over een policy uit een vorige versie.
+drop policy if exists pools_open        on public.pools;
+drop policy if exists pools_lezen       on public.pools;
+drop policy if exists pools_aanmaken    on public.pools;
+drop policy if exists pools_bijwerken   on public.pools;
+drop policy if exists pool_members_open on public.pool_members;
+drop policy if exists pool_members_lezen     on public.pool_members;
+drop policy if exists pool_members_meedoen   on public.pool_members;
+drop policy if exists pool_members_bijwerken on public.pool_members;
+drop policy if exists races_open        on public.races;
+drop policy if exists races_all         on public.races;
+drop policy if exists races_lezen       on public.races;
+drop policy if exists predictions_open  on public.predictions;
+drop policy if exists predictions_lezen on public.predictions;
+drop policy if exists predictions_eigen on public.predictions;
+drop policy if exists questions_lezen   on public.questions;
+drop policy if exists pool_questions_open on public.pool_questions;
+drop policy if exists pool_questions_lezen   on public.pool_questions;
+drop policy if exists pool_questions_beheren on public.pool_questions;
+drop policy if exists answers_open      on public.answers;
+drop policy if exists answers_lezen     on public.answers;
+drop policy if exists answers_eigen     on public.answers;
+
+-- ---- poules -------------------------------------------------
+-- Lezen moet open: zonder een poule op zijn code te kunnen vinden kun je
+-- niet meedoen, en op dat moment ben je nog geen lid.
+create policy pools_lezen on public.pools
+  for select to anon, authenticated using (true);
+create policy pools_aanmaken on public.pools
+  for insert to anon, authenticated with check (true);
+-- Alleen de poulebaas past de omschrijving of de vragenset aan. Let op de
+-- volgorde bij het aanmaken: eerst de poule (nog zonder eigenaar), dan de
+-- speler, dan pas deze update — op dat moment is de eigenaar nog leeg en ben
+-- je al lid, dus mag_beheren() zegt ja.
+create policy pools_bijwerken on public.pools
+  for update to anon, authenticated
+  using (public.mag_beheren(id)) with check (public.mag_beheren(id));
+-- Geen policy voor delete: de app verwijdert nooit een poule, dus die deur
+-- hoeft niet open te staan.
+
+-- ---- spelers ------------------------------------------------
+-- Lezen moet open om dezelfde reden als bij poules: het "Wie ben jij?"-scherm
+-- laat je kiezen uit de bestaande spelers, en dat is vóór je lid bent.
+create policy pool_members_lezen on public.pool_members
+  for select to anon, authenticated using (true);
+-- Meedoen mag, maar nooit namens een ander account.
+create policy pool_members_meedoen on public.pool_members
+  for insert to anon, authenticated
+  with check (user_id is null or user_id = auth.uid());
+-- Dit is de kern van het claimen. `using` bepaalt welke rijen je mag aanraken,
+-- `with check` hoe ze eruit mogen komen:
+--
+--   * een speler die van niemand is  -> claimen mag
+--   * je eigen speler                -> loslaten mag
+--   * de speler van een ander        -> niets
+--
+-- En de poulebaas mag een speler losmaken van het account waar hij per
+-- ongeluk aan is blijven hangen. Zonder die uitweg is één misklik op het
+-- "Wie ben jij?"-scherm genoeg om iemands seizoen onbereikbaar te maken.
+create policy pool_members_bijwerken on public.pool_members
+  for update to anon, authenticated
+  using (user_id is null or user_id = auth.uid() or public.mag_beheren(pool_id))
+  with check (user_id is null or user_id = auth.uid() or public.mag_beheren(pool_id));
+
+-- ---- races en vragen ----------------------------------------
+-- races is de enige tabel die door álle poules gedeeld wordt: één rij per
+-- race per seizoen, geen pool_id. Wie hier schreef, veranderde de uitslag
+-- voor iedereen die dit seizoen volgt. Alleen lezen dus; schrijven doet de
+-- sync op een GitHub-runner met de service_role key, en die gaat overal
+-- langs, ook langs RLS.
+create policy races_lezen on public.races
+  for select to anon, authenticated using (true);
+-- De vragenlijst hoort uit dit bestand te komen, niet uit de app.
+create policy questions_lezen on public.questions
+  for select to anon, authenticated using (true);
+
+-- ---- welke vragen doet deze poule -------------------------
+create policy pool_questions_lezen on public.pool_questions
+  for select to anon, authenticated using (true);
+create policy pool_questions_beheren on public.pool_questions
+  for all to anon, authenticated
+  using (public.mag_beheren(pool_id)) with check (public.mag_beheren(pool_id));
+
+-- ---- de inzendingen zelf ------------------------------------
+-- Lezen is open: de app laat je na de deadline elkaars top 10 zien, en de
+-- stand telt iedereen mee.
+create policy answers_lezen on public.answers
+  for select to anon, authenticated using (true);
+-- Schrijven alleen voor je eigen speler. `for all` dekt insert, update én
+-- delete in één keer, en dat is precies wat een upsert nodig heeft: PostgREST
+-- maakt daar insert ... on conflict do update van.
+create policy answers_eigen on public.answers
+  for all to anon, authenticated
+  using (public.mag_voor_speler(member_id))
+  with check (public.mag_voor_speler(member_id));
+
+-- predictions wordt door de app niet meer gebruikt — de antwoorden staan in
+-- answers — maar de tabel bestaat nog en krijgt dezelfde behandeling.
+create policy predictions_lezen on public.predictions
+  for select to anon, authenticated using (true);
+create policy predictions_eigen on public.predictions
+  for all to anon, authenticated
+  using (public.mag_voor_speler(member_id))
+  with check (public.mag_voor_speler(member_id));
 
 -- ------------------------------------------------------------
 --  Rechten op tabelniveau
@@ -682,6 +833,14 @@ union all
 select 'aantal poules',        (select count(*)::text from public.pools)
 union all
 select 'aantal spelers',       (select count(*)::text from public.pool_members)
+union all
+-- Het getal om in de gaten te houden na het dichtzetten van de policies.
+-- Deze spelers hangen nog aan geen enkel account, en hun antwoorden staan
+-- daarom nog open voor iedereen die de poulecode heeft. Elke keer dat zo
+-- iemand de app opent claimt hij zichzelf en zakt dit getal. Staat het op 0,
+-- dan kan de tweede regel uit mag_voor_speler() weg.
+select 'spelers zonder account',
+       (select count(*)::text from public.pool_members where user_id is null)
 union all
 select 'races in 2026',        (select count(*)::text from public.races where season = 2026)
 union all

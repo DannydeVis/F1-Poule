@@ -252,8 +252,40 @@ En kijk één keer wat er daadwerkelijk in de mailbox belandt: onder Authenticat
 → Emails staan de sjablonen, en die zijn Engels en generiek ("Confirm your email
 change"). Voor een Nederlandse poule-app is dat op zijn minst verwarrend.
 
-Wat er nog niet is: de policies staan nog open, dus de database dwingt hier nog
-niets af. Dat staat op de rol in `OVERDRACHT.md`.
+### Wat de database nu wél afdwingt
+
+De policies staan dicht. Wat dat concreet betekent:
+
+- **Je eigen inzending is van jou.** Zodra je speler aan je account hangt kan
+  niemand anders hem nog overschrijven of weggooien — ook niet met de anon key
+  uit `index.html`, en die staat daar publiek.
+- **Een speler die nog aan geen enkel account hangt blijft beschrijfbaar.** Dat
+  is met opzet: anders had het dichtzetten iedereen buitengesloten die de app
+  nog niet geopend had. De bescherming groeit mee, speler voor speler. Het
+  getal `spelers zonder account` onderaan de uitvoer van `schema.sql` laat zien
+  hoeveel er nog te gaan zijn.
+- **De vragenset en de omschrijving zijn van de poulebaas**, nu ook in de
+  database en niet alleen op het scherm.
+- **Lezen blijft voor iedereen open.** Dat moet: je zoekt een poule op zijn
+  code voordat je lid bent, en je kiest jezelf uit de spelerslijst voordat je
+  meedoet. Wie de anon key uit de broncode plukt kan dus poules en namen
+  uitlezen, en zich aanmelden bij een poule die niet van hem is. Vervelend,
+  maar niet destructief: hij komt bij niemands antwoord.
+
+### Als een speler aan het verkeerde account hangt
+
+Klikt iemand op het "Wie ben jij?"-scherm op de verkeerde naam, dan claimt hij
+die speler. De database laat dat daarna niet meer terugdraaien — precies wat je
+wilt tegen een vreemde, precies wat je niet wilt tegen een vergissing.
+
+Daarom staat er onder **Poule** bij zo'n speler een klein knopje **losmaken**,
+alleen zichtbaar voor de poulebaas. Twee tikken, en de volgende die zich als
+die speler aanmeldt claimt hem opnieuw.
+
+Eén ding kan de poulebaas níét: zichzelf redden. Wie zijn eigen browser
+leegmaakt zonder een mailadres gekoppeld te hebben, krijgt een nieuw account en
+kan daarna niets meer voor zijn eigen speler opslaan. Het mailadres is de
+reservesleutel, en dat is de reden dat het scherm er nadrukkelijk om vraagt.
 
 ---
 

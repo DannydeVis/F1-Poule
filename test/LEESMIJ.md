@@ -34,10 +34,12 @@ je eigen computer.
 | `kalender-en-coureurs.test.mjs` | Het testrecord Kuala Lumpur uit de kalender van OpenF1, wanneer de deelnemerslijst opnieuw opgehaald wordt, en dat een rondenummer nooit van race wisselt |
 | `knipsel.test.mjs` | Dat de rekenkern nog uit `index.html` te knippen is en klopt — de audit draait erop |
 | `account.test.mjs` | Het anonieme account: dat rondkijken er geen aanmaakt, dat een geclaimde speler nooit overgenomen wordt, en dat een gedeeld toestel gewoon een tweede speler mag inschrijven |
+| `eigen-inzending.test.mjs` | Wat de app laat zien als de database het schrijven weigert: uitleg in plaats van stilte, en de losmaakknop van de poulebaas |
 | `mailkoppeling.test.mjs` | Je account meenemen met een mailadres: dat "gestuurd" niet "gekoppeld" is, dat een onbekend adres geen leeg account maakt, en vooral dat de sleutel uit de inloglink niet voor een poulecode wordt aangezien |
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |
 | `schema-herstel.test.sql` | Of een tweede run van `schema.sql` een beschadigde tabel opruimt |
+| `policies.test.sql` | De belofte waarvoor de login gebouwd is: je eigen inzending is van jou. Plus wat er níét dichtgaat — lezen blijft open, en een speler zonder account blijft beschrijfbaar |
 | `lidmaatschap.test.sql` | `is_member()`: je eigen poule wel en die van een ander niet, dat een speler zonder account niemand binnenlaat, en dat je account verwijderen je spelers meeneemt |
 | `auth-nabootsing.sql` | Geen test maar gereedschap: bootst `auth.users` en `auth.uid()` na zoals Supabase ze levert, zodat de policies lokaal en in de CI te draaien zijn |
 | `races-alleen-lezen.test.sql` | Dat `anon` en `authenticated` de uitslagen wel mogen lezen maar niet schrijven — races wordt door alle poules gedeeld |

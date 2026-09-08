@@ -180,6 +180,14 @@
     text-transform:uppercase;flex:1;min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
   .speler .ptn{font-family:var(--mono);font-size:11px;color:var(--ink2)}
+  /* Alleen zichtbaar voor de poulebaas, en alleen bij een speler die aan een
+     ander account hangt. Klein en grijs: het is een uitweg, geen aanbod. */
+  .speler .losmaak{
+    flex:none;background:none;border:1px solid var(--lijn);border-radius:6px;
+    padding:5px 9px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+    color:var(--ink3);cursor:pointer;transition:color .18s,border-color .18s}
+  .speler .losmaak:hover{color:var(--ink);border-color:var(--ink3)}
+  .speler .losmaak[data-zeker="ja"]{color:var(--accent);border-color:var(--accent)}
 
   /* ---- de app: zijbalk + inhoud --------------------------- */
   .shell{display:flex;flex-direction:column;min-height:100%}
@@ -836,6 +844,16 @@ async function maakSpeler(poolId, naam) {
   return uit;
 }
 
+// Speel ik als iemand die aan een ánder account hangt? Dan neemt de database
+// mijn wijzigingen niet meer aan. Dat kan legitiem zijn — dezelfde persoon op
+// een tweede toestel dat nog niet ingelogd is — maar het moet wel uitgelegd
+// worden, want RLS zwijgt erover.
+function nietVanMij() {
+  if (DEMO || !S.ik) return false;
+  const lid = S.leden.find(l => zelfde(l.member_id, S.ik.id));
+  return !!lid?.user_id && !zelfde(lid.user_id, mijnUid);
+}
+
 // Welke speler in deze poule hoort bij mijn account? Hiermee herkent de app
 // je op een toestel dat nog nooit van je gehoord heeft — nu alleen nog als
 // je die sessie zelf meeneemt, straks ook via een mailadres.
@@ -1396,10 +1414,19 @@ function uitleg(error) {
     '23505': 'Er staan dubbele voorspellingen in de database. '
            + 'Draai schema.sql opnieuw, die ruimt ze op en zet de unieke sleutel goed.',
     '23503': 'Deze race of speler bestaat niet (meer) in de database.',
+    // 42501 wordt hieronder overschreven als de oorzaak te herleiden is tot
+    // een speler die bij een ander account hoort; zie onder dit lijstje.
     '42501': 'De database weigert het schrijven (RLS-policy). Draai schema.sql opnieuw.',
     '42P01': 'Een tabel ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.',
     '42703': 'Een kolom ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.',
   };
+  // De database weigert het schrijven, en sinds spelers aan een account hangen
+  // is daar meestal een concrete, uitlegbare reden voor.
+  if (code === '42501' && nietVanMij()) {
+    return `${S.ik.naam} hoort bij een ander toestel, dus hier kun je niets `
+         + 'voor hem opslaan. Log in met je mailadres om hier ook '
+         + `${S.ik.naam} te zijn, of vraag de poulebaas om ${S.ik.naam} los te maken.`;
+  }
   // Dezelfde code, een andere sleutel, een heel ander verhaal.
   if (alBezetDoorAccount(error)) {
     return 'Dit toestel speelt in deze poule al mee als een andere speler. '
@@ -1563,10 +1590,17 @@ async function bewaar() {
       .select();
 
     if (error) throw new Error(uitleg(error));
-    if (!data?.length) throw new Error(
-      'De database nam de voorspelling aan maar gaf geen rij terug. '
-      + 'Waarschijnlijk blokkeert een RLS-policy het schrijven of het teruglezen. '
-      + 'Draai schema.sql opnieuw in de Supabase SQL editor.');
+    // Nul rijen terug is het antwoord van RLS op een schrijfactie die niet
+    // mag — er komt geen foutmelding bij. Sinds spelers aan een account
+    // hangen is daar één veel waarschijnlijkere oorzaak voor dan een kapotte
+    // policy, en die verdient een antwoord waar je iets mee kunt.
+    if (!data?.length) throw new Error(nietVanMij()
+      ? `${S.ik.naam} hoort bij een ander toestel, dus hier kun je zijn `
+        + 'voorspelling niet opslaan. Log in met je mailadres om hier ook '
+        + `${S.ik.naam} te zijn, of vraag de poulebaas om ${S.ik.naam} los te maken.`
+      : 'De database nam de voorspelling aan maar gaf geen rij terug. '
+        + 'Waarschijnlijk blokkeert een RLS-policy het schrijven of het teruglezen. '
+        + 'Draai schema.sql opnieuw in de Supabase SQL editor.');
   }
 
   for (const [id] of wissen) {
@@ -1999,6 +2033,7 @@ function toonApp() {
   knoopBeheer();
   knoopOmschrijving();
   knoopMail();
+  knoopLosmaken();
   const wissel = app.querySelector('#wissel');
   if (wissel) wissel.onclick = () => { vergeet(S.poule.id); S.ik = null; render(); };
   const anders = app.querySelector('#anderePoule');
@@ -2210,13 +2245,62 @@ function poulePagina(rijen) {
     </div>`;
 }
 
-// Een speler in de lijst onder Poule. Een regel, geen knop: er valt hier
-// niets aan te tikken.
+// Een speler in de lijst onder Poule. Voor de poulebaas staat er soms één
+// knop bij, en die is er om een probleem op te lossen dat anders niet op te
+// lossen is.
+//
+// Wie op het "Wie ben jij?"-scherm op een naam klikt, claimt die speler voor
+// dat toestel. Dat is de bedoeling — zo hoort een speler bij een account —
+// maar één misklik, of een telefoon die je uitleent, en iemands hele seizoen
+// hangt aan het verkeerde account. De database laat dat daarna niet meer
+// terugdraaien: precies wat je wilt tegen een vreemde, precies wat je niet
+// wilt tegen een vergissing.
+//
+// Vandaar deze uitweg, en alleen deze: de poulebaas maakt de speler los, en
+// de volgende die zichzelf aanwijst claimt hem opnieuw. Zie schema.sql,
+// policy pool_members_bijwerken.
 function spelerRij(r, i) {
+  const lid = S.leden.find(l => zelfde(l.member_id, r.id));
+  const bijEenAnder = lid?.user_id && !zelfde(lid.user_id, mijnUid);
+  const los = S.ik && magBeheren() && bijEenAnder
+    ? `<button class="losmaak" data-losmaken="${esc(r.id)}"
+         title="${esc(r.naam)} losmaken van het toestel waar hij nu aan hangt">losmaken</button>`
+    : '';
   return `<div class="speler ${r.mij ? 'zelf' : ''}" style="animation:none">
     <span class="nr">${String(i + 1).padStart(2,'0')}</span>
     <span class="nm">${esc(r.naam)}</span>
+    ${los}
     <span class="ptn">${r.punten} ptn</span></div>`;
+}
+
+// De knop stelt zijn eigen vraag, net als "Wis alles": een confirm() is lelijk,
+// wordt geblokkeerd, en ziet eruit als de melding die iedereen blind wegklikt.
+function knoopLosmaken() {
+  app.querySelectorAll('[data-losmaken]').forEach(knop => knop.onclick = async () => {
+    if (knop.dataset.zeker !== 'ja') {
+      knop.dataset.zeker = 'ja';
+      knop.textContent = 'zeker weten?';
+      setTimeout(() => {
+        if (!knop.isConnected) return;
+        knop.dataset.zeker = ''; knop.textContent = 'losmaken';
+      }, 5000);
+      return;
+    }
+    knop.disabled = true;
+    const id = knop.dataset.losmaken;
+    const { data, error } = await db.from('pool_members')
+      .update({ user_id: null }).eq('member_id', id).select();
+    if (error || !data?.length) {
+      S.melding = error ? uitleg(error)
+        : 'Losmaken lukte niet. Alleen de poulebaas mag dat, en de database '
+          + 'controleert dat zelf ook.';
+    } else {
+      const naam = S.leden.find(l => zelfde(l.member_id, id))?.display_name ?? 'Die speler';
+      S.melding = `${naam} is losgemaakt. Wie zich nu als ${naam} aanmeldt, is ${naam}.`;
+    }
+    try { await laad(); } catch (e) { toonFout(e.message); return; }
+    render();
+  });
 }
 
 // ---- jezelf meenemen naar een ander toestel -----------------
@@ -2285,9 +2369,10 @@ function mailBlok() {
   if (!S.mail.open) {
     return `${kop}
       <p class="zacht" style="margin:0">Hang er een mailadres aan, dan kun je
-        op een ander toestel inloggen en raak je je poules niet kwijt als deze
-        browser wordt opgeschoond. Hoeft niet — je speelt ook zonder gewoon
-        door.</p>
+        op een ander toestel inloggen. Het is ook je reservesleutel: je speler
+        hoort nu bij dit toestel, en wie zijn browser leegmaakt zonder
+        mailadres kan daarna niets meer voor zichzelf opslaan. Hoeft niet —
+        maar het duurt tien seconden.</p>
       <button class="knop klein" id="mailopen">Mailadres koppelen</button>`;
   }
 
@@ -3360,6 +3445,14 @@ function kiesSpeler() {
     S.ik = { id: lid.member_id, naam: lid.display_name };
     onthoud(S.poule.id, S.ik.id);
     if (!lid.user_id) await claimSpeler(lid.member_id);
+    // Hangt deze speler aan een ander account, dan kun je hier wel meekijken
+    // maar niets opslaan. Dat nú zeggen is stukken beter dan het te laten
+    // merken bij de eerste voorspelling die niet bewaard wordt.
+    if (nietVanMij()) {
+      S.melding = `${lid.display_name} hoort bij een ander toestel. Je kunt hier `
+        + 'meekijken, maar niets opslaan. Log in met je mailadres om hier ook '
+        + `${lid.display_name} te zijn.`;
+    }
     laad().then(render).catch(e => toonFout(e.message));
   });
 
