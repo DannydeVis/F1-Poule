@@ -242,12 +242,19 @@ Doe je dat niet, dan blijft de app gewoon werken — elke aanmeldpoging faalt
 stilletjes en er wordt niets geclaimd — maar dan staat het fundament er ook
 niet als de policies dichtgaan.
 
-### Een mailadres eraan hangen (optioneel)
+### Je account meenemen (optioneel)
 
-Onder **Poule** staat "je account meenemen". Daar koppel je een mailadres aan
-je anonieme account. Op een tweede toestel kies je op het beginscherm
-**Inloggen met je mailadres** en ben je daar meteen dezelfde speler, zonder de
-poulecode.
+Onder **Poule** staat "je account meenemen". Daar koppel je **Google** of een
+**mailadres** aan je anonieme account. Op een tweede toestel kies je op het
+beginscherm de bijbehorende inlogknop en ben je daar meteen dezelfde speler,
+zonder de poulecode.
+
+Google staat als eerste keuze, want dat is één tik tegen "open je mail, zoek
+het bericht, klik de link". De mailweg blijft er gewoon naast: wie geen Google
+wil of heeft mag niet buiten de boot vallen. Onder water is het hetzelfde —
+`linkIdentity()` hangt Google aan het anonieme account dat je al had, precies
+zoals `updateUser({ email })` dat met een mailadres doet, dus je spelers en
+punten gaan mee.
 
 Het is met opzet optioneel en het staat met opzet onderaan. Verreweg de meeste
 mensen typen gewoon hun poulecode; dit is er voor wie ook op zijn laptop
@@ -264,18 +271,32 @@ Drie dingen die daarbij horen:
 - **Na het inloggen wint je account** van de speler die dit toestel toevallig
   onthield. Inloggen is een uitspraak: je bedoelt jezelf.
 
-**Nog twee dingen in het Supabase-dashboard**, en deze twee vergeet je zeker
-één keer:
+**Google aanzetten** (Authentication → Sign In / Providers → Google): je hebt
+een client-ID en -secret nodig uit een Google Cloud-project. Zolang je alleen
+het basisprofiel en het mailadres opvraagt blijf je in de categorie waar Google
+geen verificatiereview voor eist. Zet daarnaast **Manual linking** aan
+(Authentication → Settings), anders werkt het koppelen aan een bestaand
+anoniem account niet — alleen het inloggen op een leeg toestel.
+
+**Sign in with Apple** is bewust níét ingebouwd: dat vereist een Apple
+Developer-account van ongeveer €99 per jaar. Voor een App Store-app zou je het
+moeten aanbieden zodra je Google aanbiedt, maar dit is een webapp, dus die
+regel geldt hier niet. iPhone-gebruikers kunnen prima Google of hun mailadres
+gebruiken.
+
+**Nog twee dingen in het Supabase-dashboard** voor de mailweg, en deze twee
+vergeet je zeker één keer:
 
 1. **Redirect-url toestaan.** Authentication → URL Configuration → *Redirect
    URLs*: zet daar de url van de app in (bijvoorbeeld
    `https://dannydevis.github.io/F1-Poule/`). Staat hij er niet, dan negeert
    Supabase de terugkeerlink en komt iedereen op de Site URL uit.
-2. **Eigen SMTP instellen.** De ingebouwde mailservice van Supabase is
-   uitdrukkelijk niet voor productie: hij stuurt maar een paar mails per uur en
-   loopt daarna stil. Voor publiek gebruik hoort hier een eigen mailleverancier
-   (Resend, Postmark, SendGrid) onder. Zonder dat is dit een knop die bij de
-   derde gebruiker ophoudt te werken.
+2. **Eigen SMTP instellen** — of niet, nu Google er is. De ingebouwde
+   mailservice van Supabase stuurt maar een paar mails per uur en is
+   uitdrukkelijk niet voor productie. Zolang Google de hoofdweg is en de mail
+   de uitzondering, red je het waarschijnlijk zonder eigen mailleverancier.
+   Merk je dat mensen klagen dat de mail niet aankomt, dan hoort er alsnog een
+   eigen leverancier (Resend, Postmark, SendGrid) onder.
 
 En kijk één keer wat er daadwerkelijk in de mailbox belandt: onder Authentication
 → Emails staan de sjablonen, en die zijn Engels en generiek ("Confirm your email
@@ -541,6 +562,11 @@ Wat de verklaring zegt, en waarom het waar is:
 - **Eén ding komt nog van buiten**, en dat staat er ook zo: de supabase-client
   wordt van `esm.sh` geladen, en die ziet daarbij het IP-adres van de bezoeker.
   Ook dat zelf hosten is de laatste stap; zie `OVERDRACHT.md`.
+- **En Google, maar alleen als je ervoor kiest.** Log je met Google in, dan weet
+  Google dat je deze app gebruikt en krijgt de app je naam en mailadres. Dat
+  staat zo in de verklaring. Koppel je niets, of gebruik je een mailadres, dan
+  komt Google er niet aan te pas — anders dan bij de lettertypen van vroeger,
+  waar het IP van elke bezoeker lekte zonder dat iemand iets koos.
 
 ### Twee manieren om weg te gaan
 

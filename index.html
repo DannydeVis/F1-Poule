@@ -807,11 +807,57 @@ async function zorgVoorAccount() {
 const mijnMail        = () => mijnAccount?.email ?? null;
 const mijnWachtendeMail = () => mijnAccount?.new_email ?? null;
 
+// Hangt er een Google-account aan? Supabase zet elke gekoppelde manier van
+// inloggen in `identities`; `anonymous` staat daar ook tussen en telt hier
+// dus niet mee.
+const mijnGoogle = () =>
+  (mijnAccount?.identities ?? []).find(i => i.provider === 'google') ?? null;
+const googleMail = () => mijnGoogle()?.identity_data?.email ?? mijnMail() ?? null;
+// Is er hoe dan ook iets waarmee je terugkomt op een ander toestel?
+const kanTerugkomen = () => !!(mijnGoogle() || mijnMail());
+
 // Waar de link uit de mail op terugkomt. Bewust zonder poulecode erachter:
 // Supabase plakt zijn eigen `?code=` aan deze url, en twee keer dezelfde
 // parameter betekent dat de verkeerde gelezen wordt. De poule komt daarna uit
 // dit toestel of uit poulesVanAccount().
 const inlogTerugLink = () => linkBasis();
+
+// ---- met Google ---------------------------------------------
+// Waarom dit erbij is gekomen: een maillink werkt, maar "open je mail, zoek
+// het bericht, klik de link" is drie handelingen waar er één had gekund. En
+// het scheelt een eigen mailserver, wat voor een poule-app een scheve
+// verhouding is.
+//
+// Wat het níét is: een inlogscherm bij de voordeur. Je komt nog steeds binnen
+// met alleen een poulecode. Dit staat op precies dezelfde plek als de
+// mailkoppeling — bij "je account meenemen" — en is even optioneel.
+//
+// `linkIdentity` hangt Google aan het anonieme account dat je al hebt, zodat
+// je spelers en punten meegaan. Dat is iets anders dan `signInWithOAuth`,
+// wat je op een leeg toestel gebruikt: daar is nog geen account om aan te
+// hangen. Let op: linkIdentity vereist dat "Manual linking" aanstaat in het
+// Supabase-dashboard.
+async function koppelGoogle() {
+  const uid = await zorgVoorAccount();
+  if (!uid) return { fout: 'Er is nog geen account om Google aan te hangen.' };
+  try {
+    const { error } = await db.auth.linkIdentity({
+      provider: 'google', options: { redirectTo: inlogTerugLink() } });
+    return { fout: error ? uitlegAuth(error) : '' };
+  } catch (e) { return { fout: uitlegAuth(e) }; }
+}
+
+// Op een toestel waar je account nog niet staat. De browser gaat naar Google
+// en komt terug met `?code=`; dat handelt supabase-js zelf af, en de app
+// herkent het aan VAN_INLOGLINK.
+async function inloggenMetGoogle() {
+  if (DEMO || !db) return { fout: 'Inloggen kan niet in demomodus.' };
+  try {
+    const { error } = await db.auth.signInWithOAuth({
+      provider: 'google', options: { redirectTo: inlogTerugLink() } });
+    return { fout: error ? uitlegAuth(error) : '' };
+  } catch (e) { return { fout: uitlegAuth(e) }; }
+}
 
 async function koppelMail(mail) {
   const uid = await zorgVoorAccount();
@@ -872,10 +918,21 @@ function uitlegAuth(error) {
   if (/rate.?limit|only request this after|too many/i.test(bericht) || /rate_limit/.test(code)) {
     return 'Er is net al een mail verstuurd. Wacht een minuutje en probeer het opnieuw.';
   }
+  // Let op de volgorde: 'provider is not enabled' komt óók als
+  // validation_failed binnen, dus die controle moet hiervóór staan.
+  if (/provider is not enabled|manual linking is disabled/i.test(bericht)) {
+    return 'Inloggen met Google is nog niet aangezet voor deze app. '
+         + 'Gebruik je mailadres, of laat het de beheerder weten.';
+  }
   if (code === 'validation_failed' || /invalid.*email|email.*invalid/i.test(bericht)) {
     return 'Dat lijkt geen geldig mailadres.';
   }
-  return bericht || 'Er ging iets mis met het versturen van de mail.';
+  // Deze Google-account hangt al aan iemand anders.
+  if (code === 'identity_already_exists' || /identity is already linked/i.test(bericht)) {
+    return 'Dat Google-account hoort al bij een speler. Kies op het beginscherm '
+         + '"Inloggen met Google" om dat account hier te openen.';
+  }
+  return bericht || 'Er ging iets mis.';
 }
 
 // Deze speler hoort bij mijn account.
@@ -2621,11 +2678,14 @@ function mailBlok() {
   const kop = `<div class="scheiding"></div>
     <span class="label">je account meenemen</span>`;
 
-  if (mijnMail()) {
+  // Al geregeld: dan is er niets meer te kiezen, alleen te weten hoe je
+  // terugkomt.
+  if (kanTerugkomen()) {
+    const via = mijnGoogle() ? 'Google' : 'je mailadres';
     return `${kop}
       <p class="zacht" style="margin:0">Je account hangt aan
-        <b>${esc(mijnMail())}</b>. Op een ander toestel kies je op het
-        beginscherm "Inloggen met je mailadres" en ben je daar meteen weer
+        <b>${esc(googleMail() ?? via)}</b>. Op een ander toestel kies je op het
+        beginscherm "Inloggen met ${esc(via)}" en ben je daar meteen weer
         jezelf.</p>`;
   }
 
@@ -2640,14 +2700,21 @@ function mailBlok() {
       <p class="err" id="mailfout">${esc(S.mail.fout)}</p>`;
   }
 
+  // Google groot, mail klein eronder. Eén tik tegen "open je mail, zoek het
+  // bericht, klik de link" — maar wie geen Google wil of heeft moet niet
+  // buiten de boot vallen, dus staat de mailweg er gewoon naast.
+  const uitleg = `<p class="zacht" style="margin:0">Koppel je account, dan kun
+      je op een ander toestel inloggen. Het is ook je reservesleutel: je speler
+      hoort nu bij dit toestel, en wie zijn browser leegmaakt zonder koppeling
+      kan daarna niets meer voor zichzelf opslaan. Hoeft niet — maar het duurt
+      tien seconden.</p>`;
+
   if (!S.mail.open) {
     return `${kop}
-      <p class="zacht" style="margin:0">Hang er een mailadres aan, dan kun je
-        op een ander toestel inloggen. Het is ook je reservesleutel: je speler
-        hoort nu bij dit toestel, en wie zijn browser leegmaakt zonder
-        mailadres kan daarna niets meer voor zichzelf opslaan. Hoeft niet —
-        maar het duurt tien seconden.</p>
-      <button class="knop klein" id="mailopen">Mailadres koppelen</button>`;
+      ${uitleg}
+      <button class="knop klein" id="googlekoppel">Koppel je Google-account</button>
+      <button class="knop spook klein" id="mailopen">Liever met een mailadres</button>
+      <p class="err" id="mailfout">${esc(S.mail.fout)}</p>`;
   }
 
   return `${kop}
@@ -2718,6 +2785,11 @@ function privacyBlok() {
         doorverkocht of gedeeld. De lettertypen staan in de app zelf, dus daar
         gaat niets naartoe. Eén ding komt nog van buiten: de code waarmee de
         app met de database praat, van esm.sh. Die ziet daarbij je IP-adres.</p>
+      <p style="margin:0 0 10px"><b>Als je met Google inlogt</b><br>
+        Dan weet Google dat je deze app gebruikt, en krijgt de app je naam en
+        mailadres van Google. Dat gebeurt alleen als je er zelf voor kiest —
+        koppel je niets, of gebruik je een mailadres, dan komt Google er niet
+        aan te pas.</p>
       <p style="margin:0 0 10px"><b>Hoe lang</b><br>
         Zolang de poule bestaat. Hieronder kun je er zelf een eind aan maken.</p>
       <p style="margin:0"><b>Inzien</b><br>
@@ -2814,6 +2886,16 @@ function uitlegVerwijderen(error) {
 function knoopMail() {
   const open = app.querySelector('#mailopen');
   if (open) open.onclick = () => { S.mail = { open: true, fout: '', gestuurd: '' }; render(); };
+
+  const google = app.querySelector('#googlekoppel');
+  if (google) google.onclick = async () => {
+    google.disabled = true;
+    const uit = await koppelGoogle();
+    // Lukt het, dan is de browser inmiddels onderweg naar Google en zien we
+    // dit scherm niet meer terug. Staat er wél een fout, dan is er niets
+    // gebeurd en moet dat te lezen zijn.
+    if (uit.fout) { google.disabled = false; S.mail = { ...S.mail, fout: uit.fout }; render(); }
+  };
 
   const stuur = async (adres, knop) => {
     const mail = String(adres ?? '').trim();
@@ -4192,9 +4274,11 @@ function inlogBlok() {
   if (!S.inlog.open) {
     return `<div class="scheiding"></div>
       <div class="veldblok">
-        <p class="zacht" style="margin:0">Speelde je al mee en heb je een
-          mailadres gekoppeld? Dan hoef je de poulecode niet.</p>
+        <p class="zacht" style="margin:0">Speelde je al mee en heb je je account
+          gekoppeld? Dan hoef je de poulecode niet.</p>
+        <button class="knop spook" id="googleinlog">Inloggen met Google</button>
         <button class="knop spook" id="inlogopen">Inloggen met je mailadres</button>
+        <p class="err" id="inlogfout">${esc(S.inlog.fout)}</p>
       </div>`;
   }
   return `<div class="scheiding"></div>
@@ -4210,6 +4294,15 @@ function inlogBlok() {
 function knoopInlog() {
   const open = app.querySelector('#inlogopen');
   if (open) open.onclick = () => { S.inlog = { open: true, fout: '', gestuurd: '' }; toonStart(); };
+
+  const google = app.querySelector('#googleinlog');
+  if (google) google.onclick = async () => {
+    google.disabled = true;
+    const uit = await inloggenMetGoogle();
+    // Bij succes is de browser al onderweg naar Google. Alleen een fout komt
+    // hier terug, en die moet te lezen zijn.
+    if (uit.fout) { google.disabled = false; S.inlog = { ...S.inlog, fout: uit.fout }; toonStart(); }
+  };
 
   const knop = app.querySelector('#inlogstuur');
   if (!knop) return;
