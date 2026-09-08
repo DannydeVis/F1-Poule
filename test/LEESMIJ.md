@@ -34,6 +34,7 @@ je eigen computer.
 | `kalender-en-coureurs.test.mjs` | Het testrecord Kuala Lumpur uit de kalender van OpenF1, wanneer de deelnemerslijst opnieuw opgehaald wordt, en dat een rondenummer nooit van race wisselt |
 | `knipsel.test.mjs` | Dat de rekenkern nog uit `index.html` te knippen is en klopt — de audit draait erop |
 | `account.test.mjs` | Het anonieme account: dat rondkijken er geen aanmaakt, dat een geclaimde speler nooit overgenomen wordt, en dat een gedeeld toestel gewoon een tweede speler mag inschrijven |
+| `bijna-goed.test.mjs` | "Zo dichtbij": welke bijna-treffers wel en niet meetellen (drie plekken ernaast is niet bijna, een uitvaller telt nergens mee), en dat het ook echt op het scherm belandt |
 | `agenda.test.mjs` | De agenda met alle deadlines: dat hij aan de standaard voldoet, dat een item na een verzetting vervangen wordt in plaats van verdubbeld, en dat een race zonder tijd geen item in 1970 oplevert |
 | `eerste-indruk.test.mjs` | Wat een vreemde ziet die zonder uitnodiging binnenkomt: uitleg voor wie hem nodig heeft, weg voor wie niet, en het codeveld blijft bovenaan. Plus het PWA-manifest en de pictogrammen |
 | `privacy.test.mjs` | Het blok "wat de app van je weet": dat het klopt wat erin staat, dat de pagina niets bij een vreemde host ophaalt, en dat de twee knoppen om weg te gaan ook echt verschillen |

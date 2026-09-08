@@ -64,12 +64,12 @@ mailserver of pushmeldingen.
 `https://dannydevis.github.io/F1-Poule/?code=10D4FD` en de app vult de
 poulecode automatisch in. Scheelt je vrienden een stap en een typefout.
 
-### ~~Handmatig een uitslag invullen in de app~~ — gebouwd
-Je bent al twee keer tegen ontbrekende OpenF1-data aangelopen en moest toen de
-Supabase Table Editor in. Een simpel schermpje waarin je de volgorde van
-coureurs kunt slepen en opslaan lost dat voorgoed op. Zet er een vinkje
-"handmatig ingevuld" bij zodat je later ziet welke uitslagen niet uit de API
-komen.
+### ~~Handmatig een uitslag invullen in de app~~ — gebouwd, en weer weggehaald
+Was er, is er niet meer. Bij het klaarmaken voor publiek gebruik viel de keuze
+op "niemand vult meer zelf uitslagen in": met meer dan één poule in de app is
+een verkeerd ingevulde uitslag geen eigen probleem meer maar dat van iedereen
+die dat weekend meedeed. De uitslagen komen nu alleen nog van de sync. Zie
+`OVERDRACHT.md`, "Uitslagen komen alleen nog van de sync".
 
 ---
 
@@ -83,9 +83,11 @@ je al hebt.
 Dit is waar mensen elkaar in de groepsapp op aanspreken, veel meer dan op de
 totaalstand.
 
-### Bijna-goed terugkoppeling
-Na de race: "Was Norris P4 geworden in plaats van P5, dan had je 8 punten meer
-gehad." Cheap uit te rekenen, en precies het soort ding dat gesprek oplevert.
+### ~~Bijna-goed terugkoppeling~~ — gebouwd
+Onder de uitslag staat nu "zo dichtbij": de coureurs waar je er één of twee
+plekken naast zat, in zinnen die je in de groepsapp kunt plakken, met wat het
+scheelde. Wie er drie of meer naast zat komt er niet in — dat "zo dichtbij"
+noemen zou spot zijn.
 
 ### Je persoonlijke blinde vlek
 Over een heel seizoen aan voorspellingen: "Je zet Verstappen gemiddeld 2

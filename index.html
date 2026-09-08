@@ -524,6 +524,13 @@
   .strip{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
   .sr{display:flex;align-items:center;gap:10px;min-height:52px;padding:0 12px;
     background:var(--paneel);border-left:4px solid var(--lijn);border-radius:8px}
+  /* "Zo dichtbij": waar de punten bleven, in gewone zinnen. Bewust geen
+     tabel — dit is bedoeld om voor te lezen in de groepsapp. */
+  .bijna{background:var(--paneel2);border:1px solid var(--lijn);border-radius:12px;
+    padding:16px;display:flex;flex-direction:column;gap:10px;flex:none}
+  .bijnalijst{margin:0;padding:0 0 0 18px;display:flex;flex-direction:column;gap:6px}
+  .bijnalijst li{font-size:14px;line-height:1.5;color:var(--ink2)}
+  .bijnalijst b{font-family:var(--cond);font-size:17px;letter-spacing:.02em;color:var(--ink)}
   .sr .pos{font-family:var(--mono);font-size:12px;color:var(--ink3);min-width:32px;flex:none}
   .sr .code{font-family:var(--cond);font-size:22px;font-weight:700;min-width:52px;flex:none}
   .sr .werd{font-family:var(--mono);font-size:11px;color:var(--ink2);flex:1;min-width:0}
@@ -1075,6 +1082,29 @@ export function scoreLijst(voorspeld = [], werkelijk = []) {
     return { nr, voorspeld: i + 1, werkelijk: echt === -1 ? null : echt + 1, punten };
   });
   return { totaal, regels };
+}
+
+// Hoe dichtbij was je? Uit dezelfde regels als scoreLijst, maar dan de vraag
+// die na afloop in de groepsapp gesteld wordt: waar zat het 'm in.
+//
+// Alleen de coureurs die je nog punten opleverden tellen mee. Wie je drie of
+// meer plekken misgokte was niet bijna goed, die was gewoon fout, en dat als
+// "zo dichtbij" presenteren zou een grap zijn. Een DNF valt er ook buiten:
+// daar viel niets aan te doen.
+//
+// `scheelde` per regel is wat een exacte voorspelling extra had opgeleverd, en
+// het totaal telt alleen die bijna-treffers op. Bewust niet "wat een perfecte
+// top 10 waard was geweest": dat getal staat feitelijk al in het scoreblok
+// erboven, en het is bovendien vooral deprimerend. Dit gaat over de plekken
+// waar je er net naast zat.
+export function bijnaGoed(regels = []) {
+  const dichtst = regels
+    .filter(x => x.werkelijk !== null && x.punten > 0 && x.punten < 5)
+    .map(x => ({ ...x, afstand: Math.abs(x.werkelijk - x.voorspeld), scheelde: 5 - x.punten }))
+    // Het dichtstbij eerst; scheelde het even veel plekken, dan de hoogste
+    // plek in jouw lijst — daar zit de meeste spijt.
+    .sort((a, b) => a.afstand - b.afstand || a.voorspeld - b.voorspeld);
+  return { scheelde: dichtst.reduce((n, x) => n + x.scheelde, 0), dichtst };
 }
 
 // Onderling duel: per raceweekend wie van twee spelers de meeste punten
@@ -3308,8 +3338,38 @@ function uitslagWeergave(r, werkelijk) {
         </li>`;
       }).join('')}
     </ul>
+    ${bijnaGoedBlok(r, regels)}
     ${andermans(r)}
     ${weekendVoet(r)}`;
+}
+
+// Waar zat het 'm in. Dit is de vraag die na afloop in de groepsapp gesteld
+// wordt, en de app had het antwoord al staan zonder het te tonen: de lijst
+// hierboven zegt per coureur "werd P4", maar niemand telt zelf op waar de
+// punten bleven.
+//
+// Alleen tonen als er iets te zeggen valt. Wie geen enkele coureur binnen twee
+// plekken had, heeft niets "zo dichtbij" gehad, en dat dan toch zo noemen leest
+// als spot.
+function bijnaGoedBlok(r, regels) {
+  const { dichtst, scheelde } = bijnaGoed(regels);
+  if (!dichtst.length) return '';
+  const plekken = (n) => n === 1 ? 'één plek' : `${n} plekken`;
+  return `
+    <div class="bijna">
+      <span class="label">zo dichtbij</span>
+      <ul class="bijnalijst">
+        ${dichtst.slice(0, 3).map(x => {
+          const d = drv(r, x.nr);
+          return `<li><b>${esc(d.code)}</b> stond bij jou op P${x.voorspeld} en werd
+            P${x.werkelijk} — ${plekken(x.afstand)}, en dat scheelde
+            ${x.scheelde} ${x.scheelde === 1 ? 'punt' : 'punten'}.</li>`;
+        }).join('')}
+      </ul>
+      ${dichtst.length > 1 ? `<p class="zacht" style="margin:0;font-size:13px">Bij
+        elkaar scheelden die net-niets ${scheelde}
+        ${scheelde === 1 ? 'punt' : 'punten'}.</p>` : ''}
+    </div>`;
 }
 
 // Onder de uitslag: wie pakte dit weekend de meeste punten, en een knop die

@@ -2429,3 +2429,67 @@ gaatje abonneert ziet even niets.
 En de `VALARM` van twee uur van tevoren is een suggestie: veel agenda-apps
 negeren die bij een abonnement en gebruiken de melding die de gebruiker zelf
 per agenda instelt. Hij staat er wel, maar er leunt niets op.
+
+---
+
+## Zo dichtbij: waar bleven de punten?
+
+Met het fundament af was de vraag wat er nog waarde toevoegt. Het antwoord
+stond in `ROUTEKAART.md`, een lijst die al een tijdje meeliep: drie punten uit
+groep 2 zijn puur rekenwerk over gegevens die er al zijn, geen schemawijziging,
+geen infrastructuur. Dit is de eerste ervan.
+
+De uitslaglijst zei per coureur al "werd P4". Maar niemand telt zelf op waar de
+punten bleven, en dat is precies de vraag die na afloop in de groepsapp gesteld
+wordt. De app had het antwoord al staan zonder het te tonen.
+
+### Wat er wel en niet in mag
+
+Alleen coureurs die je nog iets opleverden: één of twee plekken ernaast. Wie je
+drie of meer plekken misgokte scoorde nul, en die onder de kop "zo dichtbij"
+zetten zou spot zijn. Een uitvaller telt ook niet mee — daar viel niets aan te
+doen.
+
+De volgorde is het dichtstbij eerst, en bij gelijke afstand de hoogste plek in
+jouw eigen lijst: daar zit de meeste spijt.
+
+### Een getal dat twee dingen betekende
+
+De eerste versie telde op "wat een perfecte top 10 méér waard was geweest".
+Dat klinkt logisch, maar het is een ander getal dan waar het blok over gaat, en
+de test viel er meteen over: bij een uitvaller wist ik zelf niet meer of hij nu
+wel of niet meetelde.
+
+Twee redenen om het te veranderen. Het staat feitelijk al in het scoreblok
+erboven (je punten, en hoeveel je exact had). En het is vooral deprimerend: "een
+perfecte kaart was 34 punten meer geweest" is geen gesprek, dat is een
+rapportcijfer.
+
+Nu telt het alleen de bijna-treffers op — "bij elkaar scheelden die net-niets 8
+punten" — en dat hoort bij de lijst die erboven staat.
+
+### De helft die je anders vergeet
+
+`bijna-goed.test.mjs` doet allebei: de rekenkern (geknipt uit `index.html`, net
+als bij `scoreLijst`) én de echte app in Chromium. Een rekenkern die klopt
+terwijl niemand het blok ooit te zien krijgt is nog steeds stuk. De
+browserhelft controleert ook het omgekeerde: bij een foutloze voorspelling
+staat er niets.
+
+### En een oude regel in de routekaart rechtgezet
+
+"Handmatig een uitslag invullen in de app — gebouwd" stond er nog als
+afgevinkt, terwijl dat bij het klaarmaken voor publiek gebruik juist weer is
+weggehaald. Met meer dan één poule in de app is een verkeerd ingevulde uitslag
+namelijk niet je eigen probleem meer, maar dat van iedereen die dat weekend
+meedeed.
+
+### Wat er nog in die lijst staat
+
+Twee dingen uit dezelfde groep, allebei rekenwerk over bestaande rijen:
+
+- **Je persoonlijke blinde vlek** — "je zet Verstappen gemiddeld twee plekken te
+  laag", of "je bent het scherpst op het middenveld". Dit bestaat alleen omdat
+  alle historische voorspellingen bewaard blijven.
+- **Moeilijkste race van het seizoen** — het poulegemiddelde per race, zodat je
+  ziet welk weekend iedereen verraste.
