@@ -617,6 +617,12 @@ const SUPABASE_URL = 'https://etifamdwqxjfaeaordlr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aWZhbWR3cXhqZmFlYW9yZGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzMzNTUsImV4cCI6MjEwMzE0OTM1NX0.dI0HMZsO0JcmhF9ibD81ivVl96UCYInoUz94r8cAqio';
 const SEIZOEN = 2026;
 
+// Waar iemand terecht kan met een vraag over zijn gegevens. Leeg laten mag —
+// dan staat die regel er gewoon niet — maar een privacyverklaring zonder
+// contactadres is niet af. Vul hier een adres in dat je publiek wilt hebben;
+// deze pagina is voor iedereen te lezen. Zie BEDIENING.md §12.
+const PRIVACY_CONTACT = '';
+
 const DEMO = !SUPABASE_URL || !SUPABASE_ANON_KEY;
 
 // Kan dit een poulecode zijn? Dat is geen cosmetische vraag: Supabase stuurt je
@@ -1296,6 +1302,7 @@ const S = {
   omschrijvingFout: '',
   mail:  { open: false, fout: '', gestuurd: '' },  // mailadres koppelen, onder Poule
   inlog: { open: false, fout: '', gestuurd: '' },  // inloggen op het beginscherm
+  privacy: { open: false, fout: '' },             // wat de app van je weet
 };
 
 const app = document.getElementById('app');
@@ -2033,6 +2040,7 @@ function toonApp() {
   knoopBeheer();
   knoopOmschrijving();
   knoopMail();
+  knoopPrivacy();
   knoopLosmaken();
   const wissel = app.querySelector('#wissel');
   if (wissel) wissel.onclick = () => { vergeet(S.poule.id); S.ik = null; render(); };
@@ -2236,6 +2244,7 @@ function poulePagina(rijen) {
       <b>1</b> twee plekken ernaast.</div>
     ${mailBlok()}
     ${eigenLinkBlok()}
+    ${privacyBlok()}
     ${omschrijvingBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}
@@ -2383,6 +2392,129 @@ function mailBlok() {
       placeholder="jij@voorbeeld.nl" autocomplete="email" spellcheck="false">
     <button class="knop klein" id="mailstuur">Stuur me de link</button>
     <p class="err" id="mailfout">${esc(S.mail.fout)}</p>`;
+}
+
+// ---- wat de app van je weet ---------------------------------
+// Deze app slaat sinds kort een persoonsgegeven op — je mailadres, als je het
+// koppelt — en dan hoort er te staan wat er gebeurt en hoe je het weg krijgt.
+// Kort en in gewone taal; een pagina juridisch geknip leest niemand.
+//
+// Dichtgeklapt, want de meeste mensen komen hier niet voor. Maar hij staat er
+// wel, op de plek waar ook de knoppen staan die het regelen.
+function privacyBlok() {
+  const kop = `<div class="scheiding"></div>
+    <span class="label">wat de app van je weet</span>`;
+  if (!S.privacy.open) {
+    return `${kop}
+      <p class="zacht" style="margin:0">Welke gegevens er van je bewaard
+        worden, en hoe je ze weer weg krijgt.</p>
+      <button class="knop klein" id="privacyopen">Lees het na</button>`;
+  }
+  return `${kop}
+    <div class="uitleg" style="line-height:1.6">
+      <p style="margin:0 0 10px"><b>Wat er bewaard wordt</b><br>
+        De naam die je in de poule kiest, je voorspellingen en je punten. En
+        een anoniem account: een willekeurig nummer, zodat de database weet
+        welke voorspellingen van jou zijn. <b>Je mailadres alleen als je het
+        zelf koppelt</b> — doe je dat niet, dan staat er geen mailadres.</p>
+      <p style="margin:0 0 10px"><b>Waar het staat</b><br>
+        In een database bij Supabase. De kalender, de coureurs en de uitslagen
+        komen van OpenF1; daar staat niets van jou in.</p>
+      <p style="margin:0 0 10px"><b>Wat er niet gebeurt</b><br>
+        Geen advertenties, geen analytics, geen trackers, en er wordt niets
+        doorverkocht of gedeeld. De app haalt wel lettertypen op bij Google
+        Fonts; daarbij ziet Google je IP-adres.</p>
+      <p style="margin:0 0 10px"><b>Hoe lang</b><br>
+        Zolang de poule bestaat. Hieronder kun je er zelf een eind aan maken.</p>
+      <p style="margin:0"><b>Inzien</b><br>
+        Alles wat de app van je weet staat in de app zelf: je naam, je
+        voorspellingen en je punten.${PRIVACY_CONTACT ? `<br>
+        Een vraag erover? ${esc(PRIVACY_CONTACT)}` : ''}</p>
+    </div>
+    ${weggaanBlok()}`;
+}
+
+// De twee manieren om weg te gaan. Het verschil is niet cosmetisch, dus het
+// staat er ook zo: de eerste laat de poule van je medespelers heel, de tweede
+// haalt je uit hun stand.
+function weggaanBlok() {
+  if (!mijnUid) return '';
+  return `
+    <p class="zacht" style="margin:14px 0 0"><b>Weggaan</b><br>
+      Je hebt twee keuzes, en ze verschillen echt van elkaar.</p>
+    <button class="knop klein" id="wegaccount">Mijn account verwijderen</button>
+    <p class="zacht" style="margin:0;font-size:13px">Je account en je mailadres
+      gaan weg. Je spelers blijven in de poule staan met hun naam en punten,
+      zodat de stand van de anderen blijft kloppen — ze horen alleen bij
+      niemand meer.</p>
+    <button class="knop klein" id="wegalles">Alles verwijderen</button>
+    <p class="zacht" style="margin:0;font-size:13px">Ook je spelers en al je
+      voorspellingen, in elke poule. Je verdwijnt daarmee ook uit de stand van
+      je medespelers. Dit is niet terug te draaien.</p>
+    <p class="err" id="wegfout">${esc(S.privacy.fout)}</p>`;
+}
+
+function knoopPrivacy() {
+  const open = app.querySelector('#privacyopen');
+  if (open) open.onclick = () => { S.privacy = { open: true, fout: '' }; render(); };
+
+  const weg = async (knop, ookSpelers, vraag) => {
+    if (knop.dataset.zeker !== 'ja') {
+      const oorspronkelijk = knop.textContent;
+      knop.dataset.zeker = 'ja';
+      knop.textContent = vraag;
+      setTimeout(() => {
+        if (!knop.isConnected) return;
+        knop.dataset.zeker = ''; knop.textContent = oorspronkelijk;
+      }, 6000);
+      return;
+    }
+    knop.disabled = true;
+    const fout = (t) => { const e = app.querySelector('#wegfout'); if (e) e.textContent = t; };
+    try {
+      const { error } = await db.rpc('verwijder_mijn_account', { p_ook_spelers: ookSpelers });
+      if (error) throw new Error(uitlegVerwijderen(error));
+      await db.auth.signOut().catch(() => {});
+      vergeetMijOpDitToestel();
+      location.reload();
+    } catch (e) {
+      knop.disabled = false;
+      fout(e.message);
+    }
+  };
+
+  const a = app.querySelector('#wegaccount');
+  if (a) a.onclick = () => weg(a, false, 'Account verwijderen? Tik nog een keer');
+  const b = app.querySelector('#wegalles');
+  if (b) b.onclick = () => weg(b, true, 'Alles verwijderen? Tik nog een keer');
+}
+
+// Na het verwijderen wijst dit toestel nog naar spelers die van niemand meer
+// zijn, of die er helemaal niet meer zijn. Het lijstje met poules blijft wel
+// staan: je kunt best weer meedoen, en de code opnieuw moeten opvragen is
+// nergens voor nodig.
+function vergeetMijOpDitToestel() {
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if (k.startsWith('poule:') && k !== POULES && k !== LAATSTE) localStorage.removeItem(k);
+    }
+  } catch { /* niets te doen */ }
+}
+
+// De functie draait als `security definer`; komt hij niet aan auth.users, dan
+// is dat geen fout van de speler en heeft "probeer opnieuw" geen zin.
+function uitlegVerwijderen(error) {
+  const bericht = String(error?.message ?? '');
+  if (/permission denied|must be owner|insufficient/i.test(bericht)) {
+    return 'De database mag dit account niet verwijderen. Dat is iets om aan '
+         + 'de beheerder te melden — zie BEDIENING.md §12.';
+  }
+  if (/function .*verwijder_mijn_account.* does not exist|PGRST202/i.test(bericht)
+      || error?.code === 'PGRST202') {
+    return 'Deze database kent het verwijderen nog niet. Draai schema.sql '
+         + 'opnieuw in de Supabase SQL editor.';
+  }
+  return bericht || 'Het verwijderen is niet gelukt.';
 }
 
 function knoopMail() {

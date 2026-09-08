@@ -457,3 +457,62 @@ dus niet, de opgeslagen lijst was al verouderd voordat het weekend begon. Of dat
 Actions → *Klopt de stand?* na te kijken; die draait ook
 `scripts/controle-coureurs.mjs`, dat per race naast elkaar zet wat er in de
 database staat en wat OpenF1 er nu over zegt.
+
+---
+
+## 12. Wat de app van je weet
+
+Onder **Poule** staat een dichtgeklapt blok "wat de app van je weet". Daarin
+staat kort wat er bewaard wordt en hoe je het weer weg krijgt. Sinds er
+mailadressen aan accounts kunnen hangen slaat de app een persoonsgegeven op, en
+dan hoort dat er te staan.
+
+Wat de verklaring zegt, en waarom het waar is:
+
+- **De naam die je kiest, je voorspellingen en je punten.** Plus een anoniem
+  account: een willekeurig nummer.
+- **Je mailadres alleen als je het zelf koppelt.** Zonder koppeling staat er
+  geen mailadres.
+- **Geen advertenties, analytics of trackers.** Er zit niets van dien aard in
+  `index.html`; dat is te controleren.
+- **Wel Google Fonts.** De app haalt drie lettertypen op bij
+  `fonts.googleapis.com`, en daarbij ziet Google het IP-adres van de bezoeker.
+  Dat staat er eerlijk bij. Zelf hosten haalt die regel weg en is een goede
+  volgende stap; zie `OVERDRACHT.md`.
+
+### Twee manieren om weg te gaan
+
+Het verschil is niet cosmetisch, dus het staat ook zo op het scherm:
+
+| | Wat er gebeurt |
+| --- | --- |
+| **Mijn account verwijderen** | Het account en het mailadres gaan weg. Je spelers blijven in de poule staan met hun naam en punten — ze horen alleen bij niemand meer. De stand van je medespelers blijft kloppen. |
+| **Alles verwijderen** | Ook je spelers en al je voorspellingen, in elke poule. Je verdwijnt daarmee uit de stand van anderen. Niet terug te draaien. |
+
+Allebei via `verwijder_mijn_account()` in `schema.sql`: een `security definer`
+functie die `auth.uid()` gebruikt, zodat je alleen jezelf kunt verwijderen. Dat
+is nodig omdat alleen de `service_role` in `auth.users` mag schrijven, en die
+sleutel hoort nooit in de frontend.
+
+Was je poulebaas en kies je "alles", dan raakt de poule zijn eigenaar kwijt in
+plaats van te blijven wijzen naar een speler die niet meer bestaat. Daarna mag
+elk lid hem beheren, net als de poules van vóór het aanmaakscherm.
+
+### Twee dingen die jij nog moet invullen
+
+1. **Een contactadres.** Bovenin `index.html` staat `PRIVACY_CONTACT = ''`.
+   Zolang dat leeg is, staat er geen contactregel in de verklaring — en een
+   privacyverklaring zonder contactadres is niet af. Let op: die pagina is
+   publiek, dus zet er een adres in dat je publiek wilt hebben.
+2. **Waar de database staat.** De verklaring zegt "in een database bij
+   Supabase". In welke regio dat is, staat in je Supabase-dashboard
+   (Settings → General). Voor Nederlandse gebruikers is dat het vermelden
+   waard.
+
+### Als het verwijderen niet werkt
+
+`verwijder_mijn_account()` draait met de rechten van wie hem heeft aangemaakt —
+de `postgres`-rol in de SQL editor. Krijgt een speler "de database mag dit
+account niet verwijderen", dan komt die rol niet aan `auth.users` in jouw
+project. De uitweg is dan een Supabase Edge Function met de `service_role` key,
+en die sleutel blijft daar — nooit in `index.html`.

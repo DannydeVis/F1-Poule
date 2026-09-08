@@ -631,6 +631,72 @@ grant execute on function public.mag_voor_speler(uuid) to anon, authenticated;
 grant execute on function public.mag_beheren(uuid)     to anon, authenticated;
 
 -- ------------------------------------------------------------
+--  Je account verwijderen
+--
+--  Sinds er mailadressen aan accounts kunnen hangen slaat deze app een
+--  persoonsgegeven op, en dan hoort er een knop te zijn om het weg te halen.
+--
+--  Waarom dit een functie is en geen `delete` vanuit de app: alleen de
+--  service_role mag in auth.users schrijven, en die sleutel hoort nooit in
+--  de frontend te staan. `security definer` laat deze functie draaien met de
+--  rechten van wie hem aanmaakt (de postgres-rol in de SQL editor), en
+--  `auth.uid()` zorgt dat je alleen jezelf kunt verwijderen — er is geen
+--  parameter waarin je iemand anders kunt aanwijzen.
+--
+--  Twee smaken, en het verschil is niet cosmetisch:
+--
+--    p_ook_spelers = false  Alleen het account. Je spelers blijven in de
+--                           poule staan, maar hangen aan niemand meer. De
+--                           stand van je medespelers blijft kloppen, en het
+--                           mailadres is weg.
+--    p_ook_spelers = true   Alles. Je spelers gaan mee via `on delete
+--                           cascade`, en daarmee al je voorspellingen — ook
+--                           uit de stand van anderen. Onomkeerbaar.
+--
+--  Geeft terug hoeveel spelers er zijn meegegaan (0 bij de eerste smaak).
+create or replace function public.verwijder_mijn_account(p_ook_spelers boolean default false)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  ik  uuid := auth.uid();
+  weg integer := 0;
+begin
+  if ik is null then
+    raise exception 'Er is geen account om te verwijderen: je bent niet ingelogd.';
+  end if;
+
+  if p_ook_spelers then
+    select count(*) into weg from public.pool_members where user_id = ik;
+    -- Poules waarvan ik de baas ben raken hun eigenaar kwijt, precies zoals
+    -- de poules van vóór het aanmaakscherm. Zonder deze regel wijst
+    -- owner_member_id straks naar een speler die niet meer bestaat — er staat
+    -- geen foreign key op — en kan niemand de vragenset of de omschrijving
+    -- nog aanpassen. Zie mag_beheren().
+    update public.pools p set owner_member_id = null
+    where exists (select 1 from public.pool_members m
+                  where m.member_id = p.owner_member_id and m.user_id = ik);
+  else
+    -- Losmaken vóór het account weggaat, anders neemt de cascade ze alsnog mee.
+    update public.pool_members set user_id = null where user_id = ik;
+  end if;
+
+  delete from auth.users where id = ik;
+  if not found then
+    raise exception 'Dat account bestaat niet (meer).';
+  end if;
+
+  return weg;
+end $$;
+
+-- anon heeft geen account om te verwijderen; auth.uid() is daar null. Ook een
+-- anonieme speler heeft in Supabase de rol `authenticated`.
+revoke all on function public.verwijder_mijn_account(boolean) from public;
+grant execute on function public.verwijder_mijn_account(boolean) to authenticated;
+
+-- ------------------------------------------------------------
 --  Toegang
 --
 --  Wat hier vastligt, en wat nadrukkelijk níét.
