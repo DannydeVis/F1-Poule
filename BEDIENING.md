@@ -58,9 +58,8 @@ Bovenaan de knop **Kopieer voor WhatsApp**.
 ### Poule
 Leden, poulecode, uitnodiglink met deelknop, en de instellingen. Voor de
 poulebaas staat hier ook het beheergedeelte: welke vragen meedoen, de
-omschrijving van de poule, en handmatig een uitslag invoeren als OpenF1 het
-laat afweten (zie §11). Verder je eigen link (zie §4) en, onderaan, je andere
-poules om naar over te stappen.
+omschrijving van de poule. Verder je eigen link (zie §4) en, onderaan, je
+andere poules om naar over te stappen.
 
 ---
 
@@ -211,7 +210,7 @@ Blokkeer het niet, alleen een melding. Het is hun poule.
 2. Tabbalk onderin, bestaande schermen erin hangen
 3. Aanmaakproces in vier stappen, met de presets
 4. Uitnodiglink met `?code=`
-5. Beheergedeelte onder Poule, inclusief handmatige uitslaginvoer
+5. Beheergedeelte onder Poule
 
 Stap 1 en 2 zijn los van elkaar te doen en raken elkaar nauwelijks. Stap 3 heeft
 stap 1 nodig.
@@ -283,11 +282,25 @@ Zo'n race blijft in de kalender staan, want er kunnen voorspellingen aan
 hangen. Hij is alleen niet meer in te vullen, telt niet mee als iets wat je nog
 moet doen, en zegt "niet doorgegaan" in plaats van "de uitslag volgt".
 
-**Handmatig invoeren blijft bestaan**, en dat is geen restje. Als OpenF1 een
-uitslag mist of te laat is, vul je hem onder Poule zelf in; de sync raakt hem
-daarna niet meer aan, want die vult alleen wat leeg is. Dat is ook de weg terug
-bij een race die ten onrechte als afgelast is gemarkeerd: **een uitslag wint
-altijd van de vlag.** Staat er een uitslag, dan telt de race gewoon mee.
+**Handmatig invoeren bestaat niet meer.** Dat was een knop onder Poule waarmee
+je een ontbrekende uitslag zelf kon invullen. Hij is eruit, en de reden staat
+in de tabel zelf: `races` heeft geen `pool_id`. Er is één rij per race per
+seizoen, gedeeld door élke poule in de app. Wie daar iets in typte, veranderde
+de uitslag voor iedereen die dat seizoen volgde. De app waarschuwde daar ook
+voor — *"geldt voor iedereen die dit seizoen volgt"* — maar een waarschuwing is
+onder vrienden genoeg en publiek niet: één iemand kan er elke poule mee slopen.
+
+De tabel staat nu op **alleen-lezen** voor `anon` en `authenticated`, met twee
+sloten: een RLS-policy die alleen `select` toestaat, én een `revoke` van
+`insert, update, delete` op tabelniveau. Schrijven doet alleen de sync, en die
+draait op een GitHub-runner met de `service_role` key — die gaat langs allebei.
+
+Wat er al met de hand ingevoerd was blijft staan en blijft gemarkeerd als
+handmatig; de sync corrigeert dat niet, want die vult alleen wat leeg is.
+
+Een uitslag wint nog steeds van de vlag: staat er een uitslag, dan telt een
+race die als afgelast gemarkeerd stond gewoon weer mee. Alleen komt die uitslag
+nu altijd van de sync.
 
 **Als een uitslag niet binnenkomt**: draai de verkenner (Actions → *OpenF1
 verkennen*), eventueel met een `session_key`. Die laat zien of OpenF1 de race

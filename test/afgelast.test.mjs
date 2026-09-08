@@ -76,10 +76,11 @@ check('wat je had ingevuld is niet weggegooid',
     (a) => a.question_id === 'quali_top10' && a.waarde?.length === 10))),
   JSON.stringify(await page.evaluate(() => globalThis.__db.answers.map((a) => a.question_id))));
 
-// Zelf invullen mag nog: als hij tóch verreden blijkt, moet er een weg terug
-// zijn. Dat is dezelfde knop als bij een gewone gesloten race.
-check('je kunt hem alsnog zelf invullen als hij toch verreden is',
-  (await page.$('#zelfinvullen')) !== null);
+// Zelf invullen bestaat niet meer: races is één tabel voor alle poules, dus
+// die knop veranderde de uitslag voor iedereen die het seizoen volgt. Een
+// afgelaste race die tóch verreden blijkt komt vanzelf goed via de sync.
+check('er staat geen knop om de uitslag zelf in te vullen',
+  (await page.$('#zelfinvullen')) === null);
 
 // --- een uitslag wint van de vlag ----------------------------------------
 await page.evaluate(() => {

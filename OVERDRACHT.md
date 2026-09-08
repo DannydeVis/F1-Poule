@@ -137,11 +137,12 @@ dekken de nieuwe opmaak net zo goed als de oude.
   het wel. Het script gebruikt alleen de ingebouwde `fetch`, dus ook daar
   geen `npm install`.
 
-- **`sync.html` bestaat nog als handmatige noodknop**, voor als je buiten
-  het schema om iets wilt ophalen. Die draait in de browser op de anon key,
-  en daarom staat de `races`-tabel ook voor `anon` schrijfbaar. Zou je
-  `sync.html` ooit uitfaseren, dan kan die policy strenger: de Actions-sync
-  gebruikt de service_role key en heeft hem niet nodig.
+- **`sync.html` bestond als handmatige noodknop**, voor als je buiten het
+  schema om iets wilde ophalen. Die draaide in de browser op de anon key, en
+  daarom stond de `races`-tabel ook voor `anon` schrijfbaar. Hier stond al:
+  "zou je `sync.html` ooit uitfaseren, dan kan die policy strenger". Dat is
+  precies wat er gebeurd is — zie "Uitslagen komen alleen nog van de sync"
+  onderaan.
 
 ## Opgelost: opslaan van een voorspelling
 
@@ -762,7 +763,7 @@ inclusief het migratiepad van de oude tabelstructuur hierboven. De bewaar-bug
 kan dus niet stilzwijgend terugkomen.
 
 **De poule zelf heeft geen npm of build-stap nodig.** `index.html` en
-`sync.html` blijven bestanden die je rechtstreeks in een browser opent. Node
+`index.html` blijft een bestand dat je rechtstreeks in een browser opent. Node
 draait alleen op de runner van GitHub. Zie `test/LEESMIJ.md`.
 
 Een pull request vanaf een `claude/*`-branch wordt automatisch gemerged zodra
@@ -780,7 +781,6 @@ worden. Rood betekent geen merge.
 | `diagnose.sql` | Leest alleen: toont de werkelijke tabellen, kolommen en sleutels |
 | `reset.sql` | Gooit oude tabellen weg, draai vóór schema.sql bij een schone herstart |
 | `scripts/sync.mjs` | Haalt kalender en uitslagen uit OpenF1, draait in GitHub Actions |
-| `sync.html` | Handmatige variant van de sync, draait in de browser |
 | `.github/workflows/sync.yml` | Draait de sync elk uur, plus een knop om hem los te starten |
 | `.github/workflows/tests.yml` | Draait de tests bij elke pull request en push naar main |
 | `.github/workflows/automerge.yml` | Mergt een `claude/*`-pull request zodra de tests groen zijn |
@@ -789,7 +789,7 @@ worden. Rood betekent geen merge.
 | `BEDIENING.md` | Ontwerp voor de navigatie, het aanmaakproces en de vragenset |
 
 Supabase-project: `etifamdwqxjfaeaordlr`. De URL en de anon key staan bovenin
-`index.html` en `sync.html` en zijn bewust publiek; dat hoort bij de anon key.
+`index.html` en is bewust publiek; dat hoort bij de anon key.
 De service_role key die de Actions-sync gebruikt staat als repository secret
 (`SUPABASE_URL` en `SUPABASE_KEY`) en hoort nergens in de code te staan.
 
@@ -1598,3 +1598,69 @@ Hier hangt nog iets aan vast dat het onthouden waard is: **OpenF1 is voor
 niet-commercieel gebruik**. Advertenties of een betaalde variant breken die
 voorwaarde en dwingen je naar een betaalde databron. Geen geld in de app is dus
 niet alleen een juridische keuze, het houdt ook de databron open.
+
+## Uitslagen komen alleen nog van de sync
+
+Dit volgt uit één ding in het schema dat makkelijk over het hoofd te zien is:
+**`races` heeft geen `pool_id`.** Er is één rij per race per seizoen, gedeeld
+door élke poule in de app. Wie daar iets in schreef, veranderde de uitslag voor
+iedereen die dat seizoen volgde — niet alleen voor zijn eigen poule.
+
+De app was daar eerlijk over ("geldt voor iedereen die dit seizoen volgt, niet
+alleen voor jouw poule"), en onder vrienden is zo'n waarschuwing genoeg.
+Publiek is het dat niet: het is een knop waarmee één iemand elke poule in de
+app kan verzieken, en die is niet terug te draaien omdat de sync alleen lege
+uitslagen vult.
+
+Dus eruit:
+
+- `uitslagInvoer()`, `bewaarUitslag()`, `losseInvoer()`, `losseBewaren()`,
+  `knoopLosse()`, `magInvullen()`, `openUitslagen()`, `UITSLAGKOLOM` en de
+  knoppen "Uitslag zelf invullen" en "Zelf invullen"
+- `S.uitslag` en `S.losse` uit de toestand
+- `sync.html`, dat met de anon key naar `races` schreef
+
+Op de plek van die invulformulieren staat nu `wachtOpUitslag()`: één regel die
+zegt dat de uitslag nog volgt. `HANDVLAG` blijft, want uitslagen die er vóór
+deze wijziging met de hand in zijn gezet blijven gemarkeerd — de sync
+corrigeert die niet.
+
+### Twee sloten in plaats van één
+
+De policy op `races` staat nu op `for select` in plaats van `for all`. Maar er
+is meer aan de hand, en dat was de echte vondst: **`schema.sql` had helemaal
+geen `grant`-regels.** Supabase geeft `anon` en `authenticated` standaard alles
+op `public`, dus dat werkte — maar het stond nergens, en in de CI werden de
+rollen kaal aangemaakt (`create role anon;`), zonder rechten. Daardoor waren de
+RLS-policies daar nooit uitgeoefend: een test die als `anon` iets probeerde
+kreeg "permission denied" op tabelniveau en kwam nooit bij de policy.
+
+Nu staan de rechten expliciet in `schema.sql`, en `races` krijgt er een tweede
+slot bij:
+
+```sql
+grant select on public.races to anon, authenticated;
+revoke insert, update, delete on public.races from anon, authenticated;
+```
+
+Een policy die per ongeluk weer te ruim wordt komt daar alsnog niet langs.
+
+`test/races-alleen-lezen.test.sql` draait als `anon` én als `authenticated` en
+controleert dat lezen mag en schrijven niet — update, insert en delete alle
+drie. Let op één detail in die test: RLS gooit bij een `update` die niets mag
+raken géén fout, hij raakt gewoon nul rijen. Daarom meet de test `found` en
+niet alleen of er een exception kwam.
+
+Nagekeken tegen een echte PostgreSQL 16, inclusief de tegenproef: met de oude
+`races_open`-policy en de bijbehorende grants erin zakt de test op *"gezakt:
+anon kon een uitslag overschrijven"*.
+
+### Wat dit kost
+
+Er is nu geen weg meer om een uitslag die OpenF1 mist met de hand aan te
+vullen. Dat is een echt verlies, en het is aanvaardbaar geworden door wat er
+deze week al gebouwd is: de sync draait elk uur, herkent zelf afgelaste races,
+repareert een verouderde deelnemerslijst, en er is een knop in het
+Actions-tabblad om hem meteen te draaien. Blijft er tóch iets ontbreken, dan is
+dat nu een klus voor de beheerder met de `service_role` key — niet iets wat
+elke bezoeker kan.

@@ -64,30 +64,22 @@ await page.click('[data-tab="race"]');
 await page.waitForSelector('.score');
 
 const wachten = await tekst('#paneel');
-check('een uitslag die er nog niet is zegt dat hij vanzelf komt',
-  wachten.includes('nog niet bekend') && wachten.includes('sync'),
-  wachten.slice(0, 90) + '...');
+check('een uitslag die er nog niet is zegt dat hij nog volgt',
+  wachten.includes('uitslag volgt nog'), wachten.slice(0, 110) + '...');
 check('en er staat niet dat je punten hebt laten liggen',
   !wachten.includes('geen snelste ronde gekozen'), wachten.slice(0, 90) + '...');
+// Zelf invullen bestaat niet meer: races is één tabel voor alle poules, dus
+// die knop veranderde de uitslag voor iedereen die het seizoen volgt.
+check('en er staat geen knop om hem zelf in te vullen',
+  (await page.$('[data-losse-start="snelste_ronde"]')) === null);
 
-// --- zelf invullen ---------------------------------------------------------
-await page.click('[data-losse-start="snelste_ronde"]');
-await page.waitForSelector('[data-losse]');
-check('zelf invullen waarschuwt dat het voor iedereen geldt',
-  (await tekst('#paneel')).includes('niet alleen voor jouw poule'));
-check('opslaan kan pas als je iemand hebt aangewezen',
-  await page.$eval('#losseOpslaan', (b) => b.disabled));
-
-// Bewust dezelfde coureur als de speler koos, zodat de punten zichtbaar worden.
-await page.click(`[data-losse="${ronde}"]`);
-await page.click('#losseOpslaan');
-await page.waitForSelector('.melding');
-
-const na = await race1();
-check('de snelste ronde staat in de database', na.fastest_lap === ronde, String(na.fastest_lap));
-check('en is gemarkeerd als handmatig ingevuld', na.fastest_lap_handmatig === true);
-check('de snelste pitstop is niet aangeraakt', na.fastest_pitstop === null,
-  String(na.fastest_pitstop));
+// --- de sync brengt hem binnen ---------------------------------------------
+await page.evaluate((nr) => {
+  const r = globalThis.__db.races.find((x) => String(x.id) === '1');
+  r.fastest_lap = nr;                 // dezelfde coureur als de speler koos
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
+}, ronde);
+await page.reload();
 
 // --- en dan de punten ------------------------------------------------------
 await openRace(page, 'Melbourne');
@@ -95,10 +87,10 @@ await page.click('[data-tab="race"]');
 await page.waitForSelector('.score');
 const scherm = await tekst('#paneel');
 check('de goede gok levert 10 punten op',
-  /snelste ronde · 10 punten · handmatig ingevuld/.test(scherm),
+  /snelste ronde · 10 punten/.test(scherm),
   scherm.match(/snelste ronde[^A-Z]*/)?.[0] ?? 'die regel staat er niet');
 check('de snelste pitstop wacht nog steeds op zijn uitslag',
-  scherm.includes('nog niet bekend'));
+  scherm.includes('uitslag volgt nog'));
 
 // --- een misser noemt wie het wél werd -------------------------------------
 await page.evaluate(() => {
