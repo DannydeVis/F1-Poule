@@ -7,4 +7,820 @@ X-WR-CALNAME:F1 Poule 2026
 X-WR-TIMEZONE:UTC
 REFRESH-INTERVAL;VALUE=DURATION:PT12H
 X-PUBLISHED-TTL:PT12H
+BEGIN:VEVENT
+UID:quali-11234@f1-poule
+DTSTAMP:20260307T050000Z
+DTSTART:20260307T050000Z
+DTEND:20260307T060000Z
+SUMMARY:Kwalificatie Melbourne — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Melbourne\, Australia
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Melbourne: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11234@f1-poule
+DTSTAMP:20260308T040000Z
+DTSTART:20260308T040000Z
+DTEND:20260308T050000Z
+SUMMARY:Race Melbourne — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Melbourne\, Australia
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Melbourne: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11245@f1-poule
+DTSTAMP:20260314T070000Z
+DTSTART:20260314T070000Z
+DTEND:20260314T080000Z
+SUMMARY:Kwalificatie Shanghai — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Shanghai\, China
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Shanghai: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11245@f1-poule
+DTSTAMP:20260315T070000Z
+DTSTART:20260315T070000Z
+DTEND:20260315T080000Z
+SUMMARY:Race Shanghai — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Shanghai\, China
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Shanghai: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11253@f1-poule
+DTSTAMP:20260328T060000Z
+DTSTART:20260328T060000Z
+DTEND:20260328T070000Z
+SUMMARY:Kwalificatie Suzuka — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Suzuka\, Japan
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Suzuka: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11253@f1-poule
+DTSTAMP:20260329T050000Z
+DTSTART:20260329T050000Z
+DTEND:20260329T060000Z
+SUMMARY:Race Suzuka — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Suzuka\, Japan
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Suzuka: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11261@f1-poule
+DTSTAMP:20260411T160000Z
+DTSTART:20260411T160000Z
+DTEND:20260411T170000Z
+SUMMARY:Kwalificatie Sakhir — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Sakhir\, Bahrain
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CANCELLED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Sakhir: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11261@f1-poule
+DTSTAMP:20260412T150000Z
+DTSTART:20260412T150000Z
+DTEND:20260412T160000Z
+SUMMARY:Race Sakhir — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Sakhir\, Bahrain
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CANCELLED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Sakhir: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11269@f1-poule
+DTSTAMP:20260418T170000Z
+DTSTART:20260418T170000Z
+DTEND:20260418T180000Z
+SUMMARY:Kwalificatie Jeddah — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Jeddah\, Saudi Arabia
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CANCELLED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Jeddah: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11269@f1-poule
+DTSTAMP:20260419T170000Z
+DTSTART:20260419T170000Z
+DTEND:20260419T180000Z
+SUMMARY:Race Jeddah — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Jeddah\, Saudi Arabia
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CANCELLED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Jeddah: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11280@f1-poule
+DTSTAMP:20260502T200000Z
+DTSTART:20260502T200000Z
+DTEND:20260502T210000Z
+SUMMARY:Kwalificatie Miami Gardens — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Miami Gardens\, United States
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Miami Gardens: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11280@f1-poule
+DTSTAMP:20260503T170000Z
+DTSTART:20260503T170000Z
+DTEND:20260503T180000Z
+SUMMARY:Race Miami Gardens — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Miami Gardens\, United States
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Miami Gardens: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11291@f1-poule
+DTSTAMP:20260523T200000Z
+DTSTART:20260523T200000Z
+DTEND:20260523T210000Z
+SUMMARY:Kwalificatie Montréal — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Montréal\, Canada
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Montréal: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11291@f1-poule
+DTSTAMP:20260524T200000Z
+DTSTART:20260524T200000Z
+DTEND:20260524T210000Z
+SUMMARY:Race Montréal — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Montréal\, Canada
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Montréal: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11299@f1-poule
+DTSTAMP:20260606T140000Z
+DTSTART:20260606T140000Z
+DTEND:20260606T150000Z
+SUMMARY:Kwalificatie Monte Carlo — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Monte Carlo\, Monaco
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Monte Carlo: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11299@f1-poule
+DTSTAMP:20260607T130000Z
+DTSTART:20260607T130000Z
+DTEND:20260607T140000Z
+SUMMARY:Race Monte Carlo — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Monte Carlo\, Monaco
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Monte Carlo: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11307@f1-poule
+DTSTAMP:20260613T140000Z
+DTSTART:20260613T140000Z
+DTEND:20260613T150000Z
+SUMMARY:Kwalificatie Barcelona — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Barcelona\, Spain
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Barcelona: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11307@f1-poule
+DTSTAMP:20260614T130000Z
+DTSTART:20260614T130000Z
+DTEND:20260614T140000Z
+SUMMARY:Race Barcelona — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Barcelona\, Spain
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Barcelona: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11315@f1-poule
+DTSTAMP:20260627T140000Z
+DTSTART:20260627T140000Z
+DTEND:20260627T150000Z
+SUMMARY:Kwalificatie Spielberg — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Spielberg\, Austria
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Spielberg: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11315@f1-poule
+DTSTAMP:20260628T130000Z
+DTSTART:20260628T130000Z
+DTEND:20260628T140000Z
+SUMMARY:Race Spielberg — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Spielberg\, Austria
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Spielberg: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11326@f1-poule
+DTSTAMP:20260704T150000Z
+DTSTART:20260704T150000Z
+DTEND:20260704T160000Z
+SUMMARY:Kwalificatie Silverstone — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Silverstone\, United Kingdom
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Silverstone: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11326@f1-poule
+DTSTAMP:20260705T140000Z
+DTSTART:20260705T140000Z
+DTEND:20260705T150000Z
+SUMMARY:Race Silverstone — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Silverstone\, United Kingdom
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Silverstone: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11334@f1-poule
+DTSTAMP:20260718T140000Z
+DTSTART:20260718T140000Z
+DTEND:20260718T150000Z
+SUMMARY:Kwalificatie Spa-Francorchamps — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Spa-Francorchamps\, Belgium
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Spa-Francorchamps: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11334@f1-poule
+DTSTAMP:20260719T130000Z
+DTSTART:20260719T130000Z
+DTEND:20260719T140000Z
+SUMMARY:Race Spa-Francorchamps — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Spa-Francorchamps\, Belgium
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Spa-Francorchamps: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11342@f1-poule
+DTSTAMP:20260725T140000Z
+DTSTART:20260725T140000Z
+DTEND:20260725T150000Z
+SUMMARY:Kwalificatie Budapest — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Budapest\, Hungary
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Budapest: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11342@f1-poule
+DTSTAMP:20260726T130000Z
+DTSTART:20260726T130000Z
+DTEND:20260726T140000Z
+SUMMARY:Race Budapest — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Budapest\, Hungary
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Budapest: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11353@f1-poule
+DTSTAMP:20260822T140000Z
+DTSTART:20260822T140000Z
+DTEND:20260822T150000Z
+SUMMARY:Kwalificatie Zandvoort — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Zandvoort\, Netherlands
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Zandvoort: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11353@f1-poule
+DTSTAMP:20260823T130000Z
+DTSTART:20260823T130000Z
+DTEND:20260823T140000Z
+SUMMARY:Race Zandvoort — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Zandvoort\, Netherlands
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Zandvoort: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11361@f1-poule
+DTSTAMP:20260905T140000Z
+DTSTART:20260905T140000Z
+DTEND:20260905T150000Z
+SUMMARY:Kwalificatie Monza — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Monza\, Italy
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Monza: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11361@f1-poule
+DTSTAMP:20260906T130000Z
+DTSTART:20260906T130000Z
+DTEND:20260906T140000Z
+SUMMARY:Race Monza — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Monza\, Italy
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Monza: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11369@f1-poule
+DTSTAMP:20260912T140000Z
+DTSTART:20260912T140000Z
+DTEND:20260912T150000Z
+SUMMARY:Kwalificatie Madrid — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Madrid\, Spain
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Madrid: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11369@f1-poule
+DTSTAMP:20260913T130000Z
+DTSTART:20260913T130000Z
+DTEND:20260913T140000Z
+SUMMARY:Race Madrid — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Madrid\, Spain
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Madrid: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11377@f1-poule
+DTSTAMP:20260925T120000Z
+DTSTART:20260925T120000Z
+DTEND:20260925T130000Z
+SUMMARY:Kwalificatie Baku — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Baku\, Azerbaijan
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Baku: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11377@f1-poule
+DTSTAMP:20260926T110000Z
+DTSTART:20260926T110000Z
+DTEND:20260926T120000Z
+SUMMARY:Race Baku — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Baku\, Azerbaijan
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Baku: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11388@f1-poule
+DTSTAMP:20261010T130000Z
+DTSTART:20261010T130000Z
+DTEND:20261010T140000Z
+SUMMARY:Kwalificatie Marina Bay — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Marina Bay\, Singapore
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Marina Bay: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11388@f1-poule
+DTSTAMP:20261011T120000Z
+DTSTART:20261011T120000Z
+DTEND:20261011T130000Z
+SUMMARY:Race Marina Bay — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Marina Bay\, Singapore
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Marina Bay: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11396@f1-poule
+DTSTAMP:20261024T210000Z
+DTSTART:20261024T210000Z
+DTEND:20261024T220000Z
+SUMMARY:Kwalificatie Austin — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Austin\, United States
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Austin: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11396@f1-poule
+DTSTAMP:20261025T200000Z
+DTSTART:20261025T200000Z
+DTEND:20261025T210000Z
+SUMMARY:Race Austin — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Austin\, United States
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Austin: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11404@f1-poule
+DTSTAMP:20261031T210000Z
+DTSTART:20261031T210000Z
+DTEND:20261031T220000Z
+SUMMARY:Kwalificatie Mexico City — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Mexico City\, Mexico
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Mexico City: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11404@f1-poule
+DTSTAMP:20261101T200000Z
+DTSTART:20261101T200000Z
+DTEND:20261101T210000Z
+SUMMARY:Race Mexico City — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Mexico City\, Mexico
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Mexico City: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11412@f1-poule
+DTSTAMP:20261107T180000Z
+DTSTART:20261107T180000Z
+DTEND:20261107T190000Z
+SUMMARY:Kwalificatie São Paulo — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:São Paulo\, Brazil
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie São Paulo: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11412@f1-poule
+DTSTAMP:20261108T170000Z
+DTSTART:20261108T170000Z
+DTEND:20261108T180000Z
+SUMMARY:Race São Paulo — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:São Paulo\, Brazil
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race São Paulo: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11420@f1-poule
+DTSTAMP:20261121T040000Z
+DTSTART:20261121T040000Z
+DTEND:20261121T050000Z
+SUMMARY:Kwalificatie Las Vegas — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Las Vegas\, United States
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Las Vegas: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11420@f1-poule
+DTSTAMP:20261122T040000Z
+DTSTART:20261122T040000Z
+DTEND:20261122T050000Z
+SUMMARY:Race Las Vegas — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Las Vegas\, United States
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Las Vegas: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11428@f1-poule
+DTSTAMP:20261128T180000Z
+DTSTART:20261128T180000Z
+DTEND:20261128T190000Z
+SUMMARY:Kwalificatie Lusail — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Lusail\, Qatar
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Lusail: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11428@f1-poule
+DTSTAMP:20261129T160000Z
+DTSTART:20261129T160000Z
+DTEND:20261129T170000Z
+SUMMARY:Race Lusail — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Lusail\, Qatar
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Lusail: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-11436@f1-poule
+DTSTAMP:20261205T140000Z
+DTSTART:20261205T140000Z
+DTEND:20261205T150000Z
+SUMMARY:Kwalificatie Yas Marina — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Yas Marina\, United Arab Emirates
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Kwalificatie Yas Marina: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11436@f1-poule
+DTSTAMP:20261206T130000Z
+DTSTART:20261206T130000Z
+DTEND:20261206T140000Z
+SUMMARY:Race Yas Marina — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://dannydevis.github.io/F1-Poule/
+LOCATION:Yas Marina\, United Arab Emirates
+URL:https://dannydevis.github.io/F1-Poule/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT2H
+DESCRIPTION:Race Yas Marina: nog twee uur om in te vullen
+END:VALARM
+END:VEVENT
 END:VCALENDAR
