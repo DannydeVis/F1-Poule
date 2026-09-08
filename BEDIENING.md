@@ -163,6 +163,35 @@ lijst over al je toestellen vraagt om een login; zie OVERDRACHT.md.
 
 ---
 
+
+### Wie hier voor het eerst komt
+
+Onder het codeveld staat een blok **wat is dit?**: kort wat je voorspelt, hoe
+het scoren werkt, dat de uitslagen vanzelf binnenkomen, en dat het gratis is,
+zonder wachtwoord en zonder geld erin.
+
+Twee regels die tegen elkaar in werken, en allebei gelden:
+
+- **Alleen voor een leeg toestel.** Staan er al poules in `mijnPoules()`, dan
+  verdwijnt het blok. Wie het spel kent wil doorklikken, niet opnieuw uitgelegd
+  krijgen wat hij al weet.
+- **Onder het codeveld, nooit erboven.** Wie een uitnodiging heeft moet zijn
+  code meteen kunnen intikken zonder eerst langs een uitleg te scrollen.
+
+`test/eerste-indruk.test.mjs` houdt allebei vast, inclusief de volgorde op het
+scherm.
+
+### Op het beginscherm zetten
+
+Er is een `manifest.webmanifest`, dus "zet op beginscherm" geeft een echte
+app-tegel in een eigen venster in plaats van een browsersnelkoppeling. Een
+poule-app leeft op een telefoon, dus dat is geen franje.
+
+De pictogrammen staan in `pictogrammen/` en zijn `maskable`: Android snijdt ze
+in de vorm van het toestel, en alles wat telt blijft binnen de veilige zone.
+Ze worden gemaakt door `scripts/maak-pictogrammen.py` — met de hand, want er is
+geen beeldbibliotheek en er hoeft er ook geen te komen: het motief is het
+startgrid uit het ontwerp, en dat bestaat uit rechthoeken.
 ## 6. De vragenset op slot
 
 Zodra de eerste race van het seizoen gescoord is, worden de vinkjes in

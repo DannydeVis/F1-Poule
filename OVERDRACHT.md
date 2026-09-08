@@ -2291,3 +2291,65 @@ Dat wilde ik in dezelfde stap wegwerken — esm.sh kan met `?bundle` een
 zelfstandig bestand serveren — maar die host is vanuit deze omgeving niet
 bereikbaar (403 via de proxy). Het is dus een aparte stap, en het is de laatste
 partij die overblijft.
+
+---
+
+## De eerste indruk: wat is dit eigenlijk?
+
+Alles tot hier ging over spelers die al wisten waar ze aan begonnen. Iemand met
+een uitnodiging heeft context; hij krijgt een code in een groepsapp en weet van
+wie. Maar de opdracht was expliciet dat dit geen app voor één vriendengroep
+wordt, en dan komt er vroeg of laat iemand binnen zonder die context.
+
+Die zag: *"Doe mee met je poule — je hebt alleen de code van je poule nodig."*
+En verder niets. Geen woord over wát je voorspelt, hoe het scoren werkt, of het
+geld kost, of je een account nodig hebt. Dat is geen kleine omissie; dat is het
+verschil tussen een app en een deur zonder bordje.
+
+### Twee regels die tegen elkaar in werken
+
+Ze gelden allebei, en dat is precies waarom het blok is zoals het is:
+
+**Alleen voor een leeg toestel.** Staan er al poules in `mijnPoules()`, dan
+verdwijnt de uitleg. Wie het spel kent wil doorklikken. Uitleg die blijft staan
+nadat je hem gelezen hebt is geen uitleg meer maar ruis.
+
+**Onder het codeveld, nooit erboven.** Wie wél een uitnodiging heeft moet zijn
+code meteen kunnen intikken. Een uitleg die je eerst moet wegscrollen om te
+kunnen doen waarvoor je kwam, kost meer dan hij oplevert. `eerste-indruk.test.mjs`
+controleert de volgorde in de DOM, niet alleen dat beide dingen er staan —
+anders zou een latere verplaatsing er stil doorheen glippen.
+
+Wat er in staat is kort gehouden: wat je voorspelt, de puntenregel (5 exact, 3
+ernaast, 1 twee ernaast), dat de uitslagen vanzelf binnenkomen, en dat het
+gratis is zonder wachtwoord en zonder geld. Dat laatste staat er bewust: het is
+een keuze (BEDIENING.md §10), en het is precies waar iemand naar zoekt voordat
+hij ergens aan begint.
+
+### Een PWA-manifest, en een PNG-schrijver van dertig regels
+
+Een poule-app leeft op een telefoon. "Zet op beginscherm" gaf tot nu toe een
+browsersnelkoppeling; met `manifest.webmanifest` geeft het een echte tegel in
+een eigen venster.
+
+Daar horen pictogrammen bij, en er is in deze omgeving geen enkele
+beeldbibliotheek: geen PIL, geen ImageMagick, geen sharp. Dat hoefde ook niet.
+Een PNG is een handvol zlib-gecomprimeerde scanlijnen met een crc erachter, en
+`zlib` en `struct` zitten in de standaardbibliotheek. `scripts/maak-pictogrammen.py`
+is dertig regels en levert 602 bytes voor 192×192.
+
+Het motief is het **startgrid** uit het ontwerp van de app zelf: twee kolommen
+die om en om verspringen, in de kleuren van de app. Alleen rechte hoeken, dus
+geen anti-aliasing nodig en overal scherp — wat je wilt bij een tegel die soms
+48 pixels groot is. En het is `maskable`, met alles wat telt binnen de veilige
+zone, zodat Android hem in de vorm van het toestel mag snijden.
+
+De pictogrammen in de repo zijn byte voor byte wat het script maakt; dat is
+gecontroleerd, zodat ze later te wijzigen zijn zonder gokwerk.
+
+### En de testserver serveert het mee
+
+`test/hulp.mjs` kent nu ook `.png` en `.webmanifest`, zodat de test het
+manifest echt ophaalt en de pictogrammen echt opvraagt in plaats van te
+controleren dat er een regel in de HTML staat. Een manifest dat 404 geeft ziet
+er in de broncode precies hetzelfde uit als eentje die werkt.

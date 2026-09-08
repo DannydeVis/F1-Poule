@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Poule</title>
 <meta name="color-scheme" content="dark light">
+<meta name="description" content="Voorspel de top 10 van de kwalificatie en de race, en houd de stand bij met je vrienden. Gratis, zonder wachtwoord.">
+<!-- "Zet op beginscherm" geeft hiermee een echte app-tegel in plaats van een
+     browsersnelkoppeling. Een poule-app leeft op een telefoon, dus dat is
+     geen franje. De pictogrammen zijn maskable: Android snijdt ze in de vorm
+     van het toestel, en alles wat telt blijft binnen de veilige zone. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="pictogrammen/poule-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="pictogrammen/poule-192.png">
+<meta name="theme-color" content="#0b0b0c">
+<meta name="apple-mobile-web-app-title" content="Poule">
 <style>
   /* ==========================================================
      Lettertypen, uit deze repo en niet bij Google vandaan
@@ -3879,6 +3889,35 @@ async function pouleAanmaken(m) {
 //  Poule vinden of aanmaken
 // ============================================================
 
+// ---- wat is dit eigenlijk? ----------------------------------
+// Wie een uitnodiging krijgt weet waar hij aan begint. Wie hier via een link
+// in een groepsapp of een zoekresultaat belandt niet: die zag tot nu toe
+// alleen "vul je poulecode in" en verder niets. Geen woord over wát je
+// voorspelt, hoe het scoren werkt, of dat het gratis is.
+//
+// Alleen voor een leeg toestel. Wie hier al poules heeft staan kent het spel,
+// en die wil doorklikken en niet opnieuw uitgelegd krijgen wat hij al weet.
+//
+// En het staat onder het codeveld, niet erboven. Wie wél een code heeft moet
+// die meteen kunnen intikken zonder eerst langs een uitleg te scrollen.
+function watIsDitBlok() {
+  if (mijnPoules().length) return '';
+  return `
+    <div class="scheiding"></div>
+    <div class="veldblok">
+      <span class="label">wat is dit?</span>
+      <p class="zacht" style="margin:0">Een voorspellingspoule voor de Formule 1.
+        Voor elke race voorspel je de <b>top 10 van de kwalificatie</b> en de
+        <b>top 10 van de race</b>, plus een paar losse vragen: wie wint, wie
+        pakt pole, hoeveel safety cars.</p>
+      <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek
+        ernaast, <b>1</b> twee plekken ernaast. De uitslagen komen vanzelf
+        binnen, dus niemand hoeft ze bij te houden.</div>
+      <p class="zacht" style="margin:0">Gratis, geen wachtwoord, en er zit geen
+        geld in — geen inleg, geen pot, geen prijzen. Je speelt om de eer.</p>
+    </div>`;
+}
+
 // ---- inloggen met je mailadres ------------------------------
 // Dit is de tweede helft van mailBlok(): daar koppel je een mailadres op het
 // toestel waar je al speelt, hier open je datzelfde account op een nieuw
@@ -3965,6 +4004,7 @@ function toonStart() {
           <p class="zacht" style="margin:0">Nog geen poule? Begin er zelf een.</p>
           <button class="knop spook" id="nieuw">Nieuwe poule maken</button>
         </div>
+        ${watIsDitBlok()}
         ${inlogBlok()}
         <p class="err" id="f">${esc(S.linkFout)}</p>
       </div>
