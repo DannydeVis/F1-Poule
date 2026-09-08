@@ -213,10 +213,47 @@ Doe je dat niet, dan blijft de app gewoon werken — elke aanmeldpoging faalt
 stilletjes en er wordt niets geclaimd — maar dan staat het fundament er ook
 niet als de policies dichtgaan.
 
+### Een mailadres eraan hangen (optioneel)
+
+Onder **Poule** staat "je account meenemen". Daar koppel je een mailadres aan
+je anonieme account. Op een tweede toestel kies je op het beginscherm
+**Inloggen met je mailadres** en ben je daar meteen dezelfde speler, zonder de
+poulecode.
+
+Het is met opzet optioneel en het staat met opzet onderaan. Verreweg de meeste
+mensen typen gewoon hun poulecode; dit is er voor wie ook op zijn laptop
+meespeelt of zijn browser weleens leegt.
+
+Drie dingen die daarbij horen:
+
+- **"Gestuurd" is niet "gekoppeld".** Tot iemand op de link in de mail klikt
+  staat het adres in `new_email` en is er niets veranderd. Het scherm zegt dat
+  ook zo.
+- **Een onbekend adres maakt geen account aan** (`shouldCreateUser: false`).
+  Anders levert één typfout je een leeg account op waarin al je voorspellingen
+  verdwenen lijken.
+- **Na het inloggen wint je account** van de speler die dit toestel toevallig
+  onthield. Inloggen is een uitspraak: je bedoelt jezelf.
+
+**Nog twee dingen in het Supabase-dashboard**, en deze twee vergeet je zeker
+één keer:
+
+1. **Redirect-url toestaan.** Authentication → URL Configuration → *Redirect
+   URLs*: zet daar de url van de app in (bijvoorbeeld
+   `https://dannydevis.github.io/F1-Poule/`). Staat hij er niet, dan negeert
+   Supabase de terugkeerlink en komt iedereen op de Site URL uit.
+2. **Eigen SMTP instellen.** De ingebouwde mailservice van Supabase is
+   uitdrukkelijk niet voor productie: hij stuurt maar een paar mails per uur en
+   loopt daarna stil. Voor publiek gebruik hoort hier een eigen mailleverancier
+   (Resend, Postmark, SendGrid) onder. Zonder dat is dit een knop die bij de
+   derde gebruiker ophoudt te werken.
+
+En kijk één keer wat er daadwerkelijk in de mailbox belandt: onder Authentication
+→ Emails staan de sjablonen, en die zijn Engels en generiek ("Confirm your email
+change"). Voor een Nederlandse poule-app is dat op zijn minst verwarrend.
+
 Wat er nog niet is: de policies staan nog open, dus de database dwingt hier nog
-niets af. En zonder mailadres reist je account niet mee naar een tweede
-toestel; daarvoor is de eigen link er nog. Beide staan op de rol in
-`OVERDRACHT.md`.
+niets af. Dat staat op de rol in `OVERDRACHT.md`.
 
 ---
 

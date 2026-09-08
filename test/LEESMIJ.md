@@ -34,6 +34,7 @@ je eigen computer.
 | `kalender-en-coureurs.test.mjs` | Het testrecord Kuala Lumpur uit de kalender van OpenF1, wanneer de deelnemerslijst opnieuw opgehaald wordt, en dat een rondenummer nooit van race wisselt |
 | `knipsel.test.mjs` | Dat de rekenkern nog uit `index.html` te knippen is en klopt — de audit draait erop |
 | `account.test.mjs` | Het anonieme account: dat rondkijken er geen aanmaakt, dat een geclaimde speler nooit overgenomen wordt, en dat een gedeeld toestel gewoon een tweede speler mag inschrijven |
+| `mailkoppeling.test.mjs` | Je account meenemen met een mailadres: dat "gestuurd" niet "gekoppeld" is, dat een onbekend adres geen leeg account maakt, en vooral dat de sleutel uit de inloglink niet voor een poulecode wordt aangezien |
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |
 | `schema-herstel.test.sql` | Of een tweede run van `schema.sql` een beschadigde tabel opruimt |

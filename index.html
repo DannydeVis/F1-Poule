@@ -131,7 +131,12 @@
     color:var(--amber);font-size:15px;margin-bottom:14px;
   }
   .waarschuwing .label{color:var(--amber)}
-  .err{color:var(--accent);font-size:14px;margin:8px 0 0;min-height:0}
+  /* flex:none, geen min-height:0. De kolommen zijn flexkolommen die op een
+     breed scherm zelf scrollen, en een flexitem met min-height:0 mag door de
+     browser tot niets worden platgedrukt zodra de inhoud niet past. Dat
+     gebeurde ook: de foutmelding stond er wel, met de juiste tekst, maar was
+     nul pixels hoog. Een melding die je niet kunt lezen is geen melding. */
+  .err{color:var(--accent);font-size:14px;margin:8px 0 0;flex:none}
   .leeg{
     display:flex;flex-direction:column;gap:12px;align-items:flex-start;
     border:1px dashed var(--stippel);border-radius:14px;padding:20px;
@@ -606,6 +611,39 @@ const SEIZOEN = 2026;
 
 const DEMO = !SUPABASE_URL || !SUPABASE_ANON_KEY;
 
+// Kan dit een poulecode zijn? Dat is geen cosmetische vraag: Supabase stuurt je
+// na een inloglink terug met `?code=<sleutel>` in de adresbalk, en dat is
+// precies de parameter waar deze app zijn poulecode in zet. Zonder onderscheid
+// zou de app na het inloggen roepen dat "die poulecode niet bestaat".
+//
+// De grens ligt ruim, want een verminkte uitnodigingslink hoort nog steeds een
+// nette melding te krijgen ("de code BESTAATNIET bestaat niet") in plaats van
+// stilzwijgend genegeerd te worden. Een sleutel van Supabase is een uuid: 36
+// tekens mét streepjes, en valt dus aan beide kanten af.
+//
+// Dit is trouwens de tweede grendel. De eerste is de volgorde bij de start:
+// supabase-js heeft zijn sleutel al uit de adresbalk gehaald voordat
+// codeUitLink() ernaar kijkt. Twee grendels, omdat een mislukte inwisseling
+// (een verlopen link) de eerste kan overslaan.
+const ZIET_ERUIT_ALS_POULECODE = (code) => /^[A-Z0-9]{1,12}$/.test(String(code ?? ''));
+
+// Komen we net terug van een inloglink uit de mail? Dat moet híér vastgesteld
+// worden: supabase-js ruimt de adresbalk op zodra hij de sleutel gebruikt
+// heeft, en dat gebeurt al tijdens de import hieronder.
+//
+// Waarom het uitmaakt: normaal wint wat dit toestel onthouden heeft van wat
+// je account zegt. Maar wie zojuist bewust heeft ingelogd bedoelt het
+// omgekeerde — zie herkenMij().
+const VAN_INLOGLINK = (() => {
+  try {
+    const zoek = new URLSearchParams(location.search);
+    const hash = new URLSearchParams(String(location.hash).replace(/^#/, ''));
+    if (hash.has('access_token')) return true;
+    const code = zoek.get('code');
+    return !!code && !ZIET_ERUIT_ALS_POULECODE(code.trim().toUpperCase());
+  } catch { return false; }
+})();
+
 let db = null;
 if (!DEMO) {
   const { createClient } = await import(
@@ -638,6 +676,14 @@ if (!DEMO) {
 
 // Het account dat nu aan de knoppen zit, of null zolang er geen is.
 let mijnUid = null;
+// En het account zelf, want daar hangt het mailadres aan.
+let mijnAccount = null;
+
+const zetAccount = (user) => {
+  mijnAccount = user ?? null;
+  mijnUid = user?.id ?? null;
+  return mijnUid;
+};
 
 // De sessie die al op dit toestel stond. Kost geen netwerkverkeer:
 // supabase-js bewaart hem zelf in localStorage.
@@ -645,9 +691,8 @@ async function bestaandeSessie() {
   if (DEMO || !db) return null;
   try {
     const { data } = await db.auth.getSession();
-    mijnUid = data?.session?.user?.id ?? null;
-  } catch { mijnUid = null; }
-  return mijnUid;
+    return zetAccount(data?.session?.user);
+  } catch { return zetAccount(null); }
 }
 
 // Nu is er wel een account nodig. Eén keer per toestel; daarna staat de
@@ -657,9 +702,90 @@ async function zorgVoorAccount() {
   try {
     const { data, error } = await db.auth.signInAnonymously();
     if (error) return null;
-    mijnUid = data?.user?.id ?? null;
+    return zetAccount(data?.user);
   } catch { return null; }
-  return mijnUid;
+}
+
+// ---- een mailadres eraan hangen -----------------------------
+// Dit is het enige stukje login dat de speler bewust doet, en het is
+// nadrukkelijk optioneel. Zonder mailadres speel je gewoon door; je account
+// blijft dan op dit ene toestel staan.
+//
+// Het mailadres staat pas in `email` als er op de bevestigingslink geklikt
+// is. Tot dat moment houdt Supabase het in `new_email`, en dat verschil is
+// precies wat het scherm moet laten zien: "gestuurd" is niet "gekoppeld".
+const mijnMail        = () => mijnAccount?.email ?? null;
+const mijnWachtendeMail = () => mijnAccount?.new_email ?? null;
+
+// Waar de link uit de mail op terugkomt. Bewust zonder poulecode erachter:
+// Supabase plakt zijn eigen `?code=` aan deze url, en twee keer dezelfde
+// parameter betekent dat de verkeerde gelezen wordt. De poule komt daarna uit
+// dit toestel of uit poulesVanAccount().
+const inlogTerugLink = () => linkBasis();
+
+async function koppelMail(mail) {
+  const uid = await zorgVoorAccount();
+  if (!uid) return { fout: 'Er is nog geen account om een mailadres aan te hangen.' };
+  try {
+    const { data, error } = await db.auth.updateUser(
+      { email: mail }, { emailRedirectTo: inlogTerugLink() });
+    if (error) return { fout: uitlegAuth(error) };
+    if (data?.user) zetAccount(data.user);
+    return { fout: '' };
+  } catch (e) { return { fout: uitlegAuth(e) }; }
+}
+
+// Inloggen op een toestel waar je account nog niet staat.
+//
+// `shouldCreateUser: false` is hier belangrijk. Standaard maakt Supabase een
+// nieuw account aan bij een onbekend adres, en dan levert één typfout je een
+// leeg account op waarin al je voorspellingen verdwenen lijken. Beter een
+// melding dat dat adres nog nergens bij hoort.
+async function stuurInlogLink(mail) {
+  if (DEMO || !db) return { fout: 'Inloggen kan niet in demomodus.' };
+  try {
+    const { error } = await db.auth.signInWithOtp({
+      email: mail,
+      options: { shouldCreateUser: false, emailRedirectTo: inlogTerugLink() },
+    });
+    return { fout: error ? uitlegAuth(error) : '' };
+  } catch (e) { return { fout: uitlegAuth(e) }; }
+}
+
+// Welke poules horen bij dit account? Na het inloggen op een nieuw toestel is
+// dit het enige wat je poules terugvindt — localStorage is daar leeg, en de
+// poulecode opnieuw moeten opvragen is precies de drempel die we weghalen.
+async function poulesVanAccount() {
+  if (DEMO || !db || !mijnUid) return [];
+  try {
+    const { data } = await db.from('pool_members').select('pool_id').eq('user_id', mijnUid);
+    const ids = [...new Set((data ?? []).map(r => r.pool_id))].filter(Boolean);
+    if (!ids.length) return [];
+    const { data: poules } = await db.from('pools').select('*').in('id', ids);
+    return poules ?? [];
+  } catch { return []; }
+}
+
+// De meldingen van Supabase zijn Engels en technisch. Deze drie komen in de
+// praktijk voor en verdienen een antwoord waar iemand iets mee kan.
+function uitlegAuth(error) {
+  const code = String(error?.code ?? '');
+  const bericht = String(error?.message ?? '');
+  if (code === 'email_exists' || /already (been )?registered|already exists/i.test(bericht)) {
+    return 'Dat mailadres hoort al bij een account. Kies op het beginscherm '
+         + '"Inloggen met je mailadres" om dat account hier te openen.';
+  }
+  if (code === 'otp_disabled' || /signups not allowed/i.test(bericht)) {
+    return 'Bij dat mailadres hoort nog geen account. Koppel het eerst onder '
+         + 'Poule, op het toestel waar je al meespeelt.';
+  }
+  if (/rate.?limit|only request this after|too many/i.test(bericht) || /rate_limit/.test(code)) {
+    return 'Er is net al een mail verstuurd. Wacht een minuutje en probeer het opnieuw.';
+  }
+  if (code === 'validation_failed' || /invalid.*email|email.*invalid/i.test(bericht)) {
+    return 'Dat lijkt geen geldig mailadres.';
+  }
+  return bericht || 'Er ging iets mis met het versturen van de mail.';
 }
 
 // Deze speler hoort bij mijn account.
@@ -809,16 +935,21 @@ function herstelScherm() {
 // plekken bijna hetzelfde uitgeschreven; die liepen bij elke aanpassing uit
 // de pas.
 //
-// De volgorde is bewust. Eerst wat dit toestel onthouden heeft — dat is de
-// snelste en klopt bijna altijd. Pas als het toestel niets weet kijken we
-// wat mijn account zegt; dat is nieuw, en het is wat straks een tweede
-// telefoon zonder poulecode alsnog binnenlaat.
+// De volgorde is bewust. Normaal wint wat dit toestel onthouden heeft — dat
+// is de snelste en klopt bijna altijd. Wie zojuist op een inloglink heeft
+// geklikt bedoelt precies het omgekeerde: dan wint het account. Anders zou je
+// na het inloggen alsnog de speler zijn die op dit toestel toevallig het
+// laatst gekozen was.
 //
 // Geeft true als S.ik gezet is.
-async function herkenMij() {
-  const bekend = mijnId(S.poule.id);
-  const lid = (bekend && S.leden.find(l => zelfde(l.member_id, bekend)))
-           || lidVanAccount();
+async function herkenMij({ accountEerst = VAN_INLOGLINK } = {}) {
+  const vanToestel = () => {
+    const bekend = mijnId(S.poule.id);
+    return bekend ? S.leden.find(l => zelfde(l.member_id, bekend)) : null;
+  };
+  const lid = accountEerst
+    ? (lidVanAccount() || vanToestel())
+    : (vanToestel() || lidVanAccount());
   if (!lid) return false;
   S.ik = { id: lid.member_id, naam: lid.display_name };
   onthoud(S.poule.id, lid.member_id);
@@ -1145,6 +1276,8 @@ const S = {
   beheerFout: '',
   omschrijving: null,   // getypte omschrijving, zolang die nog niet bewaard is
   omschrijvingFout: '',
+  mail:  { open: false, fout: '', gestuurd: '' },  // mailadres koppelen, onder Poule
+  inlog: { open: false, fout: '', gestuurd: '' },  // inloggen op het beginscherm
 };
 
 const app = document.getElementById('app');
@@ -1581,10 +1714,16 @@ function nogNietIngevuld(race, welk) {
 // een typefout, en is de enige manier om een poule te delen zonder dat
 // iemand zes tekens moet overtikken uit een groepsapp.
 
+// Let op de lengtecontrole: `?code=` is ook de parameter waarmee Supabase je
+// na een inloglink terugstuurt, en die sleutel is tientallen tekens lang. Zou
+// die hier doorgelaten worden, dan kreeg je na het inloggen "die poulecode
+// bestaat niet" te zien. Zie ZIET_ERUIT_ALS_POULECODE bovenaan.
 function codeUitLink() {
   try {
     const code = new URLSearchParams(location.search).get('code');
-    return code ? code.trim().toUpperCase() : '';
+    if (!code) return '';
+    const schoon = code.trim().toUpperCase();
+    return ZIET_ERUIT_ALS_POULECODE(schoon) ? schoon : '';
   } catch { return ''; }
 }
 
@@ -1859,6 +1998,7 @@ function toonApp() {
   knoopUitnodiging(app);
   knoopBeheer();
   knoopOmschrijving();
+  knoopMail();
   const wissel = app.querySelector('#wissel');
   if (wissel) wissel.onclick = () => { vergeet(S.poule.id); S.ik = null; render(); };
   const anders = app.querySelector('#anderePoule');
@@ -2059,6 +2199,7 @@ function poulePagina(rijen) {
       || `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
       <b>1</b> twee plekken ernaast.</div>
+    ${mailBlok()}
     ${eigenLinkBlok()}
     ${omschrijvingBlok()}
     ${beheerBlok()}
@@ -2104,6 +2245,84 @@ function eigenLinkBlok() {
     <button class="knop klein" id="eigenlink">Kopieer je eigen link</button>
     <textarea class="veld tekstblok hide" id="eigenlinkveld" readonly rows="3"
       aria-label="Je eigen link om zelf te kopiëren"></textarea>`;
+}
+
+// ---- je account meenemen met een mailadres ------------------
+// Nadrukkelijk optioneel. Zonder mailadres speel je gewoon door; je account
+// blijft dan op dit ene toestel staan en de eigen link hierboven is dan de
+// manier om jezelf mee te nemen.
+//
+// Wat het wél oplevert: je raakt je poules niet kwijt als deze browser wordt
+// opgeschoond, en je logt op een tweede toestel in zonder de poulecode.
+//
+// Drie toestanden, en het verschil tussen de eerste twee is belangrijk genoeg
+// om te tonen: "we hebben een mail gestuurd" is niet hetzelfde als
+// "gekoppeld". Zolang er niet op de link geklikt is, is er niets gekoppeld.
+function mailBlok() {
+  if (!S.ik || !mijnUid) return '';
+  const kop = `<div class="scheiding"></div>
+    <span class="label">je account meenemen</span>`;
+
+  if (mijnMail()) {
+    return `${kop}
+      <p class="zacht" style="margin:0">Je account hangt aan
+        <b>${esc(mijnMail())}</b>. Op een ander toestel kies je op het
+        beginscherm "Inloggen met je mailadres" en ben je daar meteen weer
+        jezelf.</p>`;
+  }
+
+  const wacht = mijnWachtendeMail() || S.mail.gestuurd;
+  if (wacht) {
+    return `${kop}
+      <p class="zacht" style="margin:0">We hebben een mail gestuurd naar
+        <b>${esc(wacht)}</b>. Klik op de link erin, dan is je account
+        gekoppeld. Zolang je dat niet doet verandert er niets — je speelt
+        gewoon door.</p>
+      <button class="knop klein" id="mailopnieuw">Stuur de mail opnieuw</button>
+      <p class="err" id="mailfout">${esc(S.mail.fout)}</p>`;
+  }
+
+  if (!S.mail.open) {
+    return `${kop}
+      <p class="zacht" style="margin:0">Hang er een mailadres aan, dan kun je
+        op een ander toestel inloggen en raak je je poules niet kwijt als deze
+        browser wordt opgeschoond. Hoeft niet — je speelt ook zonder gewoon
+        door.</p>
+      <button class="knop klein" id="mailopen">Mailadres koppelen</button>`;
+  }
+
+  return `${kop}
+    <p class="zacht" style="margin:0">We sturen je één mail met een link erin.
+      Verder gebruiken we je adres nergens voor.</p>
+    <input class="veld" id="mailveld" type="email" inputmode="email"
+      placeholder="jij@voorbeeld.nl" autocomplete="email" spellcheck="false">
+    <button class="knop klein" id="mailstuur">Stuur me de link</button>
+    <p class="err" id="mailfout">${esc(S.mail.fout)}</p>`;
+}
+
+function knoopMail() {
+  const open = app.querySelector('#mailopen');
+  if (open) open.onclick = () => { S.mail = { open: true, fout: '', gestuurd: '' }; render(); };
+
+  const stuur = async (adres, knop) => {
+    const mail = String(adres ?? '').trim();
+    const fout = (t) => { const p = app.querySelector('#mailfout'); if (p) p.textContent = t; };
+    if (!mail) { fout('Vul je mailadres in'); return; }
+    knop.disabled = true;
+    const uit = await koppelMail(mail);
+    knop.disabled = false;
+    // Ook bij een fout onthouden we het adres niet als "gestuurd": anders
+    // blijft er een scherm staan dat op een mail wacht die nooit komt.
+    S.mail = { open: !!uit.fout, fout: uit.fout, gestuurd: uit.fout ? '' : mail };
+    render();
+  };
+
+  const knop = app.querySelector('#mailstuur');
+  if (knop) knop.onclick = () => stuur(app.querySelector('#mailveld')?.value, knop);
+
+  const opnieuw = app.querySelector('#mailopnieuw');
+  if (opnieuw) opnieuw.onclick = () =>
+    stuur(mijnWachtendeMail() || S.mail.gestuurd, opnieuw);
 }
 
 // ---- omschrijving -------------------------------------------
@@ -3377,6 +3596,57 @@ async function pouleAanmaken(m) {
 //  Poule vinden of aanmaken
 // ============================================================
 
+// ---- inloggen met je mailadres ------------------------------
+// Dit is de tweede helft van mailBlok(): daar koppel je een mailadres op het
+// toestel waar je al speelt, hier open je datzelfde account op een nieuw
+// toestel. Bewust onderaan en klein — verreweg de meeste mensen hebben hier
+// niets te zoeken, die typen gewoon hun poulecode.
+function inlogBlok() {
+  if (DEMO) return '';
+  if (S.inlog.gestuurd) {
+    return `<div class="scheiding"></div>
+      <div class="veldblok">
+        <p class="zacht" style="margin:0">We hebben een mail gestuurd naar
+          <b>${esc(S.inlog.gestuurd)}</b>. Klik op de link erin, dan sta je
+          hier meteen in je eigen poules.</p>
+      </div>`;
+  }
+  if (!S.inlog.open) {
+    return `<div class="scheiding"></div>
+      <div class="veldblok">
+        <p class="zacht" style="margin:0">Speelde je al mee en heb je een
+          mailadres gekoppeld? Dan hoef je de poulecode niet.</p>
+        <button class="knop spook" id="inlogopen">Inloggen met je mailadres</button>
+      </div>`;
+  }
+  return `<div class="scheiding"></div>
+    <div class="veldblok">
+      <span class="label">je mailadres</span>
+      <input class="veld" id="inlogveld" type="email" inputmode="email"
+        placeholder="jij@voorbeeld.nl" autocomplete="email" spellcheck="false">
+      <button class="knop spook" id="inlogstuur">Stuur me een inloglink</button>
+      <p class="err" id="inlogfout">${esc(S.inlog.fout)}</p>
+    </div>`;
+}
+
+function knoopInlog() {
+  const open = app.querySelector('#inlogopen');
+  if (open) open.onclick = () => { S.inlog = { open: true, fout: '', gestuurd: '' }; toonStart(); };
+
+  const knop = app.querySelector('#inlogstuur');
+  if (!knop) return;
+  knop.onclick = async () => {
+    const mail = (app.querySelector('#inlogveld')?.value ?? '').trim();
+    const fout = (t) => { const p = app.querySelector('#inlogfout'); if (p) p.textContent = t; };
+    if (!mail) { fout('Vul je mailadres in'); return; }
+    knop.disabled = true;
+    const uit = await stuurInlogLink(mail);
+    knop.disabled = false;
+    S.inlog = { open: !!uit.fout, fout: uit.fout, gestuurd: uit.fout ? '' : mail };
+    toonStart();
+  };
+}
+
 function toonStart() {
   // Je poules van dit toestel bovenaan: wie er al bij hoort hoeft de code niet
   // opnieuw in te tikken, en wie in meer dan één poule zit kiest hier welke.
@@ -3412,6 +3682,7 @@ function toonStart() {
           <p class="zacht" style="margin:0">Nog geen poule? Begin er zelf een.</p>
           <button class="knop spook" id="nieuw">Nieuwe poule maken</button>
         </div>
+        ${inlogBlok()}
         <p class="err" id="f">${esc(S.linkFout)}</p>
       </div>
     </div></div>`;
@@ -3426,6 +3697,7 @@ function toonStart() {
   });
 
   app.querySelector('#nieuw').onclick = () => startAanmaken();
+  knoopInlog();
 
   app.querySelector('#mee').onclick = async () => {
     const code = app.querySelector('#code').value.trim().toUpperCase();
@@ -3452,8 +3724,19 @@ if (DEMO) {
   if (!herstelScherm()) render();
 } else {
   // De sessie van dit toestel eerst: hervat() moet weten wie ik ben voordat
-  // hij een speler probeert te herkennen.
+  // hij een speler probeert te herkennen. Deze regel is bovendien wat een
+  // inloglink laat werken — getSession() wacht tot supabase-js de sleutel uit
+  // de adresbalk heeft omgezet, en pas daarna haalt hervat() diezelfde
+  // adresbalk leeg.
   await bestaandeSessie();
+  // Kom je net binnen via een inloglink, dan is dit toestel leeg: geen poules,
+  // geen speler. Wat je account weet is dan het enige wat je bij je poule
+  // brengt, en zonder dit stond je alsnog voor het codescherm.
+  if (VAN_INLOGLINK) {
+    const poules = await poulesVanAccount();
+    for (const p of [...poules].reverse()) onthoudInLijst(p);
+    if (!laatstePoule() && poules.length === 1) onthoudPoule(poules[0].id);
+  }
   await hervat();
 }
 
