@@ -24,7 +24,6 @@ je eigen computer.
 | `afgelast.test.mjs` | Een race die niet doorgegaan is: hij zegt dat, is niet in te vullen, en een uitslag wint alsnog van de vlag |
 | `uitslagen.test.mjs` | De vier losse uitslagen uit de gegevens van OpenF1: vooral welke berichten van de wedstrijdleiding wél en niet een safety car zijn |
 | `duel-weergave.test.mjs` | Dat "jij" vaststaat aan je eigen cijfer in het onderlinge duel, en niet aan dat van de tegenstander |
-| `inleg.test.mjs` | De inleg en het betaalverzoek: hoe een bedrag gelezen wordt, dat alleen http(s) als betaalknop doorkomt (ook uit de database), en het afvinken wie betaald heeft |
 | `poules-en-omschrijving.test.mjs` | De omschrijving van een poule, en meer dan één poule op hetzelfde toestel: wisselen zonder de code, en een poule die weg is |
 | `poule-aanmaken.test.mjs` | Het aanmaken in vier stappen: de presets, de losse vragen met hun live puntentotaal, de gokwaarschuwing, en wat er in de database belandt |
 | `vragen-beheren.test.mjs` | De vragenset aanpassen onder Poule, en dat er niets meer verandert zodra hij op slot zit |

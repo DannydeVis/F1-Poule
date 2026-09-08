@@ -980,6 +980,10 @@ zelf kunt selecteren.
 
 ## Inleg en betaalverzoek
 
+> **Achteraf: dit is er weer uit gehaald.** Zie "Geen geld in de app" onderaan.
+> De rest van deze sectie blijft staan omdat het uitlegt wat er gebouwd was en
+> waarom — het weghalen is een aparte beslissing met een eigen reden.
+
 Joey, in de groepsapp: *"Doe gelijk een betaalverzoek er in 😉 Of ook wat de
 inleg moet zijn enzo."* Twee kolommen op `pools` (`inleg numeric(8,2)` en
 `betaallink text`), één op `pool_members` (`betaald boolean`), en een blok onder
@@ -1551,3 +1555,46 @@ als voorheen — alleen het racescherm zelf blijft nu openstaan.
 Vier controles erbij in `poule-onthouden.test.mjs` (14 nu), gecontroleerd
 door de drie `herstelScherm()`-aanroepen terug te draaien: zonder de
 aanpassing verdween het racescherm inderdaad na een refresh.
+
+## Geen geld in de app
+
+De inleg met het betaalverzoek is er weer uit. Niet omdat hij niet werkte — hij
+werkte prima, met 23 controles — maar omdat het doel van de app veranderd is:
+van een vriendenpoule naar iets dat vreemden gaan gebruiken.
+
+Zodra er geld in een poule zit (inleg, pot, prijs) kom je in Nederland in de
+buurt van de Wet op de kansspelen. Bij je eigen vrienden is dat theorie; zodra
+je de link publiek deelt is het dat niet meer. Ik ben geen jurist en dit is
+geen juridisch advies — maar dit is de goedkoopste voorzorg die er is, want de
+functie kost niets om weg te laten.
+
+Wat eruit ging:
+
+- `pools.inleg`, `pools.betaallink` en `pool_members.betaald` uit `schema.sql`,
+  inclusief `drop column if exists` zodat een bestaande database ze bij de
+  volgende run kwijtraakt
+- `euro()`, `bedragTekst()`, `veiligeLink()`, `heeftInleg()`, `inlegBlok()`,
+  `inlegBeheerBlok()`, `knoopInleg()`, `inlegBewaren()`, `betaaldZetten()` en
+  de bijbehorende CSS uit `index.html`
+- Het bedrag en de betaallink uit de uitnodigingstekst
+- Het open/betaald-vinkje achter elke spelernaam; `spelerRij()` is daarmee
+  weer een regel in plaats van soms een knop
+- `test/inleg.test.mjs`
+
+**De drop is onomkeerbaar, en dat is de bedoeling.** Een kolom leeglaten staan
+met een bedrag en een Tikkie-link erin is precies wat je niet wilt als de reden
+van het weghalen juridisch is.
+
+Om te bewijzen dat het weghalen ook echt gebeurt bij een bestaande database,
+zijn de kolommen mét gegevens (`12.50`, een Tikkie-link, `betaald = true`)
+toegevoegd aan `test/oude-structuur.sql`, en controleert
+`oude-structuur-controle.sql` nu dat ze ná `schema.sql` weg zijn in plaats van
+dat ze aangemaakt zijn. Nagekeken tegen een echte PostgreSQL 16: eerst
+aanwezig, na `schema.sql` verdwenen, en de poule, speler en race staan er nog.
+Zonder de drop-regels zakt die controle met `gezakt: pools.inleg of
+pools.betaallink staat er nog`.
+
+Hier hangt nog iets aan vast dat het onthouden waard is: **OpenF1 is voor
+niet-commercieel gebruik**. Advertenties of een betaalde variant breken die
+voorwaarde en dwingen je naar een betaalde databron. Geen geld in de app is dus
+niet alleen een juridische keuze, het houdt ook de databron open.

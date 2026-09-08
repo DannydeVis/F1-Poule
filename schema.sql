@@ -21,13 +21,8 @@ create extension if not exists pgcrypto;
 create table if not exists public.pools (
   id         uuid primary key default gen_random_uuid(),
   name       text not null,
-  -- Een regel over waar deze poule voor is: "met de collega's, 5 euro inleg".
+  -- Een regel over waar deze poule voor is: "met de collega's, om de eer".
   beschrijving text,
-  -- Wat het kost om mee te doen, en waar je dat naartoe stuurt. numeric en
-  -- niet float: geld in een float geeft 4,999999 en dat wil je nergens zien.
-  -- Beide mogen leeg blijven; een poule om de eer is de normale poule.
-  inleg      numeric(8,2),
-  betaallink text,
   season     int  not null default 2026,
   join_code  text not null unique default upper(substr(md5(random()::text), 1, 6)),
   created_at timestamptz not null default now()
@@ -37,10 +32,6 @@ create table if not exists public.pool_members (
   member_id    uuid primary key default gen_random_uuid(),
   pool_id      uuid not null,
   display_name text not null,
-  -- Afgevinkt door de poulebaas als de inleg binnen is. Dit is een lijstje,
-  -- geen boekhouding: de app ziet geen betalingen en gelooft alleen wat de
-  -- poulebaas aanvinkt.
-  betaald      boolean not null default false,
   created_at   timestamptz not null default now()
 );
 
@@ -141,8 +132,6 @@ create table if not exists public.answers (
 -- ------------------------------------------------------------
 
 alter table public.pools        add column if not exists beschrijving text;
-alter table public.pools        add column if not exists inleg      numeric(8,2);
-alter table public.pools        add column if not exists betaallink text;
 alter table public.pools        add column if not exists season     int not null default 2026;
 alter table public.pools        add column if not exists join_code  text;
 alter table public.pools        add column if not exists created_at timestamptz not null default now();
@@ -157,8 +146,19 @@ alter table public.pools        add column if not exists questions_locked boolea
 
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
-alter table public.pool_members add column if not exists betaald      boolean not null default false;
 alter table public.pool_members add column if not exists created_at   timestamptz not null default now();
+
+-- De inleg, het betaalverzoek en het betaald-vinkje zijn eruit gehaald. Zodra
+-- er geld in een poule zit — inleg, pot, prijs — kom je in Nederland in de
+-- buurt van de Wet op de kansspelen, en dat is niets om per ongeluk in te
+-- rollen bij een app die publiek gebruikt gaat worden.
+--
+-- Let op: dit is onomkeerbaar. Wie een bedrag en een betaallink had ingevuld
+-- is die kwijt zodra dit bestand opnieuw draait, en dat is precies de
+-- bedoeling — je wilt die gegevens niet laten staan.
+alter table public.pools        drop column if exists inleg;
+alter table public.pools        drop column if exists betaallink;
+alter table public.pool_members drop column if exists betaald;
 
 alter table public.races        add column if not exists country        text;
 alter table public.races        add column if not exists race_key       bigint;

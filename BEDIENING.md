@@ -59,8 +59,8 @@ Bovenaan de knop **Kopieer voor WhatsApp**.
 Leden, poulecode, uitnodiglink met deelknop, en de instellingen. Voor de
 poulebaas staat hier ook het beheergedeelte: welke vragen meedoen, de
 omschrijving van de poule, en handmatig een uitslag invoeren als OpenF1 het
-laat afweten (zie §11). Verder de inleg (zie §10), je eigen link (zie §4) en,
-onderaan, je andere poules om naar over te stappen.
+laat afweten (zie §11). Verder je eigen link (zie §4) en, onderaan, je andere
+poules om naar over te stappen.
 
 ---
 
@@ -70,7 +70,7 @@ Eén vraag per scherm. Werkt beter op een telefoon dan een lang formulier.
 
 ### Stap 1: Hoe heet de poule
 Twee velden: de naam, met "Vrijdagmiddagpoule" als voorbeeld eronder, en een
-omschrijving die leeg mag blijven ("Met de collega's, 5 euro inleg"). Die
+omschrijving die leeg mag blijven ("Met de collega's, om de eer"). Die
 omschrijving is er voor wie in meer dan één poule zit: twee poules die allebei
 "Poule 2026" heten zijn uit elkaar te houden aan waar ze over gaan. Hij staat
 onder de naam en in het lijstje waarmee je tussen poules wisselt, en de
@@ -99,9 +99,6 @@ te worden.
 
 ### Stap 4: Klaar, nodig je vrienden uit
 
-Hier staat ook de inleg (§10). Dat is geen toeval: dit is het scherm waarop je
-de uitnodiging kopieert, en wat je hier invult gaat mee in die tekst. Zet je
-het er niet bij, dan is de eerste vraag in de groepsapp toch "en wat kost het?".
 Toont de poulecode groot, plus een deelknop met de uitnodiglink erin:
 
 ```
@@ -221,44 +218,27 @@ stap 1 nodig.
 
 ---
 
-## 10. Inleg en betaalverzoek
+## 10. Geen geld in de app
 
-Uit de groepsapp: *"Doe gelijk een betaalverzoek er in 😉 Of ook wat de inleg
-moet zijn enzo."* Twee dingen dus: wat het kost om mee te doen, en waar je dat
-naartoe stuurt.
+Er zat een inleg met een betaalverzoek in: een bedrag per poule, een
+Tikkie-link, en een lijstje van wie betaald had. Dat is er allemaal uit.
 
-Allebei optioneel, en allebei alleen te zetten door de poulebaas. Een poule om
-de eer is de gewone poule; staat er niets ingevuld, dan is er ook niets van te
-zien — geen bedrag, geen betaalknop, en geen open/betaald achter de namen.
+Zodra er geld in een poule zit — inleg, pot, prijs — kom je in Nederland in de
+buurt van de Wet op de kansspelen. Zolang het je eigen vrienden zijn is dat een
+theoretisch verhaal; zodra vreemden meedoen is het dat niet meer. Dit is geen
+juridisch advies, en ik ben geen jurist: het is de goedkoopste voorzorg die er
+is, want de functie kost niets om weg te laten.
 
-**Waar het staat**: op stap 4 van het aanmaken (§3) en onder Poule. Wat er staat
-gaat mee in de uitnodigingstekst:
+Dus: geen inleg, geen pot, geen betaallink, geen "wie wint krijgt". Wie met
+zijn vrienden geld afspreekt doet dat in de groepsapp, buiten deze app om.
 
-> Doe mee met Vrijdagmiddagpoule:
-> https://…/?code=RTM026
->
-> Inleg: € 5,00
-> Betalen: https://tikkie.me/pay/…
+Hier hangt nog iets aan vast: **OpenF1 is voor niet-commercieel gebruik**.
+Advertenties of een betaalde variant breken die voorwaarde en dwingen je naar
+een betaalde databron. Zie §11.
 
-**Het bedrag** mag als `5`, `5,00` of `€ 12,50` ingetypt worden. Staat er wel
-iets maar geen cijfer ("vijf euro"), dan is dat een melding en geen lege inleg:
-anders vul je iets in, druk je op opslaan, en gebeurt er niets.
-
-**De betaallink** wordt alleen als knop getoond als het een `http`- of
-`https`-adres is. Wie `tikkie.me/pay/abc` intypt krijgt er `https://` voor; wie
-een ander protocol intypt krijgt dat niet stilzwijgend vervangen, maar een
-melding. Dat is geen overdreven voorzichtigheid: een `javascript:`-adres in dat
-veld wordt uitgevoerd zodra een lid op de knop tikt, en volgens §7 kan iedereen
-met de anon key in `pools` schrijven. Daarom wordt er niet alleen bij het
-opslaan gecontroleerd maar ook bij het tonen — een adres dat buiten de app om in
-de database is gezet komt er zo alsnog niet door.
-
-**Wie heeft betaald** is een lijstje van de poulebaas, geen boekhouding. De app
-ziet geen betalingen; hij gelooft alleen het vinkje. Tik als poulebaas op een
-speler om hem af te vinken. Achter elke naam staat dan `open` of `betaald`.
-
-Zelf zie je alleen dat je afgevinkt bent als dat zo is. "Nog niet afgevinkt"
-bij elk bezoek is zeuren van een machine, en de poulebaas heeft de lijst al.
+De kolommen `pools.inleg`, `pools.betaallink` en `pool_members.betaald` worden
+door `schema.sql` actief verwijderd. Dat is onomkeerbaar en met opzet: je wilt
+die gegevens niet laten staan.
 
 ---
 

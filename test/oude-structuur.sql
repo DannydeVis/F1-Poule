@@ -14,16 +14,22 @@
 
 create extension if not exists pgcrypto;
 
+-- inleg en betaallink stonden er in een eerdere versie wél in. Ze staan hier
+-- met gegevens erin, zodat de controle kan bewijzen dat schema.sql ze echt
+-- weghaalt en niet alleen dat ze nooit zijn aangemaakt.
 create table pools (
-  id        uuid primary key default gen_random_uuid(),
-  name      text,
-  join_code text unique
+  id         uuid primary key default gen_random_uuid(),
+  name       text,
+  inleg      numeric(8,2),
+  betaallink text,
+  join_code  text unique
 );
 
 create table pool_members (
   pool_id      uuid not null,
   member_id    uuid not null default gen_random_uuid(),
   display_name text,
+  betaald      boolean not null default false,
   primary key (pool_id, member_id)
 );
 
@@ -42,6 +48,7 @@ create table predictions (
   race_top10  text[]
 );
 
-insert into pools (name, join_code) values ('Vrijdagmiddagpoule', 'RTM026');
-insert into pool_members (pool_id, display_name) select id, 'Danny' from pools;
+insert into pools (name, join_code, inleg, betaallink)
+  values ('Vrijdagmiddagpoule', 'RTM026', 12.50, 'https://tikkie.me/pay/abc');
+insert into pool_members (pool_id, display_name, betaald) select id, 'Danny', true from pools;
 insert into races (season, round, name) values (2026, 1, 'Melbourne');
