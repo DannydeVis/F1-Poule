@@ -95,6 +95,17 @@ jobs:
           psql -d leden -v ON_ERROR_STOP=1 -f schema.sql
           psql -d leden -v ON_ERROR_STOP=1 -f test/lidmaatschap.test.sql
 
+      # De belofte waarvoor de hele login gebouwd is: jouw voorspelling is van
+      # jou. Deze test draait als anon én als authenticated en meet `found`,
+      # want RLS geeft geen fout op een geblokkeerde schrijfactie — hij raakt
+      # gewoon nul rijen.
+      - name: de policies — van wie is een inzending
+        run: |
+          createdb policies
+          psql -d policies -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d policies -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d policies -v ON_ERROR_STOP=1 -f test/policies.test.sql
+
       # De vorige stap heeft de tabel opzettelijk beschadigd. schema.sql hoort
       # dat te herstellen zonder dat er data verloren gaat die de app gebruikt.
       - name: schema.sql opnieuw draaien op de beschadigde database

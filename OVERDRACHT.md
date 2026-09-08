@@ -2019,3 +2019,121 @@ minder mag het niet worden.
 De policies. Nu pas kan dat: iedereen heeft een account, spelers hangen eraan,
 en wie op een tweede toestel speelt kan zichzelf meenemen. Met het open eind
 hierboven erbij.
+
+*(Gebeurd, in [De policies dicht, zonder iemand buiten te
+sluiten](#de-policies-dicht-zonder-iemand-buiten-te-sluiten). Het open eind is
+daar een losmaakknop voor de poulebaas geworden — met één scherpe kant die
+niet weg te ontwerpen bleek.)*
+
+---
+
+## De policies dicht, zonder iemand buiten te sluiten
+
+Dit is waar de hele login voor gebouwd is. De anon key staat publiek in
+`index.html` — dat hoort zo, dat is wat een anon key is — en tot vandaag was
+dat genoeg om andermans top 10 te overschrijven of weg te gooien.
+
+Wat er nu vastligt: **jouw inzending is van jou**. En wat er nadrukkelijk
+níét vastligt: lezen.
+
+### De regel die het ongevaarlijk maakt
+
+```sql
+create or replace function public.mag_voor_speler(p_member uuid)
+...
+  where member_id = p_member
+    and (user_id = auth.uid() or user_id is null)
+```
+
+Die tweede regel is de belangrijkste van de hele wijziging. Zonder hem zou het
+dichtzetten op de dag van livegang een halve poule buitensluiten: iedereen die
+de app nog niet geopend had sinds er accounts zijn, plus elke tweede speler die
+op een gedeeld toestel is ingeschreven.
+
+En dat zou je niet eens merken. **RLS geeft geen foutmelding op een
+geblokkeerde schrijfactie** — hij raakt gewoon nul rijen. De app zou zwijgend
+niets opslaan, precies het beeld van "het opslaan lukt niet" dat een half jaar
+geleden al eens de ronde deed.
+
+Met die regel groeit de bescherming mee. Iedereen die de app opent claimt
+zichzelf, en vanaf dat moment kan niemand anders meer bij zijn inzending. Het
+getal `spelers zonder account` onderaan `schema.sql` telt af hoeveel er nog te
+gaan zijn; staat het op 0, dan kan de tweede regel weg.
+
+### Wat er open blijft, en waarom dat geen slordigheid is
+
+Lezen. Iedereen mag alles lezen, en dat volgt uit hoe de app werkt: je zoekt
+een poule op zijn code voordat je lid bent, en je kiest jezelf uit de
+spelerslijst voordat je meedoet. Allebei vóór er van lidmaatschap sprake is.
+
+De eerlijke consequentie: wie de anon key uit de broncode plukt kan poules en
+namen uitlezen, en zich aanmelden bij een poule die niet van hem is. Vervelend,
+niet destructief — hij staat er dan als extra speler in en komt nog steeds bij
+niemands antwoord.
+
+Dichttimmeren kán, maar vraagt om een `security definer`-functie voor "poule
+zoeken op code" plus eentje voor de spelerslijst, en dus om een verbouwing van
+het meedoen-scherm. Dat is een volgende stap, geen onderdeel van deze.
+
+### Eén misklik, en iemands seizoen hangt aan het verkeerde account
+
+Wie op het "Wie ben jij?"-scherm op een naam klikt, claimt die speler. Dat is
+de bedoeling. Maar één misklik, of een telefoon die je uitleent, en het zit
+vast: de database laat een geclaimde speler met opzet niet overnemen.
+
+Vandaar precies één uitweg, en niet meer dan één: de poulebaas ziet bij zo'n
+speler een klein **losmaken** onder Poule. Twee tikken (dezelfde vraag-stelt-
+zichzelf-knop als "Wis alles", want een `confirm()` wordt weggeklikt), en de
+volgende die zich als die speler aanmeldt claimt hem opnieuw.
+
+`mag_beheren()` dekt ook de poules van vóór het aanmaakscherm, die geen
+eigenaar hebben: daar mag elk lid het. Anders zou juist de oudste poule geen
+uitweg hebben.
+
+### Wat de poulebaas níét kan: zichzelf redden
+
+Dit is de scherpe kant van echt eigenaarschap, en het hoort opgeschreven te
+staan in plaats van ontdekt te worden.
+
+Maak je je browser leeg zonder een mailadres gekoppeld te hebben, dan krijg je
+een nieuw anoniem account. Je speler hoort nog bij het oude. Je kunt niets meer
+voor jezelf opslaan, en losmaken kan alleen wie mét het eigenaarsaccount
+inlogt — dus jij niet meer.
+
+Er is geen slimme uitweg gevonden die de bescherming heel laat:
+
+- *Iedereen mag losmaken* haalt de hele wijziging onderuit.
+- *De eigen link (`&speler=<member_id>`) als bewijs* leek elegant — je hebt hem
+  aantoonbaar ooit gehad — maar `pool_members` staat open voor lezen, dus die
+  member_id is geen geheim. Zou alleen werken als de spelerslijst dichtgaat, en
+  dat kan niet zolang het "Wie ben jij?"-scherm bestaat.
+- *Controleren of het oude account nog bestaat* helpt niet: een anoniem account
+  blijft gewoon staan als jij je browser leegt.
+
+Het mailadres ís de reservesleutel. Daarom vraagt het scherm er nu explicieter
+om — niet met "dan kun je op een ander toestel inloggen", maar met wat er
+gebeurt als je het niet doet.
+
+### De nabootsing doet de policies na
+
+`test/nabootsing-supabase.mjs` heeft nu `magVoorSpeler()` en `magBeheren()`.
+Niet omdat de nabootsing de policies moet bewijzen — dat doet
+`test/policies.test.sql` tegen een echte PostgreSQL 16, met 27 controles die
+allemaal `found` meten en niet op een exception wachten — maar omdat een
+browsertest anders stiekem door een open deur loopt. De schermen die uitleggen
+"deze speler hoort bij een ander toestel" zouden dan nooit te zien zijn.
+
+Met datzelfde onderscheid als in Postgres: een verboden insert geeft `42501`,
+een verboden update of delete raakt zwijgend nul rijen. `index.html` vangt
+allebei op en maakt er hetzelfde leesbare antwoord van.
+
+### Wat er nog kan
+
+- De spelerslijst en het zoeken op poulecode achter een `security definer`
+  functie, zodat een poule niet meer uit te lezen is door wie de code niet
+  heeft.
+- De tweede regel uit `mag_voor_speler()` schrappen zodra
+  `spelers zonder account` op 0 staat.
+- Een privacyverklaring en "verwijder mijn account" — dat laatste is
+  technisch al voorbereid (`on delete cascade` op `pool_members.user_id`),
+  maar er zit nog geen knop aan.
