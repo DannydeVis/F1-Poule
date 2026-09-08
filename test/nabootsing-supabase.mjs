@@ -28,6 +28,9 @@ const beginstand = {
   // De nabootsing van auth.users. Staat in de "database", niet in de sessie:
   // een account overleeft het wissen van localStorage, net als in het echt.
   auth_users: [],
+  // Verstuurde inloglinks die nog niet aangeklikt zijn. In het echt zit dit in
+  // een mailbox; hier is het een rij met de sleutel die in de adresbalk komt.
+  otp: [],
   races: [
     // race_id is bewust een getal: zo controleren we ook dat 3 en '3'
     // niet uit elkaar lopen bij het terugzoeken van een voorspelling.
@@ -74,6 +77,7 @@ try {
 // Een bewaarde database van vóór de accounts mist deze tabel; zonder deze
 // regel valt de nabootsing dan om op een leesactie die niets hoort te doen.
 store.auth_users ??= [];
+store.otp ??= [];
 const bewaren = () => { try { sessionStorage.setItem(BEWAAR, JSON.stringify(store)); } catch { /* niets */ } };
 
 // Wordt door ontbrekende-sleutel.test.mjs leeggemaakt om een database zonder
@@ -99,6 +103,9 @@ const dubbelAccount = { data: null, error: { code: '23505',
 // ongeluk dezelfde array-instantie deelt met de "database".
 const kopie = (v) => JSON.parse(JSON.stringify(v));
 const gelijk = (a, b) => String(a) === String(b);
+// Een filter is [kolom, waarde] of [kolom, lijst, 'in'].
+const past = (rij, [k, v, op]) =>
+  op === 'in' ? (v ?? []).some((x) => gelijk(rij[k], x)) : gelijk(rij[k], v);
 
 globalThis.__db = store;
 
@@ -147,7 +154,7 @@ function uitvoeren(tabel, q) {
 
   if (q._weg) {
     // Een leeggemaakt antwoord haalt zijn rij weg: waarde mag niet null zijn.
-    const blijft = rijen.filter((r) => !q._filters.every(([k, v]) => gelijk(r[k], v)));
+    const blijft = rijen.filter((r) => !q._filters.every((f) => past(r, f)));
     const verwijderd = rijen.length - blijft.length;
     rijen.length = 0;
     rijen.push(...blijft);
@@ -160,7 +167,7 @@ function uitvoeren(tabel, q) {
     // schrijfactie zelf, zodat een rij die inmiddels gevuld is niet geraakt
     // wordt. Zonder dat kan de app niet nagespeeld worden.
     const doel = rijen.filter((r) =>
-      q._filters.every(([k, v]) => gelijk(r[k], v)) &&
+      q._filters.every((f) => past(r, f)) &&
       q._isNull.every((k) => (r[k] ?? null) === null));
     if (tabel === 'pool_members' && doel.some((r) =>
         botstMetAccount(rijen, { ...r, ...q._update }, r))) return dubbelAccount;
@@ -169,7 +176,7 @@ function uitvoeren(tabel, q) {
     return q._selectNa ? { data: kopie(doel), error: null } : { data: null, error: null };
   }
 
-  const uit = kopie(rijen.filter((r) => q._filters.every(([k, v]) => gelijk(r[k], v))));
+  const uit = kopie(rijen.filter((r) => q._filters.every((f) => past(r, f))));
   if (q._single) {
     if (uit.length !== 1) {
       return { data: null, error: { code: 'PGRST116', message: 'geen of meerdere rijen' } };
@@ -184,6 +191,7 @@ function maakQuery(tabel) {
     _filters: [], _isNull: [], _single: false, _selectNa: false,
     select() { if (q._insert || q._upsert || q._update) q._selectNa = true; return q; },
     eq(k, v) { q._filters.push([k, v]); return q; },
+    in(k, v) { q._filters.push([k, v, 'in']); return q; },
     is(k, v) {
       if (v !== null) throw new Error('de nabootsing kent alleen is(kolom, null)');
       q._isNull.push(k); return q;
@@ -213,10 +221,54 @@ function huidigeSessie() {
     const rauw = localStorage.getItem(SESSIE);
     if (!rauw) return null;
     const s = JSON.parse(rauw);
-    // Een sessie van een account dat niet (meer) bestaat is geen sessie.
-    return store.auth_users.some((u) => u.id === s?.user?.id) ? s : null;
+    // Het account uit de "database", niet de kopie die in de sessie stond:
+    // anders ziet de app een mailadres niet dat inmiddels bevestigd is.
+    const user = store.auth_users.find((u) => u.id === s?.user?.id);
+    return user ? { ...s, user: kopie(user) } : null;
   } catch { return null; }
 }
+
+function zetSessie(user) {
+  const sessie = { user, access_token: 'nep-' + user.id };
+  try { localStorage.setItem(SESSIE, JSON.stringify(sessie)); } catch { /* niets */ }
+  return sessie;
+}
+
+// De nabootsing van detectSessionInUrl: supabase-js pikt bij het laden van de
+// pagina de sleutel uit `?code=` op, zet de sessie, en haalt de parameter uit
+// de adresbalk. Dat laatste is geen detail — het is de reden dat de app die
+// sleutel niet als poulecode kan aanzien, en dus precies wat getest moet
+// kunnen worden.
+function inlogUitAdresbalk() {
+  try {
+    const code = new URLSearchParams(location.search).get('code');
+    if (!code) return;
+    const wacht = store.otp.find((o) => o.code === code);
+    if (!wacht) return;
+    const user = store.auth_users.find((u) => u.id === wacht.user_id);
+    if (user) {
+      // Een bevestigingslink maakt het adres definitief; een inloglink zet
+      // alleen de sessie op dit toestel.
+      if (wacht.bevestigt) {
+        user.email = wacht.email;
+        user.new_email = null;
+        user.is_anonymous = false;
+      }
+      zetSessie(user);
+    }
+    store.otp = store.otp.filter((o) => o.code !== code);
+    bewaren();
+    const over = new URLSearchParams(location.search);
+    over.delete('code');
+    const rest = over.toString();
+    history.replaceState(null, '', location.pathname + (rest ? '?' + rest : ''));
+  } catch { /* niets */ }
+}
+inlogUitAdresbalk();
+
+// Een sleutel die er niet uitziet als een poulecode, zoals Supabase hem maakt.
+let teller = 0;
+const nieuweSleutel = () => `pkce-${Date.now().toString(36)}-${++teller}-abcdefghijklmnop`;
 
 const auth = {
   async getSession() { return { data: { session: huidigeSessie() }, error: null }; },
@@ -228,12 +280,50 @@ const auth = {
     const bestaand = huidigeSessie();
     if (bestaand) return { data: bestaand, error: null };
     const user = { id: 'account-' + (store.auth_users.length + 1),
-                   is_anonymous: true, email: null };
+                   is_anonymous: true, email: null, new_email: null };
     store.auth_users.push(user);
     bewaren();
-    const sessie = { user, access_token: 'nep-' + user.id };
-    try { localStorage.setItem(SESSIE, JSON.stringify(sessie)); } catch { /* niets */ }
-    return { data: sessie, error: null };
+    return { data: zetSessie(user), error: null };
+  },
+
+  // Een mailadres aan het huidige account hangen. Net als bij Supabase komt
+  // het adres in `new_email` en pas in `email` als er op de link geklikt is.
+  async updateUser({ email }, opties = {}) {
+    const sessie = huidigeSessie();
+    if (!sessie) return { data: null, error: { message: 'geen sessie' } };
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email ?? ''))) {
+      return { data: null, error: { code: 'validation_failed', message: 'Unable to validate email address: invalid format' } };
+    }
+    const bezet = store.auth_users.some((u) =>
+      u.id !== sessie.user.id && (gelijk(u.email, email) || gelijk(u.new_email, email)));
+    if (bezet) {
+      return { data: null, error: { code: 'email_exists',
+        message: 'A user with this email address has already been registered' } };
+    }
+    const user = store.auth_users.find((u) => u.id === sessie.user.id);
+    user.new_email = email;
+    store.otp.push({ code: nieuweSleutel(), user_id: user.id, email,
+                     bevestigt: true, terug: opties.emailRedirectTo ?? '' });
+    bewaren();
+    zetSessie(user);
+    return { data: { user: kopie(user) }, error: null };
+  },
+
+  // Een inloglink naar een bestaand account. shouldCreateUser:false betekent
+  // dat een onbekend adres een fout geeft in plaats van een leeg account.
+  async signInWithOtp({ email, options = {} }) {
+    const user = store.auth_users.find((u) => gelijk(u.email, email));
+    if (!user) {
+      if (options.shouldCreateUser === false) {
+        return { data: null, error: { code: 'otp_disabled',
+          message: 'Signups not allowed for otp' } };
+      }
+      return { data: null, error: { message: 'onbekend adres' } };
+    }
+    store.otp.push({ code: nieuweSleutel(), user_id: user.id, email,
+                     bevestigt: false, terug: options.emailRedirectTo ?? '' });
+    bewaren();
+    return { data: {}, error: null };
   },
   async signOut() {
     try { localStorage.removeItem(SESSIE); } catch { /* niets */ }
@@ -242,6 +332,19 @@ const auth = {
   onAuthStateChange() {
     return { data: { subscription: { unsubscribe() {} } } };
   },
+};
+
+// Wat de tests nodig hebben om een mailbox na te bootsen: welke link is er
+// verstuurd, en wat gebeurt er als je erop klikt.
+globalThis.__mail = {
+  // De laatst verstuurde link, precies zoals hij in de mail zou staan.
+  laatsteLink() {
+    const laatste = store.otp[store.otp.length - 1];
+    if (!laatste) return null;
+    const basis = laatste.terug || (location.origin + location.pathname);
+    return basis + (basis.includes('?') ? '&' : '?') + 'code=' + laatste.code;
+  },
+  aantalVerstuurd() { return store.otp.length; },
 };
 
 export const createClient = () => ({ from: maakQuery, auth });

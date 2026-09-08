@@ -1858,6 +1858,11 @@ genoeg meer: hij zet wel `S.ik`, maar het tweede toestel heeft een ánder
 anoniem account, en dat is geen lid. Zonder mailkoppeling zou zo'n speler op
 zijn laptop stilletjes niets meer kunnen opslaan.
 
+*(Stap 1 staat inmiddels in [Je account meenemen: één mailadres, en een botsing
+in de adresbalk](#je-account-meenemen-één-mailadres-en-een-botsing-in-de-adresbalk).
+Daar bleek `?code=` twee dingen te betekenen — de poulecode van deze app én de
+sleutel waarmee Supabase je terugstuurt.)*
+
 ### Eén ding dat handmatig moet
 
 Anoniem inloggen staat standaard **uit** in een Supabase-project. Dashboard →
@@ -1880,3 +1885,137 @@ naboots(t)en — nu ook echt een ander account oplevert. Zonder die keuze zou
 De nabootsing dwingt ook de gedeeltelijke unieke index af. Zonder dat zou de
 app een claim kunnen doen die de echte database weigert, en zou geen enkele
 test dat merken.
+
+---
+
+## Je account meenemen: één mailadres, en een botsing in de adresbalk
+
+De vorige stap gaf iedereen een account, maar dat account bleef op één browser
+staan. Dit is de stap die het meeneemt — en het is de laatste stap vóór de
+policies dicht kunnen, want zonder dit sluit je elke speler buiten die ook op
+zijn laptop meedoet.
+
+Het is nadrukkelijk optioneel gebleven, zoals afgesproken. Wie geen mailadres
+koppelt speelt gewoon door. Het staat onderaan onder Poule, en op het
+beginscherm staat de tegenhanger ("Inloggen met je mailadres") onder de knop om
+een nieuwe poule te maken. Verreweg de meeste mensen typen gewoon hun
+poulecode.
+
+### De valstrik: `?code=` betekent twee dingen
+
+Dit is het soort fout dat je pas in productie vindt, en dan een uur kost.
+
+Supabase stuurt je na een inloglink terug met `?code=<lange sleutel>` in de
+adresbalk (de PKCE-flow). Deze app zet zijn **poulecode** in precies dezelfde
+parameter: `?code=RTM026`. Zonder onderscheid zou de app na het inloggen
+vrolijk melden dat "die poulecode niet bestaat", en zou je nooit binnenkomen.
+
+Twee dingen houden dat tegen:
+
+```js
+const ZIET_ERUIT_ALS_POULECODE = (code) => /^[A-Z0-9]{1,8}$/.test(String(code ?? ''));
+```
+
+`codeUitLink()` laat alleen door wat dáárop lijkt. Iets van vijf of zeven tekens
+mag nog steeds doorgaan voor een typfout in een poulecode — daar hoort een nette
+melding bij — maar een sleutel van tientallen tekens is nooit van ons.
+
+En andersom: `emailRedirectTo` krijgt géén poulecode mee. Supabase plakt zijn
+eigen `?code=` achter die url, en `URLSearchParams.get('code')` geeft dan de
+eerste van de twee terug — dus zou supabase-js onze poulecode proberen in te
+wisselen voor een sessie. De poule komt na het inloggen ergens anders vandaan;
+zie hieronder.
+
+### Wat er in de adresbalk stond moet je meteen vastleggen
+
+```js
+const VAN_INLOGLINK = (() => { ... })();
+```
+
+Dit staat bovenaan, vóór de import van supabase-js. Dat is geen stijlkeuze:
+supabase-js ruimt de adresbalk op zodra hij de sleutel gebruikt heeft, en dat
+gebeurt tijdens die import. Wie het daarna probeert vast te stellen vindt niets
+meer.
+
+Waarom het uitmaakt: normaal wint wat dit toestel onthouden heeft van wat je
+account zegt (zie `herkenMij()`). Maar wie zojuist bewust op een inloglink heeft
+geklikt bedoelt het omgekeerde. Zonder deze vlag zou je na het inloggen alsnog
+de speler zijn die op dit toestel toevallig het laatst gekozen was — bijvoorbeeld
+de logeergast aan wie je je telefoon had uitgeleend.
+
+`await bestaandeSessie()` vóór `await hervat()` is om dezelfde reden
+load-bearing geworden: `getSession()` wacht tot supabase-js de sleutel heeft
+omgezet, en pas daarna haalt `hervat()` diezelfde adresbalk leeg met
+`vergeetLinkCode()`.
+
+### En dan sta je op een leeg toestel voor het codescherm
+
+Inloggen dat je vervolgens alsnog om de poulecode vraagt is geen inloggen. Op
+een tweede toestel is `localStorage` leeg: geen poules, geen speler. Dus haalt
+de app na een inloglink op wat je account weet:
+
+```js
+const { data } = await db.from('pool_members').select('pool_id').eq('user_id', mijnUid);
+```
+
+Die poules gaan in het lijstje van dit toestel, en is het er precies één dan
+loopt de app er meteen in door. Dit is meteen de eerste plek waar `user_id`
+échte functionaliteit levert in plaats van alleen een controlemogelijkheid.
+
+### Een foutmelding van nul pixels hoog
+
+Bij het testen van het mailformulier bleek de foutmelding niet zichtbaar. Ze
+stond er wel, met de goede tekst, maar nul pixels hoog.
+
+De oorzaak zat in de CSS en was ouder dan deze wijziging: `.err` had
+`min-height:0`. De kolommen zijn flexkolommen die op een breed scherm zelf
+scrollen, en een flexitem met `min-height:0` mag door de browser tot niets
+worden platgedrukt zodra de inhoud niet past. Dat gold dus ook voor de
+foutmeldingen bij de omschrijving en bij de vragenset — die waren al onzichtbaar,
+alleen was daar nog nooit iemand tegenaan gelopen.
+
+`flex:none` in plaats van `min-height:0`. Een lege melding blijft nul hoog, een
+gevulde niet meer.
+
+### Twee dingen die niet in de code staan maar wel gedaan moeten worden
+
+1. **Redirect-url toestaan** in Supabase (Authentication → URL Configuration →
+   Redirect URLs). Staat de url van de app er niet in, dan negeert Supabase de
+   terugkeerlink.
+2. **Eigen SMTP instellen.** De ingebouwde mailer van Supabase stuurt een paar
+   mails per uur en is uitdrukkelijk niet voor productie. Zonder een eigen
+   mailleverancier is dit een knop die bij de derde gebruiker ophoudt te
+   werken — en dat merk je niet, want de app krijgt keurig "verstuurd" terug.
+
+### Wat de nabootsing erbij kreeg
+
+`__mail.laatsteLink()` geeft de link die verstuurd zou zijn, en die openen ís
+"op de link klikken". De nabootsing doet ook `detectSessionInUrl` na, inclusief
+het opruimen van de adresbalk — juist dat opruimen is wat getest moet kunnen
+worden, want het is de reden dat de app die sleutel niet als poulecode ziet.
+
+Verschil tussen de twee soorten links, net als bij Supabase: een
+bevestigingslink (van `updateUser`) maakt het adres definitief, een inloglink
+(van `signInWithOtp`) zet alleen de sessie op dat toestel.
+
+### Eén open eind, en het hoort bij de policies
+
+Wie op het "Wie ben jij?"-scherm op een naam klikt, claimt die speler voor dít
+toestel. Dat is precies de bedoeling — zo hoort een speler bij een account —
+maar het gaat mis als iemand op de verkeerde naam klikt, of als je je telefoon
+uitleent en de logeergast zichzelf aanwijst met jouw account nog actief. Die
+speler hangt dan aan een account dat er niets mee te maken heeft, en zolang de
+policies openstaan merkt niemand het.
+
+Zodra ze dichtgaan wél: die speler is dan door niemand meer te gebruiken. Er
+moet dus een weg terug komen, en die hoort bij de policies-wijziging, niet
+hier. De voor de hand liggende vorm is een "deze speler is niet van mij" die de
+claim losmaakt, met dezelfde drempel als vandaag geldt — wie de poulecode heeft,
+mag het. Meer beveiliging dan dat heeft de app op dit punt nooit gehad, en
+minder mag het niet worden.
+
+### Wat er nog moet
+
+De policies. Nu pas kan dat: iedereen heeft een account, spelers hangen eraan,
+en wie op een tweede toestel speelt kan zichzelf meenemen. Met het open eind
+hierboven erbij.
