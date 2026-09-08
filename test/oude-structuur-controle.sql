@@ -70,20 +70,22 @@ begin
   ) then
     raise exception 'gezakt: pools.beschrijving is niet bijgemaakt';
   end if;
-  -- Net zo voor de inleg en het betaalverzoek, en het vinkje per speler.
-  if not exists (
+  -- En andersom voor de inleg: die kolommen horen juist wég te zijn. Een
+  -- oude database die ze nog had moet ze bij het opnieuw draaien van
+  -- schema.sql kwijtraken, anders blijven er bedragen en betaallinks staan
+  -- van een functie die er niet meer is.
+  if exists (
     select 1 from information_schema.columns
     where table_schema = 'public' and table_name = 'pools'
       and column_name in ('inleg', 'betaallink')
-    group by table_name having count(*) = 2
   ) then
-    raise exception 'gezakt: pools.inleg of pools.betaallink is niet bijgemaakt';
+    raise exception 'gezakt: pools.inleg of pools.betaallink staat er nog';
   end if;
-  if not exists (
+  if exists (
     select 1 from information_schema.columns
     where table_schema = 'public' and table_name = 'pool_members' and column_name = 'betaald'
   ) then
-    raise exception 'gezakt: pool_members.betaald is niet bijgemaakt';
+    raise exception 'gezakt: pool_members.betaald staat er nog';
   end if;
   raise notice 'ok: ontbrekende kolommen zijn bijgemaakt';
 end $$;

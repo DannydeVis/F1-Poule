@@ -33,17 +33,17 @@ check('een poule zonder omschrijving heeft een leeg veld',
 check('en opslaan kan pas als er iets veranderd is',
   await page.isDisabled('#omschrijvingBewaren'));
 
-await page.fill('#pouleomschrijving', "Met de collega's, 5 euro inleg");
+await page.fill('#pouleomschrijving', "Met de collega's, om de eer");
 check('zodra je typt mag het wel', !(await page.isDisabled('#omschrijvingBewaren')));
 
 await page.click('#omschrijvingBewaren');
 await page.waitForSelector('.pouletekst');
 check('de omschrijving staat onder de naam van de poule',
-  (await tekst('.pouletekst')) === "Met de collega's, 5 euro inleg",
+  (await tekst('.pouletekst')) === "Met de collega's, om de eer",
   await tekst('.pouletekst'));
 check('en hij staat in de database',
   (await page.evaluate(() => globalThis.__db.pools[0].beschrijving))
-    === "Met de collega's, 5 euro inleg");
+    === "Met de collega's, om de eer");
 
 // --- en weer weghalen ------------------------------------------------------
 await page.fill('#pouleomschrijving', '   ');
