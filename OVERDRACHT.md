@@ -2230,3 +2230,64 @@ namens iemand te beslissen.
 
 En de regio van de database staat in het Supabase-dashboard; voor Nederlandse
 gebruikers is het het vermelden waard waar hun gegevens staan.
+
+---
+
+## De lettertypen uit de app zelf
+
+De privacyverklaring uit de vorige stap had één regel die ik er liever niet in
+had gehad: *"De app haalt wel lettertypen op bij Google Fonts; daarbij ziet
+Google je IP-adres."*
+
+Dat was waar, dus het stond er. Maar een verklaring die iets vervelends
+opschrijft is minder waard dan een app die het niet doet.
+
+De drie families staan nu in `lettertypen/`, letterlijk de woff2-bestanden die
+Google Fonts serveert (Open Font License), met `@font-face`-regels in de
+`<style>` van `index.html`.
+
+### Wat er wel en niet in zit
+
+Alleen **latin** en **latin-ext**, geen vietnamees: dat zou een derde toevoegen
+aan iets dat hier nooit geladen wordt. En alleen de acht gewichten die de app
+echt gebruikt.
+
+Zestien bestanden, 278 KB bij elkaar — maar dat is niet wat een bezoeker
+ophaalt. De `unicode-range` per regel laat de browser alleen pakken wat hij
+nodig heeft: voor een Nederlandse poule is dat het latin-deel, en daarbinnen
+alleen de gewichten die op dat scherm staan. Op het beginscherm bleken dat er
+vijf van de zestien.
+
+`font-display: swap` blijft, zodat de tekst leesbaar is voordat ze binnen zijn.
+
+### De test die het moet vasthouden
+
+Een verklaring die zegt "er gaat niets naar buiten" is alleen iets waard als
+iets dat bewaakt. `privacy.test.mjs` kijkt daarom in de markup:
+
+```js
+[...document.querySelectorAll('link[href], script[src], img[src]')]
+  .map((e) => e.getAttribute('href') || e.getAttribute('src'))
+  .filter((u) => /^https?:\/\//.test(u ?? ''))
+```
+
+Nul verwijzingen naar een vreemde host. Sluipt er ooit weer een `<link>` naar
+Google Fonts in, dan valt die test om.
+
+### En de test rendert nu ook met de echte letters
+
+`test/hulp.mjs` serveerde alleen `index.html` en de nabootsing uit een
+tijdelijke map. De lettertypen zouden daar 404 geven, en dan zou elke
+browsertest met andere letters renderen dan de echte app — precies het soort
+verschil waardoor een test wél slaagt en het scherm tóch scheef staat. De
+testserver valt nu terug op de repo zelf voor wat hij niet in die map heeft.
+
+### Wat er nog van buiten komt
+
+Eén ding: de supabase-client, van `esm.sh`. Die ziet daarbij het IP-adres van
+de bezoeker, en dat staat nu in de verklaring waar eerst Google stond.
+
+Dat wilde ik in dezelfde stap wegwerken — esm.sh kan met `?bundle` een
+zelfstandig bestand serveren — maar die host is vanuit deze omgeving niet
+bereikbaar (403 via de proxy). Het is dus een aparte stap, en het is de laatste
+partij die overblijft.

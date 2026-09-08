@@ -40,8 +40,21 @@ check('hij zegt dat een mailadres alleen bewaard wordt als je het koppelt',
 check('en waar de gegevens staan', verklaring.includes('Supabase'));
 check('en dat er geen trackers in zitten',
   verklaring.includes('geen trackers') || verklaring.includes('geen analytics'));
-check('en het is eerlijk over de lettertypen bij Google',
-  verklaring.includes('Google Fonts') && verklaring.includes('IP-adres'));
+check('en dat de lettertypen in de app zelf zitten',
+  verklaring.includes('lettertypen staan in de app zelf'));
+check('en het is eerlijk over het enige dat nog van buiten komt',
+  verklaring.includes('esm.sh') && verklaring.includes('IP-adres'));
+// De verklaring mag dit pas beweren zolang het waar is. Deze controle kijkt
+// naar de markup: geen <link>, <script src> of <img> naar een vreemde host.
+// Zou er weer een verwijzing naar Google Fonts in sluipen, dan valt deze test
+// om — en dat is precies de bedoeling. De dynamische import van de
+// supabase-client staat niet in de markup en is hier vervangen door de
+// nabootsing; die staat wél in de verklaring genoemd.
+const vreemd = await page.evaluate(() => [...document.querySelectorAll('link[href], script[src], img[src]')]
+  .map((e) => e.getAttribute('href') || e.getAttribute('src'))
+  .filter((u) => /^https?:\/\//.test(u ?? '')));
+check('en dat klopt: de pagina haalt niets bij een andere host op',
+  vreemd.length === 0, vreemd.join(' | ') || '(niets)');
 check('het verschil tussen de twee manieren van weggaan staat erbij',
   verklaring.includes('zodat de stand van de anderen blijft kloppen')
     && verklaring.includes('niet terug te draaien'));

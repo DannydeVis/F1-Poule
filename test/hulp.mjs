@@ -43,14 +43,20 @@ export async function startPagina({ aanpassen = (s) => s, indexPad } = {}) {
   writeFileSync(join(map, 'nabootsing-supabase.mjs'),
     aanpassen(readFileSync(join(hier, 'nabootsing-supabase.mjs'), 'utf8')));
 
-  const types = { '.html': 'text/html', '.mjs': 'text/javascript' };
+  const types = { '.html': 'text/html', '.mjs': 'text/javascript', '.woff2': 'font/woff2' };
   const server = createServer((req, res) => {
     // Eerst de querystring eraf: de app leest ?code= uit de link, dus '/'
     // komt hier ook binnen als '/?code=RTM026'.
     const pad = req.url.split('?')[0];
     const naam = pad === '/' ? '/index.html' : pad;
     try {
-      const body = readFileSync(join(map, naam));
+      // Eerst de tijdelijke map (daar staan index.html en de nabootsing), dan
+      // de repo zelf. Dat tweede is er voor de lettertypen: die staan sinds
+      // kort in lettertypen/ en horen ook in een test gewoon te laden, anders
+      // rendert elke test met andere letters dan de echte app.
+      let body;
+      try { body = readFileSync(join(map, naam)); }
+      catch { body = readFileSync(join(wortel, naam.replace(/^\//, ''))); }
       res.writeHead(200, { 'Content-Type': types[naam.slice(naam.lastIndexOf('.'))] ?? 'text/plain' });
       res.end(body);
     } catch { res.writeHead(404); res.end('niet gevonden'); }
