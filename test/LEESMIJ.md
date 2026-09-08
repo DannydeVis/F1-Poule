@@ -1,7 +1,7 @@
 # Tests
 
 Deze map is er voor de CI op GitHub. **De poule zelf heeft geen npm of
-build-stap nodig** — `index.html` en `sync.html` blijven bestanden die je
+build-stap nodig** — `index.html` blijft een bestand dat je
 rechtstreeks in een browser opent. Wie geen Node kan installeren hoeft hier
 dus niets mee te doen; GitHub draait het bij elke pull request vanzelf.
 Hetzelfde geldt voor `scripts/sync.mjs`: dat draait op de runner, niet op
@@ -14,7 +14,6 @@ je eigen computer.
 | `voorspelling-bewaren.test.mjs` | De bug waarbij een opgeslagen voorspelling verdween na terugkeren naar het overzicht |
 | `poule-onthouden.test.mjs` | Of de poule na herladen onthouden wordt, en of een bestaande naam intypen geen tweede speler aanmaakt |
 | `ontbrekende-sleutel.test.mjs` | Of een database zonder de unieke sleutel een leesbare melding geeft in plaats van stille dubbele rijen |
-| `uitslag-invoeren.test.mjs` | Handmatig een uitslag invullen: de vlag komt mee, en een bestaande uitslag wordt niet overschreven |
 | `uitnodiging.test.mjs` | De link met `?code=`: hij wint van de onthouden poule, verdwijnt daarna uit de adresbalk, en een kapotte code zegt dat. Plus je eigen link met `&speler=`, waarmee je op een tweede toestel dezelfde speler bent |
 | `duel.test.mjs` | De onderlinge duels tussen spelers, vooral welke weekenden níét meetellen |
 | `winnaar.test.mjs` | De losse winnaar van 25 punten |
@@ -37,6 +36,7 @@ je eigen computer.
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |
 | `schema-herstel.test.sql` | Of een tweede run van `schema.sql` een beschadigde tabel opruimt |
+| `races-alleen-lezen.test.sql` | Dat `anon` en `authenticated` de uitslagen wel mogen lezen maar niet schrijven — races wordt door alle poules gedeeld |
 | `oude-structuur.sql` + `-controle.sql` | Of `schema.sql` een oudere tabelopzet rechtzet zonder gegevens te raken (fout 42830) |
 
 De browsertests draaien `index.html` echt in Chromium, met de import van

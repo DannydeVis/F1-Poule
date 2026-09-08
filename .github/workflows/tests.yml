@@ -70,6 +70,15 @@ jobs:
       - name: Gedrag van de deadline-trigger en de unieke sleutel
         run: psql -v ON_ERROR_STOP=1 -f test/schema-gedrag.test.sql
 
+      # races is de enige tabel die alle poules delen, dus wie daarin schrijft
+      # raakt iedereen. Deze test draait als anon én als authenticated en
+      # controleert dat lezen mag en schrijven niet.
+      - name: races staat op alleen-lezen voor anon
+        run: |
+          createdb rls
+          psql -d rls -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d rls -v ON_ERROR_STOP=1 -f test/races-alleen-lezen.test.sql
+
       # De vorige stap heeft de tabel opzettelijk beschadigd. schema.sql hoort
       # dat te herstellen zonder dat er data verloren gaat die de app gebruikt.
       - name: schema.sql opnieuw draaien op de beschadigde database

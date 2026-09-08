@@ -526,6 +526,7 @@ drop policy if exists pools_open        on public.pools;
 drop policy if exists pool_members_open on public.pool_members;
 drop policy if exists races_open        on public.races;
 drop policy if exists races_all         on public.races;
+drop policy if exists races_lezen       on public.races;
 drop policy if exists predictions_open  on public.predictions;
 drop policy if exists questions_lezen   on public.questions;
 drop policy if exists pool_questions_open on public.pool_questions;
@@ -535,10 +536,16 @@ create policy pools_open        on public.pools
   for all to anon, authenticated using (true) with check (true);
 create policy pool_members_open on public.pool_members
   for all to anon, authenticated using (true) with check (true);
--- races staat ook open voor schrijven omdat sync.html in de browser draait
--- en dus alleen de anon-sleutel heeft.
-create policy races_open        on public.races
-  for all to anon, authenticated using (true) with check (true);
+-- races is de enige tabel die door álle poules gedeeld wordt: één rij per
+-- race per seizoen, geen pool_id. Wie hier schreef, veranderde de uitslag
+-- voor iedereen die dit seizoen volgt. Dat was te verdedigen zolang het
+-- vrienden waren en sync.html in de browser draaide; publiek is het een knop
+-- waarmee één iemand elke poule in de app sloopt.
+--
+-- Nu: alleen lezen. Schrijven doet de sync op een GitHub-runner, en die
+-- gebruikt de service_role key — die gaat overal langs, ook langs RLS.
+create policy races_lezen       on public.races
+  for select to anon, authenticated using (true);
 create policy predictions_open  on public.predictions
   for all to anon, authenticated using (true) with check (true);
 -- De vragenlijst zelf is de enige tabel die niet openstaat voor schrijven:
@@ -550,6 +557,35 @@ create policy pool_questions_open on public.pool_questions
   for all to anon, authenticated using (true) with check (true);
 create policy answers_open      on public.answers
   for all to anon, authenticated using (true) with check (true);
+
+-- ------------------------------------------------------------
+--  Rechten op tabelniveau
+--  Supabase geeft anon en authenticated standaard alles op `public`. Dat is
+--  een blanco cheque die nergens in dit bestand te zien was, dus staat hij er
+--  nu expliciet — met twee voordelen. Je leest hier wat er mag, en de CI doet
+--  het na: daar hadden anon en authenticated tot nu toe hélemaal geen rechten,
+--  waardoor de policies hierboven wel bestonden maar nooit uitgeoefend werden.
+--
+--  Dit is een tweede slot naast RLS. Een policy die per ongeluk te ruim wordt
+--  komt hier alsnog niet langs.
+-- ------------------------------------------------------------
+
+grant usage on schema public to anon, authenticated;
+
+grant select, insert, update, delete on public.pools          to anon, authenticated;
+grant select, insert, update, delete on public.pool_members   to anon, authenticated;
+grant select, insert, update, delete on public.predictions    to anon, authenticated;
+grant select, insert, update, delete on public.pool_questions to anon, authenticated;
+grant select, insert, update, delete on public.answers        to anon, authenticated;
+grant select on public.questions to anon, authenticated;
+
+-- races is het strengst, en met opzet: één tabel voor alle poules, dus wie
+-- hier schrijft raakt iedereen. Alleen de sync schrijft, en die draait op een
+-- runner met de service_role key — die gaat langs zowel de grant als RLS.
+grant select on public.races to anon, authenticated;
+revoke insert, update, delete on public.races from anon, authenticated;
+
+grant usage on all sequences in schema public to anon, authenticated;
 
 -- ------------------------------------------------------------
 --  Controle

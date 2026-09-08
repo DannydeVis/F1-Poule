@@ -84,26 +84,26 @@ await page.waitForSelector('.score');
 check('zolang het aantal niet bekend is staat er geen verwijt',
   !(await tekst('#paneel')).includes('geen aantal gekozen'));
 
-// --- zelf invullen ---------------------------------------------------------
-await page.click('[data-losse-start="safety_cars"]');
-await page.waitForSelector('[data-losse-extra="safety_cars"]');
-check('zelf invullen gebruikt dezelfde aantallen',
-  (await page.$$eval('[data-losse-extra="safety_cars"]', (n) => n.length)) === 7);
-// Eén ernaast: dat hoort de helft op te leveren, niet nul.
-await page.click('[data-losse-extra="safety_cars"][data-waarde="3"]');
-await page.click('#losseOpslaan');
-await page.waitForSelector('.melding');
+// Zelf invullen bestaat niet meer: races is één tabel voor alle poules, dus
+// die knop veranderde de uitslag voor iedereen die het seizoen volgt.
+check('er staat geen knop om het aantal zelf in te vullen',
+  (await page.$('[data-losse-start="safety_cars"]')) === null);
 
-const na = await race1();
-check('het aantal staat in de database', na.safety_cars === 3, String(na.safety_cars));
-check('en is gemarkeerd als handmatig ingevuld', na.safety_cars_handmatig === true);
+// --- de sync brengt het aantal binnen --------------------------------------
+// Eén ernaast: dat hoort de helft op te leveren, niet nul.
+await page.evaluate(() => {
+  const r = globalThis.__db.races.find((x) => String(x.id) === '1');
+  r.safety_cars = 3;
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
+});
+await page.reload();
 
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
 await page.waitForSelector('.score');
 const scherm = await tekst('#paneel');
 check('eentje ernaast levert de helft van de punten op',
-  /safety cars · 12 punten · handmatig ingevuld SC 2 het werd 3 safety cars 6/.test(scherm),
+  /safety cars · 12 punten SC 2 het werd 3 safety cars 6/.test(scherm),
   scherm.match(/safety cars .{0,70}/)?.[0] ?? 'die regel staat er niet');
 
 // --- de rode vlag, alles of niets -----------------------------------------
@@ -138,10 +138,13 @@ await page.waitForSelector('#paneel');
 const leeg = await tekst('#paneel');
 check('een race waarin je niets invulde zegt dat ook',
   leeg.includes('Je hebt hier niks ingevuld'), leeg.slice(0, 70) + '...');
-check('maar de ontbrekende uitslagen zijn er wel in te vullen',
-  (await page.$('[data-losse-start="safety_cars"]')) !== null
-    && (await page.$('[data-losse-start="snelste_ronde"]')) !== null,
-  leeg.slice(0, 110) + '...');
+// Vroeger stond hier een rijtje "zelf invullen" voor de uitslagen die nog
+// ontbraken — ook voor wie zelf niets voorspeld had. Die knop is weg, en
+// daarmee heeft dit scherm niets meer te melden: je hebt niets ingevuld, dus
+// er valt niets te scoren.
+check('en er wordt nergens meer om een handmatige uitslag gevraagd',
+  (await page.$('[data-losse-start]')) === null && !leeg.includes('Zelf invullen'),
+  leeg.slice(0, 140) + '...');
 
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
