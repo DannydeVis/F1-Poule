@@ -475,10 +475,13 @@ Wat de verklaring zegt, en waarom het waar is:
   geen mailadres.
 - **Geen advertenties, analytics of trackers.** Er zit niets van dien aard in
   `index.html`; dat is te controleren.
-- **Wel Google Fonts.** De app haalt drie lettertypen op bij
-  `fonts.googleapis.com`, en daarbij ziet Google het IP-adres van de bezoeker.
-  Dat staat er eerlijk bij. Zelf hosten haalt die regel weg en is een goede
-  volgende stap; zie `OVERDRACHT.md`.
+- **De lettertypen komen uit de app zelf.** Die stonden eerst bij Google Fonts;
+  nu in `lettertypen/` in de repo. Een browsertest controleert dat er geen
+  `<link>`, `<script src>` of `<img>` naar een vreemde host in `index.html`
+  terugsluipt.
+- **Eén ding komt nog van buiten**, en dat staat er ook zo: de supabase-client
+  wordt van `esm.sh` geladen, en die ziet daarbij het IP-adres van de bezoeker.
+  Ook dat zelf hosten is de laatste stap; zie `OVERDRACHT.md`.
 
 ### Twee manieren om weg te gaan
 

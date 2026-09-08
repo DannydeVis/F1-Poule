@@ -34,7 +34,7 @@ je eigen computer.
 | `kalender-en-coureurs.test.mjs` | Het testrecord Kuala Lumpur uit de kalender van OpenF1, wanneer de deelnemerslijst opnieuw opgehaald wordt, en dat een rondenummer nooit van race wisselt |
 | `knipsel.test.mjs` | Dat de rekenkern nog uit `index.html` te knippen is en klopt — de audit draait erop |
 | `account.test.mjs` | Het anonieme account: dat rondkijken er geen aanmaakt, dat een geclaimde speler nooit overgenomen wordt, en dat een gedeeld toestel gewoon een tweede speler mag inschrijven |
-| `privacy.test.mjs` | Het blok "wat de app van je weet": dat het klopt wat erin staat, en dat de twee knoppen om weg te gaan ook echt verschillen |
+| `privacy.test.mjs` | Het blok "wat de app van je weet": dat het klopt wat erin staat, dat de pagina niets bij een vreemde host ophaalt, en dat de twee knoppen om weg te gaan ook echt verschillen |
 | `eigen-inzending.test.mjs` | Wat de app laat zien als de database het schrijven weigert: uitleg in plaats van stilte, en de losmaakknop van de poulebaas |
 | `mailkoppeling.test.mjs` | Je account meenemen met een mailadres: dat "gestuurd" niet "gekoppeld" is, dat een onbekend adres geen leeg account maakt, en vooral dat de sleutel uit de inloglink niet voor een poulecode wordt aangezien |
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
