@@ -40,6 +40,7 @@ je eigen computer.
 | `eerste-indruk.test.mjs` | Wat een vreemde ziet die zonder uitnodiging binnenkomt: uitleg voor wie hem nodig heeft, weg voor wie niet, en het codeveld blijft bovenaan. Plus het PWA-manifest en de pictogrammen |
 | `privacy.test.mjs` | Het blok "wat de app van je weet": dat het klopt wat erin staat, dat de pagina niets bij een vreemde host ophaalt, en dat de twee knoppen om weg te gaan ook echt verschillen |
 | `eigen-inzending.test.mjs` | Wat de app laat zien als de database het schrijven weigert: uitleg in plaats van stilte, en de losmaakknop van de poulebaas |
+| `google.test.mjs` | Inloggen met Google: dat het aan je bestaande account hangt in plaats van een tweede te maken, dat de voordeur een poulecode blijft, en dat iemand anders zijn Google-account niet in jouw speler belandt |
 | `mailkoppeling.test.mjs` | Je account meenemen met een mailadres: dat "gestuurd" niet "gekoppeld" is, dat een onbekend adres geen leeg account maakt, en vooral dat de sleutel uit de inloglink niet voor een poulecode wordt aangezien |
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |

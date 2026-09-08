@@ -78,6 +78,7 @@ try {
 // regel valt de nabootsing dan om op een leesactie die niets hoort te doen.
 store.auth_users ??= [];
 store.otp ??= [];
+store.google_als ??= 'danny@gmail.voorbeeld';
 const bewaren = () => { try { sessionStorage.setItem(BEWAAR, JSON.stringify(store)); } catch { /* niets */ } };
 
 // Wordt door ontbrekende-sleutel.test.mjs leeggemaakt om een database zonder
@@ -318,6 +319,14 @@ function inlogUitAdresbalk() {
         user.new_email = null;
         user.is_anonymous = false;
       }
+      // Terug van Google: de identiteit hangt er nu aan, en daarmee is het
+      // account niet anoniem meer.
+      if (wacht.google) {
+        user.identities = [...(user.identities ?? []).filter((i) => i.provider !== 'google'),
+                           { provider: 'google', identity_data: { email: wacht.email } }];
+        user.email ??= wacht.email;
+        user.is_anonymous = false;
+      }
       zetSessie(user);
     }
     store.otp = store.otp.filter((o) => o.code !== code);
@@ -344,10 +353,56 @@ const auth = {
     const bestaand = huidigeSessie();
     if (bestaand) return { data: bestaand, error: null };
     const user = { id: 'account-' + (store.auth_users.length + 1),
-                   is_anonymous: true, email: null, new_email: null };
+                   is_anonymous: true, email: null, new_email: null,
+                   identities: [{ provider: 'anonymous', identity_data: {} }] };
     store.auth_users.push(user);
     bewaren();
     return { data: zetSessie(user), error: null };
+  },
+
+  // Google aan het huidige account hangen. In het echt stuurt supabase-js de
+  // browser naar Google en komt hij terug met ?code=; hier zetten we dezelfde
+  // sleutel klaar, zodat een test de terugkomst kan naspelen.
+  //
+  // De nabootsing kent één Google-account per test: welk adres dat is stelt de
+  // test in met __mail.googleAls().
+  async linkIdentity({ provider, options = {} }) {
+    if (provider !== 'google') return { data: null, error: { message: 'onbekende provider' } };
+    const sessie = huidigeSessie();
+    if (!sessie) return { data: null, error: { message: 'geen sessie' } };
+    const bezet = store.auth_users.find((u) =>
+      u.id !== sessie.user.id
+      && (u.identities ?? []).some((i) => i.provider === 'google'
+                                       && gelijk(i.identity_data?.email, store.google_als)));
+    if (bezet) {
+      return { data: null, error: { code: 'identity_already_exists',
+        message: 'Identity is already linked to another user' } };
+    }
+    store.otp.push({ code: nieuweSleutel(), user_id: sessie.user.id,
+                     email: store.google_als, google: true,
+                     terug: options.redirectTo ?? '' });
+    bewaren();
+    return { data: {}, error: null };
+  },
+
+  // Inloggen op een leeg toestel. Bestaat er nog geen account met dit
+  // Google-adres, dan maakt Supabase er wél een aan — anders dan bij
+  // signInWithOtp, want hier is Google zelf het bewijs dat jij het bent.
+  async signInWithOAuth({ provider, options = {} }) {
+    if (provider !== 'google') return { data: null, error: { message: 'onbekende provider' } };
+    let user = store.auth_users.find((u) =>
+      (u.identities ?? []).some((i) => i.provider === 'google'
+                                    && gelijk(i.identity_data?.email, store.google_als)));
+    if (!user) {
+      user = { id: 'account-' + (store.auth_users.length + 1), is_anonymous: false,
+               email: store.google_als, new_email: null,
+               identities: [{ provider: 'google', identity_data: { email: store.google_als } }] };
+      store.auth_users.push(user);
+    }
+    store.otp.push({ code: nieuweSleutel(), user_id: user.id, email: store.google_als,
+                     google: true, terug: options.redirectTo ?? '' });
+    bewaren();
+    return { data: {}, error: null };
   },
 
   // Een mailadres aan het huidige account hangen. Net als bij Supabase komt
@@ -409,6 +464,9 @@ globalThis.__mail = {
     return basis + (basis.includes('?') ? '&' : '?') + 'code=' + laatste.code;
   },
   aantalVerstuurd() { return store.otp.length; },
+  // Met welk Google-account de nabootsing inlogt. Zo kan een test twee
+  // verschillende mensen naspelen.
+  googleAls(adres) { store.google_als = adres; bewaren(); },
 };
 
 // ------------------------------------------------------------

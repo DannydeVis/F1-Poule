@@ -38,8 +38,11 @@ const meedoenAls = async (naam) => {
 await meedoenAls('Danny');
 await page.click('[data-weergave="poule"]');
 await page.waitForSelector('#mailopen');
-check('onder Poule staat het aanbod om een mailadres te koppelen',
-  (await tekst('#mailopen')) === 'Mailadres koppelen');
+// Google staat er sinds kort als eerste keuze; de mailweg is de tweede knop.
+// Dat die er nog steeds is, is het punt: wie geen Google wil of heeft mag niet
+// buiten de boot vallen.
+check('onder Poule kun je nog steeds voor een mailadres kiezen',
+  (await tekst('#mailopen')).includes('mailadres'), await tekst('#mailopen'));
 
 await page.click('#mailopen');
 await page.waitForSelector('#mailveld');

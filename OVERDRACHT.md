@@ -2554,3 +2554,77 @@ schemawerk en een keuze over de puntenverdeling) en groep 4
 (seizoensmechaniek). Plus de dingen die op een beslissing van de eigenaar
 wachten: het contactadres in de privacyverklaring, de regio van de database, en
 de instellingen in het Supabase-dashboard.
+
+---
+
+## Inloggen met Google, en waarom niet met Apple
+
+De vraag was of Google en Apple niet makkelijker zijn dan een maillink. Voor de
+speler: ja. Maar het antwoord daarop is niet "vervang de login", want er ís
+geen login om te vervangen — de voordeur is een poulecode en dat blijft zo.
+
+Google komt op precies de plek waar de mailkoppeling staat: bij **je account
+meenemen**, onder Poule. Onder water is het hetzelfde verhaal.
+`linkIdentity({ provider: 'google' })` hangt Google aan het anonieme account
+dat je al had, net zoals `updateUser({ email })` dat met een mailadres doet,
+dus je spelers en punten gaan mee. Op een leeg toestel is het
+`signInWithOAuth`, want daar is nog geen account om aan te hangen.
+
+Wat het oplevert is drie handelingen minder — "open je mail, zoek het bericht,
+klik de link" wordt één tik — en het maakt een eigen mailserver optioneel. Dat
+laatste was een van de vervelendste openstaande punten: SMTP opzetten voor een
+poule-app is een scheve verhouding.
+
+### De mailweg blijft staan
+
+Google groot, mail klein eronder. Niet iedereen heeft een Google-account of wil
+er een gebruiken, en de belofte van deze app is dat er geen drempel is. Met
+Google als hoofdweg en mail als uitzondering redt de ingebouwde mailer van
+Supabase het waarschijnlijk ook zonder eigen leverancier.
+
+### Apple: niet gebouwd, en dat is een keuze
+
+Sign in with Apple vereist een Apple Developer-account van ongeveer €99 per
+jaar. De regel dat je het móét aanbieden zodra je een andere social login
+aanbiedt geldt voor App Store-apps, en dit is een webapp — dus die bijt hier
+niet. iPhone-gebruikers kunnen Google of hun mailadres gebruiken. Komt er ooit
+een echte App Store-app, dan verandert die afweging.
+
+### Wat het kost aan eerlijkheid
+
+De privacyverklaring heeft er een alinea bij: log je met Google in, dan weet
+Google dat je deze app gebruikt en krijgt de app je naam en mailadres.
+
+Dat is iets anders dan het lettertypeverhaal van eerder vandaag, en het is de
+moeite waard om dat verschil te benoemen. Daar lekte het IP-adres van élke
+bezoeker naar Google zonder dat iemand iets koos; dat is weggehaald. Hier
+kiest iemand er zelf voor, en wie het niet wil houdt de mailweg.
+
+### Wat er in de nabootsing bij moest
+
+`linkIdentity` en `signInWithOAuth`, plus `identities` op het accountobject —
+daar zet Supabase elke gekoppelde manier van inloggen in, `anonymous`
+inbegrepen. De terugkomst van Google gebruikt dezelfde `?code=` als een
+maillink, dus die machinerie stond er al sinds de mailkoppeling.
+
+`__mail.googleAls(adres)` stelt in met welk Google-account de nabootsing
+inlogt. Daarmee kan een test twee verschillende mensen naspelen, en dat is de
+controle die er echt toe doet: iemand anders zijn Google-account mag niet in
+jouw speler belanden.
+
+### Eén verschil met de mailweg dat opzettelijk is
+
+Bij een maillink staat `shouldCreateUser: false`: een onbekend adres maakt geen
+account aan, want één typfout zou je een leeg account opleveren waarin al je
+voorspellingen verdwenen lijken. Bij Google staat dat niet aan, en dat hoort
+ook niet: Google zelf is het bewijs dat jij het bent, en er valt geen typfout
+te maken. Een onbekend Google-account krijgt dus gewoon een eigen account —
+precies wat je wilt als een nieuwe speler zo binnenkomt.
+
+### Wat de beheerder moet doen
+
+Authentication → Sign In / Providers → Google aanzetten, met een client-ID en
+-secret uit een Google Cloud-project. En **Manual linking** aan onder
+Authentication → Settings, anders werkt alleen het inloggen op een leeg toestel
+en niet het koppelen aan een bestaand anoniem account. Gaat er iets van dat
+tweetal mis, dan zegt de app dat het niet aan de speler ligt.
