@@ -1107,6 +1107,83 @@ export function bijnaGoed(regels = []) {
   return { scheelde: dichtst.reduce((n, x) => n + x.scheelde, 0), dichtst };
 }
 
+// Je blinde vlek: welke coureur zet je structureel te hoog of te laag?
+//
+// Dit inzicht bestaat alleen omdat élke voorspelling bewaard blijft. Geen
+// enkele poule-app heeft het, en het is niet meer dan een gemiddelde over
+// rijen die er al staan.
+//
+// Twee drempels, en die zijn er om te voorkomen dat de app met gezag onzin
+// verkoopt. Onder `minSessies` ingeleverde lijsten zegt hij niets: na twee
+// weekenden is elk patroon toeval. En een coureur telt pas mee vanaf
+// `minKeer` voorspellingen mét uitslag — anders is één uitschieter genoeg
+// voor een "patroon".
+//
+// `afwijking` is jouw plek min zijn echte plek. Negatief betekent dat je hem
+// te hóóg zet: je had hem op P2 en hij werd P5.
+export function blindeVlek(sessies = [], { minSessies = 6, minKeer = 4, drempel = 1 } = {}) {
+  if (sessies.length < minSessies) return [];
+  const per = new Map();
+  for (const { voorspeld = [], werkelijk = [] } of sessies) {
+    voorspeld.forEach((nr, i) => {
+      const echt = werkelijk.indexOf(nr);
+      // Niet in de uitslag: uitgevallen, of buiten de plekken die je invulde.
+      // Daar valt geen afwijking uit af te leiden.
+      if (echt === -1) return;
+      const rij = per.get(nr) ?? { som: 0, keer: 0 };
+      rij.som += (i + 1) - (echt + 1);
+      rij.keer++;
+      per.set(nr, rij);
+    });
+  }
+  return [...per.entries()]
+    .filter(([, r]) => r.keer >= minKeer)
+    .map(([nr, r]) => ({ nr, keer: r.keer, afwijking: r.som / r.keer }))
+    .filter(x => Math.abs(x.afwijking) >= drempel)
+    .sort((a, b) => Math.abs(b.afwijking) - Math.abs(a.afwijking));
+}
+
+// En de vrolijke kant: waar ben je juist scherp? Gemiddeld aantal punten per
+// plek, per stuk van de lijst. De kop van de uitslag is makkelijker dan de
+// staart, dus het gaat om waar jij het relatief goed doet, niet om wie de
+// hoogste score haalt.
+export const PLEKBANDEN = [
+  { naam: 'P1 tot P3',  van: 1, tot: 3 },
+  { naam: 'P4 tot P6',  van: 4, tot: 6 },
+  { naam: 'P7 tot P10', van: 7, tot: 10 },
+];
+
+export function sterkstePlekken(sessies = [], { minSessies = 6 } = {}) {
+  if (sessies.length < minSessies) return [];
+  const som = PLEKBANDEN.map(() => ({ punten: 0, plekken: 0 }));
+  for (const { voorspeld = [], werkelijk = [] } of sessies) {
+    voorspeld.forEach((nr, i) => {
+      const band = PLEKBANDEN.findIndex(b => i + 1 >= b.van && i + 1 <= b.tot);
+      if (band === -1) return;
+      const echt = werkelijk.indexOf(nr);
+      som[band].punten += echt === -1 ? 0 : Math.max(0, 5 - 2 * Math.abs(i - echt));
+      som[band].plekken++;
+    });
+  }
+  return PLEKBANDEN
+    .map((b, i) => ({ ...b, ...som[i], gemiddelde: som[i].plekken ? som[i].punten / som[i].plekken : 0 }))
+    .filter(b => b.plekken > 0)
+    .sort((a, b) => b.gemiddelde - a.gemiddelde);
+}
+
+// Welk weekend was het lastigst? Het poulegemiddelde per race, van laag naar
+// hoog. Leuk voor de terugblik, en het verklaart een weekend waarin iedereen
+// tegenviel: dan lag het niet aan jou.
+//
+// Een race telt pas mee vanaf `minSpelers` inzendingen; het gemiddelde van
+// één speler is geen poulegemiddelde.
+export function raceGemiddelden(rijen = [], { minSpelers = 2 } = {}) {
+  return rijen
+    .filter(r => (r.punten ?? []).length >= minSpelers)
+    .map(r => ({ ...r, gemiddelde: r.punten.reduce((a, b) => a + b, 0) / r.punten.length }))
+    .sort((a, b) => a.gemiddelde - b.gemiddelde);
+}
+
 // Onderling duel: per raceweekend wie van twee spelers de meeste punten
 // pakte, opgeteld over het seizoen. Een weekend waarin geen van beiden iets
 // heeft ingeleverd telt niet mee; dat is geen gelijkspel maar een weekend
@@ -2288,10 +2365,89 @@ function standPagina(rijen) {
     ${rijen.length ? rijen.map((r, i) => standRij(r, i, rijen)).join('')
       : `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
     ${weekendRanglijst()}
+    ${terugblikBlok()}
     ${duelLijst()}
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
       <b>1</b> twee plekken ernaast. Wie een weekend de meeste punten pakt wint dat
       weekend, ook al sta je in het seizoen achter.</div>`;
+}
+
+// ---- terugblik: je blinde vlek en het zwaarste weekend --------
+// Wat dit hier doet: de stand vertelt wie er wint, maar niet waarom jij staat
+// waar je staat. Dit zijn twee gemiddelden over rijen die er al staan, en ze
+// bestaan alleen omdat élke voorspelling bewaard blijft.
+//
+// Alles hieronder houdt zich in tot er genoeg gespeeld is. Een app die na twee
+// weekenden beweert dat je "Verstappen structureel te laag zet" is niet slim,
+// die verzint iets.
+
+// Alle top 10-lijsten die ik heb ingeleverd en waar een uitslag bij hoort. De
+// kwalificatie en de race tellen als aparte lijsten: het zijn twee
+// voorspellingen, en je kunt in de ene scherper zijn dan in de andere.
+function mijnSessies() {
+  const uit = [];
+  for (const r of S.races) {
+    const p = vindPred(r.id, S.ik.id);
+    if (!p) continue;
+    if (r.quali_result?.length && p.quali_top10?.length) {
+      uit.push({ voorspeld: p.quali_top10, werkelijk: r.quali_result });
+    }
+    if (r.race_result?.length && p.race_top10?.length) {
+      uit.push({ voorspeld: p.race_top10, werkelijk: r.race_result });
+    }
+  }
+  return uit;
+}
+
+// Een coureur opzoeken zonder te weten in welke race hij stond: de blinde vlek
+// gaat over het hele seizoen, dus er is geen enkele race die "de" race is.
+function coureurOveral(nr) {
+  for (const r of S.races) {
+    const d = (r.drivers ?? []).find(x => x.nr === nr);
+    if (d) return d;
+  }
+  return drv({}, nr);
+}
+
+const komma = (n) => n.toFixed(1).replace('.', ',');
+
+function terugblikBlok() {
+  if (!S.ik) return '';
+  const sessies = mijnSessies();
+  const vlek = blindeVlek(sessies)[0];
+  const sterk = sterkstePlekken(sessies)[0];
+
+  const perRace = raceGemiddelden(S.races
+    .filter(r => r.quali_result?.length || r.race_result?.length)
+    .map(r => ({ naam: r.name,
+                 punten: S.leden.filter(l => heeftVoorspeld(r, l.member_id))
+                                .map(l => scoreWeekend(vindPred(r.id, l.member_id), r)) })));
+  const zwaarst = perRace[0];
+  const lichtst = perRace.length > 1 ? perRace[perRace.length - 1] : null;
+
+  const regels = [];
+  if (vlek) {
+    const d = coureurOveral(vlek.nr);
+    const richting = vlek.afwijking < 0 ? 'te hoog' : 'te laag';
+    regels.push(`Je zet <b>${esc(d.code)}</b> gemiddeld
+      ${komma(Math.abs(vlek.afwijking))} ${Math.abs(vlek.afwijking) < 1.05 ? 'plek' : 'plekken'}
+      ${richting}, over ${vlek.keer} voorspellingen.`);
+  }
+  if (sterk) {
+    regels.push(`Je bent het scherpst op <b>${esc(sterk.naam)}</b>: gemiddeld
+      ${komma(sterk.gemiddelde)} van de 5 punten per plek.`);
+  }
+  if (zwaarst) {
+    regels.push(`<b>${esc(zwaarst.naam)}</b> was het zwaarste weekend voor de poule:
+      gemiddeld ${komma(zwaarst.gemiddelde)} punten${lichtst
+        ? `, tegen ${komma(lichtst.gemiddelde)} in ${esc(lichtst.naam)}` : ''}.`);
+  }
+  if (!regels.length) return '';
+
+  return `<span class="label">terugblik</span>
+    <div class="bijna">
+      <ul class="bijnalijst">${regels.map(r => `<li>${r}</li>`).join('')}</ul>
+    </div>`;
 }
 
 // De tweede ranglijst: los van het seizoen valt er elk weekend iets te winnen.
