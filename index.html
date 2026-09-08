@@ -143,6 +143,8 @@
     text-transform:uppercase;letter-spacing:.06em;
     transition:transform .18s var(--soepel),filter .18s,border-color .18s,background .18s;
   }
+  /* Sommige knoppen zijn een link, want ze gaan ergens heen (webcal://). */
+  a.knop{text-decoration:none;color:inherit}
   .knop.primair{background:var(--accent);color:var(--accent-ink)}
   .knop.primair:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08)}
   .knop.spook{background:transparent;border:1px solid var(--lijn);color:var(--ink);
@@ -1864,6 +1866,14 @@ function uitnodigingsTekst(poule = S.poule) {
 const eigenLinkTekst = () =>
   `${linkBasis()}?code=${S.poule.join_code}&speler=${encodeURIComponent(S.ik.id)}`;
 
+// De agenda met alle deadlines. Die staat naast index.html op dezelfde
+// plek, dus de bestandsnaam eraf en kalender.ics erachter — dat werkt zowel
+// op dannydevis.github.io/F1-Poule/ als op een eigen domein.
+const agendaLink = () => linkBasis().replace(/[^/]*$/, '') + 'kalender.ics';
+// webcal:// laat een telefoon of laptop meteen de abonneer-vraag stellen in
+// plaats van het bestand te downloaden. Het is dezelfde url, ander protocol.
+const agendaAbonnee = () => agendaLink().replace(/^https?:/, 'webcal:');
+
 // Dezelfde knop staat op de poulepagina en op de laatste stap van het
 // aanmaken. Op de poulepagina gaat het om S.poule; tijdens het aanmaken
 // bestaat die nog niet (die wordt pas gezet zodra je op "Naar de poule"
@@ -1873,6 +1883,7 @@ const eigenLinkTekst = () =>
 function knoopUitnodiging(waar, poule = S.poule) {
   kopieerknop(waar, '#uitnodiging', '#uitnodigingveld', () => uitnodigingsTekst(poule));
   if (S.poule && S.ik) kopieerknop(waar, '#eigenlink', '#eigenlinkveld', eigenLinkTekst);
+  kopieerknop(waar, '#agendalink', '#agendalinkveld', agendaLink);
 }
 
 // Kopiëren naar het klembord mag niet overal — een oudere browser, of een
@@ -2311,6 +2322,7 @@ function poulePagina(rijen) {
       <b>1</b> twee plekken ernaast.</div>
     ${mailBlok()}
     ${eigenLinkBlok()}
+    ${agendaBlok()}
     ${privacyBlok()}
     ${omschrijvingBlok()}
     ${beheerBlok()}
@@ -2459,6 +2471,34 @@ function mailBlok() {
       placeholder="jij@voorbeeld.nl" autocomplete="email" spellcheck="false">
     <button class="knop klein" id="mailstuur">Stuur me de link</button>
     <p class="err" id="mailfout">${esc(S.mail.fout)}</p>`;
+}
+
+// ---- de deadlines in je agenda ------------------------------
+// Het probleem: de app weet precies wanneer de kwalificatie sluit, maar wie
+// hem niet toevallig opent mist het weekend. En niets invullen is in een poule
+// het ergste wat er kan gebeuren — dan doe je gewoon niet mee.
+//
+// Waarom een agenda-abonnement en geen mail of pushbericht: die vragen allebei
+// om infrastructuur die er niet is, én om een lijst met wie je wanneer
+// bereikt. Dit vraagt om niets. Je abonneert je één keer, en daarna staan de
+// deadlines in je eigen agenda met de melding die je daar al gewend bent.
+// Verschuift een sessie, dan past de sync het bestand aan en volgt je agenda
+// vanzelf. Zie scripts/agenda.mjs en OVERDRACHT.md.
+function agendaBlok() {
+  if (DEMO) return '';
+  return `
+    <div class="scheiding"></div>
+    <span class="label">deadlines in je agenda</span>
+    <p class="zacht" style="margin:0">Abonneer je één keer, en elke
+      kwalificatie en race staat in je agenda — met de melding die je daar zelf
+      instelt. Verschuift een sessie, dan schuift je agenda mee.</p>
+    <a class="knop klein" href="${esc(agendaAbonnee())}">Zet in mijn agenda</a>
+    <p class="zacht" style="margin:0;font-size:13px">Werkt de knop niet, dan
+      wil je agenda de link zelf hebben. Kopieer hem en plak hem bij
+      "agenda toevoegen via url".</p>
+    <button class="knop klein" id="agendalink">Kopieer de agendalink</button>
+    <textarea class="veld tekstblok hide" id="agendalinkveld" readonly rows="2"
+      aria-label="De agendalink om zelf te kopiëren"></textarea>`;
 }
 
 // ---- wat de app van je weet ---------------------------------

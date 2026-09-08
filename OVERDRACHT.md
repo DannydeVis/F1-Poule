@@ -2353,3 +2353,79 @@ gecontroleerd, zodat ze later te wijzigen zijn zonder gokwerk.
 manifest echt ophaalt en de pictogrammen echt opvraagt in plaats van te
 controleren dat er een regel in de HTML staat. Een manifest dat 404 geeft ziet
 er in de broncode precies hetzelfde uit als eentje die werkt.
+
+---
+
+## De deadlines in je agenda, en waarom niet in je mailbox
+
+Het laatste echte gat: de app weet precies wanneer de kwalificatie sluit, maar
+wie hem niet toevallig opent mist het weekend. En niets invullen is in een
+poule het ergste wat er kan gebeuren — dan doe je gewoon niet mee.
+
+Er waren vier manieren, en de afweging is de moeite van het opschrijven waard
+omdat de gekozen oplossing op het eerste gezicht de minst voor de hand liggende
+is.
+
+**Mail via een cron-job.** Kan: de sync draait al elk uur met de service_role
+key en kan dus zien wie wat niet heeft ingevuld, en sinds de mailkoppeling
+hebben sommige spelers een adres. Maar het vraagt om een mailleverancier met
+een sleutel, en die is er niet — de login-mails lopen nu nog over de ingebouwde
+mailer van Supabase, die een paar mails per uur doet. Bovendien komt er dan van
+alles bij kijken dat niets met een poule te maken heeft: afmelden, bounces,
+niet in de spammap belanden.
+
+**Web push.** Meer bewegende delen dan mail: een service worker, VAPID-sleutels,
+een pushdienst, en per speler een opgeslagen endpoint. En op iOS werkt het
+alleen als de app op het beginscherm staat — wat sinds het manifest wél kan,
+maar het blijft een voorwaarde. Geen terugval als het misgaat.
+
+**Scherper waarschuwen in de app.** Kost niets, en de hero zegt al wie er nog
+niets heeft ingevuld. Maar het lost het probleem niet op: het bereikt precies
+niemand die de app níét opent.
+
+**Een agenda-abonnement.** Dit is het geworden. De sync draait toch al elk uur
+en kent alle deadlines; die schrijft `kalender.ics` naast `index.html`, GitHub
+Pages serveert hem, en wie zich er één keer op abonneert krijgt elke deadline
+in zijn eigen agenda — met de melding die hij daar al gewend is. Verschuift een
+sessie, dan past de sync het bestand aan en volgt de agenda vanzelf.
+
+Geen nieuwe secrets, geen mailleverancier, geen pushdienst, en geen enkel
+gegeven van een speler dat ergens heen gestuurd wordt: het bestand is voor
+iedereen hetzelfde.
+
+De eerlijke beperking staat er ook bij, in de app en in BEDIENING.md: een
+agenda-item geldt voor iedereen en kan dus niet zeggen "jij hebt nog niets
+ingevuld". Het bereikt je wél, en dat is precies wat de andere opties niet
+doen zonder infrastructuur.
+
+### Twee details die pas maanden later pijn zouden doen
+
+**De UID moet vastliggen.** Zonder een vaste `UID` per sessie zet een agenda-app
+bij elke verversing een nieuw item naast het oude in plaats van het te
+vervangen. Na een half seizoen staat elke deadline er dan tien keer in. De UID
+hangt daarom aan `race_key` en de sessie, niet aan het moment van maken.
+
+**De DTSTAMP mag níét "nu" zijn.** Dat is wat de standaard suggereert, maar de
+sync draait elk uur: een bestand dat elke run van zichzelf verschilt zou elk
+uur een commit opleveren voor een kalender die een paar keer per jaar
+verschuift. `DTSTAMP` is daarom gelijk aan `DTSTART`, en de workflow legt
+alleen vast als `git diff` iets vindt. Een test controleert dat twee keer
+dezelfde races byte voor byte hetzelfde bestand geven.
+
+### De bug die de test ving
+
+`new Date(null)` is niet ongeldig — het is 1 januari 1970. Een race waarvan de
+kwalificatietijd nog niet bekend is (dat gebeurt: OpenF1 heeft die pas als de
+sessie is ingepland) zou daarmee een item in ieders agenda hebben gezet in het
+jaar dat Formule 1 nog zwart-wit was. `stempel()` controleert nu eerst op leeg,
+en de test legt vast dat `null`, `undefined` en `''` alle drie niets opleveren.
+
+### Wat er nog niet af is
+
+`kalender.ics` in de repo is leeg tot de sync voor het eerst draait. Dat is een
+geldige agenda — hij vult zichzelf binnen het uur — maar wie zich in dat
+gaatje abonneert ziet even niets.
+
+En de `VALARM` van twee uur van tevoren is een suggestie: veel agenda-apps
+negeren die bij een abonnement en gebruiken de melding die de gebruiker zelf
+per agenda instelt. Hij staat er wel, maar er leunt niets op.
