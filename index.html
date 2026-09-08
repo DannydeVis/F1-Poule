@@ -615,10 +615,114 @@ if (!DEMO) {
 }
 
 // ============================================================
+//  Een account, zonder inlogscherm
+//
+//  Elke speler krijgt een anoniem account bij Supabase. Je merkt er niets
+//  van — geen wachtwoord, geen mail, geen scherm — maar de database krijgt
+//  er iets mee om op te controleren: straks mag alleen jouw account bij
+//  jouw voorspellingen. Zonder dat is de anon key uit deze broncode genoeg
+//  om andermans inzending te overschrijven.
+//
+//  Twee keuzes die de moeite waard zijn om te weten:
+//
+//  1. Het account wordt pas aangemaakt op het moment dat er echt iets aan
+//     jou gehangen moet worden. Wie alleen rondkijkt krijgt niets. Anders
+//     stond er straks een account in de database voor elke bot die de
+//     pagina opvraagt.
+//  2. Alles hieronder is vergevingsgezind. Staat anoniem inloggen uit in
+//     het Supabase-project, of gaat het even mis, dan blijft de app werken
+//     zoals hij deed. Zolang de policies nog openstaan kost dat niets, en
+//     een speler die niet meer kan opslaan omdat een aanmeldpoging faalde
+//     zou veel erger zijn. Zie OVERDRACHT.md.
+// ============================================================
+
+// Het account dat nu aan de knoppen zit, of null zolang er geen is.
+let mijnUid = null;
+
+// De sessie die al op dit toestel stond. Kost geen netwerkverkeer:
+// supabase-js bewaart hem zelf in localStorage.
+async function bestaandeSessie() {
+  if (DEMO || !db) return null;
+  try {
+    const { data } = await db.auth.getSession();
+    mijnUid = data?.session?.user?.id ?? null;
+  } catch { mijnUid = null; }
+  return mijnUid;
+}
+
+// Nu is er wel een account nodig. Eén keer per toestel; daarna staat de
+// sessie in localStorage en komt hij via bestaandeSessie() terug.
+async function zorgVoorAccount() {
+  if (DEMO || !db || mijnUid) return mijnUid;
+  try {
+    const { data, error } = await db.auth.signInAnonymously();
+    if (error) return null;
+    mijnUid = data?.user?.id ?? null;
+  } catch { return null; }
+  return mijnUid;
+}
+
+// Deze speler hoort bij mijn account.
+//
+// `is('user_id', null)` is de kern: je kunt alleen een speler claimen die
+// nog van niemand is, nooit iemand overnemen. Raakt de update niets, dan is
+// dat geen fout maar een antwoord — de speler was al geclaimd, of dit
+// account heeft in deze poule al een andere speler. Dat laatste mag niet:
+// twee keer in dezelfde stand staan met je punten verdeeld is precies wat
+// de unieke sleutel in schema.sql tegenhoudt.
+async function claimSpeler(memberId) {
+  if (DEMO || !db || !memberId) return false;
+  const uid = await zorgVoorAccount();
+  if (!uid) return false;
+  try {
+    const { data, error } = await db.from('pool_members')
+      .update({ user_id: uid })
+      .eq('member_id', memberId).is('user_id', null).select();
+    if (error || !data?.length) return false;
+    const lid = S.leden.find(l => zelfde(l.member_id, memberId));
+    if (lid) lid.user_id = uid;
+    return true;
+  } catch { return false; }
+}
+
+// Herkent de botsing met de gedeeltelijke unieke sleutel uit schema.sql:
+// (pool_id, user_id). Postgres geeft daar 23505 op, net als bij een dubbele
+// voorspelling, dus de naam van de sleutel is het enige verschil.
+const alBezetDoorAccount = (error) =>
+  error?.code === '23505'
+  && /pool_members_pool_user_uniek/.test(`${error.message ?? ''} ${error.details ?? ''}`);
+
+// Een speler aanmaken, met dit account eraan als dat kan.
+//
+// Dat kan niet altijd. Op een gedeeld toestel — één telefoon die rondgaat
+// bij het inschrijven — speelt dit account misschien al mee in deze poule,
+// en twee spelers op één account in één poule houdt schema.sql tegen. Dan
+// maken we de speler zonder account aan. Hij doet verder gewoon mee; hij
+// hangt alleen nog aan niemand, tot degene van wie hij is hem op zijn eigen
+// toestel opent. Dat is veel beter dan iemand niet laten meedoen omdat de
+// telefoon van een ander was.
+async function maakSpeler(poolId, naam) {
+  const uid = await zorgVoorAccount();
+  const nieuweSpeler = (user_id) => db.from('pool_members')
+    .insert({ pool_id: poolId, display_name: naam, user_id }).select().single();
+  const uit = await nieuweSpeler(uid);
+  if (uid && alBezetDoorAccount(uit.error)) return nieuweSpeler(null);
+  return uit;
+}
+
+// Welke speler in deze poule hoort bij mijn account? Hiermee herkent de app
+// je op een toestel dat nog nooit van je gehoord heeft — nu alleen nog als
+// je die sessie zelf meeneemt, straks ook via een mailadres.
+const lidVanAccount = () =>
+  mijnUid ? S.leden.find(l => l.user_id && zelfde(l.user_id, mijnUid)) : null;
+
+// ============================================================
 //  Wie ben ik, en in welke poule?
-//  Geen login. De browser onthoudt welke poule je gebruikte en wie je
-//  daarin bent. Dat is geen beveiliging, maar gemak: kom je terug op
-//  hetzelfde toestel, dan hoef je de poulecode niet opnieuw te typen.
+//  Los van het account hierboven: de browser onthoudt welke poule je
+//  gebruikte en wie je daarin bent. Dat is geen beveiliging, maar gemak —
+//  kom je terug op hetzelfde toestel, dan hoef je de poulecode niet
+//  opnieuw te typen. Het account is wat de database straks controleert;
+//  dit is wat de app sneller maakt.
 // ============================================================
 
 // localStorage kan geblokkeerd zijn: privémodus, of een browser die opslag
@@ -699,6 +803,29 @@ function herstelScherm() {
   }
   if (['races', 'stand', 'poule'].includes(scherm.weergave)) S.weergave = scherm.weergave;
   return false;
+}
+
+// Ben ik al bekend in de poule die nu openstaat? Dit stond eerder op vier
+// plekken bijna hetzelfde uitgeschreven; die liepen bij elke aanpassing uit
+// de pas.
+//
+// De volgorde is bewust. Eerst wat dit toestel onthouden heeft — dat is de
+// snelste en klopt bijna altijd. Pas als het toestel niets weet kijken we
+// wat mijn account zegt; dat is nieuw, en het is wat straks een tweede
+// telefoon zonder poulecode alsnog binnenlaat.
+//
+// Geeft true als S.ik gezet is.
+async function herkenMij() {
+  const bekend = mijnId(S.poule.id);
+  const lid = (bekend && S.leden.find(l => zelfde(l.member_id, bekend)))
+           || lidVanAccount();
+  if (!lid) return false;
+  S.ik = { id: lid.member_id, naam: lid.display_name };
+  onthoud(S.poule.id, lid.member_id);
+  // Een speler van vóór de login hangt nog aan niemand. Wie hem nu gebruikt
+  // krijgt hem, zodat de database straks kan controleren dat hij van jou is.
+  if (!lid.user_id) await claimSpeler(lid.member_id);
+  return true;
 }
 
 // ============================================================
@@ -1131,6 +1258,8 @@ function uitleg(error) {
     '42P10': 'De tabel answers mist de unieke sleutel op '
            + '(pool_id, race_id, member_id, question_id). '
            + 'Draai schema.sql opnieuw in de Supabase SQL editor.',
+    // 23505 kan ook over de spelerssleutel gaan; die krijgt onder dit
+    // lijstje een eigen antwoord.
     '23505': 'Er staan dubbele voorspellingen in de database. '
            + 'Draai schema.sql opnieuw, die ruimt ze op en zet de unieke sleutel goed.',
     '23503': 'Deze race of speler bestaat niet (meer) in de database.',
@@ -1138,6 +1267,11 @@ function uitleg(error) {
     '42P01': 'Een tabel ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.',
     '42703': 'Een kolom ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.',
   };
+  // Dezelfde code, een andere sleutel, een heel ander verhaal.
+  if (alBezetDoorAccount(error)) {
+    return 'Dit toestel speelt in deze poule al mee als een andere speler. '
+         + 'Eén account kan niet twee keer in dezelfde stand staan.';
+  }
   if (bekend[code]) return bekend[code];
   const bericht = error?.message ?? 'Onbekende fout';
   return code ? `${bericht} (${code})` : bericht;
@@ -1219,7 +1353,7 @@ async function laad() {
   }
   const [races, leden, antwoorden, vragen, poulevragen] = await Promise.all([
     db.from('races').select('*').eq('season', SEIZOEN).order('round'),
-    db.from('pool_members').select('member_id,display_name').eq('pool_id', S.poule.id),
+    db.from('pool_members').select('member_id,display_name,user_id').eq('pool_id', S.poule.id),
     db.from('answers').select('*').eq('pool_id', S.poule.id),
     db.from('questions').select('*').order('volgorde'),
     db.from('pool_questions').select('question_id').eq('pool_id', S.poule.id),
@@ -1950,9 +2084,14 @@ function spelerRij(r, i) {
 // over die drie verdeeld. De app weet namelijk alleen per toestel wie je bent.
 //
 // Dit is nadrukkelijk géén inlog. Wie deze link heeft speelt onder jouw naam,
-// net zoals wie de poulecode heeft in de poule kan. Het lost het echte
-// probleem op zonder dat er accounts en rechten bij komen kijken; wat een
-// echte inlog zou kosten staat in OVERDRACHT.md.
+// net zoals wie de poulecode heeft in de poule kan.
+//
+// Sinds er accounts zijn is dit een tussenstap geworden. Hangt je speler nog
+// aan niemand, dan claimt het toestel dat de link opent hem — dan werkt de
+// link precies zoals hij belooft. Hoort hij al bij het account van je eerste
+// toestel, dan speel je hier wel onder je eigen naam maar zonder eigenaarschap,
+// en dat is straks niet genoeg meer. Zodra je een mailadres kunt koppelen
+// vervangt dat deze link; zie OVERDRACHT.md.
 function eigenLinkBlok() {
   if (!S.ik) return '';
   return `
@@ -1974,8 +2113,8 @@ function eigenLinkBlok() {
 // en bij het wisselen tussen poules.
 //
 // Alleen de poulebaas kan hem aanpassen, om dezelfde reden als bij de
-// vragenset: zonder login kan de database niet controleren wie dat is, dus
-// dit houdt de knop weg bij wie hem niet nodig heeft. Zie BEDIENING.md §7.
+// vragenset: de database controleert nog niet wie dat is, dus dit houdt de
+// knop weg bij wie hem niet nodig heeft. Zie BEDIENING.md §7.
 function omschrijvingBlok() {
   if (!magBeheren()) return '';
   const nu = S.omschrijving ?? S.poule.beschrijving ?? '';
@@ -2074,16 +2213,14 @@ async function naarPoule(poolId) {
   onthoudPoule(data.id); onthoudInLijst(data);
   try { await laad(); }
   catch (e) { toonFout(e.message); return; }
-  const bekend = mijnId(S.poule.id);
-  const lid = bekend && S.leden.find(l => zelfde(l.member_id, bekend));
-  if (lid) S.ik = { id: lid.member_id, naam: lid.display_name };
+  await herkenMij();
   render();
 }
 
 // ---- beheer: welke vragen doen mee --------------------------
-// BEDIENING.md §5 t/m §8. Zonder login kan de database niet controleren wie
-// de poulebaas is; owner_member_id houdt deze knoppen weg bij wie ze niet
-// nodig heeft, meer niet. Zie §7.
+// BEDIENING.md §5 t/m §8. De database controleert nog niet wie de poulebaas
+// is — de policies staan nog open — dus owner_member_id houdt deze knoppen
+// alleen weg bij wie ze niet nodig heeft, meer niet. Zie §7.
 
 // Poules van vóór het aanmaakscherm hebben geen eigenaar. Die op slot doen
 // zou niemand meer bij de vragenset laten; dan maar iedereen.
@@ -2999,10 +3136,11 @@ function kiesSpeler() {
     </button>`).join('')
     || `<p class="zacht" style="margin:0">Nog geen spelers, maak de eerste aan.</p>`;
 
-  app.querySelectorAll('[data-lid]').forEach(b => b.onclick = () => {
-    S.ik = { id: b.dataset.lid,
-             naam: S.leden.find(l => zelfde(l.member_id, b.dataset.lid)).display_name };
+  app.querySelectorAll('[data-lid]').forEach(b => b.onclick = async () => {
+    const lid = S.leden.find(l => zelfde(l.member_id, b.dataset.lid));
+    S.ik = { id: lid.member_id, naam: lid.display_name };
     onthoud(S.poule.id, S.ik.id);
+    if (!lid.user_id) await claimSpeler(lid.member_id);
     laad().then(render).catch(e => toonFout(e.message));
   });
 
@@ -3018,6 +3156,7 @@ function kiesSpeler() {
     if (bestaand) {
       S.ik = { id: bestaand.member_id, naam: bestaand.display_name };
       onthoud(S.poule.id, S.ik.id);
+      if (!bestaand.user_id) await claimSpeler(bestaand.member_id);
       S.melding = `Welkom terug, ${bestaand.display_name}.`;
       try { await laad(); render(); }
       catch (e) { app.querySelector('#f').textContent = e.message; }
@@ -3029,9 +3168,7 @@ function kiesSpeler() {
       S.leden.push({ member_id:id, display_name:naam });
       S.ik = { id, naam }; onthoud(S.poule.id, id); render(); return;
     }
-    const { data, error } = await db.from('pool_members')
-      .insert({ pool_id: S.poule.id, display_name: naam })
-      .select().single();
+    const { data, error } = await maakSpeler(S.poule.id, naam);
     if (error) { app.querySelector('#f').textContent = uitleg(error); return; }
     S.ik = { id: data.member_id, naam };
     onthoud(S.poule.id, data.member_id);
@@ -3222,13 +3359,12 @@ async function pouleAanmaken(m) {
     m.poule = data;
   }
   if (!m.ik) {
-    const { data, error } = await db.from('pool_members')
-      .insert({ pool_id: m.poule.id, display_name: m.speler.trim() }).select().single();
+    const { data, error } = await maakSpeler(m.poule.id, m.speler.trim());
     if (error) throw new Error(uitleg(error));
     m.ik = { id: data.member_id, naam: m.speler.trim() };
-    // Wie de poule aanmaakt is de poulebaas. Zonder login kan de database dat
-    // niet afdwingen; het houdt de beheerknoppen weg bij wie ze niet nodig
-    // heeft. Zie BEDIENING.md §7.
+    // Wie de poule aanmaakt is de poulebaas. De database dwingt dat nog niet
+    // af — de policies staan nog open — dus voorlopig houdt dit alleen de
+    // beheerknoppen weg bij wie ze niet nodig heeft. Zie BEDIENING.md §7.
     await db.from('pools').update({ owner_member_id: m.ik.id }).eq('id', m.poule.id);
     m.poule.owner_member_id = m.ik.id;
   }
@@ -3297,13 +3433,10 @@ function toonStart() {
     if (error || !data) { fout('Die poulecode bestaat niet'); return; }
     S.poule = data;
     onthoudPoule(S.poule.id); onthoudInLijst(S.poule);
-    const bekend = mijnId(S.poule.id);
     try { await laad(); }
     catch (e) { fout(e.message); return; }
     S.weergave = 'races'; S.race = null;
-    if (bekend && S.leden.some(l => zelfde(l.member_id, bekend))) {
-      S.ik = { id: bekend, naam: S.leden.find(l => zelfde(l.member_id, bekend)).display_name };
-    }
+    await herkenMij();
     render();
   };
 
@@ -3315,12 +3448,12 @@ function toonStart() {
 
 if (DEMO) {
   await laad();
-  const bekend = mijnId(S.poule.id);
-  if (bekend && S.leden.some(l => zelfde(l.member_id, bekend))) {
-    S.ik = { id: bekend, naam: S.leden.find(l => zelfde(l.member_id, bekend)).display_name };
-  }
+  await herkenMij();
   if (!herstelScherm()) render();
 } else {
+  // De sessie van dit toestel eerst: hervat() moet weten wie ik ben voordat
+  // hij een speler probeert te herkennen.
+  await bestaandeSessie();
   await hervat();
 }
 
@@ -3349,9 +3482,12 @@ async function hervat() {
       // omdat de link recenter is, maar ook omdat onthoud() hierboven niets
       // doet in een browser die niets mag opslaan; dan is dit het enige wat
       // je nog als jezelf binnenlaat.
-      const bekend = uitLid ? uitLid.member_id : mijnId(S.poule.id);
-      const lid = bekend && S.leden.find(l => zelfde(l.member_id, bekend));
-      if (lid) S.ik = { id: lid.member_id, naam: lid.display_name };
+      if (uitLid) {
+        S.ik = { id: uitLid.member_id, naam: uitLid.display_name };
+        if (!uitLid.user_id) await claimSpeler(uitLid.member_id);
+      } else {
+        await herkenMij();
+      }
       if (!herstelScherm()) render();
       return;
     }
@@ -3376,9 +3512,7 @@ async function hervat() {
   try { await laad(); }
   catch (e) { toonFout(e.message); return; }
 
-  const bekend = mijnId(S.poule.id);
-  const lid = bekend && S.leden.find(l => zelfde(l.member_id, bekend));
-  if (lid) S.ik = { id: lid.member_id, naam: lid.display_name };
+  await herkenMij();
   if (!herstelScherm()) render();
 }
 </script>

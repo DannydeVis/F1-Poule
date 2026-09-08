@@ -22,7 +22,12 @@ const DRIVERS = [
 
 const beginstand = {
   pools: [{ id:'pool-1', name:'Vrijdagmiddagpoule', join_code:'RTM026', season:2026 }],
-  pool_members: [{ member_id:'lid-1', pool_id:'pool-1', display_name:'Danny' }],
+  // user_id null: deze speler bestond al voordat er accounts waren. Precies
+  // de situatie die de app moet kunnen claimen.
+  pool_members: [{ member_id:'lid-1', pool_id:'pool-1', display_name:'Danny', user_id:null }],
+  // De nabootsing van auth.users. Staat in de "database", niet in de sessie:
+  // een account overleeft het wissen van localStorage, net als in het echt.
+  auth_users: [],
   races: [
     // race_id is bewust een getal: zo controleren we ook dat 3 en '3'
     // niet uit elkaar lopen bij het terugzoeken van een voorspelling.
@@ -66,6 +71,9 @@ try {
   const opgeslagen = sessionStorage.getItem(BEWAAR);
   store = opgeslagen ? JSON.parse(opgeslagen) : JSON.parse(JSON.stringify(beginstand));
 } catch { store = JSON.parse(JSON.stringify(beginstand)); }
+// Een bewaarde database van vóór de accounts mist deze tabel; zonder deze
+// regel valt de nabootsing dan om op een leesactie die niets hoort te doen.
+store.auth_users ??= [];
 const bewaren = () => { try { sessionStorage.setItem(BEWAAR, JSON.stringify(store)); } catch { /* niets */ } };
 
 // Wordt door ontbrekende-sleutel.test.mjs leeggemaakt om een database zonder
@@ -74,6 +82,18 @@ const UNIEK = {
   predictions: ['pool_id', 'race_id', 'member_id'],
   answers:     ['pool_id', 'race_id', 'member_id', 'question_id'],
 };
+
+// De gedeeltelijke unieke sleutel uit schema.sql: één account kan niet twee
+// spelers in dezelfde poule zijn. Zonder deze regel hier zou de app een
+// claim kunnen doen die de echte database weigert, en zou geen enkele test
+// dat merken.
+function botstMetAccount(rijen, rij, zichzelf) {
+  if (!rij.user_id) return false;
+  return rijen.some((x) => x !== zichzelf
+    && gelijk(x.pool_id, rij.pool_id) && x.user_id && gelijk(x.user_id, rij.user_id));
+}
+const dubbelAccount = { data: null, error: { code: '23505',
+  message: 'duplicate key value violates unique constraint "pool_members_pool_user_uniek"' } };
 
 // Alles wat het geheugen in gaat wordt gekopieerd, zodat de pagina nooit per
 // ongeluk dezelfde array-instantie deelt met de "database".
@@ -89,6 +109,8 @@ function uitvoeren(tabel, q) {
   }
 
   if (q._insert) {
+    if (tabel === 'pool_members'
+        && q._insert.some((r) => botstMetAccount(rijen, r, null))) return dubbelAccount;
     const nieuw = q._insert.map((r) => {
       const rij = kopie(r);
       if (tabel === 'pool_members') rij.member_id = 'lid-' + (rijen.length + 1);
@@ -140,6 +162,8 @@ function uitvoeren(tabel, q) {
     const doel = rijen.filter((r) =>
       q._filters.every(([k, v]) => gelijk(r[k], v)) &&
       q._isNull.every((k) => (r[k] ?? null) === null));
+    if (tabel === 'pool_members' && doel.some((r) =>
+        botstMetAccount(rijen, { ...r, ...q._update }, r))) return dubbelAccount;
     for (const r of doel) Object.assign(r, kopie(q._update));
     bewaren();
     return q._selectNa ? { data: kopie(doel), error: null } : { data: null, error: null };
@@ -175,4 +199,49 @@ function maakQuery(tabel) {
   return q;
 }
 
-export const createClient = () => ({ from: maakQuery });
+// ------------------------------------------------------------
+//  auth
+//  De sessie staat bewust in localStorage, net als bij supabase-js zelf.
+//  Tests die localStorage wissen bootsen daarmee een ander toestel na — en
+//  krijgen dan ook echt een ander account, wat precies is wat we willen
+//  kunnen controleren.
+// ------------------------------------------------------------
+const SESSIE = 'nabootsing:sessie';
+
+function huidigeSessie() {
+  try {
+    const rauw = localStorage.getItem(SESSIE);
+    if (!rauw) return null;
+    const s = JSON.parse(rauw);
+    // Een sessie van een account dat niet (meer) bestaat is geen sessie.
+    return store.auth_users.some((u) => u.id === s?.user?.id) ? s : null;
+  } catch { return null; }
+}
+
+const auth = {
+  async getSession() { return { data: { session: huidigeSessie() }, error: null }; },
+  async getUser() {
+    const s = huidigeSessie();
+    return { data: { user: s?.user ?? null }, error: s ? null : { message: 'geen sessie' } };
+  },
+  async signInAnonymously() {
+    const bestaand = huidigeSessie();
+    if (bestaand) return { data: bestaand, error: null };
+    const user = { id: 'account-' + (store.auth_users.length + 1),
+                   is_anonymous: true, email: null };
+    store.auth_users.push(user);
+    bewaren();
+    const sessie = { user, access_token: 'nep-' + user.id };
+    try { localStorage.setItem(SESSIE, JSON.stringify(sessie)); } catch { /* niets */ }
+    return { data: sessie, error: null };
+  },
+  async signOut() {
+    try { localStorage.removeItem(SESSIE); } catch { /* niets */ }
+    return { error: null };
+  },
+  onAuthStateChange() {
+    return { data: { subscription: { unsubscribe() {} } } };
+  },
+};
+
+export const createClient = () => ({ from: maakQuery, auth });

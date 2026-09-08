@@ -1746,3 +1746,137 @@ De policies zelf, en de frontend die anonieme sessies opzet en bestaande
 spelers laat claimen via het `member_id` dat al in `localStorage` staat. In die
 volgorde: eerst de frontend die inlogt, dán de policies dicht. Andersom sluit
 je de deur terwijl iedereen nog buiten staat.
+
+*(De frontend staat inmiddels in [De frontend logt in, zonder
+inlogscherm](#de-frontend-logt-in-zonder-inlogscherm). Daar bleek er nog een
+stap tussen te moeten: een mailadres koppelen, anders sluit je alsnog iedereen
+buiten die op een tweede toestel speelt.)*
+
+---
+
+## De frontend logt in, zonder inlogscherm
+
+Het fundament lag ([hierboven](#fundament-voor-de-login-wie-ben-je-en-waar-hoor-je-bij)):
+`pool_members.user_id`, de unieke sleutel erop, en `is_member()`. Wat ontbrak
+was de kant die iemand daadwerkelijk een account geeft. Dit is die kant.
+
+De opdracht was expliciet: *"gebruikersvriendelijk en alles automatisch"*. Een
+inlogscherm is precies het tegenovergestelde — het is de plek waar de helft van
+je bezoekers afhaakt bij een app die ze nog niet vertrouwen. Dus:
+`signInAnonymously()`. Iedereen krijgt een account, niemand merkt het.
+
+### Drie keuzes die het gedrag bepalen
+
+**1. Het account wordt lui aangemaakt.** Niet bij het openen van de pagina,
+maar op het moment dat er echt iets aan jou gehangen moet worden: een speler
+claimen, een speler aanmaken, een poule aanmaken. `bestaandeSessie()` leest bij
+de start alleen wat er al staat — dat is een localStorage-leesactie van
+supabase-js, geen netwerkverkeer. `zorgVoorAccount()` doet de aanmelding, en
+alleen die kost een rondje naar Supabase.
+
+Dit is geen micro-optimalisatie. Deze pagina wordt publiek. Een account per
+paginaweergave betekent een rij in `auth.users` voor elke crawler, elke
+linkpreview, elke keer dat iemand de URL in een chat plakt. Dat is niet op te
+ruimen zonder te raden welke accounts echt van iemand zijn.
+
+**2. Claimen kan alleen wat van niemand is.**
+
+```js
+await db.from('pool_members').update({ user_id: uid })
+  .eq('member_id', memberId).is('user_id', null).select();
+```
+
+Die `.is('user_id', null)` is het hele verhaal. Raakt de update niets, dan is
+dat geen fout maar een antwoord: de speler was al geclaimd. Vandaar `.select()`
+— zonder teruggegeven rijen weet je niet of het gelukt is, en RLS geeft straks
+óók geen fout op een geblokkeerde update, alleen nul rijen. Dat is de valkuil
+die in `test/lidmaatschap.test.sql` al vastligt en die hier hetzelfde werkt.
+
+**3. Alles is vergevingsgezind.** Staat anoniem inloggen uit in het
+Supabase-project, of gaat de aanmelding mis, dan blijft de app werken zoals hij
+deed. Elke `try` valt terug op `null`, en op `null` slaat de app het claimen
+gewoon over. Zolang de policies openstaan kost dat niets. Een speler die niet
+meer kan opslaan omdat een aanmeldpoging faalde zou onvergeeflijk zijn.
+
+### Het gedeelde toestel, en waarom er geen foutmelding komt
+
+Eén account kan maar één speler per poule zijn — dat is de gedeeltelijke unieke
+index uit `schema.sql`, en hij is er met reden: anders sta je twee keer in
+dezelfde stand met je punten verdeeld.
+
+Maar er is een heel gewoon geval waarin dat botst. Danny maakt de poule aan op
+zijn telefoon en geeft hem door zodat Joey zich kan inschrijven. Zelfde
+browser, zelfde account, tweede speler in dezelfde poule: Postgres weigert met
+`23505`.
+
+De eerste versie liet die fout gewoon aan de speler zien. Dat was fout, en niet
+zo'n beetje ook: iemand kan zich niet inschrijven omdat de telefoon van een
+ander was. `maakSpeler()` doet nu een tweede poging zónder `user_id`:
+
+```js
+const uit = await nieuweSpeler(uid);
+if (uid && alBezetDoorAccount(uit.error)) return nieuweSpeler(null);
+```
+
+Joey doet gewoon mee. Zijn speler hangt alleen nog aan niemand, tot hij de app
+op zijn eigen toestel opent en hem daar claimt. Precies zoals elke speler van
+vóór de accounts.
+
+`alBezetDoorAccount()` kijkt naar de naam van de sleutel in het foutbericht,
+niet alleen naar de code: `23505` betekende tot nu toe "dubbele voorspellingen,
+draai `schema.sql` opnieuw", en dat is een misleidend antwoord op deze botsing.
+`uitleg()` heeft er daarom een aparte tekst voor.
+
+### herkenMij(), en de volgorde die erin zit
+
+Dezelfde vier regels stonden op vijf plekken uitgeschreven — bij `#mee`, bij
+`naarPoule()`, twee keer in `hervat()`, en bij de start in demomodus. Ze liepen
+bij elke aanpassing uit de pas. Nu is er één `herkenMij()`, en die heeft een
+bewuste volgorde:
+
+1. Wat dit toestel onthouden heeft (`localStorage`). Snel, en klopt bijna altijd.
+2. Pas als het toestel niets weet: welke speler bij mijn account hoort.
+
+Die tweede is nieuw. Hij is de reden dat "Speler wisselen" een refresh
+overleeft — het toestel weet dan wie je koos, en dat wint — én dat een toestel
+dat helemaal niets weet je alsnog terugvindt zodra je account meekomt.
+
+### Wat dit nog níét is
+
+Je account reist nog niet mee naar een tweede toestel. De sessie staat in
+`localStorage` van díé browser; er hangt geen mailadres aan. Cross-device gaat
+dus nog steeds via de eigen link.
+
+Dat is meteen de volgorde van wat er nog moet, en die is niet vrijblijvend:
+
+1. **Een mailadres koppelen** (`updateUser({ email })` op het anonieme account,
+   en `signInWithOtp()` op het tweede toestel). Optioneel, zoals afgesproken.
+2. **Dán pas de policies dicht.**
+
+Andersom is een storing. Zodra de policies dicht zijn is de eigen link niet
+genoeg meer: hij zet wel `S.ik`, maar het tweede toestel heeft een ánder
+anoniem account, en dat is geen lid. Zonder mailkoppeling zou zo'n speler op
+zijn laptop stilletjes niets meer kunnen opslaan.
+
+### Eén ding dat handmatig moet
+
+Anoniem inloggen staat standaard **uit** in een Supabase-project. Dashboard →
+Authentication → Sign In / Providers → *Anonymous sign-ins* aanzetten. Zonder
+dat faalt elke `signInAnonymously()` met `anonymous_provider_disabled`, blijft
+de app werken zoals hij deed (dat is het punt van de vergevingsgezindheid
+hierboven), en wordt er stilletjes niets geclaimd. Dat merk je pas als de
+policies dichtgaan en iedereen buiten staat — dus dit is de plek om het te
+zeggen.
+
+### Wat de nabootsing erbij kreeg
+
+`test/nabootsing-supabase.mjs` heeft nu `auth`, met één keuze die de tests
+scherp maakt: de **sessie staat in `localStorage`**, de **accounts in de
+"database"**. Dat is hoe supabase-js het zelf doet, en het betekent dat de
+bestaande truc `localStorage.clear()` — waarmee tests al een ander toestel
+naboots(t)en — nu ook echt een ander account oplevert. Zonder die keuze zou
+"een ander toestel neemt je speler niet over" niets bewijzen.
+
+De nabootsing dwingt ook de gedeeltelijke unieke index af. Zonder dat zou de
+app een claim kunnen doen die de echte database weigert, en zou geen enkele
+test dat merken.
