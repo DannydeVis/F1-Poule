@@ -32,6 +32,11 @@ create table if not exists public.pool_members (
   member_id    uuid primary key default gen_random_uuid(),
   pool_id      uuid not null,
   display_name text not null,
+  -- Welk account bij deze speler hoort. Leeg zolang niemand hem geclaimd
+  -- heeft: de app werkte lang zonder login, en die spelers bestaan nog.
+  -- `on delete cascade` is er voor "verwijder mijn account": één rij weg uit
+  -- auth.users en al je spelers gaan mee.
+  user_id      uuid references auth.users(id) on delete cascade,
   created_at   timestamptz not null default now()
 );
 
@@ -147,6 +152,28 @@ alter table public.pools        add column if not exists questions_locked boolea
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
 alter table public.pool_members add column if not exists created_at   timestamptz not null default now();
+alter table public.pool_members add column if not exists user_id      uuid;
+
+-- De verwijzing apart, want `add column if not exists` neemt geen foreign key
+-- mee bij een tabel die de kolom al had.
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.table_constraints
+    where constraint_name = 'pool_members_user_id_fkey' and table_name = 'pool_members'
+  ) then
+    alter table public.pool_members
+      add constraint pool_members_user_id_fkey
+      foreign key (user_id) references auth.users(id) on delete cascade;
+  end if;
+end $$;
+
+-- Eén account kan niet twee keer dezelfde speler in dezelfde poule zijn, en
+-- twee spelers in één poule kunnen niet hetzelfde account zijn: anders sta je
+-- twee keer in de stand met je punten verdeeld — precies het probleem dat de
+-- eigen link ooit moest oplossen.
+create unique index if not exists pool_members_pool_user_uniek
+  on public.pool_members (pool_id, user_id) where user_id is not null;
 
 -- De inleg, het betaalverzoek en het betaald-vinkje zijn eruit gehaald. Zodra
 -- er geld in een poule zit — inleg, pot, prijs — kom je in Nederland in de
@@ -557,6 +584,39 @@ create policy pool_questions_open on public.pool_questions
   for all to anon, authenticated using (true) with check (true);
 create policy answers_open      on public.answers
   for all to anon, authenticated using (true) with check (true);
+
+-- ------------------------------------------------------------
+--  Wie ben je, en waar hoor je bij
+--  auth.uid() komt van Supabase; in de tests wordt hij nagebootst door
+--  test/auth-nabootsing.sql.
+-- ------------------------------------------------------------
+
+-- Hoort dit account bij deze poule?
+--
+-- `security definer` is hier geen luxe maar noodzaak: deze functie leest
+-- pool_members, en straks staat er een policy óp pool_members die deze
+-- functie aanroept. Zonder definer kijkt die select opnieuw door RLS heen,
+-- roept de policy zichzelf aan, en draait Postgres in een oneindige lus.
+-- Dat is de klassieke valkuil bij RLS in Supabase.
+--
+-- `set search_path = public` hoort bij elke security definer: zonder dat kan
+-- iemand met een eigen schema in zijn search_path een andere pool_members
+-- laten vinden dan bedoeld.
+create or replace function public.is_member(p_pool uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.pool_members
+    where pool_id = p_pool and user_id = auth.uid()
+  );
+$$;
+
+revoke all on function public.is_member(uuid) from public;
+grant execute on function public.is_member(uuid) to anon, authenticated;
 
 -- ------------------------------------------------------------
 --  Rechten op tabelniveau

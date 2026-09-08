@@ -64,6 +64,12 @@ jobs:
       - name: Rollen aanmaken die Supabase standaard heeft
         run: psql -v ON_ERROR_STOP=1 -c "create role anon; create role authenticated;"
 
+      # Supabase levert het auth-schema mee; gewone PostgreSQL niet. Zonder
+      # deze nabootsing draait schema.sql niet eens, want de policies en de
+      # foreign key op pool_members verwijzen naar auth.
+      - name: auth nabootsen zoals Supabase hem levert
+        run: psql -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+
       - name: schema.sql draaien op een lege database
         run: psql -v ON_ERROR_STOP=1 -f schema.sql
 
@@ -76,8 +82,18 @@ jobs:
       - name: races staat op alleen-lezen voor anon
         run: |
           createdb rls
+          psql -d rls -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
           psql -d rls -v ON_ERROR_STOP=1 -f schema.sql
           psql -d rls -v ON_ERROR_STOP=1 -f test/races-alleen-lezen.test.sql
+
+      # is_member() is het fundament onder alle policies die nog komen, dus
+      # dat moet los bewezen zijn voordat er iets op gebouwd wordt.
+      - name: lidmaatschap en het claimen van een speler
+        run: |
+          createdb leden
+          psql -d leden -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d leden -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d leden -v ON_ERROR_STOP=1 -f test/lidmaatschap.test.sql
 
       # De vorige stap heeft de tabel opzettelijk beschadigd. schema.sql hoort
       # dat te herstellen zonder dat er data verloren gaat die de app gebruikt.
@@ -98,6 +114,7 @@ jobs:
       - name: De vragenlijst en de tabellen eromheen
         run: |
           createdb vragen
+          psql -d vragen -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
           psql -d vragen -v ON_ERROR_STOP=1 -f schema.sql
           psql -d vragen -v ON_ERROR_STOP=1 -f test/vragen.test.sql
 
@@ -107,6 +124,7 @@ jobs:
       - name: schema.sql tegen een oudere tabelstructuur
         run: |
           createdb oud
+          psql -d oud -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
           psql -d oud -v ON_ERROR_STOP=1 -f test/oude-structuur.sql
           psql -d oud -v ON_ERROR_STOP=1 -f schema.sql
           psql -d oud -v ON_ERROR_STOP=1 -f test/oude-structuur-controle.sql
@@ -115,4 +133,5 @@ jobs:
         run: |
           psql -d oud -v ON_ERROR_STOP=1 -f diagnose.sql
           createdb leeg
+          psql -d leeg -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
           psql -d leeg -v ON_ERROR_STOP=1 -f diagnose.sql
