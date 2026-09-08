@@ -43,7 +43,8 @@ export async function startPagina({ aanpassen = (s) => s, indexPad } = {}) {
   writeFileSync(join(map, 'nabootsing-supabase.mjs'),
     aanpassen(readFileSync(join(hier, 'nabootsing-supabase.mjs'), 'utf8')));
 
-  const types = { '.html': 'text/html', '.mjs': 'text/javascript', '.woff2': 'font/woff2' };
+  const types = { '.html': 'text/html', '.mjs': 'text/javascript', '.woff2': 'font/woff2',
+                  '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
   const server = createServer((req, res) => {
     // Eerst de querystring eraf: de app leest ?code= uit de link, dus '/'
     // komt hier ook binnen als '/?code=RTM026'.
