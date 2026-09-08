@@ -22,6 +22,10 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    # Voor het vastleggen van kalender.ics hieronder. Verder schrijft deze
+    # workflow niets in de repo.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -36,3 +40,22 @@ jobs:
           SEIZOEN: '2026'
           KALENDER: ${{ inputs.kalender }}
         run: node scripts/sync.mjs
+
+      # De sync schrijft kalender.ics alleen als er echt iets veranderd is, dus
+      # deze stap doet meestal niets. Wie zich op die agenda geabonneerd heeft
+      # krijgt een verschoven sessie zo vanzelf binnen.
+      #
+      # De pull --rebase is er voor de zeldzame samenloop dat automerge net een
+      # pull request in main zet terwijl deze run bezig is.
+      - name: De agenda vastleggen als hij veranderd is
+        run: |
+          if git diff --quiet -- kalender.ics; then
+            echo "Agenda ongewijzigd, niets vast te leggen"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add kalender.ics
+          git commit -m "Agenda bijgewerkt door de sync"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

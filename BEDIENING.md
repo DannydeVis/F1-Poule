@@ -489,6 +489,36 @@ database staat en wat OpenF1 er nu over zegt.
 
 ---
 
+## 11b. De deadlines in je agenda
+
+Onder **Poule** staat "deadlines in je agenda": één keer abonneren, en elke
+kwalificatie en race staat in je eigen agenda met de melding die je daar zelf
+instelt.
+
+Het bestand is `kalender.ics` naast `index.html`, en de sync schrijft het bij
+elke run — maar alleen als er echt iets veranderd is. Verschuift een sessie,
+dan past de sync het aan en volgt de agenda van iedere abonnee vanzelf.
+
+Waarom dit en geen mail of pushbericht: die vragen allebei om infrastructuur
+die er niet is (een mailleverancier met een sleutel, of VAPID-sleutels plus een
+pushdienst) én om een lijst met wie je wanneer bereikt. Dit vraagt om niets, en
+het bestand is voor iedereen hetzelfde — er gaat dus ook geen enkel gegeven van
+een speler naartoe.
+
+Wees eerlijk over wat het niet kan: een agenda-item geldt voor iedereen en kan
+dus niet zeggen "jij hebt nog niets ingevuld". Het bereikt je wél, en dat is
+precies wat de app tot nu toe niet deed.
+
+Twee dingen om te weten:
+
+- **De `VALARM` van twee uur van tevoren is een suggestie.** Veel agenda-apps
+  negeren die bij een abonnement en gebruiken de melding die de gebruiker zelf
+  per agenda instelt. Daarom staat hij er wel, maar leunt niets erop.
+- **Het bestand in de repo is leeg tot de eerste sync draait.** Dat is een
+  geldige agenda; hij vult zichzelf binnen het uur.
+
+---
+
 ## 12. Wat de app van je weet
 
 Onder **Poule** staat een dichtgeklapt blok "wat de app van je weet". Daarin

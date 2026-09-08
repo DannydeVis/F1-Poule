@@ -95,6 +95,34 @@ check('en die pictogrammen bestaan ook echt',
   plaatjes.length >= 2 && plaatjes.every((p) => p.includes(':200:')),
   plaatjes.join(' | '));
 
+// --- de deadlines in je agenda --------------------------------------------
+// Wie de app niet toevallig opent mist een weekend. Dit is de manier om dat
+// op te lossen zonder mailleverancier of pushdienst: één keer abonneren, en
+// daarna staan de deadlines in je eigen agenda.
+await page.waitForSelector('#code');
+await page.fill('#code', 'RTM026');
+await page.click('#mee');
+await page.waitForSelector('[data-race], [data-lid]');
+if (await page.$('[data-lid]')) await page.click('[data-lid]');
+await page.waitForSelector('[data-race], .speler');
+await page.click('[data-weergave="poule"]');
+await page.waitForSelector('#agendalink');
+
+const abonnee = await page.getAttribute('a.knop[href^="webcal"]', 'href');
+check('de abonneerknop gebruikt webcal, zodat je agenda hem herkent',
+  (abonnee ?? '').startsWith('webcal://') && abonnee.endsWith('/kalender.ics'),
+  String(abonnee));
+
+// En het bestand waar hij naar wijst bestaat ook echt. Een agendalink die
+// 404 geeft ziet er in de broncode precies hetzelfde uit als eentje die werkt.
+const agenda = await page.evaluate(async () => {
+  const r = await fetch('kalender.ics');
+  return { status: r.status, type: r.headers.get('content-type'), begin: (await r.text()).slice(0, 15) };
+});
+check('en het bestand staat er, met een geldige agenda erin',
+  agenda.status === 200 && agenda.begin.startsWith('BEGIN:VCALENDAR'),
+  JSON.stringify(agenda));
+
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
 await stoppen();

@@ -22,9 +22,11 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
+import { readFileSync, writeFileSync } from 'node:fs';
 import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast,
          deelnemersUit, hoortNietInDeKalender, rondeToewijzing, dubbeleRaces }
   from './uitslagen.mjs';
+import { maakAgenda } from './agenda.mjs';
 
 const API = 'https://api.openf1.org/v1';
 const REST = `${SUPABASE_URL}/rest/v1`;
@@ -386,6 +388,35 @@ async function vragensetOpSlot(races) {
 }
 
 // ------------------------------------------------------------
+//  De deadlines als agenda-abonnement
+//
+//  Wie zich hierop abonneert krijgt de deadlines in zijn eigen agenda, met de
+//  melding die hij daar al heeft staan. Geen mailleverancier, geen
+//  pushdienst, geen lijst met wie je wanneer bereikt — dit bestand is voor
+//  iedereen hetzelfde. Zie scripts/agenda.mjs.
+//
+//  Alleen wegschrijven als er echt iets veranderd is: deze sync draait elk
+//  uur, en een bestand dat elke keer verschilt van zichzelf zou elk uur een
+//  commit opleveren voor een kalender die een paar keer per jaar verschuift.
+// ------------------------------------------------------------
+
+const AGENDA_PAD = new URL('../kalender.ics', import.meta.url);
+const APP_URL = process.env.APP_URL ?? 'https://dannydevis.github.io/F1-Poule/';
+
+function schrijfAgenda(races) {
+  const nieuw = maakAgenda(races, { url: APP_URL, naam: `F1 Poule ${SEIZOEN}` });
+  let oud = '';
+  try { oud = readFileSync(AGENDA_PAD, 'utf8'); } catch { /* bestaat nog niet */ }
+  if (oud === nieuw) {
+    console.log('Agenda ongewijzigd');
+    return false;
+  }
+  writeFileSync(AGENDA_PAD, nieuw);
+  console.log(`Agenda bijgewerkt (${races.length} races)`);
+  return true;
+}
+
+// ------------------------------------------------------------
 
 try {
   let races = await haalRaces();
@@ -402,7 +433,9 @@ try {
 
   // Opnieuw ophalen: uitslagen() heeft er net uitslagen bij gezet, en die
   // bepalen welke poules op slot gaan.
-  await vragensetOpSlot(await haalRaces());
+  const nu = await haalRaces();
+  await vragensetOpSlot(nu);
+  schrijfAgenda(nu);
 } catch (e) {
   console.error('Mislukt:', e.message);
   process.exit(1);
