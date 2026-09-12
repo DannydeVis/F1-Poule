@@ -158,8 +158,18 @@ naam invult. Corrigeert zichzelf als één team het seizoen domineert.
 Vijf per seizoen, niet twee keer op dezelfde vraag. Maakt het een strategische
 keuze in plaats van een automatisme.
 
-### Slechtste twee races vallen weg
+### ~~Slechtste twee races vallen weg~~ — gebouwd
 Bij 24 races tellen de beste 22. Vangt één vakantie en één ramprace op.
+
+Staat op de standpagina als een eigen blok, nadrukkelijk náást de stand en
+niet in plaats van. De officiële stand blijft alles meetellen: iemands punten
+midden in een lopend seizoen afpakken is geen verbetering, ook niet als de
+uitkomst eerlijker is. Wil je het later wél de officiële telling maken, dan is
+dat één regel in `standRijen()`.
+
+De regel groeit mee met het seizoen — per twaalf gereden races valt er één
+weekend af. Zou je meteen vanaf race één twee weekenden wegstrepen, dan telt er
+na drie races nog één mee en is de stand onzin.
 
 ### Automatisch invullen bij vergeten
 Wie niks inlevert krijgt de huidige WK-stand als top 10, gemarkeerd als

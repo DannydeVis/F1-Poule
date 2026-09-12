@@ -2628,3 +2628,137 @@ Authentication → Sign In / Providers → Google aanzetten, met een client-ID e
 Authentication → Settings, anders werkt alleen het inloggen op een leeg toestel
 en niet het koppelen aan een bestaand anoniem account. Gaat er iets van dat
 tweetal mis, dan zegt de app dat het niet aan de speler ligt.
+
+---
+
+## De sync draaide niet elk uur, en Madrid kwam uit de verkeerde sessie
+
+Twee dingen die allebei dezelfde vorm hadden: er stond ergens een aanname, en
+niemand had hem ooit nageteld.
+
+### De deelnemerslijst kwam uit een sessie die nog niet gereden was
+
+"Hadjar is dit weekend weer uitgevallen en wordt vervangen door Lawson. En
+Tsunoda komt erbij. Maar die kan ik niet kiezen."
+
+Ik heb daar eerst het verkeerde antwoord op gegeven — "OpenF1 weet het niet" —
+en dat was fout omdat mijn controle naar precies dezelfde twee sessies keek als
+de sync zelf. Op een runner uitgevraagd gaf OpenF1 dit voor Madrid:
+
+    Practice 1  11362  vrijdag  11:30   #22 TSU Racing Bulls  #30 LAW Red Bull
+    Practice 2  11363  vrijdag  15:00   #22 TSU Racing Bulls  #30 LAW Red Bull
+    Practice 3  11364  zaterdag 10:30   #22 TSU Racing Bulls  #30 LAW Red Bull
+    Qualifying  11365  zaterdag 14:00   #22 TSU Racing Bulls  #30 LAW Red Bull
+    Race        11369  zondag   13:00   #6  HAD Red Bull      #30 LAW Racing Bulls
+
+De vrije trainingen wisten het vanaf vrijdagmiddag.
+
+Een sessie die nog niet gereden is vult OpenF1 met de inschrijflijst van het
+seizoen, en die kan weken oud zijn. `deelnemersUit()` keek alleen naar
+`quali_key` en `race_key`. Zolang die twee niet gereden waren gaven ze allebei
+diezelfde oude lijst terug — keurig gelijk aan wat wij opgeslagen hadden, dus
+het zag eruit alsof er niets mis was.
+
+`weekendBron()` in `scripts/uitslagen.mjs` pakt nu de laatste sessie die **al
+begonnen** is. Nog niet begonnen telt niet mee: dat is juist de sessie met de
+oude opgave, dus die meenemen zou Hadjar terugzetten. Eén uitzondering — de
+eerste sessie van het weekend wordt overgeslagen, want daar moeten teams een
+rookie in de auto zetten en die rijdt de race niet.
+
+`sync.mjs` haalt de sessies van het hele seizoen in één verzoek op en zoekt per
+race het weekend erbij via `race_key` of `quali_key`; daar is geen kolom voor
+nodig. Lukt dat verzoek niet, dan valt alles terug op het oude gedrag.
+
+### En de racesessie mag het niet terugdraaien
+
+Zodra de race gereden is haalt `sync.mjs` de lijst uit de rácesessie, want die
+zegt wie er echt gereden heeft. Maar dat is precies de sessie die het hele
+weekend nog op de oude opgave stond. `lijstDekt()` toetst daarom wat we al
+weten: wie finisht, stond aan de start. Staat er in de uitslag een nummer dat
+niet in de aangeboden lijst voorkomt, dan is die lijst niet af en nemen we hem
+niet over.
+
+Dezelfde redenering als de Monza-reparatie, maar andersom gebruikt: daar
+bewijst hij dat ónze lijst kapot is, hier dat die van OpenF1 dat is.
+
+### Wat dit niet oplost
+
+Een wissel die bekend wordt voordat er ook maar iets gereden is. Dan is er geen
+gereden sessie om aan te vragen en blijft het de opgave die OpenF1 heeft.
+
+### De sync draaide niet elk uur
+
+In `sync.yml` stond `cron: '0 * * * *'` met erboven de aanname dat hij dan ook
+elk uur draait. Nageteld over zes dagen:
+
+    ingesteld        24 keer per dag
+    werkelijk        5 a 7 keer per dag
+    kortste gat      1u55
+    langste gat      4u59
+    gaten < 1 uur    geen enkele
+
+Er is dus niets veranderd toen dit van elke 3 uur naar elk uur ging. GitHub
+laat geplande runs vallen bij drukte, en drukte is precies een raceweekend.
+
+De cron staat nu op vier keer per uur. Meer pogingen is de enige knop die we
+hebben zonder er een server bij te zetten; een garantie is het niet.
+`scripts/controle-sync.mjs` telt het voortaan na en draait mee in de
+controle-workflow, zodat de volgende die hier komt niet weer op de cron-regel
+hoeft af te gaan.
+
+### Wat de controlescripts erbij kregen
+
+`controle-coureurs.mjs` vergelijkt nu met álle gereden sessies van het weekend
+en zegt erbij welke de sync zou pakken — precies wat ontbrak toen ik de
+verkeerde conclusie trok. `verkennen.mjs` dumpt de volledige lijst per sessie
+plus wat er van sessie op sessie verandert. En `controle-stand.yml` heeft een
+`race`-invoer, zodat je één race kunt nakijken zonder op alle vierentwintig te
+wachten.
+
+---
+
+## Zonder je slechtste weekend
+
+Uit groep 4 van de routekaart: "Bij 24 races tellen de beste 22. Vangt één
+vakantie en één ramprace op."
+
+Het punt erachter staat bovenaan diezelfde lijst. Wat een vriendenpoule kapot
+maakt is niet een tekort aan vraagsoorten, maar dat iemand na acht races
+onbereikbaar achterstaat en afhaakt. Eén gemiste race kost vijftig tot honderd
+punten en die haal je in een seizoen niet meer in.
+
+### Ernaast, niet in plaats van
+
+`zonderSlechtste()` rekent het uit, `streepBlok()` zet het op de standpagina
+onder de weekendoverwinningen. De officiële stand blijft alles meetellen.
+
+Dat is een keuze. Het seizoen loopt — race 16 van de 24 — en er zit een echte
+poule in met echte punten. Iedereen op één dag zijn totaal zien zakken omdat de
+app het voortaan anders telt is geen verbetering, ook niet als de uitkomst
+eerlijker is. Het blok beantwoordt de vraag waar het om gaat ("hoe ver sta ik
+echt achter?") zonder iemand iets af te pakken. Wil je het later wél de
+officiële telling maken, dan is dat één regel in `standRijen()`.
+
+### De regel groeit mee met het seizoen
+
+Per twaalf gereden races valt er één weekend af, met een maximum van twee. Bij
+vierentwintig races zijn dat er dus twee, precies zoals bedoeld.
+
+Dat meegroeien is niet cosmetisch. Zou je meteen vanaf race één twee weekenden
+wegstrepen, dan telt er na drie races nog één mee en is de stand onzin.
+
+### De fout die de test ving
+
+Mijn eerste versie filterde weggestreepte weekenden van nul punten uit de zin
+eronder, met als redenering "wie nog niks heeft ingeleverd streept nullen weg".
+Dat klopt voor iemand die nooit meedeed, maar het haalde de zin ook weg bij
+precies de persoon voor wie dit blok bestaat: degene die één weekend miste. De
+browsertest liep er meteen op vast. Het filter kijkt nu of je het hele seizoen
+iets gescoord hebt, niet of dat ene weekend boven nul zat.
+
+### Wat het doet, aan een voorbeeld
+
+Danny mist Monaco (0 punten), Davy deed alles mee. In de stand staan ze allebei
+op 420. In het blok: Danny blijft 420 — zijn nul valt weg — en Davy zakt naar
+392, want hij levert zijn slechtste weekend van 28 in. Het vangnet geldt voor
+iedereen gelijk, anders is het een beloning voor wegblijven.
