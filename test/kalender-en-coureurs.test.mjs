@@ -15,7 +15,8 @@
 
 import { maakControle } from './hulp.mjs';
 import { deelnemersUit, hoortNietInDeKalender, VERVERS_VENSTER_DAGEN,
-         weekendBron, rondeToewijzing, dubbeleRaces } from '../scripts/uitslagen.mjs';
+         weekendBron, lijstDekt, rondeToewijzing,
+         dubbeleRaces } from '../scripts/uitslagen.mjs';
 
 const { check, afronden } = maakControle('kalender en deelnemerslijst');
 
@@ -229,6 +230,32 @@ check('het venster van veertien dagen blijft gelden',
 check('een gescoorde race trekt zich niets van de weekendsessies aan',
   deelnemersUit({ ...madrid, race_result: ['6', '30'] },
                 op('2026-09-13T18:00:00Z'), MADRID) === null);
+
+
+// ------------------------------------------------------------------
+//  De racesessie mag de goede lijst niet terugdraaien
+// ------------------------------------------------------------------
+// Zodra de race gereden is haalt sync.mjs de lijst uit de rácesessie, want
+// die zegt wie er echt gereden heeft. Maar juist die sessie stond het hele
+// weekend nog op de oude opgave. Werkt OpenF1 hem niet meteen bij, dan zou
+// hij de goede lijst uit de kwalificatie overschrijven met de verkeerde —
+// precies de fout die we net weggehaald hebben, een dag later alsnog.
+//
+// Wie finisht, stond aan de start. Dat is genoeg om het te zien.
+const goed = [{ nr: '22' }, { nr: '30' }, { nr: '1' }];
+const oud = [{ nr: '6' }, { nr: '30' }, { nr: '1' }];
+
+check('een lijst die de hele uitslag dekt is bruikbaar',
+  lijstDekt(goed, ['1', '30', '22']) === true);
+check('een lijst waar iemand uit de uitslag in ontbreekt is niet af',
+  lijstDekt(oud, ['1', '30', '22']) === false);
+check('nummers als getal en als tekst zijn ook hier dezelfde coureur',
+  lijstDekt(goed, [1, 30, 22]) === true);
+check('een lege lijst dekt nooit iets',
+  lijstDekt([], ['1']) === false && lijstDekt(null, ['1']) === false
+    && lijstDekt(undefined, ['1']) === false);
+check('zonder uitslag valt er niets tegen te toetsen, dus dan mag hij',
+  lijstDekt(goed, []) === true && lijstDekt(goed, null) === true);
 
 
 // ------------------------------------------------------------------
