@@ -177,14 +177,34 @@ async function droogloop(races) {
   }
 }
 
+/**
+ * Alle sessies van één weekend, op tijd gezet.
+ *
+ * OpenF1 noemt een plaats niet altijd zoals wij hem noemen (onze kalender
+ * heeft "Madrid", OpenF1 kan er "Madring" van maken). Vinden we niets op de
+ * naam, dan halen we het hele seizoen op en zoeken we los op plaats, circuit,
+ * land en meeting-naam. Beter een grove match dan een lege log.
+ */
+async function sessiesVan(locatie) {
+  let alles = await haal(`sessions?year=${JAAR}&location=${encodeURIComponent(locatie)}`);
+  if (!isFout(alles) && alles.length) {
+    return alles.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+  }
+  const hele = await haal(`sessions?year=${JAAR}`);
+  if (isFout(hele)) return hele;
+  const zoek = locatie.toLowerCase();
+  const raak = hele.filter((s) => [s.location, s.circuit_short_name, s.country_name, s.meeting_name]
+    .some((v) => String(v ?? '').toLowerCase().includes(zoek)));
+  return raak.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+}
+
 // Alle sessies van één weekend (FP1 t/m race), niet alleen de race zelf.
 // Nodig zodra het de kwalificatie is die net voorbij is en de race nog moet
 // komen — de rest van dit script gaat uit van session_name=Race, en die
 // bestaat dan nog niet als "gereden".
 async function weekend(locatie) {
-  const alles = await haal(`sessions?year=${JAAR}&location=${encodeURIComponent(locatie)}`);
-  if (isFout(alles)) { console.log(`sessions gaf ${alles.fout}`); return; }
-  const op = alles.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+  const op = await sessiesVan(locatie);
+  if (isFout(op)) { console.log(`sessions gaf ${op.fout}`); return; }
   console.log(`\n=== ${locatie} ${JAAR}: ${op.length} sessies ===`);
   const nu = Date.now();
   for (const s of op) {
@@ -207,9 +227,8 @@ async function weekend(locatie) {
  * verschil tussen twee heel andere oplossingen, dus eerst kijken.
  */
 async function coureurs(locatie) {
-  const alles = await haal(`sessions?year=${JAAR}&location=${encodeURIComponent(locatie)}`);
-  if (isFout(alles)) { console.log(`sessions gaf ${alles.fout}`); return; }
-  const op = alles.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+  const op = await sessiesVan(locatie);
+  if (isFout(op)) { console.log(`sessions gaf ${op.fout}`); return; }
   console.log(`\n=== ${locatie} ${JAAR}: deelnemers per sessie ===`);
 
   const perSessie = [];
@@ -222,6 +241,38 @@ async function coureurs(locatie) {
     for (const d of ds) uniek.set(String(d.driver_number), d);
     console.log(`  ${String(s.session_name).padEnd(12)} ${uniek.size} coureurs (session_key ${s.session_key})`);
     perSessie.push({ sessie: s, coureurs: uniek });
+  }
+
+  // De volledige lijst per sessie, en wat er van sessie op sessie verandert.
+  // De vergelijking kwalificatie-naast-race hieronder ziet niets zolang die
+  // twee allebei nog moeten komen: OpenF1 vult een sessie die nog niet gereden
+  // is met de inschrijflijst van het seizoen. De vrije trainingen zijn dan de
+  // enige sessies die al gereden zijn, en dus de enige die weten wie er dit
+  // weekend echt in de auto zit.
+  for (const p of perSessie) {
+    console.log(`\n  -- ${p.sessie.session_name} (${p.sessie.session_key}, ${p.sessie.date_start}) --`);
+    for (const nr of [...p.coureurs.keys()].sort((a, b) => Number(a) - Number(b))) {
+      const d = p.coureurs.get(nr);
+      console.log(`     #${String(nr).padEnd(3)} ${String(d.name_acronym ?? '').padEnd(4)}`
+        + ` ${String(d.full_name ?? '').padEnd(24)} ${d.team_name ?? ''}`);
+    }
+  }
+
+  console.log('\n=== wat verandert er van sessie op sessie? ===');
+  for (let i = 1; i < perSessie.length; i++) {
+    const vorig = perSessie[i - 1];
+    const nu = perSessie[i];
+    const regels = [];
+    for (const nr of new Set([...vorig.coureurs.keys(), ...nu.coureurs.keys()])) {
+      const a = vorig.coureurs.get(nr);
+      const b = nu.coureurs.get(nr);
+      if (!a) regels.push(`#${nr} ${b.full_name} (${b.team_name}) komt erbij`);
+      else if (!b) regels.push(`#${nr} ${a.full_name} (${a.team_name}) valt weg`);
+      else if (a.team_name !== b.team_name) regels.push(`#${nr} ${b.full_name}: ${a.team_name} -> ${b.team_name}`);
+    }
+    const kop = `  ${vorig.sessie.session_name} -> ${nu.sessie.session_name}`;
+    if (!regels.length) console.log(`${kop}: niets`);
+    else { console.log(`${kop}:`); for (const r of regels) console.log(`    ${r}`); }
   }
 
   const quali = perSessie.find((p) => p.sessie.session_name === 'Qualifying');

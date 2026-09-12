@@ -22,6 +22,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { weekendBron } from './uitslagen.mjs';
 
 const API = 'https://api.openf1.org/v1';
 const SEIZOEN = Number(process.env.SEIZOEN ?? 2026);
@@ -85,6 +86,30 @@ function verschil(a, b, watA, watB) {
   return regels;
 }
 
+// Eén verzoek voor alle sessies van het seizoen; daarmee is per race terug te
+// vinden welke sessies bij zijn weekend horen.
+const alleSessies = await openf1(`sessions?year=${SEIZOEN}`);
+await wacht(900);
+const perMeeting = new Map();
+const meetingVan = new Map();
+if (Array.isArray(alleSessies)) {
+  for (const x of alleSessies) {
+    if (!perMeeting.has(x.meeting_key)) perMeeting.set(x.meeting_key, []);
+    perMeeting.get(x.meeting_key).push(x);
+    meetingVan.set(String(x.session_key), x.meeting_key);
+  }
+  for (const lijst of perMeeting.values()) {
+    lijst.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+  }
+} else {
+  console.log(`Let op: sessies van ${SEIZOEN} niet op kunnen halen (${alleSessies?.fout})\n`);
+}
+
+const sessiesVanWeekend = (r) => {
+  const m = meetingVan.get(String(r.race_key)) ?? meetingVan.get(String(r.quali_key));
+  return m === undefined ? [] : (perMeeting.get(m) ?? []);
+};
+
 const races = await sb(`races?season=eq.${SEIZOEN}&select=*&order=round`);
 const kijken = races.filter((r) =>
   !ALLEEN || String(r.name).toLowerCase().includes(ALLEEN.toLowerCase()));
@@ -98,7 +123,29 @@ for (const r of kijken) {
   console.log(`  opgeslagen: ${opgeslagen.size} coureurs`
     + `${r.drivers ? '' : '  (leeg — nog nooit opgehaald)'}`);
 
-  for (const [wat, key] of [['kwalificatie', r.quali_key], ['race', r.race_key]]) {
+  // Alle sessies van dit weekend, en welke de sync nu als bron zou pakken.
+  // Precies dit ontbrak hier toen ik in Madrid tot de verkeerde conclusie
+  // kwam: ik vergeleek alleen met de kwalificatie en de race, die allebei nog
+  // niet gereden waren en dus allebei nog de oude opgave van het seizoen
+  // bevatten. Ze kwamen keurig overeen met wat wij opgeslagen hadden, en dat
+  // zag eruit als "er is niets mis". De vrije trainingen van diezelfde
+  // vrijdag wisten het al wel.
+  const weekend = sessiesVanWeekend(r);
+  if (weekend.length) {
+    const bron = weekendBron(weekend, Date.now());
+    console.log(`  weekend: ${weekend.map((x) => `${x.session_name} ${x.session_key}`
+      + `${new Date(x.date_start).getTime() <= Date.now() ? '' : ' (moet nog)'}`).join(', ')}`);
+    console.log(`  de sync zou nu ${bron === null ? 'geen weekendsessie' : bron} gebruiken`);
+  }
+
+  const nakijken = [['kwalificatie', r.quali_key], ['race', r.race_key]];
+  for (const sessie of weekend) {
+    if (nakijken.some(([, k]) => String(k) === String(sessie.session_key))) continue;
+    if (new Date(sessie.date_start).getTime() > Date.now()) continue;
+    nakijken.unshift([sessie.session_name, sessie.session_key]);
+  }
+
+  for (const [wat, key] of nakijken) {
     if (!key) { console.log(`  ${wat}: geen session_key`); continue; }
     const rijen = await openf1(`drivers?session_key=${key}`);
     await wacht(900);

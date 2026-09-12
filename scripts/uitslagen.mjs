@@ -154,7 +154,48 @@ export function lijktAfgelast({ raceGevonden, deadline, nu = Date.now() }) {
  */
 export const VERVERS_VENSTER_DAGEN = 14;
 
-export function deelnemersUit(race, nu = Date.now()) {
+/**
+ * Welke sessie van dit weekend weet als laatste wie er echt rijdt?
+ *
+ * Dit is de kern van wat er in Madrid misging. Een sessie die nog niet
+ * begonnen is vult OpenF1 met de inschrijflijst van het seizoen, en die kan
+ * weken oud zijn. Pas als een sessie daadwerkelijk gereden wordt staat er in
+ * wie er in de auto zat. Op zaterdagochtend gaf OpenF1 dit:
+ *
+ *   Practice 1  (11362, vrijdag 11:30)  #22 TSU Racing Bulls   #30 LAW Red Bull
+ *   Practice 2  (11363, vrijdag 15:00)  #22 TSU Racing Bulls   #30 LAW Red Bull
+ *   Practice 3  (11364, zaterdag 10:30) #22 TSU Racing Bulls   #30 LAW Red Bull
+ *   Race        (11369, zondag  13:00)  #6  HAD Red Bull       #30 LAW Racing Bulls
+ *
+ * De vrije trainingen wisten het al vanaf vrijdagmiddag. Wij keken alleen
+ * naar de kwalificatie en de race, en die stonden allebei nog op de oude
+ * opgave — dus de app liet Hadjar kiezen die niet meedeed, en Tsunoda niet
+ * die wel meedeed. Niet omdat OpenF1 het niet wist, maar omdat wij het aan
+ * de verkeerde sessie vroegen.
+ *
+ * De regel: de laatste sessie die al begonnen is. Nog niet begonnen telt
+ * niet mee, want dat is precies de sessie met de oude opgave.
+ *
+ * Met één uitzondering: de eerste sessie van het weekend slaan we over. Dat
+ * is de enige sessie waar het veld met opzet afwijkt van het racveld —
+ * teams moeten daar een rookie in de auto zetten, en die rijdt de race niet.
+ * Hem meetellen zou een naam in de kiezer zetten die er zondag niet is. De
+ * tweede training is nog altijd vrijdagmiddag, ruim een dag voor de eerste
+ * deadline, dus dat kost geen enkele echte wissel.
+ */
+export function weekendBron(sessies, nu = Date.now()) {
+  const op = (sessies ?? [])
+    .map((s) => ({ key: s.session_key, start: new Date(s.date_start ?? null).getTime() }))
+    .filter((s) => s.key !== null && s.key !== undefined && Number.isFinite(s.start))
+    .sort((a, b) => a.start - b.start);
+  if (!op.length) return null;
+
+  const eerste = op[0].key;
+  const bruikbaar = op.filter((s) => s.start <= nu && s.key !== eerste);
+  return bruikbaar.length ? bruikbaar[bruikbaar.length - 1].key : null;
+}
+
+export function deelnemersUit(race, nu = Date.now(), sessies = []) {
   if (race.race_result) {
     // Gereden en gescoord: normaal gesproken klaar. sync.mjs ververst op het
     // moment dat de uitslag binnenkomt uit de racesessie.
@@ -170,7 +211,11 @@ export function deelnemersUit(race, nu = Date.now()) {
     return onbekend ? race.race_key : null;
   }
 
-  const sessie = race.quali_key ?? race.race_key ?? null;
+  // Eerst de sessies van dit weekend die al gereden zijn; die weten het het
+  // best. Weet sync.mjs ze niet (geen meeting gevonden, of het weekend moet
+  // nog helemaal beginnen), dan blijft de oude terugval staan: de opgave die
+  // bij de kwalificatie hoort. Beter een oude lijst dan geen lijst.
+  const sessie = weekendBron(sessies, nu) ?? race.quali_key ?? race.race_key ?? null;
   if (!sessie) return null;
   if (!(race.drivers ?? []).length) return sessie;
 
