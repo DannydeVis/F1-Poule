@@ -346,8 +346,23 @@ const UITSLAGVELDEN = ['quali_result', 'race_result', 'fastest_lap',
                        'fastest_pitstop', 'safety_cars', 'rode_vlag'];
 
 async function uitslagen(races) {
-  // OpenF1 rekent data als live tot 30 min na afloop. We wachten 45 min,
-  // dan is het historisch en vrij op te vragen.
+  // Wanneer mogen we een sessie gaan opvragen? Deze regel telt 45 minuten
+  // vanaf de START van de sessie, niet vanaf het einde — deadline_quali en
+  // deadline_race zijn allebei het begintijdstip. Er stond hier "OpenF1 rekent
+  // data als live tot 30 min na afloop, we wachten 45 min", en dat is iets
+  // heel anders: een kwalificatie duurt een uur en een race twee, dus na 45
+  // minuten is de sessie nog bezig.
+  //
+  // Dat is niet erg en met opzet zo gelaten: we vragen het gewoon te vroeg,
+  // krijgen een 404, en proberen het de volgende ronde opnieuw. Zo hebben we
+  // de uitslag op het vroegste moment dat OpenF1 hem vrijgeeft, zonder dat we
+  // hoeven te raden hoe lang een sessie duurde. Een rode vlag of een
+  // regenonderbreking maakt die duur namelijk onvoorspelbaar.
+  //
+  // Wat het wel betekent: "een kwartier na de kwalificatie" is geen belofte
+  // die deze code kan doen. Op zijn vroegst is het een halfuur na afloop —
+  // dus anderhalf uur na de start van een kwalificatie van een uur — en
+  // daarna hangt het af van of GitHub de geplande run aflevert.
   const grens = Date.now() - 45 * 60 * 1000;
   const rijp = (wanneer) => new Date(wanneer).getTime() < grens;
   let veranderd = 0;
