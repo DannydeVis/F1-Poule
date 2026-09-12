@@ -46,6 +46,13 @@ jobs:
       - name: Wat staat er in de kalender
         run: node scripts/controle-kalender.mjs
 
+      # Draait de sync echt zo vaak als de cron zegt? Nee, en dat is het
+      # punt: ingesteld op vier keer per uur, geleverd een stuk minder.
+      - name: Hoe vaak draait de sync echt
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/controle-sync.mjs
+
       - name: Kloppen de deelnemerslijsten nog
         if: inputs.coureurs != false
         env:
