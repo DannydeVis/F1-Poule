@@ -15,7 +15,7 @@
 
 import { maakControle } from './hulp.mjs';
 import { deelnemersUit, hoortNietInDeKalender, VERVERS_VENSTER_DAGEN,
-         rondeToewijzing, dubbeleRaces } from '../scripts/uitslagen.mjs';
+         weekendBron, rondeToewijzing, dubbeleRaces } from '../scripts/uitslagen.mjs';
 
 const { check, afronden } = maakControle('kalender en deelnemerslijst');
 
@@ -138,6 +138,97 @@ check('een race zonder geplande tijd wordt niet elk uur opnieuw opgehaald',
   deelnemersUit(race({ deadline_quali: null, deadline_race: null }), NU) === null);
 check('en een onleesbare datum ook niet',
   deelnemersUit(race({ deadline_quali: 'ergens in oktober', deadline_race: null }), NU) === null);
+
+
+// ------------------------------------------------------------------
+//  Madrid: de juiste lijst stond er al, wij vroegen het de verkeerde sessie
+// ------------------------------------------------------------------
+// "Hadjar is dit weekend weer uitgevallen en wordt vervangen door Lawson. En
+// Tsunoda komt erbij. Maar die kan ik niet kiezen."
+//
+// Dat lag niet aan OpenF1. Op zaterdagmiddag gaf die dit terug voor Madrid —
+// letterlijk overgenomen uit de log van scripts/verkennen.mjs:
+//
+//   Practice 1  11362  vrijdag  11:30   #22 TSU Racing Bulls  #30 LAW Red Bull
+//   Practice 2  11363  vrijdag  15:00   #22 TSU Racing Bulls  #30 LAW Red Bull
+//   Practice 3  11364  zaterdag 10:30   #22 TSU Racing Bulls  #30 LAW Red Bull
+//   Qualifying  11365  zaterdag 14:00   #22 TSU Racing Bulls  #30 LAW Red Bull
+//   Race        11369  zondag   13:00   #6  HAD Red Bull      #30 LAW Racing Bulls
+//
+// De vrije trainingen wisten het vanaf vrijdagmiddag. De racesessie was
+// zondag nog steeds niet begonnen en stond dus nog op de oude opgave van het
+// seizoen. Wij keken alleen naar quali_key en race_key, en zolang die twee
+// niet gereden waren stonden ze allebei op diezelfde oude opgave.
+const MADRID = [
+  { session_key: 11362, session_name: 'Practice 1', date_start: '2026-09-11T11:30:00+00:00' },
+  { session_key: 11363, session_name: 'Practice 2', date_start: '2026-09-11T15:00:00+00:00' },
+  { session_key: 11364, session_name: 'Practice 3', date_start: '2026-09-12T10:30:00+00:00' },
+  { session_key: 11365, session_name: 'Qualifying', date_start: '2026-09-12T14:00:00+00:00' },
+  { session_key: 11369, session_name: 'Race',       date_start: '2026-09-13T13:00:00+00:00' },
+];
+const op = (wanneer) => new Date(wanneer).getTime();
+
+check('vrijdagochtend, nog niets gereden: niets te halen uit het weekend',
+  weekendBron(MADRID, op('2026-09-11T09:00:00Z')) === null);
+
+// De eerste training telt niet mee. Daar moeten teams een rookie in de auto
+// zetten, en die rijdt de race niet — hem meetellen zet een naam in de kiezer
+// die er zondag niet is.
+check('tijdens de eerste training nog steeds niets: daar zit een rookie in',
+  weekendBron(MADRID, op('2026-09-11T12:00:00Z')) === null);
+
+check('vanaf de tweede training is dat de bron',
+  weekendBron(MADRID, op('2026-09-11T16:00:00Z')) === 11363);
+check('zaterdagochtend na de derde training schuift hij mee',
+  weekendBron(MADRID, op('2026-09-12T11:00:00Z')) === 11364);
+check('zaterdagmiddag na de kwalificatie ook',
+  weekendBron(MADRID, op('2026-09-12T16:00:00Z')) === 11365);
+
+// Dit is de kern. De racesessie is de laatste van het weekend, maar hij is
+// nog niet begonnen — en juist een sessie die nog niet begonnen is staat vol
+// met de oude opgave. Zou weekendBron() hem pakken, dan was de fix een
+// verslechtering: Hadjar terug in de kiezer, Tsunoda er weer uit.
+check('een sessie die nog moet komen telt niet mee, ook niet de race zelf',
+  weekendBron(MADRID, op('2026-09-12T16:00:00Z')) !== 11369);
+check('zondag ná de start is de racesessie wel de bron',
+  weekendBron(MADRID, op('2026-09-13T14:00:00Z')) === 11369);
+
+check('zonder sessies van het weekend valt er niets te kiezen',
+  weekendBron([], NU) === null && weekendBron(null, NU) === null
+    && weekendBron(undefined, NU) === null);
+check('een sessie zonder leesbare tijd telt niet mee',
+  weekendBron([{ session_key: 9, date_start: null },
+               { session_key: 8, date_start: 'zaterdagmiddag' }],
+              op('2026-09-13T14:00:00Z')) === null);
+
+// En zo komt het samen in deelnemersUit(): op zaterdagmiddag haalt Madrid
+// zijn lijst uit de kwalificatie die net gereden is, en niet uit de
+// racesessie met de oude opgave.
+const madrid = {
+  quali_key: 11365, race_key: 11369,
+  deadline_quali: '2026-09-12T14:00:00Z', deadline_race: '2026-09-13T13:00:00Z',
+  drivers: [{ nr: '6' }, { nr: '30' }], race_result: null,
+};
+check('Madrid ververst zaterdagmiddag uit de gereden kwalificatie',
+  deelnemersUit(madrid, op('2026-09-12T16:00:00Z'), MADRID) === 11365);
+check('en vrijdagmiddag uit de tweede vrije training, een dag voor de deadline',
+  deelnemersUit(madrid, op('2026-09-11T16:00:00Z'), MADRID) === 11363);
+check('zonder dat er al iets gereden is blijft het de oude terugval',
+  deelnemersUit(madrid, op('2026-09-11T09:00:00Z'), MADRID) === 11365);
+check('en zonder sessies van het weekend gedraagt hij zich als voorheen',
+  deelnemersUit(race(), NU, []) === 11357);
+
+// Het venster telt nog steeds: een weekend in december kost geen verzoeken,
+// ook al is er ergens anders in het seizoen iets gereden.
+check('het venster van veertien dagen blijft gelden',
+  deelnemersUit({ ...madrid, deadline_quali: dagen(VERVERS_VENSTER_DAGEN + 30),
+                  deadline_race: dagen(VERVERS_VENSTER_DAGEN + 31) },
+                NU, MADRID) === null);
+
+// En een gereden race blijft met rust, wat er ook in het weekend staat.
+check('een gescoorde race trekt zich niets van de weekendsessies aan',
+  deelnemersUit({ ...madrid, race_result: ['6', '30'] },
+                op('2026-09-13T18:00:00Z'), MADRID) === null);
 
 
 // ------------------------------------------------------------------

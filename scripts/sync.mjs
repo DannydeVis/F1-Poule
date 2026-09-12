@@ -232,6 +232,12 @@ async function deelnemers(sessionKey) {
       kleur: d.team_colour ? `#${d.team_colour}` : '#888888',
     });
   }
+  // Leeg is geen lijst. Nu we ook vrije trainingen als bron gebruiken kan het
+  // gebeuren dat OpenF1 een sessie wel kent maar er nog geen coureurs bij
+  // heeft. Zonder deze regel schrijft probeer() die lege lijst gewoon weg —
+  // leeg() vindt [] namelijk niet leeg — en dan staat er niemand meer in de
+  // kiezer waar eerst tweeëntwintig namen stonden.
+  if (!uniek.size) return null;
   return [...uniek.values()].sort((a, b) => a.team.localeCompare(b.team));
 }
 
@@ -263,12 +269,62 @@ async function probeer(patch, veld, ophalen, gemist) {
   }
 }
 
+/**
+ * Alle sessies van het seizoen, gegroepeerd per weekend.
+ *
+ * Eén verzoek voor het hele seizoen, niet één per race: dat is honderdtwintig
+ * rijen en het scheelt drieëntwintig verzoeken per sync-ronde.
+ *
+ * Waarom we dit nodig hebben staat bij weekendBron() in uitslagen.mjs: de
+ * kwalificatie- en racesessie staan vol met de inschrijflijst van het seizoen
+ * tot ze echt gereden worden, en de vrije trainingen weten het een dag eerder.
+ *
+ * Lukt het niet, dan geeft dit een lege map terug en valt deelnemersUit()
+ * terug op wat het altijd al deed. Een sync zonder deelnemerslijst is erger
+ * dan een sync met een oude.
+ */
+async function weekendSessies() {
+  let alles;
+  try {
+    alles = await openf1(`sessions?year=${SEIZOEN}`);
+    await wacht(700);
+  } catch (e) {
+    console.log(`  sessies van het seizoen niet op kunnen halen: ${e.message}`);
+    return { perMeeting: new Map(), perSessieKey: new Map() };
+  }
+
+  const perMeeting = new Map();
+  for (const s of alles ?? []) {
+    if (!perMeeting.has(s.meeting_key)) perMeeting.set(s.meeting_key, []);
+    perMeeting.get(s.meeting_key).push(s);
+  }
+
+  // De races-tabel kent alleen race_key en quali_key. Via die twee vinden we
+  // terug bij welk weekend een rij hoort, zonder er een kolom voor nodig te
+  // hebben.
+  const perSessieKey = new Map();
+  for (const [meeting, lijst] of perMeeting) {
+    for (const s of lijst) perSessieKey.set(String(s.session_key), meeting);
+  }
+  return { perMeeting, perSessieKey };
+}
+
+/** De sessies van het weekend waar deze race bij hoort. */
+function sessiesVanRace(race, weekenden) {
+  if (!weekenden?.perSessieKey) return [];
+  const meeting = weekenden.perSessieKey.get(String(race.race_key))
+    ?? weekenden.perSessieKey.get(String(race.quali_key));
+  return meeting === undefined ? [] : (weekenden.perMeeting.get(meeting) ?? []);
+}
+
 async function uitslagen(races) {
   // OpenF1 rekent data als live tot 30 min na afloop. We wachten 45 min,
   // dan is het historisch en vrij op te vragen.
   const grens = Date.now() - 45 * 60 * 1000;
   const rijp = (wanneer) => new Date(wanneer).getTime() < grens;
   let veranderd = 0;
+
+  const weekenden = await weekendSessies();
 
   for (const race of races) {
     const patch = {};
@@ -280,7 +336,7 @@ async function uitslagen(races) {
     // uit, een reserve stapt in, iemand wisselt van team. Dat stond hier
     // eerder als `if (!race.drivers ...)`, en dan bevriest de lijst voorgoed
     // op wat er de allereerste keer in stond.
-    const bron = deelnemersUit(race, Date.now());
+    const bron = deelnemersUit(race, Date.now(), sessiesVanRace(race, weekenden));
     if (bron) await probeer(patch, 'drivers', () => deelnemers(bron), gemist);
     if (!race.quali_result && race.quali_key && rijp(race.deadline_quali)) {
       await probeer(patch, 'quali_result', () => uitslag(race.quali_key), gemist);
