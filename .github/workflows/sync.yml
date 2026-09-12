@@ -1,15 +1,31 @@
 name: Uitslagen synchroniseren
 
 on:
-  # Elk uur. Was eerst elke 3 uur, maar GitHub Actions garandeert een
-  # geplande tijd niet — bij drukte (en dat is precies tijdens elke
-  # kwalificatie en race) kan een run een paar uur later starten dan
-  # gepland. Bij elke 3 uur duurde het dan soms 5 tot 6 uur voor een
-  # uitslag binnenkwam. Elk uur maakt zo'n vertraging minder erg voelen,
-  # zonder dat het iets extra's kost: bij niks nieuws doet de run toch
-  # niets.
+  # Vier keer per uur. Niet omdat het vier keer per uur hoeft, maar omdat
+  # GitHub een geplande tijd niet garandeert en er veel meer van wegvalt
+  # dan je zou denken.
+  #
+  # Dit stond op '0 * * * *' met erboven de aanname dat het dan ook elk uur
+  # draait. Nageteld over zes dagen klopte dat niet:
+  #
+  #     ingesteld        24 keer per dag
+  #     werkelijk        5 a 7 keer per dag
+  #     kortste gat      1u55
+  #     langste gat      4u59
+  #     gaten < 1 uur    geen enkele
+  #
+  # Er is dus niets veranderd toen dit van elke 3 uur naar elk uur ging:
+  # het was elke 2 tot 5 uur, en het bleef elke 2 tot 5 uur. GitHub laat
+  # geplande runs vallen bij drukte, en dat is precies tijdens een
+  # raceweekend.
+  #
+  # Vier pogingen per uur maakt de kans dat er eentje doorkomt groter. Een
+  # garantie is het niet — GitHub kan er net zo goed drie van de vier laten
+  # vallen — en dit is de enige knop die we hebben zonder een server erbij.
+  # Kosten zijn er niet: de repo is openbaar, dus Actions-minuten zijn
+  # gratis, en een run zonder nieuws is in een seconde of tien klaar.
   schedule:
-    - cron: '0 * * * *'
+    - cron: '*/15 * * * *'
 
   # Knop in het Actions-tabblad om hem handmatig te starten.
   workflow_dispatch:
