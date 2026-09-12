@@ -24,7 +24,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast,
-         deelnemersUit, hoortNietInDeKalender, rondeToewijzing, dubbeleRaces }
+         deelnemersUit, lijstDekt, hoortNietInDeKalender, rondeToewijzing, dubbeleRaces }
   from './uitslagen.mjs';
 import { maakAgenda } from './agenda.mjs';
 
@@ -353,7 +353,19 @@ async function uitslagen(races) {
       // rust. Dit is ook de lijst waarop de teamgenoot-duels gescoord worden,
       // dus een verouderde lijst scoort de duels op de verkeerde paren.
       if (raceGevonden) {
-        await probeer(patch, 'drivers', () => deelnemers(race.race_key), gemist);
+        // Maar niet blind. De racesessie stond het hele weekend nog op de
+        // oude opgave van het seizoen; heeft OpenF1 hem op dit moment nog
+        // niet bijgewerkt, dan zou hij de goede lijst uit de kwalificatie
+        // overschrijven met de verkeerde. Wie finisht stond aan de start,
+        // dus een lijst die de uitslag niet dekt is niet af — dan houden we
+        // wat we hebben en proberen we het volgend uur opnieuw.
+        await probeer(patch, 'drivers', async () => {
+          const lijst = await deelnemers(race.race_key);
+          if (lijstDekt(lijst, patch.race_result)) return lijst;
+          console.log(`  ronde ${race.round} ${race.name}: de lijst van de racesessie`
+            + ' dekt de uitslag niet, dus die nemen we niet over');
+          return null;
+        }, gemist);
       }
       // Alleen een 404 is bewijs. Een 429 betekent dat wij te snel vroegen.
       raceOntbreekt = !raceGevonden

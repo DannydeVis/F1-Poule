@@ -195,6 +195,27 @@ export function weekendBron(sessies, nu = Date.now()) {
   return bruikbaar.length ? bruikbaar[bruikbaar.length - 1].key : null;
 }
 
+/**
+ * Dekt deze deelnemerslijst de hele uitslag?
+ *
+ * Wie finisht, stond aan de start. Staat er in de uitslag een nummer dat
+ * niet in de lijst voorkomt, dan is die lijst niet compleet.
+ *
+ * Dezelfde redenering als bij de reparatie van Monza, maar andersom gebruikt:
+ * daar bewijst hij dat onze opgeslagen lijst kapot is, hier dat de lijst die
+ * OpenF1 ons aanbiedt dat is. Dat is nodig zodra de race gereden is, want dan
+ * halen we de lijst uit de rácesessie — en juist die sessie stond het hele
+ * weekend nog op de oude opgave. Heeft OpenF1 hem op dat moment nog niet
+ * bijgewerkt, dan zou hij de goede lijst die we net uit de kwalificatie
+ * hebben gehaald overschrijven met de verkeerde.
+ */
+export function lijstDekt(drivers, uitslag) {
+  if (!(drivers ?? []).length) return false;
+  if (!(uitslag ?? []).length) return true;
+  const kennen = new Set(drivers.map((d) => String(d.nr)));
+  return uitslag.every((nr) => kennen.has(String(nr)));
+}
+
 export function deelnemersUit(race, nu = Date.now(), sessies = []) {
   if (race.race_result) {
     // Gereden en gescoord: normaal gesproken klaar. sync.mjs ververst op het
