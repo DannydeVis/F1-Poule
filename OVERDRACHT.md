@@ -2762,3 +2762,88 @@ Danny mist Monaco (0 punten), Davy deed alles mee. In de stand staan ze allebei
 op 420. In het blok: Danny blijft 420 — zijn nul valt weg — en Davy zakt naar
 392, want hij levert zijn slechtste weekend van 28 in. Het vangnet geldt voor
 iedereen gelijk, anders is het een beloning voor wegblijven.
+
+---
+
+## Een uitslag die achteraf verandert
+
+"Belangrijk dat hij een dag na de race ook nog gesynchroniseerd wordt, omdat er
+wel eens achteraf wat veranderd."
+
+Dat deed de sync niet. De voorwaarde was letterlijk:
+
+    if (!race.race_result && race.race_key && rijp(race.deadline_race))
+
+Eén keer opgehaald, daarna nooit meer gekeken. Hetzelfde gold voor de
+kwalificatie en voor de vier losse uitslagen (`if (leeg(race.fastest_lap))`).
+Een tijdstraf die na afloop wordt uitgedeeld verandert de klassering, een
+diskwalificatie haalt iemand er helemaal uit, en een geschrapte
+kwalificatietijd schuift de grid op. Niets daarvan kwam ooit in de app terecht,
+terwijl het de punten van iedereen in de poule verandert.
+
+### Twee vensters, en waarom ze uren breed zijn
+
+`opnieuwNakijken()` in `scripts/uitslagen.mjs`:
+
+    2 tot 8 uur na de start    de race is net uit, de wedstrijdleiding doet
+                               zijn onderzoeken — hier valt het meeste
+    20 tot 32 uur na de start  "een dag later", waar een enkele beslissing en
+                               de meeste correcties in de gegevens landen
+
+Met opzet uren en geen minuten. GitHub levert een geplande run niet
+betrouwbaar af (zie hierboven), dus een venster van een kwartier zouden we
+regelmatig helemaal missen.
+
+### Wat een herkeuring kost, en wat niet
+
+Alleen de klassering wordt opnieuw opgehaald — dat is `session_result`, een
+klein antwoord. De snelste ronde en de pitstops komen uit `laps` en `pit`, en
+dat zijn de zwaarste antwoorden die OpenF1 geeft (elke ronde van elke coureur).
+Die worden alleen opnieuw opgehaald als de klassering ook echt geschoven is.
+
+En er wordt alleen weggeschreven wat werkelijk anders is (`zelfdeWaarde()`).
+Zonder dat zou elke herkeuring dezelfde uitslag terugschrijven en "bijgewerkt"
+melden — en dan is die melding niets meer waard op het moment dat er wél iets
+verandert. Verandert er wel iets, dan zegt de log wat er stond en wat er nu
+staat.
+
+### Drie dingen die deze wijziging zelf gevaarlijk maakten
+
+1. **`uitslag()` gaf `[]` terug bij een half antwoord**, en `leeg()` vindt `[]`
+   niet leeg. Zolang we alleen lege velden vulden was dat onzichtbaar; bij een
+   herkeuring zou één storing bij OpenF1 een complete klassering overschrijven
+   met niets. Geeft nu `null`.
+2. **Een korte lijst is geen uitslag.** `veiligeVervanging()` accepteert een
+   nieuwe klassering alleen als hij hooguit twee plaatsen korter is dan wat er
+   stond — een diskwalificatie haalt er één of twee uit, veel korter is een
+   storing.
+3. **Een 404 tijdens een herkeuring is geen afgelasting.** Dat gold als bewijs
+   dat een race niet doorgegaan was; bij een allang gereden race zou dat de hele
+   ronde voor iedereen wegzetten. Nu telt dat alleen als er nooit een uitslag
+   was.
+
+### Waarom de cron niet op raceweekenden staat
+
+Dat was de vraag, en het antwoord is dat cron de kalender niet kent. Het weekend
+zit daarom in `sync.mjs`, waar de kalender wél bekend is: `opnieuwNakijken()`
+bepaalt wanneer er iets na te kijken valt, en buiten het verversvenster haalt de
+sync niet eens de sessielijst van het seizoen op.
+
+Op de dagen filteren gaat bovendien mis. Uit `kalender.ics` van dit seizoen:
+
+    kwalificatie   23x zaterdag, 1x vrijdag  (Baku)
+    race           23x zondag,   1x zaterdag (Baku)
+    tijden         04:00 tot 21:00 UTC
+
+Baku schuift een hele dag op, en het tweede hercontrolevenster van een race om
+21:00 UTC valt op dinsdagochtend. Een cron van vrijdag tot en met zondag mist
+die allebei.
+
+### Wat hier niet aan te doen is
+
+"Een kwartier na de kwalificatie" is geen belofte die we kunnen doen. De sync
+begint te vragen vanaf 45 minuten na de start van een sessie, en OpenF1 geeft
+historische gegevens pas vrij 30 minuten na afloop — bij een kwalificatie van
+een uur is dat dus op zijn vroegst anderhalf uur na de start. Daarna hangt het
+af van of GitHub de geplande run aflevert, en dat is de onbetrouwbare schakel.
+`controle-sync.mjs` laat zien hoe goed dat gaat.

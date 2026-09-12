@@ -216,6 +216,79 @@ export function lijstDekt(drivers, uitslag) {
   return uitslag.every((nr) => kennen.has(String(nr)));
 }
 
+/**
+ * Wanneer kijken we een uitslag die we al hebben nóg een keer na?
+ *
+ * "Belangrijk dat hij een dag na de race ook nog gesynchroniseerd wordt, omdat
+ * er wel eens achteraf wat veranderd."
+ *
+ * Dat klopt, en de sync deed het niet. De voorwaarde was `if (!race.race_result
+ * ...)`: één keer opgehaald, daarna nooit meer gekeken. Een tijdstraf die na
+ * afloop wordt uitgedeeld verandert de klassering, een diskwalificatie haalt
+ * iemand er helemaal uit, en een geschrapte kwalificatietijd schuift de grid
+ * op. Niets daarvan kwam ooit in de app terecht, terwijl het wel de punten van
+ * iedereen in de poule verandert.
+ *
+ * Waarom vensters en niet gewoon "de eerste twee dagen elk kwartier": dat zijn
+ * bijna twaalfhonderd verzoeken aan OpenF1 per raceweekend voor iets wat
+ * hooguit twee keer verandert. De vensters staan waar de beslissingen vallen:
+ *
+ *   2 tot 8 uur na de start   de race is net afgelopen en de wedstrijdleiding
+ *                             doet zijn onderzoeken — hier valt het meeste
+ *   20 tot 32 uur na de start "een dag later", waar een enkele beslissing en
+ *                             de meeste correcties in de gegevens landen
+ *
+ * Ze zijn met opzet uren breed en niet minuten. GitHub levert een geplande run
+ * niet betrouwbaar af (zie controle-sync.mjs), dus een venster van een kwartier
+ * zouden we regelmatig helemaal missen.
+ */
+export const HERCONTROLE_VENSTERS = [[2, 8], [20, 32]];
+
+export function opnieuwNakijken(race, nu = Date.now()) {
+  if (!race?.race_key || race.afgelast) return false;
+
+  // Zelfde valkuil als overal hier: new Date(null) is 1 januari 1970, en dat
+  // valt in geen enkel venster maar levert wel een keurig getal op.
+  const wanneer = race.deadline_race ?? null;
+  if (wanneer === null || wanneer === undefined || wanneer === '') return false;
+  const start = new Date(wanneer).getTime();
+  if (!Number.isFinite(start)) return false;
+
+  const uren = (nu - start) / 3600e3;
+  return HERCONTROLE_VENSTERS.some(([van, tot]) => uren >= van && uren < tot);
+}
+
+/**
+ * Is dit werkelijk iets anders dan wat er al staat?
+ *
+ * Nodig zodra we uitslagen opnieuw ophalen: zonder deze controle schrijft elke
+ * herkeuring dezelfde uitslag terug, en dan is elke sync-ronde een schrijfactie
+ * en meldt de log "bijgewerkt" terwijl er niets gebeurd is.
+ */
+export function zelfdeWaarde(a, b) {
+  if (a === b) return true;
+  if (a === null || a === undefined || b === null || b === undefined) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/**
+ * Mag deze nieuwe uitslag de oude vervangen?
+ *
+ * Nodig zodra we uitslagen die er al staan opnieuw ophalen. Een half antwoord
+ * van OpenF1 — een tijdelijke storing, een sessie die opnieuw verwerkt wordt —
+ * zou anders een complete klassering vervangen door vijf namen, en dan klopt
+ * de stand van de hele poule niet meer terwijl er niets aan de hand was.
+ *
+ * Korter mag wel een beetje: een diskwalificatie haalt er iemand uit, en bij
+ * hoge uitzondering twee. Veel korter is geen uitslag maar een storing.
+ */
+export function veiligeVervanging(oud, nieuw, { marge = 2 } = {}) {
+  if (!Array.isArray(nieuw) || !nieuw.length) return false;
+  if (!Array.isArray(oud) || !oud.length) return true;
+  return nieuw.length >= oud.length - marge;
+}
+
 export function deelnemersUit(race, nu = Date.now(), sessies = []) {
   if (race.race_result) {
     // Gereden en gescoord: normaal gesproken klaar. sync.mjs ververst op het

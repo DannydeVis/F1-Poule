@@ -1,8 +1,8 @@
 name: Uitslagen synchroniseren
 
 on:
-  # Vier keer per uur. Niet omdat het vier keer per uur hoeft, maar omdat
-  # GitHub een geplande tijd niet garandeert en er veel meer van wegvalt
+  # Vier keer per uur, elke dag. Niet omdat het vier keer per uur hoeft, maar
+  # omdat GitHub een geplande tijd niet garandeert en er veel meer van wegvalt
   # dan je zou denken.
   #
   # Dit stond op '0 * * * *' met erboven de aanname dat het dan ook elk uur
@@ -24,6 +24,21 @@ on:
   # vallen — en dit is de enige knop die we hebben zonder een server erbij.
   # Kosten zijn er niet: de repo is openbaar, dus Actions-minuten zijn
   # gratis, en een run zonder nieuws is in een seconde of tien klaar.
+  #
+  # Waarom hier geen raceweekend in staat, terwijl dat de vraag was: cron kent
+  # de kalender niet. Het weekend zit daarom in sync.mjs, waar de kalender wél
+  # bekend is — opnieuwNakijken() bepaalt wanneer er iets te doen valt, en
+  # buiten het verversvenster haalt de sync niet eens de sessielijst op.
+  #
+  # En op de dagen filteren gaat mis. Uit kalender.ics van dit seizoen:
+  #
+  #     kwalificatie   23x zaterdag, 1x vrijdag  (Baku)
+  #     race           23x zondag,   1x zaterdag (Baku)
+  #     tijden         04:00 tot 21:00 UTC
+  #
+  # Baku schuift een hele dag op, en het tweede hercontrolevenster van een race
+  # om 21:00 UTC valt op dinsdagochtend. Een cron van vrijdag tot en met zondag
+  # mist die allebei, en dat is precies het weekend waarin het misgaat.
   schedule:
     - cron: '*/15 * * * *'
 

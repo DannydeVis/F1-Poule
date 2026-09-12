@@ -24,7 +24,8 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast,
-         deelnemersUit, lijstDekt, hoortNietInDeKalender, rondeToewijzing, dubbeleRaces }
+         deelnemersUit, lijstDekt, opnieuwNakijken, zelfdeWaarde, veiligeVervanging,
+         hoortNietInDeKalender, rondeToewijzing, dubbeleRaces }
   from './uitslagen.mjs';
 import { maakAgenda } from './agenda.mjs';
 
@@ -213,10 +214,32 @@ async function streepDoor(nep) {
 /** Volledige uitslag als array van coureurnummers, op volgorde. */
 async function uitslag(sessionKey) {
   const rijen = await openf1(`session_result?session_key=${sessionKey}`);
-  return rijen
+  const op = rijen
     .filter((r) => typeof r.position === 'number')
     .sort((a, b) => a.position - b.position)
     .map((r) => String(r.driver_number));
+  // Een lege lijst is geen uitslag. leeg() vindt [] namelijk niet leeg, dus
+  // zonder deze regel schrijft de sync "de race is gereden en niemand stond
+  // erin" weg zodra OpenF1 een half antwoord geeft — en bij een herkeuring
+  // overschrijft dat een klassering die gewoon goed was.
+  return op.length ? op : null;
+}
+
+/**
+ * Een uitslag ophalen die een bestaande mag vervangen — of niet.
+ *
+ * Zie veiligeVervanging(): bij een herkeuring is een veel kortere lijst geen
+ * diskwalificatie maar een storing, en die mag een goede klassering niet
+ * wegschrijven. null betekent "niets bruikbaars", en dan laat probeer() het
+ * veld met rust.
+ */
+async function nieuweUitslag(sessionKey, huidig, waar) {
+  const nieuw = await uitslag(sessionKey);
+  if (nieuw === null || veiligeVervanging(huidig, nieuw)) return nieuw;
+  console.log(`  ${waar}: OpenF1 geeft ${nieuw.length} plaatsen terug waar er`
+    + ` ${huidig.length} stonden — dat is geen uitslag maar een storing, dus`
+    + ' wat er staat blijft staan');
+  return null;
 }
 
 /** Deelnemerslijst met teamkleuren, zodat de frontend geen grid hardcodeert. */
@@ -317,6 +340,11 @@ function sessiesVanRace(race, weekenden) {
   return meeting === undefined ? [] : (weekenden.perMeeting.get(meeting) ?? []);
 }
 
+// De velden waar punten aan hangen. Verandert hier iets nadat het er al stond,
+// dan verschuift de stand van de hele poule en hoort dat hard in de log.
+const UITSLAGVELDEN = ['quali_result', 'race_result', 'fastest_lap',
+                       'fastest_pitstop', 'safety_cars', 'rode_vlag'];
+
 async function uitslagen(races) {
   // OpenF1 rekent data als live tot 30 min na afloop. We wachten 45 min,
   // dan is het historisch en vrij op te vragen.
@@ -324,7 +352,16 @@ async function uitslagen(races) {
   const rijp = (wanneer) => new Date(wanneer).getTime() < grens;
   let veranderd = 0;
 
-  const weekenden = await weekendSessies();
+  // De sessies van het seizoen alleen ophalen als er ook echt een race is die
+  // zijn deelnemerslijst mag verversen. Buiten een raceweekend is dat niemand,
+  // en sinds de sync elk kwartier draait is één verzoek per ronde er 96 per
+  // dag. deelnemersUit() met een lege sessielijst geeft precies het oude
+  // antwoord, dus dit is een goedkope voorcontrole en geen tweede regel.
+  const iemandWil = races.some((r) => deelnemersUit(r, Date.now(), []) !== null);
+  const weekenden = iemandWil
+    ? await weekendSessies()
+    : { perMeeting: new Map(), perSessieKey: new Map() };
+  if (!iemandWil) console.log('  geen race in het verversvenster, sessies niet opgehaald');
 
   for (const race of races) {
     const patch = {};
@@ -338,21 +375,30 @@ async function uitslagen(races) {
     // op wat er de allereerste keer in stond.
     const bron = deelnemersUit(race, Date.now(), sessiesVanRace(race, weekenden));
     if (bron) await probeer(patch, 'drivers', () => deelnemers(bron), gemist);
-    if (!race.quali_result && race.quali_key && rijp(race.deadline_quali)) {
-      await probeer(patch, 'quali_result', () => uitslag(race.quali_key), gemist);
+    // Vlak na de race en een dag erna kijken we alles nog een keer na, ook wat
+    // we al hebben. Zie opnieuwNakijken(): een tijdstraf of een geschrapte
+    // ronde verandert de klassering achteraf, en dat is de punten van iedereen
+    // in de poule. Wat er niet van verandert wordt verderop weer uit de patch
+    // gehaald, dus dit kost geen enkele schrijfactie extra.
+    const herkeuring = opnieuwNakijken(race, Date.now());
+
+    if ((!race.quali_result || herkeuring) && race.quali_key && rijp(race.deadline_quali)) {
+      await probeer(patch, 'quali_result', () => nieuweUitslag(race.quali_key,
+        race.quali_result, `ronde ${race.round} ${race.name} kwalificatie`), gemist);
     }
     // Of de race-uitslag er is, houden we apart bij: als OpenF1 hem niet
     // heeft is dat straks het bewijs dat de race is afgelast.
     let raceGevonden = !!race.race_result;
     let raceOntbreekt = false;
-    if (!race.race_result && race.race_key && rijp(race.deadline_race)) {
-      await probeer(patch, 'race_result', () => uitslag(race.race_key), gemist);
-      raceGevonden = !!patch.race_result;
+    if ((!race.race_result || herkeuring) && race.race_key && rijp(race.deadline_race)) {
+      await probeer(patch, 'race_result', () => nieuweUitslag(race.race_key,
+        race.race_result, `ronde ${race.round} ${race.name} race`), gemist);
+      raceGevonden = !!patch.race_result || !!race.race_result;
       // Precies nu, en maar één keer: de rácesessie is de enige lijst die
       // zegt wie er echt gereden heeft. Daarna laat deelnemersUit() hem met
       // rust. Dit is ook de lijst waarop de teamgenoot-duels gescoord worden,
       // dus een verouderde lijst scoort de duels op de verkeerde paren.
-      if (raceGevonden) {
+      if (raceGevonden && !race.race_result) {
         // Maar niet blind. De racesessie stond het hele weekend nog op de
         // oude opgave van het seizoen; heeft OpenF1 hem op dit moment nog
         // niet bijgewerkt, dan zou hij de goede lijst uit de kwalificatie
@@ -368,8 +414,32 @@ async function uitslagen(races) {
         }, gemist);
       }
       // Alleen een 404 is bewijs. Een 429 betekent dat wij te snel vroegen.
-      raceOntbreekt = !raceGevonden
+      // En alleen als we nog nooit een uitslag hadden: bij een herkeuring zou
+      // een OpenF1 die even hikt een allang gereden race als afgelast
+      // wegzetten, en dan is de hele ronde voor iedereen weg.
+      raceOntbreekt = !raceGevonden && !race.race_result
         && gemist.some((g) => g.startsWith('race_result') && g.includes('404'));
+    }
+
+    // Alleen als de klassering echt geschoven is halen we ook de vier losse
+    // uitslagen opnieuw op. Die komen uit laps/ en pit/, en dat zijn de
+    // zwaarste antwoorden die OpenF1 geeft — elke ronde van elke coureur. Die
+    // twee dagen lang elk kwartier opvragen voor iets wat hooguit één keer
+    // verandert is onbeleefd tegen een gratis API, en het levert niets op.
+    const klasseringAnders =
+      ('race_result'  in patch && !zelfdeWaarde(patch.race_result,  race.race_result))
+      || ('quali_result' in patch && !zelfdeWaarde(patch.quali_result, race.quali_result));
+    // Alleen melden als er ook echt iets stond dat verschoven is. Bij de
+    // eerste keer ophalen is klasseringAnders óók waar — er stond niets en nu
+    // wel — en dan zou de log elke normale race als "geschoven" aankondigen.
+    const echtGeschoven = herkeuring && (
+      ('race_result' in patch && !leeg(race.race_result)
+        && !zelfdeWaarde(patch.race_result, race.race_result))
+      || ('quali_result' in patch && !leeg(race.quali_result)
+        && !zelfdeWaarde(patch.quali_result, race.quali_result)));
+    if (echtGeschoven) {
+      console.log(`  ronde ${race.round} ${race.name}: de klassering is geschoven,`
+        + ' dus de snelste ronde, pitstop, safety cars en rode vlag ook opnieuw');
     }
 
     // Een race die er een week na dato nog steeds niet is, is niet doorgegaan.
@@ -384,30 +454,62 @@ async function uitslagen(races) {
     // De vier losse uitslagen komen allemaal uit de race zelf. Bij een
     // afgelaste race valt er niets op te halen, dus die slaan we over.
     if (race.race_key && rijp(race.deadline_race) && !race.afgelast && !raceOntbreekt) {
-      if (leeg(race.fastest_lap)) {
+      if (leeg(race.fastest_lap) || klasseringAnders) {
         await probeer(patch, 'fastest_lap',
           async () => snelsteRonde(await openf1(`laps?session_key=${race.race_key}`)), gemist);
       }
-      if (leeg(race.fastest_pitstop)) {
+      if (leeg(race.fastest_pitstop) || klasseringAnders) {
         await probeer(patch, 'fastest_pitstop',
           async () => snelstePitstop(await openf1(`pit?session_key=${race.race_key}`)), gemist);
       }
       // Safety cars en rode vlag komen uit dezelfde lijst berichten, dus die
       // halen we één keer op als er iets van de twee nog ontbreekt.
-      if (leeg(race.safety_cars) || leeg(race.rode_vlag)) {
+      if (leeg(race.safety_cars) || leeg(race.rode_vlag) || klasseringAnders) {
         try {
           const berichten = await openf1(`race_control?session_key=${race.race_key}`);
           await wacht(700);
-          if (leeg(race.safety_cars)) patch.safety_cars = telSafetyCars(berichten);
-          if (leeg(race.rode_vlag))   patch.rode_vlag   = hadRodeVlag(berichten);
+          if (leeg(race.safety_cars) || klasseringAnders) patch.safety_cars = telSafetyCars(berichten);
+          if (leeg(race.rode_vlag)   || klasseringAnders) patch.rode_vlag   = hadRodeVlag(berichten);
         } catch (e) {
           gemist.push(`safety_cars/rode_vlag (${e.message})`);
         }
       }
     }
 
+    // "Nog niets" en "niet opnieuw kunnen nakijken" zijn twee verschillende
+    // berichten. Sinds we uitslagen die er al staan opnieuw ophalen zou alles
+    // op één hoop anders melden dat er "nog niets" is voor een race die al
+    // weken gescoord is.
     if (gemist.length) {
-      console.log(`  ronde ${race.round} ${race.name}: nog niets voor ${gemist.join(', ')}`);
+      const veldVan = (g) => g.split(' ')[0];
+      const nieuwe = gemist.filter((g) => leeg(race[veldVan(g)]));
+      const bekende = gemist.filter((g) => !leeg(race[veldVan(g)]));
+      if (nieuwe.length) {
+        console.log(`  ronde ${race.round} ${race.name}: nog niets voor ${nieuwe.join(', ')}`);
+      }
+      if (bekende.length) {
+        console.log(`  ronde ${race.round} ${race.name}: niet opnieuw kunnen nakijken:`
+          + ` ${bekende.join(', ')} — wat er staat blijft staan`);
+      }
+    }
+
+    // Alleen wegschrijven wat echt anders is. Zonder dit schrijft elke
+    // herkeuring dezelfde uitslag terug en meldt de log "bijgewerkt" terwijl
+    // er niets gebeurd is — en dan is die melding niets meer waard op het
+    // moment dat er wél iets verandert.
+    for (const veld of Object.keys(patch)) {
+      if (!zelfdeWaarde(patch[veld], race[veld])) {
+        // Dit is het geval waar de herkeuring voor bestaat, en het is groot
+        // nieuws: de punten van iedereen in de poule schuiven mee. Dus zegt de
+        // log wat er stond en wat er nu staat, niet alleen dát het veranderde.
+        if (UITSLAGVELDEN.includes(veld) && !leeg(race[veld])) {
+          console.log(`  ronde ${race.round} ${race.name}: LET OP, ${veld} is achteraf`
+            + ` veranderd — was ${JSON.stringify(race[veld])},`
+            + ` wordt ${JSON.stringify(patch[veld])}`);
+        }
+        continue;
+      }
+      delete patch[veld];
     }
     if (Object.keys(patch).length === 0) continue;
 
