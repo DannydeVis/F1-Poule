@@ -25,6 +25,25 @@ on:
   # Kosten zijn er niet: de repo is openbaar, dus Actions-minuten zijn
   # gratis, en een run zonder nieuws is in een seconde of tien klaar.
   #
+  # BIJGEWERKT de dag na deze wijziging: controle-sync.mjs liet zien dat het
+  # niet hielp. Van 19:44 tot 06:31 uur — bijna twaalf uur na het instellen
+  # van deze cron — kwamen er precies vier runs door, met gaten tot 5u15. Dat
+  # is niet beter dan de oude '0 * * * *'.
+  #
+  # De reden staat in GitHub's eigen community-discussies (community#201738,
+  # community#185355): nieuwe accounts en repo's zonder opgebouwde
+  # "trust score" komen in een laagprioritaire wachtrij terecht die een paar
+  # keer per dag geleegd wordt, ongeacht welke cron er staat. Deze repo is
+  # sinds 24 augustus 2026 in gebruik — precies het profiel waar dat op
+  # slaat. Een fijnere cron kan dat plafond niet doorbreken; vaker vragen dan
+  # dit heeft dus geen zin totdat GitHub deze repo anders indeelt.
+  #
+  # Wat wél helpt, en waar deze cron nu voor dient: elke keer dat GitHub een
+  # run wél oppakt is de kans groot dat het toevallig in een van de
+  # hercontrolevensters van opnieuwNakijken() valt (die zijn met opzet 6 tot
+  # 12 uur breed). De vensters zijn dus niet naast dit probleem gebouwd — ze
+  # zijn de manier waarop de sync dit probleem overleeft.
+  #
   # Waarom hier geen raceweekend in staat, terwijl dat de vraag was: cron kent
   # de kalender niet. Het weekend zit daarom in sync.mjs, waar de kalender wél
   # bekend is — opnieuwNakijken() bepaalt wanneer er iets te doen valt, en
