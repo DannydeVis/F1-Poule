@@ -2847,3 +2847,36 @@ historische gegevens pas vrij 30 minuten na afloop — bij een kwalificatie van
 een uur is dat dus op zijn vroegst anderhalf uur na de start. Daarna hangt het
 af van of GitHub de geplande run aflevert, en dat is de onbetrouwbare schakel.
 `controle-sync.mjs` laat zien hoe goed dat gaat.
+
+---
+
+## Waarom vaker vragen niet hielp
+
+De dag nadat de cron van elk uur naar elk kwartier ging (#56), liet
+`controle-sync.mjs` zien dat er niets veranderd was: van 19:44 tot 06:31 uur
+kwamen er precies vier runs door, met een gat tot 5u15. Dat is niet beter dan
+de oude instelling.
+
+De oorzaak staat in GitHub's eigen community-discussies
+([community#201738](https://github.com/orgs/community/discussions/201738),
+[community#185355](https://github.com/orgs/community/discussions/185355)):
+nieuwe accounts en repo's zonder opgebouwde "trust score" komen in een
+laagprioritaire wachtrij die een paar keer per dag geleegd wordt — ongeacht
+welke cron erin staat. Deze repo bestaat sinds 24 augustus 2026, precies het
+profiel waar dat op slaat. Een fijnere cron doorbreekt dat plafond niet.
+
+Dit is dus geen bug om op te lossen, en er is verder omhoogschroeven van de
+cron ook niet zinvol. Het verklaart wel waarom de hercontrolevensters in
+`opnieuwNakijken()` bewust 6 tot 12 uur breed zijn gemaakt: die vensters zijn
+niet extra voorzichtig naast dit probleem gebouwd, ze zijn de manier waarop de
+sync dit overleeft. Zolang GitHub een paar keer per dag wél een run oppakt —
+en dat gebeurt, gemiddeld 5 à 7 keer — valt die met een marge van dat formaat
+bijna altijd binnen een venster.
+
+Twee dingen die hier wel bij zouden helpen, mocht het ooit nodig zijn: de
+trust score van een repo/account bouwt op met de tijd en met activiteit, dus
+dit kan vanzelf verbeteren; en een externe pinger (een gratis dienst als
+cron-job.org die op tijd de GitHub API aanroept om de workflow te starten)
+omzeilt GitHub's eigen scheduler helemaal. Dat laatste is nu niet gedaan,
+omdat het een extra afhankelijkheid toevoegt voor een probleem dat de brede
+vensters al opvangen.
