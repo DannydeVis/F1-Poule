@@ -734,6 +734,31 @@ const VAN_INLOGLINK = (() => {
   } catch { return false; }
 })();
 
+// Komen we terug van Google of een maillink, maar dan mét een foutmelding in
+// plaats van een geldige sleutel? Dat gebeurt bijvoorbeeld als dit
+// Google-account al aan een andere speler hangt: Supabase stuurt dan geen
+// `code` of `access_token` terug, maar `error`/`error_description` in de
+// adresbalk (als query- of als hash-parameter, vandaar dat hier allebei
+// gecontroleerd worden, net als bij VAN_INLOGLINK hierboven).
+//
+// Zonder deze controle merkt niemand daar iets van: VAN_INLOGLINK is dan
+// gewoon false, en de app laat een leeg beginscherm zien alsof je nooit op
+// de knop geklikt hebt. uitlegAuth() verderop in dit bestand kent dit soort
+// fouten al goed genoeg om ze uit te leggen ("Dat Google-account hoort al
+// bij een speler...") — hij werd tot nu toe alleen nooit aangeroepen voor een
+// fout die pas ná de omweg via Google terugkomt, in plaats van in de
+// foutmelding van de aanroep zelf.
+const OAUTH_FOUT_UIT_LINK = (() => {
+  try {
+    const zoek = new URLSearchParams(location.search);
+    const hash = new URLSearchParams(String(location.hash).replace(/^#/, ''));
+    const code = hash.get('error_code') || zoek.get('error_code')
+      || hash.get('error') || zoek.get('error');
+    if (!code) return null;
+    return { code, message: hash.get('error_description') || zoek.get('error_description') || '' };
+  } catch { return null; }
+})();
+
 let db = null;
 if (!DEMO) {
   const { createClient } = await import(
@@ -4485,6 +4510,16 @@ function toonStart() {
 // ============================================================
 //  Start
 // ============================================================
+
+// Eerst de foutmelding uit de adresbalk, vóór alles hieronder: dit moet
+// gebeurd zijn voordat er een render is, anders komt de speler eerst een
+// glimp van iets anders tegen. En de adresbalk opschonen kan niet wachten
+// tot toonStart() dat toch al doet — DEMO slaat toonStart() soms over, en
+// een herlaadactie zou anders dezelfde oude fout opnieuw laten zien.
+if (OAUTH_FOUT_UIT_LINK) {
+  S.melding = uitlegAuth(OAUTH_FOUT_UIT_LINK);
+  vergeetLinkCode();
+}
 
 if (DEMO) {
   await laad();
