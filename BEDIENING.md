@@ -27,7 +27,7 @@ vinkjes en heeft het geen zin:
 De huidige opzet stapelt schermen met een Terug-knop. Dat houdt op zodra
 weekendwinnaars, duels en handmatige invoer erbij komen.
 
-Drie tabs, vast onderin beeld:
+Vier tabs, vast onderin beeld:
 
 ```
 ┌─────────────────────────────────────┐
@@ -35,7 +35,7 @@ Drie tabs, vast onderin beeld:
 │           schermruimte              │
 │                                     │
 ├─────────────────────────────────────┤
-│   Races      Stand       Poule      │
+│ Races    Stand    Poule   Profiel   │
 └─────────────────────────────────────┘
 ```
 
@@ -58,8 +58,14 @@ Bovenaan de knop **Kopieer voor WhatsApp**.
 ### Poule
 Leden, poulecode, uitnodiglink met deelknop, en de instellingen. Voor de
 poulebaas staat hier ook het beheergedeelte: welke vragen meedoen, de
-omschrijving van de poule. Verder je eigen link (zie §4) en, onderaan, je
-andere poules om naar over te stappen.
+omschrijving van de poule. Onderaan je andere poules om naar over te stappen.
+
+### Profiel
+Alles wat over jou gaat, niet over de poule: als wie je hier speelt, je
+account koppelen aan een mailadres of Google (zie §7), je eigen link om
+jezelf naar een ander toestel mee te nemen (zie §4), wat de app van je weet
+en hoe je dat weghaalt (zie §12), en — alleen als er een weg terug is —
+uitloggen.
 
 ---
 
@@ -124,7 +130,7 @@ maak jezelf aan als nieuwe speler.
 De app weet alleen per toestel wie je bent, dus wie op zijn telefoon én op zijn
 laptop meedoet maakt zichzelf twee keer aan en ziet zijn punten over twee
 spelers verdeeld. Deze link zet je op het tweede toestel meteen als dezelfde
-speler neer. Hij staat onder Poule, met de waarschuwing erbij: wie hem heeft
+speler neer. Hij staat onder Profiel, met de waarschuwing erbij: wie hem heeft
 speelt onder jouw naam.
 
 Staat de speler uit de link niet (meer) in de poule, dan gedraagt hij zich als
@@ -253,7 +259,7 @@ niet als de policies dichtgaan.
 
 ### Je account meenemen (optioneel)
 
-Onder **Poule** staat "je account meenemen". Daar koppel je **Google** of een
+Onder **Profiel** staat "je account meenemen". Daar koppel je **Google** of een
 **mailadres** aan je anonieme account. Op een tweede toestel kies je op het
 beginscherm de bijbehorende inlogknop en ben je daar meteen dezelfde speler,
 zonder de poulecode.
@@ -551,7 +557,7 @@ Twee dingen om te weten:
 
 ## 12. Wat de app van je weet
 
-Onder **Poule** staat een dichtgeklapt blok "wat de app van je weet". Daarin
+Onder **Profiel** staat een dichtgeklapt blok "wat de app van je weet". Daarin
 staat kort wat er bewaard wordt en hoe je het weer weg krijgt. Sinds er
 mailadressen aan accounts kunnen hangen slaat de app een persoonsgegeven op, en
 dan hoort dat er te staan.
@@ -594,6 +600,25 @@ sleutel hoort nooit in de frontend.
 Was je poulebaas en kies je "alles", dan raakt de poule zijn eigenaar kwijt in
 plaats van te blijven wijzen naar een speler die niet meer bestaat. Daarna mag
 elk lid hem beheren, net als de poules van vóór het aanmaakscherm.
+
+### Uitloggen: alleen als er een weg terug is
+
+Onder **Profiel** staat, naast de twee manieren om weg te gaan, ook gewoon
+**Uitloggen** — maar alleen als `kanTerugkomen()` waar is, dus als er een
+mailadres of Google-account aan hangt. Zonder dat zou uitloggen een val zijn:
+je speler blijft aan het oude account hangen (anders dan bij "Mijn account
+verwijderen", dat `user_id` expliciet leegmaakt), en zonder gekoppeld account
+is er geen inloglink die je daar ooit nog bij terugbrengt. Staat de knop er
+niet, dan legt de tekst ernaast uit waarom, en wat je eerst moet doen.
+
+Uitloggen zelf is niet-destructief: `auth.signOut()` maakt alleen de sessie in
+deze browser ongeldig, en dit toestel vergeet met welke speler het je
+associeerde (dezelfde opruiming als bij accountverwijdering, zie
+`vergeetMijOpDitToestel()`). De speler, zijn punten en zijn `user_id` in de
+database blijven precies zoals ze waren — de weg terug is "Inloggen met
+Google" of "Inloggen met je mailadres" op het beginscherm, niet je naam
+opnieuw aanklikken in de spelerslijst (dat geeft nu netjes "hoort bij een
+ander toestel", precies zoals bij elk ander toestel dat al bij iemand hoort).
 
 ### Twee dingen die jij nog moet invullen
 

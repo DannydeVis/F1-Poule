@@ -2281,7 +2281,7 @@ function render() {
   toonApp();
 }
 
-const NAVNAMEN = { races:'Races', stand:'Stand', poule:'Poule' };
+const NAVNAMEN = { races:'Races', stand:'Stand', poule:'Poule', profiel:'Profiel' };
 
 function toonApp() {
   onthoudScherm();
@@ -2335,6 +2335,7 @@ function toonApp() {
           <section class="kol links">${
             S.weergave === 'stand' ? standPagina(rijen)
             : S.weergave === 'poule' ? poulePagina(rijen)
+            : S.weergave === 'profiel' ? profielPagina()
             : racesPagina(volgend)}</section>
           <section class="kol rechts">${
             detail ? raceDetailKop() : nevenPaneel(rijen)}</section>
@@ -2369,6 +2370,7 @@ function toonApp() {
   knoopMail();
   knoopPrivacy();
   knoopLosmaken();
+  knoopUitloggen();
   const wissel = app.querySelector('#wissel');
   if (wissel) wissel.onclick = () => { vergeet(S.poule.id); S.ik = null; render(); };
   const anders = app.querySelector('#anderePoule');
@@ -2688,14 +2690,71 @@ function poulePagina(rijen) {
       || `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
       <b>1</b> twee plekken ernaast.</div>
-    ${mailBlok()}
-    ${eigenLinkBlok()}
     ${agendaBlok()}
-    ${privacyBlok()}
     ${omschrijvingBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}
     <button class="knop klein" id="wissel">Speler wisselen</button>`;
+}
+
+// ---- profiel: alles wat over jou gaat, niet over de poule ---
+// Eerder stond dit verspreid onder Poule, tussen de spelerslijst en de
+// vragenset — en stond op het beginscherm nog gewoon "Inloggen met..." klaar
+// terwijl je hier allang zat. Eén plek voor wie je bent, hoe je terugkomt, en
+// hoe je weggaat, los van de poule-instellingen die alleen de poulebaas ziet.
+function profielPagina() {
+  if (!S.ik) return '';
+  return `
+    <h1 class="middel smalkop">Profiel</h1>
+    <p class="zacht" style="margin:-10px 0 0">Je speelt hier als
+      <b>${esc(S.ik.naam)}</b>.</p>
+    ${uitlogBlok()}
+    ${mailBlok()}
+    ${eigenLinkBlok()}
+    ${privacyBlok()}`;
+}
+
+// Uitloggen bestond met opzet niet: zonder een gekoppeld mailadres of
+// Google-account is er geen weg terug naar je speler, en dat is een valkuil
+// verkopen als knop. Nu je account wél gekoppeld kan zijn, mag de knop er
+// zijn — maar alleen dan. kanTerugkomen() is precies de voorwaarde die dat
+// verschil maakt.
+function uitlogBlok() {
+  if (!mijnUid) return '';
+  const kop = `<div class="scheiding"></div><span class="label">uitloggen</span>`;
+  if (!kanTerugkomen()) {
+    return `${kop}
+      <p class="zacht" style="margin:0">Kan nog niet: zonder gekoppeld
+        mailadres of Google-account is er hierna geen weg terug naar
+        ${esc(S.ik.naam)} op dit toestel. Koppel eerst een account
+        hierboven.</p>`;
+  }
+  const via = mijnGoogle() ? 'Google' : 'je mailadres';
+  return `${kop}
+    <p class="zacht" style="margin:0">Dit toestel vergeet daarna wie je bent.
+      Terugkomen kan met "Inloggen met ${esc(via)}" op het beginscherm.</p>
+    <button class="knop klein" id="uitloggen">Uitloggen</button>`;
+}
+
+function knoopUitloggen() {
+  const knop = app.querySelector('#uitloggen');
+  if (!knop) return;
+  knop.onclick = async () => {
+    if (knop.dataset.zeker !== 'ja') {
+      knop.dataset.zeker = 'ja';
+      knop.textContent = 'Zeker weten?';
+      setTimeout(() => {
+        if (!knop.isConnected) return;
+        knop.dataset.zeker = ''; knop.textContent = 'Uitloggen';
+      }, 6000);
+      return;
+    }
+    knop.disabled = true;
+    await db.auth.signOut().catch(() => {});
+    zetAccount(null);
+    vergeetMijOpDitToestel();
+    location.reload();
+  };
 }
 
 // Een speler in de lijst onder Poule. Voor de poulebaas staat er soms één
@@ -4506,6 +4565,17 @@ function watIsDitBlok() {
 // niets te zoeken, die typen gewoon hun poulecode.
 function inlogBlok() {
   if (DEMO) return '';
+  // Dit toestel is al ergens aan gekoppeld: nog een keer "inloggen met..."
+  // aanbieden zou vragen om in te loggen op het account waar je al in zit.
+  if (kanTerugkomen()) {
+    const via = mijnGoogle() ? 'Google' : 'je mailadres';
+    return `<div class="scheiding"></div>
+      <div class="veldblok">
+        <p class="zacht" style="margin:0">Je bent al ingelogd, als
+          <b>${esc(googleMail() ?? via)}</b>. Vul hierboven de poulecode in
+          om bij een andere poule te komen.</p>
+      </div>`;
+  }
   if (S.inlog.gestuurd) {
     return `<div class="scheiding"></div>
       <div class="veldblok">

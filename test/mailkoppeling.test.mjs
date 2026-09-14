@@ -36,12 +36,12 @@ const meedoenAls = async (naam) => {
 
 // --- toestel 1: meespelen en een mailadres koppelen ------------------------
 await meedoenAls('Danny');
-await page.click('[data-weergave="poule"]');
+await page.click('[data-weergave="profiel"]');
 await page.waitForSelector('#mailopen');
 // Google staat er sinds kort als eerste keuze; de mailweg is de tweede knop.
 // Dat die er nog steeds is, is het punt: wie geen Google wil of heeft mag niet
 // buiten de boot vallen.
-check('onder Poule kun je nog steeds voor een mailadres kiezen',
+check('onder Profiel kun je nog steeds voor een mailadres kiezen',
   (await tekst('#mailopen')).includes('mailadres'), await tekst('#mailopen'));
 
 await page.click('#mailopen');
@@ -82,6 +82,9 @@ await page.click('[data-weergave="poule"]');
 await page.waitForSelector('.speler.zelf');
 check('en je bent nog steeds dezelfde speler',
   (await tekst('.speler.zelf .nm')) === 'Danny', await tekst('.speler.zelf .nm'));
+
+await page.click('[data-weergave="profiel"]');
+await page.waitForSelector('#eigenlink');
 check('het scherm zegt nu dat je account gekoppeld is',
   (await tekst('#app')).includes('Je account hangt aan danny@voorbeeld.nl'));
 
@@ -139,10 +142,9 @@ await page.goto(url);
 await meedoenAls('Logeergast');
 check('als logeergast speel je gewoon mee', (await speler('Logeergast')) !== null);
 
-await page.click('[data-weergave="poule"]');
-await page.waitForSelector('#inlogopen, #mailopen');
-// Uitloggen bestaat niet in de app; de weg terug naar jezelf is de inloglink.
-// Die vragen we hier aan vanaf het beginscherm.
+// Uitloggen zou hier ook kunnen, maar Logeergast is nooit gekoppeld
+// geweest — dus is de weg terug naar Danny de inloglink, aangevraagd
+// vanaf het beginscherm waar #anderePoule je naartoe brengt.
 await page.click('#anderePoule');
 await page.waitForSelector('#inlogopen');
 await page.click('#inlogopen');

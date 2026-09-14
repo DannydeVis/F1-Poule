@@ -27,9 +27,9 @@ await kiesTien(page);
 await page.click('#opslaan');
 await page.waitForSelector('[data-race]');
 
-await page.click('[data-weergave="poule"]');
+await page.click('[data-weergave="profiel"]');
 await page.waitForSelector('#privacyopen');
-check('de verklaring staat dichtgeklapt onder Poule',
+check('de verklaring staat dichtgeklapt onder Profiel',
   (await page.$('#wegaccount')) === null);
 
 await page.click('#privacyopen');
@@ -99,7 +99,7 @@ check('na het verwijderen kun je jezelf gewoon weer aanwijzen',
   (await speler('Danny')).user_id !== null, JSON.stringify(await speler('Danny')));
 
 // --- alles weg: nu gaat de speler wél mee ---------------------------------
-await page.click('[data-weergave="poule"]');
+await page.click('[data-weergave="profiel"]');
 await page.waitForSelector('#privacyopen, #wegalles');
 if (await page.$('#privacyopen')) {
   await page.click('#privacyopen');
