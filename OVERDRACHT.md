@@ -2941,3 +2941,44 @@ relevant), dus de vraag kan daar een tweede keer verschijnen.
 erin, dat hij nooit een tweede keer komt (ook niet na al gekoppeld te
 hebben), en het scherpe gedeelde-toestel-geval met de bijbehorende
 `user_id: null`-controle.
+
+---
+
+## Een poulebaas voor poules die er nog nooit een hadden
+
+"Volgens mij kan iedereen de poule aanpassen. Er moet een beheerdersfunctie
+komen." Klopte, en wel heel letterlijk voor de echte "Vrijdagmiddagpoule":
+die is aangemaakt vóór `owner_member_id` bestond, dus staat hij open voor
+iedereen. Dat mechanisme was al half gebouwd — `magBeheren()` en
+`beheerBlok()` kennen het ownerless-geval al en tonen er zelfs een zin over
+("Deze poule heeft geen poulebaas... Iedereen kan hem dus aanpassen"), en
+`pouleAanmaken()` zet `owner_member_id` bij het aanmaken van een nieuwe
+poule. Wat ontbrak was de uitweg voor een bestaande, ownerless poule: een
+knop die het alsnog regelt.
+
+### De knop
+
+`beheerBlok()` krijgt naast die uitlegtekst een knop "Ik word poulebaas",
+alleen zichtbaar zolang `S.poule.owner_member_id` leeg is — dus voor iedereen
+die de sectie sowieso al mag zien via `magBeheren()`. De handler in
+`knoopBeheer()` volgt hetzelfde stramien als `knoopLosmaken()`: knop op slot,
+wegschrijven, database opnieuw laden, netjes melden wat er gebeurd is.
+
+Het schrijven zelf is `db.from('pools').update({ owner_member_id: S.ik.id
+}).eq('id', S.poule.id).is('owner_member_id', null)`. Die laatste `.is()` is
+geen decoratie: zonder die voorwaarde zouden twee mensen die toevallig
+tegelijk op de knop drukken elkaar straffeloos kunnen overschrijven. Met de
+voorwaarde raakt de tweede update nul rijen, en die krijgt gewoon te horen
+dat iemand anders net iets sneller was.
+
+De database dwingt eigenaarschap zelf nog niet af — de policies staan nog
+open, zie `schema.sql` en BEDIENING.md §7 — dus deze knop is voorlopig, net
+als de rest van `owner_member_id`, een UI-afspraak en geen slot. Maar het is
+wel de afspraak die ontbrak: zonder deze knop kon een ownerless poule dat
+nooit meer worden, ook niet met de beste bedoelingen.
+
+### Controles
+
+7 in `test/beheerder.test.mjs`: dat de knop en de uitleg verschijnen bij een
+ownerless poule, dat klikken de database ook echt bijwerkt en een
+bevestiging toont, en dat knop én uitleg daarna verdwenen zijn.
