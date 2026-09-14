@@ -116,14 +116,18 @@ Wie die link opent slaat het codescherm over en komt direct bij "hoe heet jij".
 
 ## 4. Meedoen met een poule
 
-Twee routes:
+Drie routes:
 
 **Via de uitnodiglink** (`?code=...`): direct naar "hoe heet jij", geen code
 intypen. Dit wordt de standaardroute, want zo deel je hem in de groepsapp.
 
 **Via de code**: invoerveld op het startscherm voor wie de link kwijt is.
 
-Daarna in beide gevallen: kies jezelf uit de lijst als je er al in staat, of
+**Via de lijst met openbare poules**: voor wie geen code én geen link heeft.
+Alleen poules die de poulebaas bewust openbaar heeft gezet staan hierin; zie
+§5a. Een klik werkt verder identiek aan de code invullen.
+
+Daarna in alle gevallen: kies jezelf uit de lijst als je er al in staat, of
 maak jezelf aan als nieuwe speler.
 
 **Via je eigen link** (`?code=...&speler=...`): voor jezelf, niet om te delen.
@@ -164,6 +168,21 @@ Wisselen haalt de poule opnieuw uit de database op in plaats van uit het
 lijstje: de naam of de omschrijving kan veranderd zijn, en een poule die
 verwijderd is hoort uit het lijstje te verdwijnen in plaats van je op een leeg
 scherm te zetten.
+
+### 5a. Openbare poules
+
+Standaard blijft een poule alleen bereikbaar met de code — dat is en blijft
+de snelste weg voor verreweg de meeste mensen, en verandert hier niet.
+Openbaar voegt alleen een tweede weg toe: onder **Poule** kan de poulebaas
+(`magBeheren()`) de poule "openbaar" zetten, en dan verschijnt hij op het
+beginscherm in een dichtgeklapte lijst "Blader door openbare poules" —
+bewust achter een knop, niet meteen zichtbaar, want dit is de uitzondering,
+niet de voordeur.
+
+Dit is geen nieuwe blootstelling: `pools_lezen` in `schema.sql` stond al open
+voor iedereen met de anon key, dus wie de poule kon *raden* kon hem al lezen.
+`is_public` verandert alleen of hij in een lijst staat, niet wie hem mag
+lezen — "privé" betekent nog steeds precies wat het al betekende.
 
 Let op wat dit lijstje **niet** is: het staat in `localStorage`, dus het is per
 toestel. Wie op zijn telefoon én op zijn laptop speelt heeft twee lijstjes. Eén

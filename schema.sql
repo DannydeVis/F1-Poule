@@ -148,6 +148,11 @@ alter table public.pools        add column if not exists owner_member_id uuid;
 -- Zodra de eerste race gescoord is ligt de vragenset vast, anders zijn de
 -- races onderling niet meer vergelijkbaar.
 alter table public.pools        add column if not exists questions_locked boolean not null default false;
+-- Standaard bereik je een poule alleen met de code. Openbaar voegt daar een
+-- tweede manier aan toe: vindbaar in een lijst op het beginscherm, zonder de
+-- code te hoeven kennen. "Privé" betekent verder nog steeds precies wat het
+-- al deed — pools_lezen stond al open, dit voegt geen nieuwe leesrechten toe.
+alter table public.pools        add column if not exists is_public  boolean not null default false;
 
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;

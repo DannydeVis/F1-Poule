@@ -1603,6 +1603,7 @@ const S = {
   mail:  { open: false, fout: '', gestuurd: '' },  // mailadres koppelen, onder Poule
   inlog: { open: false, fout: '', gestuurd: '' },  // inloggen op het beginscherm
   privacy: { open: false, fout: '' },             // wat de app van je weet
+  openbaar: { open: false, laden: false, lijst: null, fout: '' }, // openbare poules, beginscherm
 };
 
 const app = document.getElementById('app');
@@ -2367,6 +2368,7 @@ function toonApp() {
   knoopUitnodiging(app);
   knoopBeheer();
   knoopOmschrijving();
+  knoopOpenbaar();
   knoopMail();
   knoopPrivacy();
   knoopLosmaken();
@@ -2692,6 +2694,7 @@ function poulePagina(rijen) {
       <b>1</b> twee plekken ernaast.</div>
     ${agendaBlok()}
     ${omschrijvingBlok()}
+    ${openbaarBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}
     <button class="knop klein" id="wissel">Speler wisselen</button>`;
@@ -3163,6 +3166,42 @@ async function omschrijvingBewaren(tekst) {
   // Ook in het lijstje op dit toestel, anders staat de oude tekst er nog bij
   // als je straks tussen je poules wisselt.
   onthoudInLijst(S.poule);
+}
+
+// ---- openbaar: vindbaar zonder code --------------------------
+// Een poule is en blijft standaard alleen bereikbaar met de code — dat
+// verandert hier niet. Openbaar voegt alleen een tweede weg naartoe toe:
+// een plek in de lijst op het beginscherm, voor wie geen code heeft. Lezen
+// stond toch al open (pools_lezen), dus dit is geen nieuw lek, alleen een
+// nieuwe manier om te vinden wat sowieso al leesbaar was.
+function openbaarBlok() {
+  if (!magBeheren()) return '';
+  const aan = !!S.poule.is_public;
+  return `
+    <div class="scheiding"></div>
+    <span class="label">vindbaar voor iedereen</span>
+    <p class="zacht" style="margin:0">${aan
+      ? 'Deze poule staat in de lijst met openbare poules op het beginscherm. Iedereen kan meedoen zonder de code.'
+      : 'Nu kan alleen meedoen wie de poulecode heeft. Openbaar maakt de poule ook vindbaar zonder code.'}</p>
+    <button class="knop klein" id="openbaarKnop">${aan ? 'Maak weer privé' : 'Maak openbaar'}</button>`;
+}
+
+function knoopOpenbaar() {
+  const knop = app.querySelector('#openbaarKnop');
+  if (!knop) return;
+  knop.onclick = async () => {
+    knop.disabled = true;
+    const nu = !S.poule.is_public;
+    try {
+      if (!DEMO) {
+        const { error } = await db.from('pools').update({ is_public: nu }).eq('id', S.poule.id);
+        if (error) throw new Error(uitleg(error));
+      }
+      S.poule.is_public = nu;
+      S.melding = nu ? 'De poule is nu openbaar.' : 'De poule is weer privé.';
+    } catch (e) { S.melding = e.message; }
+    render();
+  };
 }
 
 // ---- meer dan één poule -------------------------------------
@@ -4540,6 +4579,38 @@ async function pouleAanmaken(m) {
 //
 // En het staat onder het codeveld, niet erboven. Wie wél een code heeft moet
 // die meteen kunnen intikken zonder eerst langs een uitleg te scrollen.
+// ---- openbare poules: meedoen zonder code --------------------
+// De voordeur blijft de code — dat is en blijft de snelste weg voor
+// verreweg de meeste mensen. Dit is de uitzondering: wie geen code heeft
+// maar wel mee wil doen met een poule die de poulebaas bewust vindbaar
+// heeft gezet. Dichtgeklapt en onderaan, net als de andere blokken die niet
+// voor iedereen zijn.
+function openbarePoulesBlok() {
+  if (DEMO) return '';
+  const o = S.openbaar;
+  if (!o.open) {
+    return `<div class="scheiding"></div>
+      <div class="veldblok">
+        <p class="zacht" style="margin:0">Geen code? Blader door poules die
+          voor iedereen vindbaar zijn.</p>
+        <button class="knop spook" id="openbareOpen">Blader door openbare poules</button>
+      </div>`;
+  }
+  if (o.laden) {
+    return `<div class="scheiding"></div>
+      <div class="veldblok"><p class="zacht" style="margin:0">Bezig met laden...</p></div>`;
+  }
+  const lijst = o.lijst ?? [];
+  return `<div class="scheiding"></div>
+    <div class="veldblok">
+      <span class="label">openbare poules</span>
+      ${lijst.length ? lijst.map(pouleKnop).join('')
+        : `<p class="zacht" style="margin:0">Nog geen openbare poules. Vraag de poulebaas van
+             je eigen poule om hem vindbaar te maken, of tik de code in.</p>`}
+      <p class="err" id="openbarefout">${esc(o.fout)}</p>
+    </div>`;
+}
+
 function watIsDitBlok() {
   if (mijnPoules().length) return '';
   return `
@@ -4666,6 +4737,7 @@ function toonStart() {
           <p class="zacht" style="margin:0">Nog geen poule? Begin er zelf een.</p>
           <button class="knop spook" id="nieuw">Nieuwe poule maken</button>
         </div>
+        ${openbarePoulesBlok()}
         ${watIsDitBlok()}
         ${inlogBlok()}
         <p class="err" id="f">${esc(S.linkFout)}</p>
@@ -4683,6 +4755,17 @@ function toonStart() {
 
   app.querySelector('#nieuw').onclick = () => startAanmaken();
   knoopInlog();
+
+  const openbareOpen = app.querySelector('#openbareOpen');
+  if (openbareOpen) openbareOpen.onclick = async () => {
+    S.openbaar = { ...S.openbaar, open: true, laden: true, fout: '' };
+    toonStart();
+    const { data, error } = await db.from('pools')
+      .select('id,name,beschrijving,join_code').eq('is_public', true);
+    S.openbaar = { open: true, laden: false, lijst: error ? [] : (data ?? []),
+                   fout: error ? uitleg(error) : '' };
+    toonStart();
+  };
 
   app.querySelector('#mee').onclick = async () => {
     const code = app.querySelector('#code').value.trim().toUpperCase();
