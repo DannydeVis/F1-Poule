@@ -24,6 +24,28 @@ deze lijst gaat daarom over sociale mechaniek, niet over voorspellingen.
 
 ---
 
+## Op de rol: het eigen domein racepicks.com
+
+Nog niet nu, wel binnenkort. Zodra racepicks.com er is:
+
+- **Google Cloud** (Google Auth Platform → Clients): `https://racepicks.com`
+  toevoegen als Authorized JavaScript origin, en
+  `https://etifamdwqxjfaeaordlr.supabase.co/auth/v1/callback` staat er al
+  goed (die verandert niet — dat is Supabase's adres, niet dat van de app).
+  De oude GitHub Pages-origin mag erbij blijven staan zolang die nog gebruikt
+  wordt.
+- **Supabase** (Authentication → URL Configuration): Site URL naar
+  `https://racepicks.com`, en `https://racepicks.com/**` toevoegen aan
+  Redirect URLs. De oude GitHub Pages-regel pas weghalen als niemand die
+  link meer gebruikt.
+- **GitHub Pages**: een `CNAME`-bestand met `racepicks.com` erin, plus een
+  DNS-record bij de domeinregistrar die naar GitHub Pages wijst.
+- De app zelf hoeft niet aangepast: `linkBasis()` leest `location.origin`
+  dynamisch uit, dus uitnodigingslinks en OAuth-redirects werken vanzelf op
+  elk domein waar de app draait.
+
+---
+
 ## Groep 1: klein werk, groot effect
 
 ### ~~Weekendwinnaar naast de seizoensstand~~ — gebouwd
