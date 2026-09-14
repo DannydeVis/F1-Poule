@@ -30,9 +30,9 @@ check('en Google staat onderaan bij het inloggen, niet als voordeur',
 
 // --- toestel 1: meespelen en Google koppelen ------------------------------
 await meedoen(page);
-await page.click('[data-weergave="poule"]');
+await page.click('[data-weergave="profiel"]');
 await page.waitForSelector('#googlekoppel');
-check('onder Poule staat Google als eerste keuze',
+check('onder Profiel staat Google als eerste keuze',
   (await tekst('#googlekoppel')).includes('Google'));
 check('en de mailweg staat er gewoon naast',
   (await tekst('#mailopen')).includes('mailadres'));
@@ -57,8 +57,8 @@ check('er is geen tweede account bijgekomen', (await accounts()).length === 1);
 check('en je speler hangt nog steeds aan datzelfde account',
   (await speler('Danny')).user_id === na.id);
 
-await page.click('[data-weergave="poule"]');
-await page.waitForSelector('.speler');
+await page.click('[data-weergave="profiel"]');
+await page.waitForSelector('#eigenlink');
 const poule = await tekst('#app');
 const noemtAdres = poule.includes('danny@gmail.voorbeeld');
 check('het scherm zegt waar je account aan hangt', noemtAdres,

@@ -3012,3 +3012,84 @@ op `#anderePoule` klikten (`eerste-indruk`, `account`, `mailkoppeling`,
 races, stand, poule én middenin een racescherm — vier plekken waarvan er
 eerder maar twee waren — en dat een klik nog steeds hetzelfde doet: terug
 naar het codescherm, met de poule intact in het lijstje van bekende poules.
+
+---
+
+## Een Profiel-tab, en voor het eerst echt uitloggen
+
+Derde en laatste van de drie gevraagde verbeteringen: "als ik ingelogd ben,
+staat er nog steeds een optie inloggen via.... ik denk dat we een profiel
+functie moeten bouwen zodat je daar alles kan veranderen en eventueel
+uitloggen." Twee aparte gebreken bleken hierachter te zitten.
+
+### Gebrek 1: het beginscherm wist niet dat je al was ingelogd
+
+`inlogBlok()` (op het beginscherm, `toonStart()`) bood altijd "Inloggen met
+Google" / "Inloggen met je mailadres" aan, ongeacht of dit toestel al een
+gekoppeld account had. Terecht verwarrend: als je net via "Andere poule"
+terugkwam op dat scherm terwijl je account allang aan een mailadres hing, zag
+je een aanbod om in te loggen op precies het account waar je al in zat.
+
+De functie kende zijn eigen antwoord al niet, maar `mailBlok()` (de
+tegenhanger onder wat nu Profiel heet) had het patroon allang: eerst checken
+of `kanTerugkomen()` waar is, en zo ja, een statuszin tonen in plaats van de
+knoppen. `inlogBlok()` kreeg dezelfde voorwaarde: is er al een weg terug, dan
+staat er nu "Je bent al ingelogd, als &lt;adres&gt;" in plaats van de twee
+inlogknoppen.
+
+### Gebrek 2: alles over je account stond verspreid onder Poule
+
+`mailBlok()` (account koppelen), `eigenLinkBlok()` (jezelf meenemen) en
+`privacyBlok()` (wat de app weet, en de twee manieren om weg te gaan) stonden
+alle drie onder het Poule-tabblad, tussen de spelerslijst en het
+beheergedeelte — poule-instellingen en accountinstellingen door elkaar.
+
+Nieuwe vierde tab **Profiel** (`profielPagina()`, toegevoegd aan `NAVNAMEN`)
+bundelt nu alles wat over jou gaat in plaats van over de poule: wie je hier
+speelt, daarna die drie bestaande blokken ongewijzigd hergebruikt, plus de
+nieuwe uitlogknop. `agendaBlok()` en `omschrijvingBlok()`/`beheerBlok()`
+bleven bewust onder Poule — die gaan over déze poule, niet over jouw account.
+
+### De nieuwe knop: uitloggen, maar alleen als het veilig is
+
+Een eerdere, bewuste ontwerpkeuze (nu achterhaald, zie de bijgewerkte
+testcommentaren) was dat uitloggen niet bestond: zonder gekoppeld account is
+er na `auth.signOut()` geen weg terug naar je speler, want die blijft in de
+database gewoon aan je (nu ontoegankelijke) account hangen — anders dan bij
+"Mijn account verwijderen", dat `user_id` expliciet leegmaakt. Uitloggen zou
+zonder die voorwaarde een valkuil zijn, geen knop.
+
+`uitlogBlok()` toont de knop daarom alleen als `kanTerugkomen()` waar is.
+Is dat niet zo, dan staat er een uitleg waarom niet, met de aansporing om
+eerst een account te koppelen. Is het wel zo, dan doet `knoopUitloggen()`
+(zelfde twee-tik-bevestiging als "losmaken" en "wis alles" elders in de app)
+precies drie dingen: `db.auth.signOut()`, `vergeetMijOpDitToestel()` (dezelfde
+opruiming als na accountverwijdering — alle `poule:*:mijn_id`-sleutels weg,
+de lijst met bekende poules blijft staan), en een herlaadbeurt. Niets in de
+database verandert; alleen de sessie in déze browser wordt ongeldig.
+
+De weg terug is daarna expliciet de inloglink, niet de eigen naam opnieuw
+aanklikken in de spelerslijst — dat geeft nu netjes "hoort bij een ander
+toestel", precies zoals elk ander toestel dat al bij iemand hoort.
+
+### Wat dit kostte aan de testkant
+
+Vijf bestaande testbestanden klikten al op `#mailopen`, `#eigenlink` of
+`#privacyopen` na `[data-weergave="poule"]`: `oauth-fout.test.mjs`,
+`google.test.mjs`, `mailkoppeling.test.mjs`, `uitnodiging.test.mjs` en
+`privacy.test.mjs`. Die navigeren nu eerst naar `[data-weergave="profiel"]`
+voor die controles; waar een test zowel een poule-check (`.speler.zelf`) als
+een accountcheck nodig had, is dat nu twee aparte tabwissels. Een verouderde
+code-comment in `mailkoppeling.test.mjs` ("Uitloggen bestaat niet in de app")
+is bijgewerkt.
+
+### Controles
+
+13 nieuwe in `test/profiel-en-uitloggen.test.mjs`: de Profiel-tab toont wie
+je bent; zonder gekoppeld account geen uitlogknop maar wel de uitleg waarom
+niet; na koppelen verschijnt de knop; het beginscherm biedt daarna geen
+dubbele inlog meer aan; terugkomen in de poule via een bekende-poule-knop
+herkent je automatisch; uitloggen vraagt eerst een bevestiging; na uitloggen
+is de lokale sessie weg maar het account en de speler bestaan nog gewoon;
+en de eigen naam aanklikken op dit toestel wijst daarna netjes naar de
+inloglink in plaats van je zomaar weer binnen te laten.

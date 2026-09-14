@@ -73,6 +73,7 @@ check('de uitnodiging bevat de poulenaam en een link met de code',
 // --- je eigen link -------------------------------------------------------
 // Het probleem hierachter: dezelfde persoon op zijn telefoon én zijn laptop
 // stond twee keer in de stand, met zijn punten over die twee verdeeld.
+await page.click('[data-weergave="profiel"]');
 await page.waitForSelector('#eigenlink');
 await page.click('#eigenlink');
 await page.waitForTimeout(200);

@@ -61,7 +61,7 @@ await page.evaluate(() => {
 });
 
 await meedoen(page);
-await page.click('[data-weergave="poule"]');
+await page.click('[data-weergave="profiel"]');
 await page.waitForSelector('#googlekoppel');
 await page.click('#googlekoppel');
 await page.waitForTimeout(300);
