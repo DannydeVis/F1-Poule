@@ -268,7 +268,12 @@ Drie regels die daarbij horen:
   Op een gedeeld toestel — één telefoon die rondgaat bij het inschrijven —
   betekent dat: de tweede speler wordt zonder account aangemaakt. Hij doet
   gewoon mee en wordt geclaimd zodra hij de app op zijn eigen toestel opent.
-  Een foutmelding zou daar veel erger zijn.
+  Een foutmelding zou daar veel erger zijn. Deze terugval zit nog gewoon in
+  `maakSpeler()`, maar is sinds het verwijderen van "Speler wisselen" niet
+  meer via de UI te bereiken — wie zich al heeft aangewezen op dit toestel
+  komt niet meer terug bij "Wie ben jij?" om een tweede naam te typen. In de
+  praktijk opent iedereen de app nu op zijn eigen toestel, en daar speelt dit
+  toch al niet. Zie `OVERDRACHT.md`.
 
 **Eenmalig aanzetten in Supabase.** Anoniem inloggen staat standaard uit.
 Dashboard → Authentication → Sign In / Providers → **Anonymous sign-ins** aan.

@@ -17,7 +17,7 @@ const { page, jsFouten, stoppen } = await startPagina();
 
 const naarPoule = async () => {
   await page.click('[data-weergave="poule"]');
-  await page.waitForSelector('.vragenlijst, #wissel');
+  await page.waitForSelector('.vragenlijst, #uitnodiging');
 };
 const vinkjes = () => page.$$eval('.vraagregel.aan', (n) => n.map((b) => b.dataset.vraagAan));
 const inDb = () => page.evaluate(() => globalThis.__db.pool_questions.map((v) => v.question_id));

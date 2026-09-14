@@ -7,11 +7,14 @@
 //
 // Wat hier vastligt is vooral wanneer dit scherm wél en niet verschijnt. Wél:
 // bij een verse, eigen claim. Niet: bij een tweede keer (nooit nogmaals
-// vragen), niet als er al iets gekoppeld is, en — het scherpste geval — niet
-// als een gedeeld toestel een tweede speler aanmaakt die aan niemand komt te
-// hangen. Dat laatste zou anders Google aan de verkeerde persoon hangen.
+// vragen), en niet als er al iets gekoppeld is. Het scherpste geval — een
+// gedeeld toestel dat een tweede speler aanmaakt die aan niemand komt te
+// hangen, want anders zou "wil je koppelen" Google aan de verkeerde persoon
+// hangen — bestaat nog in de code, maar is sinds het verwijderen van "Speler
+// wisselen" niet meer via een browsertest te bereiken; zie de toelichting
+// verderop in dit bestand en OVERDRACHT.md.
 
-import { maakControle, startPagina, naDeClaim } from './hulp.mjs';
+import { maakControle, startPagina } from './hulp.mjs';
 
 const { check, afronden } = maakControle('eenmalig gevraagd: wil je koppelen');
 
@@ -45,25 +48,12 @@ const { check, afronden } = maakControle('eenmalig gevraagd: wil je koppelen');
 // ------------------------------------------------------------------
 //  Nooit een tweede keer op hetzelfde toestel
 // ------------------------------------------------------------------
-{
-  const { page, stoppen } = await startPagina();
-  await page.fill('#code', 'RTM026');
-  await page.click('#mee');
-  await page.waitForSelector('[data-lid]');
-  await page.click('[data-lid]');
-  await naDeClaim(page);
-
-  // Terug naar "Wie ben jij?" en jezelf nogmaals aanwijzen — dezelfde claim,
-  // geen nieuwe. De vraag mag hier niet nog een keer verschijnen.
-  await page.click('#wissel');
-  await page.waitForSelector('[data-lid]');
-  await page.click('[data-lid]');
-  await page.waitForSelector('[data-race]');
-  check('een tweede keer jezelf aanwijzen laat de vraag niet terugkomen',
-    (await page.$('#koppelnunniet')) === null);
-
-  await stoppen();
-}
+// Dit toetste jezelf nogmaals aanwijzen via "Wie ben jij?" zonder een nieuwe
+// claim (eersteKeer moet dan false zijn, dus geen koppel-vraag). Dat kon
+// alleen via "Speler wisselen", terug naar de picker zonder de sessie kwijt
+// te raken — die knop is verwijderd, en daarmee ook de enige weg om dit na
+// te bootsen. Zie OVERDRACHT.md. Het aangrenzende geval — een leeg toestel
+// dat een al-geclaimde naam aanklikt — staat wel nog in test/account.test.mjs.
 
 // ------------------------------------------------------------------
 //  Al gekoppeld? Dan is er niets meer te vragen.
@@ -92,29 +82,14 @@ const { check, afronden } = maakControle('eenmalig gevraagd: wil je koppelen');
 // doorgeeft aan een tweede speler ziet die speler wél aangemaakt worden,
 // maar hij hangt aan niemand — en dan zou "wil je koppelen" Google aan de
 // eerste speler hangen, niet aan de tweede. Zie isNuVanMij() in index.html.
-{
-  const { page, jsFouten, stoppen } = await startPagina();
-  await page.fill('#code', 'RTM026');
-  await page.click('#mee');
-  await page.waitForSelector('[data-lid]');
-  await page.click('[data-lid]');
-  await naDeClaim(page);
-
-  await page.click('#wissel');
-  await page.waitForSelector('#naam');
-  await page.fill('#naam', 'Joey');
-  await page.click('#maak');
-  await page.waitForSelector('[data-race]');
-  check('de tweede speler op hetzelfde toestel krijgt de vraag niet',
-    (await page.$('#koppelnunniet')) === null);
-
-  const joey = await page.evaluate(() =>
-    globalThis.__db.pool_members.find((l) => l.display_name === 'Joey'));
-  check('want die speler hangt aan niemand — dat is precies de reden',
-    joey && joey.user_id === null, JSON.stringify(joey));
-
-  check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
-  await stoppen();
-}
+//
+// Dit kon alleen getoetst worden door na een verse claim via "Speler
+// wisselen" terug te gaan naar "Wie ben jij?" en daar een tweede naam aan te
+// maken, zonder de eerste sessie kwijt te raken. Die knop is verwijderd, en
+// het gedeeld-toestel-moment dat hij simuleerde is daarmee niet meer via de
+// UI te bereiken — zie OVERDRACHT.md. De kern die dit beschermde,
+// maakSpeler()'s terugval op user_id: null zodra een tweede claim in
+// dezelfde poule botst, staat nog gewoon in index.html; hij is alleen niet
+// meer vanuit een browsertest te prikkelen.
 
 process.exit(afronden() ? 0 : 1);
