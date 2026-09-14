@@ -370,14 +370,11 @@ const auth = {
     if (provider !== 'google') return { data: null, error: { message: 'onbekende provider' } };
     const sessie = huidigeSessie();
     if (!sessie) return { data: null, error: { message: 'geen sessie' } };
-    const bezet = store.auth_users.find((u) =>
-      u.id !== sessie.user.id
-      && (u.identities ?? []).some((i) => i.provider === 'google'
-                                       && gelijk(i.identity_data?.email, store.google_als)));
-    if (bezet) {
-      return { data: null, error: { code: 'identity_already_exists',
-        message: 'Identity is already linked to another user' } };
-    }
+    // Geen botsingscontrole hier: op dit moment is de browser nog niet eens
+    // bij Google geweest, dus Supabase kan hier onmogelijk al weten met welk
+    // Google-adres je terugkomt. Die controle gebeurt daarom pas in
+    // laatsteLink() — de stap die "terugkomen van Google" naspeelt — en dat
+    // is precies waar hij in het echt ook pas gebeurt.
     store.otp.push({ code: nieuweSleutel(), user_id: sessie.user.id,
                      email: store.google_als, google: true,
                      terug: options.redirectTo ?? '' });
@@ -456,11 +453,28 @@ const auth = {
 // Wat de tests nodig hebben om een mailbox na te bootsen: welke link is er
 // verstuurd, en wat gebeurt er als je erop klikt.
 globalThis.__mail = {
-  // De laatst verstuurde link, precies zoals hij in de mail zou staan.
+  // De laatst verstuurde link, precies zoals hij in de mail zou staan — of,
+  // bij een Google-koppeling die botst, precies zoals Supabase terugstuurt
+  // ná de omweg via Google: geen geldige sleutel, maar een foutmelding in de
+  // adresbalk. Pas op dit moment is dat te ontdekken, zie linkIdentity()
+  // hierboven.
   laatsteLink() {
     const laatste = store.otp[store.otp.length - 1];
     if (!laatste) return null;
     const basis = laatste.terug || (location.origin + location.pathname);
+    if (laatste.google) {
+      const bezet = store.auth_users.find((u) =>
+        u.id !== laatste.user_id
+        && (u.identities ?? []).some((i) => i.provider === 'google'
+                                         && gelijk(i.identity_data?.email, laatste.email)));
+      if (bezet) {
+        store.otp = store.otp.filter((o) => o.code !== laatste.code);
+        bewaren();
+        return basis + (basis.includes('?') ? '&' : '?')
+          + 'error=server_error&error_code=identity_already_exists'
+          + '&error_description=' + encodeURIComponent('Identity is already linked to another user');
+      }
+    }
     return basis + (basis.includes('?') ? '&' : '?') + 'code=' + laatste.code;
   },
   aantalVerstuurd() { return store.otp.length; },
