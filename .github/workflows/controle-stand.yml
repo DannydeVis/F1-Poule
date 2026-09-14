@@ -25,6 +25,9 @@ on:
       race:
         description: 'Alleen deze race nakijken (bv. Madrid; leeg = alle 24)'
         default: ''
+      account_uid:
+        description: 'Hoort dit account (uit Authentication -> Users) ergens bij, of is het een spookaccount? Leeg = overslaan'
+        default: ''
 
 jobs:
   controleren:
@@ -58,3 +61,12 @@ jobs:
         env:
           RACE: ${{ inputs.race }}
         run: node scripts/controle-coureurs.mjs
+
+      # Voor de vraag "hoort dit account nog ergens bij, of mag het weg" —
+      # bijvoorbeeld een spookaccount dat per ongeluk ontstond bij een
+      # mislukte inlogpoging, en een echte speler in de weg zit.
+      - name: Hoort dit account ergens bij
+        if: inputs.account_uid != ''
+        env:
+          UID: ${{ inputs.account_uid }}
+        run: node scripts/controle-account.mjs

@@ -15,7 +15,7 @@
 // zelf, en de accounts in de "database". Een test die localStorage wist
 // bootst daarmee een ander toestel na en krijgt ook echt een ander account.
 
-import { maakControle, startPagina } from './hulp.mjs';
+import { maakControle, startPagina, naDeClaim } from './hulp.mjs';
 
 const { check, afronden } = maakControle('account: wie ben je, en van wie is deze speler');
 const { page, jsFouten, stoppen } = await startPagina();
@@ -27,7 +27,7 @@ const speler = (naam) => page.evaluate((n) =>
 const kiesSpeler = async (naam) => {
   await page.waitForSelector('[data-lid]');
   await page.click(`[data-lid]:has(.nm:text-is("${naam}"))`);
-  await page.waitForSelector('[data-race]');
+  await naDeClaim(page);
 };
 const voerCodeIn = async () => {
   await page.waitForSelector('#code');

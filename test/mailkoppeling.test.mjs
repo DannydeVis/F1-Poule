@@ -14,7 +14,7 @@
 // De nabootsing doet de mailbox na: __mail.laatsteLink() geeft de link die
 // verstuurd zou zijn, en die openen is hier "op de link klikken".
 
-import { maakControle, startPagina } from './hulp.mjs';
+import { maakControle, startPagina, naDeClaim } from './hulp.mjs';
 
 const { check, afronden } = maakControle('mailadres koppelen en inloggen');
 const { page, jsFouten, stoppen, url } = await startPagina();
@@ -31,7 +31,7 @@ const meedoenAls = async (naam) => {
   await page.click('#mee');
   await page.waitForSelector('[data-lid]');
   await page.click(`[data-lid]:has(.nm:text-is("${naam}"))`);
-  await page.waitForSelector('[data-race]');
+  await naDeClaim(page);
 };
 
 // --- toestel 1: meespelen en een mailadres koppelen ------------------------

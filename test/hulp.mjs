@@ -78,13 +78,29 @@ export async function startPagina({ aanpassen = (s) => s, indexPad } = {}) {
   };
 }
 
+// Ná een [data-lid]- of #maak-klik die zou moeten uitkomen in de poule.
+//
+// Een verse claim laat de app sinds koppelVraagScherm() eenmalig vragen of je
+// wilt koppelen; een claim die al bestond niet (bijvoorbeeld dezelfde naam
+// twee keer, of nog een speler op hetzelfde toestel die aan niemand komt te
+// hangen). Vandaar op allebei wachten en alleen wegklikken als hij er ook
+// echt is — één plek voor deze naad, in plaats van in elk testbestand apart.
+export async function naDeClaim(page) {
+  await Promise.race([
+    page.waitForSelector('#koppelnunniet'),
+    page.waitForSelector('[data-race]'),
+  ]);
+  if (await page.$('#koppelnunniet')) await page.click('#koppelnunniet');
+  await page.waitForSelector('[data-race]');
+}
+
 // De vaste eerste stappen: poulecode invoeren en jezelf aanwijzen.
 export async function meedoen(page) {
   await page.fill('#code', 'RTM026');
   await page.click('#mee');
   await page.waitForSelector('[data-lid]');
   await page.click('[data-lid]');
-  await page.waitForSelector('[data-race]');
+  await naDeClaim(page);
 }
 
 export async function openRace(page, naam) {
