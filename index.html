@@ -1726,6 +1726,12 @@ function uitleg(error) {
     '42501': 'De database weigert het schrijven (RLS-policy). Draai schema.sql opnieuw.',
     '42P01': 'Een tabel ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.',
     '42703': 'Een kolom ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.',
+    // PostgREST valideert kolommen tegen zijn eigen, gecachte schema, dus dit
+    // is dezelfde ontbrekende-kolom-situatie als 42703 — alleen ontdekt vóórdat
+    // de vraag ooit bij Postgres komt.
+    'PGRST204': 'Een kolom ontbreekt in de database. Draai schema.sql in de Supabase SQL '
+              + 'editor; staat hij er al, dan moet PostgREST zijn schema nog verversen '
+              + '(Settings → API → Reload schema, of even een minuutje wachten).',
   };
   // De database weigert het schrijven, en sinds spelers aan een account hangen
   // is daar meestal een concrete, uitlegbare reden voor.
