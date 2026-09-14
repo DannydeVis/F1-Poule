@@ -10,7 +10,7 @@
 // vastliggen: de uitleg moet er zijn voor wie hem nodig heeft, en weg voor wie
 // niet — en het codeveld mag er nooit door naar beneden geduwd worden.
 
-import { maakControle, startPagina } from './hulp.mjs';
+import { maakControle, startPagina, naDeClaim } from './hulp.mjs';
 
 const { check, afronden } = maakControle('de eerste indruk');
 const { page, jsFouten, stoppen, url } = await startPagina();
@@ -49,7 +49,7 @@ await page.fill('#code', 'RTM026');
 await page.click('#mee');
 await page.waitForSelector('[data-lid]');
 await page.click('[data-lid]');
-await page.waitForSelector('[data-race]');
+await naDeClaim(page);
 check('en meedoen werkt zoals het werkte', true);
 
 // --- en daarna is de uitleg weg -------------------------------------------

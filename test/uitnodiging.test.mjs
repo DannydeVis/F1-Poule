@@ -9,7 +9,7 @@
 // Onderaan de eigen link (?code=...&speler=...), waarmee je jezelf meeneemt
 // naar een tweede toestel in plaats van jezelf daar opnieuw aan te maken.
 
-import { maakControle, startPagina } from './hulp.mjs';
+import { maakControle, startPagina, naDeClaim } from './hulp.mjs';
 
 const { check, afronden } = maakControle('uitnodigingslink');
 const { page, jsFouten, url, stoppen } = await startPagina();
@@ -35,7 +35,7 @@ check('kleine letters in de link werken ook',
 // We staan na de vorige stap op het spelerscherm; jezelf aanwijzen zodat er
 // straks iets is om naar terug te keren.
 await page.click('[data-lid]');
-await page.waitForSelector('[data-race]');
+await naDeClaim(page);
 await page.goto(url + '?code=RTM027');   // één tekens ernaast
 await page.waitForSelector('#code');
 const melding = (await page.textContent('#f')).trim();

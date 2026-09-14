@@ -2880,3 +2880,64 @@ cron-job.org die op tijd de GitHub API aanroept om de workflow te starten)
 omzeilt GitHub's eigen scheduler helemaal. Dat laatste is nu niet gedaan,
 omdat het een extra afhankelijkheid toevoegt voor een probleem dat de brede
 vensters al opvangen.
+
+---
+
+## Eén keer gevraagd: wil je koppelen?
+
+"Ik denk wel dat als mensen de app openen voor de 1e keer, dat moeten ze de
+keuze krijgen of ze willen inloggen of niet." Terecht — degene die dit
+voorstelde had er zelf net last van: een Google-koppeling die op de
+verkeerde plek verstopt zat, ontdekt op het moment dat hij al nodig was.
+
+Tot nu toe stond die keuze alleen onder het Poule-tabblad (`mailBlok()`),
+precies het scherm dat iemand die net drie tikken verder is (poulecode, naam,
+klaar) nog nooit gezien heeft.
+
+### Wanneer hij verschijnt
+
+`koppelVraagScherm()` verschijnt direct na een verse, eigen claim — vóór het
+eerste scherm van de poule — via drie plekken in `kiesSpeler()`: een nieuwe
+naam typen (`#maak`), een bestaande naam opnieuw typen (dezelfde persoon op
+een ander toestel), en een onclaimde naam uit de lijst aantikken. Daarna
+nooit meer, ook niet in een tweede poule op hetzelfde toestel:
+`magKoppelVraagTonen()` onthoudt dat met een eigen `localStorage`-sleutel
+(`poule:koppelgevraagd`), dezelfde aanpak als de rest van dit bestand.
+
+Hij hergebruikt `mailBlok()` (Google-knop, mailknop, alle bestaande logica)
+in plaats van die logica te dupliceren, met een even grote "Nu niet, ik speel
+liever anoniem"-knop ernaast — bewust als `knop spook`, dezelfde neutrale
+stijl als de andere twee keuzes, en niet `knop primair`. Die laatste zou de
+sterkste kleur op het scherm geven aan "niet koppelen", en dat is precies het
+omgekeerde van een eerlijke keuze aanbieden.
+
+### Het scherpe geval dat bijna misging
+
+Eén account mag maar één speler per poule zijn. Wie zijn telefoon doorgeeft
+aan een tweede speler (bijvoorbeeld om zelf toe te voegen aan de poule) ziet
+die speler wél aangemaakt worden, maar `claimSpeler()` raakt dan niets — de
+speler hangt aan niemand. Zonder een extra controle zou de koppel-vraag hier
+"Welkom Joey" zeggen en vervolgens Google aan Danny's account hangen, want
+`mijnUid` is en blijft Danny's account. `isNuVanMij(memberId)` checkt na de
+claimpoging of de speler ook echt van dít account is, en houdt de vraag anders
+tegen.
+
+### Wat dit kostte aan de testkant
+
+Vrijwel elke browsertest simuleert "meedoen" door op een onclaimde, gezaaide
+speler te klikken — precies het moment waarop dit nieuwe scherm nu verschijnt.
+`test/hulp.mjs` kreeg er daarom een gedeelde `naDeClaim()` bij, die na zo'n
+klik op zowel de vraag als het gewone vervolg wacht en de vraag wegklikt als
+hij er is. Vier testbestanden met een eigen, lokale variant van diezelfde
+klik-en-wacht-stap (`account.test.mjs`, `eerste-indruk.test.mjs`,
+`mailkoppeling.test.mjs`, `uitnodiging.test.mjs`) kregen dezelfde behandeling.
+`privacy.test.mjs` had het scherpst: account verwijderen wist ook
+`poule:koppelgevraagd` (met opzet — na een nieuw account is de vraag weer
+relevant), dus de vraag kan daar een tweede keer verschijnen.
+
+### Controles
+
+10 in `test/koppel-vraag.test.mjs`: dat de vraag verschijnt met de eigen naam
+erin, dat hij nooit een tweede keer komt (ook niet na al gekoppeld te
+hebben), en het scherpe gedeelde-toestel-geval met de bijbehorende
+`user_id: null`-controle.

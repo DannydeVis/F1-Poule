@@ -4049,6 +4049,73 @@ function keuzeOverzicht(r, pred, welk) {
 }
 
 // ============================================================
+//  Eén keer gevraagd: wil je koppelen?
+//
+//  "Ik denk wel dat als mensen de app openen voor de 1e keer, dat moeten ze
+//  de keuze krijgen of ze willen inloggen of niet." Tot nu toe stond die
+//  keuze verstopt op het Poule-tabblad — precies het scherm dat iemand die
+//  net drie tikken verder is (poulecode, naam, klaar) nog nooit gezien
+//  heeft. Zonder dit ontdekt iemand het bestaan van een reservesleutel pas
+//  nadat hij hem nodig had, en dat is precies andersom.
+//
+//  Verschijnt daarom precies één keer: direct nadat iemand voor het eerst
+//  een speler claimt, vóór het eerste scherm van de poule. Nooit meer
+//  daarna, ook niet in een tweede poule op hetzelfde toestel —
+//  magKoppelVraagTonen() hieronder onthoudt dat met dezelfde localStorage-
+//  aanpak als de rest van dit bestand. En nadrukkelijk geen verplichting:
+//  "nu niet" is een net zo grote knop als koppelen, en komt op precies
+//  hetzelfde scherm uit als koppelen zou hebben gedaan.
+// ============================================================
+
+const KOPPELGEVRAAGD = 'poule:koppelgevraagd';
+
+// Heeft het nog zin om dit te vragen? Al gekoppeld, of al eens gevraagd (wat
+// er ook uit kwam): dan is er niets meer te winnen, en nog een keer vragen
+// is geen hulp meer maar nagging.
+function magKoppelVraagTonen() {
+  return !DEMO && !!mijnUid && !kanTerugkomen() && !lees(KOPPELGEVRAAGD);
+}
+
+// Is déze speler, ná de claimpoging, echt van dit account? Niet vanzelfsprekend:
+// één account mag maar één speler per poule hebben, dus wie zijn telefoon
+// doorgeeft aan een tweede speler ziet die speler wél aangemaakt worden, maar
+// zonder dat hij aan mijnUid komt te hangen (claimSpeler() raakt dan niets).
+// Zonder deze controle zou de koppel-vraag na zo'n aanmelding "Welkom Joey"
+// zeggen en vervolgens Google aan Danny's account hangen — het account van
+// wie toevallig het toestel vasthield, niet van wie er net bij kwam.
+function isNuVanMij(memberId) {
+  const lid = S.leden.find(l => zelfde(l.member_id, memberId));
+  return !!lid?.user_id && zelfde(lid.user_id, mijnUid);
+}
+
+function koppelVraagScherm() {
+  schrijf(KOPPELGEVRAAGD, '1');
+  app.innerHTML = `
+    <div class="toegang"><div class="kaart"><div class="baan"></div>
+      <div class="kaart-in">
+        <div class="merk">
+          <span class="blok"></span>
+          <span class="naam">Poule</span>
+          <span class="code">${esc(S.poule.join_code ?? S.poule.name)}</span>
+        </div>
+        <div>
+          <h1 class="middel">Welkom,<br>${esc(S.ik.naam)}</h1>
+          <p class="zacht" style="margin:12px 0 0">Je speelt al mee — dit is
+            de enige keer dat we dit vragen.</p>
+        </div>
+        ${S.melding ? `<div class="meldingbalk"><div class="melding">${esc(S.melding)}</div></div>` : ''}
+        ${mailBlok()}
+        <div class="scheiding"></div>
+        <button class="knop spook" id="koppelnunniet" style="min-height:56px">
+          Nu niet, ik speel liever anoniem</button>
+      </div>
+    </div></div>`;
+  S.melding = '';
+  knoopMail();
+  app.querySelector('#koppelnunniet').onclick = () => render();
+}
+
+// ============================================================
 //  Wie ben je? — vervangt de login
 // ============================================================
 
@@ -4103,7 +4170,12 @@ function kiesSpeler() {
     const lid = S.leden.find(l => zelfde(l.member_id, b.dataset.lid));
     S.ik = { id: lid.member_id, naam: lid.display_name };
     onthoud(S.poule.id, S.ik.id);
-    if (!lid.user_id) await claimSpeler(lid.member_id);
+    // Alleen een verse claim is een moment om over koppelen te beginnen. Was
+    // deze speler al van iemand — ikzelf op een ouder toestel, of iemand
+    // anders — dan is er niets "voor het eerst" aan, en zou de vraag hier
+    // misplaatst zijn.
+    const eersteKeer = !lid.user_id;
+    if (eersteKeer) await claimSpeler(lid.member_id);
     // Hangt deze speler aan een ander account, dan kun je hier wel meekijken
     // maar niets opslaan. Dat nú zeggen is stukken beter dan het te laten
     // merken bij de eerste voorspelling die niet bewaard wordt.
@@ -4112,7 +4184,16 @@ function kiesSpeler() {
         + 'meekijken, maar niets opslaan. Log in met je mailadres om hier ook '
         + `${lid.display_name} te zijn.`;
     }
-    laad().then(render).catch(e => toonFout(e.message));
+    try {
+      await laad();
+      // isNuVanMij() en niet eersteKeer: een gedeeld toestel kan deze speler
+      // aanmaken zonder hem te claimen (één account, één speler per poule),
+      // en dan is er niets om over te koppelen.
+      if (eersteKeer && isNuVanMij(lid.member_id) && magKoppelVraagTonen()) {
+        koppelVraagScherm(); return;
+      }
+      render();
+    } catch (e) { toonFout(e.message); }
   });
 
   app.querySelector('#maak').onclick = async () => {
@@ -4127,9 +4208,16 @@ function kiesSpeler() {
     if (bestaand) {
       S.ik = { id: bestaand.member_id, naam: bestaand.display_name };
       onthoud(S.poule.id, S.ik.id);
-      if (!bestaand.user_id) await claimSpeler(bestaand.member_id);
+      const eersteKeer = !bestaand.user_id;
+      if (eersteKeer) await claimSpeler(bestaand.member_id);
       S.melding = `Welkom terug, ${bestaand.display_name}.`;
-      try { await laad(); render(); }
+      try {
+        await laad();
+        if (eersteKeer && isNuVanMij(bestaand.member_id) && magKoppelVraagTonen()) {
+          koppelVraagScherm(); return;
+        }
+        render();
+      }
       catch (e) { app.querySelector('#f').textContent = e.message; }
       return;
     }
@@ -4143,7 +4231,18 @@ function kiesSpeler() {
     if (error) { app.querySelector('#f').textContent = uitleg(error); return; }
     S.ik = { id: data.member_id, naam };
     onthoud(S.poule.id, data.member_id);
-    try { await laad(); render(); }
+    try {
+      await laad();
+      // Ook hier: pas de vraag stellen als deze gloednieuwe speler ook echt
+      // van dit account is. Op een gedeeld toestel waar al iemand anders
+      // speelt lukt claimSpeler() niet — één account, één speler per poule
+      // — en dan zou "wil je koppelen" Google aan de verkeerde persoon
+      // hangen.
+      if (isNuVanMij(data.member_id) && magKoppelVraagTonen()) {
+        koppelVraagScherm(); return;
+      }
+      render();
+    }
     catch (e) { app.querySelector('#f').textContent = e.message; }
   };
 }

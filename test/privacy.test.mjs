@@ -83,7 +83,17 @@ if (await page.$('#code')) {
   await page.click('#mee');
 }
 await page.waitForSelector('[data-lid], [data-race]');
-if (await page.$('[data-lid]')) await page.click('[data-lid]:has(.nm:text-is("Danny"))');
+if (await page.$('[data-lid]')) {
+  await page.click('[data-lid]:has(.nm:text-is("Danny"))');
+  // Account verwijderen wist ook poule:koppelgevraagd (zie
+  // vergeetMijOpDitToestel()) — met opzet, want na een nieuw account is de
+  // koppel-vraag weer relevant. Dus kan hij hier opnieuw verschijnen.
+  await Promise.race([
+    page.waitForSelector('#koppelnunniet'),
+    page.waitForSelector('[data-race], .speler'),
+  ]);
+  if (await page.$('#koppelnunniet')) await page.click('#koppelnunniet');
+}
 await page.waitForSelector('[data-race], .speler');
 check('na het verwijderen kun je jezelf gewoon weer aanwijzen',
   (await speler('Danny')).user_id !== null, JSON.stringify(await speler('Danny')));
