@@ -13,10 +13,10 @@
 // en de database laat dat met opzet niet terugdraaien. De poulebaas kan de
 // speler losmaken; daarna claimt de volgende die zich aanmeldt hem opnieuw.
 
-import { maakControle, startPagina, meedoen, openRace, kiesTien } from './hulp.mjs';
+import { maakControle, startPagina, meedoen, openRace, kiesTien, naDeClaim } from './hulp.mjs';
 
 const { check, afronden } = maakControle('van wie is deze inzending');
-const { page, jsFouten, stoppen } = await startPagina();
+const { page, jsFouten, stoppen, url } = await startPagina();
 
 const speler = (naam) => page.evaluate((n) =>
   globalThis.__db.pool_members.find((l) => l.display_name === n) ?? null, naam);
@@ -58,11 +58,16 @@ check('bij een speler van een ander toestel staat een losmaakknop',
 check('en bij je eigen speler niet — daar valt niets los te maken',
   knoppen.find((k) => k.naam === 'Danny')?.los === false, JSON.stringify(knoppen));
 
-// --- als Joey spelen mag, opslaan niet ------------------------------------
-await page.click('#wissel');
+// --- een vreemdeling klikt Joey aan: meekijken mag, opslaan niet -----------
+// Geen "Speler wisselen" meer om dit op hetzelfde toestel na te bootsen, dus
+// dit simuleert precies wat een echte vreemdeling zou doen: de poule voor het
+// eerst openen en op Joey klikken.
+await page.evaluate(() => localStorage.clear());
+await page.goto(url);
+await page.fill('#code', 'RTM026');
+await page.click('#mee');
 await page.waitForSelector('[data-lid]');
 await page.click('[data-lid]:has(.nm:text-is("Joey"))');
-// We kwamen vanuit de poulepagina, dus daar landen we ook weer.
 await page.waitForSelector('.meldingbalk, [data-race]');
 check('de app zegt meteen dat deze speler bij een ander toestel hoort',
   (await tekst('#app')).includes('Joey hoort bij een ander toestel'),
@@ -86,15 +91,27 @@ check('en de voorspelling van Danny is onaangeraakt',
   (await page.evaluate(() => globalThis.__db.answers
     .filter((a) => a.member_id === 'lid-1').length)) === 1);
 
-// --- de poulebaas maakt hem los -------------------------------------------
-await page.click('[data-weergave="races"]');
-await page.waitForSelector('[data-race]');
-await page.click('#wissel');
-await page.waitForSelector('[data-lid]');
-await page.click('[data-lid]:has(.nm:text-is("Danny"))');
-await page.waitForSelector('[data-race], .speler');
+// --- losmaken vraagt een echt lid ------------------------------------------
+// De vreemdeling hierboven keek alleen maar mee en heeft zelf geen account
+// (hij claimde nooit iets), dus voor hem geeft de database geen toestemming
+// om iets los te maken — ook al is de poule ownerless en zou de knop op het
+// scherm hem laten geloven van wel. Een echt lid moet dit doen: een nieuwe
+// speler die zichzelf wél claimt, en die daarna via zijn eigen link (net als
+// eigenLinkBlok() dat bedoelt) naar Joey's rij kijkt zonder zijn eigen
+// account kwijt te raken.
+await page.evaluate(() => localStorage.clear());
+await page.goto(url);
+await page.fill('#code', 'RTM026');
+await page.click('#mee');
+await page.waitForSelector('#naam');
+await page.fill('#naam', 'Casper');
+await page.click('#maak');
+await naDeClaim(page);
+
+await page.goto(`${url}?code=RTM026&speler=lid-9`);
+await page.waitForSelector('[data-weergave]');
 await page.click('[data-weergave="poule"]');
-await page.waitForSelector('[data-losmaken]');
+await page.waitForSelector('[data-losmaken="lid-9"]');
 
 // Eén tik vraagt om bevestiging: een confirm() wordt weggeklikt, deze vraag
 // niet.
@@ -115,10 +132,6 @@ check('en het scherm legt uit wat er nu gebeurt',
 // Een speler die van niemand is blijft beschrijfbaar. Dat is met opzet: op de
 // dag dat de policies dichtgingen had nog niet iedereen zichzelf geclaimd, en
 // die mensen mogen niet buiten komen te staan.
-await page.click('#wissel');
-await page.waitForSelector('[data-lid]');
-await page.click('[data-lid]:has(.nm:text-is("Joey"))');
-await page.waitForSelector('[data-race], .speler');
 await page.click('[data-weergave="races"]');
 await openRace(page, 'Shanghai');
 await page.click('[data-tab="race"]');

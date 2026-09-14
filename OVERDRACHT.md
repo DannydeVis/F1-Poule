@@ -3153,3 +3153,71 @@ aanwijzen. Ook `schema.sql`, `test/schema-gedrag.test.sql`,
 `test/policies.test.sql` en de rest van de PostgreSQL-suite opnieuw gedraaid
 tegen een lokale database — de nieuwe kolom verandert niets aan bestaand
 gedrag.
+
+---
+
+## "Speler wisselen" weggehaald
+
+"Nutteloos voor mij, kan weg." Terechte vraag om op te helderen wat de knop
+precies deed: hij liet je op hetzelfde toestel teruggaan naar "Wie ben
+jij?" zonder je sessie kwijt te raken — anders dan **Wissel** (verlaat de
+poule, houdt je account) en **Uitloggen** (beëindigt je account overal),
+vergat deze knop alleen lokaal wie je *in deze ene poule* was.
+
+Voordat hij wegging, is expliciet gevraagd of dat gevolgen had: ja, want het
+was ook de enige weg om op één telefoon meerdere mensen achter elkaar te
+laten inschrijven (BEDIENING.md §7, "een gedeeld toestel"). Met die
+consequentie helder gekozen voor volledige verwijdering.
+
+### Wat er nu niet meer via de UI kan
+
+`maakSpeler()` heeft een terugval: probeer je een nieuwe naam aan te maken
+terwijl je account al een andere speler in dezelfde poule heeft, dan krijg
+je hem zonder eigenaar in plaats van een foutmelding (de unieke-sleutel-
+botsing wordt opgevangen). Die code blijft gewoon staan — hij is onschadelijk
+en verwijderen was geen onderdeel van de vraag — maar zonder "Speler
+wisselen" is er geen manier meer om via de app zelf terug te komen bij "Wie
+ben jij?" wanneer je al een speler in de huidige poule hebt. Wie een tweede
+account nodig heeft, opent de app nu gewoon op zijn eigen toestel; dat was
+toch al de aangeraden weg.
+
+### Wat er is weggehaald
+
+- De knop zelf (`racesPagina()` en `poulePagina()`) en zijn click-handler in
+  `toonApp()`.
+- `vergeet(poolId)`, de enige aanroeper van die handler — dood zonder hem.
+
+### Wat dit kostte aan de testkant
+
+Vier testbestanden gebruikten `#wissel` niet om de knop zelf te testen, maar
+als kortste weg naar "een tweede lokale identiteit op dezelfde pagina":
+
+- **`test/vragen-beheren.test.mjs`** — triviaal: de knop stond alleen in een
+  `waitForSelector`-fallback, vervangen door `#uitnodiging`.
+- **`test/eigen-inzending.test.mjs`** — volledig herbouwd zonder verlies:
+  "meekijken bij Joey" wordt nu een echte vreemdeling die de poule voor het
+  eerst opent (`localStorage.clear()` + code), en "losmaken" gebeurt door een
+  nieuwe, echt geclaimde speler ("Casper") die via zijn eigen link
+  (`?code=...&speler=lid-9`) naar Joey's rij kijkt zonder zijn eigen account
+  te verliezen — dezelfde truc als `eigenLinkBlok()`, hier gebruikt om te
+  kijken in plaats van om jezelf mee te nemen.
+- **`test/account.test.mjs`** — het "ander toestel neemt niemand over"-deel
+  werd twee onafhankelijke verse bezoeken in plaats van één bezoek met een
+  wissel ertussen (realistischer toch: twee vreemdelingen, niet één die van
+  gedachten verandert). Het "gedeeld toestel"-deel zelf (Joey via `#maak`
+  aanmaken terwijl Danny's sessie actief is) kon niet gelijkwaardig herbouwd
+  worden — dat vereist precies het mechanisme dat wegging — en is vervangen
+  door Joey rechtstreeks als niet-geclaimde speler in de "database" te
+  zetten, met een comment dat uitlegt waarom.
+- **`test/koppel-vraag.test.mjs`** — twee scenario's (`"Nooit een tweede
+  keer op hetzelfde toestel"` en `"Het scherpe geval: een gedeeld toestel,
+  een tweede speler"`) konden niet zonder het mechanisme zelf getest worden
+  en zijn vervangen door een toelichting op de plek waar ze stonden, inclusief
+  een verwijzing hierheen.
+
+### Controles
+
+Geen nieuwe test — dit is een verwijdering. Het aantal testbestanden blijft
+40; de volledige suite is opnieuw groen gedraaid. De vier aangepaste
+bestanden dekken het gedrag dat nog wél bereikbaar is, en zijn expliciet in
+hun commentaar over wat dat niet meer is.

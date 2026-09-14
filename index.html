@@ -1055,7 +1055,6 @@ const wis     = (k)    => { try { localStorage.removeItem(k); } catch { /* niets
 const sleutel = (poolId) => `poule:${poolId}:mijn_id`;
 const mijnId  = (poolId) => lees(sleutel(poolId));
 const onthoud = (poolId, memberId) => schrijf(sleutel(poolId), memberId);
-const vergeet = (poolId) => wis(sleutel(poolId));
 
 // Welke poule je het laatst gebruikte. Zonder dit begint de app elke keer
 // weer op het codescherm.
@@ -2373,8 +2372,6 @@ function toonApp() {
   knoopPrivacy();
   knoopLosmaken();
   knoopUitloggen();
-  const wissel = app.querySelector('#wissel');
-  if (wissel) wissel.onclick = () => { vergeet(S.poule.id); S.ik = null; render(); };
   const anders = app.querySelector('#anderePoule');
   if (anders) anders.onclick = () => {
     // Alleen "welke poule sta je nu in" vergeten. Het lijstje met al je
@@ -2402,8 +2399,7 @@ function racesPagina(volgend) {
     <span class="label">kalender</span>
     <div class="kalender">${S.races.map(kalenderRij).join('')
       || `<div class="leeg"><span class="label">nog geen races</span>
-           <p class="zacht" style="margin:0">De kalender wordt automatisch opgehaald.</p></div>`}</div>
-    <button class="knop klein" id="wissel">Speler wisselen</button>`;
+           <p class="zacht" style="margin:0">De kalender wordt automatisch opgehaald.</p></div>`}</div>`;
 }
 
 function hero(volgend) {
@@ -2696,8 +2692,7 @@ function poulePagina(rijen) {
     ${omschrijvingBlok()}
     ${openbaarBlok()}
     ${beheerBlok()}
-    ${pouleLijstBlok()}
-    <button class="knop klein" id="wissel">Speler wisselen</button>`;
+    ${pouleLijstBlok()}`;
 }
 
 // ---- profiel: alles wat over jou gaat, niet over de poule ---

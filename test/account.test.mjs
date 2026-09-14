@@ -57,26 +57,23 @@ await page.waitForSelector('[data-race]');
 check('een herlaadbeurt hergebruikt de sessie en maakt er geen tweede bij',
   (await accounts()).length === 1);
 
-// --- een gedeeld toestel ---------------------------------------------------
-// Danny geeft zijn telefoon door zodat Joey zich kan inschrijven. Eén account
-// kan maar één speler per poule zijn (die sleutel staat in schema.sql), dus
-// Joey krijgt er geen. Hij doet gewoon mee; hij hangt alleen nog aan niemand,
-// tot hij de app op zijn eigen toestel opent. Een foutmelding zou hier veel
-// erger zijn dan een speler die nog geclaimd moet worden.
-await page.click('#wissel');
-await page.waitForSelector('#naam');
-await page.fill('#naam', 'Joey');
-await page.click('#maak');
-await page.waitForSelector('[data-race]');
-
-const joey = await speler('Joey');
-check('een tweede speler vanaf hetzelfde toestel mag gewoon meedoen', joey !== null);
-check('maar hij hangt nog aan niemand', joey && joey.user_id === null,
-  JSON.stringify(joey));
+// --- een tweede, nog niet geclaimde speler ---------------------------------
+// Dit ontstond vroeger via "Speler wisselen": Danny gaf zijn telefoon door,
+// Joey typte zijn naam in, en omdat één account maar één speler per poule
+// mag zijn (schema.sql) kreeg Joey er geen — maakSpeler() valt dan terug op
+// user_id: null in plaats van een foutmelding. Die knop is weg, en daarmee
+// ook de enige weg om dit gedeeld-toestel-moment via de UI na te bootsen;
+// zie OVERDRACHT.md. Dit zet Joey rechtstreeks klaar zoals hij er na zo'n
+// moment had uitgezien, zodat de rest van deze test — een niet-geclaimde
+// speler kan alsnog geclaimd worden — gewoon door kan.
+await page.evaluate(() => {
+  globalThis.__db.pool_members.push(
+    { member_id: 'lid-2', pool_id: 'pool-1', display_name: 'Joey', user_id: null });
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
+});
+check('Joey staat klaar als speler zonder account', (await speler('Joey'))?.user_id === null);
 check('en de eerste speler blijft van het eerste account',
   (await speler('Danny')).user_id === eerste[0]);
-check('er is geen tweede account voor bijgemaakt', (await accounts()).length === 1);
-check('en er staat geen foutmelding', (await page.$('#f')) === null);
 
 // --- het account herkent je, ook als het toestel niets meer weet -----------
 // Alleen de poule-geheugens weg, de sessie blijft staan. Dat is de situatie
@@ -113,9 +110,11 @@ check('een leeg toestel neemt een geclaimde speler niet over',
 check('en maakt daar ook geen account voor aan, want dat helpt niemand',
   (await accounts()).length === 1);
 
-// Een speler die nog van niemand is, is er wel eentje om te claimen — en
-// dán is er pas een account nodig.
-await page.click('#wissel');
+// Een ánder, eveneens vers toestel: een speler die nog van niemand is, is er
+// wel eentje om te claimen — en dán is er pas een account voor nodig.
+await page.evaluate(() => localStorage.clear());
+await page.reload();
+await voerCodeIn();
 await kiesSpeler('Joey');
 
 const twee = await accounts();
