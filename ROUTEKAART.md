@@ -43,6 +43,38 @@ Nog niet nu, wel binnenkort. Zodra racepicks.com er is:
 - De app zelf hoeft niet aangepast: `linkBasis()` leest `location.origin`
   dynamisch uit, dus uitnodigingslinks en OAuth-redirects werken vanzelf op
   elk domein waar de app draait.
+- **Eigen SMTP met racepicks.com-adres.** Nu staat er in elke mail (magic
+  link, mailkoppeling) een afzenderadres van Supabase zelf
+  (`noreply@mail.app.supabase.io`) — dat kan pas veranderen naar iets met
+  `racepicks.com` erin zodra dat domein bestaat én er een mailserver aan
+  gekoppeld wordt (Supabase → Authentication → Settings → SMTP). De
+  zichtbare *tekst* in de mail (onderwerp, inhoud) is trouwens nu al vrij
+  aan te passen via Authentication → Emails → sjablonen, zonder dat
+  daarvoor het domein nodig is.
+
+---
+
+## Wellicht: publieke en private poules
+
+Nog niet uitgewerkt, wel de moeite waard om vast te houden. Op dit moment is
+elke poule al "privé" in de zin dat je altijd de code nodig hebt om mee te
+doen — er is geen manier om een poule te *vinden* zonder dat iemand de code
+deelt.
+
+Publiek zou iets nieuws toevoegen: een manier om poules vindbaar te maken
+zonder een gedeelde code, bijvoorbeeld een blader-lijst van open poules
+waar iedereen bij mag springen. Vragen die eerst beantwoord moeten worden
+voordat dit gebouwd kan worden:
+
+- Vindbaar op wat — een naam, een regio, "iedereen mag meedoen"?
+- Wie mag een poule openbaar zetten — alleen de poulebaas, of iedereen die
+  een poule aanmaakt?
+- Betekent "privé" dan ook iets nieuws (bijvoorbeeld: de stand pas zichtbaar
+  na meedoen, in plaats van "iedereen met de code kan alles zien" zoals nu)?
+
+Dat laatste raakt de RLS-policies in `schema.sql`, dus dit is niet alleen
+een schermpje erbij — het is een echte ontwerpvraag. Oppakken zodra er
+duidelijkheid is over wat "publiek" hier precies moet betekenen.
 
 ---
 
