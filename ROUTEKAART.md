@@ -54,27 +54,19 @@ Nog niet nu, wel binnenkort. Zodra racepicks.com er is:
 
 ---
 
-## Wellicht: publieke en private poules
+## ~~Publieke en private poules~~ — gebouwd
 
-Nog niet uitgewerkt, wel de moeite waard om vast te houden. Op dit moment is
-elke poule al "privé" in de zin dat je altijd de code nodig hebt om mee te
-doen — er is geen manier om een poule te *vinden* zonder dat iemand de code
-deelt.
+De drie open vragen zijn met opzet zo klein mogelijk beantwoord:
 
-Publiek zou iets nieuws toevoegen: een manier om poules vindbaar te maken
-zonder een gedeelde code, bijvoorbeeld een blader-lijst van open poules
-waar iedereen bij mag springen. Vragen die eerst beantwoord moeten worden
-voordat dit gebouwd kan worden:
-
-- Vindbaar op wat — een naam, een regio, "iedereen mag meedoen"?
-- Wie mag een poule openbaar zetten — alleen de poulebaas, of iedereen die
-  een poule aanmaakt?
-- Betekent "privé" dan ook iets nieuws (bijvoorbeeld: de stand pas zichtbaar
-  na meedoen, in plaats van "iedereen met de code kan alles zien" zoals nu)?
-
-Dat laatste raakt de RLS-policies in `schema.sql`, dus dit is niet alleen
-een schermpje erbij — het is een echte ontwerpvraag. Oppakken zodra er
-duidelijkheid is over wat "publiek" hier precies moet betekenen.
+- **Vindbaar op wat** — alleen een naam en omschrijving in een blader-lijst,
+  geen regio of categorie. Dat kan er later bij als er behoefte aan blijkt.
+- **Wie mag openbaar zetten** — alleen de poulebaas, via `magBeheren()`,
+  hetzelfde mechanisme als de vragenset en de omschrijving.
+- **Betekent "privé" iets nieuws** — nee. `pools_lezen` stond al open (zie
+  §RLS in `schema.sql`), dus "privé" betekent nog steeds precies wat het al
+  betekende: je hebt de code nodig om hem te *vinden*, niet om hem te lezen.
+  Geen RLS-wijziging dus, alleen een nieuwe kolom `is_public` en een nieuwe
+  weg naar dezelfde, altijd al leesbare data. Zie `OVERDRACHT.md`.
 
 ---
 

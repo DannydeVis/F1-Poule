@@ -3093,3 +3093,63 @@ herkent je automatisch; uitloggen vraagt eerst een bevestiging; na uitloggen
 is de lokale sessie weg maar het account en de speler bestaan nog gewoon;
 en de eigen naam aanklikken op dit toestel wijst daarna netjes naar de
 inloglink in plaats van je zomaar weer binnen te laten.
+
+---
+
+## Openbare poules: meedoen zonder code
+
+"Wellicht ook iets doen met publieke en prive poules?" stond in
+`ROUTEKAART.md` met drie open ontwerpvragen. Alle drie zijn met opzet zo
+klein mogelijk beantwoord, om niet in een RLS-herziening te belanden voor
+iets dat ook zonder kan.
+
+### De beslissing: "privé" verandert niet
+
+`pools_lezen` in `schema.sql` staat al open voor iedereen met de anon key —
+zie de uitleg bij "Toegang" in dat bestand: lezen moet open zijn, want je
+moet een poule op zijn code kunnen vinden vóórdat je lid bent. Dat betekent:
+wie een poule-id of -code al heeft, kon hem altijd al lezen. Openbaar maken
+verandert dus niets aan wie mág lezen, alleen of een poule in een lijst
+*staat* om gevonden te worden. Geen nieuwe policy, geen nieuwe blootstelling
+— alleen een nieuwe kolom en een nieuwe weg naar dezelfde data.
+
+Dat scheelt een hoop scope: geen "stand pas zichtbaar na meedoen"-semantiek,
+geen aparte leesregels voor openbaar versus privé. Als daar ooit vraag naar
+komt is dat een aparte, latere beslissing — deze kolom staat er niet los van
+in de weg.
+
+### Wat er is gebouwd
+
+- **`pools.is_public`** (schema.sql, default `false`). De bestaande
+  `pools_bijwerken`-policy (`mag_beheren(id)`) dekt het schrijven al: geen
+  nieuwe policy nodig, dezelfde die de omschrijving en de vragenset al
+  beschermt.
+- **`openbaarBlok()`/`knoopOpenbaar()`** onder Poule, naast de omschrijving:
+  een knop "Maak openbaar" / "Maak weer privé", alleen zichtbaar voor wie
+  `magBeheren()` — hetzelfde poulebaas-mechanisme als overal elders.
+- **`openbarePoulesBlok()`** op het beginscherm (`toonStart()`): dichtgeklapt
+  achter "Blader door openbare poules", want dit is de uitzondering, niet de
+  voordeur. Open klappen haalt `pools` op met `is_public = true` en toont ze
+  met `pouleKnop()` — dezelfde render- en klikfunctie die de "jouw poules"-
+  lijst al gebruikt, dus een klik doet precies wat daar ook gebeurt:
+  `naarPoule(id)`, en je landt op "Wie ben jij?" zonder ooit een code te
+  hebben getikt.
+
+### Wat dit bewust niet doet
+
+Geen filter, geen zoekveld, geen regio of categorie — alleen naam en
+omschrijving in een platte lijst. Geen paginering: voor een vriendenapp
+zonder centrale promotie wordt die lijst voorlopig niet lang genoeg om dat
+nodig te maken. Allebei makkelijk toe te voegen zodra dat een keer wringt.
+
+### Controles
+
+12 in `test/openbare-poules.test.mjs`: een poule is standaard niet openbaar;
+de knop wisselt hem naar openbaar en terug, met de database mee; een tweede,
+niet-openbare poule blijft uit de lijst; en een volledig vers toestel (geen
+bekende poules, geen sessie) vindt de openbare poule via de lijst, komt op
+de spelerslijst uit zonder een code te tikken, en kan zichzelf daar gewoon
+aanwijzen. Ook `schema.sql`, `test/schema-gedrag.test.sql`,
+`test/policies.test.sql` en de rest van de PostgreSQL-suite opnieuw gedraaid
+tegen een lokale database — de nieuwe kolom verandert niets aan bestaand
+gedrag.
