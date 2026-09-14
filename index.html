@@ -226,6 +226,11 @@
     text-overflow:ellipsis;white-space:nowrap}
   .merk .code{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
     color:var(--ink3);margin-left:auto;flex:none}
+  .merk .wisselknop{margin-left:auto;flex:none;background:none;
+    border:1px solid var(--lijn);border-radius:6px;padding:5px 9px;
+    font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+    color:var(--ink3);cursor:pointer;transition:color .18s,border-color .18s}
+  .merk .wisselknop:hover{color:var(--ink);border-color:var(--ink3)}
   .groot{font-family:var(--cond);font-size:44px;font-weight:700;line-height:.98;
     text-transform:uppercase;margin:0}
   .middel{font-family:var(--cond);font-size:34px;font-weight:700;line-height:1;
@@ -2293,6 +2298,8 @@ function toonApp() {
           <span class="blok"></span>
           <span class="naam merknaam">Poule</span>
           <span class="naam merkpoule">${esc(S.poule.name)}</span>
+          <button class="wisselknop" id="anderePoule" type="button"
+            title="Wissel van poule">Wissel</button>
         </div>
         <nav class="nav">
           ${Object.keys(NAVNAMEN).map(w => `<button class="navknop" data-weergave="${w}"
@@ -2392,10 +2399,7 @@ function racesPagina(volgend) {
     <div class="kalender">${S.races.map(kalenderRij).join('')
       || `<div class="leeg"><span class="label">nog geen races</span>
            <p class="zacht" style="margin:0">De kalender wordt automatisch opgehaald.</p></div>`}</div>
-    <div style="display:flex;gap:8px">
-      <button class="knop klein" id="wissel">Speler wisselen</button>
-      <button class="knop klein" id="anderePoule">Andere poule</button>
-    </div>`;
+    <button class="knop klein" id="wissel">Speler wisselen</button>`;
 }
 
 function hero(volgend) {
@@ -2691,10 +2695,7 @@ function poulePagina(rijen) {
     ${omschrijvingBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}
-    <div style="display:flex;gap:8px">
-      <button class="knop klein" id="wissel">Speler wisselen</button>
-      <button class="knop klein" id="anderePoule">Andere poule</button>
-    </div>`;
+    <button class="knop klein" id="wissel">Speler wisselen</button>`;
 }
 
 // Een speler in de lijst onder Poule. Voor de poulebaas staat er soms één

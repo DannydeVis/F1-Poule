@@ -2982,3 +2982,33 @@ nooit meer worden, ook niet met de beste bedoelingen.
 7 in `test/beheerder.test.mjs`: dat de knop en de uitleg verschijnen bij een
 ownerless poule, dat klikken de database ook echt bijwerkt en een
 bevestiging toont, en dat knop én uitleg daarna verdwenen zijn.
+
+---
+
+## "Andere poule" verhuisd naar de zijbalk
+
+"Het verwisselen naar een andere poule zit ver weg en is niet duidelijk."
+Terecht: de knop stond onderaan het Races- én het Poule-tabblad, achter een
+hero, een kalender of — op Poule — vijf andere blokken. Op de Standpagina
+stond hij helemaal niet, en in een racescherm ook niet.
+
+De oplossing was geen nieuwe functie, alleen een nieuwe plek. `#anderePoule`
+zelf — inclusief de handler die hem al had in `toonApp()` — bleef ongewijzigd;
+hij verhuisde van `racesPagina()` en `poulePagina()` naar de `.merk`-balk
+bovenin de vaste zijbalk. Die zijbalk is onderdeel van de `toonApp()`-schil
+en staat er dus op elk tabblad en in elk racescherm, sticky bovenaan op
+mobiel en als permanente kolom op breder scherm — precies de dekking die
+ontbrak. De knop kreeg een eigen klasse (`.wisselknop`, dezelfde compacte
+stijl als `.losmaak` bij een speler) in plaats van de generieke `knop klein`,
+zodat hij in de smalle `.merk`-rij past zonder de poulenaam te verdringen.
+
+Omdat de id en de klik-logica identiek bleven, hoefden bestaande tests die al
+op `#anderePoule` klikten (`eerste-indruk`, `account`, `mailkoppeling`,
+`poules-en-omschrijving`) niet aangepast te worden.
+
+### Controles
+
+7 nieuwe in `test/poule-wisselen.test.mjs`: dat de knop zichtbaar is op
+races, stand, poule én middenin een racescherm — vier plekken waarvan er
+eerder maar twee waren — en dat een klik nog steeds hetzelfde doet: terug
+naar het codescherm, met de poule intact in het lijstje van bekende poules.

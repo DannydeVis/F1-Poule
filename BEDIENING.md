@@ -149,8 +149,10 @@ Dat laatste wijkt af van het oorspronkelijke plan, waarin je bij meer dan één
 poule eerst een lijstje kreeg. In de praktijk speel je vrijwel altijd in
 dezelfde poule verder, en dan is een keuzescherm ertussen een extra tik. Het
 lijstje staat er wel, op de twee plekken waar je het nodig hebt: onderaan de
-Poule-tab ("jouw andere poules"), en op het startscherm zodra je op **Andere
-poule** hebt gedrukt.
+Poule-tab ("jouw andere poules"), en op het startscherm zodra je op **Wissel**
+hebt gedrukt — die knop staat in de zijbalk, naast de poulenaam, en is dus op
+elk tabblad en in elk racescherm bereikbaar in plaats van ergens onderaan een
+tabblad.
 
 Wisselen haalt de poule opnieuw uit de database op in plaats van uit het
 lijstje: de naam of de omschrijving kan veranderd zijn, en een poule die
