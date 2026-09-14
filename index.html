@@ -3181,7 +3181,8 @@ function beheerBlok() {
     ${opSlot ? `<p class="zacht" style="margin:0">De vragenset ligt vast${
       race ? ` sinds ${esc(race.name)}` : ''}. Zo blijven alle races vergelijkbaar.</p>` : ''}
     ${!S.poule.owner_member_id ? `<p class="zacht" style="margin:0">Deze poule heeft geen
-      poulebaas — hij is aangemaakt voordat dat bestond. Iedereen kan hem dus aanpassen.</p>` : ''}
+      poulebaas — hij is aangemaakt voordat dat bestond. Iedereen kan hem dus aanpassen.</p>
+      <button class="knop klein" id="pouleClaimen">Ik word poulebaas</button>` : ''}
     <div class="vragenlijst">${vragenLijst(gekozen, { uit: opSlot })}</div>
     ${opSlot ? '' : `${vragenVoet(gekozen)}
       <div style="display:flex;gap:8px">
@@ -3201,6 +3202,27 @@ function knoopBeheer() {
   });
   const terug = app.querySelector('#vragenTerug');
   if (terug) terug.onclick = () => { S.beheer = null; S.beheerFout = ''; render(); };
+
+  const claim = app.querySelector('#pouleClaimen');
+  if (claim) claim.onclick = async () => {
+    claim.disabled = true;
+    claim.textContent = 'Bezig...';
+    // Alleen zetten als er nog geen poulebaas is: twee mensen die tegelijk op
+    // deze knop drukken mogen niet allebei winnen. Zie ook §7 van
+    // BEDIENING.md — de database dwingt dit nog niet zelf af.
+    const { data, error } = await db.from('pools')
+      .update({ owner_member_id: S.ik.id }).eq('id', S.poule.id)
+      .is('owner_member_id', null).select();
+    if (error || !data?.length) {
+      S.melding = error ? uitleg(error)
+        : 'Dat lukte niet. Misschien was je net te laat en heeft iemand anders hem al geclaimd.';
+    } else {
+      S.poule.owner_member_id = S.ik.id;
+      S.melding = 'Je bent nu de poulebaas van deze poule.';
+    }
+    try { await laad(); } catch (e) { toonFout(e.message); return; }
+    render();
+  };
 
   const bewaren = app.querySelector('#vragenBewaren');
   if (bewaren) bewaren.onclick = async () => {

@@ -210,6 +210,13 @@ De poulebaas staat als `owner_member_id` bij de poule, en het beheergedeelte
 staat alleen bij die speler op het scherm. Dat geldt voor de vragenset én voor
 de omschrijving.
 
+Heeft een poule nog geen `owner_member_id` — poules van vóór dit scherm
+bestond, zoals de echte Vrijdagmiddagpoule — dan mag voorlopig iedereen erbij,
+en staat er onder Poule een knop "Ik word poulebaas" om dat op te lossen. Wie
+'m als eerste indrukt, is 'm; de update gebeurt met `.is('owner_member_id',
+null)` erbij zodat een gelijktijdige tweede poging nul rijen raakt in plaats
+van de eerste te overschrijven.
+
 Wees eerlijk over wat dat op dit moment is: het voorkomt ongelukken, geen
 kwaadwilligheid. Iemand die de anon key uit de broncode plukt kan er alsnog
 omheen. Voor een vriendenpoule is dat prima, maar bouw er geen dingen op die
