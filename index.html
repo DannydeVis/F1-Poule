@@ -90,6 +90,9 @@
     --accent:#d93d24; --accent-ink:#ffffff;
     --groen:#1f8a4c; --groen-vlak:rgba(31,138,76,.12); --groen-rand:rgba(31,138,76,.45);
     --amber:#b07b16; --amber-vlak:rgba(176,123,22,.10); --amber-rand:rgba(176,123,22,.40);
+    /* De paars-groen-geel van een F1-timingscherm. Paars is de beste van de
+       drie en hoort schaars te zijn — daarom alleen voor een exacte treffer. */
+    --paars:#8b2fc9;
     --omkeer:#14151a; --omkeer-ink:#f2f1ee;
     --vlag-a:#14151a;
     --sans:Barlow,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
@@ -105,6 +108,7 @@
       --accent:#ee4d33; --accent-ink:#0b0b0c;
       --groen:#34b264; --groen-vlak:rgba(52,178,100,.16); --groen-rand:rgba(52,178,100,.50);
       --amber:#e0a53a; --amber-vlak:rgba(224,165,58,.08); --amber-rand:rgba(224,165,58,.40);
+      --paars:#c084f5;
       --omkeer:#f2f3f5; --omkeer-ink:#0b0b0c;
       --vlag-a:#f2f3f5;
     }
@@ -552,7 +556,12 @@
     text-transform:uppercase;flex:none}
   .pts{font-family:var(--cond);font-size:24px;font-weight:700;min-width:26px;
     text-align:right;flex:none}
-  .v5{color:var(--groen)} .v3{color:var(--amber)} .v1{color:var(--amber)} .v0{color:var(--ink3)}
+  /* Paars-groen-geel, zoals op een timingscherm: paars is raak, groen is bijna,
+     geel is net niet, grijs is mis. Eerder waren "één plek ernaast" en "twee
+     plekken ernaast" allebei amber; nu zijn het drie echte treden. Het getal
+     blijft ernaast staan — kleur alleen is voor wie groen en geel niet uit
+     elkaar houdt geen informatie. */
+  .v5{color:var(--paars)} .v3{color:var(--groen)} .v1{color:var(--amber)} .v0{color:var(--ink3)}
   .rest{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;
     background:var(--paneel);border-radius:8px}
   .rest .nm{font-family:var(--cond);font-size:20px;font-weight:600;
