@@ -783,3 +783,42 @@ de `postgres`-rol in de SQL editor. Krijgt een speler "de database mag dit
 account niet verwijderen", dan komt die rol niet aan `auth.users` in jouw
 project. De uitweg is dan een Supabase Edge Function met de `service_role` key,
 en die sleutel blijft daar — nooit in `index.html`.
+
+---
+
+## 13. De vier SQL-bestanden, en wanneer je welke pakt
+
+Ze lijken op elkaar en doen heel verschillende dingen. Van onschuldig naar
+onomkeerbaar:
+
+| bestand | wat het doet | wanneer |
+|---|---|---|
+| `diagnose.sql` | leest alleen, wijzigt niets | als je wilt weten hoe de database ervoor staat |
+| `schema.sql` | maakt en repareert de structuur | na elke wijziging aan het schema; twee keer draaien mag |
+| `leegmaken.sql` | gooit poules, spelers en inzendingen weg, laat de rest staan | een schone start met dezelfde kalender |
+| `reset.sql` | sloopt alle tabellen | alleen als `schema.sql` de boel niet meer recht krijgt |
+
+### leegmaken.sql: schone start, kalender blijft
+
+Voor "ik wil opnieuw beginnen met de poules". Weg gaan de poules, de spelers,
+de antwoorden, de vragenkeuze per poule en de oude `predictions`-rijen. Blijven
+staan de 24 races met hun deelnemerslijsten en uitslagen, de vragenlijst zelf,
+en alle accounts.
+
+Dat laatste is met opzet: een account is niet hetzelfde als een speler. Wie
+straks opnieuw inlogt is gewoon weer zichzelf en maakt een nieuwe speler aan.
+Wil je ook de accounts weg, dan staat daar onderin het bestand een blok voor
+dat je uit het commentaar haalt — inclusief je eigen inlog.
+
+Na afloop hoeft er niets meer: de app werkt meteen, er is niets opnieuw op te
+halen, en de eerste die een poule aanmaakt begint met een lege lei. Het bestand
+draait in één transactie en eindigt met een controlelijstje waarin links alles
+nul hoort te zijn en rechts alles moet staan zoals het stond. Twee keer draaien
+is net zo veilig als één keer.
+
+### Waarom dit niet `reset.sql` is
+
+`reset.sql` doet `drop table`. Daarna staat er geen structuur meer, moet
+`schema.sql` opnieuw en moet de kalender via de sync opnieuw opgehaald worden —
+inclusief alle uitslagen van het seizoen tot nu toe. Dat is een hersteloperatie
+voor als er iets stuk is, geen opschoning.
