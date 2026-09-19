@@ -1962,8 +1962,11 @@ function eerstvolgende(nu = Date.now()) {
 
 function raceStand(r, nu = Date.now()) {
   const mijn = vindPred(r.id, S.ik.id);
+  // Geen "uitslag ·" ervoor: deze rij staat onder de kop "gereden", met een
+  // finishvlag ernaast. Die twee zeggen het al, en de regel moet ruimte
+  // houden voor wie het weekend won.
   if (r.quali_result || r.race_result) {
-    return { soort:'klaar', tekst:`uitslag · ${scoreWeekend(mijn, r)} ptn` };
+    return { soort:'klaar', tekst:`${scoreWeekend(mijn, r)} ptn` };
   }
   // Een uitslag wint van de vlag: staat er toch een uitslag (met de hand
   // ingevuld, of OpenF1 die hem later alsnog kreeg), dan is hij niet afgelast.
@@ -2403,7 +2406,25 @@ function toonApp() {
 
 // ---- linkerkolom: races -------------------------------------
 
+// De kalender liep strak chronologisch, en dus schoof het seizoen zichzelf
+// naar beneden: in juni moest je langs acht gereden races scrollen voordat je
+// de eerstvolgende zag. Nu staat bovenaan wat er nog komt, en krijgen de
+// gereden races hun eigen lijst eronder — nieuwste eerst, en niet als dood
+// archief maar met wie dat weekend in de poule won.
 function racesPagina(volgend) {
+  const metStand = S.races.map(r => ({ r, st: raceStand(r) }));
+  const achterDeRug = (st) => st.soort === 'klaar' || st.soort === 'afgelast';
+  const komend = metStand.filter(x => !achterDeRug(x.st));
+  const gereden = metStand.filter(x => achterDeRug(x.st)).reverse();
+  // Twee heel verschillende soorten leegte: een poule die nog op de kalender
+  // wacht, en een seizoen dat erop zit. Hetzelfde zinnetje voor allebei zou in
+  // december beweren dat de races nog opgehaald moeten worden.
+  const leeg = S.races.length
+    ? `<div class="leeg"><span class="label">seizoen rond</span>
+         <p class="zacht" style="margin:0">Alle races zijn gereden. Hieronder staat
+           hoe ze gegaan zijn.</p></div>`
+    : `<div class="leeg"><span class="label">nog geen races</span>
+         <p class="zacht" style="margin:0">De kalender wordt automatisch opgehaald.</p></div>`;
   return `
     ${DEMO ? `<div class="waarschuwing"><span class="label">demo</span>
       Demomodus met verzonnen data.</div>` : ''}
@@ -2412,9 +2433,9 @@ function racesPagina(volgend) {
       invullen. Sta opslag voor deze site toe, of gebruik geen privévenster.</div>` : ''}
     ${volgend ? hero(volgend) : ''}
     <span class="label">kalender</span>
-    <div class="kalender">${S.races.map(kalenderRij).join('')
-      || `<div class="leeg"><span class="label">nog geen races</span>
-           <p class="zacht" style="margin:0">De kalender wordt automatisch opgehaald.</p></div>`}</div>`;
+    <div class="kalender">${komend.map(x => kalenderRij(x.r, x.st)).join('') || leeg}</div>
+    ${gereden.length ? `<span class="label">gereden</span>
+      <div class="kalender">${gereden.map(x => kalenderRij(x.r, x.st)).join('')}</div>` : ''}`;
 }
 
 function hero(volgend) {
@@ -2438,17 +2459,29 @@ function hero(volgend) {
     </div>`;
 }
 
-function kalenderRij(r) {
-  const st = raceStand(r);
+// Wie pakte dit weekend de meeste punten in de poule? Zonder dit is een
+// gereden race alleen "uitslag · 78 ptn" — je eigen score, zonder te weten of
+// dat goed of slecht was. Bij een gelijkstand delen ze hem; vanaf drie namen
+// wordt het een opsomming die niemand meer leest.
+function weekendWinstTekst(r) {
+  const winnaars = weekendWinnaars(r);
+  if (!winnaars.length) return '';
+  if (winnaars.length === 1) return winnaars[0].mij ? 'jij won' : `${winnaars[0].naam} won`;
+  if (winnaars.length === 2) return `${winnaars[0].naam} en ${winnaars[1].naam} deelden`;
+  return `${winnaars.length} spelers deelden`;
+}
+
+function kalenderRij(r, st = raceStand(r)) {
   const mijn = vindPred(r.id, S.ik.id);
   const vink = (lijst) => lijst?.length ? 'aan' : '';
   const merk = st.soort === 'klaar' ? `<span class="vlag"></span>`
     : st.soort === 'open' ? `<span class="stip klopt"></span>` : '';
+  const won = st.soort === 'klaar' ? weekendWinstTekst(r) : '';
   return `<button class="race ${st.soort}" data-race="${esc(r.id)}">
     <span class="rnd">${String(r.round).padStart(2,'0')}</span>
     <span class="rinfo">
       <span class="nm">${esc(r.name)}</span>
-      <span class="st ${st.soort}">${esc(st.tekst)}</span>
+      <span class="st ${st.soort}">${esc(st.tekst)}${won ? ` · ${esc(won)}` : ''}</span>
     </span>
     <span class="mk" title="Q = kwalificatie ingevuld, R = race ingevuld">
       <i class="${vink(mijn?.quali_top10)}">Q</i><i class="${vink(mijn?.race_top10)}">R</i></span>

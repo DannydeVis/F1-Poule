@@ -47,6 +47,25 @@ invulscherm of het uitslagscherm.
 Bovenaan een strook met wat er nu speelt: "Kwalificatie sluit zaterdag 16:00,
 Davy heeft nog niks ingevuld."
 
+Daaronder staan **twee** lijsten, en die volgorde is het punt:
+
+- **kalender** — wat nog komt, plus wat nog op zijn uitslag wacht,
+  chronologisch.
+- **gereden** — alles met een uitslag (en de afgelaste races), **nieuwste
+  eerst**.
+
+Eén chronologische lijst duwde het seizoen zichzelf naar beneden: halverwege
+stond de eerstvolgende race onder acht gereden weekenden. En terugkijken begin
+je bij vorige week, niet bij maart — vandaar de omgekeerde volgorde in de
+tweede lijst.
+
+Een gereden race toont je eigen punten én wie dat weekend in de poule won
+("100 ptn · jij won", "16 ptn · Michael won", of bij gelijkspel "Davy en
+Michael deelden", op alfabet). Zonder die tweede helft weet je wel wat je
+scoorde maar niet of dat goed was. Het woord "uitslag" staat er met opzet
+niet meer voor: de kop "gereden" en de finishvlag in de rij zeggen dat al, en
+de regel heeft de ruimte nodig.
+
 ### Stand
 Drie onderdelen op één scherm, gescheiden door koppen:
 - Seizoensstand
