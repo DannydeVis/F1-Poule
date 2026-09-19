@@ -1733,6 +1733,11 @@ function tikken() {
 const sluitTekst = (iso) => new Date(iso)
   .toLocaleString('nl-NL', { weekday:'short', hour:'2-digit', minute:'2-digit' });
 
+// Een datum zonder tijd, voor regels waar het om de dag gaat en niet om het
+// uur ("sinds 19 september").
+const datumKort = (iso) => new Date(iso)
+  .toLocaleDateString('nl-NL', { day:'numeric', month:'long' });
+
 // ============================================================
 //  Foutmeldingen
 //  De poule draait op een werk-pc zonder devtools. Een fout uit Postgres
@@ -1814,6 +1819,121 @@ const VRAAG_VELD = { quali_top10:'quali_top10', race_top10:'race_top10', winnaar
 const GEBOUWD = ['quali_top10', 'race_top10', 'winnaar', 'pole', 'teamgenoot_duels',
                  'snelste_ronde', 'snelste_pitstop', 'safety_cars', 'rode_vlag'];
 
+// ---- automatisch invullen bij vergeten ----------------------
+// Van de drie dingen die een vriendenpoule slopen was "mensen vergeten in te
+// vullen" de laatste die nog niet aangepakt was. Wie een weekend mist staat
+// op nul, en twee gemiste weekenden is meestal het einde van je seizoen.
+//
+// Daarom: wie niets inlevert krijgt de WK-stand van dat moment als top 10.
+// Dat is de saaiste voorspelling die er is en levert ongeveer de helft op van
+// wat een goede lijst doet — genoeg om aangehaakt te blijven, te weinig om
+// niet invullen lonend te maken.
+//
+// Drie dingen die bewust zo zijn:
+//
+//   Het staat uit, tenzij de poulebaas het aanzet. Dit verandert de spelregels
+//   van een poule, en dat is niet aan de app.
+//
+//   Het is een moment en geen vinkje. `autofill_vanaf` bewaart wanneer het
+//   aanging, en alleen deadlines daarna tellen mee. Anders zou aanzetten
+//   iedereen punten geven over races die al gereden zijn, en dat is precies
+//   het soort verrassing waar een poule ruzie van krijgt.
+//
+//   Er wordt niets weggeschreven. De lijst bestaat alleen in het geheugen van
+//   de app, opnieuw uitgerekend bij elke keer laden. Uitzetten haalt hem dus
+//   ook echt weg, en niemands inzending raakt vervuild met iets wat hij niet
+//   zelf gekozen heeft.
+
+// Het WK-puntenschema, alleen om een standaardlijst mee te maken. Het heeft
+// niets te maken met wat een speler in de poule scoort.
+const WK_PUNTEN = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+
+// Staat automatisch invullen aan voor deze lijst? De deadline moet voorbij
+// zijn (anders valt er nog niets te vergeten) en erná liggen (anders zou het
+// met terugwerkende kracht gelden).
+function autoGeldt(race, welk) {
+  const vanaf = S.poule?.autofill_vanaf;
+  if (!vanaf || !top10Actief(welk)) return false;
+  const deadline = welk === 'quali' ? race.deadline_quali : race.deadline_race;
+  if (!deadline) return false;
+  const t = Date.parse(deadline);
+  return t < Date.now() && t > Date.parse(vanaf);
+}
+
+const isAuto = (pred, welk) => !!pred?.auto?.includes(TOP10VRAAG[welk]);
+
+// Een automatische lijst moet overal waar hij te zien is zichzelf aanwijzen.
+// Punten die eruit komen zijn echt, maar de keuze is van de app en niet van
+// de speler, en dat verschil mag nergens wegvallen.
+const autoNoot = (pred, welk, waarom) => isAuto(pred, welk)
+  ? `<p class="label amber" style="margin:0">automatisch ingevuld · ${waarom}</p>` : '';
+
+/**
+ * De standaardlijst voor één race: de WK-stand zoals hij vóór dit weekend
+ * was, teruggebracht tot de coureurs die dit weekend meedoen.
+ *
+ * Nadrukkelijk de stand van tóén en niet die van nu, want anders zou de score
+ * van een race in mei nog veranderen zodra er in september wordt gereden.
+ *
+ * Coureurs met evenveel punten (in de eerste weken zijn dat er veel, allemaal
+ * op nul) staan op hun gemiddelde finishplek; wie nog nooit gefinisht is komt
+ * achteraan. Zonder eerdere uitslag is er geen stand en dus ook geen lijst —
+ * voor race 1 van een seizoen vult de app niets in.
+ */
+function autoLijst(race) {
+  const meedoen = (race.drivers ?? []).map(d => String(d.nr));
+  if (meedoen.length < 10) return null;
+  const punten = new Map(), som = new Map(), tel = new Map();
+  let eerdere = 0;
+  for (const r of S.races) {
+    if (!(r.round < race.round) || !r.race_result?.length) continue;
+    eerdere++;
+    r.race_result.forEach((nr, i) => {
+      const k = String(nr);
+      punten.set(k, (punten.get(k) ?? 0) + (WK_PUNTEN[i] ?? 0));
+      som.set(k, (som.get(k) ?? 0) + i + 1);
+      tel.set(k, (tel.get(k) ?? 0) + 1);
+    });
+  }
+  if (!eerdere) return null;
+  const gemiddeld = (k) => tel.get(k) ? som.get(k) / tel.get(k) : 99;
+  return meedoen
+    .sort((a, b) => (punten.get(b) ?? 0) - (punten.get(a) ?? 0)
+                 || gemiddeld(a) - gemiddeld(b)
+                 || Number(a) - Number(b))
+    .slice(0, 10);
+}
+
+// Draait ná bouwPreds(): vult de gaten, en merkt aan welke lijst niet van de
+// speler zelf komt. Een halve inzending telt per lijst — wie de kwalificatie
+// wel invulde en de race vergat krijgt alleen die tweede aangevuld.
+function vulAutoAan() {
+  if (!S.poule?.autofill_vanaf) return;
+  for (const r of S.races) {
+    const welken = ['quali', 'race'].filter(w => autoGeldt(r, w));
+    if (!welken.length) continue;
+    const lijst = autoLijst(r);
+    if (!lijst) continue;
+    for (const l of S.leden) {
+      let p = vindPred(r.id, l.member_id);
+      if (!p) {
+        p = { pool_id:S.poule.id, race_id:r.id, member_id:l.member_id,
+              quali_top10:null, race_top10:null, race_winnaar:null,
+              pole:null, teamgenoot_duels:null,
+              snelste_ronde:null, snelste_pitstop:null,
+              safety_cars:null, rode_vlag:null };
+        S.preds.push(p);
+      }
+      for (const w of welken) {
+        const kolom = TOP10VRAAG[w];
+        if (p[kolom]?.length) continue;
+        p[kolom] = lijst;
+        p.auto = [...(p.auto ?? []), kolom];
+      }
+    }
+  }
+}
+
 function bouwPreds() {
   const per = new Map();
   for (const a of S.antwoorden) {
@@ -1829,6 +1949,7 @@ function bouwPreds() {
     per.get(sleutel)[VRAAG_VELD[a.question_id] ?? a.question_id] = a.waarde;
   }
   S.preds = [...per.values()];
+  vulAutoAan();
 }
 
 // Welke vragen doen mee in deze poule? Nog geen keuze gemaakt (of een poule
@@ -2025,6 +2146,8 @@ function weekendUitslag(race) {
     id: l.member_id,
     naam: l.display_name,
     punten: scoreWeekend(vindPred(race.id, l.member_id), race),
+    // Punten zonder inzending: automatisch ingevuld, of gewoon nul.
+    zelfgedaan: heeftVoorspeld(race, l.member_id),
     mij: zelfde(l.member_id, S.ik.id),
   })).sort((a,b) => b.punten - a.punten || String(a.naam).localeCompare(String(b.naam)));
 }
@@ -2032,8 +2155,12 @@ function weekendUitslag(race) {
 // Bij een gelijke stand delen ze de overwinning; allebei een streepje erbij
 // is eerlijker dan er willekeurig één aanwijzen.
 function weekendWinnaars(race) {
-  const rijen = weekendUitslag(race);
-  if (!rijen?.length) return [];
+  // Wie niets inleverde doet niet mee om de weekendwinst, ook niet als de
+  // automatische lijst toevallig goed uitpakte. De seizoensstand houdt je
+  // aangehaakt; een weekend winnen is iets wat je doet, niet iets wat je
+  // overkomt. De lijst is al gesorteerd, dus filteren houdt dat zo.
+  const rijen = (weekendUitslag(race) ?? []).filter(r => r.zelfgedaan);
+  if (!rijen.length) return [];
   const hoogste = rijen[0].punten;
   return hoogste > 0 ? rijen.filter(r => r.punten === hoogste) : [];
 }
@@ -2044,7 +2171,11 @@ function weekendWinnaars(race) {
 const heeftVoorspeld = (r, id) => {
   const p = vindPred(r.id, id);
   return !!p && GEBOUWD.some(vraag => {
-    const w = p[VRAAG_VELD[vraag] ?? vraag];
+    const kolom = VRAAG_VELD[vraag] ?? vraag;
+    // Een automatisch ingevulde lijst is geen inzending. Zonder deze regel
+    // zou "heeft meegedaan" waar worden voor iemand die niets deed.
+    if (p.auto?.includes(kolom)) return false;
+    const w = p[kolom];
     return Array.isArray(w) ? w.length > 0 : !leegAntwoord(w);
   });
 };
@@ -2406,6 +2537,7 @@ function toonApp() {
   knoopBeheer();
   knoopOmschrijving();
   knoopOpenbaar();
+  knoopAutofill();
   knoopMail();
   knoopPrivacy();
   knoopLosmaken();
@@ -2493,7 +2625,10 @@ function weekendWinstTekst(r) {
 
 function kalenderRij(r, st = raceStand(r)) {
   const mijn = vindPred(r.id, S.ik.id);
-  const vink = (lijst) => lijst?.length ? 'aan' : '';
+  // Het vinkje zegt "dit heb jij ingevuld". Een automatisch aangevulde lijst
+  // is dat niet, dus die laat het vakje leeg — anders zou het scherm je
+  // vertellen dat je iets gedaan hebt wat je niet gedaan hebt.
+  const vink = (welk) => !isAuto(mijn, welk) && mijn?.[TOP10VRAAG[welk]]?.length ? 'aan' : '';
   const merk = st.soort === 'klaar' ? `<span class="vlag"></span>`
     : st.soort === 'open' ? `<span class="stip klopt"></span>` : '';
   const won = st.soort === 'klaar' ? weekendWinstTekst(r) : '';
@@ -2504,7 +2639,7 @@ function kalenderRij(r, st = raceStand(r)) {
       <span class="st ${st.soort}">${esc(st.tekst)}${won ? ` · ${esc(won)}` : ''}</span>
     </span>
     <span class="mk" title="Q = kwalificatie ingevuld, R = race ingevuld">
-      <i class="${vink(mijn?.quali_top10)}">Q</i><i class="${vink(mijn?.race_top10)}">R</i></span>
+      <i class="${vink('quali')}">Q</i><i class="${vink('race')}">R</i></span>
     ${merk}
   </button>`;
 }
@@ -2759,6 +2894,7 @@ function poulePagina(rijen) {
     ${agendaBlok()}
     ${omschrijvingBlok()}
     ${openbaarBlok()}
+    ${autofillBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}`;
 }
@@ -3247,6 +3383,50 @@ function openbaarBlok() {
       ? 'Deze poule staat in de lijst met openbare poules op het beginscherm. Iedereen kan meedoen zonder de code.'
       : 'Nu kan alleen meedoen wie de poulecode heeft. Openbaar maakt de poule ook vindbaar zonder code.'}</p>
     <button class="knop klein" id="openbaarKnop">${aan ? 'Maak weer privé' : 'Maak openbaar'}</button>`;
+}
+
+// De poulebaas zet automatisch invullen aan. Nadrukkelijk met de datum
+// erbij zodra het aanstaat: dit is geen vinkje maar een streep in het
+// seizoen, en wie hem ziet moet kunnen zien waar hij ligt.
+function autofillBlok() {
+  if (!magBeheren()) return '';
+  const vanaf = S.poule.autofill_vanaf;
+  return `
+    <div class="scheiding"></div>
+    <span class="label">automatisch invullen bij vergeten</span>
+    <p class="zacht" style="margin:0">${vanaf
+      ? `Wie een lijst vergeet krijgt sinds ${esc(datumKort(vanaf))} de WK-stand
+         van dat moment als top 10, gemarkeerd als automatisch. Races van vóór
+         die datum blijven zoals ze waren. Een weekend win je er niet mee.`
+      : `Nu levert een gemiste race nul punten op, en twee gemiste races is meestal
+         het einde van iemands seizoen. Aanzetten geeft wie niets inlevert
+         voortaan de WK-stand als top 10. Alleen vanaf nu — de races die al
+         gereden zijn veranderen niet.`}</p>
+    <button class="knop klein" id="autofillKnop">${vanaf ? 'Zet weer uit' : 'Zet aan'}</button>`;
+}
+
+function knoopAutofill() {
+  const knop = app.querySelector('#autofillKnop');
+  if (!knop) return;
+  knop.onclick = async () => {
+    knop.disabled = true;
+    // Aanzetten bewaart het moment, uitzetten wist het. Opnieuw aanzetten
+    // begint dus ook opnieuw, en vult niet alsnog de tussenliggende races in.
+    const nu = S.poule.autofill_vanaf ? null : new Date().toISOString();
+    try {
+      if (!DEMO) {
+        const { error } = await db.from('pools')
+          .update({ autofill_vanaf: nu }).eq('id', S.poule.id);
+        if (error) throw new Error(uitleg(error));
+      }
+      S.poule.autofill_vanaf = nu;
+      bouwPreds();
+      S.melding = nu
+        ? 'Automatisch invullen staat aan, vanaf nu.'
+        : 'Automatisch invullen staat weer uit.';
+    } catch (e) { S.melding = e.message; }
+    render();
+  };
 }
 
 function knoopOpenbaar() {
@@ -3835,8 +4015,9 @@ function uitslagWeergave(r, werkelijk) {
   const lijst = S.tab === 'quali' ? mijn?.quali_top10 : mijn?.race_top10;
   // Deze uitslag komt niet van OpenF1 en wordt door de sync ook niet meer
   // bijgewerkt, dus dat hoort er gewoon bij te staan.
-  const noot = r[HANDVLAG[S.tab]]
-    ? `<p class="label amber" style="margin:0">handmatig ingevuld · niet van openf1</p>` : '';
+  const noot = (r[HANDVLAG[S.tab]]
+    ? `<p class="label amber" style="margin:0">handmatig ingevuld · niet van openf1</p>` : '')
+    + autoNoot(mijn, S.tab, 'je had hier zelf niets ingeleverd');
   // De losse vragen hangen aan dezelfde deadline als de top 10 van deze tab.
   const losse = coureurVragen(S.tab).map(id => coureurUitslag(r, mijn, id)).join('')
     + extraVragen(S.tab).map(id => extraUitslag(r, mijn, id)).join('')
@@ -4062,8 +4243,11 @@ function andermans(r) {
     // Eerder hing dit aan een ingevulde top 10. Wie alleen de pole of een
     // paar duels invulde stond dan op "—" terwijl hij gewoon punten had.
     const deed = heeftVoorspeld(r, l.member_id);
-    return { id: l.member_id, naam: l.display_name, deed,
-             punten: werkelijk && deed ? scoreTab(p, r, S.tab) : null };
+    // En wie niets inleverde maar wel automatisch is aangevuld heeft ook
+    // punten; die horen hier te staan, met erbij hoe ze eraan komen.
+    const auto = isAuto(p, S.tab);
+    return { id: l.member_id, naam: l.display_name, deed, auto,
+             punten: werkelijk && (deed || auto) ? scoreTab(p, r, S.tab) : null };
   }).sort((a,b) => (b.punten ?? -1) - (a.punten ?? -1));
   // De rijen zijn knoppen: hierachter zit de hele inzending van die speler.
   // Dat kan pas nu — deze functie wordt alleen op een gesloten scherm
@@ -4071,7 +4255,8 @@ function andermans(r) {
   return `<span class="label">de rest · tik op een naam om hun voorspelling te zien</span>
     ${rijen.map(x => `<button class="rest inkijk" data-bekijk="${esc(x.id)}">
       <span class="nm">${esc(x.naam)}</span>
-      <span class="zacht">${x.deed ? 'bekijken' : 'niets ingevuld'}</span>
+      <span class="zacht">${x.deed ? 'bekijken'
+        : x.auto ? 'automatisch ingevuld' : 'niets ingevuld'}</span>
       <span class="t">${x.punten ?? '—'}</span>
     </button>`).join('')}`;
 }
@@ -4131,8 +4316,10 @@ function keuzeOverzicht(r, pred, welk) {
     || coureurVragen(welk).some(id => !!antwoordVan(pred, id))
     || extraVragen(welk).some(id => !leegAntwoord(pred?.[id]))
     || (welk === 'race' && !!pred?.teamgenoot_duels?.length);
+  const auto = autoNoot(pred, welk, 'deze speler leverde zelf niets in');
   if (!iets) return `<div class="leeg"><span class="label">niets ingevuld</span>
     <p class="zacht" style="margin:0">Voor ${wat} is hier niets ingeleverd.</p></div>`;
+
 
   const { regels } = scoreLijst(lijst ?? [], werkelijk ?? []);
   // Geen top 10 ingevuld is net zo goed een antwoord als "niets gekozen" bij
@@ -4229,7 +4416,7 @@ function keuzeOverzicht(r, pred, welk) {
       </ul>`;
   })();
 
-  return `${top10}${los}${extra}${duelblok}`;
+  return `${auto}${top10}${los}${extra}${duelblok}`;
 }
 
 // ============================================================
