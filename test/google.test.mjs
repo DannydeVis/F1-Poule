@@ -25,8 +25,9 @@ const link = () => page.evaluate(() => globalThis.__mail.laatsteLink());
 await page.waitForSelector('#code');
 check('het beginscherm vraagt nog steeds gewoon om een poulecode',
   (await page.$('#code')) !== null);
-check('en Google staat onderaan bij het inloggen, niet als voordeur',
-  (await page.$('#googleinlog')) !== null && (await page.$('#inlogopen')) !== null);
+check('en Google staat bij het inloggen, naast de mailweg maar niet als voordeur',
+  (await page.$('#googleinlog')) !== null && (await page.$('#inlogopen')) !== null
+    && (await page.$$eval('.knop.primair', (n) => n.map((b) => b.id))).join() === 'mee');
 
 // --- toestel 1: meespelen en Google koppelen ------------------------------
 await meedoen(page);

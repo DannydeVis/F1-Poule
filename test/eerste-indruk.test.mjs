@@ -44,6 +44,26 @@ const volgorde = await page.evaluate(() => {
 });
 check('en het codeveld staat er nog steeds bovenaan', volgorde === 'onder', String(volgorde));
 
+// --- de inlog moet er ook uitzien als een inlog ----------------------------
+// "Ik zie niet de standaard Google-inlog die ik altijd zie op websites." Hij
+// stond onderaan, ónder het aanmaken, de openbare poules én de uitleg, in de
+// lichtste knopstijl die de app kent. Wat hier vastligt: hij staat direct
+// onder het codeveld, en de Google-knop ziet eruit zoals hij overal elders
+// ook doet — echt logo, gewone schrijfwijze.
+const inlogPositie = await page.evaluate(() => {
+  const google = document.querySelector('#googleinlog');
+  const nieuw = document.querySelector('#nieuw');
+  if (!google || !nieuw) return null;
+  return google.compareDocumentPosition(nieuw) & Node.DOCUMENT_POSITION_FOLLOWING
+    ? 'boven' : 'onder';
+});
+check('de inlog staat boven "Nieuwe poule maken", niet onderaan weggestopt',
+  inlogPositie === 'boven', String(inlogPositie));
+check('de Google-knop draagt het echte logo, niet alleen tekst',
+  await page.$eval('#googleinlog', (b) => !!b.querySelector('svg path[fill="#4285F4"]')));
+check('en staat er in gewone schrijfwijze, niet in kapitalen zoals de rest',
+  (await page.$eval('#googleinlog', (b) => getComputedStyle(b).textTransform)) === 'none');
+
 // De code werkt gewoon nog.
 await page.fill('#code', 'RTM026');
 await page.click('#mee');

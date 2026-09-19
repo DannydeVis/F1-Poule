@@ -3221,3 +3221,67 @@ Geen nieuwe test — dit is een verwijdering. Het aantal testbestanden blijft
 40; de volledige suite is opnieuw groen gedraaid. De vier aangepaste
 bestanden dekken het gedrag dat nog wél bereikbaar is, en zijn expliciet in
 hun commentaar over wat dat niet meer is.
+
+---
+
+## De inlog ziet er eindelijk uit als een inlog
+
+"Ik zie niet de standaard Google-inlog die ik altijd zie op websites."
+Terecht, en het lag niet aan wat er ontbrak maar aan hoe het erbij stond. De
+knoppen wáren er al — `inlogBlok()` bood Google en een maillink aan — maar:
+
+- ze stonden onderaan het beginscherm, ná het codeveld, ná "Nieuwe poule
+  maken", ná de openbare poules én ná de hele "wat is dit?"-uitleg;
+- allebei in `knop spook`, de lichtste stijl die de app heeft, in kapitalen
+  zoals elke andere knop;
+- met een voorwaardelijke zin ervóór ("Speelde je al mee en heb je je account
+  gekoppeld?") in plaats van een kop die zegt waar je naar kijkt.
+
+Niets daarvan is fout, en allemaal samen zorgt het ervoor dat je het niet
+ziet.
+
+### Wat er veranderd is
+
+Het blok staat nu direct onder het codeveld, met een `label` "inloggen"
+erboven. De Google-knop is de enige knop in de app die met opzet de huisstijl
+niet volgt: eigen klasse `.knop.google`, het officiële vierkleurenlogo, en
+gewone schrijfwijze in plaats van kapitalen. Die afwijking ís het punt — de
+knop moet herkend worden als dezelfde knop die overal elders staat, en dat
+lukt niet in een eigen jasje.
+
+Het logo zit inline als SVG. Een `<img>` naar Google's CDN zou een regel
+breken die de app zichzelf oplegt (de privacyverklaring belooft dat er niets
+bij een vreemde host wordt opgehaald) en waar `test/privacy.test.mjs` op
+afrekent.
+
+Verder blijft de Google-knop nu ook staan zodra het mailveld openklapt. Dat
+veld was daarvoor een doodlopende weg: eenmaal open was er geen knop meer
+terug naar Google, alleen een herlaadactie.
+
+### Wat bewust níét veranderd is
+
+De poulecode blijft de voordeur: hij staat erboven en houdt als enige de
+primaire rode knop. En er komt **geen wachtwoord**. Dat is expliciet
+afgewogen: op datzelfde scherm staat "Geen wachtwoord" als belofte, de
+inloglink bewijst precies hetzelfde (dat het adres van jou is) zonder dat
+iemand iets kan vergeten, en een vergeten-wachtwoordstroom valt sowieso
+terug op diezelfde mail. Google doet het in één tik.
+
+### Een valse alarmbel onderweg
+
+De eerste schermafdruk in donkere modus liet een lichtgrijze, uitgeschakeld
+ogende knop zien. Dat bleek de CSS-transitie op `background` (180ms, staat op
+`.knop`): de afdruk werd genomen terwijl de kleur nog van licht naar donker
+onderweg was. Na 600ms wachten meet hij `#15161a` op `--paneel`, precies
+zoals bedoeld. Vermeld omdat het er in een afdruk uitziet als een echte fout,
+en het dat niet is.
+
+### Controles
+
+3 nieuwe in `test/eerste-indruk.test.mjs`, precies op de dingen die dit
+opnieuw kunnen laten verwateren: de inlog staat boven "Nieuwe poule maken"
+(en dus boven de openbare poules en de uitleg), de Google-knop bevat het
+echte logo (`svg path[fill="#4285F4"]`), en hij staat in gewone schrijfwijze
+(`text-transform: none`). In `test/google.test.mjs` is de controle die
+beweerde dat Google "onderaan" staat bijgewerkt; die bewaakt nu wat er echt
+toe doet — dat `mee` de enige primaire knop op het scherm blijft.
