@@ -3583,3 +3583,65 @@ Alleen de twee top 10-lijsten worden aangevuld. De pole, de winnaar, de duels,
 safety cars en de rode vlag blijven leeg. Daar is geen "saaiste voorspelling"
 voor te bedenken die niet gewoon gokken is, en een gok namens iemand anders
 neerzetten is iets anders dan een gat vullen met de bekende stand.
+
+---
+
+## leegmaken.sql: opnieuw beginnen zonder de kalender kwijt te raken
+
+"Als dadelijk alles klaar is wil ik toch een volledige reset van spelers en
+poules."
+
+Er was al een `reset.sql`, maar die is iets anders: die doet `drop table` op
+alles. Daarna staat er geen structuur meer, moet `schema.sql` opnieuw, en moet
+de hele kalender via de sync opnieuw opgehaald worden — inclusief de uitslagen
+van het seizoen tot dan toe. Dat is een hersteloperatie voor als er iets stuk
+is, niet een opschoning.
+
+Wat hier gevraagd werd is het andere ding: de poules en de spelers weg, de rest
+laten staan. Vandaar een eigen bestand.
+
+### Wat weg gaat en wat niet
+
+Weg: poules, spelers, antwoorden, de vragenkeuze per poule, en de rijen in de
+oude `predictions`-tabel. Blijven: de races met hun deelnemerslijsten en
+uitslagen, de vragenlijst zelf, en de accounts.
+
+Dat laatste is de enige echte keuze in dit bestand. Een account is niet
+hetzelfde als een speler: `auth.users` zegt wie je bent, `pool_members` zegt
+welke naam je in welke poule hebt. Wie na een opschoning opnieuw inlogt is dus
+gewoon weer zichzelf en maakt een nieuwe speler aan — en dat is bijna altijd
+wat je wilt. Het blok dat de accounts wél weghaalt staat erin, maar
+uitgecommentarieerd, met de waarschuwing dat je eigen inlog er dan ook aan gaat.
+
+### Waarom vijf deletes en niet één
+
+`delete from public.pools` zou genoeg zijn: alles hangt er met
+`on delete cascade` aan. Ze staan er toch alle vijf, om twee redenen. Je ziet
+zo welke tabellen geraakt worden zonder de sleutels in `schema.sql` na te
+lopen, en op een database van vóór die sleutels — waar `pool_members.pool_id`
+nog nullable was — kan een cascade een losse rij laten staan die hier wel
+meegaat.
+
+Alles in één transactie, met onderaan een controlelijstje in de stijl van het
+blok waar `schema.sql` zelf mee eindigt: links hoort alles nul te zijn, rechts
+hoort alles te staan zoals het stond.
+
+### Controles
+
+Zes in `test/leegmaken.test.sql`, in de CI-job naast de andere SQL-tests. Het
+zet een poule klaar met een speler, een account, een race, een vragenkeuze, een
+antwoord en een oude voorspelling, draait het bestand, en controleert beide
+kanten.
+
+De tweede kant is de belangrijke. Dat de poules leeg zijn na een bestand dat
+"leegmaken" heet controleert zichzelf wel; wat stil kan breken is dat de races
+met hun uitslagen er nog staan. Gaan die per ongeluk mee, dan is het verschil
+met `reset.sql` weg en moet iemand na een opschoning de hele kalender opnieuw
+ophalen zonder te begrijpen waarom. Ook getest: dat de accounts níét zijn
+aangeraakt, en dat twee keer draaien net zo veilig is als één keer.
+
+Eén ding dat onderweg bleek en het opschrijven waard is: de deadline-trigger
+weigert een antwoord op een sessie die al dicht is. De test moest daarom eerst
+een race in de toekomst zetten, het antwoord invoeren, en de race daarna pas
+"gereden" maken. Dat is precies de volgorde waarin het in het echt ook gaat, en
+het is goed dat de database dat afdwingt.
