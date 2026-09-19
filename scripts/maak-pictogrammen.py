@@ -36,12 +36,13 @@ BG     = (0x0b, 0x0b, 0x0c)
 ACCENT = (0xee, 0x4d, 0x33)
 INK    = (0xf2, 0xf3, 0xf5)
 
-def startgrid(N):
+def startgrid(N, rand=0.17):
     """Het startgrid uit het ontwerp: twee kolommen, om en om verspringend.
-    Alleen rechte hoeken, dus geen anti-aliasing nodig en overal scherp."""
-    # De veilige zone van een maskable icoon is de binnenste 80%; alles wat
-    # telt blijft daarbinnen.
-    marge = N * 0.17
+    Alleen rechte hoeken, dus geen anti-aliasing nodig en overal scherp.
+
+    `rand` is hoeveel van de zijde als marge vrij blijft. Voor een maskable
+    icoon hoort dat ruim te zijn, voor iOS juist niet — zie onderaan."""
+    marge = N * rand
     breed = N - 2 * marge
     kolom = breed * 0.40
     tussen = breed - 2 * kolom
@@ -62,5 +63,14 @@ def startgrid(N):
     return kleur
 
 for N in (192, 512):
+    # Maskable: de veilige zone is de binnenste 80%, en alles wat telt blijft
+    # daarbinnen, want Android snijdt er zijn eigen vorm uit.
     n = png(f"{sys.argv[1]}/poule-{N}.png", N, N, startgrid(N))
     print(f"poule-{N}.png  {n} bytes")
+
+# iOS snijdt niet, het legt er alleen ronde hoeken omheen. De veilige zone van
+# een maskable icoon is daar dus verspilde ruimte: het motief komt klein uit
+# met een brede rand eromheen. Vandaar een eigen, vullende variant. 180 is de
+# maat die een iPhone op zijn scherpst vraagt; een iPad schaalt hem terug.
+n = png(f"{sys.argv[1]}/poule-apple-180.png", 180, 180, startgrid(180, 0.08))
+print(f"poule-apple-180.png  {n} bytes")

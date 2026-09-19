@@ -278,6 +278,37 @@ in de vorm van het toestel, en alles wat telt blijft binnen de veilige zone.
 Ze worden gemaakt door `scripts/maak-pictogrammen.py` — met de hand, want er is
 geen beeldbibliotheek en er hoeft er ook geen te komen: het motief is het
 startgrid uit het ontwerp, en dat bestaat uit rechthoeken.
+
+iOS krijgt een eigen pictogram, `poule-apple-180.png`. Apple snijdt namelijk
+niet, het legt er alleen ronde hoeken omheen — de veilige zone van een maskable
+icoon is daar dus verspilde ruimte en het motief zou klein uitkomen met een
+brede rand. Vandaar een vullende variant, uit hetzelfde script.
+
+**Het blok "op je beginscherm".** Installeerbaar zijn is niet hetzelfde als
+gevonden worden: onderaan het beginscherm staat sinds kort een blok dat het
+aanbiedt. Er zijn twee wegen, want de browsers zijn het oneens:
+
+| | wat de speler ziet |
+|---|---|
+| Android / Chrome | een echte knop **Zet op beginscherm** die de installatie start |
+| iPhone / iPad | de instructie *Tik onderin op ⤴ Deel en kies Zet op beginscherm* |
+
+Op Android vangen we `beforeinstallprompt` op, roepen `preventDefault()` (anders
+zet Chrome zijn eigen balk onderin) en bewaren het event, zodat onze eigen knop
+hem later kan afvuren. Zo'n event is eenmalig: na één keer prompten is hij op en
+verdwijnt de knop, tot de browser hem opnieuw aanbiedt.
+
+Safari kent die API niet, dus daar hangt alles aan de user agent. Let op dat een
+iPad zich sinds iPadOS 13 als een Mac meldt — het aanraakscherm
+(`navigator.maxTouchPoints`) is wat hem verraadt.
+
+Het blok verdwijnt in drie gevallen: de app draait al als app
+(`display-mode: standalone` of `navigator.standalone`), de speler tikte op
+**Nu niet** (`poule:installweg` in localStorage, definitief), of de browser kan
+het niet en het is geen Apple-toestel — dan beloven we niets.
+
+`test/beginscherm.test.mjs` legt allebei de wegen vast, plus het wegklikken en
+het manifest zelf.
 ## 6. De vragenset op slot
 
 Zodra de eerste race van het seizoen gescoord is, worden de vinkjes in
