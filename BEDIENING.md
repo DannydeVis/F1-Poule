@@ -188,6 +188,33 @@ Let op wat dit lijstje **niet** is: het staat in `localStorage`, dus het is per
 toestel. Wie op zijn telefoon én op zijn laptop speelt heeft twee lijstjes. Eén
 lijst over al je toestellen vraagt om een login; zie OVERDRACHT.md.
 
+### 5b. De inlog op het beginscherm
+
+Onder het codeveld staat een blok **inloggen**: een Google-knop met het
+officiële logo en gewone schrijfwijze, en daaronder "Inloggen met je
+mailadres" (een inloglink, geen wachtwoord). Beide zijn er alleen voor wie
+zijn account al gekoppeld heeft; wie dat niet heeft, tikt gewoon zijn
+poulecode in.
+
+Twee dingen liggen hier vast, en ze werken tegen elkaar in:
+
+- **De poulecode blijft de voordeur.** Hij staat erboven en houdt als enige
+  de primaire (rode) knop. De inlog is de tweede optie, niet de eerste.
+- **Maar hij moet er wel uitzien als een inlog.** Hij stond eerst helemaal
+  onderaan — ónder het aanmaken, de openbare poules én de uitleg — in de
+  lichtste knopstijl die de app kent, met een voorwaardelijke zin ervoor.
+  Daardoor herkende niemand het als inloggen. `test/eerste-indruk.test.mjs`
+  bewaakt nu allebei: de inlog staat boven "Nieuwe poule maken", en de
+  Google-knop draagt het echte logo.
+
+Het logo zit **inline als SVG** in `index.html`, niet als `<img>` van een
+vreemde host: de privacyverklaring belooft dat deze pagina niets elders
+ophaalt, en `test/privacy.test.mjs` rekent daarop af.
+
+Geen wachtwoord, met opzet — zie §12. De inloglink bewijst hetzelfde (dat het
+adres van jou is) zonder dat iemand iets kan vergeten, en Google doet het in
+één tik.
+
 ---
 
 
