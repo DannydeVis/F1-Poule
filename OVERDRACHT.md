@@ -3285,3 +3285,60 @@ echte logo (`svg path[fill="#4285F4"]`), en hij staat in gewone schrijfwijze
 (`text-transform: none`). In `test/google.test.mjs` is de controle die
 beweerde dat Google "onderaan" staat bijgewerkt; die bewaakt nu wat er echt
 toe doet — dat `mee` de enige primaire knop op het scherm blijft.
+
+---
+
+## Gereden races zakken naar beneden, en gaan iets zeggen
+
+"Kunnen we iets moois maken met de races die al geweest zijn. Die blijven
+bovenaan staan." Twee klachten in één zin, en de tweede is de echte.
+
+De kalender was één chronologische lijst, van ronde 01 tot 24. Dat werkt in
+maart prima en is in juni een probleem: het seizoen duwt zichzelf naar
+beneden, en de race waar je iets mee moet staat onder acht weekenden die al
+geweest zijn. De `hero` bovenaan wees de eerstvolgende race wel aan, maar de
+lijst eronder bleef bij het begin beginnen.
+
+### De splitsing
+
+`racesPagina()` deelt nu op in twee lijsten: **kalender** (alles zonder
+uitslag — open, komt nog, of wacht op zijn uitslag) en **gereden** (uitslag
+binnen, plus de afgelaste races). Gereden staat eronder en gaat **omgekeerd
+chronologisch**: terugkijken begin je bij vorige week.
+
+Dat "wacht op uitslag" bij de kalender hoort en niet bij gereden is bewust:
+dat is de race waar je nog iets van verwacht, niet eentje die je afvinkt.
+
+Twee soorten leegte die eerst hetzelfde zinnetje deelden, staan nu uit
+elkaar: een poule die nog op de kalender wacht ("de kalender wordt
+automatisch opgehaald") en een seizoen dat erop zit ("alle races zijn
+gereden"). Dat eerste zinnetje in december is gewoon onwaar.
+
+### Wat de gereden races nu vertellen
+
+Een afgelopen race zei alleen `uitslag · 78 ptn` — je eigen score, zonder
+enige maat. `weekendWinstTekst()` zet ernaast wie dat weekend in de poule won:
+`100 ptn · jij won`, `16 ptn · Michael won`, en bij gelijkspel `Davy en
+Michael deelden` (op alfabet, want zo sorteert `weekendUitslag()` al). Vanaf
+drie namen wordt het `3 spelers deelden` — een opsomming die niemand leest is
+geen informatie.
+
+`weekendWinnaars()` bestond al voor de weekendoverwinningen op de Standpagina;
+dit is dezelfde bron, alleen per race getoond in plaats van opgeteld.
+
+Het woord "uitslag ·" is uit `raceStand()` gehaald. De kop "gereden" en de
+finishvlag in de rij zeggen het al, en zonder dat voorvoegsel past de regel
+op een telefoon weer op één regel in plaats van twee.
+
+### Controles
+
+10 in `test/gereden-races.test.mjs`, met een half seizoen nagespeeld (drie
+races met uitslag, drie die nog komen, drie spelers die verschillend gokten):
+dat "gereden" een eigen lijst is en ónder de kalender staat, dat de rondes in
+`04,05,06,03,02,01` staan, en alle drie de winnaarsvarianten — jij, iemand
+anders, en een gedeelde winst. Plus dat een race die nog moet komen niets over
+winnen zegt.
+
+Ook met de hand bekeken in Chromium op telefoonbreedte: dat de regel na het
+toevoegen van de winnaar nog op één regel past was precies de reden om
+"uitslag ·" weg te halen.
