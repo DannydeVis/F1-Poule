@@ -151,19 +151,24 @@ het gemiddelde van één speler is geen poulegemiddelde.
 
 ---
 
-## Groep 3: extra vraagsoorten
+## ~~Groep 3: extra vraagsoorten~~ — de beste vier staan er
 
 Pas hieraan beginnen als groep 1 en 2 staan. En dan niet alles, maar hooguit
 vier of vijf.
 
-### De beste vier, wat mij betreft
+### De beste vier, wat mij betreft — alle vier gebouwd
 
 | Vraag | Waarom deze |
 |---|---|
 | ~~**Winnaar apart, 25 punten**~~ — gebouwd | Meest gevraagde toevoeging, één extra kolom |
-| **Teamgenoot-duels** | Bijna 50/50, dus de poule splitst zich altijd. Beste verhouding tussen spreiding en kennis van alle vraagsoorten |
-| **Aantal safety cars** | Hard te tellen, geen discussie over de uitslag |
-| **Rode vlag ja/nee** | Simpel, en een goed gevoel als je hem goed hebt |
+| ~~**Teamgenoot-duels**~~ — gebouwd | Bijna 50/50, dus de poule splitst zich altijd. Beste verhouding tussen spreiding en kennis van alle vraagsoorten |
+| ~~**Aantal safety cars**~~ — gebouwd | Hard te tellen, geen discussie over de uitslag |
+| ~~**Rode vlag ja/nee**~~ — gebouwd | Simpel, en een goed gevoel als je hem goed hebt |
+
+Plus snelste ronde en snelste pitstop, die er onderweg bij kwamen. De negen
+vragen die de app kent staan in `GEBOUWD` in `index.html`; per poule vink je
+aan welke meedoen. Daarmee is deze groep wat mij betreft klaar: hier nog meer
+aan toevoegen is precies waar de les bovenaan deze lijst voor waarschuwt.
 
 ### De rest van de catalogus
 
@@ -259,14 +264,27 @@ Gebruik safety cars en VSC in plaats daarvan.
 6. ~~Winnaar als aparte vraag~~ — gebouwd
 7. ~~Uitnodigingslink met code~~ — gebouwd
 
-Punt 1 tot en met 3 samen zijn waarschijnlijk een avond werk en hebben meer
-effect op of je poule het seizoen haalt dan de hele rest van deze lijst bij
-elkaar. Die drie staan er nu in, en punt 4 inmiddels ook; zie
-`OVERDRACHT.md` voor hoe ze werken. Let op: punt 4 heeft twee nieuwe
-kolommen in `races`, dus draai `schema.sql` opnieuw voordat je het gebruikt.
-Alle zeven staan er inmiddels in; zie `OVERDRACHT.md` voor hoe ze werken.
-Punt 4 en 6 hebben nieuwe kolommen, dus draai `schema.sql` opnieuw voordat je
-ze gebruikt. Wat nog openligt is groep 3 en verder: extra vraagsoorten en
-seizoensmechaniek. Denk aan de waarschuwing bovenaan deze lijst voordat je
-daaraan begint — meer vraagsoorten is niet wat een vriendenpoule beter
-maakt.
+Alle zeven staan erin; zie `OVERDRACHT.md` voor hoe ze werken. Punt 1 tot en
+met 3 waren samen ongeveer een avond werk en hebben meer effect op of je poule
+het seizoen haalt dan de hele rest van deze lijst bij elkaar.
+
+## Wat er nu nog openligt
+
+Groep 1, 2 en 3 staan er, en uit groep 4 ook al "slechtste twee races vallen
+weg". Wat rest is dit, en het is geen toeval dat het allemaal groep 4 is:
+
+| | wat het is | de haak eraan |
+|---|---|---|
+| Automatisch invullen bij vergeten | wie niks inlevert krijgt een standaardlijst | dit is de enige van de drie kwalen bovenaan deze lijst die nog niet aangepakt is |
+| Contrair-multiplier | punten schalen met hoe zeldzaam je antwoord was | verandert wat een punt waard is |
+| Jokers | vijf per seizoen, dubbele punten | nieuwe keuze per race, dus nieuw scherm |
+| Seizoenslaag | vragen vóór race 1, gescoord aan het eind | hoort aan het begin van een seizoen te beginnen |
+| Sprintweekenden | de sprint als eigen sessie meetellen | de sync pakt nu alleen `session_name=Race` en `Qualifying` |
+
+Alle vijf raken de telling. Dat is de reden dat ze hier nog staan en niet
+gebouwd zijn: midden in een lopend seizoen de puntentelling omgooien is geen
+verbetering, ook niet als de nieuwe regel op zichzelf beter is. Vergelijk hoe
+"slechtste twee races vallen weg" het heeft opgelost — naast de stand, niet in
+plaats ervan. Wie hieraan begint doet er goed aan dezelfde vraag eerst te
+beantwoorden: geldt dit vanaf nu, of met terugwerkende kracht over races die
+al gereden zijn?
