@@ -3395,3 +3395,98 @@ altijd naast staat.
 
 Ook met de hand bekeken in Chromium, licht en donker, op een uitslag met
 exact, één ernaast, twee ernaast en een DNF door elkaar.
+
+---
+
+## Zet op beginscherm — en zeggen dat het kan
+
+"Kan je maken dat deze app geïnstalleerd kan worden via de 'zet op
+beginscherm' op je telefoon of iPad. En daarbij een onboarding bij"
+
+Het eerste deel was er al. `manifest.webmanifest` staat er sinds het begin, met
+`display: standalone` en maskable pictogrammen, dus wie het zelf opzocht kreeg
+al een echte app-tegel in een eigen venster. Wat ontbrak was dat iemand het ooit
+te horen kreeg. Dit stuk werk is dus vooral het tweede deel: het aanbieden.
+
+Onderaan het beginscherm staat nu een blok **op je beginscherm**, onder "wat is
+dit?". Daar en niet hoger: wie een poulecode heeft moet die kunnen intikken
+zonder eerst langs een aanbieding te scrollen.
+
+### Twee wegen, want de browsers zijn het oneens
+
+Chrome stuurt `beforeinstallprompt` zodra hij vindt dat de app installeerbaar
+is. We roepen daar `preventDefault()` op — anders zet Chrome zijn eigen balk
+onderin en die kiest zijn eigen moment — en bewaren het event, zodat onze knop
+hem later kan afvuren. Zo'n event is eenmalig: na één `prompt()` is hij op, dus
+de knop verdwijnt en komt pas terug als de browser hem opnieuw aanbiedt (wat hij
+doet als de installatie niet doorging).
+
+Safari kent die API niet. Daar is de enige weg Deel → "Zet op beginscherm", en
+dat is precies het soort ding dat niemand uit zichzelf vindt. Dus staat er op
+een iPhone of iPad een zin die het voorzegt, met het deel-teken er inline in
+getekend: een instructie die naar een knop verwijst die je niet laat zien is een
+halve instructie.
+
+Die kant hangt aan de user agent, en daar zit één val in: een iPad meldt zich
+sinds iPadOS 13 als `MacIntel`. `navigator.maxTouchPoints > 1` is wat hem
+verraadt. Zonder die tweede helft krijgt de helft van de vraag ("of iPad") niets
+te zien.
+
+### Wanneer het blok er níét staat
+
+Drie gevallen, en dat is de hele logica van `installBlok()`:
+
+- de app draait al als app — `display-mode: standalone`, of `navigator
+  .standalone` op iOS;
+- de speler tikte op **Nu niet**. Dat zet `poule:installweg` in localStorage en
+  is definitief. Eén keer nee is nee; een aanbieding die blijft terugkomen is
+  een banner;
+- de browser heeft geen prompt gestuurd én het is geen Apple-toestel. Dan kan
+  deze browser het misschien niet, en dan beloven we niets.
+
+### Een eigen pictogram voor iOS
+
+Het maskable pictogram is verkeerd voor Apple. Android snijdt er zijn eigen vorm
+uit, dus houdt een maskable icoon 17% rand vrij; Apple snijdt niet maar legt er
+alleen ronde hoeken omheen. Dezelfde plaat komt daar dus uit als een klein
+motief in een brede lege rand.
+
+`scripts/maak-pictogrammen.py` kreeg daarom een parameter: `startgrid(N, rand)`.
+De bestaande twee bestanden komen er byte-voor-byte identiek uit (nagekeken), en
+er komt één bij, `poule-apple-180.png` op `rand=0.08` — vullend. 568 bytes, nog
+steeds zonder beeldbibliotheek. 180 is de maat die een iPhone op zijn scherpst
+vraagt; een iPad schaalt hem terug.
+
+Verder in de `<head>`: `apple-mobile-web-app-capable`, zodat iOS de app zonder
+adresbalk opent in plaats van als snelkoppeling naar Safari.
+
+### Wat dit niet is
+
+Geen service worker, dus geen offline. De app is één bestand dat zijn data live
+uit Supabase haalt; offline zou betekenen dat je een oude stand te zien krijgt
+terwijl je denkt dat hij klopt, en dat is erger dan een foutmelding. "Eigen
+tegel, eigen venster, geen adresbalk" is wat er beloofd wordt, en dat is ook
+precies wat je krijgt.
+
+### Controles
+
+24 in `test/beginscherm.test.mjs`, over vier verse pagina's: de Android-weg (de
+knop verschijnt pas ná de prompt, roept hem één keer aan, verdwijnt daarna,
+komt terug bij een nieuwe prompt), de iOS-weg (uitleg uit zichzelf, mét het
+deel-teken, zonder installatieknop, en het teken loopt mee met de tekst in
+plaats van de regel op te blazen), het wegklikken dat een herlading overleeft
+ook als de browser blijft aanbieden, allebei de manieren waarop een browser
+"draait al als app" meldt, en het manifest zelf inclusief of het
+Apple-pictogram echt bestaat.
+
+`test/hulp.mjs` kreeg daarvoor een `userAgent`-optie op `startPagina()` — de
+iOS-kant hangt nu eenmaal aan wat de browser over zichzelf zegt. Een echte
+`beforeinstallprompt` kan Playwright niet afvuren (die stuurt Chrome alleen bij
+een echte installatie), dus die wordt nagespeeld met een event met hetzelfde
+oppervlak.
+
+Ook met de hand bekeken in Chromium op telefoonbreedte, licht en donker, in
+allebei de varianten. De installatieknop is `.knop spook` geworden en niet
+`.knop klein`: in die eerste opzet hadden "Zet op beginscherm" en "Nu niet"
+precies evenveel gewicht, terwijl de rest van het beginscherm zijn echte acties
+(nieuwe poule, openbare poules) al als spook zet.

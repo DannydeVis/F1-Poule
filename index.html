@@ -12,9 +12,15 @@
      van het toestel, en alles wat telt blijft binnen de veilige zone. -->
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="pictogrammen/poule-192.png" sizes="192x192">
-<link rel="apple-touch-icon" href="pictogrammen/poule-192.png">
+<!-- iOS snijdt geen eigen vorm uit het icoon, het legt er alleen ronde hoeken
+     omheen. Het maskable pictogram hierboven komt daar dus klein uit met een
+     brede rand; vandaar een eigen, vullende variant. -->
+<link rel="apple-touch-icon" href="pictogrammen/poule-apple-180.png">
 <meta name="theme-color" content="#0b0b0c">
 <meta name="apple-mobile-web-app-title" content="Poule">
+<!-- display:standalone uit het manifest is wat een iPhone sinds 16.4 leest;
+     dit is de oude schakelaar, voor toestellen die daar nog onder zitten. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
 <style>
   /* ==========================================================
      Lettertypen, uit deze repo en niet bij Google vandaan
@@ -252,6 +258,11 @@
      telefoon niet op één regel. Zonder dit valt het eind er stilletjes af. */
   .smalkop{overflow-wrap:anywhere}
   .veldblok{display:flex;flex-direction:column;gap:12px}
+
+  /* Het deel-teken van iOS staat middenin een zin, dus het moet op de regel
+     meelopen: even hoog als de letters en met de staart op de basislijn. */
+  .deelicoon{width:1.05em;height:1.05em;vertical-align:-.18em;
+    color:var(--ink2);flex:none}
 
   /* ---- spelerkeuze ---------------------------------------- */
   .speler{
@@ -4663,6 +4674,69 @@ function openbarePoulesBlok() {
     </div>`;
 }
 
+// ---- op je beginscherm zetten --------------------------------
+// De app was al installeerbaar — manifest.webmanifest staat er, met een eigen
+// venster en maskable pictogrammen — maar nergens stond dát het kon. Op
+// Android geeft de browser ons een echte prompt; op een iPhone of iPad bestaat
+// die API niet en is de enige weg Deel → "Zet op beginscherm". Daar moet je
+// mensen dus met zoveel woorden naartoe wijzen.
+const INSTALLWEG = 'poule:installweg';
+
+// De prompt van de browser, als hij hem aanbiedt. Hij komt één keer langs en
+// is daarna op: bewaren is de enige manier om er een eigen knop van te maken.
+let installPrompt = null;
+
+const alGeinstalleerd = () =>
+  matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+// Een iPad meldt zich sinds iPadOS 13 als een Mac; het aanraakscherm is wat
+// hem verraadt.
+const isApple = () => /iPhone|iPad|iPod/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+// Het deel-teken van iOS, inline. Een instructie die naar een knop verwijst
+// die je niet laat zien is een halve instructie.
+const DEEL_ICOON = `<svg class="deelicoon" viewBox="0 0 24 24" fill="none"
+  stroke="currentColor" stroke-width="2" stroke-linecap="round"
+  stroke-linejoin="round" aria-hidden="true">
+  <path d="M12 3v13"/><path d="M8 7l4-4 4 4"/>
+  <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>
+</svg>`;
+
+function installBlok() {
+  if (DEMO || alGeinstalleerd() || lees(INSTALLWEG)) return '';
+  // Geen prompt en geen Apple: dan kan deze browser het niet, of hij heeft
+  // nog niet laten weten dat het kan. Dan maar niets beloven.
+  if (!installPrompt && !isApple()) return '';
+  const kop = `<div class="scheiding"></div>
+    <div class="veldblok">
+      <span class="label">op je beginscherm</span>
+      <p class="zacht" style="margin:0">Zet Poule op je beginscherm, dan opent hij
+        als een app: eigen tegel, eigen venster, geen adresbalk.</p>`;
+  if (installPrompt) {
+    return `${kop}
+      <button class="knop spook" id="installeer">Zet op beginscherm</button>
+      <button class="knop klein" id="installweg">Nu niet</button>
+    </div>`;
+  }
+  return `${kop}
+      <p class="zacht" style="margin:0">Tik onderin op ${DEEL_ICOON} <b>Deel</b>
+        en kies <b>Zet op beginscherm</b>.</p>
+      <button class="knop klein" id="installweg">Nu niet</button>
+    </div>`;
+}
+
+addEventListener('beforeinstallprompt', (ev) => {
+  // Zonder dit toont Chrome zijn eigen balk onderin. Liever onze eigen knop,
+  // op het moment dat de speler er iets aan heeft.
+  ev.preventDefault();
+  installPrompt = ev;
+  // Alleen opnieuw tekenen als het beginscherm nu openstaat. Dit kan ook
+  // binnenkomen terwijl iemand een poule aan het aanmaken is, en dan zou een
+  // toonStart() dat scherm onder zijn handen vandaan trekken.
+  if (app.querySelector('#code')) toonStart();
+});
+
 function watIsDitBlok() {
   if (mijnPoules().length) return '';
   return `
@@ -4816,6 +4890,7 @@ function toonStart() {
         </div>
         ${openbarePoulesBlok()}
         ${watIsDitBlok()}
+        ${installBlok()}
         <p class="err" id="f">${esc(S.linkFout)}</p>
       </div>
     </div></div>`;
@@ -4831,6 +4906,21 @@ function toonStart() {
 
   app.querySelector('#nieuw').onclick = () => startAanmaken();
   knoopInlog();
+
+  const installeer = app.querySelector('#installeer');
+  if (installeer) installeer.onclick = async () => {
+    installeer.disabled = true;
+    const vraag = installPrompt;
+    // Een prompt gaat maar één keer op. Ook als de speler hem wegklikt is hij
+    // op, dus hem meteen loslaten in plaats van een knop laten staan die het
+    // een tweede keer niet meer doet.
+    installPrompt = null;
+    try { await vraag.prompt(); } catch { /* de browser beslist, wij niet */ }
+    toonStart();
+  };
+
+  const installweg = app.querySelector('#installweg');
+  if (installweg) installweg.onclick = () => { schrijf(INSTALLWEG, '1'); toonStart(); };
 
   const openbareOpen = app.querySelector('#openbareOpen');
   if (openbareOpen) openbareOpen.onclick = async () => {

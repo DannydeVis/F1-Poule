@@ -30,7 +30,11 @@ export function maakControle(titel) {
 
 // aanpassen() krijgt de broncode van de nabootsing en mag hem wijzigen,
 // zodat een test een kapotte database kan naspelen.
-export async function startPagina({ aanpassen = (s) => s, indexPad } = {}) {
+//
+// userAgent doet zich voor als een ander apparaat. Nodig voor de iOS-kant van
+// "zet op beginscherm": daar bestaat de installatieprompt van Chrome niet en
+// hangt het scherm dus aan wat navigator.userAgent zegt.
+export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent } = {}) {
   const map = mkdtempSync(join(tmpdir(), 'poule-test-'));
 
   const bron = readFileSync(indexPad ?? join(wortel, 'index.html'), 'utf8');
@@ -66,7 +70,7 @@ export async function startPagina({ aanpassen = (s) => s, indexPad } = {}) {
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
 
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const page = await browser.newPage(userAgent ? { userAgent } : {});
   const jsFouten = [];
   page.on('pageerror', (e) => jsFouten.push(String(e)));
   const url = `http://127.0.0.1:${server.address().port}/`;
