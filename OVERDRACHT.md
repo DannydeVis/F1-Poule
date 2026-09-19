@@ -3342,3 +3342,56 @@ winnen zegt.
 Ook met de hand bekeken in Chromium op telefoonbreedte: dat de regel na het
 toevoegen van de winnaar nog op één regel past was precies de reden om
 "uitslag ·" weg te halen.
+
+---
+
+## Punten in de kleuren van een timingscherm
+
+"Wat vind je ervan dat we dezelfde kleuren als F1. Dus paars, groen en geel.
+Dus bijvoorbeeld als je het goed heb geraden dan word het paars?"
+
+Het aardige: de app had de schaal al, alleen niet af. `.v5/.v3/.v1/.v0`
+kleurden het puntenblokje per plek, maar `.v3` (één plek ernaast, 3 punten) en
+`.v1` (twee ernaast, 1 punt) waren allebei amber. De score kende dus vier
+treden en de kleur drie. Met paars erbij valt dat vanzelf goed:
+
+    .v5 → paars   exact
+    .v3 → groen   één plek ernaast
+    .v1 → geel    twee plekken ernaast
+    .v0 → grijs   mis
+
+Eén regel CSS en één nieuwe variabele (`--paars`, donkerder in het lichte
+thema en lichter in het donkere, net als `--groen` en `--amber`). Omdat alles
+door `puntKlasse()` loopt, pakt élke plek waar punten staan het mee: de top
+10, de losse vragen (pole goed is nu een paarse ✓), de inkijk bij een
+medespeler en het `delta`-label ("exact", "↓ 1").
+
+### Twee dingen die de kleur niet mag worden
+
+**Niet de rij.** Die uitslagregels dragen al kleur met een andere betekenis:
+de linkerrand is de teamkleur van de coureur, op acht plekken in de code. De
+scorekleur zit daarom rechts, op het puntenblokje. Zo staan de twee
+betekenissen naast elkaar in plaats van door elkaar.
+
+**Niet het enige signaal.** Groen en geel zijn precies het paar dat bij de
+meest voorkomende kleurenblindheid samenvalt. Het getal stond er al naast en
+blijft er staan; de kleur is een extraatje.
+
+### Wat bewust niet meeveranderde
+
+Het grote totaal in het scoreblok (`.score .getal`) blijft groen. Dat is geen
+oordeel over één gok maar een som, en paars daarvoor gebruiken zou paars
+precies de schaarste afnemen waar het zijn kracht aan ontleent. Ook de
+letterlijke F1-betekenis is losgelaten: daar is paars "snelste van iedereen",
+hier is het "jij had 'm exact". Dat is een bewuste keuze, geen vergissing.
+
+### Controles
+
+8 in `test/puntenkleuren.test.mjs`, met één uitslag waar alle vier de treden
+in voorkomen: welke trede welke variabele pakt (niet welke tint dat is — de
+kleuren mogen bijgesteld worden), dat vier scores ook echt vier kleuren zijn
+(de fout die er zat), dat paars alleen bij raak staat, en dat het getal er
+altijd naast staat.
+
+Ook met de hand bekeken in Chromium, licht en donker, op een uitslag met
+exact, één ernaast, twee ernaast en een DNF door elkaar.

@@ -59,6 +59,19 @@ stond de eerstvolgende race onder acht gereden weekenden. En terugkijken begin
 je bij vorige week, niet bij maart — vandaar de omgekeerde volgorde in de
 tweede lijst.
 
+In het uitslagscherm dragen de punten per plek de kleuren van een
+F1-timingscherm: **paars** voor exact (5), **groen** voor één plek ernaast
+(3), **geel** voor twee ernaast (1), grijs voor mis. Paars hoort schaars te
+zijn, dus het is alleen voor raak — niet voor "bijna". Daarvoor waren 3 en 1
+punt allebei amber, en had de schaal dus een trede minder dan de score.
+
+Twee dingen die daarbij vastliggen. De teamkleur van de coureur blijft op de
+**linkerrand** van de rij staan; de scorekleur zit rechts op het puntenblokje.
+Kleur betekent daar dus twee dingen naast elkaar in plaats van door elkaar. En
+het aantal punten staat altijd naast de kleur: groen en geel zijn precies het
+paar dat een kleurenblinde niet onderscheidt, dus de kleur is een extraatje en
+nooit de enige drager.
+
 Een gereden race toont je eigen punten én wie dat weekend in de poule won
 ("100 ptn · jij won", "16 ptn · Michael won", of bij gelijkspel "Davy en
 Michael deelden", op alfabet). Zonder die tweede helft weet je wel wat je
