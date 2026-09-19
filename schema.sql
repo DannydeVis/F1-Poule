@@ -153,6 +153,11 @@ alter table public.pools        add column if not exists questions_locked boolea
 -- code te hoeven kennen. "Privé" betekent verder nog steeds precies wat het
 -- al deed — pools_lezen stond al open, dit voegt geen nieuwe leesrechten toe.
 alter table public.pools        add column if not exists is_public  boolean not null default false;
+-- Wie niets inlevert krijgt een standaardlijst, zodat een gemiste race je
+-- niet uit de poule schrijft. Geen aan/uit maar een moment: de poulebaas zet
+-- het aan en vanaf dat moment telt het. Zo verandert de stand over races die
+-- al gereden zijn niet met terugwerkende kracht. Leeg = uit.
+alter table public.pools        add column if not exists autofill_vanaf timestamptz;
 
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;

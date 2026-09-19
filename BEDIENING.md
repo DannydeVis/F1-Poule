@@ -319,6 +319,37 @@ Poule → beheer alleen-lezen, met een regel eronder:
 Technisch: een veld `questions_locked` op de poule, gezet door de scoringslogica
 zodra de eerste race een uitslag krijgt.
 
+### 6a. Automatisch invullen bij vergeten
+
+Staat uit. De poulebaas zet hem aan in Poule → beheer, en vanaf dat moment
+krijgt wie een top 10 vergeet de WK-stand van dat moment als lijst, zichtbaar
+gemarkeerd als automatisch. Dat levert ongeveer de helft op van wat een goede
+lijst doet: genoeg om aangehaakt te blijven, te weinig om vergeten lonend te
+maken.
+
+Vier dingen die daarbij vastliggen:
+
+- **Geen terugwerkende kracht.** `pools.autofill_vanaf` bewaart *wanneer* het
+  aanging, niet dát het aanstaat. Alleen deadlines na dat moment tellen mee, dus
+  aanzetten verandert nooit een stand die er al was. Uitzetten wist het moment;
+  opnieuw aanzetten begint dus ook opnieuw en vult de tussenliggende races niet
+  alsnog in.
+- **Er wordt niets weggeschreven.** De lijst bestaat alleen in het geheugen van
+  de app en wordt bij elke keer laden opnieuw uitgerekend. Uitzetten haalt hem
+  daarmee ook echt weg, en niemands inzending raakt vervuild met een keuze die
+  hij niet zelf maakte.
+- **Je wint er geen weekend mee.** De seizoensstand telt de punten gewoon mee —
+  dat is het hele doel — maar `weekendWinnaars()` slaat automatisch ingevulde
+  inzendingen over. Ook het Q/R-vinkje op de racelijst blijft leeg, en het
+  onderlinge duel telt het weekend niet als gespeeld.
+- **Per lijst, niet per weekend.** Wie de kwalificatie invulde en de race vergat
+  krijgt alleen die tweede aangevuld.
+
+Voor de eerste race van een seizoen gebeurt er niets: er is dan nog geen
+uitslag om een WK-stand uit te maken. De stand wordt trouwens berekend uit de
+races *vóór* dat weekend, niet uit de huidige — anders zou de score van een
+race in mei nog veranderen door wat er in september gebeurt.
+
 ---
 
 ## 7. Wie mag wat

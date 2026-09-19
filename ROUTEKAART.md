@@ -222,9 +222,14 @@ De regel groeit mee met het seizoen — per twaalf gereden races valt er één
 weekend af. Zou je meteen vanaf race één twee weekenden wegstrepen, dan telt er
 na drie races nog één mee en is de stand onzin.
 
-### Automatisch invullen bij vergeten
-Wie niks inlevert krijgt de huidige WK-stand als top 10, gemarkeerd als
-"automatisch". Houdt iemand die twee races mist in de race.
+### ~~Automatisch invullen bij vergeten~~ — gebouwd
+Wie niks inlevert krijgt de WK-stand als top 10, gemarkeerd als "automatisch".
+Houdt iemand die twee races mist in de race.
+
+Staat uit tot de poulebaas hem aanzet, en dan alleen vanaf dat moment — zie
+`OVERDRACHT.md` voor waarom dat een datum is en geen vinkje. Je wint er geen
+weekend mee: de seizoensstand houdt je aangehaakt, een weekend winnen is iets
+wat je doet.
 
 ### Seizoenslaag
 Vragen die je vóór race 1 invult en aan het eind scoort: wereldkampioen,
@@ -270,21 +275,21 @@ het seizoen haalt dan de hele rest van deze lijst bij elkaar.
 
 ## Wat er nu nog openligt
 
-Groep 1, 2 en 3 staan er, en uit groep 4 ook al "slechtste twee races vallen
-weg". Wat rest is dit, en het is geen toeval dat het allemaal groep 4 is:
+Groep 1, 2 en 3 staan er, en uit groep 4 "slechtste twee races vallen weg" en
+"automatisch invullen bij vergeten" — daarmee zijn alle drie de kwalen bovenaan
+deze lijst aangepakt. Wat rest is dit:
 
 | | wat het is | de haak eraan |
 |---|---|---|
-| Automatisch invullen bij vergeten | wie niks inlevert krijgt een standaardlijst | dit is de enige van de drie kwalen bovenaan deze lijst die nog niet aangepakt is |
 | Contrair-multiplier | punten schalen met hoe zeldzaam je antwoord was | verandert wat een punt waard is |
 | Jokers | vijf per seizoen, dubbele punten | nieuwe keuze per race, dus nieuw scherm |
 | Seizoenslaag | vragen vóór race 1, gescoord aan het eind | hoort aan het begin van een seizoen te beginnen |
 | Sprintweekenden | de sprint als eigen sessie meetellen | de sync pakt nu alleen `session_name=Race` en `Qualifying` |
 
-Alle vijf raken de telling. Dat is de reden dat ze hier nog staan en niet
+Alle vier raken de telling. Dat is de reden dat ze hier nog staan en niet
 gebouwd zijn: midden in een lopend seizoen de puntentelling omgooien is geen
-verbetering, ook niet als de nieuwe regel op zichzelf beter is. Vergelijk hoe
-"slechtste twee races vallen weg" het heeft opgelost — naast de stand, niet in
-plaats ervan. Wie hieraan begint doet er goed aan dezelfde vraag eerst te
-beantwoorden: geldt dit vanaf nu, of met terugwerkende kracht over races die
-al gereden zijn?
+verbetering, ook niet als de nieuwe regel op zichzelf beter is. Kijk hoe de twee die er
+wél zijn dat hebben opgelost: "slechtste twee races" staat náást de stand in
+plaats van erin, en "automatisch invullen" geldt alleen vanaf het moment dat de
+poulebaas hem aanzet. Wie hieraan begint beantwoordt die vraag dus eerst: geldt
+dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?

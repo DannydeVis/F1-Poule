@@ -3490,3 +3490,96 @@ allebei de varianten. De installatieknop is `.knop spook` geworden en niet
 `.knop klein`: in die eerste opzet hadden "Zet op beginscherm" en "Nu niet"
 precies evenveel gewicht, terwijl de rest van het beginscherm zijn echte acties
 (nieuwe poule, openbare poules) al als spook zet.
+
+---
+
+## Automatisch invullen bij vergeten
+
+Bovenaan `ROUTEKAART.md` staan drie dingen die een vriendenpoule slopen. Twee
+ervan zijn allang aangepakt — de weekendwinnaar en de duels zorgen dat je niet
+uitgeteld bent na acht races, de terugblik en de kopieerknop geven een reden om
+terug te komen. De derde stond er nog: mensen vergeten in te vullen. Wie een
+weekend mist staat op nul, en twee gemiste weekenden is meestal het einde van
+iemands seizoen.
+
+Nu krijgt wie een top 10 vergeet de WK-stand van dat moment als lijst. Dat is
+met opzet de saaiste voorspelling die er is: in de test levert hij 60 van de
+100 punten op tegen 100 voor iemand die het weekend goed had. Genoeg om
+aangehaakt te blijven, te weinig om vergeten aantrekkelijk te maken.
+
+### Het moeilijke deel is niet het invullen
+
+Dat is tien regels. Het moeilijke deel is dat dit de spelregels van een
+draaiende poule verandert, en daar zit dit werk vol met keuzes over.
+
+**Een moment, geen vinkje.** `pools.autofill_vanaf` bewaart wannéér het
+aanging. Alleen deadlines daarna tellen mee. Een vinkje zou betekenen dat de
+poulebaas op een dinsdagavond in september iedereen punten geeft over races uit
+mei, en dan is de stand 's ochtends een andere dan 's avonds zonder dat er
+gereden is. Dezelfde afweging als bij "slechtste twee races vallen weg", waar
+het antwoord ook was: niet met terugwerkende kracht aan een lopend seizoen
+zitten.
+
+Bijkomend: uitzetten wist het moment. Opnieuw aanzetten begint dus opnieuw en
+vult de tussenliggende races niet alsnog in.
+
+**Er wordt niets weggeschreven.** Geen rijen in `answers`. `vulAutoAan()` draait
+na `bouwPreds()` en zet de lijst in het geheugen, met een `auto`-veld erbij dat
+zegt welke lijsten niet van de speler komen. Dat scheelt een schrijfrecht dat
+niemand zou moeten hebben (de app zou namens een ander moeten schrijven), het
+maakt uitzetten echt ongedaan, en niemands inzending raakt vervuild met een
+keuze die hij niet zelf maakte.
+
+**De stand van tóén, niet die van nu.** `autoLijst()` telt WK-punten over de
+races met `round <` deze race. Met de huidige stand zou de score van een race
+in mei nog veranderen door wat er in september gebeurt, en dan klopt een
+uitslag die je in de groepsapp geplakt hebt een maand later niet meer. Coureurs
+met evenveel punten staan op hun gemiddelde finishplek, wie nog nooit finishte
+achteraan. Voor race 1 van een seizoen is er niets om op te bouwen en gebeurt
+er dus ook niets.
+
+**Je wint er geen weekend mee.** Dit is de enige plek waar de punten wél en
+niet meetellen. De seizoensstand telt ze gewoon — dat is het hele doel — maar
+`weekendWinnaars()` slaat automatische inzendingen over. "Davy won Monza"
+terwijl Davy niets inleverde is precies de grap waar een poule zuur van wordt.
+De grens: de stand houdt je aangehaakt, een weekend winnen is iets wat je doet.
+
+Datzelfde onderscheid zit in `heeftVoorspeld()`, die automatisch ingevulde
+velden nu overslaat. Daarmee telt het onderlinge duel een weekend waarin geen
+van beiden iets inleverde ook niet als gespeeld.
+
+### Overal zeggen dat het niet van jou is
+
+Punten die eruit komen zijn echt; de keuze is van de app. Dat verschil mag
+nergens wegvallen, dus `autoNoot()` staat op je eigen uitslagscherm en in de
+inkijk bij een ander, `andermans()` zet "automatisch ingevuld" in plaats van
+"niets ingevuld" (mét de punten, want die zijn er), en het Q/R-vinkje op de
+racelijst blijft leeg — dat vinkje betekent "dit heb jij ingevuld", en dat is
+dan niet zo.
+
+### Controles
+
+22 in `test/automatisch-invullen.test.mjs`, met drie gereden races die elk een
+eigen rol spelen: Melbourne (ronde 1, geen eerdere uitslag dus geen stand),
+Shanghai (gereden vóór de streep) en Suzuka (erna, de enige die meedoet). Danny
+levert nergens iets in, Michael levert in Suzuka precies dezelfde lijst in als
+de automatische, en Casper heeft de uitslag exact goed.
+
+Dat Michael en de automaat op de punt gelijk uitkomen is het hart van de test:
+dezelfde lijst, dezelfde punten, en tóch wint alleen wie hem zelf koos. Verder
+ligt vast dat aanzetten geen enkele gereden race raakt, dat de streep precies
+tussen Shanghai en Suzuka valt, dat de automatische lijst het verliest van
+iemand die het weekend goed had, dat de Q/R-vinkjes leeg blijven, en dat
+uitzetten de punten meteen weer weghaalt.
+
+De `schema.sql`-wijziging (één nullable kolom, geen nieuwe policy — de
+bestaande `pools_bijwerken` met `mag_beheren(id)` dekt hem al) is lokaal tegen
+PostgreSQL 16 gedraaid in dezelfde volgorde als de CI-job, inclusief de
+herstel- en reset-stappen. Alle 44 browsertestbestanden groen.
+
+### Wat dit níét doet
+
+Alleen de twee top 10-lijsten worden aangevuld. De pole, de winnaar, de duels,
+safety cars en de rode vlag blijven leeg. Daar is geen "saaiste voorspelling"
+voor te bedenken die niet gewoon gokken is, en een gok namens iemand anders
+neerzetten is iets anders dan een gat vullen met de bekende stand.
