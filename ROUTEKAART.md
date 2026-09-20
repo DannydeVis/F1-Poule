@@ -384,7 +384,7 @@ die de verkeerde naam op hun beginscherm hebben staan.
 
 ---
 
-## Fase 2: het racescherm wordt een dashboard
+## ~~Fase 2: het racescherm wordt een dashboard~~ — gebouwd
 
 Het beste idee uit de doorlichting, en het goedkoopste: de data is er al, het
 is een herschikking van het scherm.
@@ -411,7 +411,7 @@ niemand ziet.
 
 ---
 
-## Fase 3: de leuke dingen
+## ~~Fase 3: de leuke dingen~~ — gebouwd wat het waard was
 
 Op volgorde van wat het oplevert gedeeld door wat het kost. Het aardige aan
 deze hele fase: er komt geen kolom en geen tabel bij. Het is allemaal rekenwerk
@@ -443,30 +443,31 @@ ik pas overwegen als blijkt dat mensen die agenda-link niet gebruiken.
 
 ---
 
-## Fase 4: de fundering
+## ~~Fase 4: de fundering~~ — gedaan wat het waard was
 
-**`index.html` opsplitsen.** Het bestand is 5234 regels. Dat is te groot, en er
-is een duidelijk signaal dat het pijn doet: `scripts/knipsel.mjs` bestaat alleen
-maar omdat de rekenkern niet te importeren is, en knipt daarom vier gemarkeerde
-blokken (`primitieven`, `vragen`, `zoeken`, `optellen`) letterlijk uit het
-bestand om ze te kunnen testen.
+**`index.html` opsplitsen — nagemeten en niet gedaan.** Het bestand is ruim
+5000 regels, en het plan was om de vier knip-blokken uit `scripts/knipsel.mjs`
+echte modules te maken. De telling voordat ik begon:
 
-Maar niet in één klap, en niet in tien bestanden tegelijk. De volgorde die het
-minste risico geeft:
+| blok | regels | verwijzingen naar `S` |
+|---|---|---|
+| `primitieven` | 235 | 0 |
+| `vragen` | 112 | 1 |
+| `zoeken` | 4 | 1 |
+| `optellen` | 479 | 54 |
 
-1. die vier knip-blokken worden echte modules. Ze zijn al logisch afgescheiden
-   en al los getest, dus `knipsel.mjs` kan daarna weg — dat is winst op dag één;
-2. daarna pas de view-laag, en dan alleen een scherm dat je tóch aan het
-   verbouwen bent.
+`primitieven` is puur en zou zo te verplaatsen zijn. Maar `optellen` — het
+grootste blok, en waar het om gaat — hangt met 54 verwijzingen aan de toestand
+van de app. Dat is geen module maken maar de state van de hele app verbouwen,
+met bijna vijftig testbestanden die erop leunen.
 
-Wat er niet moet gebeuren: React of een bouwstap erbij. Gewone ES-modules zijn
-genoeg, en de testopstelling kan het aan — `test/hulp.mjs` serveert al uit de
-repo naast de tijdelijke map.
+En alleen `primitieven` verplaatsen geeft het slechtste van twee werelden: de
+app is dan geen één bestand meer (wat het hele ontwerp is — geen bouwstap, geen
+bundel) én `knipsel.mjs` blijft nodig voor de andere drie.
 
-Wat het kost: `test/hulp.mjs` vervangt nu één importregel in `index.html` om
-Supabase door de nabootsing te ruilen. Met modules over meerdere bestanden moet
-die truc mee verhuizen. Dat is te doen, maar het is wél het soort werk waar
-alle 44 testbestanden tegelijk op omvallen als het misgaat.
+Het advies dat hier eerst stond geldt nog steeds: doe dit als een fúnctie
+moeilijk toe te voegen wordt, niet op een regelaantal. Dat moment is er nog
+niet geweest — fase 1 tot en met 4 kwamen er zonder gedoe in.
 
 **Toegankelijkheid nalopen.** Hier staat de app er niet slecht voor: de
 puntenkleuren zijn nooit het enige signaal (er staat altijd een getal naast, en
@@ -541,9 +542,9 @@ geldt dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?
 |---|---|---|
 | ~~0~~ | ~~RLS dichtzetten~~ — **gebouwd**, zie `OVERDRACHT.md` | het enige dat een publieke launch tegenhield |
 | ~~1~~ | ~~RacePicks: naam, icoon~~ — **gebouwd**; alleen het domein is nog van jou | vóórdat mensen "Poule" op hun beginscherm zetten |
-| 2 | racescherm wordt dashboard | grootste winst per uur werk, data is er al |
-| 3 | positiewijziging, reeksen, grafiek, recap | rekenwerk over wat er al ligt |
-| 4 | modules, toegankelijkheid, fout- en legeschermen | onderhoud, als er geen haast is |
+| ~~2~~ | ~~racescherm wordt dashboard~~ — **gebouwd** | grootste winst per uur werk, data is er al |
+| ~~3~~ | ~~positiewijziging, reeksen, grafiek~~ — **gebouwd**; recap en profielstatistieken bewust niet, zie `OVERDRACHT.md` | rekenwerk over wat er al ligt |
+| ~~4~~ | ~~toegankelijkheid, offlinescherm~~ — **gebouwd**; opsplitsen nagemeten en niet gedaan | onderhoud, als er geen haast is |
 | 5 | talen, andere klassen, push, publieke profielen | duur, en niets ervan zit in de weg |
 
 Fase 0 en 1 horen bij elkaar en zijn samen de "klaar voor publiek"-stap. Fase 2

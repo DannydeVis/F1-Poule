@@ -3886,3 +3886,172 @@ poule van één, en dat een automatische lijst niet als "klaar" en niet als
 
 Alle 46 testbestanden groen, en met de hand bekeken in licht en donker op
 telefoonbreedte.
+
+---
+
+## Fase 3: wat er gebeurd is, niet alleen waar je staat
+
+Drie dingen erbij op de standpagina, alle drie rekenwerk over data die er al
+lag. Geen kolom, geen tabel, geen nieuwe bron.
+
+### Positiewijziging
+
+`standRijen()` telde altijd alles op. Nu neemt hij een grens mee: `standRijen(n)`
+telt alleen races met een rondenummer onder `n`. Daarmee is "de stand zoals hij
+vóór dit weekend was" dezelfde functie, één weekend eerder afgekapt, en is het
+verschil tussen die twee posities het pijltje.
+
+Twee grenzen die erin zitten omdat het anders onzin vertelt. Geen pijltje als
+er niets veranderd is — een "0" erbij maakt van "er is niets gebeurd" een
+mededeling. En geen pijltjes na één gereden race, want dan is iedereen nieuw en
+zou elke rij iets krijgen dat nergens op slaat.
+
+### Reeksen
+
+Hoeveel weekenden op rij je hebt ingeleverd, vanaf drie, klein naast de naam.
+Telt terug vanaf de laatste gereden race en stopt bij het eerste weekend dat je
+oversloeg. Leunt op `heeftVoorspeld()`, en die slaat automatisch aangevulde
+lijsten over — dus een reeks die de app voor je invulde telt niet. Dezelfde
+grens als bij de weekendwinst: het is iets wat je doet, niet iets wat je
+overkomt.
+
+### De seizoenslijn
+
+Je positie per race, als lijn. Met de hand getekende SVG en geen bibliotheek:
+het is één pad over hooguit 24 punten, en daar een grafiekpakket voor inladen
+zou meer wegen dan de hele app.
+
+Drie beslissingen erin:
+
+- **De y-as staat op zijn kop**, want plek 1 hoort bovenaan. Bij een poule van
+  twee zou `(totaal - 1)` anders door nul delen, vandaar het aparte geval.
+- **Drie races is de ondergrens**, en in je eentje verschijnt hij niet. Twee
+  punten zijn een streepje en geen verloop, en een grafiek die een trend
+  suggereert die er niet is, is erger dan geen grafiek.
+- **De getallen eronder zijn het echte antwoord.** Waar je begon, je beste, je
+  slechtste en waar je nu staat. De lijn laat de vorm zien; de getallen maken er
+  informatie van, en ze zijn ook het enige wat overblijft voor wie de grafiek
+  niet kan zien. Het `aria-label` op de svg vertelt hetzelfde in één zin.
+
+Wie nooit van plek wisselde krijgt geen "slechtste" te zien — dat zou twee keer
+hetzelfde getal zijn.
+
+De labels heetten eerst "hoogste" en "laagste". Klopt letterlijk (plek 1 is de
+hoogste), maar je leest het twee keer voordat je het doorhebt. Nu "beste" en
+"slechtste".
+
+### Controles
+
+10 in `test/klimmen-en-reeksen.test.mjs` en 12 in
+`test/seizoensgrafiek.test.mjs`. Het zwaartepunt ligt op de drempels en op de
+gevallen die stil fout gaan: geen pijltje bij geen beweging, geen grafiek bij
+twee races of in je eentje, een gebroken reeks na één gemist weekend, en geen
+dubbel getal in de voet als je nooit van plek wisselde.
+
+Alle 48 testbestanden groen.
+
+### Wat er van fase 3 níét in zit
+
+**Race Recap als eigen pagina.** Die bestaat grotendeels al, verspreid: "zo
+dichtbij", de weekendwinnaar, je score en de inkijk bij anderen staan allemaal
+op het racescherm. Er samenbrengen wat er al staat levert een pagina op die
+hetzelfde zegt op een andere plek. Als er ooit iets bijkomt wat er nog niet is,
+is dat het moment.
+
+**Profielstatistieken.** Race wins, accuracy, beste circuit. Kan, maar de
+drempels uit de terugblik gelden hier net zo hard: onder een handvol races zegt
+"accuracy 72%" niets, en het is precies het soort getal waarmee een app met
+gezag onzin verkoopt.
+
+**Share cards als afbeelding.** Zie `ROUTEKAART.md` — er staat al een knop die
+de uitslag als tekst op je klembord zet, en tekst is in een groepsapp beter dan
+een plaatje.
+
+---
+
+## Fase 4: de fundering, en één ding dat ik bewust niet heb gedaan
+
+### Zonder verbinding
+
+`index.html` haalde supabase-js op met een `await import` op het hoogste niveau
+van de module. Mislukt die, dan stopt het hele script — en dan blijft er
+letterlijk een leeg vlak staan, want alles wat een scherm tekent staat
+eronder. Zonder bereik zag de app er dus uit alsof hij stuk was in plaats van
+alsof je geen verbinding had. Dat is precies het verschil dat een mens wél
+maakt en een blanco pagina niet.
+
+Er staat nu een `try` omheen en een eigen scherm: "Even geen bereik", met de
+uitleg dat de standen live opgehaald worden en dat je inzendingen veilig
+staan. Nadrukkelijk een ander scherm dan `toonFout()`: daar is iets misgegaan,
+hier is er gewoon niets om mee te praten.
+
+**De fout die dat kostte, want hij is leerzaam.** Eerst zette ik er
+`if (laadfout) { geenVerbinding(); return; }` neer, boven `bestaandeSessie()`.
+Die regel staat op het hoogste niveau van de module en niet in een functie, dus
+JavaScript gaf "Illegal return statement" — en daarmee brak het hele bestand,
+op precies dezelfde manier als het probleem dat ik aan het oplossen was. De
+suite viel meteen om op `#code` dat nooit verscheen. Het is nu een eigen
+`else if`-tak, met die geschiedenis in een commentaarregel erboven.
+
+Waarom er geen service worker komt staat in de overdracht bij "zet op
+beginscherm": een oude stand tonen alsof hij klopt is erger dan een
+foutmelding.
+
+### Toegankelijkheid, gemeten in plaats van geschat
+
+`test/toegankelijkheid.test.mjs` loopt over élk element met eigen tekst in
+allebei de thema's en rekent de WCAG-contrastverhouding uit tegen de
+achtergrond waar het écht op ligt — niet tegen de variabele die er in theorie
+achter zit. Dat vond vier dingen die met het oog niet opvallen:
+
+| | was | is |
+|---|---|---|
+| `--ink3` licht (de kleine labels) | 2.77 | 4.55 |
+| `--ink3` donker | 3.36 | 4.61 |
+| `--groen` licht, op zijn eigen tint | 4.42 | 4.54 |
+| `--amber` licht | 3.27 | 4.51 |
+| `.sessie.open i` ("!" op `--gedempt`) | 4.36 | 13.58 |
+
+Alleen de tekstkleuren zijn verschoven, en steeds naar de lichtste waarde die
+de grens haalt — zo blijft de rangorde tussen `--ink`, `--ink2` en `--ink3` zo
+groot als hij kan zijn. De vlakken en randen eronder zijn achtergronden en
+hoeven niets te halen; die staan nog op hun oorspronkelijke tint.
+
+Dat laatste geval kwam uit mijn eigen fase 2-werk: het uitroepteken op de
+weekendkaart, uitgerekend het teken dat je moet zien. Het heeft nu de volle
+tekstkleur, en dat klopt ook inhoudelijk — het is de enige van de vier die om
+aandacht vraagt.
+
+Verder getest: elke knop haalt 44 pixels (de maat die Apple en Google allebei
+aanhouden — de wisselknop in de merkbalk zat op 27), toetsenbordfocus geeft een
+zichtbare rand, en de pagina zegt in welke taal hij staat.
+
+Eén ding aan die test is de moeite van het onthouden waard: de focuscontrole
+drukt een échte Tab en gebruikt geen `.focus()` vanuit script. `:focus-visible`
+slaat alleen aan bij toetsenbordbediening, dus met een programmatische focus
+faalde hij onterecht.
+
+### Wat ik bewust niet heb gedaan: index.html opsplitsen
+
+Dit stond in `ROUTEKAART.md` als fase 4, met het plan om de vier knip-blokken
+uit `scripts/knipsel.mjs` echte modules te maken. Ik heb het nagemeten
+voordat ik begon:
+
+    primitieven   235 regels    0 verwijzingen naar S
+    vragen        112 regels    1
+    zoeken          4 regels    1
+    optellen      479 regels   54
+
+`primitieven` is inderdaad puur en zou zo te verplaatsen zijn. Maar `optellen`
+— het grootste blok, en het blok waar het om gaat — hangt met 54 verwijzingen
+aan de toestand van de app. Dat is geen module maken, dat is een verbouwing van
+de state van de hele app, met 49 testbestanden die er tegelijk op leunen.
+
+En alleen `primitieven` verplaatsen levert het slechtste van twee werelden op:
+de app is dan geen één bestand meer (wat het hele ontwerp is — geen bouwstap,
+geen bundel) én `knipsel.mjs` blijft alsnog nodig voor de andere drie.
+
+Dus: niet gedaan, en de routekaart zegt nu waarom, met die telling erbij. Het
+advies dat ik er zelf in schreef geldt nog steeds — doe dit als een fúnctie
+moeilijk toe te voegen wordt, niet op een regelaantal. Dat moment is er nog
+niet geweest: fase 1 tot en met 4 zijn er zonder gedoe in gekomen.
