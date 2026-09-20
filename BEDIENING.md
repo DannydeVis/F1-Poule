@@ -40,44 +40,24 @@ Vier tabs, vast onderin beeld:
 ```
 
 ### Races
-De lijst met raceweekenden, dit is het startscherm. Per race zichtbaar of hij
-open is, wacht op de uitslag, of gescoord is. Tik erop en je komt in het
-invulscherm of het uitslagscherm.
 
-Bovenaan een strook met wat er nu speelt: "Kwalificatie sluit zaterdag 16:00,
-Davy heeft nog niks ingevuld."
+**Bovenaan: de weekendkaart.** Die beantwoordt in deze volgorde de drie vragen
+waarmee iemand de app opent:
 
-Daaronder staan **twee** lijsten, en die volgorde is het punt:
+1. **welke race komt eraan** — het rondenummer klein, het circuit groot, met de
+   afteller tot de eerstvolgende deadline en de vijf startlampjes;
+2. **moet ik nog iets doen** — per sessie een vinkje: `✓ klaar`, `· deels`,
+   `! open`, of `~ automatisch` voor een lijst die de app zelf invulde. Daarna
+   één knop, en die wijst naar de sessie die nog ópen is en nog niet af — niet
+   naar de eerstvolgende deadline. Wie de kwalificatie al deed terwijl de race
+   nog open staat kreeg anders "bekijken" te lezen terwijl er juist werk lag;
+3. **hoe sta ik ervoor** — je plek, je punten en wat het vorige weekend
+   opleverde, als drie grote getallen onder een streep. Speel je in je eentje,
+   dan valt die regel weg: "1e van 1" is geen informatie.
 
-- **kalender** — wat nog komt, plus wat nog op zijn uitslag wacht,
-  chronologisch.
-- **gereden** — alles met een uitslag (en de afgelaste races), **nieuwste
-  eerst**.
-
-Eén chronologische lijst duwde het seizoen zichzelf naar beneden: halverwege
-stond de eerstvolgende race onder acht gereden weekenden. En terugkijken begin
-je bij vorige week, niet bij maart — vandaar de omgekeerde volgorde in de
-tweede lijst.
-
-In het uitslagscherm dragen de punten per plek de kleuren van een
-F1-timingscherm: **paars** voor exact (5), **groen** voor één plek ernaast
-(3), **geel** voor twee ernaast (1), grijs voor mis. Paars hoort schaars te
-zijn, dus het is alleen voor raak — niet voor "bijna". Daarvoor waren 3 en 1
-punt allebei amber, en had de schaal dus een trede minder dan de score.
-
-Twee dingen die daarbij vastliggen. De teamkleur van de coureur blijft op de
-**linkerrand** van de rij staan; de scorekleur zit rechts op het puntenblokje.
-Kleur betekent daar dus twee dingen naast elkaar in plaats van door elkaar. En
-het aantal punten staat altijd naast de kleur: groen en geel zijn precies het
-paar dat een kleurenblinde niet onderscheidt, dus de kleur is een extraatje en
-nooit de enige drager.
-
-Een gereden race toont je eigen punten én wie dat weekend in de poule won
-("100 ptn · jij won", "16 ptn · Michael won", of bij gelijkspel "Davy en
-Michael deelden", op alfabet). Zonder die tweede helft weet je wel wat je
-scoorde maar niet of dat goed was. Het woord "uitslag" staat er met opzet
-niet meer voor: de kop "gereden" en de finishvlag in de rij zeggen dat al, en
-de regel heeft de ruimte nodig.
+Daaronder de kalender, in twee lijsten: eerst wat er nog komt, daarna wat er
+gereden is (nieuwste eerst), met per gereden race je punten en wie dat weekend
+won.
 
 ### Stand
 Drie onderdelen op één scherm, gescheiden door koppen:
