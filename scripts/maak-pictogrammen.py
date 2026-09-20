@@ -1,4 +1,4 @@
-# Maakt de pictogrammen voor "zet op beginscherm":
+# Maakt de pictogrammen van RacePicks voor "zet op beginscherm":
 #
 #     python3 scripts/maak-pictogrammen.py pictogrammen
 #
@@ -37,8 +37,13 @@ ACCENT = (0xee, 0x4d, 0x33)
 INK    = (0xf2, 0xf3, 0xf5)
 
 def startgrid(N, rand=0.17):
-    """Het startgrid uit het ontwerp: twee kolommen, om en om verspringend.
-    Alleen rechte hoeken, dus geen anti-aliasing nodig en overal scherp.
+    """Het startgrid: twee kolommen, om en om verspringend. Alleen rechte
+    hoeken, dus geen anti-aliasing nodig en overal scherp.
+
+    Eén vak is de pole en staat in het accent; de rest is ink. Dat is de
+    "picks" uit RacePicks: één keuze die eruit springt op een grid. Eerder
+    wisselden de kleuren om en om, en dan is het een streepjespatroon — op een
+    tegel van 48 pixels leest dat als ruis in plaats van als één ding.
 
     `rand` is hoeveel van de zijde als marge vrij blijft. Voor een maskable
     icoon hoort dat ruim te zijn, voor iOS juist niet — zie onderaan."""
@@ -53,24 +58,25 @@ def startgrid(N, rand=0.17):
         for i in range(4):
             top = marge + i * (hoog + gat)
             if marge <= x < marge + kolom and top <= y < top + hoog:
-                return ACCENT if i % 2 == 0 else INK
+                # De linkerkolom staat hoger, dus vak 0 daarvan is de pole.
+                return ACCENT if i == 0 else INK
         links2 = marge + kolom + tussen
         for i in range(4):
             top = marge + verspring + i * (hoog + gat)
             if links2 <= x < links2 + kolom and top <= y < top + hoog:
-                return INK if i % 2 == 0 else ACCENT
+                return INK
         return BG
     return kleur
 
 for N in (192, 512):
     # Maskable: de veilige zone is de binnenste 80%, en alles wat telt blijft
     # daarbinnen, want Android snijdt er zijn eigen vorm uit.
-    n = png(f"{sys.argv[1]}/poule-{N}.png", N, N, startgrid(N))
-    print(f"poule-{N}.png  {n} bytes")
+    n = png(f"{sys.argv[1]}/racepicks-{N}.png", N, N, startgrid(N))
+    print(f"racepicks-{N}.png  {n} bytes")
 
 # iOS snijdt niet, het legt er alleen ronde hoeken omheen. De veilige zone van
 # een maskable icoon is daar dus verspilde ruimte: het motief komt klein uit
 # met een brede rand eromheen. Vandaar een eigen, vullende variant. 180 is de
 # maat die een iPhone op zijn scherpst vraagt; een iPad schaalt hem terug.
-n = png(f"{sys.argv[1]}/poule-apple-180.png", 180, 180, startgrid(180, 0.08))
-print(f"poule-apple-180.png  {n} bytes")
+n = png(f"{sys.argv[1]}/racepicks-apple-180.png", 180, 180, startgrid(180, 0.08))
+print(f"racepicks-apple-180.png  {n} bytes")
