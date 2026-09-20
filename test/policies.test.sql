@@ -151,11 +151,20 @@ begin
   raise notice 'ok: een geclaimde speler is niet over te nemen';
 
   -- Een speler die van niemand is, mag hij wél claimen: dat is precies hoe
-  -- iedereen binnenkomt.
-  update pool_members set user_id = 'cccccccc-0000-0000-0000-000000000003'
-  where member_id = 'cccc3333-0000-0000-0000-000000000003' and user_id is null;
-  if not found then raise exception 'gezakt: Chris kan een vrije speler niet claimen'; end if;
+  -- iedereen binnenkomt. Sinds de leespolicies dicht staan gaat dat via
+  -- poule_claim_speler() en niet meer met een losse update — Chris is op dat
+  -- moment nog geen lid, dus hij ziet de rij niet die hij wil bijwerken. Zie
+  -- test/afscherming.test.sql voor die hele redenering.
+  if public.poule_claim_speler('cccc3333-0000-0000-0000-000000000003') is null then
+    raise exception 'gezakt: Chris kan een vrije speler niet claimen'; end if;
   raise notice 'ok: een speler zonder eigenaar is te claimen';
+
+  -- En de weg die dicht hoort te zitten, zit ook echt dicht: rechtstreeks
+  -- bijwerken vanuit de app raakt niets meer.
+  update pool_members set user_id = 'cccccccc-0000-0000-0000-000000000003'
+  where member_id = 'bbbb2222-0000-0000-0000-000000000002';
+  if found then raise exception 'gezakt: Chris nam Bram over met een losse update'; end if;
+  raise notice 'ok: rechtstreeks claimen van andermans speler raakt niets';
 
   -- En nu hij van Chris is, kan Bram er niet meer bij.
   perform set_config('request.jwt.claims',
@@ -203,12 +212,14 @@ begin
   if not found then raise exception 'gezakt: de poulebaas kan een speler niet losmaken'; end if;
   raise notice 'ok: de poulebaas kan een verkeerd geclaimde speler losmaken';
 
-  -- Bram claimt zichzelf weer terug.
+  -- Bram claimt zichzelf weer terug. Ook dit gaat langs de functie: Bram is
+  -- net losgemaakt, dus op dít moment hoort hij bij geen enkele speler in
+  -- deze poule en ziet hij zijn eigen rij niet meer staan. Precies de
+  -- situatie waarvoor poule_claim_speler() bestaat.
   perform set_config('request.jwt.claims',
     '{"sub":"bbbbbbbb-0000-0000-0000-000000000002"}', true);
-  update pool_members set user_id = 'bbbbbbbb-0000-0000-0000-000000000002'
-  where member_id = 'bbbb2222-0000-0000-0000-000000000002' and user_id is null;
-  if not found then raise exception 'gezakt: Bram kan zichzelf niet terugpakken'; end if;
+  if public.poule_claim_speler('bbbb2222-0000-0000-0000-000000000002') is null then
+    raise exception 'gezakt: Bram kan zichzelf niet terugpakken'; end if;
   raise notice 'ok: en de speler is daarna weer gewoon te claimen';
 
   -- Maar Bram is geen poulebaas, dus hij heeft die uitweg niet.
@@ -260,17 +271,27 @@ begin
   --  9. Een poule vinden en aanmaken blijft voor iedereen
   -- ============================================================
   -- Zonder ingelogde gebruiker, zoals iemand die de app voor het eerst opent.
+  --
+  -- Dit ging eerst met een gewone `select ... where join_code = ...` op de
+  -- tabel. Dat kan niet meer en dat is de hele winst van fase 0: een policy
+  -- kan niet eisen dát je filtert, dus "vinden op je code" en "de hele tabel
+  -- leegvissen" waren dezelfde rechten. Nu loopt binnenkomen langs een
+  -- functie met een verplichte sleutel. Zie test/afscherming.test.sql voor de
+  -- kant die dichtgegaan is; hier staat dat de deur nog wél opengaat.
   set local role anon;
   perform set_config('request.jwt.claims', '', true);
 
   select count(*) into aantal from pools where join_code = 'ANNA01';
-  if aantal <> 1 then raise exception 'gezakt: een poule is niet meer op zijn code te vinden'; end if;
+  if aantal <> 0 then raise exception 'gezakt: de poulestabel is nog rechtstreeks te lezen'; end if;
+  raise notice 'ok: rechtstreeks in de poulestabel kijken levert niets op';
+
+  if public.poule_ophalen(p_code => 'ANNA01') is null then
+    raise exception 'gezakt: een poule is niet meer op zijn code te vinden'; end if;
   raise notice 'ok: een poule zoeken op zijn code kan zonder account';
 
-  select count(*) into aantal from pool_members
-  where pool_id = '11111111-0000-0000-0000-000000000001';
-  if aantal < 3 then raise exception 'gezakt: het "Wie ben jij?"-scherm heeft niets te tonen'; end if;
-  raise notice 'ok: de spelerslijst is zichtbaar voor wie nog geen lid is';
+  if jsonb_array_length(public.poule_ophalen(p_code => 'ANNA01') -> 'leden') < 3 then
+    raise exception 'gezakt: het "Wie ben jij?"-scherm heeft niets te tonen'; end if;
+  raise notice 'ok: de spelerslijst komt mee voor wie nog geen lid is';
 
   insert into pools (id, name, join_code)
   values ('99999999-0000-0000-0000-000000000009', 'Nieuwe poule', 'NIEUW1');

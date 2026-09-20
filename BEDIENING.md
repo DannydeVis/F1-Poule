@@ -476,11 +476,53 @@ De policies staan dicht. Wat dat concreet betekent:
   hoeveel er nog te gaan zijn.
 - **De vragenset en de omschrijving zijn van de poulebaas**, nu ook in de
   database en niet alleen op het scherm.
-- **Lezen blijft voor iedereen open.** Dat moet: je zoekt een poule op zijn
-  code voordat je lid bent, en je kiest jezelf uit de spelerslijst voordat je
-  meedoet. Wie de anon key uit de broncode plukt kan dus poules en namen
-  uitlezen, en zich aanmelden bij een poule die niet van hem is. Vervelend,
-  maar niet destructief: hij komt bij niemands antwoord.
+- **Lezen kan alleen binnen je eigen poule.** Dit stond lang open, en dat was
+  het grootste gat in de app: met de anon key uit `index.html` — die staat daar
+  met opzet publiek — was élke poule, élke spelersnaam en élk antwoord in de
+  hele database uit te lezen. Zie hieronder hoe dat nu werkt.
+
+### Binnenkomen zonder de deur open te laten staan
+
+Dichtzetten naar "alleen leden" kan niet zomaar, en dát is de reden dat het zo
+lang open stond: om een poule binnen te komen moet je hem kunnen lezen vóórdat
+je lid bent. Je typt een code in, krijgt de spelerslijst te zien, en wijst
+jezelf aan. Op dat moment kent de database je nog niet.
+
+Een policy kan niet eisen dát je filtert. "Een poule zoeken op zijn code" en
+"de hele tabel leegvissen" waren daardoor dezelfde rechten. Een functie met een
+verplichte parameter kan dat verschil wél maken, en daar draait de oplossing
+dus om. Vier stuks, allemaal `security definer` in `schema.sql`:
+
+| functie | waarvoor |
+|---|---|
+| `poule_ophalen(code, id)` | de poule met zijn spelers, inzendingen en vragenset, in één keer |
+| `poule_meedoen(pool, naam)` | jezelf inschrijven als nieuwe speler |
+| `poule_claim_speler(member)` | jezelf aanwijzen op het "Wie ben jij?"-scherm |
+| `poule_aanmaken(...)` | een nieuwe poule, jezelf, het baasschap en de vragenset in één transactie |
+
+Wat je moet weten om binnen te komen is de poulecode of het poule-id, en
+allebei zijn ze een geheim op zich: een code is zes tekens uit md5, een id is
+een uuid. Dat is dezelfde grens als voorheen — wie de code heeft ziet de poule.
+Wat niet meer kan is de tabel leegvissen zónder zo'n sleutel.
+
+De policies eronder staan nu op:
+
+| tabel | wie mag lezen |
+|---|---|
+| `pools` | leden, plus iedereen voor poules die op openbaar staan |
+| `pool_members` | je eigen spelers, plus de medespelers in je eigen poules |
+| `answers`, `pool_questions`, `predictions` | leden van die poule |
+| `races`, `questions` | iedereen — dit is gedeelde naslag, geen poulegegevens |
+
+Let op bij het aanpassen hiervan: in Postgres heeft `returning` net zo goed
+leesrecht nodig. Een `insert(...).select()` of `update(...).select()` op een rij
+die je op dat moment nog niet mag zien raakt nul rijen, zónder foutmelding. Dat
+is precies waarom meedoen, claimen en aanmaken functies moesten worden en geen
+gewone schrijfacties konden blijven.
+
+`test/afscherming.test.sql` en `test/afscherming.test.mjs` leggen allebei de
+kanten vast: dat een vreemde niets ziet, en dat binnenkomen met een code nog
+gewoon werkt.
 
 ### Als een speler aan het verkeerde account hangt
 
