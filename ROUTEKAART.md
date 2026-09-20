@@ -332,8 +332,43 @@ rol (zie bovenaan dit bestand voor de instellingen die daarbij horen).
 - logo en app-icoon: `scripts/maak-pictogrammen.py` maakt ze nu uit het
   startgrid-motief. Een nieuw merk betekent een nieuw motief in dat script —
   en denk aan de drie maten: 192, 512 en de vullende 180 voor iOS;
-- kleuren- en iconsysteem: de kleuren staan al als variabelen op `:root` met
-  een donkere tegenhanger, dus dat is één blok CSS en geen zoektocht.
+- kleuren- en iconsysteem: zie hieronder — hier is minder te doen dan het lijkt.
+
+### De positionering
+
+Niet "een website waar je F1-voorspellingen kunt invullen", maar:
+
+> **RacePicks is the F1 prediction game for you and your friends. Pick the
+> grid, beat your mates and win the weekend.**
+
+Dat is de betere van de twee, en niet alleen als marketingzin: het beschrijft
+preciezer wat er gebouwd is. "Win the weekend" is letterlijk de
+weekendoverwinning, en "beat your mates" is het onderlinge duel. Allebei
+bestaan ze al.
+
+Deze zin heeft een plek in de app: de "wat is dit?"-tekst op het beginscherm
+zegt nu wat de app dóét (top 10 voorspellen, punten per plek). Wat er mist is
+waaróm. Wel eerst in het Nederlands vertalen — de rest van de app is Nederlands
+en één Engelse zin ertussen leest als een banner.
+
+### Over het kleurensysteem: dat is er al
+
+Het advies noemt als visuele richting "zwart/donkergrijs, off-white, één fel
+rood-oranje accent, Barlow/Barlow Condensed behouden". Dat is geen wijziging,
+dat is een beschrijving van wat er staat:
+
+| advies | staat al in `:root` |
+|---|---|
+| zwart/donkergrijs | `--bg:#0b0b0c`, `--paneel:#15161a` (donker thema) |
+| off-white | `--ink:#f2f3f5` |
+| fel rood-oranje accent | `--accent:#ee4d33` |
+| Barlow / Barlow Condensed | `--sans` en `--cond`, zelf gehost in `lettertypen/` |
+
+Wat er van dat advies wél overblijft is niet de kleur maar de **vorm**: veel
+grotere cijfers, minder randen, minder losse kadertjes, meer dashboardgevoel.
+Dat is geen nieuw kleurensysteem maar een herindeling van het scherm, en het
+hoort dus bij fase 2 en niet hier. Hier blijft over: de naam, het logo en het
+icoon.
 
 **Waarom dit meteen na fase 0 komt en niet later.** Sinds "zet op beginscherm"
 er is, installeren mensen de app als tegel op hun telefoon. Die tegel pakt de
@@ -373,9 +408,10 @@ niemand ziet.
 
 ## Fase 3: de leuke dingen
 
-Op volgorde van wat het oplevert gedeeld door wat het kost. De eerste drie zijn
-rekenwerk over data die er al ligt; de laatste twee zijn een stuk duurder dan
-ze klinken.
+Op volgorde van wat het oplevert gedeeld door wat het kost. Het aardige aan
+deze hele fase: er komt geen kolom en geen tabel bij. Het is allemaal rekenwerk
+over data die er al ligt, plus één scherm dat vooral bestaand spul bij elkaar
+zet.
 
 | | wat het is | kosten |
 |---|---|---|
@@ -384,7 +420,6 @@ ze klinken.
 | **Seizoensgrafiek** | je positie door het seizoen heen | dezelfde herhaalde stand als bij positiewijziging, als lijngrafiek |
 | **Race Recap** | persoonlijke pagina na iedere race | grotendeels al gebouwd, verspreid: "zo dichtbij", de weekendwinnaar, je score en de inkijk bij anderen. Dit is vooral samenbrengen |
 | **Profielstatistieken** | race wins, accuracy, beste circuit | rekenwerk over bestaande data, maar kijk eerst naar de drempels in de terugblik: onder een handvol races zegt zo'n percentage niets |
-| **Vorige seizoenen** | 2026 → archief → 2027 | de eerste die de database echt raakt: `season` staat overal al, maar poules hangen nu aan één seizoen |
 
 **Share cards als afbeelding zou ik overslaan.** Het advies stelt een plaatje
 voor WhatsApp voor, maar er zit al een knop "Kopieer voor de groepsapp" die
@@ -435,6 +470,42 @@ thema. Wat een ronde verdient: contrast op de gedempte tekstkleuren,
 toetsenbordbediening van het keuzeblad, en of de aanraakvlakken groot genoeg
 zijn.
 
+**Fout-, laad- en legescherm nalopen.** Verspreid door de app zitten deze
+toestanden er wel, maar niemand heeft ze ooit naast elkaar gelegd. `uitleg()`
+vertaalt inmiddels een rij Postgres-codes naar mensentaal, en er zijn
+`.leeg`-blokken voor "niets ingevuld" — maar of elk scherm er één heeft, en of
+een trage verbinding iets anders laat zien dan een leeg vlak, is nooit
+gecontroleerd. Dit is bij uitstek werk dat je in één ronde doet en daarna nooit
+meer, dus het verdient een eigen testbestand dat de drie toestanden per scherm
+afloopt.
+
+**PWA- en offlinegedrag testen.** Er is met opzet geen service worker (zie de
+overdracht bij "zet op beginscherm": een oude stand tonen alsof hij klopt is
+erger dan een foutmelding). Wat wél getest hoort te worden is wat er dan
+gebeurt als je de app als app opent zonder verbinding. Nu is dat
+waarschijnlijk de offlinepagina van de browser, en die ziet eruit alsof de app
+stuk is in plaats van dat je even geen bereik hebt.
+
+---
+
+## Fase 5: als de rest staat
+
+Vijf dingen die genoemd zijn en die geen van alle in de weg zitten. Ze staan
+hier omdat ze duur zijn, niet omdat ze slecht zijn.
+
+| | wat het is | wat het echt kost |
+|---|---|---|
+| **Vorige seizoenen** | 2026 → archief → 2027 | de enige die de database echt raakt: `season` staat overal al, maar een poule hangt nu aan één seizoen. Hoort erbij zodra dit seizoen afloopt, en geen dag eerder |
+| **Publieke profielen** | je statistieken op een eigen pagina | kan pas ná fase 0. Nu is álles publiek leesbaar, dus "publiek profiel" zou niets toevoegen behalve een url |
+| **Push-herinneringen** | melding vóór de deadline | vraagt een service worker, een meldingsrecht dat mensen weigeren, en een server die op tijd wakker wordt. Het agenda-abonnement doet dit al zonder dat alles |
+| **Internationale talen** | de app in het Engels | het grootste van deze vijf, en niet omdat er veel tekst is. De hele app is Nederlands tot in de functienamen en de commentaren; de tekst zit niet in een sleutel-waardelijst maar in de HTML-sjablonen. Dat is een vertaalslag én een verbouwing |
+| **Andere raceklassen** | F2, F3, MotoGP | vastgelopen op de data, niet op de app. De hele sync hangt aan OpenF1, en dat is F1-only. Een andere klasse betekent een tweede databron met een eigen vorm, en daar staat `scripts/sync.mjs` nu niet op ingericht |
+
+Over die laatste twee: allebei zijn het het soort punt dat klein klinkt in een
+lijstje en een week werk is in de praktijk. Als één van de twee toch moet, dan
+Engels eerst — dat maakt de app bereikbaar voor meer mensen zonder dat er een
+tweede databron bij komt.
+
 ---
 
 ## En dan nog dit, uit groep 4
@@ -467,8 +538,9 @@ geldt dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?
 | 1 | RacePicks: naam, icoon, kleuren, domein | vóórdat mensen "Poule" op hun beginscherm zetten |
 | 2 | racescherm wordt dashboard | grootste winst per uur werk, data is er al |
 | 3 | positiewijziging, reeksen, grafiek, recap | rekenwerk over wat er al ligt |
-| 4 | knip-blokken naar modules, toegankelijkheid | onderhoud, als er geen haast is |
+| 4 | modules, toegankelijkheid, fout- en legeschermen | onderhoud, als er geen haast is |
+| 5 | talen, andere klassen, push, publieke profielen | duur, en niets ervan zit in de weg |
 
 Fase 0 en 1 horen bij elkaar en zijn samen de "klaar voor publiek"-stap. Fase 2
 is de grootste verbetering voor wie de app al gebruikt. Fase 3 en 4 mogen door
-elkaar lopen.
+elkaar lopen. Fase 5 is voor als je denkt dat je klaar bent.
