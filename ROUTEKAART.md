@@ -285,7 +285,7 @@ die van dat advies; waar ik ervan afwijk staat erbij waarom.
 
 ---
 
-## Fase 0: het lek dichten vóór racepicks.com live gaat
+## ~~Fase 0: het lek dichten vóór racepicks.com live gaat~~ — gebouwd
 
 **Dit is het enige echte blokkade-punt op deze hele lijst, en het staat daarom
 bovenaan en niet onderaan.**
@@ -534,7 +534,7 @@ geldt dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?
 
 | fase | wat | waarom daar |
 |---|---|---|
-| 0 | RLS dichtzetten | het enige dat een publieke launch tegenhoudt |
+| ~~0~~ | ~~RLS dichtzetten~~ — **gebouwd**, zie `OVERDRACHT.md` | het enige dat een publieke launch tegenhield |
 | 1 | RacePicks: naam, icoon, kleuren, domein | vóórdat mensen "Poule" op hun beginscherm zetten |
 | 2 | racescherm wordt dashboard | grootste winst per uur werk, data is er al |
 | 3 | positiewijziging, reeksen, grafiek, recap | rekenwerk over wat er al ligt |

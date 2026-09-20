@@ -142,6 +142,26 @@ function magBeheren(poolId) {
     gelijk(m.member_id, poule.owner_member_id) && gelijk(m.user_id, ik));
 }
 
+// is_member(): zit ik zelf in deze poule? Sinds de leespolicies dicht staan
+// hangt hier bijna alles aan. Let op dat dit met auth.uid() werkt en niet met
+// de speler die het scherm toont: wie op een gedeeld toestel een tweede
+// speler is, hoort net zo goed te kunnen lezen.
+function isLid(poolId) {
+  const ik = wieBenIk();
+  return !!ik && store.pool_members.some((m) => gelijk(m.pool_id, poolId) && gelijk(m.user_id, ik));
+}
+
+// De leespolicies uit schema.sql, in dezelfde volgorde. Een rij die hier
+// false krijgt bestaat voor deze sessie simpelweg niet -- precies wat RLS
+// doet, en nadrukkelijk geen foutmelding.
+function magLezen(tabel, rij) {
+  if (tabel === 'pools')          return !!rij.is_public || isLid(rij.id);
+  if (tabel === 'pool_members')   return gelijk(rij.user_id, wieBenIk()) || isLid(rij.pool_id);
+  if (tabel === 'answers' || tabel === 'predictions'
+      || tabel === 'pool_questions') return isLid(rij.pool_id);
+  return true;   // races en questions zijn gedeelde gegevens
+}
+
 // Postgres weigert een verboden insert met 42501; een verboden update of
 // delete raakt gewoon nul rijen en geeft géén fout. Dat verschil is precies
 // wat index.html moet opvangen, dus bootst de nabootsing het na.
@@ -238,10 +258,16 @@ function uitvoeren(tabel, q) {
         botstMetAccount(rijen, { ...r, ...q._update }, r))) return dubbelAccount;
     for (const r of doel) Object.assign(r, kopie(q._update));
     bewaren();
-    return q._selectNa ? { data: kopie(doel), error: null } : { data: null, error: null };
+    // `returning` heeft in Postgres net zo goed leesrecht nodig. Precies deze
+    // regel is waarom claimen en meedoen een functie moesten worden: de rij
+    // die je net aanmaakt of claimt valt op dat moment nog buiten je
+    // leesrechten.
+    const terug = doel.filter((r) => magLezen(tabel, r));
+    return q._selectNa ? { data: kopie(terug), error: null } : { data: null, error: null };
   }
 
-  const uit = kopie(rijen.filter((r) => q._filters.every((f) => past(r, f))));
+  const uit = kopie(rijen.filter((r) =>
+    magLezen(tabel, r) && q._filters.every((f) => past(r, f))));
   if (q._single) {
     if (uit.length !== 1) {
       return { data: null, error: { code: 'PGRST116', message: 'geen of meerdere rijen' } };
@@ -490,6 +516,80 @@ globalThis.__mail = {
 //  wat het scherm belooft, en dat moet een browsertest kunnen nalopen.
 // ------------------------------------------------------------
 const functies = {
+  // De vier functies uit fase 0. Ze bestaan omdat een policy niet kan eisen
+  // dát je filtert: "een poule vinden op zijn code" en "de hele tabel
+  // leegvissen" waren daardoor dezelfde rechten. Een functie met een
+  // verplichte sleutel kan dat verschil wél maken.
+  poule_ophalen({ p_code = null, p_id = null } = {}) {
+    const poule = store.pools.find((p) =>
+      (p_code && gelijk(String(p.join_code).toUpperCase(), String(p_code).toUpperCase()))
+      || (p_id && gelijk(p.id, p_id)));
+    if (!poule) return { data: null, error: null };
+    const leden = store.pool_members.filter((m) => gelijk(m.pool_id, poule.id))
+      .map(({ member_id, display_name, user_id }) => ({ member_id, display_name, user_id }));
+    return { data: {
+      poule: kopie(poule),
+      leden: kopie(leden),
+      antwoorden: kopie((store.answers ?? []).filter((a) => gelijk(a.pool_id, poule.id))),
+      poulevragen: (store.pool_questions ?? [])
+        .filter((r) => gelijk(r.pool_id, poule.id)).map((r) => r.question_id),
+    }, error: null };
+  },
+
+  poule_meedoen({ p_pool, p_naam } = {}) {
+    const poule = store.pools.find((p) => gelijk(p.id, p_pool));
+    if (!poule) return { data: null, error: { message: 'die poule bestaat niet' } };
+    const ik = wieBenIk();
+    // Twee spelers op één account in één poule houdt de unieke sleutel tegen;
+    // dan wordt de speler zonder account aangemaakt. Dat stond eerst in de
+    // app en hoort in de database.
+    const bezet = ik && store.pool_members.some((m) =>
+      gelijk(m.pool_id, p_pool) && gelijk(m.user_id, ik));
+    const rij = { member_id: 'lid-' + (store.pool_members.length + 1),
+                  pool_id: p_pool, display_name: p_naam, user_id: bezet ? null : ik };
+    store.pool_members.push(rij);
+    bewaren();
+    return { data: kopie(rij), error: null };
+  },
+
+  poule_claim_speler({ p_member } = {}) {
+    const ik = wieBenIk();
+    if (!ik) return { data: null, error: null };
+    const lid = store.pool_members.find((m) => gelijk(m.member_id, p_member));
+    if (!lid || lid.user_id) return { data: null, error: null };
+    if (store.pool_members.some((m) =>
+        gelijk(m.pool_id, lid.pool_id) && gelijk(m.user_id, ik))) {
+      return { data: null, error: null };
+    }
+    lid.user_id = ik;
+    bewaren();
+    return { data: kopie(lid), error: null };
+  },
+
+  poule_aanmaken({ p_naam, p_beschrijving = null, p_speler, p_vragen = [] } = {}) {
+    if (!String(p_naam ?? '').trim()) {
+      return { data: null, error: { message: 'een poule heeft een naam nodig' } };
+    }
+    if (!String(p_speler ?? '').trim()) {
+      return { data: null, error: { message: 'je hebt zelf ook een naam nodig' } };
+    }
+    const poule = { id: 'pool-' + (store.pools.length + 1), name: String(p_naam).trim(),
+                    beschrijving: String(p_beschrijving ?? '').trim() || null,
+                    season: 2026, join_code: 'ABC123', owner_member_id: null };
+    store.pools.push(poule);
+    const ik = { member_id: 'lid-' + (store.pool_members.length + 1), pool_id: poule.id,
+                 display_name: String(p_speler).trim(), user_id: wieBenIk() };
+    store.pool_members.push(ik);
+    // In één keer de baas, zodat er geen moment is waarop een verse poule
+    // geen eigenaar heeft en dus voor elk lid te beheren is.
+    poule.owner_member_id = ik.member_id;
+    for (const v of p_vragen ?? []) {
+      store.pool_questions.push({ pool_id: poule.id, question_id: v });
+    }
+    bewaren();
+    return { data: { poule: kopie(poule), ik: kopie(ik) }, error: null };
+  },
+
   verwijder_mijn_account({ p_ook_spelers = false } = {}) {
     const ik = wieBenIk();
     if (!ik) return { data: null, error: { message: 'Er is geen account om te verwijderen.' } };

@@ -3645,3 +3645,100 @@ weigert een antwoord op een sessie die al dicht is. De test moest daarom eerst
 een race in de toekomst zetten, het antwoord invoeren, en de race daarna pas
 "gereden" maken. Dat is precies de volgorde waarin het in het echt ook gaat, en
 het is goed dat de database dat afdwingt.
+
+---
+
+## Fase 0: het lek dichten
+
+Het grootste gat dat de app heeft gehad, en het stond er vanaf het begin in.
+`pools_lezen`, `pool_members_lezen` en `answers_lezen` stonden alle drie op
+`using (true)`. De anon key staat met opzet publiek in `index.html`, dus
+daarmee kon iedereen élke poule, élke spelersnaam en élk antwoord in de hele
+database uitlezen — niet alleen die van zijn eigen poule.
+
+Onder vrienden was dat te verdedigen, en het stond ook eerlijk in BEDIENING.md:
+wie de code heeft ziet alles, net als in de groepsapp waar die code in staat.
+Wat niet klopte was dat het ook gold voor mensen die de code *niet* hadden.
+
+### Waarom het zo lang open stond
+
+Niet uit slordigheid. Om een poule binnen te komen moet je hem kunnen lezen
+vóórdat je lid bent: je typt een code in, krijgt de spelerslijst te zien, en
+wijst jezelf aan. Op dat moment kent de database je nog niet, dus
+`is_member()` is onwaar en een policy op lidmaatschap sluit je buiten.
+
+De kern van het probleem is dat **een policy niet kan eisen dát je filtert**.
+"Een poule zoeken op zijn code" en "de hele tabel leegvissen" zijn voor RLS
+dezelfde rechten. Een functie met een verplichte parameter kan dat verschil
+wél maken. Vandaar vier `security definer`-functies:
+
+    poule_ophalen(code, id)      de poule met spelers, inzendingen en vragenset
+    poule_meedoen(pool, naam)    jezelf inschrijven
+    poule_claim_speler(member)   jezelf aanwijzen op "Wie ben jij?"
+    poule_aanmaken(...)          poule + speler + baasschap + vragenset
+
+Wat je moet weten om binnen te komen is de code of het id, en allebei zijn ze
+een geheim: zes tekens uit md5, of een uuid. Dezelfde grens als voorheen — wie
+de code heeft ziet de poule. Wat weg is, is het sleepnet.
+
+### Wat me onderweg verraste
+
+**`returning` heeft leesrecht nodig.** Dit is de val waar het meeste werk in
+ging zitten. `insert(...).select()` en `update(...).select()` raken nul rijen
+als de rij die terugkomt buiten je leespolicy valt — en dat is precies de
+situatie bij meedoen, claimen en aanmaken: je maakt of claimt een rij op het
+moment dat je nog geen lid bent. Geen foutmelding, gewoon niets. Dat is waarom
+die drie functies moesten worden en niet als gewone schrijfactie konden
+blijven.
+
+Het kwam boven doordat `test/policies.test.sql` omviel op "Chris kan een vrije
+speler niet claimen". Dat was geen achterhaalde verwachting maar een echte
+regressie, en zonder die test had ik hem pas op het live domein gevonden.
+
+Dezelfde val zat in het terugpakken na een losmaakactie: de poulebaas maakt
+een speler los, en op dat moment ziet die speler zijn eigen rij niet meer
+staan. Ook dat loopt nu langs `poule_claim_speler()`.
+
+**De aanmaker kon zijn eigen verse poule niet lezen.** Een poule zonder leden
+valt buiten `pools_lezen`, dus `insert(...).select()` op een nieuwe poule gaf
+niets terug. Opgelost door het hele aanmaken één functie te maken — poule,
+speler, baasschap en vragenset in één transactie. Dat is meteen beter dan wat
+er stond: ging er eerder onderweg iets mis, dan bleef er een halve poule
+achter, wel een poule maar geen speler of wel een speler en geen vragen. En
+het baasschap wordt nu in dezelfde transactie gezet, dus er is geen moment
+meer waarop een verse poule geen eigenaar heeft en dus voor elk lid te beheren
+is. Daarmee vervalt ook het voorbehoud dat in BEDIENING.md §7 stond.
+
+### Wat het de app opleverde
+
+`laad()` deed vijf parallelle queries en doet er nu drie: races, questions en
+één `poule_ophalen()`. Die laatste geeft de poule, de spelers, de inzendingen
+en de vragenset in één keer terug. Veiliger én minder werk.
+
+`maakSpeler()` is van elf regels naar vier gegaan: de botsing op een gedeeld
+toestel (twee spelers op één account in één poule) zat in de app en zit nu in
+`poule_meedoen()`. Dat hoort daar — het is een regel van de database, niet van
+het scherm.
+
+### Controles
+
+16 in `test/afscherming.test.sql` en 12 in `test/afscherming.test.mjs`, allebei
+met een eigen CI-stap. Ze leggen dezelfde twee kanten vast:
+
+- een vreemde ziet geen poule, geen naam, geen inzending en geen vragenset, en
+  kan de poulestabel niet leegvissen;
+- met de code kom je er gewoon in, zie je de spelerslijst, en kun je je
+  inschrijven — en een verzonnen code levert niets op.
+
+De browsertest zet daarvoor een tweede poule neer waar de speler niets mee te
+maken heeft. Dat is met opzet: gaat `index.html` ooit weer een gewone `select`
+op `pools` doen, dan blijft dat in de nabootsing gewoon werken zolang je zélf
+lid bent. Je zou het pas merken op het echte domein, bij iemand anders.
+
+`test/nabootsing-supabase.mjs` heeft de leespolicies er in dezelfde vorm bij
+gekregen, inclusief de `returning`-regel — zonder dat zou de nabootsing
+vrolijker zijn dan de echte database, en dat is het gevaarlijkste soort
+testopstelling.
+
+Hele SQL-suite lokaal gedraaid in de volgorde van de CI-job, alle 45
+browsertestbestanden groen.

@@ -1007,10 +1007,12 @@ async function claimSpeler(memberId) {
   const uid = await zorgVoorAccount();
   if (!uid) return false;
   try {
-    const { data, error } = await db.from('pool_members')
-      .update({ user_id: uid })
-      .eq('member_id', memberId).is('user_id', null).select();
-    if (error || !data?.length) return false;
+    // Via de functie en niet met een losse update: op het moment dat je
+    // jezelf claimt ben je nog geen lid, dus de leespolicy verbergt precies
+    // de rij die je wilt bijwerken en zou de update nul rijen raken -- zonder
+    // foutmelding. Zie poule_claim_speler() in schema.sql.
+    const { data, error } = await db.rpc('poule_claim_speler', { p_member: memberId });
+    if (error || !data) return false;
     const lid = S.leden.find(l => zelfde(l.member_id, memberId));
     if (lid) lid.user_id = uid;
     return true;
@@ -1034,12 +1036,12 @@ const alBezetDoorAccount = (error) =>
 // toestel opent. Dat is veel beter dan iemand niet laten meedoen omdat de
 // telefoon van een ander was.
 async function maakSpeler(poolId, naam) {
-  const uid = await zorgVoorAccount();
-  const nieuweSpeler = (user_id) => db.from('pool_members')
-    .insert({ pool_id: poolId, display_name: naam, user_id }).select().single();
-  const uit = await nieuweSpeler(uid);
-  if (uid && alBezetDoorAccount(uit.error)) return nieuweSpeler(null);
-  return uit;
+  await zorgVoorAccount();
+  // Via de functie: een insert met `.select()` erachter kan niet meer, want
+  // `returning` heeft leesrecht nodig en op dit moment ben je nog geen lid.
+  // De botsing hierboven zit nu in poule_meedoen() zelf -- het is een regel
+  // van de database, niet van het scherm.
+  return db.rpc('poule_meedoen', { p_pool: poolId, p_naam: naam });
 }
 
 // Speel ik als iemand die aan een ánder account hangt? Dan neemt de database
@@ -1974,22 +1976,43 @@ async function laad() {
     bouwPreds();
     return;
   }
-  const [races, leden, antwoorden, vragen, poulevragen] = await Promise.all([
+  // races en questions zijn gedeeld door alle poules en staan op alleen-lezen
+  // voor iedereen; de inhoud van één poule komt in één keer uit
+  // poule_ophalen(). Sinds de leespolicies dicht staan is dat niet alleen
+  // veiliger maar ook minder werk: één ronde in plaats van drie.
+  const [races, vragen, inhoud] = await Promise.all([
     db.from('races').select('*').eq('season', SEIZOEN).order('round'),
-    db.from('pool_members').select('member_id,display_name,user_id').eq('pool_id', S.poule.id),
-    db.from('answers').select('*').eq('pool_id', S.poule.id),
     db.from('questions').select('*').order('volgorde'),
-    db.from('pool_questions').select('question_id').eq('pool_id', S.poule.id),
+    pouleOphalen({ p_id: S.poule.id }),
   ]);
   // Een mislukte lees-actie stil laten passeren geeft een lege lijst zonder
   // uitleg; dat is precies hoe de bewaar-bug zo lang onzichtbaar bleef.
-  const stuk = [races, leden, antwoorden, vragen, poulevragen].find(r => r.error);
+  const stuk = [races, vragen, inhoud].find(r => r.error);
   if (stuk) throw new Error(uitleg(stuk.error));
-  S.races = races.data ?? []; S.leden = leden.data ?? [];
-  S.antwoorden = antwoorden.data ?? [];
+  if (!inhoud.data) throw new Error('Deze poule bestaat niet meer.');
+  S.races = races.data ?? [];
   S.vragen = vragen.data ?? [];
-  S.poulevragen = (poulevragen.data ?? []).map(r => r.question_id);
+  S.leden = inhoud.data.leden ?? [];
+  S.antwoorden = inhoud.data.antwoorden ?? [];
+  S.poulevragen = inhoud.data.poulevragen ?? [];
+  // De poule zelf komt mee, dus een omschrijving die iemand anders net
+  // aanpaste staat er meteen goed bij.
+  if (inhoud.data.poule) S.poule = inhoud.data.poule;
   bouwPreds();
+}
+
+// ---- de weg naar binnen -------------------------------------------
+// Eén poule ophalen op zijn code of zijn id. Dit was een gewone select op
+// pools, maar die tabel staat sinds fase 0 dicht voor wie er niet in zit --
+// en je moet een poule nu eenmaal kunnen lezen vóórdat je lid bent. Zie de
+// uitleg boven poule_ophalen() in schema.sql.
+const pouleOphalen = (argumenten) => db.rpc('poule_ophalen', argumenten);
+
+// Alleen de poule zelf, voor de schermen die verder niets nodig hebben.
+async function pouleBij(argumenten) {
+  const { data, error } = await pouleOphalen(argumenten);
+  if (error) return { data: null, error };
+  return { data: data?.poule ?? null, error: null };
 }
 
 async function bewaar() {
@@ -3473,7 +3496,7 @@ const pouleKnop = (p) => `
 // plaats van uit het lijstje gelezen: de naam kan veranderd zijn, en de poule
 // kan weg zijn — dan moet hij ook uit het lijstje.
 async function naarPoule(poolId) {
-  const { data, error } = await db.from('pools').select('*').eq('id', poolId).single();
+  const { data, error } = await pouleBij({ p_id: poolId });
   if (error || !data) {
     vergeetUitLijst(poolId);
     if (zelfde(laatstePoule(), poolId)) vergeetPoule();
@@ -4792,26 +4815,21 @@ async function pouleAanmaken(m) {
     m.ik = { id:'m-nieuw', naam:m.speler.trim() };
     return;
   }
-  if (!m.poule) {
-    const { data, error } = await db.from('pools')
-      .insert({ name: m.naam.trim(), beschrijving: m.beschrijving.trim() || null,
-                season: SEIZOEN }).select().single();
-    if (error) throw new Error(uitleg(error));
-    m.poule = data;
-  }
-  if (!m.ik) {
-    const { data, error } = await maakSpeler(m.poule.id, m.speler.trim());
-    if (error) throw new Error(uitleg(error));
-    m.ik = { id: data.member_id, naam: m.speler.trim() };
-    // Wie de poule aanmaakt is de poulebaas. De database dwingt dat nog niet
-    // af — de policies staan nog open — dus voorlopig houdt dit alleen de
-    // beheerknoppen weg bij wie ze niet nodig heeft. Zie BEDIENING.md §7.
-    await db.from('pools').update({ owner_member_id: m.ik.id }).eq('id', m.poule.id);
-    m.poule.owner_member_id = m.ik.id;
-  }
-  const { error } = await db.from('pool_questions')
-    .insert(m.vragen.map(id => ({ pool_id: m.poule.id, question_id: id })));
+  // Eén functie voor het hele aanmaken: de poule, jezelf, het baasschap en de
+  // vragenset. Waren vier aanroepen, en dan bleef er bij een fout onderweg
+  // een halve poule achter -- wel een poule maar geen speler, of wel een
+  // speler en geen vragen. Nu is het één transactie die slaagt of niets doet.
+  // Dat de aanmaker meteen poulebaas is dwingt de database nu zelf af.
+  await zorgVoorAccount();
+  const { data, error } = await db.rpc('poule_aanmaken', {
+    p_naam: m.naam.trim(),
+    p_beschrijving: m.beschrijving.trim() || null,
+    p_speler: m.speler.trim(),
+    p_vragen: m.vragen,
+  });
   if (error) throw new Error(uitleg(error));
+  m.poule = data.poule;
+  m.ik = { id: data.ik.member_id, naam: data.ik.display_name };
 }
 
 // ============================================================
@@ -5122,7 +5140,7 @@ function toonStart() {
 
   app.querySelector('#mee').onclick = async () => {
     const code = app.querySelector('#code').value.trim().toUpperCase();
-    const { data, error } = await db.from('pools').select('*').eq('join_code', code).single();
+    const { data, error } = await pouleBij({ p_code: code });
     if (error || !data) { fout('Die poulecode bestaat niet'); return; }
     S.poule = data;
     onthoudPoule(S.poule.id); onthoudInLijst(S.poule);
@@ -5180,7 +5198,7 @@ async function hervat() {
   if (uitLink) {
     const spelerLink = spelerUitLink();
     vergeetLinkCode();
-    const { data } = await db.from('pools').select('*').eq('join_code', uitLink).single();
+    const { data } = await pouleBij({ p_code: uitLink });
     if (data) {
       S.poule = data;
       onthoudPoule(data.id); onthoudInLijst(data);
@@ -5219,7 +5237,7 @@ async function hervat() {
   const id = laatstePoule();
   if (!id) { toonStart(); return; }
 
-  const { data, error } = await db.from('pools').select('*').eq('id', id).single();
+  const { data, error } = await pouleBij({ p_id: id });
   if (error || !data) { vergeetPoule(); toonStart(); return; }
 
   S.poule = data;

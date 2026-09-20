@@ -641,6 +641,210 @@ grant execute on function public.mag_voor_speler(uuid) to anon, authenticated;
 grant execute on function public.mag_beheren(uuid)     to anon, authenticated;
 
 -- ------------------------------------------------------------
+--  Een poule ophalen zonder de hele tabel open te zetten
+--
+--  Hier zat het gat. `pools_lezen`, `pool_members_lezen` en `answers_lezen`
+--  stonden alle drie op `using (true)`, en de anon key staat met opzet
+--  publiek in index.html. Daarmee kon iedereen élke poule, élke spelersnaam
+--  en élk antwoord in de hele database uitlezen — niet alleen die van zijn
+--  eigen poule.
+--
+--  Dichtzetten naar "alleen leden" kan niet zomaar, en dat is precies waarom
+--  het zo lang open stond: om een poule binnen te komen moet je hem kunnen
+--  lezen vóórdat je lid bent. Je typt een code in, krijgt de spelerslijst te
+--  zien, en wijst jezelf aan. Op dat moment kent de database je nog niet.
+--
+--  De uitweg is niet de policy maar de weg eromheen. Wat je moet weten om
+--  binnen te komen is de poulecode of het poule-id, en allebei zijn ze een
+--  geheim op zich: een code is zes tekens uit md5, een id is een uuid. Wat
+--  niet mocht kunnen is de tabel leegvissen zónder zo'n sleutel, en dat is
+--  precies het verschil tussen een policy en deze functie. Een policy kan
+--  niet eisen dat je filtert; een functie met een verplichte parameter wel.
+--
+--  Vandaar: één functie die alles teruggeeft wat één poule is, en daarna
+--  policies die dichtstaan voor wie niets in handen heeft.
+create or replace function public.poule_ophalen(
+  p_code text default null,
+  p_id   uuid default null
+)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  with poule as (
+    select * from public.pools
+     where (p_code is not null and join_code = upper(p_code))
+        or (p_id   is not null and id        = p_id)
+     limit 1
+  )
+  select case when not exists (select 1 from poule) then null else jsonb_build_object(
+    'poule',      (select to_jsonb(p) from poule p),
+    'leden',      coalesce((select jsonb_agg(jsonb_build_object(
+                     'member_id',    m.member_id,
+                     'display_name', m.display_name,
+                     'user_id',      m.user_id) order by m.created_at)
+                   from public.pool_members m, poule p where m.pool_id = p.id), '[]'::jsonb),
+    'antwoorden', coalesce((select jsonb_agg(to_jsonb(a))
+                   from public.answers a, poule p where a.pool_id = p.id), '[]'::jsonb),
+    'poulevragen',coalesce((select jsonb_agg(pq.question_id)
+                   from public.pool_questions pq, poule p where pq.pool_id = p.id), '[]'::jsonb)
+  ) end;
+$$;
+
+-- Meedoen aan een poule: een speler aanmaken en meteen terugkrijgen.
+--
+-- Dit was een insert vanuit de app met `.select()` erachter. Dat kan niet
+-- meer: `returning` heeft leesrecht nodig, en op het moment dat je jezelf
+-- inschrijft ben je nog geen lid — dus de policy zou precies de rij
+-- tegenhouden die je net hebt aangemaakt.
+--
+-- Meteen meegenomen: de botsing op een gedeeld toestel. Eén telefoon die
+-- rondgaat bij het inschrijven betekent dat dit account misschien al
+-- meespeelt in deze poule, en twee spelers op één account in één poule houdt
+-- de unieke sleutel tegen. Dan wordt de speler zonder account aangemaakt. Hij
+-- doet gewoon mee; hij hangt alleen aan niemand tot degene van wie hij is hem
+-- op zijn eigen toestel opent. Dat stond eerst in de app, en hoort hier: het
+-- is een regel van de database, niet van het scherm.
+create or replace function public.poule_meedoen(p_pool uuid, p_naam text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  nieuw public.pool_members%rowtype;
+begin
+  if not exists (select 1 from public.pools where id = p_pool) then
+    raise exception 'die poule bestaat niet';
+  end if;
+  begin
+    insert into public.pool_members (pool_id, display_name, user_id)
+    values (p_pool, p_naam, auth.uid())
+    returning * into nieuw;
+  exception when unique_violation then
+    insert into public.pool_members (pool_id, display_name, user_id)
+    values (p_pool, p_naam, null)
+    returning * into nieuw;
+  end;
+  return jsonb_build_object('member_id', nieuw.member_id,
+                            'display_name', nieuw.display_name,
+                            'user_id', nieuw.user_id);
+end;
+$$;
+
+-- Een poule aanmaken: de poule, jezelf als eerste speler, het baasschap en
+-- de vragenset, in één keer.
+--
+-- Was vier losse aanroepen vanuit de app. Dat kan niet meer om dezelfde reden
+-- als bij meedoen — de insert las zijn eigen nieuwe rij terug met `.select()`,
+-- en een poule zonder leden valt buiten de leespolicy — maar het is ook
+-- gewoon beter. Ging er onderweg iets mis, dan bleef er een halve poule
+-- achter: wel een poule, geen speler, of wel een speler en geen vragen. Nu is
+-- het één transactie die slaagt of niets doet.
+--
+-- En het baasschap wordt hier gezet in plaats van door een aparte update
+-- erna. Daarmee is er geen moment meer waarop een verse poule geen eigenaar
+-- heeft en dus voor elk lid te beheren is.
+create or replace function public.poule_aanmaken(
+  p_naam text,
+  p_beschrijving text,
+  p_speler text,
+  p_vragen text[]
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  nieuwe public.pools%rowtype;
+  ik     public.pool_members%rowtype;
+begin
+  if coalesce(btrim(p_naam), '') = '' then
+    raise exception 'een poule heeft een naam nodig';
+  end if;
+  if coalesce(btrim(p_speler), '') = '' then
+    raise exception 'je hebt zelf ook een naam nodig';
+  end if;
+
+  insert into public.pools (name, beschrijving, season)
+  values (btrim(p_naam), nullif(btrim(coalesce(p_beschrijving, '')), ''),
+          (select coalesce(max(season), extract(year from now())::int) from public.races))
+  returning * into nieuwe;
+
+  insert into public.pool_members (pool_id, display_name, user_id)
+  values (nieuwe.id, btrim(p_speler), auth.uid())
+  returning * into ik;
+
+  update public.pools set owner_member_id = ik.member_id where id = nieuwe.id
+  returning * into nieuwe;
+
+  if p_vragen is not null and array_length(p_vragen, 1) > 0 then
+    insert into public.pool_questions (pool_id, question_id)
+    select nieuwe.id, v from unnest(p_vragen) as v;
+  end if;
+
+  return jsonb_build_object(
+    'poule', to_jsonb(nieuwe),
+    'ik',    jsonb_build_object('member_id', ik.member_id,
+                                'display_name', ik.display_name,
+                                'user_id', ik.user_id));
+end;
+$$;
+
+-- Jezelf aanwijzen op het "Wie ben jij?"-scherm.
+--
+-- Hoort om dezelfde reden hier als meedoen en aanmaken: op het moment dat je
+-- jezelf claimt ben je nog geen lid, dus de leespolicy verbergt precies de
+-- rij die je wilt bijwerken. Een `update ... where user_id is null` vanuit de
+-- app raakt dan nul rijen, zonder foutmelding — het lastigste soort stuk.
+--
+-- Wat de functie níét doet is de deur wijder zetten dan hij stond. Je moet
+-- het member_id kennen (een uuid, dus onraadbaar), en een speler die al aan
+-- iemand hangt blijft onaanraakbaar: dat is dezelfde grens als in de policy.
+create or replace function public.poule_claim_speler(p_member uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  ik public.pool_members%rowtype;
+begin
+  if auth.uid() is null then return null; end if;
+  begin
+    update public.pool_members
+       set user_id = auth.uid()
+     where member_id = p_member and user_id is null
+    returning * into ik;
+  exception when unique_violation then
+    -- Dit account speelt al mee in deze poule met een andere speler. Twee
+    -- spelers op één account in één poule houdt de unieke sleutel tegen, en
+    -- dat is goed: anders zou één misklik op een gedeeld toestel iemand
+    -- anders zijn seizoen inpikken.
+    return null;
+  end;
+  if not found then return null; end if;
+  return jsonb_build_object('member_id', ik.member_id,
+                            'display_name', ik.display_name,
+                            'user_id', ik.user_id);
+end;
+$$;
+
+revoke all on function public.poule_claim_speler(uuid) from public;
+grant execute on function public.poule_claim_speler(uuid) to anon, authenticated;
+
+revoke all on function public.poule_aanmaken(text, text, text, text[]) from public;
+grant execute on function public.poule_aanmaken(text, text, text, text[]) to anon, authenticated;
+
+revoke all on function public.poule_ophalen(text, uuid) from public;
+revoke all on function public.poule_meedoen(uuid, text) from public;
+grant execute on function public.poule_ophalen(text, uuid) to anon, authenticated;
+grant execute on function public.poule_meedoen(uuid, text) to anon, authenticated;
+
+-- ------------------------------------------------------------
 --  Je account verwijderen
 --
 --  Sinds er mailadressen aan accounts kunnen hangen slaat deze app een
@@ -764,10 +968,15 @@ drop policy if exists answers_lezen     on public.answers;
 drop policy if exists answers_eigen     on public.answers;
 
 -- ---- poules -------------------------------------------------
--- Lezen moet open: zonder een poule op zijn code te kunnen vinden kun je
--- niet meedoen, en op dat moment ben je nog geen lid.
+-- Lezen stond op `true`, en dat was het gat: met de publieke anon key was
+-- élke poule in de database op te vragen. Nu alleen wat je zonder sleutel
+-- ook hoort te zien — de poules waar je zelf in zit, en de poules die
+-- uitdrukkelijk openbaar zijn. Binnenkomen met een code of een id loopt via
+-- poule_ophalen(); zie de uitleg daarboven voor waarom dat een functie moet
+-- zijn en geen policy.
 create policy pools_lezen on public.pools
-  for select to anon, authenticated using (true);
+  for select to anon, authenticated
+  using (is_public or public.is_member(id));
 create policy pools_aanmaken on public.pools
   for insert to anon, authenticated with check (true);
 -- Alleen de poulebaas past de omschrijving of de vragenset aan. Let op de
@@ -781,10 +990,12 @@ create policy pools_bijwerken on public.pools
 -- hoeft niet open te staan.
 
 -- ---- spelers ------------------------------------------------
--- Lezen moet open om dezelfde reden als bij poules: het "Wie ben jij?"-scherm
--- laat je kiezen uit de bestaande spelers, en dat is vóór je lid bent.
+-- Je eigen spelers (daarmee vind je na het inloggen je poules terug), en de
+-- medespelers in een poule waar je zelf in zit. Het "Wie ben jij?"-scherm
+-- komt langs poule_ophalen(), want daar ben je nog geen lid.
 create policy pool_members_lezen on public.pool_members
-  for select to anon, authenticated using (true);
+  for select to anon, authenticated
+  using (user_id = auth.uid() or public.is_member(pool_id));
 -- Meedoen mag, maar nooit namens een ander account.
 create policy pool_members_meedoen on public.pool_members
   for insert to anon, authenticated
@@ -818,16 +1029,17 @@ create policy questions_lezen on public.questions
 
 -- ---- welke vragen doet deze poule -------------------------
 create policy pool_questions_lezen on public.pool_questions
-  for select to anon, authenticated using (true);
+  for select to anon, authenticated using (public.is_member(pool_id));
 create policy pool_questions_beheren on public.pool_questions
   for all to anon, authenticated
   using (public.mag_beheren(pool_id)) with check (public.mag_beheren(pool_id));
 
 -- ---- de inzendingen zelf ------------------------------------
--- Lezen is open: de app laat je na de deadline elkaars top 10 zien, en de
--- stand telt iedereen mee.
+-- Binnen je eigen poule mag je alles zien: de app laat je na de deadline
+-- elkaars top 10 zien en de stand telt iedereen mee. Daarbuiten niets, en
+-- dat is het verschil met hoe dit stond.
 create policy answers_lezen on public.answers
-  for select to anon, authenticated using (true);
+  for select to anon, authenticated using (public.is_member(pool_id));
 -- Schrijven alleen voor je eigen speler. `for all` dekt insert, update én
 -- delete in één keer, en dat is precies wat een upsert nodig heeft: PostgREST
 -- maakt daar insert ... on conflict do update van.
@@ -839,7 +1051,7 @@ create policy answers_eigen on public.answers
 -- predictions wordt door de app niet meer gebruikt — de antwoorden staan in
 -- answers — maar de tabel bestaat nog en krijgt dezelfde behandeling.
 create policy predictions_lezen on public.predictions
-  for select to anon, authenticated using (true);
+  for select to anon, authenticated using (public.is_member(pool_id));
 create policy predictions_eigen on public.predictions
   for all to anon, authenticated
   using (public.mag_voor_speler(member_id))

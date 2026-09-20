@@ -139,6 +139,18 @@ jobs:
           psql -d vragen -v ON_ERROR_STOP=1 -f schema.sql
           psql -d vragen -v ON_ERROR_STOP=1 -f test/vragen.test.sql
 
+      # De afscherming uit fase 0: met de publieke anon key mag je alleen zien
+      # wat bij een poule hoort waar je zelf in zit. Deze test zet een tweede
+      # poule neer waar de speler niets mee te maken heeft, en controleert
+      # allebei de kanten -- dat die dicht is, en dat binnenkomen met een code
+      # nog gewoon werkt.
+      - name: een vreemde ziet niets van een andere poule
+        run: |
+          createdb afscherming
+          psql -d afscherming -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d afscherming -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d afscherming -v ON_ERROR_STOP=1 -f test/afscherming.test.sql
+
       # leegmaken.sql gooit de poules weg en laat de kalender staan. Dat
       # tweede is wat stil kan breken: gaan de races per ongeluk mee, dan is
       # het verschil met reset.sql weg zonder dat iemand het merkt.
