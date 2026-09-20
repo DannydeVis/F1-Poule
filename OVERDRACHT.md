@@ -3814,3 +3814,75 @@ ziet ze ooit.
 
 Alle 45 testbestanden groen, en met de hand bekeken in licht en donker op
 telefoonbreedte.
+
+---
+
+## Fase 2: het racescherm wordt een dashboard
+
+Er stond al een `hero()` bovenaan met een afteller en vijf startlampjes. Mooi,
+maar hij beantwoordde maar één van de drie vragen waarmee iemand de app opent.
+Die drie zijn:
+
+1. welke race komt eraan;
+2. moet ik nog iets doen;
+3. hoe sta ik ervoor.
+
+Alle drie de antwoorden lagen al in de app, maar door elkaar: je moest zelf uit
+de kalenderlijst opmaken dat Shanghai de volgende was, uit de Q- en R-vinkjes
+dat je de race nog niet had, en van de standpagina hoe dat uitpakte. Nu staan
+ze op die volgorde op één kaart.
+
+### Wat er nieuw is
+
+**De circuitnaam groot.** Stond als klein labeltje naast "nu open", waar je
+hem overheen las. Het is het antwoord op vraag één, dus het hoort na de klok
+het grootste op de kaart te zijn.
+
+**Een regel per sessie.** `✓ klaar`, `· deels`, `! open`, of `~ automatisch`.
+Allebei de sessies, niet alleen de open — wie de kwalificatie al deed wil dat
+zien staan.
+
+**De knop wijst naar wat er nog ligt.** Dit is het enige echt lastige stukje
+logica op de kaart. Hij hing eerst aan `openLijst()`, die de eerstvolgende
+deadline teruggeeft. Heb je de kwalificatie al af terwijl de race nog open
+staat, dan las je daar "Je inzending bekijken" terwijl er juist nog werk lag.
+Nu zoekt hij de eerste sessie die nog open én nog niet af is, en zegt er ook bij
+welke: "Top 10 race invullen".
+
+**De positieregel.** Plek, punten en het vorige weekend, als drie grote
+getallen onder een streep. Valt weg bij een poule van één, want "1e van 1" is
+geen informatie.
+
+### Het detail dat twee keer fout ging
+
+Een automatisch aangevulde lijst is vol maar niet van jou. In de eerste opzet
+telde hij als `klaar` — de app zou dan zeggen dat je klaar was terwijl je niets
+had gedaan, precies de verkeerde geruststelling. Toen ik dat repareerde viel
+hij op `deels`, en dat is net zo fout: het suggereert dat je zélf begonnen was.
+
+Hij heeft nu een eigen woord op de kaart, `~ kwalificatie · automatisch`. Dat
+is dezelfde lijn als bij automatisch invullen zelf: de punten zijn echt, de
+keuze is van de app, en dat verschil mag nergens wegvallen.
+
+### Wat er niet veranderde
+
+De kalender eronder blijft zoals hij was, inclusief de race die ook op de kaart
+staat. Die eruit halen omdat hij hierboven al genoemd wordt zou je laten zoeken
+naar een race die er wél hoort te zijn.
+
+De kleuren zijn niet aangeraakt, en er is geen kadertje bij gekomen: de
+sessieregels en de positieregel zijn tekst met een streep ertussen. Dat was de
+bruikbare helft van het advies van buitenaf — grotere cijfers, minder randen,
+minder losse kadertjes.
+
+### Controles
+
+16 in `test/weekendkaart.test.mjs`. Het zwaartepunt ligt op vraag twee, want
+daar zitten de valkuilen: dat allebei de sessies er staan en niet alleen de
+open, dat een ingevulde sessie omslaat en de andere niet, dat de knop naar de
+race wijst als de kwalificatie al af is, dat de positieregel wegvalt bij een
+poule van één, en dat een automatische lijst niet als "klaar" en niet als
+"deels" geldt.
+
+Alle 46 testbestanden groen, en met de hand bekeken in licht en donker op
+telefoonbreedte.

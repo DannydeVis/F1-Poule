@@ -258,6 +258,11 @@
      telefoon niet op één regel. Zonder dit valt het eind er stilletjes af. */
   .smalkop{overflow-wrap:anywhere}
   .veldblok{display:flex;flex-direction:column;gap:12px}
+  /* De beheerkop krijgt een accentstreep aan de zijkant, en alles eronder
+     hoort daar zichtbaar bij. Geen kadertje eromheen: dat zou een vijfde
+     kader op een pagina maken die er al genoeg heeft. */
+  .beheerkop{display:flex;flex-direction:column;gap:6px;
+    border-left:3px solid var(--accent);padding-left:12px}
 
   /* Het deel-teken van iOS staat middenin een zin, dus het moet op de regel
      meelopen: even hoog als de letters en met de staart op de basislijn. */
@@ -338,6 +343,30 @@
   .lampjes span{flex:1;height:6px;border-radius:3px;background:var(--gedempt)}
   .lampjes span.aan{background:var(--accent);animation:lampjes 1.6s infinite}
   .wachtop{font-size:11px;letter-spacing:.06em}
+  /* De circuitnaam hoort het grootste op de kaart te zijn na de klok: dat is
+     het antwoord op "welke race komt eraan". Stond eerst als klein labeltje
+     naast "nu open", waar je hem over het hoofd zag. */
+  .heronaam{font-family:var(--cond);font-size:40px;font-weight:700;line-height:.95;
+    text-transform:uppercase;margin:-6px 0 -4px;overflow-wrap:anywhere}
+  /* Per sessie: heb ik ingeleverd? Een vinkje en een woord, geen kadertje --
+     dit is statusinformatie en geen knop. */
+  .sessies{display:flex;flex-wrap:wrap;gap:6px 18px}
+  .sessie{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2)}
+  .sessie i{font-style:normal;display:flex;align-items:center;justify-content:center;
+    width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:700;flex:none}
+  .sessie.klaar i{background:var(--groen-vlak);color:var(--groen)}
+  .sessie.klaar{color:var(--ink)}
+  .sessie.deels i{background:var(--amber-vlak);color:var(--amber)}
+  .sessie.auto  i{background:var(--amber-vlak);color:var(--amber)}
+  .sessie.open  i{background:var(--gedempt);color:var(--ink2)}
+  /* "Hoe sta ik ervoor", onderaan dezelfde kaart. Grote cijfers met een klein
+     woord eronder in plaats van drie losse kadertjes: het zijn drie getallen
+     over hetzelfde, dus ze horen bij elkaar in één rij te staan. */
+  .kaartvoet{display:flex;gap:22px;padding-top:14px;border-top:1px solid var(--lijn)}
+  .kaartvoet span{display:flex;flex-direction:column;gap:1px}
+  .kaartvoet .groot{font-family:var(--cond);font-size:30px;font-weight:700;line-height:1}
+  .kaartvoet i{font-style:normal;font-size:11px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink3)}
 
   /* ---- kalender ------------------------------------------- */
   .race{
@@ -637,6 +666,17 @@
   .jij{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
     text-transform:none;color:var(--accent)}
   .strij .voor{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+  /* Gestegen of gezakt sinds de vorige race. Groen en rood zijn hier
+     onvermijdelijk, maar de pijl draagt de betekenis net zo goed als de
+     kleur -- ook wie het verschil niet ziet leest ↑2. */
+  .wissel{font-family:var(--mono);font-size:11px;font-weight:700;flex:none}
+  .wissel.omhoog{color:var(--groen)}
+  .wissel.omlaag{color:var(--ink3)}
+  /* De reeks: hoeveel weekenden op rij je hebt ingeleverd. Klein en naast de
+     naam, want het is een schouderklopje en geen score. */
+  .reeks{font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+    text-transform:none;color:var(--amber);border:1px solid var(--amber-rand);
+    border-radius:20px;padding:1px 6px;vertical-align:middle}
   .strij .t{font-family:var(--cond);font-size:28px;font-weight:700}
   .uitleg{background:var(--paneel);border:1px solid var(--lijn);border-radius:12px;
     padding:14px;color:var(--ink2);font-size:14px}
@@ -2142,16 +2182,59 @@ function raceStand(r, nu = Date.now()) {
   return { soort:'open', tekst: nog > 0 ? `open · nog ${nog} te kiezen` : 'open · ingevuld' };
 }
 
-function standRijen() {
+// `tot` telt alleen de races vóór dat rondenummer mee. Zonder grens is dit de
+// gewone stand; mét is het de stand zoals hij vóór een weekend was, en dat is
+// alles wat je nodig hebt om te zeggen wie er geklommen of gezakt is.
+function standRijen(tot = Infinity) {
   return S.leden.map(l => {
     let punten = 0;
     for (const r of S.races) {
       if (!r.race_result && !r.quali_result) continue;
+      if (r.round >= tot) continue;
       punten += scoreWeekend(vindPred(r.id, l.member_id), r);
     }
     return { id:l.member_id, naam:l.display_name, punten,
              mij:zelfde(l.member_id, S.ik.id) };
   }).sort((a,b) => b.punten - a.punten || String(a.naam).localeCompare(String(b.naam)));
+}
+
+// ---- wie is er geklommen of gezakt? -------------------------
+// De stand zegt wie er wint, niet wat er is gebeurd. Twee plekken stijgen in
+// Monza is het soort ding waar mensen elkaar op aanspreken, en het kost niets:
+// dezelfde telling, één weekend eerder afgekapt.
+//
+// Pas vanaf twee gereden races: vóór de tweede is iedereen "nieuw" en zou elke
+// rij een pijltje krijgen dat nergens op slaat.
+function positieWissels() {
+  const gescoord = S.races.filter(r => r.quali_result || r.race_result)
+    .sort((a, b) => a.round - b.round);
+  if (gescoord.length < 2) return new Map();
+  const laatste = gescoord[gescoord.length - 1];
+  const eerder = standRijen(laatste.round);
+  const nu = standRijen();
+  const plek = (rijen, id) => rijen.findIndex(r => zelfde(r.id, id)) + 1;
+  return new Map(nu.map(r => {
+    const van = plek(eerder, r.id), naar = plek(nu, r.id);
+    return [String(r.id), van && naar ? van - naar : 0];
+  }));
+}
+
+// ---- reeksen ------------------------------------------------
+// "Zeven weekenden op rij ingeleverd." Telt terug vanaf de laatste race met
+// een uitslag, en stopt bij het eerste weekend dat je oversloeg.
+//
+// heeftVoorspeld() slaat automatisch aangevulde lijsten over, dus een reeks
+// die de app voor je invulde telt niet mee. Dat is dezelfde grens als bij de
+// weekendwinst: het is iets wat je doet, niet iets wat je overkomt.
+function reeksVan(memberId) {
+  const gescoord = S.races.filter(r => r.quali_result || r.race_result)
+    .sort((a, b) => b.round - a.round);
+  let n = 0;
+  for (const r of gescoord) {
+    if (!heeftVoorspeld(r, memberId)) break;
+    n++;
+  }
+  return n;
 }
 
 const gereden = () => S.races.filter(r => r.quali_result || r.race_result).length;
@@ -2613,24 +2696,98 @@ function racesPagina(volgend) {
       <div class="kalender">${gereden.map(x => kalenderRij(x.r, x.st)).join('')}</div>` : ''}`;
 }
 
+// ---- de weekendkaart ----------------------------------------
+// Wie de app opent wil binnen één seconde drie dingen weten: welke race komt
+// eraan, moet ik nog iets doen, en hoe sta ik ervoor. Die drie stonden door
+// elkaar in de kalenderlijst — je moest zelf bij elkaar zoeken dat Suzuka de
+// eerstvolgende was, dat je de race nog niet had ingevuld, en wat dat voor je
+// stand betekende. Nu staan ze op die volgorde bovenaan.
+
+// Heb ik voor deze sessie zelf iets ingeleverd? Nadrukkelijk zelf: een
+// automatisch aangevulde lijst is geen inzending, en hier zeggen dat je klaar
+// bent terwijl je niets deed is precies de verkeerde geruststelling.
+function sessieStatus(r, welk) {
+  const mijn = vindPred(r.id, S.ik.id);
+  const naam = welk === 'quali' ? 'kwalificatie' : 'race';
+  // Een automatisch aangevulde lijst is vol maar niet van jou. Hem "deels"
+  // noemen zou suggereren dat je zelf begonnen was, en "klaar" dat je er iets
+  // aan gedaan hebt. Dus krijgt hij zijn eigen woord.
+  if (isAuto(mijn, welk)) return { staat: 'auto', teken: '~', naam };
+  const aantal = gevuld(naarPlekken(mijn?.[TOP10VRAAG[welk]]));
+  if (aantal === 10) return { staat: 'klaar', teken: '✓', naam };
+  if (aantal > 0)    return { staat: 'deels', teken: '·', naam };
+  return { staat: 'open', teken: '!', naam };
+}
+
+// Waar sta ik? De positie, de punten, en wat het laatste gereden weekend
+// opleverde. Dat laatste is het getal waar mensen op terugkomen.
+function mijnPositie() {
+  const rijen = standRijen();
+  if (rijen.length < 2) return null;
+  const i = rijen.findIndex(x => x.mij);
+  if (i === -1) return null;
+  const laatste = [...S.races].reverse().find(r => r.quali_result || r.race_result);
+  return {
+    plek: i + 1,
+    totaal: rijen.length,
+    punten: rijen[i].punten,
+    weekend: laatste ? scoreWeekend(vindPred(laatste.id, S.ik.id), laatste) : null,
+  };
+}
+
+const RANGNAAM = ['', '1e', '2e', '3e'];
+const rang = (n) => RANGNAAM[n] ?? `${n}e`;
+
+function positieRegel() {
+  const p = mijnPositie();
+  if (!p) return '';
+  return `
+    <div class="kaartvoet">
+      <span><b class="groot">${rang(p.plek)}</b><i>van ${p.totaal}</i></span>
+      <span><b class="groot">${p.punten}</b><i>punten</i></span>
+      ${p.weekend === null ? '' :
+        `<span><b class="groot">+${p.weekend}</b><i>vorig weekend</i></span>`}
+    </div>`;
+}
+
 function hero(volgend) {
   const r = volgend.race;
   const aan = lampjes(volgend.iso);
   const wacht = nogNietIngevuld(r, volgend.welk);
+  // Allebei de sessies, niet alleen de open: wie de kwalificatie al gedaan
+  // heeft wil dat zien staan, en wie de race nog moet doen ook.
+  const sessies = ['quali', 'race'].filter(top10Actief).map(w => sessieStatus(r, w));
+  // De knop wijst naar wat er nog te doen is, en niet naar de eerstvolgende
+  // deadline. Wie de kwalificatie al af heeft terwijl de race nog open staat
+  // kreeg anders "bekijken" te lezen terwijl er juist nog werk lag.
+  const dicht = { quali: Date.now() >= new Date(r.deadline_quali).getTime(),
+                  race:  Date.now() >= new Date(r.deadline_race).getTime() };
+  const teDoen = ['quali', 'race']
+    .filter(w => top10Actief(w) && !dicht[w])
+    .map(w => sessieStatus(r, w))
+    .find(x => x.staat !== 'klaar');
   return `
     <div class="hero">
       <div class="hero-kop">
-        <span class="label">nu open · ${esc(r.name)}</span>
+        <span class="label">nu open · ronde ${String(r.round).padStart(2,'0')}</span>
         <span class="mono groen">sluit ${esc(sluitTekst(volgend.iso))}</span>
       </div>
+      <h2 class="heronaam">${esc(r.name)}</h2>
       <div class="klok" data-tot="${esc(volgend.iso)}">${klokTekst(volgend.iso)}</div>
       <div class="lampjes">${Array.from({length:5}, (_,i) =>
         `<span class="${i < aan ? 'aan' : ''}" style="animation-delay:${(i * .12).toFixed(2)}s"></span>`).join('')}</div>
+      <div class="sessies">${sessies.map(x => `
+        <span class="sessie ${x.staat}">
+          <i>${x.teken}</i>${esc(x.staat === 'auto' ? `${x.naam} · automatisch` : x.naam)}</span>`).join('')}</div>
       ${S.leden.length > 1 ? `<div class="wachtop mono ${wacht.length ? 'amber' : 'groen'}">${
         wacht.length
           ? `nog geen top 10: ${wacht.map(l => esc(l.display_name)).join(', ')}`
           : 'iedereen heeft zijn top 10'}</div>` : ''}
-      <button class="knop primair" data-naar-race="${esc(r.id)}">Top 10 invullen</button>
+      <button class="knop primair" data-naar-race="${esc(r.id)}">${
+        !teDoen ? 'Je inzending bekijken'
+        : teDoen.staat === 'deels' ? `Top 10 ${esc(teDoen.naam)} afmaken`
+        : `Top 10 ${esc(teDoen.naam)} invullen`}</button>
+      ${positieRegel()}
     </div>`;
 }
 
@@ -2700,12 +2857,23 @@ const puntKlasse = (p) => p === 5 ? 'v5' : p === 3 ? 'v3' : p === 1 ? 'v1' : 'v0
 
 // ---- stand --------------------------------------------------
 
-function standRij(r, i, alle) {
+function standRij(r, i, alle, wissels) {
   const volgende = alle[i + 1];
   const voor = volgende ? `+${r.punten - volgende.punten}` : '—';
+  const wissel = wissels?.get(String(r.id)) ?? 0;
+  // Een pijltje alleen als er iets te melden is. Nul plekken verschil met een
+  // streepje erbij zetten maakt van "er is niets gebeurd" een mededeling.
+  const pijl = !wissel ? ''
+    : `<span class="wissel ${wissel > 0 ? 'omhoog' : 'omlaag'}"
+         title="${wissel > 0 ? 'gestegen' : 'gezakt'} sinds vorige race"
+         >${wissel > 0 ? '↑' : '↓'}${Math.abs(wissel)}</span>`;
+  const reeks = reeksVan(r.id);
   return `<div class="strij ${r.mij ? 'zelf' : ''}">
     <span class="p">${i + 1}</span>
-    <span class="nm">${esc(r.naam)}${r.mij ? ` <span class="jij">jij</span>` : ''}</span>
+    <span class="nm">${esc(r.naam)}${r.mij ? ` <span class="jij">jij</span>` : ''}
+      ${reeks >= 3 ? `<span class="reeks" title="${reeks} weekenden op rij ingeleverd"
+        >${reeks}×</span>` : ''}</span>
+    ${pijl}
     <span class="voor">${voor}</span>
     <span class="t">${r.punten}</span>
   </div>`;
@@ -2727,7 +2895,8 @@ function standPagina(rijen) {
         <span class="balk" style="height:${balk(r.punten)}px">${r.punten}</span>
       </div>`).join('')}</div>
       <div class="scheiding"></div>` : ''}
-    ${rijen.length ? rijen.map((r, i) => standRij(r, i, rijen)).join('')
+    ${rijen.length ? (() => { const w = positieWissels();
+        return rijen.map((r, i) => standRij(r, i, rijen, w)).join(''); })()
       : `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
     ${weekendRanglijst()}
     ${streepBlok()}
@@ -2915,11 +3084,27 @@ function poulePagina(rijen) {
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
       <b>1</b> twee plekken ernaast.</div>
     ${agendaBlok()}
+    ${beheerKop()}
     ${omschrijvingBlok()}
     ${openbaarBlok()}
     ${autofillBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}`;
+}
+
+// Vier blokken die alleen de poulebaas ziet, en die samen langer zijn dan de
+// rest van de pagina. Zonder kop liepen ze naadloos door op de spelerslijst,
+// en dan lijkt het alsof iedereen aan de instellingen kan zitten. Eén regel
+// erboven scheidt "dit is jullie poule" van "dit stel jij in".
+function beheerKop() {
+  if (!magBeheren()) return '';
+  return `
+    <div class="scheiding"></div>
+    <div class="beheerkop">
+      <span class="label">beheer</span>
+      <p class="zacht" style="margin:0">Hieronder staat wat alleen jij als
+        poulebaas kunt aanpassen. De rest van de poule ziet dit niet.</p>
+    </div>`;
 }
 
 // ---- profiel: alles wat over jou gaat, niet over de poule ---
