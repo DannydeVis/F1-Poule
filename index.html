@@ -258,6 +258,11 @@
      telefoon niet op één regel. Zonder dit valt het eind er stilletjes af. */
   .smalkop{overflow-wrap:anywhere}
   .veldblok{display:flex;flex-direction:column;gap:12px}
+  /* De beheerkop krijgt een accentstreep aan de zijkant, en alles eronder
+     hoort daar zichtbaar bij. Geen kadertje eromheen: dat zou een vijfde
+     kader op een pagina maken die er al genoeg heeft. */
+  .beheerkop{display:flex;flex-direction:column;gap:6px;
+    border-left:3px solid var(--accent);padding-left:12px}
 
   /* Het deel-teken van iOS staat middenin een zin, dus het moet op de regel
      meelopen: even hoog als de letters en met de staart op de basislijn. */
@@ -661,6 +666,17 @@
   .jij{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
     text-transform:none;color:var(--accent)}
   .strij .voor{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+  /* Gestegen of gezakt sinds de vorige race. Groen en rood zijn hier
+     onvermijdelijk, maar de pijl draagt de betekenis net zo goed als de
+     kleur -- ook wie het verschil niet ziet leest ↑2. */
+  .wissel{font-family:var(--mono);font-size:11px;font-weight:700;flex:none}
+  .wissel.omhoog{color:var(--groen)}
+  .wissel.omlaag{color:var(--ink3)}
+  /* De reeks: hoeveel weekenden op rij je hebt ingeleverd. Klein en naast de
+     naam, want het is een schouderklopje en geen score. */
+  .reeks{font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+    text-transform:none;color:var(--amber);border:1px solid var(--amber-rand);
+    border-radius:20px;padding:1px 6px;vertical-align:middle}
   .strij .t{font-family:var(--cond);font-size:28px;font-weight:700}
   .uitleg{background:var(--paneel);border:1px solid var(--lijn);border-radius:12px;
     padding:14px;color:var(--ink2);font-size:14px}
@@ -2166,16 +2182,59 @@ function raceStand(r, nu = Date.now()) {
   return { soort:'open', tekst: nog > 0 ? `open · nog ${nog} te kiezen` : 'open · ingevuld' };
 }
 
-function standRijen() {
+// `tot` telt alleen de races vóór dat rondenummer mee. Zonder grens is dit de
+// gewone stand; mét is het de stand zoals hij vóór een weekend was, en dat is
+// alles wat je nodig hebt om te zeggen wie er geklommen of gezakt is.
+function standRijen(tot = Infinity) {
   return S.leden.map(l => {
     let punten = 0;
     for (const r of S.races) {
       if (!r.race_result && !r.quali_result) continue;
+      if (r.round >= tot) continue;
       punten += scoreWeekend(vindPred(r.id, l.member_id), r);
     }
     return { id:l.member_id, naam:l.display_name, punten,
              mij:zelfde(l.member_id, S.ik.id) };
   }).sort((a,b) => b.punten - a.punten || String(a.naam).localeCompare(String(b.naam)));
+}
+
+// ---- wie is er geklommen of gezakt? -------------------------
+// De stand zegt wie er wint, niet wat er is gebeurd. Twee plekken stijgen in
+// Monza is het soort ding waar mensen elkaar op aanspreken, en het kost niets:
+// dezelfde telling, één weekend eerder afgekapt.
+//
+// Pas vanaf twee gereden races: vóór de tweede is iedereen "nieuw" en zou elke
+// rij een pijltje krijgen dat nergens op slaat.
+function positieWissels() {
+  const gescoord = S.races.filter(r => r.quali_result || r.race_result)
+    .sort((a, b) => a.round - b.round);
+  if (gescoord.length < 2) return new Map();
+  const laatste = gescoord[gescoord.length - 1];
+  const eerder = standRijen(laatste.round);
+  const nu = standRijen();
+  const plek = (rijen, id) => rijen.findIndex(r => zelfde(r.id, id)) + 1;
+  return new Map(nu.map(r => {
+    const van = plek(eerder, r.id), naar = plek(nu, r.id);
+    return [String(r.id), van && naar ? van - naar : 0];
+  }));
+}
+
+// ---- reeksen ------------------------------------------------
+// "Zeven weekenden op rij ingeleverd." Telt terug vanaf de laatste race met
+// een uitslag, en stopt bij het eerste weekend dat je oversloeg.
+//
+// heeftVoorspeld() slaat automatisch aangevulde lijsten over, dus een reeks
+// die de app voor je invulde telt niet mee. Dat is dezelfde grens als bij de
+// weekendwinst: het is iets wat je doet, niet iets wat je overkomt.
+function reeksVan(memberId) {
+  const gescoord = S.races.filter(r => r.quali_result || r.race_result)
+    .sort((a, b) => b.round - a.round);
+  let n = 0;
+  for (const r of gescoord) {
+    if (!heeftVoorspeld(r, memberId)) break;
+    n++;
+  }
+  return n;
 }
 
 const gereden = () => S.races.filter(r => r.quali_result || r.race_result).length;
@@ -2798,12 +2857,23 @@ const puntKlasse = (p) => p === 5 ? 'v5' : p === 3 ? 'v3' : p === 1 ? 'v1' : 'v0
 
 // ---- stand --------------------------------------------------
 
-function standRij(r, i, alle) {
+function standRij(r, i, alle, wissels) {
   const volgende = alle[i + 1];
   const voor = volgende ? `+${r.punten - volgende.punten}` : '—';
+  const wissel = wissels?.get(String(r.id)) ?? 0;
+  // Een pijltje alleen als er iets te melden is. Nul plekken verschil met een
+  // streepje erbij zetten maakt van "er is niets gebeurd" een mededeling.
+  const pijl = !wissel ? ''
+    : `<span class="wissel ${wissel > 0 ? 'omhoog' : 'omlaag'}"
+         title="${wissel > 0 ? 'gestegen' : 'gezakt'} sinds vorige race"
+         >${wissel > 0 ? '↑' : '↓'}${Math.abs(wissel)}</span>`;
+  const reeks = reeksVan(r.id);
   return `<div class="strij ${r.mij ? 'zelf' : ''}">
     <span class="p">${i + 1}</span>
-    <span class="nm">${esc(r.naam)}${r.mij ? ` <span class="jij">jij</span>` : ''}</span>
+    <span class="nm">${esc(r.naam)}${r.mij ? ` <span class="jij">jij</span>` : ''}
+      ${reeks >= 3 ? `<span class="reeks" title="${reeks} weekenden op rij ingeleverd"
+        >${reeks}×</span>` : ''}</span>
+    ${pijl}
     <span class="voor">${voor}</span>
     <span class="t">${r.punten}</span>
   </div>`;
@@ -2825,7 +2895,8 @@ function standPagina(rijen) {
         <span class="balk" style="height:${balk(r.punten)}px">${r.punten}</span>
       </div>`).join('')}</div>
       <div class="scheiding"></div>` : ''}
-    ${rijen.length ? rijen.map((r, i) => standRij(r, i, rijen)).join('')
+    ${rijen.length ? (() => { const w = positieWissels();
+        return rijen.map((r, i) => standRij(r, i, rijen, w)).join(''); })()
       : `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
     ${weekendRanglijst()}
     ${streepBlok()}
@@ -3013,11 +3084,27 @@ function poulePagina(rijen) {
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
       <b>1</b> twee plekken ernaast.</div>
     ${agendaBlok()}
+    ${beheerKop()}
     ${omschrijvingBlok()}
     ${openbaarBlok()}
     ${autofillBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}`;
+}
+
+// Vier blokken die alleen de poulebaas ziet, en die samen langer zijn dan de
+// rest van de pagina. Zonder kop liepen ze naadloos door op de spelerslijst,
+// en dan lijkt het alsof iedereen aan de instellingen kan zitten. Eén regel
+// erboven scheidt "dit is jullie poule" van "dit stel jij in".
+function beheerKop() {
+  if (!magBeheren()) return '';
+  return `
+    <div class="scheiding"></div>
+    <div class="beheerkop">
+      <span class="label">beheer</span>
+      <p class="zacht" style="margin:0">Hieronder staat wat alleen jij als
+        poulebaas kunt aanpassen. De rest van de poule ziet dit niet.</p>
+    </div>`;
 }
 
 // ---- profiel: alles wat over jou gaat, niet over de poule ---
