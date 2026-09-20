@@ -856,3 +856,32 @@ is net zo veilig als één keer.
 `schema.sql` opnieuw en moet de kalender via de sync opnieuw opgehaald worden —
 inclusief alle uitslagen van het seizoen tot nu toe. Dat is een hersteloperatie
 voor als er iets stuk is, geen opschoning.
+
+
+---
+
+## 14. Toegankelijkheid en wat er zonder verbinding gebeurt
+
+**Contrast.** Alle tekstkleuren halen 4.5:1 tegen de achtergrond waar ze echt
+op liggen, in allebei de thema's. `test/toegankelijkheid.test.mjs` rekent dat
+per element uit en niet per variabele — een kleur kan prima zijn op het paneel
+en zakken op een getinte badge. De vlakken en randen (`--groen-vlak`,
+`--amber-rand`) zijn achtergronden en hoeven niets te halen.
+
+Let op bij het bijstellen van een kleur: kies de lichtste waarde die de grens
+haalt. Donkerder mag, maar dan verdwijnt het verschil tussen `--ink`, `--ink2`
+en `--ink3`, en dat verschil is wat de kleine labels laat terugtreden.
+
+**Aanraakvlakken** zijn minstens 44 pixels hoog, de maat die Apple en Google
+allebei aanhouden. Het zichtbare vlak mag kleiner zijn dan het aanraakgebied —
+zie `.merk .wisselknop`.
+
+**Toetsenbord.** `:focus-visible` geeft een rand van 2 pixels in de
+accentkleur. Die slaat alleen aan bij toetsenbordbediening; een `.focus()`
+vanuit script telt niet mee, en een test die dat niet weet faalt onterecht.
+
+**Zonder verbinding** krijg je een eigen scherm ("Even geen bereik") en geen
+leeg vlak. Dat laatste was wat er gebeurde: de app haalt supabase-js op met een
+`await import` op modulenniveau, en als die mislukt stopt het hele script
+voordat er ook maar iets getekend is. Er is met opzet geen service worker — een
+oude stand tonen alsof hij klopt is erger dan een foutmelding.

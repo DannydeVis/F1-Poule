@@ -3966,3 +3966,92 @@ gezag onzin verkoopt.
 **Share cards als afbeelding.** Zie `ROUTEKAART.md` — er staat al een knop die
 de uitslag als tekst op je klembord zet, en tekst is in een groepsapp beter dan
 een plaatje.
+
+---
+
+## Fase 4: de fundering, en één ding dat ik bewust niet heb gedaan
+
+### Zonder verbinding
+
+`index.html` haalde supabase-js op met een `await import` op het hoogste niveau
+van de module. Mislukt die, dan stopt het hele script — en dan blijft er
+letterlijk een leeg vlak staan, want alles wat een scherm tekent staat
+eronder. Zonder bereik zag de app er dus uit alsof hij stuk was in plaats van
+alsof je geen verbinding had. Dat is precies het verschil dat een mens wél
+maakt en een blanco pagina niet.
+
+Er staat nu een `try` omheen en een eigen scherm: "Even geen bereik", met de
+uitleg dat de standen live opgehaald worden en dat je inzendingen veilig
+staan. Nadrukkelijk een ander scherm dan `toonFout()`: daar is iets misgegaan,
+hier is er gewoon niets om mee te praten.
+
+**De fout die dat kostte, want hij is leerzaam.** Eerst zette ik er
+`if (laadfout) { geenVerbinding(); return; }` neer, boven `bestaandeSessie()`.
+Die regel staat op het hoogste niveau van de module en niet in een functie, dus
+JavaScript gaf "Illegal return statement" — en daarmee brak het hele bestand,
+op precies dezelfde manier als het probleem dat ik aan het oplossen was. De
+suite viel meteen om op `#code` dat nooit verscheen. Het is nu een eigen
+`else if`-tak, met die geschiedenis in een commentaarregel erboven.
+
+Waarom er geen service worker komt staat in de overdracht bij "zet op
+beginscherm": een oude stand tonen alsof hij klopt is erger dan een
+foutmelding.
+
+### Toegankelijkheid, gemeten in plaats van geschat
+
+`test/toegankelijkheid.test.mjs` loopt over élk element met eigen tekst in
+allebei de thema's en rekent de WCAG-contrastverhouding uit tegen de
+achtergrond waar het écht op ligt — niet tegen de variabele die er in theorie
+achter zit. Dat vond vier dingen die met het oog niet opvallen:
+
+| | was | is |
+|---|---|---|
+| `--ink3` licht (de kleine labels) | 2.77 | 4.55 |
+| `--ink3` donker | 3.36 | 4.61 |
+| `--groen` licht, op zijn eigen tint | 4.42 | 4.54 |
+| `--amber` licht | 3.27 | 4.51 |
+| `.sessie.open i` ("!" op `--gedempt`) | 4.36 | 13.58 |
+
+Alleen de tekstkleuren zijn verschoven, en steeds naar de lichtste waarde die
+de grens haalt — zo blijft de rangorde tussen `--ink`, `--ink2` en `--ink3` zo
+groot als hij kan zijn. De vlakken en randen eronder zijn achtergronden en
+hoeven niets te halen; die staan nog op hun oorspronkelijke tint.
+
+Dat laatste geval kwam uit mijn eigen fase 2-werk: het uitroepteken op de
+weekendkaart, uitgerekend het teken dat je moet zien. Het heeft nu de volle
+tekstkleur, en dat klopt ook inhoudelijk — het is de enige van de vier die om
+aandacht vraagt.
+
+Verder getest: elke knop haalt 44 pixels (de maat die Apple en Google allebei
+aanhouden — de wisselknop in de merkbalk zat op 27), toetsenbordfocus geeft een
+zichtbare rand, en de pagina zegt in welke taal hij staat.
+
+Eén ding aan die test is de moeite van het onthouden waard: de focuscontrole
+drukt een échte Tab en gebruikt geen `.focus()` vanuit script. `:focus-visible`
+slaat alleen aan bij toetsenbordbediening, dus met een programmatische focus
+faalde hij onterecht.
+
+### Wat ik bewust niet heb gedaan: index.html opsplitsen
+
+Dit stond in `ROUTEKAART.md` als fase 4, met het plan om de vier knip-blokken
+uit `scripts/knipsel.mjs` echte modules te maken. Ik heb het nagemeten
+voordat ik begon:
+
+    primitieven   235 regels    0 verwijzingen naar S
+    vragen        112 regels    1
+    zoeken          4 regels    1
+    optellen      479 regels   54
+
+`primitieven` is inderdaad puur en zou zo te verplaatsen zijn. Maar `optellen`
+— het grootste blok, en het blok waar het om gaat — hangt met 54 verwijzingen
+aan de toestand van de app. Dat is geen module maken, dat is een verbouwing van
+de state van de hele app, met 49 testbestanden die er tegelijk op leunen.
+
+En alleen `primitieven` verplaatsen levert het slechtste van twee werelden op:
+de app is dan geen één bestand meer (wat het hele ontwerp is — geen bouwstap,
+geen bundel) én `knipsel.mjs` blijft alsnog nodig voor de andere drie.
+
+Dus: niet gedaan, en de routekaart zegt nu waarom, met die telling erbij. Het
+advies dat ik er zelf in schreef geldt nog steeds — doe dit als een fúnctie
+moeilijk toe te voegen wordt, niet op een regelaantal. Dat moment is er nog
+niet geweest: fase 1 tot en met 4 zijn er zonder gedoe in gekomen.

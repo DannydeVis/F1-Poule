@@ -92,10 +92,19 @@
   :root{
     --bg:#f2f1ee; --paneel:#ffffff; --paneel2:#e9e8e4; --gedempt:#e0dedb;
     --lijn:#dcdad5; --stippel:#cfccc7;
-    --ink:#14151a; --ink2:#61656d; --ink3:#8d9299;
+    /* ink3 draagt de kleine labels (10-11px), en die hoorde op 4.5:1 te zitten.
+       Hij stond op #8d9299 en haalde 2.77 tegen de achtergrond -- onder de
+       grens voor gewone tekst én onder die voor grote. Dit is de lichtste
+       waarde die het wél haalt (4.55 tegen bg, 5.14 tegen paneel), dus de
+       rangorde blijft zo groot als hij kan zijn. */
+    --ink:#14151a; --ink2:#61656d; --ink3:#696e75;
     --accent:#d93d24; --accent-ink:#ffffff;
-    --groen:#1f8a4c; --groen-vlak:rgba(31,138,76,.12); --groen-rand:rgba(31,138,76,.45);
-    --amber:#b07b16; --amber-vlak:rgba(176,123,22,.10); --amber-rand:rgba(176,123,22,.40);
+    /* Ook deze twee dragen kleine tekst ("sluit zo 09:04", "nog geen top 10")
+       en haalden 4.38 en 3.69 tegen de achtergrond. Nu 4.55 en 4.51. De
+       vlakken en randen eronder zijn achtergronden en hoeven niets te halen;
+       die blijven op de oorspronkelijke tint staan. */
+    --groen:#117c3e; --groen-vlak:rgba(31,138,76,.12); --groen-rand:rgba(31,138,76,.45);
+    --amber:#986300; --amber-vlak:rgba(176,123,22,.10); --amber-rand:rgba(176,123,22,.40);
     /* De paars-groen-geel van een F1-timingscherm. Paars is de beste van de
        drie en hoort schaars te zijn — daarom alleen voor een exacte treffer. */
     --paars:#8b2fc9;
@@ -110,7 +119,8 @@
     :root{
       --bg:#0b0b0c; --paneel:#15161a; --paneel2:#1d1f24; --gedempt:#2b2e35;
       --lijn:#2b2e35; --stippel:#2b2e35;
-      --ink:#f2f3f5; --ink2:#9aa0a8; --ink3:#656b74;
+      /* Zelfde verhaal in het donker: #656b74 haalde 3.36. Nu 4.61/5.01. */
+      --ink:#f2f3f5; --ink2:#9aa0a8; --ink3:#7b818a;
       --accent:#ee4d33; --accent-ink:#0b0b0c;
       --groen:#34b264; --groen-vlak:rgba(52,178,100,.16); --groen-rand:rgba(52,178,100,.50);
       --amber:#e0a53a; --amber-vlak:rgba(224,165,58,.08); --amber-rand:rgba(224,165,58,.40);
@@ -245,8 +255,14 @@
     text-overflow:ellipsis;white-space:nowrap}
   .merk .code{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
     color:var(--ink3);margin-left:auto;flex:none}
+  /* Het vlak blijft klein -- dit is een knopje in een merkbalk en geen
+     hoofdactie -- maar het aanraakgebied hoort 44 pixels te zijn. Dat is de
+     maat die Apple en Google allebei aanhouden, en eronder mis je hem met je
+     duim en tik je per ongeluk iets anders aan. Vandaar dat de knop zijn
+     hoogte haalt en de rand met een binnenschaduw op de oude maat blijft. */
   .merk .wisselknop{margin-left:auto;flex:none;background:none;
     border:1px solid var(--lijn);border-radius:6px;padding:5px 9px;
+    min-height:44px;display:flex;align-items:center;
     font-family:var(--mono);font-size:10px;letter-spacing:.06em;
     color:var(--ink3);cursor:pointer;transition:color .18s,border-color .18s}
   .merk .wisselknop:hover{color:var(--ink);border-color:var(--ink3)}
@@ -358,7 +374,10 @@
   .sessie.klaar{color:var(--ink)}
   .sessie.deels i{background:var(--amber-vlak);color:var(--amber)}
   .sessie.auto  i{background:var(--amber-vlak);color:var(--amber)}
-  .sessie.open  i{background:var(--gedempt);color:var(--ink2)}
+  /* De enige van de vier die om aandacht vraagt, dus de enige die de volle
+     tekstkleur krijgt. Stond op --ink2 en haalde 4.36 op dit vlak -- net
+     onder de grens, en uitgerekend bij het teken dat je moet zien. */
+  .sessie.open  i{background:var(--gedempt);color:var(--ink)}
   /* "Hoe sta ik ervoor", onderaan dezelfde kaart. Grote cijfers met een klein
      woord eronder in plaats van drie losse kadertjes: het zijn drie getallen
      over hetzelfde, dus ze horen bij elkaar in één rij te staan. */
@@ -843,11 +862,25 @@ const OAUTH_FOUT_UIT_LINK = (() => {
 })();
 
 let db = null;
+// Waarom hier een try omheen staat: dit is een `await import` op het hoogste
+// niveau van de module. Mislukt hij, dan stopt het hele script — en dan blijft
+// er letterlijk een leeg vlak staan, want alles wat een scherm tekent staat
+// hieronder. Zonder verbinding ziet de app er dan uit alsof hij stuk is in
+// plaats van alsof je geen bereik hebt. Dat is precies het verschil dat een
+// mens wél maakt en een blanco pagina niet.
+//
+// Met de `catch` loopt de rest van het bestand gewoon door (functies zijn
+// gehesen), zodat geenVerbinding() hieronder nog bestaat om te tekenen.
+let laadfout = null;
 if (!DEMO) {
-  const { createClient } = await import(
-    'https://esm.sh/@supabase/supabase-js@2'
-  );
-  db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  try {
+    const { createClient } = await import(
+      'https://esm.sh/@supabase/supabase-js@2'
+    );
+    db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch (e) {
+    laadfout = e;
+  }
 }
 
 // ============================================================
@@ -1833,6 +1866,28 @@ function uitleg(error) {
   if (bekend[code]) return bekend[code];
   const bericht = error?.message ?? 'Onbekende fout';
   return code ? `${bericht} (${code})` : bericht;
+}
+
+// Geen verbinding, of de bibliotheek kwam niet binnen. Nadrukkelijk een ander
+// scherm dan toonFout(): daar is iets misgegaan, hier is er gewoon niets om
+// mee te praten. De app heeft met opzet geen service worker (een oude stand
+// tonen alsof hij klopt is erger dan een foutmelding), dus dit scherm is wat
+// er overblijft — en dan mag het tenminste uitleggen wat er aan de hand is.
+function geenVerbinding() {
+  app.innerHTML = `
+    <div class="toegang"><div class="kaart"><div class="baan"></div>
+      <div class="kaart-in">
+        <div class="rodevlag">
+          <span class="label">geen verbinding</span>
+          <h1 class="middel">Even geen bereik</h1>
+          <p class="zacht" style="margin:0">RacePicks haalt de standen live op, dus
+            zonder verbinding valt er niets te laten zien. Je inzendingen staan
+            veilig; zodra je weer online bent staat alles er gewoon.</p>
+          <button class="knop wit" id="opnieuw">Opnieuw proberen</button>
+        </div>
+      </div>
+    </div></div>`;
+  app.querySelector('#opnieuw').onclick = () => location.reload();
 }
 
 function toonFout(bericht) {
@@ -5431,6 +5486,13 @@ if (DEMO) {
   await laad();
   await herkenMij();
   if (!herstelScherm()) render();
+} else if (laadfout) {
+  // De bibliotheek kwam niet binnen. Alles hieronder heeft dan geen zin: er
+  // is geen db om iets aan te vragen. Nadrukkelijk als eigen tak en niet met
+  // een `return` erboven -- dit staat op het hoogste niveau van de module, en
+  // daar mag geen return staan. (Precies die fout heeft deze regel al een
+  // keer gekost: "Illegal return statement", en dan blijft het scherm leeg.)
+  geenVerbinding();
 } else {
   // De sessie van dit toestel eerst: hervat() moet weten wie ik ben voordat
   // hij een speler probeert te herkennen. Deze regel is bovendien wat een
