@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Poule</title>
+<title>RacePicks</title>
 <meta name="color-scheme" content="dark light">
-<meta name="description" content="Voorspel de top 10 van de kwalificatie en de race, en houd de stand bij met je vrienden. Gratis, zonder wachtwoord.">
+<meta name="description" content="Het F1-voorspelspel voor jou en je vrienden. Voorspel de grid, versla je maten en win het weekend. Gratis, zonder wachtwoord.">
 <!-- "Zet op beginscherm" geeft hiermee een echte app-tegel in plaats van een
      browsersnelkoppeling. Een poule-app leeft op een telefoon, dus dat is
      geen franje. De pictogrammen zijn maskable: Android snijdt ze in de vorm
      van het toestel, en alles wat telt blijft binnen de veilige zone. -->
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="pictogrammen/poule-192.png" sizes="192x192">
+<link rel="icon" href="pictogrammen/racepicks-192.png" sizes="192x192">
 <!-- iOS snijdt geen eigen vorm uit het icoon, het legt er alleen ronde hoeken
      omheen. Het maskable pictogram hierboven komt daar dus klein uit met een
      brede rand; vandaar een eigen, vullende variant. -->
-<link rel="apple-touch-icon" href="pictogrammen/poule-apple-180.png">
+<link rel="apple-touch-icon" href="pictogrammen/racepicks-apple-180.png">
 <meta name="theme-color" content="#0b0b0c">
-<meta name="apple-mobile-web-app-title" content="Poule">
+<meta name="apple-mobile-web-app-title" content="RacePicks">
 <!-- display:standalone uit het manifest is wat een iPhone sinds 16.4 leest;
      dit is de oude schakelaar, voor toestellen die daar nog onder zitten. -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2488,7 +2488,7 @@ function toonApp() {
       <aside class="zijbalk">
         <div class="merk">
           <span class="blok"></span>
-          <span class="naam merknaam">Poule</span>
+          <span class="naam merknaam">RacePicks</span>
           <span class="naam merkpoule">${esc(S.poule.name)}</span>
           <button class="wisselknop" id="anderePoule" type="button"
             title="Wissel van poule">Wissel</button>
@@ -4489,7 +4489,7 @@ function koppelVraagScherm() {
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
-          <span class="naam">Poule</span>
+          <span class="naam">RacePicks</span>
           <span class="code">${esc(S.poule.join_code ?? S.poule.name)}</span>
         </div>
         <div>
@@ -4528,7 +4528,7 @@ function kiesSpeler() {
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
-          <span class="naam">Poule</span>
+          <span class="naam">RacePicks</span>
           <span class="code">${esc(S.poule.join_code ?? S.poule.name)}</span>
         </div>
         <div>
@@ -4669,7 +4669,7 @@ function maakPagina() {
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
-          <span class="naam">Poule</span>
+          <span class="naam">RacePicks</span>
           <span class="code">stap ${m.stap} van 4</span>
         </div>
         <div class="stappen">
@@ -4916,7 +4916,7 @@ function installBlok() {
   const kop = `<div class="scheiding"></div>
     <div class="veldblok">
       <span class="label">op je beginscherm</span>
-      <p class="zacht" style="margin:0">Zet Poule op je beginscherm, dan opent hij
+      <p class="zacht" style="margin:0">Zet RacePicks op je beginscherm, dan opent hij
         als een app: eigen tegel, eigen venster, geen adresbalk.</p>`;
   if (installPrompt) {
     return `${kop}
@@ -4948,10 +4948,16 @@ function watIsDitBlok() {
     <div class="scheiding"></div>
     <div class="veldblok">
       <span class="label">wat is dit?</span>
-      <p class="zacht" style="margin:0">Een voorspellingspoule voor de Formule 1.
-        Voor elke race voorspel je de <b>top 10 van de kwalificatie</b> en de
-        <b>top 10 van de race</b>, plus een paar losse vragen: wie wint, wie
-        pakt pole, hoeveel safety cars.</p>
+      <!-- De eerste zin zegt waaróm, de tweede pas wát. Dat stond er lang
+           andersom: alleen hoe het werkt, en geen woord over wat je ermee
+           wint. "Win het weekend" is trouwens letterlijk de weekend-
+           overwinning en "versla je maten" het onderlinge duel; allebei zitten
+           ze al in de app. -->
+      <p class="zacht" style="margin:0"><b>Het F1-voorspelspel voor jou en je
+        vrienden.</b> Voorspel de grid, versla je maten en win het weekend.</p>
+      <p class="zacht" style="margin:0">Voor elke race voorspel je de
+        <b>top 10 van de kwalificatie</b> en de <b>top 10 van de race</b>, plus
+        een paar losse vragen: wie wint, wie pakt pole, hoeveel safety cars.</p>
       <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek
         ernaast, <b>1</b> twee plekken ernaast. De uitslagen komen vanzelf
         binnen, dus niemand hoeft ze bij te houden.</div>
@@ -5066,7 +5072,7 @@ function toonStart() {
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
-          <span class="naam">Poule</span>
+          <span class="naam">RacePicks</span>
           <span class="code">${SEIZOEN}</span>
         </div>
         <div>

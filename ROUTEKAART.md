@@ -1,4 +1,4 @@
-# F1 Poule: wat er nog bij kan
+# RacePicks: wat er nog bij kan
 
 Overzicht van alles wat besproken is, plus nieuwe ideeën, op volgorde van
 wat het oplevert gedeeld door wat het kost.
@@ -321,9 +321,14 @@ nog niemand vreemd op zit is onderhoud; erna is het een incident.
 
 ---
 
-## Fase 1: RacePicks worden
+## ~~Fase 1: RacePicks worden~~ — gebouwd, op het domein na
 
-De app heet nu overal "Poule". Het domein `racepicks.com` staat al langer op de
+**Gedaan:** de naam, de positioneringszin, het icoon en het manifest. **Nog
+open, en dat is jouw kant:** `racepicks.com` daadwerkelijk live zetten — zie
+bovenaan dit bestand voor de instellingen bij Google Cloud, Supabase en GitHub
+Pages die daarbij horen.
+
+De app heette overal "Poule". Het domein `racepicks.com` staat al langer op de
 rol (zie bovenaan dit bestand voor de instellingen die daarbij horen).
 
 - de naam overal: `<title>`, `manifest.webmanifest` (`name` én `short_name`),
@@ -535,7 +540,7 @@ geldt dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?
 | fase | wat | waarom daar |
 |---|---|---|
 | ~~0~~ | ~~RLS dichtzetten~~ — **gebouwd**, zie `OVERDRACHT.md` | het enige dat een publieke launch tegenhield |
-| 1 | RacePicks: naam, icoon, kleuren, domein | vóórdat mensen "Poule" op hun beginscherm zetten |
+| ~~1~~ | ~~RacePicks: naam, icoon~~ — **gebouwd**; alleen het domein is nog van jou | vóórdat mensen "Poule" op hun beginscherm zetten |
 | 2 | racescherm wordt dashboard | grootste winst per uur werk, data is er al |
 | 3 | positiewijziging, reeksen, grafiek, recap | rekenwerk over wat er al ligt |
 | 4 | modules, toegankelijkheid, fout- en legeschermen | onderhoud, als er geen haast is |

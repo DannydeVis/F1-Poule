@@ -1,4 +1,4 @@
-# F1 Poule: overdracht
+# RacePicks: overdracht
 
 Poule-app voor F1 kwalificatie- en race-top-10 voorspellen met vrienden.
 Single-file frontend (`index.html`), Supabase als backend (`schema.sql`),
@@ -3742,3 +3742,75 @@ testopstelling.
 
 Hele SQL-suite lokaal gedraaid in de volgorde van de CI-job, alle 45
 browsertestbestanden groen.
+
+---
+
+## Fase 1: RacePicks
+
+De app heette overal "Poule". Dat is nu RacePicks, met een zin erbij die zegt
+waarom je zou meedoen:
+
+> **Het F1-voorspelspel voor jou en je vrienden.** Voorspel de grid, versla je
+> maten en win het weekend.
+
+Die staat bovenaan het "wat is dit?"-blok, vóór de uitleg over hoe het scoren
+werkt. Dat stond er lang andersom — alleen hoe, geen woord over waarom. De zin
+is trouwens geen marketing die de app nog moet waarmaken: "win het weekend" is
+letterlijk de weekendoverwinning en "versla je maten" het onderlinge duel, en
+allebei zitten ze er al in.
+
+### Waarom nu en niet later
+
+Omdat "zet op beginscherm" er sinds gisteren is. Een geïnstalleerde tegel pakt
+de naam en het icoon van het moment van installeren en werkt niet bij, ook niet
+na een update. Elke week wachten was een week langer met mensen die "Poule" op
+hun telefoon hebben staan tot ze hem weggooien en opnieuw zetten.
+
+### Wat er niet veranderde: de kleuren
+
+Het advies van buitenaf noemde als richting "zwart/donkergrijs, off-white, één
+fel rood-oranje accent, Barlow behouden". Dat is geen wijziging maar een
+beschrijving van wat er al stond: `--bg:#0b0b0c`, `--ink:#f2f3f5`,
+`--accent:#ee4d33`, en Barlow plus Barlow Condensed zelf gehost in
+`lettertypen/`. Er is dus geen kleur aangeraakt. Wat van dat advies overblijft
+— grotere cijfers, minder randen, minder kadertjes — is een herindeling van het
+scherm en hoort bij fase 2.
+
+### Het woord "poule" blijft
+
+Alleen de merknaam is vervangen, niet het gewone woord. De app is Nederlands en
+je speelt nog steeds in een poule, met een poulecode en een poulebaas. Dat is
+geen halfslachtigheid: "je RacePicks" zou nergens op slaan, en de zin die er nu
+staat is precies de reden — het spel heet RacePicks, wat je erin doet heet een
+poule.
+
+Concreet negen plekken in `index.html` (`<title>`, de apple-titel, de vier
+merkbalken, de installatietekst, de beschrijving) plus `name`, `short_name` en
+`description` in het manifest.
+
+### Het icoon
+
+Hetzelfde startgrid, maar met één vak in het accent in plaats van om en om.
+Dat ene vak is de "picks" uit de naam: één keuze die eruit springt op een grid.
+De oude versie wisselde alle acht de vakken af, en dat is op een tegel van 48
+pixels een streepjespatroon — ruis in plaats van één ding.
+
+De bestanden heten nu `racepicks-192`, `-512` en `-apple-180`, uit hetzelfde
+`scripts/maak-pictogrammen.py`. Nog steeds zonder beeldbibliotheek: het motief
+bestaat uit rechthoeken, dus overal scherp en geen anti-aliasing nodig.
+
+### Controles
+
+Geen nieuw testbestand. `test/eerste-indruk.test.mjs` controleerde de
+manifestnaam al en die verwachting is meeveranderd; hij haalt de pictogrammen
+ook echt op, dus de hernoeming had daar stukgelopen als er een verwijzing was
+blijven staan. `test/beginscherm.test.mjs` doet hetzelfde voor het
+Apple-pictogram.
+
+Wat er níét mee verandert en dus bewust niet aangeraakt is: `poule:laatste`,
+`poule:poules` en de andere localStorage-sleutels. Die hernoemen zou iedereen
+die de app al gebruikt uit zijn poule gooien, voor precies nul winst — niemand
+ziet ze ooit.
+
+Alle 45 testbestanden groen, en met de hand bekeken in licht en donker op
+telefoonbreedte.
