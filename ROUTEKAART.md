@@ -277,7 +277,170 @@ het seizoen haalt dan de hele rest van deze lijst bij elkaar.
 
 Groep 1, 2 en 3 staan er, en uit groep 4 "slechtste twee races vallen weg" en
 "automatisch invullen bij vergeten" — daarmee zijn alle drie de kwalen bovenaan
-deze lijst aangepakt. Wat rest is dit:
+deze lijst aangepakt.
+
+Wat hieronder staat is een nieuw plan, in fases. Het komt uit een doorlichting
+van de app van buitenaf, naast wat er in groep 4 nog lag. De volgorde is niet
+die van dat advies; waar ik ervan afwijk staat erbij waarom.
+
+---
+
+## Fase 0: het lek dichten vóór racepicks.com live gaat
+
+**Dit is het enige echte blokkade-punt op deze hele lijst, en het staat daarom
+bovenaan en niet onderaan.**
+
+`pools_lezen`, `pool_members_lezen` en `answers_lezen` staan alle drie op
+`using (true)`. Met de anon key — die met opzet publiek in `index.html` staat —
+kan iedereen élke poule, élke spelersnaam en élk antwoord in de hele database
+uitlezen. Niet alleen van zijn eigen poule.
+
+Dat is een bewuste keuze geweest en het staat eerlijk in BEDIENING.md §7: zolang
+de app onder vrienden draait is het "wie de code heeft, ziet alles", en dat is
+niet erger dan de groepsapp waar die code ook in staat. Maar het schaalt niet
+naar een publiek domein met onbekenden erop. "Privé" gaat dan betekenen wat
+mensen dénken dat het betekent.
+
+Waarom het open stond, en dus wat een oplossing moet kunnen:
+
+- je moet een poule op zijn code kunnen vínden vóórdat je lid bent;
+- het "Wie ben jij?"-scherm toont de bestaande spelers, ook vóórdat je lid bent.
+
+De uitweg is allebei die stappen door een `security definer`-functie laten
+lopen die een join_code aanneemt en alleen díé poule met díé spelers
+teruggeeft, in plaats van `select` open te zetten op de tabellen. Daarna kunnen
+de drie policies dicht naar "alleen wat bij een poule hoort waar je lid van
+bent".
+
+Kosten: één functie, drie policies, en een ronde door de app waar die twee
+schermen data ophalen. Plus flink wat testwerk, want `test/policies.test.sql`
+en `test/lidmaatschap.test.sql` leggen het huidige gedrag juist vast.
+
+**Doe dit vóór het domein live gaat, niet erna.** Een lek dichten terwijl er
+nog niemand vreemd op zit is onderhoud; erna is het een incident.
+
+---
+
+## Fase 1: RacePicks worden
+
+De app heet nu overal "Poule". Het domein `racepicks.com` staat al langer op de
+rol (zie bovenaan dit bestand voor de instellingen die daarbij horen).
+
+- de naam overal: `<title>`, `manifest.webmanifest` (`name` én `short_name`),
+  het merk in de zijbalk, de "wat is dit?"-tekst, de mailsjablonen in Supabase,
+  en `BEDIENING.md`;
+- logo en app-icoon: `scripts/maak-pictogrammen.py` maakt ze nu uit het
+  startgrid-motief. Een nieuw merk betekent een nieuw motief in dat script —
+  en denk aan de drie maten: 192, 512 en de vullende 180 voor iOS;
+- kleuren- en iconsysteem: de kleuren staan al als variabelen op `:root` met
+  een donkere tegenhanger, dus dat is één blok CSS en geen zoektocht.
+
+**Waarom dit meteen na fase 0 komt en niet later.** Sinds "zet op beginscherm"
+er is, installeren mensen de app als tegel op hun telefoon. Die tegel pakt de
+naam en het icoon van het moment van installeren en werkt niet mee bij, ook
+niet na een update. Wie nu "Poule" installeert houdt "Poule" tot hij hem
+weggooit en opnieuw zet. Elke week wachten is dus een week langer met mensen
+die de verkeerde naam op hun beginscherm hebben staan.
+
+---
+
+## Fase 2: het racescherm wordt een dashboard
+
+Het beste idee uit de doorlichting, en het goedkoopste: de data is er al, het
+is een herschikking van het scherm.
+
+Wat iemand binnen één seconde na openen wil weten:
+
+1. welke race komt eraan;
+2. moet ik nog iets doen;
+3. hoe sta ik ervoor.
+
+Nu staan die drie door elkaar in de kalenderlijst. Voorstel is één **race
+weekend-kaart** bovenaan die ze op die volgorde beantwoordt — circuit en
+ronde, de afteller tot de eerstvolgende deadline, per sessie of je hebt
+ingeleverd, en één knop die je naar de plek brengt waar je nog iets moet doen.
+Daaronder pas je eigen stand, en daaronder pas de kalender.
+
+Verder in deze fase: de onderbalk, het invulscherm en de standenpagina
+compacter, en profiel/poule/instellingen duidelijker uit elkaar.
+
+Opletten bij de afteller: er tikt al een `tikken()` elke 30 seconden. Een
+afteller op secondeniveau is een tweede timer, en die moet uit zodra het tabblad
+naar de achtergrond gaat — anders loopt hij een uur door in een tabblad dat
+niemand ziet.
+
+---
+
+## Fase 3: de leuke dingen
+
+Op volgorde van wat het oplevert gedeeld door wat het kost. De eerste drie zijn
+rekenwerk over data die er al ligt; de laatste twee zijn een stuk duurder dan
+ze klinken.
+
+| | wat het is | kosten |
+|---|---|---|
+| **Positiewijziging** | ↑2 / ↓1 sinds vorige race, naast de stand | een tweede keer `standRijen()` over de races tot en met de vorige |
+| **Reeksen** | "7 weekenden op rij ingeleverd" | telling over `heeftVoorspeld()`, die er al is — en let op: een automatisch ingevulde lijst telt níét mee, precies zoals hij ook geen weekend wint |
+| **Seizoensgrafiek** | je positie door het seizoen heen | dezelfde herhaalde stand als bij positiewijziging, als lijngrafiek |
+| **Race Recap** | persoonlijke pagina na iedere race | grotendeels al gebouwd, verspreid: "zo dichtbij", de weekendwinnaar, je score en de inkijk bij anderen. Dit is vooral samenbrengen |
+| **Profielstatistieken** | race wins, accuracy, beste circuit | rekenwerk over bestaande data, maar kijk eerst naar de drempels in de terugblik: onder een handvol races zegt zo'n percentage niets |
+| **Vorige seizoenen** | 2026 → archief → 2027 | de eerste die de database echt raakt: `season` staat overal al, maar poules hangen nu aan één seizoen |
+
+**Share cards als afbeelding zou ik overslaan.** Het advies stelt een plaatje
+voor WhatsApp voor, maar er zit al een knop "Kopieer voor de groepsapp" die
+tekst op je klembord zet, en tekst is in een groepsapp beter dan een plaatje:
+je kunt erop zoeken, hem quoten, en hij leest ook voor wie op 4G zit. Een
+afbeelding maken betekent canvas-rendering, lettertypen inladen en twee thema's
+onderhouden, voor iets wat al werkt. Niet doen tenzij iemand er zelf om vraagt.
+
+**Kampioenschapsvoorspelling en favoriete coureur**: puur profiel en branding,
+geen punten. Leuk, maar het laagste op deze lijst.
+
+**Herinnering vóór de deadline**: er staat al een agenda-abonnement
+(`kalender.ics`), en dat is een herinnering die werkt zonder server, zonder
+pushrechten en zonder dat iemand een melding hoeft goed te keuren. Web push zou
+ik pas overwegen als blijkt dat mensen die agenda-link niet gebruiken.
+
+---
+
+## Fase 4: de fundering
+
+**`index.html` opsplitsen.** Het bestand is 5234 regels. Dat is te groot, en er
+is een duidelijk signaal dat het pijn doet: `scripts/knipsel.mjs` bestaat alleen
+maar omdat de rekenkern niet te importeren is, en knipt daarom vier gemarkeerde
+blokken (`primitieven`, `vragen`, `zoeken`, `optellen`) letterlijk uit het
+bestand om ze te kunnen testen.
+
+Maar niet in één klap, en niet in tien bestanden tegelijk. De volgorde die het
+minste risico geeft:
+
+1. die vier knip-blokken worden echte modules. Ze zijn al logisch afgescheiden
+   en al los getest, dus `knipsel.mjs` kan daarna weg — dat is winst op dag één;
+2. daarna pas de view-laag, en dan alleen een scherm dat je tóch aan het
+   verbouwen bent.
+
+Wat er niet moet gebeuren: React of een bouwstap erbij. Gewone ES-modules zijn
+genoeg, en de testopstelling kan het aan — `test/hulp.mjs` serveert al uit de
+repo naast de tijdelijke map.
+
+Wat het kost: `test/hulp.mjs` vervangt nu één importregel in `index.html` om
+Supabase door de nabootsing te ruilen. Met modules over meerdere bestanden moet
+die truc mee verhuizen. Dat is te doen, maar het is wél het soort werk waar
+alle 44 testbestanden tegelijk op omvallen als het misgaat.
+
+**Toegankelijkheid nalopen.** Hier staat de app er niet slecht voor: de
+puntenkleuren zijn nooit het enige signaal (er staat altijd een getal naast, en
+`test/puntenkleuren.test.mjs` bewaakt dat), en er is een licht en een donker
+thema. Wat een ronde verdient: contrast op de gedempte tekstkleuren,
+toetsenbordbediening van het keuzeblad, en of de aanraakvlakken groot genoeg
+zijn.
+
+---
+
+## En dan nog dit, uit groep 4
+
+Vier punten die er al langer liggen en die geen van alle in het nieuwe plan
+voorkomen:
 
 | | wat het is | de haak eraan |
 |---|---|---|
@@ -288,8 +451,24 @@ deze lijst aangepakt. Wat rest is dit:
 
 Alle vier raken de telling. Dat is de reden dat ze hier nog staan en niet
 gebouwd zijn: midden in een lopend seizoen de puntentelling omgooien is geen
-verbetering, ook niet als de nieuwe regel op zichzelf beter is. Kijk hoe de twee die er
-wél zijn dat hebben opgelost: "slechtste twee races" staat náást de stand in
-plaats van erin, en "automatisch invullen" geldt alleen vanaf het moment dat de
-poulebaas hem aanzet. Wie hieraan begint beantwoordt die vraag dus eerst: geldt
-dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?
+verbetering, ook niet als de nieuwe regel op zichzelf beter is. Kijk hoe de twee
+die er wél zijn dat hebben opgelost: "slechtste twee races" staat náást de stand
+in plaats van erin, en "automatisch invullen" geldt alleen vanaf het moment dat
+de poulebaas hem aanzet. Wie hieraan begint beantwoordt die vraag dus eerst:
+geldt dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?
+
+---
+
+## De volgorde in één blik
+
+| fase | wat | waarom daar |
+|---|---|---|
+| 0 | RLS dichtzetten | het enige dat een publieke launch tegenhoudt |
+| 1 | RacePicks: naam, icoon, kleuren, domein | vóórdat mensen "Poule" op hun beginscherm zetten |
+| 2 | racescherm wordt dashboard | grootste winst per uur werk, data is er al |
+| 3 | positiewijziging, reeksen, grafiek, recap | rekenwerk over wat er al ligt |
+| 4 | knip-blokken naar modules, toegankelijkheid | onderhoud, als er geen haast is |
+
+Fase 0 en 1 horen bij elkaar en zijn samen de "klaar voor publiek"-stap. Fase 2
+is de grootste verbetering voor wie de app al gebruikt. Fase 3 en 4 mogen door
+elkaar lopen.
