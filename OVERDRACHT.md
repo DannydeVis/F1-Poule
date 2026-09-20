@@ -3886,3 +3886,83 @@ poule van één, en dat een automatische lijst niet als "klaar" en niet als
 
 Alle 46 testbestanden groen, en met de hand bekeken in licht en donker op
 telefoonbreedte.
+
+---
+
+## Fase 3: wat er gebeurd is, niet alleen waar je staat
+
+Drie dingen erbij op de standpagina, alle drie rekenwerk over data die er al
+lag. Geen kolom, geen tabel, geen nieuwe bron.
+
+### Positiewijziging
+
+`standRijen()` telde altijd alles op. Nu neemt hij een grens mee: `standRijen(n)`
+telt alleen races met een rondenummer onder `n`. Daarmee is "de stand zoals hij
+vóór dit weekend was" dezelfde functie, één weekend eerder afgekapt, en is het
+verschil tussen die twee posities het pijltje.
+
+Twee grenzen die erin zitten omdat het anders onzin vertelt. Geen pijltje als
+er niets veranderd is — een "0" erbij maakt van "er is niets gebeurd" een
+mededeling. En geen pijltjes na één gereden race, want dan is iedereen nieuw en
+zou elke rij iets krijgen dat nergens op slaat.
+
+### Reeksen
+
+Hoeveel weekenden op rij je hebt ingeleverd, vanaf drie, klein naast de naam.
+Telt terug vanaf de laatste gereden race en stopt bij het eerste weekend dat je
+oversloeg. Leunt op `heeftVoorspeld()`, en die slaat automatisch aangevulde
+lijsten over — dus een reeks die de app voor je invulde telt niet. Dezelfde
+grens als bij de weekendwinst: het is iets wat je doet, niet iets wat je
+overkomt.
+
+### De seizoenslijn
+
+Je positie per race, als lijn. Met de hand getekende SVG en geen bibliotheek:
+het is één pad over hooguit 24 punten, en daar een grafiekpakket voor inladen
+zou meer wegen dan de hele app.
+
+Drie beslissingen erin:
+
+- **De y-as staat op zijn kop**, want plek 1 hoort bovenaan. Bij een poule van
+  twee zou `(totaal - 1)` anders door nul delen, vandaar het aparte geval.
+- **Drie races is de ondergrens**, en in je eentje verschijnt hij niet. Twee
+  punten zijn een streepje en geen verloop, en een grafiek die een trend
+  suggereert die er niet is, is erger dan geen grafiek.
+- **De getallen eronder zijn het echte antwoord.** Waar je begon, je beste, je
+  slechtste en waar je nu staat. De lijn laat de vorm zien; de getallen maken er
+  informatie van, en ze zijn ook het enige wat overblijft voor wie de grafiek
+  niet kan zien. Het `aria-label` op de svg vertelt hetzelfde in één zin.
+
+Wie nooit van plek wisselde krijgt geen "slechtste" te zien — dat zou twee keer
+hetzelfde getal zijn.
+
+De labels heetten eerst "hoogste" en "laagste". Klopt letterlijk (plek 1 is de
+hoogste), maar je leest het twee keer voordat je het doorhebt. Nu "beste" en
+"slechtste".
+
+### Controles
+
+10 in `test/klimmen-en-reeksen.test.mjs` en 12 in
+`test/seizoensgrafiek.test.mjs`. Het zwaartepunt ligt op de drempels en op de
+gevallen die stil fout gaan: geen pijltje bij geen beweging, geen grafiek bij
+twee races of in je eentje, een gebroken reeks na één gemist weekend, en geen
+dubbel getal in de voet als je nooit van plek wisselde.
+
+Alle 48 testbestanden groen.
+
+### Wat er van fase 3 níét in zit
+
+**Race Recap als eigen pagina.** Die bestaat grotendeels al, verspreid: "zo
+dichtbij", de weekendwinnaar, je score en de inkijk bij anderen staan allemaal
+op het racescherm. Er samenbrengen wat er al staat levert een pagina op die
+hetzelfde zegt op een andere plek. Als er ooit iets bijkomt wat er nog niet is,
+is dat het moment.
+
+**Profielstatistieken.** Race wins, accuracy, beste circuit. Kan, maar de
+drempels uit de terugblik gelden hier net zo hard: onder een handvol races zegt
+"accuracy 72%" niets, en het is precies het soort getal waarmee een app met
+gezag onzin verkoopt.
+
+**Share cards als afbeelding.** Zie `ROUTEKAART.md` — er staat al een knop die
+de uitslag als tekst op je klembord zet, en tekst is in een groepsapp beter dan
+een plaatje.

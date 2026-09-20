@@ -678,6 +678,15 @@
     text-transform:none;color:var(--amber);border:1px solid var(--amber-rand);
     border-radius:20px;padding:1px 6px;vertical-align:middle}
   .strij .t{font-family:var(--cond);font-size:28px;font-weight:700}
+  /* De seizoenslijn. Vaste hoogte en een viewBox die meerekt: de lijn hoeft
+     niet op de pixel te kloppen, hij moet de vórm laten zien. */
+  .grafiek{display:flex;flex-direction:column;gap:12px}
+  .grafiek svg{width:100%;height:96px;display:block;overflow:visible}
+  .grafiekvoet{display:flex;gap:20px;flex-wrap:wrap}
+  .grafiekvoet span{display:flex;flex-direction:column;gap:1px}
+  .grafiekvoet b{font-family:var(--cond);font-size:22px;font-weight:700;line-height:1}
+  .grafiekvoet i{font-style:normal;font-size:11px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink3)}
   .uitleg{background:var(--paneel);border:1px solid var(--lijn);border-radius:12px;
     padding:14px;color:var(--ink2);font-size:14px}
   .uitleg b{color:var(--ink)}
@@ -2900,6 +2909,7 @@ function standPagina(rijen) {
       : `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
     ${weekendRanglijst()}
     ${streepBlok()}
+    ${seizoensGrafiek()}
     ${terugblikBlok()}
     ${duelLijst()}
     <div class="uitleg">Punten per plek: <b>5</b> exact, <b>3</b> één plek ernaast,
@@ -2945,6 +2955,65 @@ function coureurOveral(nr) {
 }
 
 const komma = (n) => n.toFixed(1).replace('.', ',');
+
+// ---- je seizoen als lijn -------------------------------------
+// De stand zegt waar je nu staat, de pijltjes waar je vandaan komt sinds de
+// vorige race. Wat er nog miste is de vorm van je seizoen: klom je gestaag,
+// of stortte je in juni in en ben je sindsdien aan het terugkomen?
+//
+// Met de hand getekende SVG en geen bibliotheek. Het is één lijn over
+// maximaal 24 punten; daar een grafiekpakket voor inladen zou meer wegen dan
+// de hele app.
+//
+// Drie races is de ondergrens. Twee punten zijn een streepje en geen verloop,
+// en dan suggereert een grafiek een trend die er niet is.
+function seizoensGrafiek() {
+  if (!S.ik || S.leden.length < 2) return '';
+  const gescoord = S.races.filter(r => r.quali_result || r.race_result)
+    .sort((a, b) => a.round - b.round);
+  if (gescoord.length < 3) return '';
+
+  const totaal = S.leden.length;
+  const punten = gescoord.map(r => {
+    const rijen = standRijen(r.round + 1);
+    return { ronde: r.round, naam: r.name,
+             plek: rijen.findIndex(x => zelfde(x.id, S.ik.id)) + 1 };
+  }).filter(p => p.plek > 0);
+  if (punten.length < 3) return '';
+
+  const B = 300, H = 90, pad = 6;
+  // Plek 1 hoort bovenaan, dus de y-as staat op zijn kop. Bij een poule van
+  // twee zou (totaal - 1) anders door nul delen.
+  const x = (i) => pad + (i / (punten.length - 1)) * (B - 2 * pad);
+  const y = (plek) => totaal < 2 ? H / 2
+    : pad + ((plek - 1) / (totaal - 1)) * (H - 2 * pad);
+  const lijn = punten.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(p.plek).toFixed(1)}`).join(' ');
+  const beste = Math.min(...punten.map(p => p.plek));
+  const slechtste = Math.max(...punten.map(p => p.plek));
+  const nu = punten[punten.length - 1].plek;
+
+  return `
+    <div class="scheiding"></div>
+    <span class="label">jouw seizoen</span>
+    <div class="grafiek">
+      <svg viewBox="0 0 ${B} ${H}" preserveAspectRatio="none" role="img"
+        aria-label="Je positie per race: van ${rang(punten[0].plek)} bij ${esc(punten[0].naam)} naar ${rang(nu)} nu.">
+        <path d="${lijn}" fill="none" stroke="var(--accent)" stroke-width="2"
+          stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+        ${punten.map((p, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(p.plek).toFixed(1)}"
+          r="${i === punten.length - 1 ? 3.5 : 2}" fill="var(--accent)"/>`).join('')}
+      </svg>
+      <!-- De lijn alleen is een plaatje; de getallen eronder maken er
+           informatie van, en ze zijn ook het enige wat overblijft voor wie de
+           grafiek niet kan zien. -->
+      <div class="grafiekvoet">
+        <span><b>${rang(punten[0].plek)}</b><i>bij ${esc(punten[0].naam)}</i></span>
+        <span><b>${rang(beste)}</b><i>beste</i></span>
+        ${beste === slechtste ? '' : `<span><b>${rang(slechtste)}</b><i>slechtste</i></span>`}
+        <span><b>${rang(nu)}</b><i>nu</i></span>
+      </div>
+    </div>`;
+}
 
 function terugblikBlok() {
   if (!S.ik) return '';

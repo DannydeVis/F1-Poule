@@ -384,7 +384,7 @@ die de verkeerde naam op hun beginscherm hebben staan.
 
 ---
 
-## Fase 2: het racescherm wordt een dashboard
+## ~~Fase 2: het racescherm wordt een dashboard~~ — gebouwd
 
 Het beste idee uit de doorlichting, en het goedkoopste: de data is er al, het
 is een herschikking van het scherm.
@@ -411,7 +411,7 @@ niemand ziet.
 
 ---
 
-## Fase 3: de leuke dingen
+## ~~Fase 3: de leuke dingen~~ — gebouwd wat het waard was
 
 Op volgorde van wat het oplevert gedeeld door wat het kost. Het aardige aan
 deze hele fase: er komt geen kolom en geen tabel bij. Het is allemaal rekenwerk
@@ -541,8 +541,8 @@ geldt dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?
 |---|---|---|
 | ~~0~~ | ~~RLS dichtzetten~~ — **gebouwd**, zie `OVERDRACHT.md` | het enige dat een publieke launch tegenhield |
 | ~~1~~ | ~~RacePicks: naam, icoon~~ — **gebouwd**; alleen het domein is nog van jou | vóórdat mensen "Poule" op hun beginscherm zetten |
-| 2 | racescherm wordt dashboard | grootste winst per uur werk, data is er al |
-| 3 | positiewijziging, reeksen, grafiek, recap | rekenwerk over wat er al ligt |
+| ~~2~~ | ~~racescherm wordt dashboard~~ — **gebouwd** | grootste winst per uur werk, data is er al |
+| ~~3~~ | ~~positiewijziging, reeksen, grafiek~~ — **gebouwd**; recap en profielstatistieken bewust niet, zie `OVERDRACHT.md` | rekenwerk over wat er al ligt |
 | 4 | modules, toegankelijkheid, fout- en legeschermen | onderhoud, als er geen haast is |
 | 5 | talen, andere klassen, push, publieke profielen | duur, en niets ervan zit in de weg |
 

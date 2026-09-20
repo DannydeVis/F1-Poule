@@ -60,10 +60,18 @@ gereden is (nieuwste eerst), met per gereden race je punten en wie dat weekend
 won.
 
 ### Stand
-Drie onderdelen op één scherm, gescheiden door koppen:
-- Seizoensstand
-- Weekendoverwinningen (wie won de meeste losse weekenden)
-- Onderlinge duels (jij tegen elke andere speler)
+Op één scherm, gescheiden door koppen:
+- **Seizoensstand.** Per speler de plek, de punten, en het verschil met de
+  volgende. Daarbij `↑1` / `↓2` sinds de vorige race — geen pijltje als er
+  niets veranderde, en geen pijltjes na één race, want dan is iedereen nieuw.
+  En een reeks (`5×`) vanaf drie weekenden op rij ingeleverd; automatisch
+  aangevulde weekenden tellen daar niet voor mee.
+- **Jouw seizoen.** Je positie per race als lijn, met eronder waar je begon,
+  je beste en slechtste plek, en waar je nu staat. Vanaf drie gereden races en
+  alleen in een poule van twee of meer. Met de hand getekende SVG, geen
+  bibliotheek.
+- **Weekendoverwinningen** (wie won de meeste losse weekenden)
+- **Onderlinge duels** (jij tegen elke andere speler)
 
 Bovenaan de knop **Kopieer voor WhatsApp**.
 
