@@ -923,6 +923,13 @@ union all
 select 'races met deelnemerslijst',
        (select count(*)::text from public.races where season = 2026 and drivers is not null)
 union all
+-- Het getal waaraan je ziet of de sync zijn werk doet. Zonder deze regel stond
+-- er wel hoeveel races er in de kalender staan, maar niet hoeveel er gereden
+-- zijn -- en dat tweede is wat je wilt weten als je je afvraagt of de
+-- uitslagen binnenkomen.
+select 'races met uitslag',
+       (select count(*)::text from public.races where season = 2026 and race_result is not null)
+union all
 select 'handmatig ingevulde uitslagen',
        (select count(*)::text from public.races
         where season = 2026 and (quali_handmatig or race_handmatig))
