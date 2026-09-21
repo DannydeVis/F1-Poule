@@ -512,6 +512,32 @@ lijstje en een week werk is in de praktijk. Als één van de twee toch moet, dan
 Engels eerst — dat maakt de app bereikbaar voor meer mensen zonder dat er een
 tweede databron bij komt.
 
+### Waarom hier niets van gebouwd is, en dat geen uitstel is
+
+Fase 0 tot en met 4 staan er. Fase 5 niet, en dat is een keuze per punt en
+geen tekort aan tijd:
+
+- **Vorige seizoenen** vraagt een migratie voor gegevens die nog niet bestaan.
+  Het is september; dit seizoen loopt. Nu bouwen betekent gokken hoe een
+  archief eruit moet zien voordat er iets te archiveren valt.
+- **Publieke profielen** is technisch pas mogelijk sinds fase 0 — maar het zou
+  juist de deur weer openzetten die fase 0 dichtdeed. En de standpagina toont
+  binnen een poule al alles wat zo'n profiel zou zeggen.
+- **Push-herinneringen** vraagt een service worker, en de app heeft er met
+  opzet geen (zie `OVERDRACHT.md` bij "zet op beginscherm": een oude stand
+  tonen alsof hij klopt is erger dan een foutmelding). Het agenda-abonnement
+  doet hetzelfde zonder meldingsrecht en zonder server.
+- **Internationale talen** is een verbouwing, geen vertaling — de app is
+  Nederlands tot in de functienamen. En hij is gebouwd voor een Nederlandse
+  vriendenpoule.
+- **Andere raceklassen** kán niet: `scripts/sync.mjs` hangt volledig aan
+  OpenF1, en dat is F1-only. Dat is een feit over de buitenwereld, geen
+  keuze in deze repo.
+
+Drie van de vijf gaan tegen een beslissing in die eerder met reden genomen is.
+Eén wacht op het einde van het seizoen. Eén kan niet. Ze staan hier zodat de
+volgende die dit leest niet opnieuw hoeft uit te zoeken waarom ze er niet zijn.
+
 ---
 
 ## En dan nog dit, uit groep 4
@@ -545,8 +571,11 @@ geldt dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?
 | ~~2~~ | ~~racescherm wordt dashboard~~ — **gebouwd** | grootste winst per uur werk, data is er al |
 | ~~3~~ | ~~positiewijziging, reeksen, grafiek~~ — **gebouwd**; recap en profielstatistieken bewust niet, zie `OVERDRACHT.md` | rekenwerk over wat er al ligt |
 | ~~4~~ | ~~toegankelijkheid, offlinescherm~~ — **gebouwd**; opsplitsen nagemeten en niet gedaan | onderhoud, als er geen haast is |
-| 5 | talen, andere klassen, push, publieke profielen | duur, en niets ervan zit in de weg |
+| 5 | talen, andere klassen, push, publieke profielen, vorige seizoenen | **bewust niet gebouwd** — drie gaan tegen een eerdere beslissing in, één wacht op het seizoenseinde, één kan niet (OpenF1 is F1-only) |
 
-Fase 0 en 1 horen bij elkaar en zijn samen de "klaar voor publiek"-stap. Fase 2
-is de grootste verbetering voor wie de app al gebruikt. Fase 3 en 4 mogen door
-elkaar lopen. Fase 5 is voor als je denkt dat je klaar bent.
+Fase 0 tot en met 4 zijn gebouwd. Fase 5 staat er nog, maar niet als
+"nog niet aan toegekomen" — zie de redenen hierboven.
+
+Wat er aan jouw kant nog ligt: `racepicks.com` daadwerkelijk live zetten (de
+instellingen staan bovenaan dit bestand), en `schema.sql` opnieuw draaien
+tegen Supabase zodat de nieuwe policies en functies erin staan.
