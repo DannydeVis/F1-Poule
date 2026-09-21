@@ -1596,8 +1596,39 @@ const extraVragen = (welk) =>
 const leegAntwoord = (w) => w === null || w === undefined || w === '';
 
 // De top 10 is ook gewoon een vraag die een poule kan uitzetten.
-const TOP10VRAAG = { quali: 'quali_top10', race: 'race_top10' };
-const top10Actief = (welk) => vraagActief(TOP10VRAAG[welk]);
+// ---- de sessies van een raceweekend -------------------------
+// De app was rond een tweedeling gebouwd: overal stond
+// `welk === 'quali' ? r.quali_result : r.race_result` en varianten daarvan,
+// veertien keer. Dat werkt prima zolang er precies twee sessies zijn, en het
+// blokkeert elke derde — je moet dan veertien ternaries tegelijk goed
+// omzetten, in code die de punten uitrekent.
+//
+// Dus staat het nu één keer hier. Een sessie erbij is een regel in deze
+// tabel plus de kolommen in schema.sql; de rest van het bestand hoeft er
+// niets van te weten.
+const SESSIES = {
+  quali: { naam:'kwalificatie', wat:'de kwalificatie', vraag:'quali_top10',
+           uitslag:'quali_result', deadline:'deadline_quali', hand:'quali_handmatig' },
+  race:  { naam:'race',         wat:'de race',         vraag:'race_top10',
+           uitslag:'race_result',  deadline:'deadline_race',  hand:'race_handmatig' },
+};
+
+// De volgorde waarin ze op een weekend langskomen. Apart van SESSIES, want
+// een object heeft geen betekenisvolle volgorde en deze wél: eerst
+// kwalificeren, dan racen.
+const SESSIEVOLGORDE = ['quali', 'race'];
+
+// Doet deze sessie mee op dit weekend? Een sprint heeft niet elk weekend een
+// deadline, dus "de sessie bestaat" en "de sessie telt hier mee" zijn twee
+// verschillende vragen.
+const sessieOpWeekend = (r, welk) => !!r?.[SESSIES[welk].deadline];
+const weekendSessies = (r) => SESSIEVOLGORDE.filter(w => sessieOpWeekend(r, w));
+
+// Was een eigen lijstje naast SESSIES, met dezelfde twee namen erin. Nu een
+// verwijzing, zodat er één plek is waar een sessie beschreven staat.
+const TOP10VRAAG = Object.fromEntries(
+  Object.entries(SESSIES).map(([k, v]) => [k, v.vraag]));
+const top10Actief = (welk) => vraagActief(SESSIES[welk].vraag);
 
 // Tien vaste plekken met gaten erin, in plaats van een lijst die je alleen
 // achteraan kon aanvullen. Zo kun je P7 invullen zonder eerst P1 tot P6 te
@@ -1974,7 +2005,7 @@ const WK_PUNTEN = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 function autoGeldt(race, welk) {
   const vanaf = S.poule?.autofill_vanaf;
   if (!vanaf || !top10Actief(welk)) return false;
-  const deadline = welk === 'quali' ? race.deadline_quali : race.deadline_race;
+  const deadline = race[SESSIES[welk].deadline];
   if (!deadline) return false;
   const t = Date.parse(deadline);
   return t < Date.now() && t > Date.parse(vanaf);
@@ -2237,7 +2268,7 @@ function eerstvolgende(nu = Date.now()) {
   for (const r of S.races) {
     const welk = openLijst(r, nu);
     if (!welk) continue;
-    open.push({ race:r, welk, iso: welk === 'quali' ? r.deadline_quali : r.deadline_race });
+    open.push({ race:r, welk, iso: r[SESSIES[welk].deadline] });
   }
   return open.find(o => (o.race.drivers ?? []).length) ?? open[0] ?? null;
 }
@@ -2256,7 +2287,7 @@ function raceStand(r, nu = Date.now()) {
   const welk = openLijst(r, nu);
   if (!welk) return { soort:'wacht', tekst:'wacht op uitslag' };
   if (!(r.drivers ?? []).length) return { soort:'komt', tekst:'deelnemers volgen' };
-  const nog = 10 - (mijn?.[welk === 'quali' ? 'quali_top10' : 'race_top10']?.length ?? 0);
+  const nog = 10 - (mijn?.[SESSIES[welk].vraag]?.length ?? 0);
   return { soort:'open', tekst: nog > 0 ? `open · nog ${nog} te kiezen` : 'open · ingevuld' };
 }
 
@@ -2414,7 +2445,7 @@ function weekendOverwinningen() {
 // Wie heeft er voor de nog openstaande lijst nog niks ingeleverd? Jezelf
 // laten we weg: daarvoor staat de knop "Top 10 invullen" er al.
 function nogNietIngevuld(race, welk) {
-  const kolom = welk === 'quali' ? 'quali_top10' : 'race_top10';
+  const kolom = SESSIES[welk].vraag;
   return S.leden.filter(l => !zelfde(l.member_id, S.ik.id))
                 .filter(l => !(vindPred(race.id, l.member_id)?.[kolom]?.length));
 }
@@ -2583,7 +2614,8 @@ function vragenVoet(gekozen) {
 // Uitslagen die ooit met de hand zijn ingevoerd, blijven als zodanig
 // gemarkeerd. Zelf invullen kan niet meer (zie wachtOpUitslag), maar wat er
 // vóór die tijd in is gezet blijft herkenbaar: de sync corrigeert het niet.
-const HANDVLAG = { quali: 'quali_handmatig', race: 'race_handmatig' };
+const HANDVLAG = Object.fromEntries(
+  Object.entries(SESSIES).map(([k, v]) => [k, v.hand]));
 
 // ---- klembord -----------------------------------------------
 // De poule leeft in de groepsapp, niet in de app. Zonder een knop die de
@@ -2786,7 +2818,7 @@ function racesPagina(volgend) {
 // bent terwijl je niets deed is precies de verkeerde geruststelling.
 function sessieStatus(r, welk) {
   const mijn = vindPred(r.id, S.ik.id);
-  const naam = welk === 'quali' ? 'kwalificatie' : 'race';
+  const naam = SESSIES[welk].naam;
   // Een automatisch aangevulde lijst is vol maar niet van jou. Hem "deels"
   // noemen zou suggereren dat je zelf begonnen was, en "klaar" dat je er iets
   // aan gedaan hebt. Dus krijgt hij zijn eigen woord.
@@ -3986,7 +4018,7 @@ function raceDetailKop() {
   const r = S.race;
   // De teller hoort bij het tabblad dat je open hebt. Anders staat er een
   // groene tijd naast een kwalificatie die allang gereden is.
-  const iso = S.tab === 'quali' ? r.deadline_quali : r.deadline_race;
+  const iso = r[SESSIES[S.tab].deadline];
   const nogOpen = Date.now() < new Date(iso).getTime();
   return `
     <div class="detailkop">
@@ -4009,7 +4041,7 @@ function vulPaneel() {
                   race:  nu >= new Date(r.deadline_race).getTime() };
   const paneel = app.querySelector('#paneel');
   if (!paneel) return;
-  const lijstKlaar = S.tab === 'quali' ? r.quali_result : r.race_result;
+  const lijstKlaar = r[SESSIES[S.tab].uitslag];
   // Andermans inzending inkijken mag alleen als deze tab gesloten is. De knop
   // ernaartoe staat al alleen op de gesloten schermen, maar dit is de plek
   // waar het ook echt afgedwongen wordt: sta je bij iemands kwalificatie en
@@ -4088,7 +4120,7 @@ function invulWeergave(paneel, r, dicht) {
   const magOpslaan = !top10Actief(S.tab)
     ? losGekozen
     : compleet(lijst) || (klaar === 0 && losGekozen);
-  const deadline = S.tab === 'quali' ? r.deadline_quali : r.deadline_race;
+  const deadline = r[SESSIES[S.tab].deadline];
 
   // Alles op één scherm. Dat kan doordat er nergens meer een lijst van twaalf
   // coureurs openstaat: je tikt de plek of de vraag aan die je bedoelt, en
@@ -4369,7 +4401,7 @@ function duelKiezer(r) {
 
 function uitslagWeergave(r, werkelijk) {
   const mijn = vindPred(r.id, S.ik.id);
-  const lijst = S.tab === 'quali' ? mijn?.quali_top10 : mijn?.race_top10;
+  const lijst = mijn?.[SESSIES[S.tab].vraag];
   // Deze uitslag komt niet van OpenF1 en wordt door de sync ook niet meer
   // bijgewerkt, dus dat hoort er gewoon bij te staan.
   const noot = (r[HANDVLAG[S.tab]]
@@ -4603,7 +4635,7 @@ function duelUitslag(r, mijn, werkelijk) {
 function andermans(r) {
   const anderen = S.leden.filter(l => !zelfde(l.member_id, S.ik.id));
   if (!anderen.length) return '';
-  const werkelijk = S.tab === 'quali' ? r.quali_result : r.race_result;
+  const werkelijk = r[SESSIES[S.tab].uitslag];
   const rijen = anderen.map(l => {
     const p = vindPred(r.id, l.member_id);
     // Eerder hing dit aan een ingevulde top 10. Wie alleen de pole of een
@@ -4641,7 +4673,7 @@ function bekijkWeergave(paneel, r) {
   const lid = S.leden.find(l => zelfde(l.member_id, S.bekijk));
   if (!lid) { S.bekijk = null; vulPaneel(); return; }
   const pred = vindPred(r.id, lid.member_id);
-  const werkelijk = S.tab === 'quali' ? r.quali_result : r.race_result;
+  const werkelijk = r[SESSIES[S.tab].uitslag];
   paneel.innerHTML = `
     <div class="inkijkkop">
       <button class="knop klein" id="inkijkterug">← terug</button>
@@ -4674,9 +4706,9 @@ function bekijkWeergave(paneel, r) {
  * mag nergens een knop hebben.
  */
 function keuzeOverzicht(r, pred, welk) {
-  const werkelijk = welk === 'quali' ? r.quali_result : r.race_result;
-  const lijst = welk === 'quali' ? pred?.quali_top10 : pred?.race_top10;
-  const wat = welk === 'quali' ? 'de kwalificatie' : 'de race';
+  const werkelijk = r[SESSIES[welk].uitslag];
+  const lijst = pred?.[SESSIES[welk].vraag];
+  const wat = SESSIES[welk].wat;
 
   const iets = !!lijst?.length
     || coureurVragen(welk).some(id => !!antwoordVan(pred, id))
