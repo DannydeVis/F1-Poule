@@ -172,6 +172,39 @@ const sterkEr = /Je bent het scherpst op P\d/.test(lang);
 check('en waar je juist scherp bent', sterkEr,
   sterkEr ? '' : (lang.match(/scherpst[^.]*\./)?.[0] ?? 'geen scherpst-zin'));
 
+// --- twee gelijke getallen zijn geen tegenstelling -------------------------
+// Zolang elk weekend hetzelfde uitpakt -- aan het begin van een seizoen, of in
+// een poule waar iedereen dezelfde lijst inlevert -- stond hier "gemiddeld
+// 78,0 punten, tegen 78,0 in Miami". Dat is precies het soort gezag waarmee
+// een app onzin verkoopt: een verschil beweren dat er niet is.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  const uit = ['1', '4', '16', '63', '81', '44', '12', '14', '10', '18'];
+  db.answers = [];
+  // Twee gereden races waarin iedereen precies dezelfde lijst inlevert, dus
+  // allebei de weekenden komen op hetzelfde gemiddelde uit.
+  for (const r of db.races.slice(0, 2)) {
+    r.quali_result = uit; r.race_result = uit;
+    r.deadline_quali = new Date(Date.now() - 6e6).toISOString();
+    r.deadline_race = new Date(Date.now() - 5e6).toISOString();
+    for (const lid of ['lid-1', 'lid-2']) {
+      for (const v of ['quali_top10', 'race_top10']) {
+        db.answers.push({ pool_id: 'pool-1', race_id: r.id, member_id: lid,
+                          question_id: v, waarde: uit });
+      }
+    }
+  }
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await page.click('[data-weergave="stand"]');
+await page.waitForSelector('[data-weergave="stand"][aria-current="true"]');
+const gelijk = (await page.textContent('#app')).replace(/\s+/g, ' ');
+const zwaarZin = gelijk.match(/was het zwaarste weekend[^.]*\./)?.[0] ?? '';
+check('het zwaarste weekend wordt nog steeds genoemd', zwaarZin !== '', gelijk.slice(0, 120));
+check('maar zonder "tegen X in Y" als dat hetzelfde getal is',
+  !/tegen/.test(zwaarZin), zwaarZin);
+
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
 await stoppen();
