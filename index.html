@@ -793,7 +793,21 @@
 // ============================================================
 const SUPABASE_URL = 'https://etifamdwqxjfaeaordlr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aWZhbWR3cXhqZmFlYW9yZGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzMzNTUsImV4cCI6MjEwMzE0OTM1NX0.dI0HMZsO0JcmhF9ibD81ivVl96UCYInoUz94r8cAqio';
+// Het seizoen waar een verse poule in valt, en waar de demomodus op draait.
+// Voor een bestáánde poule telt niet dit getal maar `pools.season`: die poule
+// hoort bij het seizoen waarin hij is aangemaakt, en hoort dus ook in 2027 nog
+// de races van 2026 te laten zien. Zie seizoen() hieronder.
+//
+// poule_aanmaken() in schema.sql leidt het seizoen zelf af uit de kalender
+// (`max(races.season)`), dus een nieuwe poule pakt automatisch het juiste jaar
+// zonder dat hier iets bijgewerkt hoeft te worden.
 const SEIZOEN = 2026;
+
+// Welk seizoen kijk ik nu? De poule bepaalt dat, niet de klok en niet een
+// constante in dit bestand. Stond hier hardgecodeerd op 2026, en dat had op
+// 1 januari 2027 betekend dat iedereen een lege kalender zag tot iemand dit
+// bestand aanpaste.
+const seizoen = () => S.poule?.season ?? SEIZOEN;
 
 // Waar iemand terecht kan met een vraag over zijn gegevens. Leeg laten mag —
 // dan staat die regel er gewoon niet — maar een privacyverklaring zonder
@@ -2085,7 +2099,7 @@ async function laad() {
   // poule_ophalen(). Sinds de leespolicies dicht staan is dat niet alleen
   // veiliger maar ook minder werk: één ronde in plaats van drie.
   const [races, vragen, inhoud] = await Promise.all([
-    db.from('races').select('*').eq('season', SEIZOEN).order('round'),
+    db.from('races').select('*').eq('season', seizoen()).order('round'),
     db.from('questions').select('*').order('volgorde'),
     pouleOphalen({ p_id: S.poule.id }),
   ]);
@@ -2661,7 +2675,7 @@ function toonApp() {
         <div class="baan"></div>
         <div class="kop">
           <span class="ptitel">${esc(S.poule.name)}</span>
-          <span class="meta">seizoen ${SEIZOEN} · ${S.leden.length} ${S.leden.length === 1 ? 'speler' : 'spelers'}</span>
+          <span class="meta">seizoen ${seizoen()} · ${S.leden.length} ${S.leden.length === 1 ? 'speler' : 'spelers'}</span>
           ${volgend ? `<span class="pil"><span class="stip klopt"></span>
             <span class="mono">${esc(volgend.race.name.toLowerCase())} sluit in
               <span data-tot="${esc(volgend.iso)}" data-kort="1">${klokTekst(volgend.iso, true)}</span></span></span>` : ''}
@@ -5402,7 +5416,7 @@ function toonStart() {
         <div class="merk">
           <span class="blok"></span>
           <span class="naam">RacePicks</span>
-          <span class="code">${SEIZOEN}</span>
+          <span class="code">${seizoen()}</span>
         </div>
         <div>
           <h1 class="groot">${bekend.length ? 'Naar je<br>poule' : 'Doe mee<br>met je poule'}</h1>
