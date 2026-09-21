@@ -24,33 +24,71 @@ deze lijst gaat daarom over sociale mechaniek, niet over voorspellingen.
 
 ---
 
-## Op de rol: het eigen domein racepicks.com
+## Op de rol: een eigen domein
 
-Nog niet nu, wel binnenkort. Zodra racepicks.com er is:
+`racepicks.com` bleek bezet. De naam RacePicks zit inmiddels wél in de app, en
+dat hoeft geen probleem te zijn — een `.com` die weg is betekent niet dat de
+naam weg is. `.app`, `.nl` of `.eu` houden hem gewoon overeind, en dat scheelt
+een hernoeming. Wordt het toch een andere naam, zie dan de checklist onderaan
+dit hoofdstuk: dat is twintig minuten werk, geen verbouwing.
 
-- **Google Cloud** (Google Auth Platform → Clients): `https://racepicks.com`
+Hieronder staat `<domein>` voor wat het ook wordt. Zodra dat er is:
+
+- **Google Cloud** (Google Auth Platform → Clients): `https://<domein>`
   toevoegen als Authorized JavaScript origin, en
   `https://etifamdwqxjfaeaordlr.supabase.co/auth/v1/callback` staat er al
   goed (die verandert niet — dat is Supabase's adres, niet dat van de app).
   De oude GitHub Pages-origin mag erbij blijven staan zolang die nog gebruikt
   wordt.
 - **Supabase** (Authentication → URL Configuration): Site URL naar
-  `https://racepicks.com`, en `https://racepicks.com/**` toevoegen aan
+  `https://<domein>`, en `https://<domein>/**` toevoegen aan
   Redirect URLs. De oude GitHub Pages-regel pas weghalen als niemand die
   link meer gebruikt.
-- **GitHub Pages**: een `CNAME`-bestand met `racepicks.com` erin, plus een
+- **GitHub Pages**: een `CNAME`-bestand met je domein erin, plus een
   DNS-record bij de domeinregistrar die naar GitHub Pages wijst.
 - De app zelf hoeft niet aangepast: `linkBasis()` leest `location.origin`
   dynamisch uit, dus uitnodigingslinks en OAuth-redirects werken vanzelf op
   elk domein waar de app draait.
-- **Eigen SMTP met racepicks.com-adres.** Nu staat er in elke mail (magic
+- **Eigen SMTP met een adres op je eigen domein.** Nu staat er in elke mail (magic
   link, mailkoppeling) een afzenderadres van Supabase zelf
   (`noreply@mail.app.supabase.io`) — dat kan pas veranderen naar iets met
-  `racepicks.com` erin zodra dat domein bestaat én er een mailserver aan
+  je eigen domein erin zodra dat bestaat én er een mailserver aan
   gekoppeld wordt (Supabase → Authentication → Settings → SMTP). De
   zichtbare *tekst* in de mail (onderwerp, inhoud) is trouwens nu al vrij
   aan te passen via Authentication → Emails → sjablonen, zonder dat
   daarvoor het domein nodig is.
+
+### Als de naam tóch verandert
+
+De merknaam zit op dertien plekken, en nergens anders. Het gewone woord
+"poule" is met opzet níét meeveranderd — je speelt nog steeds in een poule,
+met een poulecode en een poulebaas — dus zoeken op "poule" levert honderden
+treffers op die allemaal moeten blijven staan. Zoek op de merknaam zelf.
+
+| waar | hoeveel | wat |
+|---|---|---|
+| `index.html` | 9 | `<title>`, de apple-titel, vier merkbalken, de installatietekst, de `<meta name="description">` |
+| `manifest.webmanifest` | 2 | `name` en `short_name` (de `description` is de positioneringszin, die verandert niet mee) |
+| `scripts/maak-pictogrammen.py` | 2 | de bestandsnamen die het script wegschrijft |
+| `pictogrammen/` | 3 | `-192`, `-512` en `-apple-180`, opnieuw te genereren met dat script |
+| `test/eerste-indruk.test.mjs` | 1 | controleert de manifestnaam, dus die verwachting moet mee |
+| de drie documenten + `README.md` | 5 | alleen de titels en een paar verwijzingen |
+
+Wat níét meeverandert, en dat is met opzet:
+
+- **De localStorage-sleutels blijven `poule:*`.** Hernoemen gooit iedereen die
+  de app al gebruikt uit zijn poule, voor precies nul winst — niemand ziet ze
+  ooit.
+- **De positioneringszin** ("het F1-voorspelspel voor jou en je vrienden")
+  noemt de naam niet en kan dus blijven staan.
+- **Het icoon** hoeft niet per se opnieuw: één vak in het accent op een
+  startgrid is "één keuze die eruit springt", en dat werkt bij elke naam die
+  over voorspellen gaat.
+
+Let op het moment: net als bij de vorige hernoeming pakt een geïnstalleerde
+tegel op iemands beginscherm de naam van het moment van installeren en werkt
+die niet bij. Hoe langer je wacht, hoe meer mensen de oude naam houden tot ze
+hem weggooien en opnieuw zetten.
 
 ---
 
@@ -285,7 +323,7 @@ die van dat advies; waar ik ervan afwijk staat erbij waarom.
 
 ---
 
-## ~~Fase 0: het lek dichten vóór racepicks.com live gaat~~ — gebouwd
+## ~~Fase 0: het lek dichten vóór het publiek live gaat~~ — gebouwd
 
 **Dit is het enige echte blokkade-punt op deze hele lijst, en het staat daarom
 bovenaan en niet onderaan.**
@@ -324,12 +362,11 @@ nog niemand vreemd op zit is onderhoud; erna is het een incident.
 ## ~~Fase 1: RacePicks worden~~ — gebouwd, op het domein na
 
 **Gedaan:** de naam, de positioneringszin, het icoon en het manifest. **Nog
-open, en dat is jouw kant:** `racepicks.com` daadwerkelijk live zetten — zie
-bovenaan dit bestand voor de instellingen bij Google Cloud, Supabase en GitHub
-Pages die daarbij horen.
+open, en dat is jouw kant:** een domein kiezen en live zetten — zie bovenaan
+dit bestand voor de instellingen bij Google Cloud, Supabase en GitHub Pages
+die daarbij horen. `racepicks.com` bleek bezet; de naam zelf kan blijven.
 
-De app heette overal "Poule". Het domein `racepicks.com` staat al langer op de
-rol (zie bovenaan dit bestand voor de instellingen die daarbij horen).
+De app heette overal "Poule". Een eigen domein staat al langer op de rol (zie bovenaan dit bestand voor de instellingen die daarbij horen).
 
 - de naam overal: `<title>`, `manifest.webmanifest` (`name` én `short_name`),
   het merk in de zijbalk, de "wat is dit?"-tekst, de mailsjablonen in Supabase,
@@ -576,6 +613,6 @@ geldt dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?
 Fase 0 tot en met 4 zijn gebouwd. Fase 5 staat er nog, maar niet als
 "nog niet aan toegekomen" — zie de redenen hierboven.
 
-Wat er aan jouw kant nog ligt: `racepicks.com` daadwerkelijk live zetten (de
+Wat er aan jouw kant nog ligt: een domein kiezen en live zetten (de
 instellingen staan bovenaan dit bestand), en `schema.sql` opnieuw draaien
 tegen Supabase zodat de nieuwe policies en functies erin staan.
