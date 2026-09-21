@@ -4089,3 +4089,40 @@ regel erbij dat de rest van de poule dit niet ziet.
 
 Geen van de vier is een storing; alle vier zijn ze het verschil tussen "werkt"
 en "is af".
+
+
+---
+
+## Fase 0 staat live (21 september)
+
+Gemerged en gedraaid zijn twee verschillende dingen, en bij fase 0 is dat
+verschil het hele punt: de policies en de functies zitten in `schema.sql`, niet
+in de app. Zolang dat bestand niet tegen de productiedatabase gedraaid was,
+stond het gat gewoon nog open — hoe groen de CI ook stond.
+
+Nagemeten op de echte database:
+
+    fase 0 functies (hoort 4)                4 van 4
+    leespolicies nog op iedereen (hoort 0)   0
+
+En `pages build and deployment` is geslaagd op de merge van #82, dus de app die
+bij die functies hoort staat er ook. App en database zijn allebei bij.
+
+De controlevraag staat in `ROUTEKAART.md`. Hij is zo geschreven dat hij het ook
+fóút kan zeggen — op een database van vóór fase 0 antwoordt hij `0 van 4` en
+`4` — en dat is nagegaan door hem tegen een oude `schema.sql` uit de
+git-geschiedenis te draaien. Een controle die altijd "ok" zegt bewijst niets.
+
+### Wat hierbij het opletten waard was
+
+De vijf spelers zonder account blijven werken, en dat is niet vanzelfsprekend.
+Onder de nieuwe policies kan een speler met `user_id is null` zijn eigen rij
+niet lezen op een toestel dat nog nergens lid van is. Dat het toch goed gaat
+komt doordat binnenkomen sinds fase 0 langs `poule_ophalen()` loopt, en die
+functie gaat als `security definer` langs RLS heen. Daarna claimen ze zichzelf
+met `poule_claim_speler()`, en opslaan mag omdat `mag_voor_speler()` een speler
+zonder account met opzet toelaat.
+
+Precies de groep die bij een onzorgvuldige dichtzetting stilletjes
+buitengesloten zou zijn — RLS geeft namelijk geen fout op een geblokkeerde
+lees-actie, hij geeft gewoon niets terug.

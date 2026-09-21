@@ -613,6 +613,34 @@ geldt dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?
 Fase 0 tot en met 4 zijn gebouwd. Fase 5 staat er nog, maar niet als
 "nog niet aan toegekomen" — zie de redenen hierboven.
 
-Wat er aan jouw kant nog ligt: een domein kiezen en live zetten (de
-instellingen staan bovenaan dit bestand), en `schema.sql` opnieuw draaien
-tegen Supabase zodat de nieuwe policies en functies erin staan.
+**Fase 0 staat ook echt live**, en dat is iets anders dan gemerged. Op
+21 september is `schema.sql` tegen de productiedatabase gedraaid en nagemeten:
+vier functies aanwezig, nul leespolicies nog op `using (true)`. De app die
+erbij hoort staat sinds dezelfde dag op GitHub Pages. Het gat waarmee je met
+de publieke anon key élke poule kon uitlezen is dus dicht waar het telt.
+
+Wil je dat opnieuw controleren — na een `reset.sql`, of op een tweede
+project — dan is dit de vraag:
+
+```sql
+select 'fase 0 functies (hoort 4)' as controle,
+       count(*)::text || ' van 4' as uitkomst
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+ where n.nspname = 'public'
+   and p.proname in ('poule_ophalen','poule_meedoen','poule_aanmaken','poule_claim_speler')
+union all
+select 'leespolicies nog op iedereen (hoort 0)', count(*)::text
+  from pg_policies
+ where schemaname = 'public'
+   and tablename in ('pools','pool_members','answers','pool_questions')
+   and cmd = 'SELECT' and qual = 'true'
+order by 1;
+```
+
+Die is bewust zo geschreven dat hij het ook fóút kan zeggen: op een database
+van vóór fase 0 geeft hij `0 van 4` en `4`. Een controle die altijd "ok"
+antwoordt is geen controle.
+
+Wat er aan jouw kant nog ligt: een naam en een domein kiezen en live zetten
+(de instellingen staan bovenaan dit bestand), en `leegmaken.sql` draaien
+wanneer je die schone start wilt.
