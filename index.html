@@ -3097,8 +3097,15 @@ function terugblikBlok() {
       ${komma(sterk.gemiddelde)} van de 5 punten per plek.`);
   }
   if (zwaarst) {
+    // Alleen een vergelijking maken als er iets te vergelijken valt. Zolang
+    // elk weekend gelijk uitpakt -- wat aan het begin van een seizoen zo is,
+    // en in een poule waar iedereen dezelfde lijst inlevert de hele tijd --
+    // stond hier "gemiddeld 78,0 punten, tegen 78,0 in Miami". Twee dezelfde
+    // getallen als tegenstelling presenteren is precies het soort gezag
+    // waarmee een app onzin verkoopt.
+    const verschilt = lichtst && komma(lichtst.gemiddelde) !== komma(zwaarst.gemiddelde);
     regels.push(`<b>${esc(zwaarst.naam)}</b> was het zwaarste weekend voor de poule:
-      gemiddeld ${komma(zwaarst.gemiddelde)} punten${lichtst
+      gemiddeld ${komma(zwaarst.gemiddelde)} punten${verschilt
         ? `, tegen ${komma(lichtst.gemiddelde)} in ${esc(lichtst.naam)}` : ''}.`);
   }
   if (!regels.length) return '';
@@ -3242,12 +3249,16 @@ function profielPagina() {
     <h1 class="middel smalkop">Profiel</h1>
     <p class="zacht" style="margin:-10px 0 0">Je speelt hier als
       <b>${esc(S.ik.naam)}</b>.</p>
-    ${uitlogBlok()}
     ${mailBlok()}
     ${eigenLinkBlok()}
+    ${uitlogBlok()}
     ${privacyBlok()}`;
 }
 
+// Staat ná het koppelblok en niet ervoor. Wie nog geen account gekoppeld
+// heeft leest hier "kan nog niet", en dan hoort de uitweg erboven te staan en
+// niet eronder: eerst wat je kunt doen, dan wat er daarna mogelijk wordt.
+//
 // Uitloggen bestond met opzet niet: zonder een gekoppeld mailadres of
 // Google-account is er geen weg terug naar je speler, en dat is een valkuil
 // verkopen als knop. Nu je account wél gekoppeld kan zijn, mag de knop er
@@ -4430,13 +4441,22 @@ function bijnaGoedBlok(r, regels) {
 
 // Onder de uitslag: wie pakte dit weekend de meeste punten, en een knop die
 // het geheel als tekst klaarzet voor de groepsapp.
+// "Casper & Danny & Davy" is geen Nederlands. Bij twee namen hoort "en", bij
+// meer een opsomming met komma's en "en" voor de laatste. Staat hier apart
+// omdat weekendWinstTekst() hierboven vanaf drie namen juist géén namen meer
+// noemt -- daar past het niet op één regel, hier wel.
+function opsomming(namen) {
+  if (namen.length <= 1) return namen[0] ?? '';
+  return `${namen.slice(0, -1).join(', ')} en ${namen[namen.length - 1]}`;
+}
+
 function weekendVoet(r) {
   const winnaars = S.leden.length > 1 ? weekendWinnaars(r) : [];
   const ik = winnaars.some(w => w.mij);
   return `
     ${winnaars.length ? `<span class="label">weekendwinnaar · kwalificatie + race</span>
       <div class="rest winnaar">
-        <span class="nm">${winnaars.map(w => esc(w.naam)).join(' &amp; ')}${
+        <span class="nm">${esc(opsomming(winnaars.map(w => w.naam)))}${
           ik ? ` <span class="jij">jij</span>` : ''}</span>
         <span class="t">${winnaars[0].punten}</span>
       </div>` : ''}

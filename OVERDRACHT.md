@@ -4055,3 +4055,37 @@ Dus: niet gedaan, en de routekaart zegt nu waarom, met die telling erbij. Het
 advies dat ik er zelf in schreef geldt nog steeds — doe dit als een fúnctie
 moeilijk toe te voegen wordt, niet op een regelaantal. Dat moment is er nog
 niet geweest: fase 1 tot en met 4 zijn er zonder gedoe in gekomen.
+
+---
+
+## De laatste ronde: vier dingen die alleen opvallen als je kijkt
+
+Na fase 4 ben ik elk scherm langsgelopen met een volle poule (vier spelers,
+zes gereden races) in allebei de thema's. Wat een test niet vangt maar een
+mens wel:
+
+**"Gemiddeld 78,0 punten, tegen 78,0 in Miami."** De terugblik zette het
+zwaarste en het makkelijkste weekend naast elkaar, ook als ze precies gelijk
+waren. Twee dezelfde getallen als tegenstelling presenteren is het soort gezag
+waarmee een app onzin verkoopt — en het gebeurt juist aan het begin van een
+seizoen, als er nog weinig verschil is. Die vergelijking valt nu weg als er
+niets te vergelijken valt. Vastgelegd in `test/terugblik.test.mjs`.
+
+**"Casper & Danny & Davy."** Bij een gedeelde weekendwinst werden de namen aan
+elkaar geplakt met ampersands. Dat is geen Nederlands. Nu een gewone
+opsomming: komma's, en "en" voor de laatste. Het staat los van
+`weekendWinstTekst()`, die vanaf drie namen juist géén namen meer noemt — daar
+past het niet op één regel, in de voet van het racescherm wel.
+
+**Het profiel leidde met een deur die op slot zit.** Bovenaan stond
+"uitloggen — kan nog niet: zonder gekoppeld mailadres is er geen weg terug",
+en de knop die dat oplost stond eronder. Nu andersom: eerst wat je kunt doen,
+dan wat er daarna mogelijk wordt.
+
+**De beheerblokken op de poulepagina.** Vier blokken die alleen de poulebaas
+ziet liepen naadloos door op de spelerslijst, en dan lijkt het alsof iedereen
+aan de instellingen kan zitten. Nu onder één kop met een accentstreep, met de
+regel erbij dat de rest van de poule dit niet ziet.
+
+Geen van de vier is een storing; alle vier zijn ze het verschil tussen "werkt"
+en "is af".
