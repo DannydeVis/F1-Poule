@@ -139,6 +139,17 @@ jobs:
           psql -d vragen -v ON_ERROR_STOP=1 -f schema.sql
           psql -d vragen -v ON_ERROR_STOP=1 -f test/vragen.test.sql
 
+      # De controletabel onderaan schema.sql, die je zelf te zien krijgt als je
+      # het schema draait. Hij was stilletjes verouderd -- negen vragen geteld
+      # waar er veertien staan, twee handmatig-vlaggen waar er zeven zijn --
+      # en een controle die het verkeerde meldt is erger dan geen controle.
+      - name: de controletabel meldt wat hij hoort te melden
+        run: |
+          createdb controle
+          psql -d controle -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d controle -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d controle -v ON_ERROR_STOP=1 -f test/controle.test.sql
+
       # Jokers zijn de tweede regel die hard in de database staat, naast de
       # deadline. Een joker die je achteraf mag verzetten is geen keuze maar
       # een knop om de uitslag mee te herschrijven, dus dat moet hier bewezen

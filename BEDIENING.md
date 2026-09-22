@@ -113,11 +113,16 @@ Drie knoppen, groot en tikbaar:
 |---|---|---|
 | **Simpel** | Top 10 kwalificatie, top 10 race | 100 |
 | **Klassiek** | + winnaar, pole, snelste ronde | 145 |
-| **Gevorderd** | + safety cars, rode vlag, snelste pitstop, teamgenoot-duels, top 10 sprint | ongeveer 200 |
+| **Gevorderd** | + safety cars, rode vlag, snelste pitstop, teamgenoot-duels, top 10 sprint, de vier seizoensvragen | 202 |
 
 Daaronder een regel **Zelf samenstellen**, die pas een lijst met vinkjes
 openklapt als je erop tikt. Bij elk vinkje staat het aantal punten, en
 onderaan telt hij live op: "Maximaal 178 punten per weekend."
+
+Die 202 is **per weekend**. De top 10 van de sprint (25) en de vier
+seizoensvragen (samen 150) staan er los van, want die komen niet elk weekend
+langs — zie hieronder. Draai je `schema.sql` en zie je onderaan de regel
+"punten per weekend", dan horen daar dezelfde drie getallen te staan.
 
 **De sprint telt niet mee in dat maximum.** Hij bestaat op zes van de
 vierentwintig weekenden; hem meetellen zou het maximum achttien keer per
