@@ -2680,6 +2680,12 @@ const ENGELS = Object.fromEntries([
    + 'je eerder koos blijft staan zoals het staat.',
    'The season is already running, so what you fill in now is locked straight '
    + 'away. What you picked earlier stays as it is.'],
+
+  // ---- een race die het seizoen tegenhoudt ---------------------
+  ['{races} heeft geen uitslag en is niet afgelast. Zolang dat zo blijft '
+   + 'kan het seizoen niet afgerond worden en blijven deze vragen ongescoord.',
+   '{races} has no result and is not marked cancelled. While that is the case '
+   + 'the season cannot be wrapped up and these questions stay unscored.'],
 ]);
 
 const TAALSLEUTEL = 'poule:taal';
@@ -3452,6 +3458,28 @@ const seizoenVraagOpen = (id) => {
 // nooit meer een uitslag van.
 const seizoenKlaar = () =>
   S.races.length > 0 && S.races.every(r => heeftUitslag(r) || r.afgelast);
+
+// Welke races houden het seizoen tegen?
+//
+// seizoenKlaar() eist van élke race een uitslag of een streep. Blijft er één
+// hangen -- de kalender zegt dat hij gereden is, er kwam niets binnen, en hij
+// staat niet op afgelast -- dan worden de seizoensvragen nooit gescoord en
+// blijft "Begin aan het volgende seizoen" grijs. Voor altijd, zonder dat er
+// iets misgaat waar je het aan ziet.
+//
+// De sync ruimt zoiets normaal zelf op, een week na de deadline. Maar alleen
+// als OpenF1 een harde 404 geeft; een sessierecord dat wél bestaat en geen
+// uitslag heeft -- precies wat een testrecord is -- glipt daar langs. Dan is
+// dit het enige wat het nog vertelt.
+//
+// Zeven dagen, dezelfde grens als lijktAfgelast() in scripts/uitslagen.mjs en
+// als de controleregel in schema.sql. Eerder klagen zou betekenen dat je elke
+// zondagavond een waarschuwing krijgt over een race waar de uitslag gewoon nog
+// van onderweg is.
+const VAST_NA_DAGEN = 7;
+const vastgelopenRaces = () => S.races.filter(r =>
+  !r.afgelast && !heeftUitslag(r) && r.deadline_race
+  && Date.now() - new Date(r.deadline_race).getTime() > VAST_NA_DAGEN * 864e5);
 
 // De vier antwoorden, uit de races zelf. Pas als het seizoen erop zit, want
 // een halve WK-stand is geen kampioen.
@@ -5307,6 +5335,9 @@ function seizoenslaagBlok() {
   // niet hetzelfde als `open`: na de eerste race kan de een alles ingevuld
   // hebben en de ander nog niets.
   const teVullen = vragen.filter(seizoenVraagOpen);
+  // Alleen tijdens het seizoen. Vóór de eerste race is er nog niets gereden en
+  // ná afloop is er niets meer tegen te houden.
+  const vast = open || uit ? [] : vastgelopenRaces();
 
   const kop = open
     ? T('nog in te vullen · sluit {wanneer}',
@@ -5322,6 +5353,10 @@ function seizoenslaagBlok() {
     <div class="seizoenslaag">
       <span class="label">${T('seizoensvragen')} · ${esc(kop)}</span>
       ${vragen.map(regel).join('')}
+      ${vast.length ? `<p class="zacht" style="margin:0;color:var(--amber)">${
+        T('{races} heeft geen uitslag en is niet afgelast. Zolang dat zo blijft '
+          + 'kan het seizoen niet afgerond worden en blijven deze vragen ongescoord.',
+          { races: esc(opsomming(vast.map(r => r.name))) })}</p>` : ''}
       ${teVullen.length ? `<p class="zacht" style="margin:0">${open
         ? T('Deze vier vul je één keer per seizoen in, vóór de eerste race. '
           + 'Daarna liggen ze vast tot het eind.')

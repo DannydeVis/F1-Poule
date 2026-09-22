@@ -159,6 +159,69 @@ check('met de kop die zegt dat alles ingevuld is',
   (await tekst('.seizoenslaag .label')).includes('wordt gescoord'),
   await tekst('.seizoenslaag .label'));
 
+// --- 4c. een race die het seizoen tegenhoudt -----------------------------
+// De seizoensvragen worden pas gescoord als élke race een uitslag heeft of
+// afgelast is. Blijft er één hangen, dan komt die 150 punten er nooit en
+// blijft "Begin aan het volgende seizoen" grijs -- zonder dat er iets misgaat
+// waar je het aan ziet. Dat is precies het soort stilte waar dit blok tegen
+// hoort te beschermen.
+//
+// Twee dagen na de deadline hoort hij nog te zwijgen: dan is de uitslag
+// gewoon nog onderweg en zou elke zondagavond een waarschuwing opleveren.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  const u = (d) => new Date(Date.now() + d * 864e5).toISOString();
+  db.races[1].deadline_quali = u(-3);
+  db.races[1].deadline_race = u(-2);
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await naarStand();
+check('twee dagen na de deadline zegt hij nog niets',
+  !(await tekst('.seizoenslaag')).includes('niet afgelast'),
+  (await tekst('.seizoenslaag')).slice(0, 160));
+
+// Tien dagen later wel.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  const u = (d) => new Date(Date.now() + d * 864e5).toISOString();
+  db.races[1].deadline_quali = u(-11);
+  db.races[1].deadline_race = u(-10);
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await naarStand();
+const klem = await tekst('.seizoenslaag');
+check('een week na de deadline meldt hij de race bij naam',
+  klem.includes('niet afgelast'), klem.slice(0, 220));
+check('en noemt hem bij naam, zodat je weet waar je moet zijn',
+  klem.includes(await page.evaluate(() => globalThis.__db.races[1].name)),
+  klem.slice(0, 220));
+
+// Afgelast is geen probleem: daar komt nooit meer een uitslag van, en dat
+// houdt het seizoen dus ook niet tegen.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  db.races[1].afgelast = true;
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await naarStand();
+check('een afgelaste race houdt het seizoen niet tegen',
+  !(await tekst('.seizoenslaag')).includes('niet afgelast'),
+  (await tekst('.seizoenslaag')).slice(0, 160));
+
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  const u = (d) => new Date(Date.now() + d * 864e5).toISOString();
+  db.races[1].afgelast = false;
+  db.races[1].deadline_quali = u(20);
+  db.races[1].deadline_race = u(21);
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await naarStand();
+
 // --- 5. en aan het eind wordt er gescoord ---------------------------------
 // Alle drie de races gereden. Verstappen (1) wint er twee en Norris (4) één,
 // dus Verstappen is kampioen. Red Bull heeft Verstappen en Hadjar (6).

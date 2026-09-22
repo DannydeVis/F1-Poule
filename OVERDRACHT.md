@@ -5002,3 +5002,46 @@ Daarom noemt de regel de naam en staat in `BEDIENING.md` §11 de handmatige
 uitweg erbij (`update public.races set afgelast = true where ...`). Dit
 repareren in de sync zou betekenen dat je "leeg" als bewijs gaat accepteren, en
 dat is precies de aanname die de rest van dat blok zorgvuldig vermijdt.
+
+---
+
+## Het scherm zegt zelf welke race het seizoen tegenhoudt
+
+De controleregel in `schema.sql` vertelt dit ook, maar die moet je draaien. Dat
+betekent dat je een datum moet onthouden — en een waarschuwing die afhangt van
+of iemand eraan denkt is geen waarschuwing.
+
+De gegevens staan al in de browser: `S.races` draagt `afgelast`, de uitslagen
+en de deadlines. `vastgelopenRaces()` is daarmee één filter:
+
+```js
+const VAST_NA_DAGEN = 7;
+const vastgelopenRaces = () => S.races.filter(r =>
+  !r.afgelast && !heeftUitslag(r) && r.deadline_race
+  && Date.now() - new Date(r.deadline_race).getTime() > VAST_NA_DAGEN * 864e5);
+```
+
+Staat daar iets in, dan verschijnt er onder de seizoensvragen een amberen
+regel die de race bij naam noemt. Op de **standpagina**, niet in het
+beheerscherm: het gaat om ieders honderdvijftig punten, en iedereen kijkt daar.
+De poulebaas is degene die het oplost, maar die hoeft er dan niet als enige aan
+te denken.
+
+### Drie keuzes die erin zitten
+
+**Zeven dagen**, dezelfde grens als `lijktAfgelast()` in
+`scripts/uitslagen.mjs` en als de regel in `schema.sql`. Eerder klagen zou
+betekenen dat je elke zondagavond een waarschuwing krijgt over een uitslag die
+gewoon nog onderweg is.
+
+**Alleen tijdens het seizoen.** Vóór de eerste race is er nog niets gereden, en
+ná afloop is er niets meer tegen te houden — dan staat er een puntentotaal.
+
+**Een gewone zin en geen `label`.** Eerst stond hij als `label amber`, en dat
+is mono, kapitalen en letterspatiëring. Prima voor "geen duels gekozen · 15
+punten laten liggen", onleesbaar voor twee regels lopende tekst. Het is nu
+`zacht` met een amberen kleur.
+
+`seizoenslaag.test.mjs` §4c legt alle drie vast: twee dagen na de deadline
+zwijgt hij, tien dagen erna noemt hij de race bij naam, en een afgelaste race
+houdt niets tegen.
