@@ -1457,12 +1457,24 @@ select 'deadline-trigger',
            and tgname = 'predictions_deadline'
        ) then 'ok' else 'ONTBREEKT' end
 union all
+-- Niet alleen "bestaat hij", maar ook "vuurt hij op alle drie". Deze trigger
+-- stond lang op `insert or update`, en dan kon je een antwoord dat vastligt
+-- verwijderen en opnieuw invoeren -- de regel omzeild zonder hem te breken.
+-- Een controle die dat niet ziet zegt 'ok' over een half dichte deur.
+--
+-- tgtype is een bitmasker: 4 = insert, 8 = delete, 16 = update.
 select 'deadline-trigger op answers',
-       case when exists (
-         select 1 from pg_trigger
-         where tgrelid = 'public.answers'::regclass
-           and tgname = 'answers_deadline'
-       ) then 'ok' else 'ONTBREEKT' end
+       case
+         when not exists (
+           select 1 from pg_trigger
+           where tgrelid = 'public.answers'::regclass
+             and tgname = 'answers_deadline') then 'ONTBREEKT'
+         when exists (
+           select 1 from pg_trigger
+           where tgrelid = 'public.answers'::regclass
+             and tgname = 'answers_deadline'
+             and (tgtype & 4) > 0 and (tgtype & 16) > 0 and (tgtype & 8) > 0) then 'ok'
+         else 'ZONDER DELETE — draai schema.sql opnieuw' end
 union all
 select 'dubbele voorspellingen',
        case when (select count(*) from (
