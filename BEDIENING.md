@@ -976,6 +976,11 @@ Wil je iets anders, dan zijn er twee plekken:
 Je keuze staat op dít toestel. Op je telefoon en je laptop kies je dus apart,
 net als bij het lijstje met je andere poules.
 
+Wat wél meeverandert naast de tekst: de datums ("za 14:00" wordt "Sat 14:00"),
+de aftelklok ("3d 4u" wordt "3d 4h") en het decimaalteken (×1,8 wordt ×1.8). De
+Engelse notatie is de Britse, dus de klok blijft op 24 uur — dit is een
+Europese sport.
+
 Wat niet meevertaalt: de namen die uit de database komen. De poulenaam die
 iemand zelf heeft ingetypt blijft staan zoals hij is, en de racenamen komen van
 OpenF1 ("Las Vegas" heet in het Nederlands ook Las Vegas).
