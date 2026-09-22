@@ -2645,6 +2645,11 @@ function zetTaal(taal) {
   TAAL = taal;
   schrijf(TAALSLEUTEL, taal);
   zetPaginaTaal();
+  // Een melding komt niet uit deze browser maar uit scripts/sync.mjs, dus de
+  // taal moet in de database staan. Bewust zonder await en zonder foutmelding:
+  // de taal wisselen mag nooit blijven hangen op een netwerkverzoek, en het
+  // ergste wat er misgaat is één herinnering in de vorige taal.
+  pushTaalBijwerken();
   // Het hele scherm opnieuw, want er is geen stukje dat geen tekst bevat.
   if (S.poule && S.ik) render(); else toonStart();
 }
@@ -5473,11 +5478,24 @@ async function pushAanzetten() {
   const j = ab.toJSON();
   const { error } = await db.from('push_abonnementen').upsert({
     endpoint: j.endpoint, member_id: S.ik.id, pool_id: S.poule.id,
-    p256dh: j.keys.p256dh, auth: j.keys.auth, laatst: null,
+    p256dh: j.keys.p256dh, auth: j.keys.auth, laatst: null, taal: TAAL,
   }, { onConflict: 'endpoint' });
   if (error) throw new Error(uitleg(error));
   S.push = 'aan';
   S.melding = T('Meldingen staan aan op dit toestel.');
+}
+
+// Alleen als er op dit toestel ook echt een abonnement ligt. Zonder die
+// controle zou elke taalwissel een update naar de database sturen die nul
+// rijen raakt.
+async function pushTaalBijwerken() {
+  try {
+    if (!pushKan() || !db || !S.ik) return;
+    const reg = await navigator.serviceWorker.getRegistration();
+    const ab = reg ? await reg.pushManager.getSubscription() : null;
+    if (!ab) return;
+    await db.from('push_abonnementen').update({ taal: TAAL }).eq('endpoint', ab.endpoint);
+  } catch { /* een herinnering in de vorige taal is geen reden om iets te melden */ }
 }
 
 async function pushUitzetten() {

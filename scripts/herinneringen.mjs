@@ -10,6 +10,8 @@
  * De regel in één zin: hooguit één melding per toestel per ronde, alleen over
  * een sessie die binnen het venster sluit, alleen als die poule die vraag
  * stelt, en alleen als jij er nog niets op hebt ingevuld.
+ *
+ * En in de taal van dat toestel: `push_abonnementen.taal` zegt welke.
  */
 
 // Dezelfde tabel als in index.html, maar dan alleen wat hier nodig is. Twee
@@ -23,6 +25,29 @@ export const SESSIES = {
 };
 export const SESSIEVOLGORDE = ['sprint', 'quali', 'race'];
 
+// De app vertaalt zichzelf in de browser met een woordenlijst van vierhonderd
+// zinnen. Een push komt hiervandaan, zonder browser, en gaat over precies
+// zeven zinnen -- dus staat die handvol hier, en niet een tweede kopie van de
+// hele lijst. `taal` komt uit de kolom op push_abonnementen; alles wat geen
+// 'en' is krijgt Nederlands, want dat is de brontaal.
+const WOORDEN = {
+  nl: {
+    sprint: 'sprint', quali: 'kwalificatie', race: 'race',
+    meteen: 'zo meteen', half: 'over een halfuur', uur: 'over een uur',
+    uren: (n) => `over ${n} uur`,
+    titel: (race, sessie, wanneer) => `${race}: ${sessie} sluit ${wanneer}`,
+    tekst: 'Je hebt hier nog niets ingevuld.',
+  },
+  en: {
+    sprint: 'sprint', quali: 'qualifying', race: 'race',
+    meteen: 'any moment now', half: 'in half an hour', uur: 'in an hour',
+    uren: (n) => `in ${n} hours`,
+    titel: (race, sessie, wanneer) => `${race}: ${sessie} closes ${wanneer}`,
+    tekst: 'You have not filled anything in here yet.',
+  },
+};
+export const woorden = (taal) => WOORDEN[taal === 'en' ? 'en' : 'nl'];
+
 // Drie uur. Lang genoeg om er nog iets aan te doen, kort genoeg dat het over
 // vandaag gaat. De sync draait elk uur, dus binnen dit venster valt elke
 // deadline minstens één keer op.
@@ -32,11 +57,12 @@ const urenTot = (iso, nu) => (Date.parse(iso) - nu) / 3600e3;
 
 // "over 2 uur", "over een halfuur", "zo meteen". Een herinnering die "over
 // 2.4 uur" zegt leest als een machine.
-export function overTekst(uren) {
-  if (uren < 0.25) return 'zo meteen';
-  if (uren < 0.75) return 'over een halfuur';
-  if (uren < 1.5) return 'over een uur';
-  return `over ${Math.round(uren)} uur`;
+export function overTekst(uren, taal = 'nl') {
+  const w = woorden(taal);
+  if (uren < 0.25) return w.meteen;
+  if (uren < 0.75) return w.half;
+  if (uren < 1.5) return w.uur;
+  return w.uren(Math.round(uren));
 }
 
 /**
@@ -91,12 +117,16 @@ export function wieKrijgtEenSeintje({ races = [], abonnementen = [], antwoorden 
     // snelste manier om iemand ze uit te laten zetten.
     const tag = `${treffer.race.id}:${treffer.welk}`;
     if (ab.laatst === tag) continue;
+    // De racenaam komt van OpenF1 ("Las Vegas") en blijft staan zoals hij is;
+    // alleen het zinnetje eromheen kent twee talen.
+    const w = woorden(ab.taal);
     uit.push({
       abonnement: ab,
       tag,
       bericht: {
-        titel: `${treffer.race.name}: ${SESSIES[treffer.welk].naam} sluit ${overTekst(treffer.uren)}`,
-        tekst: 'Je hebt hier nog niets ingevuld.',
+        titel: w.titel(treffer.race.name, w[treffer.welk],
+                       overTekst(treffer.uren, ab.taal)),
+        tekst: w.tekst,
         tag,
       },
     });

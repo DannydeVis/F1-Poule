@@ -108,4 +108,51 @@ check('"over een halfuur" rond het halfuur', overTekst(0.5) === 'over een halfuu
 check('"over een uur" en niet "over 1 uur"', overTekst(1) === 'over een uur', overTekst(1));
 check('daarna hele uren', overTekst(2.4) === 'over 2 uur', overTekst(2.4));
 
+// ---- en dat alles ook in het Engels ------------------------------------
+// De app vertaalt zichzelf in de browser, maar een push komt uit sync.mjs en
+// die heeft er geen. Vandaar de kolom `taal` op het abonnement: de melding
+// hoort in dezelfde taal aan te komen als het scherm waarop je hem aanzette.
+const engels = { ...danny, taal: 'en' };
+const uitEngels = roep({ races: [race(2)], abonnementen: [engels] });
+check('een Engels abonnement krijgt een Engelse melding',
+  uitEngels[0]?.bericht.titel === 'Suzuka: qualifying closes in 2 hours',
+  uitEngels[0]?.bericht.titel);
+check('en de tweede regel ook',
+  uitEngels[0]?.bericht.tekst === 'You have not filled anything in here yet.',
+  uitEngels[0]?.bericht.tekst);
+
+// De racenaam komt van OpenF1 en hoort niet mee te vertalen.
+check('de naam van de race blijft staan zoals hij is',
+  uitEngels[0]?.bericht.titel.startsWith('Suzuka: '));
+
+// De regel zelf mag niet van taal afhangen: wie een seintje krijgt en waarover
+// is precies hetzelfde, alleen de zin eromheen verschilt.
+check('de taal verandert niets aan wie er een seintje krijgt',
+  uitEngels.length === binnen.length && uitEngels[0]?.tag === binnen[0]?.tag);
+
+const beide = roep({ races: [race(2)],
+  abonnementen: [danny, { ...danny, endpoint: 'https://push/9', taal: 'en' }] });
+check('twee toestellen van dezelfde speler kunnen elk hun eigen taal hebben',
+  beide[0]?.bericht.titel !== beide[1]?.bericht.titel,
+  beide.map((x) => x.bericht.titel).join(' | '));
+
+check('"any moment now" onder een kwartier',
+  overTekst(0.1, 'en') === 'any moment now', overTekst(0.1, 'en'));
+check('"in half an hour" rond het halfuur',
+  overTekst(0.5, 'en') === 'in half an hour', overTekst(0.5, 'en'));
+check('"in an hour" en niet "in 1 hours"',
+  overTekst(1, 'en') === 'in an hour', overTekst(1, 'en'));
+check('daarna hele uren, in het meervoud',
+  overTekst(2.4, 'en') === 'in 2 hours', overTekst(2.4, 'en'));
+
+// Een abonnement uit de tijd vóór deze kolom heeft geen taal, en een kapotte
+// waarde mag niet in een lege melding eindigen. Allebei vallen ze terug op de
+// brontaal.
+check('zonder taal valt hij terug op Nederlands',
+  roep({ races: [race(2)], abonnementen: [danny] })[0]?.bericht.tekst
+    === 'Je hebt hier nog niets ingevuld.');
+check('en een taal die niet bestaat ook',
+  roep({ races: [race(2)], abonnementen: [{ ...danny, taal: 'fr' }] })[0]?.bericht.titel
+    === 'Suzuka: kwalificatie sluit over 2 uur');
+
 process.exit(afronden() ? 0 : 1);

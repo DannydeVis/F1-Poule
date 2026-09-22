@@ -883,6 +883,9 @@ De regel, en vooral wat hij niet doet:
   het laatst gestuurd is.
 - Op een **iPhone** werkt het alleen als RacePicks op je beginscherm staat.
   Dat is een regel van iOS, niet van de app.
+- De melding komt **in de taal van dat toestel**: dezelfde taal waarin je de
+  app gebruikte toen je hem aanzette. Wissel je later van taal, dan gaat de
+  melding mee. Zie §11e.
 
 ### Dit staat uit tot je het inricht
 
@@ -912,9 +915,15 @@ verloren.
 ### Wat er van je opgeslagen wordt
 
 Eén rij per toestel in `push_abonnementen`: het adres dat de pushdienst uitdeelt
-en twee sleutels van dat toestel. Geen mailadres, geen naam. Die rij is alleen
-voor jou leesbaar (en voor de sync), en verdwijnt zodra je meldingen uitzet, je
-speler weggaat of de pushdienst zegt dat het abonnement niet meer bestaat.
+en twee sleutels van dat toestel, plus in welke taal de melding moet. Geen
+mailadres, geen naam. Die rij is alleen voor jou leesbaar (en voor de sync), en
+verdwijnt zodra je meldingen uitzet, je speler weggaat of de pushdienst zegt
+dat het abonnement niet meer bestaat.
+
+Die taal staat er omdat een melding niet uit je browser komt maar uit de sync,
+en die draait in een GitHub-runner zonder browser. Hij kan dus nergens anders
+kijken. Per toestel en niet per speler: je telefoon op Engels en je laptop op
+Nederlands is een gewoon geval.
 
 ### De service worker
 
@@ -970,6 +979,11 @@ net als bij het lijstje met je andere poules.
 Wat niet meevertaalt: de namen die uit de database komen. De poulenaam die
 iemand zelf heeft ingetypt blijft staan zoals hij is, en de racenamen komen van
 OpenF1 ("Las Vegas" heet in het Nederlands ook Las Vegas).
+
+Wat wél meegaat: de herinneringen op je telefoon. Die worden verstuurd door de
+sync en niet door je browser, dus de taal staat bij je abonnement in de
+database. Wissel je van taal terwijl de meldingen aanstaan, dan wordt dat
+meteen bijgewerkt.
 
 Mist er een vertaling, dan staat die ene zin in het Nederlands tussen het
 Engels. Dat is met opzet: de Nederlandse zin is in de code de sleutel waarmee
