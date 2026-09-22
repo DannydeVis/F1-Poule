@@ -834,10 +834,23 @@ seizoen 2026 rond                                      | nog 8 te gaan
 blijven hangen (deadline > week geleden, niets binnen) | 0
 ```
 
-Die laatste hoort **nul** te zijn. De sync zet een race die OpenF1 een week na
-de deadline nog steeds niet heeft zelf op afgelast; staat er iets anders dan
-nul, dan is dat niet gebeurd en is het de moeite om `scripts/verkennen.mjs` op
-die race los te laten.
+Die laatste hoort **nul** te zijn. Staat er iets anders, dan noemt hij de races
+bij naam:
+
+```
+blijven hangen (deadline > week geleden, niets binnen) | 1: Kuala Lumpur (ronde 19)
+```
+
+De sync zet een race die OpenF1 een week na de deadline nog steeds niet heeft
+zelf op afgelast — maar alleen als OpenF1 er een harde **404** op geeft. Krijgt
+hij een lege uitslag terug (dus wél een record, geen resultaten), dan telt dat
+niet als bewijs en blijft de race staan. Dat is precies het geval waarin je zelf
+moet ingrijpen: draai `scripts/verkennen.mjs` op die race om te zien wat OpenF1
+zegt, en zet hem daarna met de hand op afgelast:
+
+```sql
+update public.races set afgelast = true where season = 2026 and round = 19;
+```
 
 **Races die niet bestaan.** OpenF1 heeft in 2026 een testrecord tussen de races
 staan: Kuala Lumpur op 4 oktober, officieel "FORMULA 1 GULF AIR BAHRAIN GRAND

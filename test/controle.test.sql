@@ -142,12 +142,15 @@ begin
 
   -- Een afgelaste race mag het seizoen níét openhouden; daar komt nooit meer
   -- een uitslag van.
+  -- Mét de naam erbij: op het moment dat hier iets staat wil je weten wélke
+  -- race, niet hoevéél. Zonder naam is de volgende stap "uitzoeken welke", en
+  -- dat is precies de stap waar je op afhaakt.
   select uitkomst into gevonden from public.poule_controle
    where controle like 'blijven hangen%';
-  if gevonden <> '1' then
-    raise exception 'gezakt: % blijven hangen in plaats van 1 (de afgelaste telt mee?)', gevonden;
+  if gevonden <> '1: Hangt (ronde 93)' then
+    raise exception 'gezakt: er staat "%" in plaats van "1: Hangt (ronde 93)"', gevonden;
   end if;
-  raise notice 'ok: een race die een week na zijn deadline niets heeft wordt gemeld';
+  raise notice 'ok: een race die een week na zijn deadline niets heeft wordt bij naam gemeld';
 
   -- Zodra hij binnenkomt is het seizoen rond en hangt er niets meer.
   update public.races set race_result = array['1','4'] where id = 9303;
