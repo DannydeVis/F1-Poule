@@ -30,6 +30,10 @@ begin
   insert into pool_questions (pool_id, question_id) values (poule, 'quali_top10');
   insert into answers (pool_id, race_id, member_id, question_id, waarde)
     values (poule, race, lid, 'quali_top10', '["1","4","16"]'::jsonb);
+  -- Een gezette joker hoort er ook aan te hangen. Jokers moeten daarvoor aan
+  -- staan in deze poule, en het weekend moet nog beginnen.
+  update pools set jokers_vanaf = now() - interval '1 hour' where id = poule;
+  insert into jokers (pool_id, race_id, member_id) values (poule, race, lid);
   -- En dan is het weekend geweest.
   update races set deadline_quali = now() - interval '2 days',
                    deadline_race  = now() - interval '1 day',
@@ -56,6 +60,8 @@ begin
   if n <> 0 then raise exception 'gezakt: nog % vragenkeuzes over', n; end if;
   select count(*) into n from predictions;
   if n <> 0 then raise exception 'gezakt: nog % oude voorspellingen over', n; end if;
+  select count(*) into n from jokers;
+  if n <> 0 then raise exception 'gezakt: nog % jokers over', n; end if;
   raise notice 'ok: poules, spelers en inzendingen zijn weg';
 
   -- Dit is waar het bestand zijn bestaansrecht aan ontleent.

@@ -4183,3 +4183,52 @@ En "maximaal per weekend" laat de sprint erbuiten (`weekendSom()`) maar noemt
 hem er apart bij (`sprintSom()`) — anders staat het weekendmaximum achttien
 van de vierentwintig weekenden te hoog. Die twee staan naast elkaar omdat het
 preset-kaartje en de voet eronder het eerder niet eens waren: 227 tegen 202.
+
+---
+
+## Jokers, en waarom de regel in de database staat
+
+Vijf per seizoen. Je legt er een op een weekend en dat weekend telt dubbel.
+De laatste van de vier punten uit groep 4 die geen overgangsregeling kon
+ontwijken: de sprint kon dat wel, want een poule kiest zijn vragen bij het
+aanmaken en een lopende poule krijgt `sprint_top10` domweg niet. Een joker is
+geen vraag maar een regel over de telling zelf, dus die moest de streep van
+`autofill_vanaf` overnemen: `pools.jokers_vanaf` bewaart wanneer hij aanging,
+en een weekend dat toen al liep telt niet mee.
+
+**Per weekend en niet per vraag.** `ROUTEKAART.md` zei "niet twee keer op
+dezelfde vraag", en dat was bedoeld om te voorkomen dat iedereen zijn jokers
+automatisch op de race-top-10 legt. Met één joker per weekend bestaat dat
+probleem niet: je kiest wélk weekend, en dat ís de keuze. Het scheelt ook een
+sterretje bij elke puntenregel in de app — de verdubbeling staat op één plek,
+in `scoreWeekend()`, en komt daardoor vanzelf terecht in de stand, de
+weekendwinst, de seizoensgrafiek en de terugblik zonder dat die vier hem apart
+hoeven te kennen.
+
+**De regel staat in `schema.sql`, niet in het scherm.** Trigger
+`jokers_bewaken` weigert een joker op een weekend dat al begonnen is, weigert
+hem net zo goed weg te halen, weigert de zesde, en weigert er een in een poule
+waar de regel uitstaat. Dat is naast de deadline op `answers` de tweede regel
+die hard in de database zit, en om precies dezelfde reden: een joker die je
+achteraf mag verzetten is geen keuze maar een knop om de uitslag mee te
+herschrijven. De knoppen in de app verdwijnen ook, maar dat is de beleefde
+versie, niet het slot.
+
+**Het ding dat bijna misging: een cascade is geen speler die van gedachten
+verandert.** De eerste versie van de trigger weigerde élke delete op een
+begonnen weekend. Dat betekende dat `leegmaken.sql` vastliep, en erger: dat
+"verwijder mijn account" zou stranden op een joker van drie races geleden. De
+speler kon zijn eigen gegevens dan niet meer weggooien, en dat is precies het
+soort deur dat niet op slot hoort te zitten. De uitzondering staat er nu als
+
+    if tg_op = 'DELETE' and pg_trigger_depth() > 1 then return old; end if;
+
+`pg_trigger_depth()` is 1 als de app zelf schrijft en hoger zodra een andere
+trigger ons aanroept — en een `on delete cascade` is zo'n trigger. Dat is
+nagegaan door de regel tijdelijk weg te halen: `test/jokers.test.sql` zakt dan
+op precies de foutmelding die de accountverwijdering geblokkeerd zou hebben.
+
+`leegmaken.sql` doet een rechtstreekse `delete from public.jokers` en valt dus
+niet onder die uitzondering. Daar staat de trigger één regel lang uit, met de
+reden erbij: die regel is er voor spelers, niet voor de beheerder die de boel
+opruimt.

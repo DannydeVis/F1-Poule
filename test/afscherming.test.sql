@@ -43,6 +43,14 @@ insert into answers (pool_id, race_id, member_id, question_id, waarde) values
   ('dddd1111-0000-0000-0000-000000000001', 902,
    'dddd3333-0000-0000-0000-000000000001', 'winnaar', '"1"');
 
+-- Een gezette joker hangt net zo goed aan één poule, dus die hoort dezelfde
+-- muur te hebben als de inzendingen.
+update pools set jokers_vanaf = now() - interval '1 hour'
+where id = 'dddd1111-0000-0000-0000-000000000001';
+insert into jokers (pool_id, race_id, member_id) values
+  ('dddd1111-0000-0000-0000-000000000001', 902,
+   'dddd3333-0000-0000-0000-000000000001');
+
 do $$
 declare n int;
 declare uit jsonb;
@@ -66,6 +74,10 @@ begin
   select count(*) into n from answers;
   if n <> 0 then raise exception 'gezakt: een vreemde ziet % inzendingen', n; end if;
   raise notice 'ok: een vreemde ziet geen enkele inzending';
+
+  select count(*) into n from jokers;
+  if n <> 0 then raise exception 'gezakt: een vreemde ziet % jokers', n; end if;
+  raise notice 'ok: een vreemde ziet geen enkele joker';
 
   select count(*) into n from pool_questions;
   if n <> 0 then raise exception 'gezakt: een vreemde ziet de vragenset'; end if;
@@ -118,6 +130,10 @@ begin
   if n <> 1 then raise exception 'gezakt: Fred ziet zijn eigen poule niet'; end if;
   select count(*) into n from answers;
   if n <> 1 then raise exception 'gezakt: Fred ziet de inzendingen van zijn poule niet'; end if;
+  -- Wel de jokers van zijn medespelers: zonder die rijen klopt de stand niet,
+  -- want een joker verdubbelt wat iemand dat weekend scoorde.
+  select count(*) into n from jokers;
+  if n <> 1 then raise exception 'gezakt: Fred ziet de jokers van zijn poule niet'; end if;
   select count(*) into n from pool_members
    where pool_id = 'dddd1111-0000-0000-0000-000000000001';
   if n <> 2 then raise exception 'gezakt: Fred ziet % medespelers in plaats van 2', n; end if;
@@ -160,6 +176,8 @@ begin
     '{"sub":"eeeeeeee-0000-0000-0000-000000000002"}', true);
   select count(*) into n from answers;
   if n <> 0 then raise exception 'gezakt: er lekt alsnog % inzending weg', n; end if;
+  select count(*) into n from jokers;
+  if n <> 0 then raise exception 'gezakt: er lekt alsnog % joker weg', n; end if;
   raise notice 'ok: na alles hierboven ziet de vreemde nog steeds niets';
 
   reset role;

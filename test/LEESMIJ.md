@@ -24,6 +24,7 @@ je eigen computer.
 | `uitslagen.test.mjs` | De vier losse uitslagen uit de gegevens van OpenF1: vooral welke berichten van de wedstrijdleiding wél en niet een safety car zijn |
 | `duel-weergave.test.mjs` | Dat "jij" vaststaat aan je eigen cijfer in het onderlinge duel, en niet aan dat van de tegenstander |
 | `poules-en-omschrijving.test.mjs` | De omschrijving van een poule, en meer dan één poule op hetzelfde toestel: wisselen zonder de code, en een poule die weg is |
+| `jokers.test.mjs` | De vijf jokers: aanzetten geldt vanaf nu, een joker verdubbelt het weekend in de kalender én in de stand, en zodra het weekend begint ligt hij vast |
 | `sprintweekend.test.mjs` | De derde sessie: dat een gewoon weekend er geen tab bij krijgt, dat een sprintweekend er wel een heeft en vóór de kwalificatie, dat hij voor halve punten telt, en dat automatisch invullen hem overslaat |
 | `poule-aanmaken.test.mjs` | Het aanmaken in vier stappen: de presets, de losse vragen met hun live puntentotaal, de gokwaarschuwing, en wat er in de database belandt |
 | `vragen-beheren.test.mjs` | De vragenset aanpassen onder Poule, en dat er niets meer verandert zodra hij op slot zit |
@@ -44,6 +45,7 @@ je eigen computer.
 | `google.test.mjs` | Inloggen met Google: dat het aan je bestaande account hangt in plaats van een tweede te maken, dat de voordeur een poulecode blijft, en dat iemand anders zijn Google-account niet in jouw speler belandt |
 | `mailkoppeling.test.mjs` | Je account meenemen met een mailadres: dat "gestuurd" niet "gekoppeld" is, dat een onbekend adres geen leeg account maakt, en vooral dat de sleutel uit de inloglink niet voor een poulecode wordt aangezien |
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
+| `jokers.test.sql` | De jokerregels waar de app niet omheen kan: vijf per seizoen, één per weekend, vast zodra dat weekend begint — en dat een cascade (poule of speler weg) er wél langs mag |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |
 | `schema-herstel.test.sql` | Of een tweede run van `schema.sql` een beschadigde tabel opruimt |
 | `verwijderen.test.sql` | "Verwijder mijn account" in twee smaken: alleen het account (de stand van de anderen blijft kloppen) of alles, en dat een poule zijn eigenaar kwijtraakt in plaats van naar een verdwenen speler te wijzen |

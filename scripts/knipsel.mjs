@@ -39,7 +39,7 @@ export function knipUit(bron, naam) {
  */
 export function rekenkern(bron, toestand) {
   return `
-const S = ${JSON.stringify({ preds: [], ...toestand })};
+const S = ${JSON.stringify({ preds: [], jokers: [], ...toestand })};
 
 ${BLOKKEN.map((naam) => knipUit(bron, naam)).join('\n\n')}
 

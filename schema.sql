@@ -130,6 +130,18 @@ create table if not exists public.answers (
   primary key (pool_id, race_id, member_id, question_id)
 );
 
+-- Vijf keer per seizoen mag je één weekend dubbel laten tellen. Een eigen
+-- tabel en geen kolom op answers, want een joker hangt aan het wéékend en
+-- niet aan één vraag: je zet hem op Monza, niet op de top 10 van Monza.
+-- Bestaat de rij, dan staat de joker; hem weghalen is de rij verwijderen.
+create table if not exists public.jokers (
+  pool_id   uuid   not null,
+  race_id   bigint not null,
+  member_id uuid   not null,
+  gezet_op  timestamptz not null default now(),
+  primary key (pool_id, race_id, member_id)
+);
+
 -- ------------------------------------------------------------
 --  Kolommen bijwerken
 --  Het schema is tijdens de bouw meerdere keren veranderd en
@@ -158,6 +170,10 @@ alter table public.pools        add column if not exists is_public  boolean not 
 -- het aan en vanaf dat moment telt het. Zo verandert de stand over races die
 -- al gereden zijn niet met terugwerkende kracht. Leeg = uit.
 alter table public.pools        add column if not exists autofill_vanaf timestamptz;
+-- Jokers: hetzelfde patroon als hierboven, en om dezelfde reden. Niet een
+-- vinkje maar een moment, zodat een weekend dat al gereden is niet met
+-- terugwerkende kracht dubbel gaat tellen. Leeg = uit.
+alter table public.pools        add column if not exists jokers_vanaf timestamptz;
 
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
@@ -449,7 +465,18 @@ alter table public.answers drop constraint if exists answers_vraag_fk;
 alter table public.answers  add constraint answers_vraag_fk
   foreign key (question_id) references public.questions(id) on delete cascade;
 
+alter table public.jokers drop constraint if exists jokers_pool_fk;
+alter table public.jokers  add constraint jokers_pool_fk
+  foreign key (pool_id) references public.pools(id) on delete cascade;
+alter table public.jokers drop constraint if exists jokers_race_fk;
+alter table public.jokers  add constraint jokers_race_fk
+  foreign key (race_id) references public.races(id) on delete cascade;
+alter table public.jokers drop constraint if exists jokers_member_fk;
+alter table public.jokers  add constraint jokers_member_fk
+  foreign key (member_id) references public.pool_members(member_id) on delete cascade;
+
 create index if not exists answers_pool_race_idx on public.answers (pool_id, race_id);
+create index if not exists jokers_pool_lid_idx on public.jokers (pool_id, member_id);
 create index if not exists predictions_pool_idx on public.predictions (pool_id);
 create index if not exists pool_members_pool_idx on public.pool_members (pool_id);
 create index if not exists races_seizoen_idx on public.races (season, round);
@@ -568,6 +595,83 @@ drop trigger if exists answers_deadline on public.answers;
 create trigger answers_deadline
   before insert or update on public.answers
   for each row execute function public.poule_antwoord_deadline();
+
+-- ------------------------------------------------------------
+--  Jokers
+--  Vijf per seizoen, één per weekend, en alleen zolang dat weekend nog
+--  helemaal openstaat. Dit is de tweede regel die hard in de database zit,
+--  en om dezelfde reden als de deadline: een joker die je achteraf mag
+--  verzetten is geen keuze maar een knop om de uitslag mee te herschrijven.
+-- ------------------------------------------------------------
+
+create or replace function public.poule_joker_bewaken()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rij      public.jokers;
+  vanaf    timestamptz;
+  eerste   timestamptz;
+  seizoen  int;
+  gezet    int;
+begin
+  rij := coalesce(new, old);
+
+  -- Een joker die meegaat omdat zijn poule, zijn speler of zijn race weggaat
+  -- is geen speler die van gedachten verandert. Zo'n rij komt hier binnen via
+  -- een cascade, en dat is aan pg_trigger_depth() te zien: die staat op 1 als
+  -- de app zelf schrijft en hoger zodra een andere trigger ons aanroept.
+  -- Zonder deze regel zou "verwijder mijn account" vastlopen op een joker die
+  -- op een gereden weekend ligt, en dat is precies het soort deur dat niet op
+  -- slot hoort te zitten.
+  if tg_op = 'DELETE' and pg_trigger_depth() > 1 then return old; end if;
+
+  -- Staat de regel uit in deze poule, dan bestaat een joker hier niet.
+  select p.jokers_vanaf into vanaf from public.pools p where p.id = rij.pool_id;
+  if not found then return rij; end if;   -- de foreign key klaagt zo zelf
+  if vanaf is null then
+    raise exception 'Jokers staan in deze poule niet aan';
+  end if;
+
+  -- De eerste deadline van het weekend, wat die sessie ook is. Op een
+  -- sprintweekend is dat de sprint en niet de kwalificatie, dus dit mag geen
+  -- vaste kolom zijn.
+  select least(r.deadline_sprint, r.deadline_quali, r.deadline_race), r.season
+    into eerste, seizoen
+  from public.races r where r.id = rij.race_id;
+  if not found then return rij; end if;
+
+  if eerste is not null and now() > eerste then
+    raise exception 'Dit weekend is al begonnen, je joker ligt vast';
+  end if;
+  -- Niet met terugwerkende kracht: een weekend dat al liep toen de poulebaas
+  -- de regel aanzette telt niet mee. Zelfde streep als bij automatisch
+  -- invullen.
+  if eerste is not null and eerste < vanaf then
+    raise exception 'Dit weekend liep al toen de jokers aangezet werden';
+  end if;
+
+  if tg_op = 'DELETE' then return old; end if;
+
+  -- Vijf per seizoen. De rij zelf niet meetellen, anders kun je een
+  -- bestaande joker niet meer opnieuw wegschrijven.
+  select count(*) into gezet
+  from public.jokers j join public.races r on r.id = j.race_id
+  where j.pool_id = new.pool_id and j.member_id = new.member_id
+    and r.season = seizoen and j.race_id <> new.race_id;
+  if gezet >= 5 then
+    raise exception 'Je hebt je vijf jokers voor dit seizoen al gezet';
+  end if;
+
+  return new;
+end $$;
+
+drop trigger if exists jokers_bewaken on public.jokers;
+create trigger jokers_bewaken
+  before insert or update or delete on public.jokers
+  for each row execute function public.poule_joker_bewaken();
 
 -- ------------------------------------------------------------
 --  Wie ben je, en waar hoor je bij
@@ -714,7 +818,14 @@ as $$
     'antwoorden', coalesce((select jsonb_agg(to_jsonb(a))
                    from public.answers a, poule p where a.pool_id = p.id), '[]'::jsonb),
     'poulevragen',coalesce((select jsonb_agg(pq.question_id)
-                   from public.pool_questions pq, poule p where pq.pool_id = p.id), '[]'::jsonb)
+                   from public.pool_questions pq, poule p where pq.pool_id = p.id), '[]'::jsonb),
+    -- Alleen race_id en member_id: een joker is een feit, geen inhoud. Dat de
+    -- jokers van je medespelers meekomen is met opzet -- zonder die rijen
+    -- klopt de stand niet, want een joker verdubbelt wat iemand dat weekend
+    -- scoorde.
+    'jokers',     coalesce((select jsonb_agg(jsonb_build_object(
+                     'race_id', j.race_id, 'member_id', j.member_id))
+                   from public.jokers j, poule p where j.pool_id = p.id), '[]'::jsonb)
   ) end;
 $$;
 
@@ -967,6 +1078,7 @@ alter table public.predictions  enable row level security;
 alter table public.questions      enable row level security;
 alter table public.pool_questions enable row level security;
 alter table public.answers        enable row level security;
+alter table public.jokers         enable row level security;
 
 -- Alle namen die dit bestand ooit gebruikt heeft, zodat een tweede run niet
 -- struikelt over een policy uit een vorige versie.
@@ -991,6 +1103,8 @@ drop policy if exists pool_questions_beheren on public.pool_questions;
 drop policy if exists answers_open      on public.answers;
 drop policy if exists answers_lezen     on public.answers;
 drop policy if exists answers_eigen     on public.answers;
+drop policy if exists jokers_lezen      on public.jokers;
+drop policy if exists jokers_eigen      on public.jokers;
 
 -- ---- poules -------------------------------------------------
 -- Lezen stond op `true`, en dat was het gat: met de publieke anon key was
@@ -1073,6 +1187,17 @@ create policy answers_eigen on public.answers
   using (public.mag_voor_speler(member_id))
   with check (public.mag_voor_speler(member_id));
 
+-- ---- jokers -------------------------------------------------
+-- Dezelfde afspraak als bij de antwoorden: binnen je poule zie je ze
+-- allemaal (anders klopt de stand niet en weet je niet wie zijn joker waar
+-- neerlegt), erbuiten niets. Schrijven alleen voor je eigen speler.
+create policy jokers_lezen on public.jokers
+  for select to anon, authenticated using (public.is_member(pool_id));
+create policy jokers_eigen on public.jokers
+  for all to anon, authenticated
+  using (public.mag_voor_speler(member_id))
+  with check (public.mag_voor_speler(member_id));
+
 -- predictions wordt door de app niet meer gebruikt — de antwoorden staan in
 -- answers — maar de tabel bestaat nog en krijgt dezelfde behandeling.
 create policy predictions_lezen on public.predictions
@@ -1101,6 +1226,7 @@ grant select, insert, update, delete on public.pool_members   to anon, authentic
 grant select, insert, update, delete on public.predictions    to anon, authenticated;
 grant select, insert, update, delete on public.pool_questions to anon, authenticated;
 grant select, insert, update, delete on public.answers        to anon, authenticated;
+grant select, insert, update, delete on public.jokers         to anon, authenticated;
 grant select on public.questions to anon, authenticated;
 
 -- races is het strengst, en met opzet: één tabel voor alle poules, dus wie

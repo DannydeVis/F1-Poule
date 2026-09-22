@@ -139,6 +139,17 @@ jobs:
           psql -d vragen -v ON_ERROR_STOP=1 -f schema.sql
           psql -d vragen -v ON_ERROR_STOP=1 -f test/vragen.test.sql
 
+      # Jokers zijn de tweede regel die hard in de database staat, naast de
+      # deadline. Een joker die je achteraf mag verzetten is geen keuze maar
+      # een knop om de uitslag mee te herschrijven, dus dat moet hier bewezen
+      # worden en niet alleen in de app.
+      - name: jokers — vijf per seizoen, en vast zodra het weekend begint
+        run: |
+          createdb jokers
+          psql -d jokers -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d jokers -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d jokers -v ON_ERROR_STOP=1 -f test/jokers.test.sql
+
       # De afscherming uit fase 0: met de publieke anon key mag je alleen zien
       # wat bij een poule hoort waar je zelf in zit. Deze test zet een tweede
       # poule neer waar de speler niets mee te maken heeft, en controleert

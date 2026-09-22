@@ -440,6 +440,22 @@
   .tabs button:hover{background:var(--paneel2);color:var(--ink)}
   .tabs button[aria-selected="true"]{background:var(--omkeer);color:var(--omkeer-ink)}
 
+  /* De jokerregel staat boven de tabbladen, want een joker geldt voor het
+     hele weekend en niet voor één sessie. Ligt hij er, dan mag hij opvallen:
+     dit weekend telt dubbel en dat wil je zien voordat je gaat invullen. */
+  .jokerregel{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    border:1px dashed var(--lijn);border-radius:12px;padding:10px 12px}
+  .jokerregel.aan{border-style:solid;border-color:var(--amber-rand);
+    background:var(--amber-vlak)}
+  .jokerregel.aan .label{color:var(--amber)}
+  .jokerregel .mono{font-size:18px;color:var(--amber)}
+  .jokerregel .knop{flex:none;min-height:40px;padding:0 14px}
+  /* Het merkteken in de kalender. Klein, naast de Q en de R, zodat je in één
+     blik ziet waar je jokers liggen. */
+  .jokervlag{font-family:var(--mono);font-size:11px;color:var(--amber);
+    border:1px solid var(--amber-rand);border-radius:4px;padding:0 4px;
+    background:var(--amber-vlak)}
+
   /* Een vraag als één regel: naam, keuze, punten. Twaalf coureurknoppen per
      vraag maakte het scherm onbruikbaar lang op een telefoon. */
   .kiesregels{display:flex;flex-direction:column;gap:6px}
@@ -1704,11 +1720,33 @@ const scoreTab = (p, race, welk) => {
   return lijst + duels + los + extra;
 };
 
+// ---- jokers -------------------------------------------------
+// Vijf per seizoen, en het weekend waarop je er een legt telt dubbel. Het
+// getal is een spelregel zoals 5/3/1 dat is, dus het staat hier en niet in
+// de database: een poule die er vier of zes zou willen is een andere vraag
+// dan deze.
+const JOKERS_PER_SEIZOEN = 5;
+const jokersAan = () => !!S.poule?.jokers_vanaf;
+const heeftJoker = (raceId, memberId) => jokersAan()
+  && S.jokers.some(j => zelfde(j.race_id, raceId) && zelfde(j.member_id, memberId));
+// Hoeveel er nog liggen. Alleen dit seizoen, want de teller loopt per
+// seizoen -- net als in de trigger die hem in de database bewaakt.
+const jokersOver = (memberId) => JOKERS_PER_SEIZOEN - S.jokers.filter(j =>
+  zelfde(j.member_id, memberId) && S.races.some(r => zelfde(r.id, j.race_id))).length;
+
 // Alleen de sessies die dít weekend bestaan. Een gewoon weekend heeft geen
 // deadline_sprint, dus die sessie telt daar niet mee -- en levert dus ook
 // geen nul op die je in de stand terugziet.
-const scoreWeekend = (p, race) =>
-  weekendSessies(race).reduce((n, w) => n + scoreTab(p, race, w), 0);
+//
+// En dan de joker eroverheen. Bewust hier en niet in scoreTab: een joker
+// hangt aan het weekend, dus hij verdubbelt alles wat je dat weekend deed en
+// niet één sessie ervan. Zo komt hij vanzelf terecht in de stand, in de
+// weekendwinst en in de grafiek, zonder dat die drie hem apart hoeven te
+// kennen.
+const scoreWeekend = (p, race) => {
+  const som = weekendSessies(race).reduce((n, w) => n + scoreTab(p, race, w), 0);
+  return p && heeftJoker(race.id, p.member_id) ? som * 2 : som;
+};
 
 // </knip vragen>
 
@@ -1784,6 +1822,11 @@ const demoVragen = [
 ];
 
 // Dezelfde demovoorspellingen, maar als rijen zoals answers ze bewaart.
+// Danny zette zijn joker op Shanghai, dus dat weekend telt bij hem dubbel.
+// Eén is genoeg om te laten zien wat het doet: in de stand, in de kalender en
+// op het racescherm.
+const demoJokers = [{ race_id:2, member_id:'m1' }];
+
 // Per sessie die deze speler ingevuld heeft, zodat de sprint meekomt zonder
 // dat hier een derde regel bijgeschreven hoeft te worden.
 const demoAntwoorden = () => demoPreds.flatMap(p => SESSIEVOLGORDE
@@ -1796,10 +1839,12 @@ const demoAntwoorden = () => demoPreds.flatMap(p => SESSIEVOLGORDE
 // ============================================================
 
 const S = {
-  poule: DEMO ? { id:'p1', name:'Vrijdagmiddagpoule', join_code:'RTM026' } : null,
+  poule: DEMO
+    ? { id:'p1', name:'Vrijdagmiddagpoule', join_code:'RTM026', jokers_vanaf:uur(-100) }
+    : null,
   ik:    DEMO ? { id:'m1', naam:'Danny' } : null,
   races: [], leden: [], preds: [],
-  antwoorden: [], vragen: [], poulevragen: [],
+  antwoorden: [], vragen: [], poulevragen: [], jokers: [],
   race:  null, tab: 'quali',
   keuze: { quali: [], race: [], winnaar: '', pole: '', duels: [],
            snelste_ronde: '', snelste_pitstop: '',
@@ -2186,6 +2231,7 @@ async function laad() {
     S.races = demoRaces; S.leden = demoLeden;
     S.vragen = demoVragen; S.poulevragen = demoVragen.map(v => v.id);
     S.antwoorden = demoAntwoorden();
+    S.jokers = demoJokers;
     bouwPreds();
     return;
   }
@@ -2208,6 +2254,7 @@ async function laad() {
   S.leden = inhoud.data.leden ?? [];
   S.antwoorden = inhoud.data.antwoorden ?? [];
   S.poulevragen = inhoud.data.poulevragen ?? [];
+  S.jokers = inhoud.data.jokers ?? [];
   // De poule zelf komt mee, dus een omschrijving die iemand anders net
   // aanpaste staat er meteen goed bij.
   if (inhoud.data.poule) S.poule = inhoud.data.poule;
@@ -2835,6 +2882,8 @@ function toonApp() {
   knoopOmschrijving();
   knoopOpenbaar();
   knoopAutofill();
+  knoopJokers();
+  knoopJokerZetten();
   knoopMail();
   knoopPrivacy();
   knoopLosmaken();
@@ -3009,6 +3058,9 @@ function kalenderRij(r, st = raceStand(r)) {
       <span class="nm">${esc(r.name)}</span>
       <span class="st ${st.soort}">${esc(st.tekst)}${won ? ` · ${esc(won)}` : ''}</span>
     </span>
+    ${heeftJoker(r.id, S.ik.id)
+      ? `<span class="jokervlag" title="Je joker ligt hier: dit weekend telt dubbel">2×</span>`
+      : ''}
     <span class="mk" title="${esc(weekendSessies(r)
       .map(w => `${SESSIES[w].letter} = ${SESSIES[w].naam} ingevuld`).join(', '))}">
       ${weekendSessies(r).map(w =>
@@ -3347,6 +3399,7 @@ function poulePagina(rijen) {
     ${omschrijvingBlok()}
     ${openbaarBlok()}
     ${autofillBlok()}
+    ${jokersBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}`;
 }
@@ -3876,6 +3929,50 @@ function autofillBlok() {
     <button class="knop klein" id="autofillKnop">${vanaf ? 'Zet weer uit' : 'Zet aan'}</button>`;
 }
 
+// Dezelfde vorm als het blok hierboven, en om dezelfde reden: ook dit is een
+// streep in het seizoen en geen vinkje. Een weekend dat al liep toen je hem
+// omzette kan geen joker meer krijgen -- dat zou achteraf punten verdubbelen
+// die al geteld waren.
+function jokersBlok() {
+  if (!magBeheren()) return '';
+  const vanaf = S.poule.jokers_vanaf;
+  return `
+    <div class="scheiding"></div>
+    <span class="label">jokers</span>
+    <p class="zacht" style="margin:0">${vanaf
+      ? `Iedereen heeft sinds ${esc(datumKort(vanaf))} ${JOKERS_PER_SEIZOEN} jokers
+         voor dit seizoen. Eén per weekend, en dat weekend telt dan dubbel. Een
+         joker moet liggen vóórdat de eerste sessie begint en kan daarna niet meer
+         verzet worden. Weekenden van vóór die datum blijven zoals ze waren.`
+      : `Aanzetten geeft iedereen ${JOKERS_PER_SEIZOEN} jokers voor dit seizoen: je
+         legt er een op een weekend en dat weekend telt dubbel. Je moet hem
+         neerleggen voordat er iets gereden is, dus het is een gok op welk weekend
+         jou het beste ligt. Alleen vanaf nu — wat al gereden is verandert niet.`}</p>
+    <button class="knop klein" id="jokersKnop">${vanaf ? 'Zet weer uit' : 'Zet aan'}</button>`;
+}
+
+function knoopJokers() {
+  const knop = app.querySelector('#jokersKnop');
+  if (!knop) return;
+  knop.onclick = async () => {
+    knop.disabled = true;
+    const nu = S.poule.jokers_vanaf ? null : new Date().toISOString();
+    try {
+      if (!DEMO) {
+        const { error } = await db.from('pools')
+          .update({ jokers_vanaf: nu }).eq('id', S.poule.id);
+        if (error) throw new Error(uitleg(error));
+      }
+      S.poule.jokers_vanaf = nu;
+      // Uitzetten laat de gezette jokers staan in de database, maar ze tellen
+      // niet meer mee -- heeftJoker() kijkt eerst of de regel aanstaat. Zo is
+      // per ongeluk uitzetten en weer aanzetten geen verlies.
+      S.melding = nu ? 'Jokers staan aan, vanaf nu.' : 'Jokers staan weer uit.';
+    } catch (e) { S.melding = e.message; }
+    render();
+  };
+}
+
 function knoopAutofill() {
   const knop = app.querySelector('#autofillKnop');
   if (!knop) return;
@@ -4118,6 +4215,7 @@ function raceDetailKop() {
         ? `<span class="mono groen" data-tot="${esc(iso)}" data-kort="1">${klokTekst(iso, true)}</span>`
         : `<span class="vlag"></span>`}
     </div>
+    ${jokerRegel(r)}
     <!-- Alleen de sessies die dit weekend bestaan: een gewoon weekend krijgt
          geen sprint-tab, en op een sprintweekend staan er drie. -->
     <div class="tabs">
@@ -4125,6 +4223,78 @@ function raceDetailKop() {
         aria-selected="${S.tab === w}">${esc(SESSIES[w].tablabel ?? SESSIES[w].naam)}</button>`).join('')}
     </div>
     <div id="paneel"></div>`;
+}
+
+// Wanneer het weekend begint: de vroegste deadline die het heeft. Niet
+// deadline_quali, want op een sprintweekend gaat de sprint voor.
+const weekendStart = (r) => {
+  const tijden = weekendSessies(r)
+    .map(w => Date.parse(r[SESSIES[w].deadline])).filter(t => !isNaN(t));
+  return tijden.length ? Math.min(...tijden) : null;
+};
+
+// Mag er op dit weekend nog een joker bij of af? Twee voorwaarden, en ze
+// staan allebei ook in de trigger in schema.sql -- deze hier is er om de knop
+// weg te laten, niet om de regel af te dwingen.
+function jokerKan(r) {
+  if (!jokersAan()) return false;
+  const start = weekendStart(r);
+  return start !== null && Date.now() < start
+    && start > Date.parse(S.poule.jokers_vanaf);
+}
+
+// De jokerregel boven de tabbladen. Staat daar en niet in een tabblad, want
+// een joker geldt voor het hele weekend en niet voor één sessie.
+function jokerRegel(r) {
+  if (!jokersAan()) return '';
+  const ligt = heeftJoker(r.id, S.ik.id);
+  const kan = jokerKan(r);
+  // Een weekend waar niets meer te kiezen valt en waar geen joker ligt hoeft
+  // ook niets te zeggen. Anders staat er op twintig weekenden een regel die
+  // alleen maar meldt dat je iets niet meer kunt.
+  if (!ligt && !kan) return '';
+  const over = jokersOver(S.ik.id);
+  const uitleg = ligt
+    ? 'je joker ligt hier · dit weekend telt dubbel'
+    : over > 0 ? `nog ${over} van je ${JOKERS_PER_SEIZOEN} jokers`
+               : 'je jokers zijn op';
+  return `
+    <div class="jokerregel ${ligt ? 'aan' : ''}">
+      <span class="label">${esc(uitleg)}</span>
+      ${kan && (ligt || over > 0)
+        ? `<button class="knop klein" id="jokerknop">${ligt ? 'Haal weg' : 'Zet hier'}</button>`
+        : `<span class="mono">2×</span>`}
+    </div>`;
+}
+
+function knoopJokerZetten() {
+  const knop = app.querySelector('#jokerknop');
+  if (!knop) return;
+  knop.onclick = async () => {
+    knop.disabled = true;
+    const r = S.race, ik = S.ik.id, ligt = heeftJoker(r.id, ik);
+    const sleutel = { pool_id: S.poule.id, race_id: r.id, member_id: ik };
+    try {
+      if (!DEMO) {
+        // Weghalen is de rij verwijderen: een joker is een feit, geen vinkje
+        // dat op false kan staan. En de trigger in de database weigert
+        // allebei de kanten zodra het weekend begonnen is, dus wat hier
+        // langskomt is ook echt op tijd.
+        const { error } = ligt
+          ? await db.from('jokers').delete().eq('pool_id', sleutel.pool_id)
+              .eq('race_id', sleutel.race_id).eq('member_id', sleutel.member_id)
+          : await db.from('jokers').insert(sleutel);
+        if (error) throw new Error(uitleg(error));
+      }
+      S.jokers = ligt
+        ? S.jokers.filter(j => !(zelfde(j.race_id, r.id) && zelfde(j.member_id, ik)))
+        : [...S.jokers, { race_id: r.id, member_id: ik }];
+      S.melding = ligt
+        ? `Je joker ligt niet meer op ${r.name}.`
+        : `Je joker ligt op ${r.name}. Dit weekend telt dubbel.`;
+    } catch (e) { S.melding = e.message; }
+    render();
+  };
 }
 
 function vulPaneel() {

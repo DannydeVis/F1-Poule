@@ -67,6 +67,7 @@ const beginstand = {
   // Leeg: een poule zonder eigen keuze doet aan alles mee.
   pool_questions: [],
   answers: [],
+  jokers: [],
 };
 
 // Een echte database overleeft het herladen van de pagina, dus deze ook.
@@ -82,6 +83,7 @@ try {
 // regel valt de nabootsing dan om op een leesactie die niets hoort te doen.
 store.auth_users ??= [];
 store.otp ??= [];
+store.jokers ??= [];
 store.google_als ??= 'danny@gmail.voorbeeld';
 const bewaren = () => { try { sessionStorage.setItem(BEWAAR, JSON.stringify(store)); } catch { /* niets */ } };
 
@@ -173,7 +175,9 @@ const geweigerd = { data: null, error: { code: '42501',
   message: 'new row violates row-level security policy' } };
 
 function magSchrijven(tabel, rij) {
-  if (tabel === 'answers' || tabel === 'predictions') return magVoorSpeler(rij.member_id);
+  if (tabel === 'answers' || tabel === 'predictions' || tabel === 'jokers') {
+    return magVoorSpeler(rij.member_id);
+  }
   // Een speler inschrijven op andermans account kan niet.
   if (tabel === 'pool_members' && rij.user_id) return gelijk(rij.user_id, wieBenIk());
   if (tabel === 'pool_questions') return magBeheren(rij.pool_id);
@@ -182,7 +186,9 @@ function magSchrijven(tabel, rij) {
 
 // Welke bestaande rijen mag ik überhaupt aanraken?
 function magRaken(tabel, rij) {
-  if (tabel === 'answers' || tabel === 'predictions') return magVoorSpeler(rij.member_id);
+  if (tabel === 'answers' || tabel === 'predictions' || tabel === 'jokers') {
+    return magVoorSpeler(rij.member_id);
+  }
   if (tabel === 'pool_members') {
     // Claimen wat van niemand is, je eigen speler loslaten, of — als
     // poulebaas — een speler losmaken die aan het verkeerde account hangt.
@@ -192,6 +198,27 @@ function magRaken(tabel, rij) {
   if (tabel === 'pools') return magBeheren(rij.id);
   return true;
 }
+
+// poule_joker_bewaken() uit schema.sql, voor zover de app hem kan raken. Niet
+// compleet -- test/jokers.test.sql draait tegen een echte PostgreSQL en legt
+// de regels daar vast -- maar wel genoeg dat een browsertest niet door een
+// open deur loopt die in productie dicht zit.
+function jokerGeweigerd(rij) {
+  const poule = store.pools.find((p) => gelijk(p.id, rij.pool_id));
+  if (!poule?.jokers_vanaf) return 'Jokers staan in deze poule niet aan';
+  const race = store.races.find((r) => gelijk(r.id, rij.race_id));
+  if (!race) return null;
+  const tijden = ['deadline_sprint', 'deadline_quali', 'deadline_race']
+    .map((k) => Date.parse(race[k])).filter((t) => !Number.isNaN(t));
+  if (!tijden.length) return null;
+  const start = Math.min(...tijden);
+  if (Date.now() > start) return 'Dit weekend is al begonnen, je joker ligt vast';
+  if (start < Date.parse(poule.jokers_vanaf)) {
+    return 'Dit weekend liep al toen de jokers aangezet werden';
+  }
+  return null;
+}
+const jokerFout = (bericht) => ({ data: null, error: { code: 'P0001', message: bericht } });
 
 function uitvoeren(tabel, q) {
   const rijen = store[tabel];
@@ -203,6 +230,20 @@ function uitvoeren(tabel, q) {
     if (q._insert.some((r) => !magSchrijven(tabel, r))) return geweigerd;
     if (tabel === 'pool_members'
         && q._insert.some((r) => botstMetAccount(rijen, r, null))) return dubbelAccount;
+    if (tabel === 'jokers') {
+      for (const r of q._insert) {
+        const weigering = jokerGeweigerd(r);
+        if (weigering) return jokerFout(weigering);
+        if (rijen.some((x) => gelijk(x.pool_id, r.pool_id) && gelijk(x.race_id, r.race_id)
+                           && gelijk(x.member_id, r.member_id))) {
+          return { data: null, error: { code: '23505',
+            message: 'duplicate key value violates unique constraint "jokers_pkey"' } };
+        }
+        const gezet = rijen.filter((x) => gelijk(x.pool_id, r.pool_id)
+          && gelijk(x.member_id, r.member_id)).length;
+        if (gezet >= 5) return jokerFout('Je hebt je vijf jokers voor dit seizoen al gezet');
+      }
+    }
     const nieuw = q._insert.map((r) => {
       const rij = kopie(r);
       if (tabel === 'pool_members') rij.member_id = 'lid-' + (rijen.length + 1);
@@ -239,6 +280,14 @@ function uitvoeren(tabel, q) {
   }
 
   if (q._weg) {
+    // Een joker weghalen valt onder dezelfde trigger als hem zetten: zodra
+    // het weekend loopt kan hij niet meer weg.
+    if (tabel === 'jokers') {
+      for (const r of rijen.filter((x) => q._filters.every((f) => past(x, f)))) {
+        const weigering = jokerGeweigerd(r);
+        if (weigering) return jokerFout(weigering);
+      }
+    }
     // Een leeggemaakt antwoord haalt zijn rij weg: waarde mag niet null zijn.
     const blijft = rijen.filter((r) =>
       !(q._filters.every((f) => past(r, f)) && magRaken(tabel, r)));
@@ -537,6 +586,8 @@ const functies = {
       antwoorden: kopie((store.answers ?? []).filter((a) => gelijk(a.pool_id, poule.id))),
       poulevragen: (store.pool_questions ?? [])
         .filter((r) => gelijk(r.pool_id, poule.id)).map((r) => r.question_id),
+      jokers: (store.jokers ?? []).filter((j) => gelijk(j.pool_id, poule.id))
+        .map(({ race_id, member_id }) => ({ race_id, member_id })),
     }, error: null };
   },
 

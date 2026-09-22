@@ -243,9 +243,13 @@ gokken bijna 2x.
 Lost het probleem op dat "wie wint" nul verschil maakt als iedereen dezelfde
 naam invult. Corrigeert zichzelf als één team het seizoen domineert.
 
-### Jokers
-Vijf per seizoen, niet twee keer op dezelfde vraag. Maakt het een strategische
-keuze in plaats van een automatisme.
+### ~~Jokers~~ — gebouwd
+Vijf per seizoen, één per weekend, en dat weekend telt dubbel. Hij moet liggen
+voordat de eerste sessie begint en kan daarna niet meer verzet worden, dus het
+is een gok op welk weekend jou het beste ligt — precies de strategische keuze
+waar dit punt voor bedoeld was. Aan te zetten door de poulebaas, en net als bij
+automatisch invullen geldt dat vanaf dat moment en niet met terugwerkende
+kracht.
 
 ### ~~Slechtste twee races vallen weg~~ — gebouwd
 Bij 24 races tellen de beste 22. Vangt één vakantie en één ramprace op.
@@ -587,18 +591,46 @@ voorkomen:
 | | wat het is | de haak eraan |
 |---|---|---|
 | Contrair-multiplier | punten schalen met hoe zeldzaam je antwoord was | verandert wat een punt waard is |
-| Jokers | vijf per seizoen, dubbele punten | nieuwe keuze per race, dus nieuw scherm |
+| ~~Jokers~~ | *gebouwd, zie hierboven* | |
 | Seizoenslaag | vragen vóór race 1, gescoord aan het eind | hoort aan het begin van een seizoen te beginnen |
 | ~~Sprintweekenden~~ | *gebouwd, zie hieronder* | |
 
 Ze raken alle vier de telling. Dat is de reden dat ze hier stonden en niet
 gebouwd waren: midden in een lopend seizoen de puntentelling omgooien is geen
 verbetering, ook niet als de nieuwe regel op zichzelf beter is. Kijk hoe de twee
-die er wél zijn dat hebben opgelost: "slechtste twee races" staat náást de stand
+die er al waren dat hebben opgelost: "slechtste twee races" staat náást de stand
 in plaats van erin, en "automatisch invullen" geldt alleen vanaf het moment dat
-de poulebaas hem aanzet. Wie aan de drie die overblijven begint beantwoordt die
+de poulebaas hem aanzet. Wie aan de twee die overblijven begint beantwoordt die
 vraag dus eerst: geldt dit vanaf nu, of met terugwerkende kracht over races die
 al gereden zijn?
+
+De twee die inmiddels gebouwd zijn beantwoordden hem allebei, en op een andere
+manier. De sprint kon het ontwijken — een poule kiest zijn vragen bij het
+aanmaken, dus een lopende poule krijgt hem simpelweg niet. De joker kon dat
+niet, want hij is geen vraag maar een regel over de telling zelf. Die heeft
+daarom dezelfde streep gekregen als automatisch invullen: `pools.jokers_vanaf`
+bewaart wanneer hij aanging, en een weekend dat toen al liep telt niet mee.
+
+### Jokers, en waarom er vijf zijn en niet per vraag
+
+Het punt hierboven zei "niet twee keer op dezelfde vraag", en dat is bewust
+anders geworden: **één joker per weekend, niet per vraag.** Die regel bestond om
+te voorkomen dat iedereen zijn jokers automatisch op de race-top-10 legt. Met
+een joker per weekend bestaat dat probleem niet — je kiest wélk weekend, en dat
+is de keuze. Per vraag doubleren zou bovendien betekenen dat elke puntenregel
+in de app een sterretje krijgt; nu staat de verdubbeling op één plek, in
+`scoreWeekend()`, en komt hij vanzelf terecht in de stand, de weekendwinst, de
+grafiek en de terugblik zonder dat die vier hem apart hoeven te kennen.
+
+Twee dingen om te weten als je hier verder bouwt:
+
+- **De regel staat in de database**, niet in het scherm: trigger
+  `jokers_bewaken` in `schema.sql`. Dat is naast de deadline op `answers` de
+  tweede regel die daar hard in zit, en om dezelfde reden.
+- **Een cascade is geen speler die van gedachten verandert.** De trigger laat
+  een delete door zodra `pg_trigger_depth() > 1`. Zonder die uitzondering liep
+  "verwijder mijn account" vast op een joker die op een gereden weekend lag, en
+  dat is precies het soort deur dat niet op slot hoort te zitten.
 
 ### Sprintweekenden, en waarom die er nu wel zijn
 

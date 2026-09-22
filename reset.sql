@@ -13,6 +13,7 @@
 drop trigger  if exists predictions_deadline on public.predictions;
 drop function if exists public.poule_deadline_bewaken() cascade;
 
+drop table if exists public.jokers         cascade;
 drop table if exists public.answers        cascade;
 drop table if exists public.pool_questions cascade;
 drop table if exists public.questions      cascade;

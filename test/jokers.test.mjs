@@ -1,0 +1,220 @@
+// Jokers: vijf per seizoen, en het weekend waar je er een op legt telt dubbel.
+//
+// De vierde en laatste van de punten uit groep 4 die de puntentelling raken,
+// en net als bij de sprint is de vraag niet "werkt het" maar "wat doet het
+// met een poule die al loopt". Antwoord: niets, tenzij de poulebaas hem
+// aanzet, en dan nog alleen voor weekenden die op dat moment nog moesten
+// beginnen.
+//
+// Wat hier vastligt:
+//   1. Uit is uit: zonder de knop is er nergens een joker te zien.
+//   2. De poulebaas zet hem aan, en dat geldt vanaf dat moment.
+//   3. Een joker verdubbelt de weekendscore, in de kalender én in de stand.
+//   4. Neerleggen en terugnemen kan, zolang het weekend nog niet begonnen is.
+//   5. Zodra de eerste sessie loopt ligt hij vast — ook het weghalen.
+//   6. Vijf is vijf.
+//   7. Een weekend dat al liep toen de jokers aangingen krijgt er geen.
+
+import { maakControle, startPagina, meedoen } from './hulp.mjs';
+
+const { check, afronden } = maakControle('jokers');
+const { page, jsFouten, stoppen } = await startPagina();
+
+const tekst = async (kies) => (await page.textContent(kies)).replace(/\s+/g, ' ').trim();
+const rij = (naam) => `[data-race]:has(.nm:text-is("${naam}"))`;
+const punten = async (naam) =>
+  Number((await tekst(`${rij(naam)} .st`)).match(/(\d+) ptn/)?.[1] ?? -1);
+const openRace = async (naam) => {
+  await page.waitForSelector('[data-race]');
+  await page.click(rij(naam));
+  await page.waitForSelector('#paneel');
+};
+const terug = async () => {
+  await page.click('[data-weergave="races"]');
+  await page.waitForSelector('[data-race]');
+};
+
+await meedoen(page);
+
+// Drie weekenden: Melbourne is gereden en levert punten op, Shanghai en
+// Suzuka moeten nog komen. Danny is poulebaas, want hij maakte de poule niet
+// aan — die stond er al — dus dat moet er eerst bij.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  const u = (h) => new Date(Date.now() + h * 3600e3).toISOString();
+  const uitslag = ['1', '4', '16', '63', '81', '44', '12', '14', '10', '18', '6', '43'];
+  const drivers = db.races[0].drivers;
+  Object.assign(db.races[0], { deadline_quali: u(-50), deadline_race: u(-49),
+    quali_result: uitslag, race_result: uitslag });
+  Object.assign(db.races[1], { deadline_quali: u(24), deadline_race: u(48) });
+  Object.assign(db.races[2], { drivers, deadline_quali: u(96), deadline_race: u(120) });
+  // Een perfecte inzending voor Melbourne: 50 + 50 = 100 punten.
+  for (const q of ['quali_top10', 'race_top10']) {
+    db.answers.push({ pool_id: 'pool-1', race_id: 1, member_id: 'lid-1',
+                      question_id: q, waarde: uitslag.slice(0, 10) });
+  }
+  db.pools[0].owner_member_id = 'lid-1';
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await page.waitForSelector('[data-race]');
+
+// --- 1. uit is uit --------------------------------------------------------
+check('een gereden weekend levert gewoon zijn punten op', (await punten('Melbourne')) === 100,
+  await tekst(`${rij('Melbourne')} .st`));
+await openRace('Shanghai');
+check('zonder de knop staat er geen jokerregel op het racescherm',
+  (await page.$('.jokerregel')) === null);
+await terug();
+check('en geen jokermerkteken in de kalender', (await page.$('.jokervlag')) === null);
+
+// --- 2. de poulebaas zet hem aan ------------------------------------------
+await page.click('[data-weergave="poule"]');
+await page.waitForSelector('#jokersKnop');
+check('de knop biedt aan om jokers aan te zetten',
+  (await tekst('#jokersKnop')) === 'Zet aan');
+await page.click('#jokersKnop');
+await page.waitForSelector('.melding');
+check('en de melding zegt erbij dat het vanaf nu geldt',
+  (await tekst('.melding')).includes('vanaf nu'), await tekst('.melding'));
+const vanaf = await page.evaluate(() => globalThis.__db.pools[0].jokers_vanaf);
+check('aanzetten bewaart een moment en geen vinkje',
+  typeof vanaf === 'string' && Math.abs(Date.parse(vanaf) - Date.now()) < 6e4, String(vanaf));
+
+// --- 7. en het geldt niet met terugwerkende kracht ------------------------
+await terug();
+check('een weekend dat al gereden is verandert niet',
+  (await punten('Melbourne')) === 100, await tekst(`${rij('Melbourne')} .st`));
+await openRace('Melbourne');
+check('en er valt daar geen joker meer op te leggen',
+  (await page.$('.jokerregel')) === null);
+await terug();
+
+// --- 4. neerleggen --------------------------------------------------------
+await openRace('Shanghai');
+check('op een weekend dat nog moet komen staat de jokerregel wel',
+  (await page.$('.jokerregel')) !== null);
+check('en die zegt hoeveel je er nog hebt',
+  (await tekst('.jokerregel .label')) === 'nog 5 van je 5 jokers',
+  await tekst('.jokerregel .label'));
+
+await page.click('#jokerknop');
+await page.waitForSelector('.melding');
+check('neerleggen zegt waar hij ligt',
+  (await tekst('.melding')).includes('Shanghai'), await tekst('.melding'));
+const gezet = await page.evaluate(() => globalThis.__db.jokers);
+check('en de joker staat in de database',
+  gezet.length === 1 && String(gezet[0].race_id) === '2' && gezet[0].member_id === 'lid-1',
+  JSON.stringify(gezet));
+check('de regel zegt nu dat het weekend dubbel telt',
+  (await tekst('.jokerregel .label')).includes('dubbel'), await tekst('.jokerregel .label'));
+
+await terug();
+check('en de kalender zet er een merkteken bij',
+  (await page.$(`${rij('Shanghai')} .jokervlag`)) !== null);
+check('alleen bij dat ene weekend',
+  (await page.$$('.jokervlag')).length === 1);
+
+// Terugnemen kan: een misklik in ronde 2 hoort je niet de rest van het
+// seizoen te kosten.
+await openRace('Shanghai');
+await page.click('#jokerknop');
+await page.waitForFunction(() => globalThis.__db.jokers.length === 0);
+check('terugnemen haalt hem weg',
+  (await page.evaluate(() => globalThis.__db.jokers.length)) === 0);
+await page.click('#jokerknop');
+await page.waitForFunction(() => globalThis.__db.jokers.length === 1);
+await terug();
+
+// --- 3. en dan telt dat weekend dubbel ------------------------------------
+// Shanghai wordt gereden, met dezelfde perfecte inzending. Zonder joker 100,
+// met joker 200.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  const u = (h) => new Date(Date.now() + h * 3600e3).toISOString();
+  const uitslag = ['1', '4', '16', '63', '81', '44', '12', '14', '10', '18', '6', '43'];
+  Object.assign(db.races[1], { deadline_quali: u(-4), deadline_race: u(-3),
+    quali_result: uitslag, race_result: uitslag });
+  for (const q of ['quali_top10', 'race_top10']) {
+    db.answers.push({ pool_id: 'pool-1', race_id: 2, member_id: 'lid-1',
+                      question_id: q, waarde: uitslag.slice(0, 10) });
+  }
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await page.waitForSelector('[data-race]');
+
+check('hetzelfde weekend met een joker levert het dubbele op',
+  (await punten('Shanghai')) === 200, await tekst(`${rij('Shanghai')} .st`));
+check('en het weekend zonder joker blijft gewoon staan',
+  (await punten('Melbourne')) === 100, await tekst(`${rij('Melbourne')} .st`));
+
+await page.click('[data-weergave="stand"]');
+await page.waitForSelector('.strij');
+const stand = Number(await tekst('.strij .t'));
+check('de stand telt de verdubbeling mee: 100 + 200', stand === 300, String(stand));
+await terug();
+
+// --- 5. en nu ligt hij vast -----------------------------------------------
+await openRace('Shanghai');
+check('op een gereden weekend staat er geen knop meer',
+  (await page.$('#jokerknop')) === null);
+check('maar wel dat de joker er ligt',
+  (await tekst('.jokerregel .label')).includes('dubbel'), await tekst('.jokerregel .label'));
+await terug();
+
+// --- 6. vijf is vijf ------------------------------------------------------
+// Nog vier weekenden erbij die allemaal nog moeten komen. Danny legt er vier
+// jokers op; de vijfde is dan op.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  const u = (h) => new Date(Date.now() + h * 3600e3).toISOString();
+  for (let i = 0; i < 4; i++) {
+    db.races.push({ id: 20 + i, season: 2026, round: 10 + i, name: `Extra ${i + 1}`,
+      drivers: db.races[0].drivers,
+      deadline_quali: u(200 + i * 24), deadline_race: u(210 + i * 24),
+      deadline_sprint: null, quali_result: null, race_result: null, sprint_result: null,
+      fastest_lap: null, fastest_pitstop: null, safety_cars: null, rode_vlag: null });
+    db.jokers.push({ pool_id: 'pool-1', race_id: 20 + i, member_id: 'lid-1' });
+  }
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await page.waitForSelector('[data-race]');
+
+await openRace('Suzuka');
+check('met vijf jokers gezet is er niets meer te vergeven',
+  (await tekst('.jokerregel .label')) === 'je jokers zijn op',
+  await tekst('.jokerregel .label'));
+check('en de knop staat er niet', (await page.$('#jokerknop')) === null);
+
+// Eentje terugnemen maakt weer plek.
+await openRace('Extra 1');
+await page.click('#jokerknop');
+await page.waitForFunction(() => globalThis.__db.jokers.length === 4);
+await openRace('Suzuka');
+check('eentje terugnemen maakt weer plek',
+  (await tekst('.jokerregel .label')) === 'nog 1 van je 5 jokers',
+  await tekst('.jokerregel .label'));
+check('en de knop is terug', (await page.$('#jokerknop')) !== null);
+
+// --- uitzetten ------------------------------------------------------------
+await page.click('[data-weergave="poule"]');
+await page.waitForSelector('#jokersKnop');
+check('de knop biedt nu aan om ze weer uit te zetten',
+  (await tekst('#jokersKnop')) === 'Zet weer uit');
+await page.click('#jokersKnop');
+await page.waitForSelector('.melding');
+await terug();
+check('uitgezet telt de verdubbeling niet meer mee',
+  (await punten('Shanghai')) === 100, await tekst(`${rij('Shanghai')} .st`));
+check('en de merktekens zijn weg', (await page.$('.jokervlag')) === null);
+// De rijen blijven wel staan: per ongeluk uitzetten en weer aanzetten hoort
+// geen verlies te zijn.
+check('maar de gezette jokers staan er nog in de database',
+  (await page.evaluate(() => globalThis.__db.jokers.length)) === 4);
+
+check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
+
+await stoppen();
+process.exit(afronden() ? 0 : 1);
