@@ -112,6 +112,69 @@ begin
   end if;
   raise notice 'ok: de sprint en de seizoenslaag staan er apart onder';
 
+  -- 4b. rondt het seizoen ooit af?
+  --
+  --     De seizoenslaag wordt pas gescoord als élke race een uitslag heeft of
+  --     afgelast is. Blijft er één hangen, dan leveren die honderdvijftig
+  --     punten nooit iets op en blijft "Begin aan het volgende seizoen"
+  --     grijs -- en dat merk je pas aan het eind van het jaar.
+  insert into public.races (id, season, round, name, deadline_quali, deadline_race,
+                            race_result, afgelast)
+  values (9301, 2026, 91, 'Gereden',  now() - interval '30 days',
+          now() - interval '29 days', array['1','4'], false),
+         (9302, 2026, 92, 'Afgelast', now() - interval '20 days',
+          now() - interval '19 days', null, true),
+         (9303, 2026, 93, 'Hangt',    now() - interval '15 days',
+          now() - interval '14 days', null, false);
+
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'afgelaste races';
+  if gevonden <> '1' then
+    raise exception 'gezakt: % afgelaste races in plaats van 1', gevonden;
+  end if;
+
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'seizoen 2026 rond';
+  if gevonden <> 'nog 1 te gaan' then
+    raise exception 'gezakt: het seizoen heet % in plaats van "nog 1 te gaan"', gevonden;
+  end if;
+  raise notice 'ok: een race die nog moet komen houdt het seizoen open (%)', gevonden;
+
+  -- Een afgelaste race mag het seizoen níét openhouden; daar komt nooit meer
+  -- een uitslag van.
+  select uitkomst into gevonden from public.poule_controle
+   where controle like 'blijven hangen%';
+  if gevonden <> '1' then
+    raise exception 'gezakt: % blijven hangen in plaats van 1 (de afgelaste telt mee?)', gevonden;
+  end if;
+  raise notice 'ok: een race die een week na zijn deadline niets heeft wordt gemeld';
+
+  -- Zodra hij binnenkomt is het seizoen rond en hangt er niets meer.
+  update public.races set race_result = array['1','4'] where id = 9303;
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'seizoen 2026 rond';
+  if gevonden <> 'ok' then
+    raise exception 'gezakt: met alles binnen heet het seizoen % in plaats van ok', gevonden;
+  end if;
+  select uitkomst into gevonden from public.poule_controle
+   where controle like 'blijven hangen%';
+  if gevonden <> '0' then
+    raise exception 'gezakt: er hangt nog % nadat alles binnen is', gevonden;
+  end if;
+  raise notice 'ok: en met alles binnen is het seizoen rond';
+
+  delete from public.races where id in (9301, 9302, 9303);
+
+  -- Zonder kalender is er niets om rond te zijn. "ok" zou hier gelden omdat
+  -- er geen race is die het tegenspreekt, en dat is precies het soort ok waar
+  -- je niets aan hebt.
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'seizoen 2026 rond';
+  if gevonden <> 'geen kalender' then
+    raise exception 'gezakt: een lege kalender heet % in plaats van "geen kalender"', gevonden;
+  end if;
+  raise notice 'ok: en een lege kalender zegt dat er geen kalender is';
+
   -- 5. handmatig ingevulde uitslagen: álle zeven vlaggen, niet twee.
   --    Per vlag apart, want het gaat er juist om dat er geen enkele
   --    overgeslagen wordt.
