@@ -145,6 +145,11 @@ check('en er staat een knop om over te schakelen',
   (await page.textContent('#taalknop')).trim() === 'EN');
 check('met een label dat in de andere taal geschreven is',
   (await page.getAttribute('#taalknop', 'aria-label')) === 'Switch to English');
+// Een schermlezer kiest op dit attribuut zijn stem en zijn uitspraakregels.
+// Staat het op "nl" terwijl er Engels staat, dan leest hij Engelse zinnen met
+// een Nederlandse tong — onverstaanbaar, en niet te zien aan het scherm.
+check('<html lang> staat op de taal die er staat',
+  (await page.getAttribute('html', 'lang')) === 'nl');
 
 await page.click('#taalknop');
 await page.waitForSelector('#taalknop:text-is("NL")');
@@ -154,6 +159,8 @@ check('één tik zet het hele beginscherm in het Engels',
   (await tekst(page, '#app')).slice(0, 70));
 check('en de knop biedt nu de weg terug',
   (await page.getAttribute('#taalknop', 'aria-label')) === 'Schakel over naar Nederlands');
+check('en <html lang> is meegegaan',
+  (await page.getAttribute('html', 'lang')) === 'en');
 
 // De keuze hoort dit toestel te overleven, anders sta je na elke herlaadbeurt
 // weer in de verkeerde taal.
@@ -202,6 +209,8 @@ check('terugzetten naar Nederlands werkt vanuit de app',
   (await tekst(page, '#app')).slice(0, 80));
 check('en de opgeslagen keuze is meegegaan',
   (await page.evaluate(() => localStorage.getItem('poule:taal'))) === 'nl');
+check('en <html lang> staat weer op nl',
+  (await page.getAttribute('html', 'lang')) === 'nl');
 
 // --- 6. staat er nog tekst buiten T() om? ---------------------------------
 // De vangnet-test. Alles hierboven controleert wat er wél vertaald is; dit

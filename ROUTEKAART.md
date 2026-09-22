@@ -844,8 +844,9 @@ Drie dingen om te weten als je hier verder bouwt:
 | 5 | ~~vorige seizoenen~~, ~~push~~, ~~publieke profielen~~ en ~~talen~~ — **gebouwd**; andere klassen bewust niet | andere klassen kan niet (OpenF1 is F1-only) |
 
 Fase 0 tot en met 4 zijn gebouwd, en uit fase 5 "vorige seizoenen",
-"push-herinneringen" en "publieke profielen". De twee die overblijven staan er
-nog, maar niet als "nog niet aan toegekomen" — zie de redenen hierboven.
+"push-herinneringen", "publieke profielen" en "internationale talen". Er blijft
+één punt over, en dat staat er niet als "nog niet aan toegekomen": andere
+raceklassen stuit op OpenF1, niet op deze repo — zie de reden hierboven.
 
 Groep 4 is leeg: ~~sprintweekenden~~, ~~jokers~~, ~~seizoenslaag~~ en de
 ~~contrair-multiplier~~ zijn alle vier gebouwd.

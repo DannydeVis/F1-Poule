@@ -2616,6 +2616,16 @@ function beginTaal() {
 
 let TAAL = beginTaal();
 
+// Het lang-attribuut op <html> hoort mee te veranderen. Het staat in de
+// broncode op "nl" omdat een pagina die nog niets weet ergens mee moet
+// beginnen, maar zodra de app zijn taal gekozen heeft klopt dat niet meer.
+// Dit is geen detail: een schermlezer kiest hierop zijn stem en zijn
+// uitspraakregels, en leest anders Engelse zinnen met een Nederlandse tong.
+function zetPaginaTaal() {
+  try { document.documentElement.lang = TAAL; } catch { /* niets */ }
+}
+zetPaginaTaal();
+
 /**
  * Vertaal één zin. `vars` vult {plaatshouders} in, zodat een getal midden in
  * een zin geen drie losse stukjes tekst hoeft te worden — in het Engels staat
@@ -2634,6 +2644,7 @@ function zetTaal(taal) {
   if (taal !== 'nl' && taal !== 'en') return;
   TAAL = taal;
   schrijf(TAALSLEUTEL, taal);
+  zetPaginaTaal();
   // Het hele scherm opnieuw, want er is geen stukje dat geen tekst bevat.
   if (S.poule && S.ik) render(); else toonStart();
 }
