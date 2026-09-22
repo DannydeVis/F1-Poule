@@ -4126,3 +4126,60 @@ zonder account met opzet toelaat.
 Precies de groep die bij een onzorgvuldige dichtzetting stilletjes
 buitengesloten zou zijn — RLS geeft namelijk geen fout op een geblokkeerde
 lees-actie, hij geeft gewoon niets terug.
+
+---
+
+## Sprintweekenden, en de tweedeling die eronder zat
+
+Zes van de vierentwintig weekenden hebben een derde sessie. Dat lijkt een
+tabje erbij, en dat was het niet — het was de laatste van de vier punten uit
+groep 4 die nog open stond, en de enige die zonder streep of knop kon.
+
+**Waarom hij zonder overgangsregeling kon.** De andere drie (contrair,
+jokers, seizoenslaag) veranderen wat een punt waard is voor poules die nu al
+lopen. De sprint niet: een poule kiest bij het aanmaken welke vragen ze stelt,
+en die set gaat op slot zodra de eerste race gescoord is. Een lopende poule
+heeft `sprint_top10` dus domweg niet in `pool_questions` staan en merkt er
+niets van. Een poule die later wordt aangemaakt kan hem aanzetten.
+
+**Wat het wél kostte.** De app was rond precies twee sessies gebouwd.
+Veertien keer stond er ergens een variant van
+
+    welk === 'quali' ? r.quali_result : r.race_result
+
+en drie keer een handgeschreven `const dicht = { quali: ..., race: ... }`.
+Dat tweede is het gevaarlijke: zo'n object zegt `undefined` over een sessie
+die het niet kent, en `undefined` is niet dicht. Een sprint zou dus ná zijn
+eigen deadline nog invulbaar zijn geweest, en dat merk je niet aan een
+foutmelding maar aan iemand die zaterdagavond nog "voorspelt".
+
+Dat is eerst in één tabel getrokken — `SESSIES`, met per sessie de naam, de
+kolommen en de deadline — in een eigen commit zonder gedragsverandering. Pas
+daarna kwam de sprint erbij als derde regel in die tabel. Wie een vierde
+sessie wil toevoegen zet er een regel bij en voegt de kolommen toe aan
+`schema.sql`; de rest van het bestand hoeft er niets van te weten.
+
+**Drie dingen die niet vanzelf goed gingen:**
+
+- **De sprint gaat vóór de kwalificatie.** Sprintkwalificatie op vrijdag,
+  sprint zaterdagochtend, gewone kwalificatie zaterdagmiddag. `SESSIEVOLGORDE`
+  staat daarom op `['sprint', 'quali', 'race']`. `openLijst()` sorteert
+  bovendien op de klok en niet op die lijst, want de volgorde van de tabs en
+  de vraag "wat sluit het eerst" zijn twee verschillende dingen.
+- **`poule_antwoord_deadline()` in `schema.sql` had een `else`.** Er stond
+  `case when sessie_van = 'quali' then r.deadline_quali else r.deadline_race
+  end`. Elke sessie die geen `quali` was viel daarmee stilletjes op de
+  race-deadline terug — een sprintantwoord zou tot zondagmiddag aangenomen
+  zijn. Nu een drieweg-`case` met een eigen melding per sessie.
+- **`heeftUitslag()`.** Op elf plekken stond `r.quali_result ||
+  r.race_result` als "is dit weekend al gereden". De sprintuitslag komt
+  zaterdagmiddag binnen, vóór de kwalificatie-uitslag, dus zo'n weekend zou
+  een paar uur lang "nog niets gereden" heten terwijl er al punten op stonden.
+
+**De weging zit in `SESSIES.sprint.weging`, niet in het puntenaantal van de
+vraag.** Dezelfde top 10, dezelfde 5/3/1 per plek, maal 0,5. De losse vragen
+eronder hangen aan hun eigen puntenaantal en worden niet nog eens geschaald.
+En "maximaal per weekend" laat de sprint erbuiten (`weekendSom()`) maar noemt
+hem er apart bij (`sprintSom()`) — anders staat het weekendmaximum achttien
+van de vierentwintig weekenden te hoog. Die twee staan naast elkaar omdat het
+preset-kaartje en de voet eronder het eerder niet eens waren: 227 tegen 202.

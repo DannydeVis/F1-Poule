@@ -24,6 +24,7 @@ je eigen computer.
 | `uitslagen.test.mjs` | De vier losse uitslagen uit de gegevens van OpenF1: vooral welke berichten van de wedstrijdleiding wél en niet een safety car zijn |
 | `duel-weergave.test.mjs` | Dat "jij" vaststaat aan je eigen cijfer in het onderlinge duel, en niet aan dat van de tegenstander |
 | `poules-en-omschrijving.test.mjs` | De omschrijving van een poule, en meer dan één poule op hetzelfde toestel: wisselen zonder de code, en een poule die weg is |
+| `sprintweekend.test.mjs` | De derde sessie: dat een gewoon weekend er geen tab bij krijgt, dat een sprintweekend er wel een heeft en vóór de kwalificatie, dat hij voor halve punten telt, en dat automatisch invullen hem overslaat |
 | `poule-aanmaken.test.mjs` | Het aanmaken in vier stappen: de presets, de losse vragen met hun live puntentotaal, de gokwaarschuwing, en wat er in de database belandt |
 | `vragen-beheren.test.mjs` | De vragenset aanpassen onder Poule, en dat er niets meer verandert zodra hij op slot zit |
 | `snelste.test.mjs` | De snelste ronde en de snelste pitstop, inclusief zelf invullen als OpenF1 ze niet heeft |

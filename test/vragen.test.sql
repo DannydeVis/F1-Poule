@@ -15,10 +15,10 @@ declare
   lid   uuid;
   n     int;
 begin
-  -- 1. de negen vragen staan er
+  -- 1. de tien vragen staan er
   select count(*) into n from questions;
-  if n <> 9 then raise exception 'gezakt: % vragen in plaats van 9', n; end if;
-  raise notice 'ok: negen vragen in de lijst';
+  if n <> 10 then raise exception 'gezakt: % vragen in plaats van 10', n; end if;
+  raise notice 'ok: tien vragen in de lijst';
 
   -- 2. de presets uit BEDIENING.md kloppen met de punten in de database
   select sum(punten) into n from questions where id in ('quali_top10','race_top10');
@@ -28,10 +28,17 @@ begin
   where id in ('quali_top10','race_top10','winnaar','pole','snelste_ronde');
   if n <> 145 then raise exception 'gezakt: Klassiek is % punten in plaats van 145', n; end if;
 
-  select sum(punten) into n from questions;
+  -- Zonder de sprint, want die bestaat op zes van de vierentwintig weekenden.
+  -- Meetellen zou het maximum van een gewoon weekend te hoog zetten; de app
+  -- rekent hem er in weekendSom() om dezelfde reden uit.
+  select sum(punten) into n from questions where id <> 'sprint_top10';
   if n not between 190 and 210 then
     raise exception 'gezakt: Gevorderd is % punten, niet ongeveer 200', n;
   end if;
+
+  select punten into n from questions where id = 'sprint_top10';
+  if n <> 25 then raise exception 'gezakt: de sprint is % punten in plaats van 25', n; end if;
+  raise notice 'ok: de sprint telt voor halve punten mee';
   raise notice 'ok: presets tellen op tot 100 / 145 / % punten', n;
 
   -- 2b. de losse punten zelf. index.html telt niet meer met eigen getallen
@@ -49,7 +56,7 @@ begin
   raise notice 'ok: de losse puntenwaarden staan zoals de app ze verwacht';
 
   -- 3. elke vraag hangt aan een bestaande sessie en een bekend soort
-  select count(*) into n from questions where sessie not in ('quali','race');
+  select count(*) into n from questions where sessie not in ('quali','sprint','race');
   if n <> 0 then raise exception 'gezakt: % vragen met een onbekende sessie', n; end if;
   select count(*) into n from questions
   where soort not in ('top10','coureur','getal','janee','duels');
@@ -119,6 +126,6 @@ begin
 
   -- 9. maar de vragenlijst zelf blijft natuurlijk staan
   select count(*) into n from questions;
-  if n <> 9 then raise exception 'gezakt: de vragenlijst is aangetast (% rijen)', n; end if;
+  if n <> 10 then raise exception 'gezakt: de vragenlijst is aangetast (% rijen)', n; end if;
   raise notice 'ok: de vragenlijst zelf blijft ongemoeid';
 end $$;

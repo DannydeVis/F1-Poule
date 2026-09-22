@@ -76,8 +76,10 @@ check('en klappen open als je erom vraagt',
   await page.$eval('.vragenlijst', (n) => !n.classList.contains('hide')));
 
 const regels = await page.$$eval('.vraagregel', (n) => n.map((b) => b.dataset.vraagAan));
+// Tien uit schema.sql plus de verzonnen 'regen' die deze test er zelf bij
+// zet: de lijst komt uit de database en niet uit een lijstje in index.html.
 check('elke vraag uit de database staat in de lijst',
-  regels.length === 10 && regels.includes('regen'), `${regels.length}: ${regels.join(', ')}`);
+  regels.length === 11 && regels.includes('regen'), `${regels.length}: ${regels.join(', ')}`);
 
 const aanVoor = await page.textContent('.somregel .getal');
 await page.click('[data-vraag-aan="safety_cars"]');
@@ -104,6 +106,28 @@ check('en de voet zegt hoeveel er nu al gevraagd wordt',
   /Daarvan wordt nu 157 punten al gevraagd/.test(voet),
   voet.match(/Daarvan wordt nu[^.]*\./)?.[0] ?? 'die regel staat er niet');
 await page.click('[data-vraag-aan="regen"]');
+
+// De sprint hoort niet in "maximaal per weekend": hij bestaat op zes van de
+// vierentwintig weekenden, dus hem meetellen zet het maximum achttien keer
+// per seizoen te hoog. Hij wordt eronder apart genoemd.
+await page.click('[data-preset="gevorderd"]');
+const metSprint = await tekst('.veldblok');
+check('de sprint telt niet mee in het weekendmaximum',
+  (await page.textContent('.somregel .getal')).trim() === '202',
+  await page.textContent('.somregel .getal'));
+check('maar wordt er wel apart bij genoemd',
+  /Op een sprintweekend komt daar 25 bij/.test(metSprint),
+  metSprint.match(/Op een sprintweekend[^.]*\./)?.[0] ?? 'die regel staat er niet');
+
+await page.click('[data-vraag-aan="sprint_top10"]');
+check('zonder de sprintvraag verdwijnt die regel weer',
+  !/sprintweekend/.test(await tekst('.veldblok')));
+check('en het weekendmaximum blijft hetzelfde',
+  (await page.textContent('.somregel .getal')).trim() === '202',
+  await page.textContent('.somregel .getal'));
+// En terug naar waar de test stond: Klassiek plus safety cars.
+await page.click('[data-preset="klassiek"]');
+await page.click('[data-vraag-aan="safety_cars"]');
 
 // --- de gokwaarschuwing uit BEDIENING.md §8 -------------------------------
 check('bij een gewone set staat er geen waarschuwing',

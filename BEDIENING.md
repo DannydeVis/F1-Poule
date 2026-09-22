@@ -46,8 +46,9 @@ waarmee iemand de app opent:
 
 1. **welke race komt eraan** — het rondenummer klein, het circuit groot, met de
    afteller tot de eerstvolgende deadline en de vijf startlampjes;
-2. **moet ik nog iets doen** — per sessie een vinkje: `✓ klaar`, `· deels`,
-   `! open`, of `~ automatisch` voor een lijst die de app zelf invulde. Daarna
+2. **moet ik nog iets doen** — per sessie van dít weekend een vinkje:
+   `✓ klaar`, `· deels`, `! open`, of `~ automatisch` voor een lijst die de app
+   zelf invulde. Op een sprintweekend staan er drie in plaats van twee. Daarna
    één knop, en die wijst naar de sessie die nog ópen is en nog niet af — niet
    naar de eerstvolgende deadline. Wie de kwalificatie al deed terwijl de race
    nog open staat kreeg anders "bekijken" te lezen terwijl er juist werk lag;
@@ -112,11 +113,16 @@ Drie knoppen, groot en tikbaar:
 |---|---|---|
 | **Simpel** | Top 10 kwalificatie, top 10 race | 100 |
 | **Klassiek** | + winnaar, pole, snelste ronde | 145 |
-| **Gevorderd** | + safety cars, rode vlag, snelste pitstop, teamgenoot-duels | ongeveer 200 |
+| **Gevorderd** | + safety cars, rode vlag, snelste pitstop, teamgenoot-duels, top 10 sprint | ongeveer 200 |
 
 Daaronder een regel **Zelf samenstellen**, die pas een lijst met vinkjes
 openklapt als je erop tikt. Bij elk vinkje staat het aantal punten, en
 onderaan telt hij live op: "Maximaal 178 punten per weekend."
+
+**De sprint telt niet mee in dat maximum.** Hij bestaat op zes van de
+vierentwintig weekenden; hem meetellen zou het maximum achttien keer per
+seizoen te hoog zetten. Staat de vraag aan, dan komt er een regel onder:
+"Op een sprintweekend komt daar 25 bij, voor de top 10 van de sprint."
 
 Standaard staat **Klassiek** geselecteerd. Wie doorklikt zonder na te denken
 krijgt daarmee iets dat leuker is dan alleen twee top-tienen, zonder overweldigd
@@ -595,11 +601,26 @@ elk uur. Niemand hoeft iets in te voeren.
 |---|---|
 | Kalender en deadlines | `sessions` |
 | Deelnemerslijst met teamkleuren | `drivers` |
-| Top 10 kwalificatie en race | `session_result` |
+| Top 10 kwalificatie, sprint en race | `session_result` |
 | Snelste ronde | `laps`, de kortste `lap_duration` |
 | Snelste pitstop | `pit`, de kortste `pit_duration` |
 | Safety cars | `race_control` |
 | Rode vlag | `race_control` |
+
+**Sprintweekenden.** Zes weekenden per seizoen hebben een derde sessie. De
+sync herkent hem aan `session_name = 'Sprint'` en vult `deadline_sprint` en
+`sprint_result`; een weekend zonder sprint houdt die kolommen leeg en krijgt
+in de app geen sprint-tab. De sprint gaat vóór de kwalificatie: de
+sprintkwalificatie ligt op vrijdag en de sprint zaterdagochtend, de gewone
+kwalificatie is zaterdag daarná. In de kalender zie je dat aan de merktekens:
+`S Q R` in plaats van `Q R`.
+
+**De sprint telt voor halve punten.** Dezelfde top 10, dezelfde 5/3/1 per
+plek, maal 0,5 — een perfecte sprint is dus 25 punten en een perfecte race 50.
+Een sprint is een derde van een race lang en hoort niet net zo zwaar te wegen
+als het weekend zelf. Automatisch invullen slaat de sprint over: die regel
+bestaat om een gemist weekend niet je seizoen te laten kosten, en daar is een
+sprint geen onderdeel van.
 
 **Wat telt als safety car.** Een virtual safety car telt mee, en dat staat er
 in de app bij de vraag ook bij. Dat is een keuze: acht van de veertien races

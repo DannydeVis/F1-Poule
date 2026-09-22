@@ -1607,22 +1607,59 @@ const leegAntwoord = (w) => w === null || w === undefined || w === '';
 // tabel plus de kolommen in schema.sql; de rest van het bestand hoeft er
 // niets van te weten.
 const SESSIES = {
-  quali: { naam:'kwalificatie', wat:'de kwalificatie', vraag:'quali_top10',
+  quali: { naam:'kwalificatie', wat:'de kwalificatie', tablabel:'Kwalificatie',
+           letter:'Q', vraag:'quali_top10',
            uitslag:'quali_result', deadline:'deadline_quali', hand:'quali_handmatig' },
-  race:  { naam:'race',         wat:'de race',         vraag:'race_top10',
+  race:  { naam:'race',         wat:'de race',         tablabel:'Race',
+           letter:'R', vraag:'race_top10',
            uitslag:'race_result',  deadline:'deadline_race',  hand:'race_handmatig' },
+  // Zes keer per seizoen. `weging` is wat een sprint anders maakt dan de
+  // andere twee: dezelfde top 10, dezelfde 5/3/1 per plek, maar halve punten.
+  // Een sprint is een derde van een race lang en hoort niet net zo zwaar te
+  // wegen als het weekend zelf.
+  sprint:{ naam:'sprint',       wat:'de sprint',       tablabel:'Sprint',
+           letter:'S', vraag:'sprint_top10',
+           uitslag:'sprint_result', deadline:'deadline_sprint',
+           hand:'sprint_handmatig', weging:0.5 },
 };
 
 // De volgorde waarin ze op een weekend langskomen. Apart van SESSIES, want
-// een object heeft geen betekenisvolle volgorde en deze wél: eerst
-// kwalificeren, dan racen.
-const SESSIEVOLGORDE = ['quali', 'race'];
+// een object heeft geen betekenisvolle volgorde en deze wél.
+//
+// De sprint staat vooraan en niet in het midden. Op een sprintweekend ligt de
+// sprintkwalificatie op vrijdag en de sprint zaterdagochtend; de gewone
+// kwalificatie is daarná, zaterdagmiddag. Dus: sprint, kwalificatie, race.
+// Een gewoon weekend heeft geen sprint en houdt gewoon kwalificatie, race.
+const SESSIEVOLGORDE = ['sprint', 'quali', 'race'];
 
 // Doet deze sessie mee op dit weekend? Een sprint heeft niet elk weekend een
 // deadline, dus "de sessie bestaat" en "de sessie telt hier mee" zijn twee
 // verschillende vragen.
 const sessieOpWeekend = (r, welk) => !!r?.[SESSIES[welk].deadline];
 const weekendSessies = (r) => SESSIEVOLGORDE.filter(w => sessieOpWeekend(r, w));
+
+// Welke sessies van dit weekend zijn al begonnen? Drie keer in dit bestand
+// stond dit als een handgeschreven `{ quali: ..., race: ... }`, en zo'n
+// object zegt `undefined` over een sessie die het niet kent. `undefined` is
+// niet dicht, dus een sprint zou na zijn eigen deadline nog invulbaar zijn.
+// Een sessie die dit weekend niet bestaat staat hier op `false`: er valt niets
+// te sluiten wat er niet is.
+const dichteSessies = (r, nu = Date.now()) => Object.fromEntries(SESSIEVOLGORDE.map(w =>
+  [w, sessieOpWeekend(r, w) && nu >= new Date(r[SESSIES[w].deadline]).getTime()]));
+
+// Is er van dit weekend al iets gereden? Stond overal als
+// `r.quali_result || r.race_result`, en dat sloeg de sprint over -- die valt
+// op zaterdagmiddag, vóór de kwalificatie, dus een sprintweekend zou een paar
+// uur lang "nog niets gereden" heten terwijl er al punten op stonden.
+const heeftUitslag = (r) => SESSIEVOLGORDE.some(w => !!r?.[SESSIES[w].uitslag]);
+const heeftUitslagLijst = (r) => SESSIEVOLGORDE.some(w => r?.[SESSIES[w].uitslag]?.length);
+
+// Welke sessie laat je zien als er meerdere van hetzelfde weekend een uitslag
+// hebben? De race zegt het meest over het weekend, daarna de kwalificatie, en
+// de sprint als laatste. Dat is een andere volgorde dan SESSIEVOLGORDE, want
+// die gaat over de klok en deze over gewicht.
+const TOONVOLGORDE = ['race', 'quali', 'sprint'];
+const getoondeSessie = (r) => TOONVOLGORDE.find(w => r?.[SESSIES[w].uitslag]) ?? null;
 
 // Was een eigen lijstje naast SESSIES, met dezelfde twee namen erin. Nu een
 // verwijzing, zodat er één plek is waar een sessie beschreven staat.
@@ -1647,21 +1684,31 @@ const antwoordVan = (p, id) => id === 'winnaar' ? p?.race_winnaar : p?.[id];
 // dezelfde deadline hangen. Staat hier één keer, zodat "jouw punten", "de
 // rest" en de stand nooit uit elkaar kunnen lopen.
 const scoreTab = (p, race, welk) => {
-  const lijst = welk === 'quali'
-    ? scoreLijst(p?.quali_top10 ?? [], race.quali_result ?? []).totaal
-    : scoreLijst(p?.race_top10 ?? [], race.race_result ?? []).totaal
-      + scoreDuels(p?.teamgenoot_duels ?? [], race.race_result ?? [],
-                   teamParen(race.drivers), puntenVoor('teamgenoot_duels'));
+  const S_ = SESSIES[welk];
+  // De halve punten van een sprint gelden voor de top 10, want dat is wat er
+  // korter is. De losse vragen eronder hangen aan hun eigen puntenaantal uit
+  // de vragenlijst en worden niet nog eens geschaald.
+  const lijst = Math.round(
+    scoreLijst(p?.[S_.vraag] ?? [], race[S_.uitslag] ?? []).totaal * (S_.weging ?? 1));
+  // De teamgenoot-duels hangen aan de race-uitslag en horen dus alleen bij de
+  // race, niet bij de kwalificatie en niet bij de sprint.
+  const duels = welk !== 'race' ? 0
+    : scoreDuels(p?.teamgenoot_duels ?? [], race.race_result ?? [],
+                 teamParen(race.drivers), puntenVoor('teamgenoot_duels'));
   const los = coureurVragen(welk).reduce((n, id) =>
     n + scoreEerste(antwoordVan(p, id), COUREURVRAAG[id].uitslag(race), puntenVoor(id)), 0);
   const extra = extraVragen(welk).reduce((n, id) => {
     const v = EXTRAVRAAG[id];
     return n + v.score(p?.[id] ?? null, race[v.kolom] ?? null, puntenVoor(id));
   }, 0);
-  return lijst + los + extra;
+  return lijst + duels + los + extra;
 };
 
-const scoreWeekend = (p, race) => scoreTab(p, race, 'quali') + scoreTab(p, race, 'race');
+// Alleen de sessies die dít weekend bestaan. Een gewoon weekend heeft geen
+// deadline_sprint, dus die sessie telt daar niet mee -- en levert dus ook
+// geen nul op die je in de stand terugziet.
+const scoreWeekend = (p, race) =>
+  weekendSessies(race).reduce((n, w) => n + scoreTab(p, race, w), 0);
 
 // </knip vragen>
 
@@ -1689,9 +1736,13 @@ const demoRaces = [
     deadline_quali:uur(-72), deadline_race:uur(-48),
     quali_result:['12','1','4','63','16','81','44','6','10','43','14','18'],
     race_result: ['63','12','16','1','4','44','81','10','6','14','43','18'] },
+  // Een sprintweekend, zodat de demo laat zien waar de derde tab vandaan komt.
+  // De sprint sluit vóór de kwalificatie: de sprintkwalificatie ligt op
+  // vrijdag, de gewone kwalificatie op zaterdag ná de sprint.
   { id:2, round:2, name:'Shanghai', drivers:DEMO_DRIVERS,
-    deadline_quali:uur(-30), deadline_race:uur(-6),
+    deadline_quali:uur(-30), deadline_race:uur(-6), deadline_sprint:uur(-34),
     quali_result:['4','81','1','16','12','63','44','14','6','10','43','18'],
+    sprint_result:['81','4','16','1','63','12','44','6','14','10','18','43'],
     race_result: ['4','1','81','12','63','16','14','44','10','6','18','43'] },
   { id:3, round:3, name:'Suzuka', drivers:DEMO_DRIVERS,
     deadline_quali:uur(28), deadline_race:uur(52),
@@ -1709,9 +1760,12 @@ const demoPreds = [
   { member_id:'m2', race_id:1, quali_top10:husselen(DEMO_DRIVERS,3),  race_top10: husselen(DEMO_DRIVERS,7) },
   { member_id:'m3', race_id:1, quali_top10:husselen(DEMO_DRIVERS,11), race_top10: husselen(DEMO_DRIVERS,13) },
   { member_id:'m1', race_id:2, quali_top10:['4','81','1','16','12','63','44','14','6','10'],
-                               race_top10: ['4','81','1','12','63','16','44','14','10','6'] },
-  { member_id:'m2', race_id:2, quali_top10:husselen(DEMO_DRIVERS,5),  race_top10: husselen(DEMO_DRIVERS,9) },
-  { member_id:'m3', race_id:2, quali_top10:husselen(DEMO_DRIVERS,17), race_top10: husselen(DEMO_DRIVERS,19) },
+                               race_top10: ['4','81','1','12','63','16','44','14','10','6'],
+                               sprint_top10:['4','81','16','1','63','12','44','14','6','10'] },
+  { member_id:'m2', race_id:2, quali_top10:husselen(DEMO_DRIVERS,5),  race_top10: husselen(DEMO_DRIVERS,9),
+                               sprint_top10:husselen(DEMO_DRIVERS,23) },
+  { member_id:'m3', race_id:2, quali_top10:husselen(DEMO_DRIVERS,17), race_top10: husselen(DEMO_DRIVERS,19),
+                               sprint_top10:husselen(DEMO_DRIVERS,29) },
 ];
 
 // De vragenlijst zoals schema.sql hem wegschrijft, maar dan alleen wat dit
@@ -1726,15 +1780,16 @@ const demoVragen = [
   { id:'teamgenoot_duels', naam:'Teamgenoot-duels',    punten:15, sessie:'race',  soort:'duels',   gok:false, volgorde:70 },
   { id:'safety_cars',      naam:'Aantal safety cars',  punten:12, sessie:'race',  soort:'getal',   gok:true,  volgorde:80 },
   { id:'rode_vlag',        naam:'Rode vlag',           punten:20, sessie:'race',  soort:'janee',   gok:true,  volgorde:90 },
+  { id:'sprint_top10',     naam:'Top 10 sprint',       punten:25, sessie:'sprint',soort:'top10',   gok:false, volgorde:25 },
 ];
 
 // Dezelfde demovoorspellingen, maar als rijen zoals answers ze bewaart.
-const demoAntwoorden = () => demoPreds.flatMap(p => [
-  { pool_id:'p1', race_id:p.race_id, member_id:p.member_id,
-    question_id:'quali_top10', waarde:p.quali_top10 },
-  { pool_id:'p1', race_id:p.race_id, member_id:p.member_id,
-    question_id:'race_top10',  waarde:p.race_top10 },
-]);
+// Per sessie die deze speler ingevuld heeft, zodat de sprint meekomt zonder
+// dat hier een derde regel bijgeschreven hoeft te worden.
+const demoAntwoorden = () => demoPreds.flatMap(p => SESSIEVOLGORDE
+  .filter(w => p[SESSIES[w].vraag])
+  .map(w => ({ pool_id:'p1', race_id:p.race_id, member_id:p.member_id,
+               question_id:SESSIES[w].vraag, waarde:p[SESSIES[w].vraag] })));
 
 // ============================================================
 //  Toestand
@@ -1766,6 +1821,10 @@ const S = {
 const app = document.getElementById('app');
 const esc = (s) => String(s ?? '').replace(/[<>&"]/g, c =>
   ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+// De namen in SESSIES staan met een kleine letter, want meestal staan ze
+// midden in een zin ("je kunt de sprint niet meer invullen"). Begint zo'n
+// naam een zin, dan hoort er een hoofdletter voor.
+const hoofdletter = (s) => String(s ?? '').replace(/^./, c => c.toUpperCase());
 // Een voorspelling kan een coureur noemen die niet meer in de deelnemerslijst
 // staat — bijvoorbeeld Hadjar bij Monza: hij is nooit uit de kwalificatie
 // weggehaald, want OpenF1 registreert die wissel niet, hij komt in OpenF1's
@@ -1967,8 +2026,9 @@ const VRAAG_VELD = { quali_top10:'quali_top10', race_top10:'race_top10', winnaar
 // Welke vragen dit scherm kan stellen en scoren. De database kent er meer;
 // die worden overgeslagen tot ze hier ook gebouwd zijn. Zo kan de vragenlijst
 // vooruitlopen op de app zonder dat er halve schermen ontstaan.
-const GEBOUWD = ['quali_top10', 'race_top10', 'winnaar', 'pole', 'teamgenoot_duels',
-                 'snelste_ronde', 'snelste_pitstop', 'safety_cars', 'rode_vlag'];
+const GEBOUWD = ['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole',
+                 'teamgenoot_duels', 'snelste_ronde', 'snelste_pitstop',
+                 'safety_cars', 'rode_vlag'];
 
 // ---- automatisch invullen bij vergeten ----------------------
 // Van de drie dingen die een vriendenpoule slopen was "mensen vergeten in te
@@ -2061,6 +2121,10 @@ function autoLijst(race) {
 function vulAutoAan() {
   if (!S.poule?.autofill_vanaf) return;
   for (const r of S.races) {
+    // Bewust niet de sprint. Automatisch invullen bestaat om een gemist
+    // weekend niet je seizoen te laten kosten, en een sprint is een halve
+    // bijvangst op zes weekenden. Er ongevraagd een lijst voor neerzetten
+    // voegt punten toe zonder dat probleem op te lossen.
     const welken = ['quali', 'race'].filter(w => autoGeldt(r, w));
     if (!welken.length) continue;
     const lijst = autoLijst(r);
@@ -2069,8 +2133,8 @@ function vulAutoAan() {
       let p = vindPred(r.id, l.member_id);
       if (!p) {
         p = { pool_id:S.poule.id, race_id:r.id, member_id:l.member_id,
-              quali_top10:null, race_top10:null, race_winnaar:null,
-              pole:null, teamgenoot_duels:null,
+              quali_top10:null, race_top10:null, sprint_top10:null,
+              race_winnaar:null, pole:null, teamgenoot_duels:null,
               snelste_ronde:null, snelste_pitstop:null,
               safety_cars:null, rode_vlag:null };
         S.preds.push(p);
@@ -2092,8 +2156,8 @@ function bouwPreds() {
     const sleutel = `${a.race_id}|${a.member_id}`;
     if (!per.has(sleutel)) {
       per.set(sleutel, { pool_id:a.pool_id, race_id:a.race_id, member_id:a.member_id,
-                         quali_top10:null, race_top10:null, race_winnaar:null,
-                         pole:null, teamgenoot_duels:null,
+                         quali_top10:null, race_top10:null, sprint_top10:null,
+                         race_winnaar:null, pole:null, teamgenoot_duels:null,
                          snelste_ronde:null, snelste_pitstop:null,
                          safety_cars:null, rode_vlag:null });
     }
@@ -2111,7 +2175,7 @@ const vraagActief = (id) =>
 // Wat een vraag oplevert, volgens de vragenlijst uit de database. De
 // getallen hieronder zijn het vangnet voor de demomodus en voor een poule
 // die de lijst nog niet heeft geladen.
-const VRAAG_PUNTEN = { quali_top10:50, race_top10:50, winnaar:25, pole:10,
+const VRAAG_PUNTEN = { quali_top10:50, race_top10:50, sprint_top10:25, winnaar:25, pole:10,
                        teamgenoot_duels:15, snelste_ronde:10, snelste_pitstop:10,
                        safety_cars:12, rode_vlag:20 };
 const puntenVoor = (id) =>
@@ -2166,15 +2230,13 @@ async function pouleBij(argumenten) {
 
 async function bewaar() {
   const nu = Date.now();
-  const dicht = { quali: nu >= new Date(S.race.deadline_quali).getTime(),
-                  race:  nu >= new Date(S.race.deadline_race).getTime() };
+  const dicht = dichteSessies(S.race, nu);
 
   // De deadline kan verstreken zijn terwijl het formulier openstond. Zonder
   // deze controle zou hieronder een lege kolom worden weggeschreven en zou de
   // speler alsnog "opgeslagen" te zien krijgen.
-  if (dicht[S.tab]) throw new Error(S.tab === 'quali'
-    ? 'De kwalificatie is inmiddels begonnen, je kunt hem niet meer invullen.'
-    : 'De race is inmiddels begonnen, je kunt hem niet meer invullen.');
+  if (dicht[S.tab]) throw new Error(
+    `${hoofdletter(SESSIES[S.tab].wat)} is inmiddels begonnen, je kunt hem niet meer invullen.`);
 
   const sleutel = { pool_id: S.poule.id, race_id: S.race.id, member_id: S.ik.id };
 
@@ -2183,12 +2245,15 @@ async function bewaar() {
   // op "aanwezig" test in plaats van op "gewijzigd" — dan kun je je
   // race-top-10 niet meer opslaan zodra de kwalificatie is begonnen.
   const wil = [];
-  // Een halve top 10 gaat er niet in: tien plekken of niets.
-  if (!dicht.quali) {
-    wil.push(['quali_top10', compleet(S.keuze.quali) ? S.keuze.quali : null]);
+  // Een halve top 10 gaat er niet in: tien plekken of niets. Alleen de
+  // sessies die dit weekend bestaan, anders zou een gewoon weekend elke keer
+  // een lege sprintlijst proberen weg te schrijven.
+  for (const w of weekendSessies(S.race)) {
+    if (dicht[w]) continue;
+    wil.push([SESSIES[w].vraag, compleet(S.keuze[w]) ? S.keuze[w] : null]);
   }
+  // De duels hangen aan de race-uitslag en dus aan de deadline van de race.
   if (!dicht.race) {
-    wil.push(['race_top10', compleet(S.keuze.race) ? S.keuze.race : null]);
     wil.push(['teamgenoot_duels', S.keuze.duels.length ? S.keuze.duels : null]);
   }
   // De vragen waarbij je één coureur aanwijst gaan allemaal hetzelfde: ze
@@ -2255,9 +2320,14 @@ function openLijst(r, nu = Date.now()) {
   // Aan een afgelaste race valt niets meer te verdienen, dus hij hoort ook
   // niet meer open te staan — en niet meer mee te tellen als "nog invullen".
   if (afgelastEnLeeg(r)) return null;
-  if (nu < new Date(r.deadline_quali).getTime()) return 'quali';
-  if (nu < new Date(r.deadline_race).getTime())  return 'race';
-  return null;
+  // Op de klok en niet op SESSIEVOLGORDE: op een sprintweekend ligt de
+  // sprintkwalificatie op vrijdag, dus de sprint sluit vóór de kwalificatie.
+  // Voor een gewoon weekend komt er hetzelfde uit als de twee losse regels
+  // die hier stonden, want quali sluit altijd eerder dan de race.
+  return weekendSessies(r)
+    .map(w => ({ w, t: new Date(r[SESSIES[w].deadline]).getTime() }))
+    .filter(x => nu < x.t)
+    .sort((a, b) => a.t - b.t)[0]?.w ?? null;
 }
 
 // De eerstvolgende race waar nog iets in te vullen valt. Een race zonder
@@ -2278,7 +2348,7 @@ function raceStand(r, nu = Date.now()) {
   // Geen "uitslag ·" ervoor: deze rij staat onder de kop "gereden", met een
   // finishvlag ernaast. Die twee zeggen het al, en de regel moet ruimte
   // houden voor wie het weekend won.
-  if (r.quali_result || r.race_result) {
+  if (heeftUitslag(r)) {
     return { soort:'klaar', tekst:`${scoreWeekend(mijn, r)} ptn` };
   }
   // Een uitslag wint van de vlag: staat er toch een uitslag (met de hand
@@ -2298,7 +2368,7 @@ function standRijen(tot = Infinity) {
   return S.leden.map(l => {
     let punten = 0;
     for (const r of S.races) {
-      if (!r.race_result && !r.quali_result) continue;
+      if (!heeftUitslag(r)) continue;
       if (r.round >= tot) continue;
       punten += scoreWeekend(vindPred(r.id, l.member_id), r);
     }
@@ -2315,7 +2385,7 @@ function standRijen(tot = Infinity) {
 // Pas vanaf twee gereden races: vóór de tweede is iedereen "nieuw" en zou elke
 // rij een pijltje krijgen dat nergens op slaat.
 function positieWissels() {
-  const gescoord = S.races.filter(r => r.quali_result || r.race_result)
+  const gescoord = S.races.filter(heeftUitslag)
     .sort((a, b) => a.round - b.round);
   if (gescoord.length < 2) return new Map();
   const laatste = gescoord[gescoord.length - 1];
@@ -2336,7 +2406,7 @@ function positieWissels() {
 // die de app voor je invulde telt niet mee. Dat is dezelfde grens als bij de
 // weekendwinst: het is iets wat je doet, niet iets wat je overkomt.
 function reeksVan(memberId) {
-  const gescoord = S.races.filter(r => r.quali_result || r.race_result)
+  const gescoord = S.races.filter(heeftUitslag)
     .sort((a, b) => b.round - a.round);
   let n = 0;
   for (const r of gescoord) {
@@ -2346,7 +2416,7 @@ function reeksVan(memberId) {
   return n;
 }
 
-const gereden = () => S.races.filter(r => r.quali_result || r.race_result).length;
+const gereden = () => S.races.filter(heeftUitslag).length;
 
 // ---- weekenden ----------------------------------------------
 // Een poule valt uit elkaar zodra de helft niet meer kan winnen. Wie 300
@@ -2356,7 +2426,7 @@ const gereden = () => S.races.filter(r => r.quali_result || r.race_result).lengt
 // Iedereen met zijn punten over dit hele weekend (kwalificatie plus race),
 // of null zolang er nog niets te scoren valt.
 function weekendUitslag(race) {
-  if (!race.quali_result && !race.race_result) return null;
+  if (!heeftUitslag(race)) return null;
   return S.leden.map(l => ({
     id: l.member_id,
     naam: l.display_name,
@@ -2396,7 +2466,7 @@ const heeftVoorspeld = (r, id) => {
 };
 
 function duels() {
-  const gescoord = S.races.filter(r => r.quali_result || r.race_result);
+  const gescoord = S.races.filter(heeftUitslag);
   return S.leden
     .filter(l => !zelfde(l.member_id, S.ik.id))
     .map(l => ({
@@ -2416,7 +2486,7 @@ function duels() {
 // optelling — zie zonderSlechtste() voor waarom dit naast de stand staat en
 // niet in plaats van.
 function streepStand() {
-  const gescoord = S.races.filter(r => r.quali_result || r.race_result);
+  const gescoord = S.races.filter(heeftUitslag);
   return S.leden.map(l => ({
     id: l.member_id,
     naam: l.display_name,
@@ -2551,11 +2621,19 @@ const PRESETS = {
   klassiek:  { naam:'Klassiek',  uitleg:'de top-tienen plus drie losse vragen',
                vragen:['quali_top10', 'race_top10', 'winnaar', 'pole', 'snelste_ronde'] },
   gevorderd: { naam:'Gevorderd', uitleg:'alles wat er is',
-               vragen:['quali_top10', 'race_top10', 'winnaar', 'pole', 'snelste_ronde',
-                       'snelste_pitstop', 'teamgenoot_duels', 'safety_cars', 'rode_vlag'] },
+               vragen:['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole',
+                       'snelste_ronde', 'snelste_pitstop', 'teamgenoot_duels',
+                       'safety_cars', 'rode_vlag'] },
 };
 
 const puntenSom = (ids) => ids.reduce((n, id) => n + puntenVoor(id), 0);
+
+// Wat een gewoon weekend maximaal oplevert. De sprint hoort daar niet in: die
+// bestaat op zes van de vierentwintig weekenden, dus hem meetellen zet het
+// maximum achttien keer per seizoen te hoog. Hij wordt apart genoemd.
+const SPRINTVRAAG = 'sprint_top10';
+const weekendSom = (ids) => puntenSom(ids.filter(id => id !== SPRINTVRAAG));
+const sprintSom = (ids) => ids.includes(SPRINTVRAAG) ? puntenVoor(SPRINTVRAAG) : 0;
 const isGok = (id) => !!S.vragen.find(v => v.id === id)?.gok;
 const welkPreset = (ids) => Object.keys(PRESETS).find(k =>
   PRESETS[k].vragen.length === ids.length && PRESETS[k].vragen.every(v => ids.includes(v)));
@@ -2596,11 +2674,14 @@ function vragenVoet(gekozen) {
   const totaal = puntenSom(gekozen);
   const gok = puntenSom(gekozen.filter(isGok));
   const nu = puntenSom(gekozen.filter(id => GEBOUWD.includes(id)));
+  const sprint = sprintSom(gekozen);
   return `
     <div class="somregel">
       <span class="label">maximaal per weekend</span>
-      <b class="getal">${totaal}</b>
+      <b class="getal">${weekendSom(gekozen)}</b>
     </div>
+    ${sprint ? `<p class="zacht" style="margin:0">Op een sprintweekend komt daar
+      ${sprint} bij, voor de top 10 van de sprint. Dat zijn er zes per seizoen.</p>` : ''}
     ${nu < totaal ? `<p class="zacht" style="margin:0">Daarvan wordt nu ${nu} punten
       al gevraagd. De rest staat klaar en gaat vanzelf meetellen zodra hij er is.</p>` : ''}
     ${!gekozen.length ? `<p class="mono amber" style="margin:0">Kies er minstens één.</p>` : ''}
@@ -2653,7 +2734,7 @@ async function naarKlembord(tekst) {
   }
 }
 const laatsteMetUitslag = () =>
-  [...S.races].reverse().find(r => r.quali_result || r.race_result) ?? null;
+  [...S.races].reverse().find(heeftUitslag) ?? null;
 
 // ============================================================
 //  De app: zijbalk, kalender, detail
@@ -2836,7 +2917,7 @@ function mijnPositie() {
   if (rijen.length < 2) return null;
   const i = rijen.findIndex(x => x.mij);
   if (i === -1) return null;
-  const laatste = [...S.races].reverse().find(r => r.quali_result || r.race_result);
+  const laatste = [...S.races].reverse().find(heeftUitslag);
   return {
     plek: i + 1,
     totaal: rijen.length,
@@ -2864,15 +2945,15 @@ function hero(volgend) {
   const r = volgend.race;
   const aan = lampjes(volgend.iso);
   const wacht = nogNietIngevuld(r, volgend.welk);
-  // Allebei de sessies, niet alleen de open: wie de kwalificatie al gedaan
-  // heeft wil dat zien staan, en wie de race nog moet doen ook.
-  const sessies = ['quali', 'race'].filter(top10Actief).map(w => sessieStatus(r, w));
+  // Alle sessies van dit weekend, niet alleen de open: wie de kwalificatie al
+  // gedaan heeft wil dat zien staan, en wie de race nog moet doen ook. Op een
+  // sprintweekend staan er dus drie.
+  const sessies = weekendSessies(r).filter(top10Actief).map(w => sessieStatus(r, w));
   // De knop wijst naar wat er nog te doen is, en niet naar de eerstvolgende
   // deadline. Wie de kwalificatie al af heeft terwijl de race nog open staat
   // kreeg anders "bekijken" te lezen terwijl er juist nog werk lag.
-  const dicht = { quali: Date.now() >= new Date(r.deadline_quali).getTime(),
-                  race:  Date.now() >= new Date(r.deadline_race).getTime() };
-  const teDoen = ['quali', 'race']
+  const dicht = dichteSessies(r);
+  const teDoen = weekendSessies(r)
     .filter(w => top10Actief(w) && !dicht[w])
     .map(w => sessieStatus(r, w))
     .find(x => x.staat !== 'klaar');
@@ -2928,8 +3009,10 @@ function kalenderRij(r, st = raceStand(r)) {
       <span class="nm">${esc(r.name)}</span>
       <span class="st ${st.soort}">${esc(st.tekst)}${won ? ` · ${esc(won)}` : ''}</span>
     </span>
-    <span class="mk" title="Q = kwalificatie ingevuld, R = race ingevuld">
-      <i class="${vink('quali')}">Q</i><i class="${vink('race')}">R</i></span>
+    <span class="mk" title="${esc(weekendSessies(r)
+      .map(w => `${SESSIES[w].letter} = ${SESSIES[w].naam} ingevuld`).join(', '))}">
+      ${weekendSessies(r).map(w =>
+        `<i class="${vink(w)}">${SESSIES[w].letter}</i>`).join('')}</span>
     ${merk}
   </button>`;
 }
@@ -2947,9 +3030,10 @@ function nevenPaneel(rijen) {
 }
 
 function korteUitslag(r) {
-  const werkelijk = r.race_result ?? r.quali_result;
+  const welk = getoondeSessie(r);
+  const werkelijk = welk ? r[SESSIES[welk].uitslag] : null;
   const mijn = vindPred(r.id, S.ik.id);
-  const lijst = r.race_result ? mijn?.race_top10 : mijn?.quali_top10;
+  const lijst = welk ? mijn?.[SESSIES[welk].vraag] : null;
   if (!lijst?.length) return `<p class="zacht" style="margin:0">Je hebt hier niks ingevuld.</p>`;
   const { regels } = scoreLijst(lijst, werkelijk);
   return `<ul class="strip">${regels.map(x => {
@@ -3035,11 +3119,9 @@ function mijnSessies() {
   for (const r of S.races) {
     const p = vindPred(r.id, S.ik.id);
     if (!p) continue;
-    if (r.quali_result?.length && p.quali_top10?.length) {
-      uit.push({ voorspeld: p.quali_top10, werkelijk: r.quali_result });
-    }
-    if (r.race_result?.length && p.race_top10?.length) {
-      uit.push({ voorspeld: p.race_top10, werkelijk: r.race_result });
+    for (const w of weekendSessies(r)) {
+      const werkelijk = r[SESSIES[w].uitslag], voorspeld = p[SESSIES[w].vraag];
+      if (werkelijk?.length && voorspeld?.length) uit.push({ voorspeld, werkelijk });
     }
   }
   return uit;
@@ -3070,7 +3152,7 @@ const komma = (n) => n.toFixed(1).replace('.', ',');
 // en dan suggereert een grafiek een trend die er niet is.
 function seizoensGrafiek() {
   if (!S.ik || S.leden.length < 2) return '';
-  const gescoord = S.races.filter(r => r.quali_result || r.race_result)
+  const gescoord = S.races.filter(heeftUitslag)
     .sort((a, b) => a.round - b.round);
   if (gescoord.length < 3) return '';
 
@@ -3123,7 +3205,7 @@ function terugblikBlok() {
   const sterk = sterkstePlekken(sessies)[0];
 
   const perRace = raceGemiddelden(S.races
-    .filter(r => r.quali_result?.length || r.race_result?.length)
+    .filter(heeftUitslagLijst)
     .map(r => ({ naam: r.name,
                  punten: S.leden.filter(l => heeftVoorspeld(r, l.member_id))
                                 .map(l => scoreWeekend(vindPred(r.id, l.member_id), r)) })));
@@ -3899,7 +3981,7 @@ const pouleVragen = () =>
 // Sinds wanneer ligt de set vast? De eerste race met een uitslag, want dat
 // is het moment waarop de sync hem op slot heeft gezet.
 const eersteGescoord = () =>
-  S.races.find(r => r.quali_result?.length || r.race_result?.length);
+  S.races.find(heeftUitslagLijst);
 
 function beheerBlok() {
   if (!magBeheren() || !S.vragen.length) return '';
@@ -4000,15 +4082,23 @@ function openRace(id, startTab = null) {
   S.race = r;
   S.weergave = 'races';
   const mijn = vindPred(id, S.ik.id);
-  S.keuze = { quali:naarPlekken(mijn?.quali_top10), race:naarPlekken(mijn?.race_top10),
+  // Een vak per sessie, gevuld vanuit de kolom die bij die sessie hoort.
+  // Stond hier als twee losse regels voor quali en race; de sprint-tab kwam
+  // dan uit op undefined en viel om zodra je hem opende.
+  S.keuze = { ...Object.fromEntries(
+                SESSIEVOLGORDE.map(w => [w, naarPlekken(mijn?.[SESSIES[w].vraag])])),
               winnaar: mijn?.race_winnaar ?? '', pole: mijn?.pole ?? '',
               duels: [...(mijn?.teamgenoot_duels ?? [])],
               snelste_ronde: mijn?.snelste_ronde ?? '',
               snelste_pitstop: mijn?.snelste_pitstop ?? '',
               safety_cars: mijn?.safety_cars ?? null,
               rode_vlag: mijn?.rode_vlag ?? null };
-  S.tab = startTab === 'quali' || startTab === 'race'
-    ? startTab : (openLijst(r) === 'race' ? 'race' : 'quali');
+  // Een onthouden tab mag alleen terug als die sessie dit weekend bestaat --
+  // anders kom je na een sprintweekend op een lege sprint-tab uit bij een
+  // gewone race.
+  const bestaat = weekendSessies(r);
+  S.tab = bestaat.includes(startTab) ? startTab
+    : (bestaat.includes(openLijst(r)) ? openLijst(r) : bestaat[0] ?? 'race');
   S.kiesplek = null;
   S.fout = '';
   render();
@@ -4028,17 +4118,18 @@ function raceDetailKop() {
         ? `<span class="mono groen" data-tot="${esc(iso)}" data-kort="1">${klokTekst(iso, true)}</span>`
         : `<span class="vlag"></span>`}
     </div>
+    <!-- Alleen de sessies die dit weekend bestaan: een gewoon weekend krijgt
+         geen sprint-tab, en op een sprintweekend staan er drie. -->
     <div class="tabs">
-      <button data-tab="quali" aria-selected="${S.tab === 'quali'}">Kwalificatie</button>
-      <button data-tab="race"  aria-selected="${S.tab === 'race'}">Race</button>
+      ${weekendSessies(r).map(w => `<button data-tab="${w}"
+        aria-selected="${S.tab === w}">${esc(SESSIES[w].tablabel ?? SESSIES[w].naam)}</button>`).join('')}
     </div>
     <div id="paneel"></div>`;
 }
 
 function vulPaneel() {
   const r = S.race, nu = Date.now();
-  const dicht = { quali: nu >= new Date(r.deadline_quali).getTime(),
-                  race:  nu >= new Date(r.deadline_race).getTime() };
+  const dicht = dichteSessies(r, nu);
   const paneel = app.querySelector('#paneel');
   if (!paneel) return;
   const lijstKlaar = r[SESSIES[S.tab].uitslag];
@@ -4064,7 +4155,7 @@ function vulPaneel() {
 // Afgelast én zonder uitslag. Die tweede voorwaarde staat er zodat een
 // uitslag altijd wint van de vlag: is hij tóch verreden en ingevuld, dan
 // telt hij gewoon mee.
-const afgelastEnLeeg = (r) => !!r.afgelast && !r.quali_result && !r.race_result;
+const afgelastEnLeeg = (r) => !!r.afgelast && !heeftUitslag(r);
 
 function geslotenWeergave(paneel, r) {
   // Een afgelaste race blijft in de kalender staan — er kunnen voorspellingen
@@ -4891,7 +4982,7 @@ function koppelVraagScherm() {
 function puntenVan(memberId) {
   let punten = 0;
   for (const r of S.races) {
-    if (!r.race_result && !r.quali_result) continue;
+    if (!heeftUitslag(r)) continue;
     punten += scoreWeekend(vindPred(r.id, memberId), r);
   }
   return punten;
@@ -5091,7 +5182,7 @@ function maakStap(m, preset) {
             aria-pressed="${preset === sleutel}">
             <span class="nm">${p.naam}</span>
             <span class="zacht">${p.uitleg}</span>
-            <span class="ptn">${puntenSom(p.vragen)}</span>
+            <span class="ptn">${weekendSom(p.vragen)}</span>
           </button>`).join('')}
       </div>
       <button class="knop spook" id="eigen">${m.eigen
