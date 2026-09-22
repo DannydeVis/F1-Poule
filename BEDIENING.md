@@ -363,6 +363,11 @@ vragen erbij.
 De joker staat op het racescherm, boven de tabbladen — hij geldt voor het hele
 weekend en niet voor één sessie. In de kalender zie je er een `2×` bij staan.
 
+Het paneel zegt in één oogopslag waar je aan toe bent: een gevulde schijf met
+een ster en een doorlopende amberen rand als er een joker ligt, een lege schijf
+met een stippellijn als er nog een te vergeven is. Daaronder staat één zin die
+zegt wat het doet.
+
 Vijf dingen die daarbij vastliggen:
 
 - **Je moet hem neerleggen voordat er iets gereden is.** Zodra de eerste sessie

@@ -4833,3 +4833,52 @@ de controle leeg te lopen: zonder de fix komt `ruimte` negatief uit en klopt
 "label >= ruimte" ook op nul. Er moet eerst rúímte zijn. Nagelopen op of hij
 afgaat — met `width:auto` weggehaald zakken alle vier de breedtes én de
 regeltelling.
+
+---
+
+## Het jokerpaneel
+
+Danny stuurde een ontwerp: een paneel met een schijf met een ster, een kop
+**JOKER: ACTIEF**, daaronder één zin die zegt wat het doet, en een knop ernaast.
+Met de vraag of die bovenrand duidelijker kon.
+
+Wat er stond was één regel kleine hoofdletters — `je joker ligt hier · dit
+weekend telt dubbel` — met een rand van één pixel op `--amber-rand`, en dat is
+40% dekking. Het verschil tussen "er ligt een joker" en "er ligt er geen" was
+een grijstint die je moest zoeken, op het paneel dat juist het hardst om
+aandacht mag vragen: het verdubbelt je weekend.
+
+Nu: twee pixels, en `--amber-sterk` (85% in het licht, 70% in het donker).
+Plus de schijf, die het verschil van een meter afstand zichtbaar maakt —
+gevuld met een volle ster als de joker ligt, leeg met een open ster als hij nog
+te vergeven is. Wie het zeker wil weten leest de zin eronder; wie langsloopt
+ziet het aan de schijf.
+
+`--amber-ink` is de kleur van de ster ín die schijf. Amber is donker in het
+licht en licht in het donker, dus die keert mee om: wit op #986300 (5,6:1),
+bijna zwart op #e0a53a (9:1).
+
+### Wat er niet uit het ontwerp is overgenomen
+
+Twee dingen, allebei omdat ze geen opmaak zijn maar een spelregel:
+
+- **"Kies op welke voorspelling je joker inzet"**, met een `★ JOKER`-label op
+  één coureur in de top 10. In deze app geldt een joker voor het héle weekend
+  — kwalificatie, sprint, race en alle losse vragen. Dat staat zo in
+  `scoreWeekend()`, in `BEDIENING.md` §6b en in de trigger `jokers_bewaken`.
+  Hem per voorspelling laten gelden is een ander spel, geen ander scherm.
+- **De groene kleur.** Groen betekent in deze app "nog open": de aftelklok, de
+  deadline, de meldingbalk. Een groen jokerpaneel zou dat woord een tweede
+  betekenis geven. Amber is bovendien de kleur die de joker overal elders al
+  heeft, tot aan het `2×`-merkteken in de kalender toe.
+
+De kop van het ontwerp zei "Je punten voor deze **race** worden verdubbeld";
+dat is in deze app niet waar. Er staat nu "dit **weekend**".
+
+### De meting in de test
+
+`test/jokers.test.mjs` meet nog steeds of de tekst de ruimte naast de knop
+vult, maar het paneel heeft nu drie kinderen in plaats van twee. De berekening
+trekt daarom ook de schijf en het tweede gat af, en de regeltelling kijkt naar
+`.jokeruitleg` en niet meer naar het hele tekstvak — dat bevat sinds deze
+wijziging twee regels, de kop en de uitleg.

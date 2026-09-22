@@ -105,6 +105,11 @@
        die blijven op de oorspronkelijke tint staan. */
     --groen:#117c3e; --groen-vlak:rgba(31,138,76,.12); --groen-rand:rgba(31,138,76,.45);
     --amber:#986300; --amber-vlak:rgba(176,123,22,.10); --amber-rand:rgba(176,123,22,.40);
+    /* De rand van het jokerpaneel stond op --amber-rand: 40% dekking op één
+       pixel, en dat verdwijnt tegen het vlak eronder. Deze is er om gezien te
+       worden. --amber-ink is de tekst ín de amberen schijf; amber is donker in
+       het licht en licht in het donker, dus de ster keert mee om. */
+    --amber-sterk:rgba(176,123,22,.85); --amber-ink:#ffffff;
     /* De paars-groen-geel van een F1-timingscherm. Paars is de beste van de
        drie en hoort schaars te zijn — daarom alleen voor een exacte treffer. */
     --paars:#8b2fc9;
@@ -124,6 +129,7 @@
       --accent:#ee4d33; --accent-ink:#0b0b0c;
       --groen:#34b264; --groen-vlak:rgba(52,178,100,.16); --groen-rand:rgba(52,178,100,.50);
       --amber:#e0a53a; --amber-vlak:rgba(224,165,58,.08); --amber-rand:rgba(224,165,58,.40);
+      --amber-sterk:rgba(224,165,58,.70); --amber-ink:#0b0b0c;
       --paars:#c084f5;
       --omkeer:#f2f3f5; --omkeer-ink:#0b0b0c;
       --vlag-a:#f2f3f5;
@@ -443,20 +449,40 @@
   /* De jokerregel staat boven de tabbladen, want een joker geldt voor het
      hele weekend en niet voor één sessie. Ligt hij er, dan mag hij opvallen:
      dit weekend telt dubbel en dat wil je zien voordat je gaat invullen. */
-  .jokerregel{display:flex;align-items:center;justify-content:space-between;gap:12px;
-    border:1px dashed var(--lijn);border-radius:12px;padding:10px 12px}
-  .jokerregel.aan{border-style:solid;border-color:var(--amber-rand);
+  /* Twee pixels en niet één, en een rand die je ook ziet. Hij stond op
+     --amber-rand (40% dekking) over één pixel, en dan is het verschil tussen
+     "er ligt een joker" en "er ligt er geen" een grijstint die je moet zoeken.
+     Dit is het paneel dat het hardst om aandacht mag vragen: het verdubbelt
+     je weekend. */
+  .jokerregel{display:flex;align-items:center;gap:12px;
+    border:2px dashed var(--stippel);border-radius:12px;padding:12px 14px}
+  .jokerregel.aan{border-style:solid;border-color:var(--amber-sterk);
     background:var(--amber-vlak)}
-  .jokerregel.aan .label{color:var(--amber)}
+
+  /* De schijf met de ster. Gevuld als de joker ligt, leeg als hij nog te
+     vergeven is -- dat verschil zie je van een meter afstand, en de tekst
+     ernaast hoef je dan pas te lezen als je het zeker wilt weten. */
+  .jokerster{flex:none;width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:17px;line-height:1;background:var(--gedempt);color:var(--ink3)}
+  .jokerregel.aan .jokerster{background:var(--amber);color:var(--amber-ink)}
+
+  /* De tekst pakt wat er naast de schijf en de knop overblijft. Zonder
+     min-width:0 zou een lange zin de rij breder maken dan het paneel in
+     plaats van af te breken. */
+  .jokertekst{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .jokerkop{font-family:var(--cond);font-size:18px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.04em;color:var(--ink2)}
+  .jokerregel.aan .jokerkop{color:var(--amber)}
+  .jokeruitleg{font-size:14px;color:var(--ink2)}
+  .jokeruitleg b{color:var(--ink);font-weight:700}
+  .jokerregel.aan .jokeruitleg b{color:var(--amber)}
   .jokerregel .mono{font-size:18px;color:var(--amber)}
   /* width:auto is hier het hele punt. .knop staat op width:100% omdat een knop
      in deze app normaal de volle breedte pakt; in een flexrij mét flex:none
      betekent dat "geef mij alles en krimp niet", en dan blijft er voor de
      tekst ernaast één woord per regel over. */
   .jokerregel .knop{flex:none;width:auto;min-height:40px;padding:0 14px}
-  /* En de tekst pakt wat overblijft. Zonder min-width:0 zou een lange zin de
-     rij breder maken dan het paneel in plaats van af te breken. */
-  .jokerregel .label{flex:1;min-width:0}
   /* Het merkteken in de kalender. Klein, naast de Q en de R, zodat je in één
      blik ziet waar je jokers liggen. */
   .jokervlag{font-family:var(--mono);font-size:11px;color:var(--amber);
@@ -2420,12 +2446,18 @@ const ENGELS = Object.fromEntries([
    'updated {wanneer}'],
 
   // ---- joker, terugblik, seizoensvragen, losmaken --------------
-  ['je joker ligt hier · dit weekend telt dubbel',
-   'your joker is here · this weekend counts double'],
-  ['nog {over} van je {totaal} jokers',
-   '{over} of your {totaal} jokers left'],
-  ['je jokers zijn op',
-   'you are out of jokers'],
+  ['Joker: actief',
+   'Joker: active'],
+  ['Joker',
+   'Joker'],
+  ['Joker: op',
+   'Joker: used up'],
+  ['Je punten voor dit weekend worden <b>verdubbeld</b>.',
+   'Your points for this weekend are <b>doubled</b>.'],
+  ['Nog <b>{over}</b> van je {totaal} te vergeven dit seizoen.',
+   '<b>{over}</b> of your {totaal} left to place this season.'],
+  ['Je hebt ze dit seizoen alle {totaal} gebruikt.',
+   'You have used all {totaal} of them this season.'],
   ['Haal weg',
    'Take it off'],
   ['Zet hier',
@@ -6815,13 +6847,29 @@ function jokerRegel(r) {
   // alleen maar meldt dat je iets niet meer kunt.
   if (!ligt && !kan) return '';
   const over = jokersOver(S.ik.id);
+  // Een kop die zegt wát dit is, en eronder één zin die zegt wat het dóét.
+  // Eerst stond het als één regel kleine hoofdletters ("je joker ligt hier ·
+  // dit weekend telt dubbel"), en dan moet je hem helemaal lezen voordat je
+  // weet of er iets ligt.
+  //
+  // De uitleg draagt <b> en gaat daarom niet door esc(). Dat kan hier omdat
+  // alles in deze drie regels uit de woordenlijst komt; er zit geen naam of
+  // iets anders in dat een speler zelf heeft ingetypt.
+  const kop = ligt ? T('Joker: actief')
+            : over > 0 ? T('Joker') : T('Joker: op');
   const uitleg = ligt
-    ? T('je joker ligt hier · dit weekend telt dubbel')
-    : over > 0 ? T('nog {over} van je {totaal} jokers', { over, totaal: JOKERS_PER_SEIZOEN })
-               : T('je jokers zijn op');
+    ? T('Je punten voor dit weekend worden <b>verdubbeld</b>.')
+    : over > 0 ? T('Nog <b>{over}</b> van je {totaal} te vergeven dit seizoen.',
+                   { over, totaal: JOKERS_PER_SEIZOEN })
+               : T('Je hebt ze dit seizoen alle {totaal} gebruikt.',
+                   { totaal: JOKERS_PER_SEIZOEN });
   return `
     <div class="jokerregel ${ligt ? 'aan' : ''}">
-      <span class="label">${esc(uitleg)}</span>
+      <span class="jokerster" aria-hidden="true">${ligt ? '★' : '☆'}</span>
+      <span class="jokertekst">
+        <b class="jokerkop">${esc(kop)}</b>
+        <span class="jokeruitleg">${uitleg}</span>
+      </span>
       ${kan && (ligt || over > 0)
         ? `<button class="knop klein" id="jokerknop">${ligt ? T('Haal weg') : T('Zet hier')}</button>`
         : `<span class="mono">2×</span>`}
