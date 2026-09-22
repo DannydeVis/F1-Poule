@@ -72,6 +72,7 @@ const beginstand = {
   pool_questions: [],
   answers: [],
   jokers: [],
+  push_abonnementen: [],
 };
 
 // Een echte database overleeft het herladen van de pagina, dus deze ook.
@@ -88,6 +89,7 @@ try {
 store.auth_users ??= [];
 store.otp ??= [];
 store.jokers ??= [];
+store.push_abonnementen ??= [];
 store.google_als ??= 'danny@gmail.voorbeeld';
 const bewaren = () => { try { sessionStorage.setItem(BEWAAR, JSON.stringify(store)); } catch { /* niets */ } };
 
@@ -96,6 +98,7 @@ const bewaren = () => { try { sessionStorage.setItem(BEWAAR, JSON.stringify(stor
 const UNIEK = {
   predictions: ['pool_id', 'race_id', 'member_id'],
   answers:     ['pool_id', 'race_id', 'member_id', 'question_id'],
+  push_abonnementen: ['endpoint'],
 };
 
 // De gedeeltelijke unieke sleutel uit schema.sql: één account kan niet twee
@@ -184,7 +187,8 @@ const geweigerd = { data: null, error: { code: '42501',
   message: 'new row violates row-level security policy' } };
 
 function magSchrijven(tabel, rij) {
-  if (tabel === 'answers' || tabel === 'predictions' || tabel === 'jokers') {
+  if (tabel === 'answers' || tabel === 'predictions' || tabel === 'jokers'
+      || tabel === 'push_abonnementen') {
     return magVoorSpeler(rij.member_id);
   }
   // Een speler inschrijven op andermans account kan niet.
@@ -195,7 +199,8 @@ function magSchrijven(tabel, rij) {
 
 // Welke bestaande rijen mag ik überhaupt aanraken?
 function magRaken(tabel, rij) {
-  if (tabel === 'answers' || tabel === 'predictions' || tabel === 'jokers') {
+  if (tabel === 'answers' || tabel === 'predictions' || tabel === 'jokers'
+      || tabel === 'push_abonnementen') {
     return magVoorSpeler(rij.member_id);
   }
   if (tabel === 'pool_members') {

@@ -89,6 +89,11 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           SEIZOEN: '2026'
           KALENDER: ${{ inputs.kalender }}
+          # Deadlineherinneringen. Niet ingesteld = geen meldingen, en de rest
+          # van de sync merkt er niets van. Zie BEDIENING.md §11c voor hoe je
+          # deze twee maakt.
+          VAPID_PRIVE: ${{ secrets.VAPID_PRIVE }}
+          PUSH_CONTACT: ${{ secrets.PUSH_CONTACT }}
         run: node scripts/sync.mjs
 
       # De sync schrijft kalender.ics alleen als er echt iets veranderd is, dus

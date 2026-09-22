@@ -47,7 +47,10 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent } 
   writeFileSync(join(map, 'nabootsing-supabase.mjs'),
     aanpassen(readFileSync(join(hier, 'nabootsing-supabase.mjs'), 'utf8')));
 
-  const types = { '.html': 'text/html', '.mjs': 'text/javascript', '.woff2': 'font/woff2',
+  const types = { '.html': 'text/html', '.mjs': 'text/javascript',
+                  // sw.js hoort als javascript geserveerd te worden, anders
+                  // weigert de browser hem als service worker.
+                  '.js': 'text/javascript', '.woff2': 'font/woff2',
                   '.png': 'image/png', '.webmanifest': 'application/manifest+json',
                   '.ics': 'text/calendar' };
   const server = createServer((req, res) => {

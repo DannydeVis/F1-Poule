@@ -28,6 +28,8 @@ import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast
          hoortNietInDeKalender, rondeToewijzing, dubbeleRaces }
   from './uitslagen.mjs';
 import { maakAgenda } from './agenda.mjs';
+import { wieKrijgtEenSeintje } from './herinneringen.mjs';
+import { stuur as stuurPush } from './push.mjs';
 
 const API = 'https://api.openf1.org/v1';
 const REST = `${SUPABASE_URL}/rest/v1`;
@@ -621,6 +623,63 @@ function schrijfAgenda(races) {
 }
 
 // ------------------------------------------------------------
+//  Herinneringen voor de deadline
+//
+//  Slaapt volledig zolang VAPID_PRIVE niet is ingesteld. Dat is met opzet: de
+//  app werkt zonder, het agenda-abonnement hierboven doet hetzelfde zonder
+//  meldingsrecht, en een half ingerichte pushdienst hoort niet elk uur te
+//  klagen in de log. Zie BEDIENING.md §11c.
+// ------------------------------------------------------------
+
+const VAPID_PRIVE  = process.env.VAPID_PRIVE;
+const PUSH_CONTACT = process.env.PUSH_CONTACT ?? 'mailto:poule@voorbeeld.nl';
+
+async function herinneringen(races) {
+  if (!VAPID_PRIVE) return;
+  const abonnementen = await sb('push_abonnementen?select=*');
+  if (!abonnementen?.length) return;
+
+  // Alleen de top tienen: dat zijn de vragen waar een herinnering over gaat.
+  // De losse vragen hangen aan dezelfde deadline, dus wie zijn top 10 invult
+  // ziet die vanzelf.
+  const ids = races.map((r) => r.id).join(',');
+  const [antwoorden, poulevragen] = await Promise.all([
+    sb(`answers?race_id=in.(${ids})&question_id=in.(quali_top10,sprint_top10,race_top10)`
+       + '&select=race_id,member_id,question_id'),
+    sb('pool_questions?select=pool_id,question_id'),
+  ]);
+
+  const lijst = wieKrijgtEenSeintje({ races, abonnementen,
+    antwoorden: antwoorden ?? [], poulevragen: poulevragen ?? [] });
+  if (!lijst.length) { console.log('Geen herinneringen te sturen'); return; }
+
+  let gelukt = 0, opgeruimd = 0;
+  for (const { abonnement, bericht, tag } of lijst) {
+    const uit = await stuurPush(abonnement, { ...bericht, url: APP_URL },
+      { onderwerp: PUSH_CONTACT, priveSleutel: VAPID_PRIVE });
+    if (uit.ok) {
+      gelukt++;
+      // Onthouden wat er gestuurd is, anders komt dezelfde melding volgend uur
+      // opnieuw. Mislukt dit, dan is een dubbele melding het ergste wat er
+      // gebeurt -- dus geen reden om de ronde te laten zakken.
+      await sb(`push_abonnementen?endpoint=eq.${encodeURIComponent(abonnement.endpoint)}`,
+        { method: 'PATCH', body: JSON.stringify({ laatst: tag }) })
+        .catch((e) => console.log(`  kon 'laatst' niet bijwerken: ${e.message}`));
+    } else if (uit.weg) {
+      // De telefoon is opnieuw ingesteld of de app is verwijderd. Geen fout,
+      // gewoon een rij die weg kan.
+      await sb(`push_abonnementen?endpoint=eq.${encodeURIComponent(abonnement.endpoint)}`,
+        { method: 'DELETE' }).catch(() => {});
+      opgeruimd++;
+    } else {
+      console.log(`  push mislukt (${uit.status}): ${String(uit.tekst).slice(0, 120)}`);
+    }
+  }
+  console.log(`Herinneringen: ${gelukt} verstuurd`
+    + (opgeruimd ? `, ${opgeruimd} verlopen abonnement(en) opgeruimd` : ''));
+}
+
+// ------------------------------------------------------------
 
 try {
   let races = await haalRaces();
@@ -640,6 +699,7 @@ try {
   const nu = await haalRaces();
   await vragensetOpSlot(nu);
   schrijfAgenda(nu);
+  await herinneringen(nu);
 } catch (e) {
   console.error('Mislukt:', e.message);
   process.exit(1);

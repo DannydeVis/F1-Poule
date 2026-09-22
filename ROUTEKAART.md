@@ -548,7 +548,7 @@ hier omdat ze duur zijn, niet omdat ze slecht zijn.
 |---|---|---|
 | ~~**Vorige seizoenen**~~ | *gebouwd, zie hieronder* | |
 | **Publieke profielen** | je statistieken op een eigen pagina | kan pas ná fase 0. Nu is álles publiek leesbaar, dus "publiek profiel" zou niets toevoegen behalve een url |
-| **Push-herinneringen** | melding vóór de deadline | vraagt een service worker, een meldingsrecht dat mensen weigeren, en een server die op tijd wakker wordt. Het agenda-abonnement doet dit al zonder dat alles |
+| ~~**Push-herinneringen**~~ | *gebouwd, zie hieronder* | |
 | **Internationale talen** | de app in het Engels | het grootste van deze vijf, en niet omdat er veel tekst is. De hele app is Nederlands tot in de functienamen en de commentaren; de tekst zit niet in een sleutel-waardelijst maar in de HTML-sjablonen. Dat is een vertaalslag én een verbouwing |
 | **Andere raceklassen** | F2, F3, MotoGP | vastgelopen op de data, niet op de app. De hele sync hangt aan OpenF1, en dat is F1-only. Een andere klasse betekent een tweede databron met een eigen vorm, en daar staat `scripts/sync.mjs` nu niet op ingericht |
 
@@ -570,10 +570,10 @@ geen tekort aan tijd:
 - **Publieke profielen** is technisch pas mogelijk sinds fase 0 — maar het zou
   juist de deur weer openzetten die fase 0 dichtdeed. En de standpagina toont
   binnen een poule al alles wat zo'n profiel zou zeggen.
-- **Push-herinneringen** vraagt een service worker, en de app heeft er met
-  opzet geen (zie `OVERDRACHT.md` bij "zet op beginscherm": een oude stand
-  tonen alsof hij klopt is erger dan een foutmelding). Het agenda-abonnement
-  doet hetzelfde zonder meldingsrecht en zonder server.
+- ~~**Push-herinneringen**~~ is gebouwd, en het bezwaar is opgelost in plaats
+  van genegeerd: `sw.js` heeft geen `fetch`-handler en cachet niets, dus hij
+  kan geen oude stand tonen alsof hij klopt. Zie "Een seintje op je telefoon"
+  hieronder.
 - **Internationale talen** is een verbouwing, geen vertaling — de app is
   Nederlands tot in de functienamen. En hij is gebouwd voor een Nederlandse
   vriendenpoule.
@@ -581,9 +581,46 @@ geen tekort aan tijd:
   OpenF1, en dat is F1-only. Dat is een feit over de buitenwereld, geen
   keuze in deze repo.
 
-Drie van de vijf gaan tegen een beslissing in die eerder met reden genomen is.
-Eén kan niet. Ze staan hier zodat de volgende die dit leest niet opnieuw hoeft
-uit te zoeken waarom ze er niet zijn.
+Wat overblijft: publieke profielen en internationale talen gaan allebei tegen
+een beslissing in die eerder met reden genomen is, en andere raceklassen kan
+niet. Ze staan hier zodat de volgende die dit leest niet opnieuw hoeft uit te
+zoeken waarom ze er niet zijn.
+
+### Een seintje op je telefoon
+
+Het bezwaar tegen push was de service worker: zodra die verzoeken onderschept
+kan hij een oude versie of een oude stand serveren terwijl de speler denkt dat
+het klopt, en dat is erger dan een foutmelding. Dat bezwaar is niet genegeerd
+maar weggenomen — `sw.js` heeft **geen `fetch`-handler** en cachet niets. Hij
+toont een melding en brengt je naar de app, meer niet.
+`test/meldingen.test.mjs` zakt als daar ooit een fetch-handler bij komt.
+
+De andere bezwaren staan er nog, en daarom is dit een aanbod en geen
+vervanging:
+
+- Meldingsrecht wordt geweigerd. Dan legt het scherm uit wat er aan de hand is
+  en wijst het naar het agenda-abonnement, dat het zonder doet.
+- Op iOS werkt het alleen als de app op het beginscherm staat. Dat staat er ook
+  bij, vóórdat je op de knop drukt.
+- Het staat volledig uit tot iemand een VAPID-sleutelpaar maakt. Zonder
+  `VAPID_PUBLIEK` in `index.html` biedt de app het niet eens aan, en zonder het
+  secret `VAPID_PRIVE` stuurt de sync niets.
+
+Wat het wél kan en de agenda niet: kijken of jíj nog iets open hebt staan. Een
+agenda-item geldt voor iedereen; een melding gaat alleen naar wie zijn top 10
+nog niet heeft ingeleverd.
+
+Drie dingen om te weten als je hier verder bouwt:
+
+- **Het rekenwerk is nagerekend, niet vertrouwd.** Web push is drie RFC's, en
+  twee ervan leveren een testvector mee. `test/push.test.mjs` draait die
+  vectoren; gaat er iets kapot in de sleutelafleiding, dan zakt die test en
+  niet pas een telefoon die stil blijft.
+- **Geen npm install.** `scripts/push.mjs` gebruikt alleen de ingebouwde
+  crypto van Node, om dezelfde reden als de rest van de sync.
+- **De regel wie een seintje krijgt staat los** in `scripts/herinneringen.mjs`,
+  als functie zonder netwerk erin. Een melding te veel is vervelend, één te
+  weinig maakt de functie zinloos, en allebei zie je pas op iemands telefoon.
 
 ### Terugbladeren naar een vorig seizoen
 
@@ -729,11 +766,11 @@ Drie dingen om te weten als je hier verder bouwt:
 | ~~2~~ | ~~racescherm wordt dashboard~~ — **gebouwd** | grootste winst per uur werk, data is er al |
 | ~~3~~ | ~~positiewijziging, reeksen, grafiek~~ — **gebouwd**; recap en profielstatistieken bewust niet, zie `OVERDRACHT.md` | rekenwerk over wat er al ligt |
 | ~~4~~ | ~~toegankelijkheid, offlinescherm~~ — **gebouwd**; opsplitsen nagemeten en niet gedaan | onderhoud, als er geen haast is |
-| 5 | ~~vorige seizoenen~~ — **gebouwd**; talen, andere klassen, push, publieke profielen bewust niet | drie gaan tegen een eerdere beslissing in, één kan niet (OpenF1 is F1-only) |
+| 5 | ~~vorige seizoenen~~ en ~~push~~ — **gebouwd**; talen, andere klassen, publieke profielen bewust niet | twee gaan tegen een eerdere beslissing in, één kan niet (OpenF1 is F1-only) |
 
-Fase 0 tot en met 4 zijn gebouwd, en uit fase 5 "vorige seizoenen". De vier die
-overblijven staan er nog, maar niet als "nog niet aan toegekomen" — zie de
-redenen hierboven.
+Fase 0 tot en met 4 zijn gebouwd, en uit fase 5 "vorige seizoenen" en
+"push-herinneringen". De drie die overblijven staan er nog, maar niet als "nog
+niet aan toegekomen" — zie de redenen hierboven.
 
 Uit groep 4 zijn inmiddels ook ~~sprintweekenden~~, ~~jokers~~ en de
 ~~seizoenslaag~~ gebouwd. Alleen de contrair-multiplier ligt er nog; die raakt

@@ -34,6 +34,7 @@ begin;
 -- leegmaakt, dus die gaat hier even uit. Een cascade laat hij vanzelf door,
 -- maar dit is een rechtstreekse delete.
 alter table public.jokers disable trigger jokers_bewaken;
+delete from public.push_abonnementen;
 delete from public.jokers;
 alter table public.jokers enable trigger jokers_bewaken;
 delete from public.answers;

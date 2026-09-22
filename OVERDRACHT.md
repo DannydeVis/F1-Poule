@@ -4345,3 +4345,77 @@ kiezen via een blad dat je openklikt — dat is er omdat een lijst van twaalf
 coureurs bij elke vraag het racescherm onbruikbaar lang maakte. Deze vier
 vragen zie je één keer per jaar, en dan is een gewone `<select>` korter,
 toegankelijker en sneller.
+
+---
+
+## Een seintje op je telefoon
+
+Push stond op de lijst met "bewust niet gebouwd", en het bezwaar was de service
+worker: zodra die verzoeken onderschept kan hij een oude versie of een oude
+stand serveren terwijl de speler denkt dat hij kijkt naar hoe het nú staat. Een
+verkeerde stand die eruitziet als de goede is erger dan een foutmelding.
+
+Dat bezwaar is niet genegeerd maar weggenomen. **`sw.js` heeft geen
+`fetch`-handler en cachet niets.** Hij luistert naar `push` en naar
+`notificationclick`, en verder niets. `test/meldingen.test.mjs` leest het
+bestand en zakt als daar ooit een fetch-handler in terechtkomt — dat is precies
+het soort regel die iemand er ooit "even" bij zet.
+
+### Drie stukken, en waarom ze los staan
+
+**`scripts/push.mjs`** — het protocol. Web push is drie RFC's: 8188 voor het
+`aes128gcm`-formaat, 8291 voor hoe je de sleutel afleidt uit een abonnement, en
+8292 voor VAPID. Geen pakket, om dezelfde reden als de rest van de sync: die
+draait op een runner zonder `npm install`, en één pakket erbij haalt die keuze
+onderuit. Node's ingebouwde `crypto` heeft alles wat nodig is —
+`createECDH`, `hkdfSync`, `createCipheriv('aes-128-gcm')` en `sign` met
+`dsaEncoding: 'ieee-p1363'` (dat laatste is niet optioneel: een JWT-handtekening
+is r‖s als kale bytes, en Node geeft standaard de DER-verpakking die een
+pushdienst weigert).
+
+**`scripts/herinneringen.mjs`** — de regel wie een seintje krijgt, als functie
+zonder netwerk erin. Een melding te veel is vervelend, één te weinig maakt de
+functie zinloos, en allebei merk je pas op iemands telefoon. Als losse functie
+is het na te rekenen:
+
+- hooguit één per toestel per ronde, over de sessie die het eerst dichtgaat;
+- alleen binnen drie uur voor de deadline (de sync draait per uur, dus elke
+  deadline valt minstens één keer in dat venster);
+- alleen als die poule die vraag stelt en die speler nog niets invulde;
+- niet twee keer dezelfde: `push_abonnementen.laatst` houdt de laatste tag bij.
+
+**`sw.js` en het blok onder Profiel** — het scherm. Drie toestanden: niet
+aangeboden (geen `VAPID_PUBLIEK`), geweigerd (met uitleg en een verwijzing naar
+het agenda-abonnement), of aan.
+
+### Nagerekend in plaats van vertrouwd
+
+`test/push.test.mjs` draait de testvectoren uit RFC 8291 Appendix A en RFC 8292
+§2.4. Dat is het hele punt van die vectoren: de versleutelde uitkomst ligt
+byte-voor-byte vast bij een gegeven sleutel en zout, dus een fout in de
+afleiding zakt hier en niet pas op een telefoon die stil blijft. De
+VAPID-handtekening is niet deterministisch (ECDSA gebruikt een willekeurig
+getal), dus daar wordt gecontroleerd wat wél vastligt: de kop, de eisen, en dat
+de handtekening klopt met de publieke sleutel die meegaat — plus dat hij níét
+klopt met een andere sleutel, want anders bewijst die controle niets.
+
+Twee tests in deze map starten dus geen browser. Dat is nieuw en het klopt:
+`draai-alles.mjs` draait elk `*.test.mjs`-bestand met Node, en wat hier kapot
+kan gaan is rekenwerk.
+
+### Wat er uit blijft staan tot iemand het inricht
+
+`VAPID_PUBLIEK` staat leeg in `index.html` en `VAPID_PRIVE` bestaat niet als
+secret. Zolang dat zo is biedt de app niets aan en stuurt de sync niets — geen
+foutmelding, geen lege log-regel, niets. `node scripts/push-sleutels.mjs` maakt
+een paar en zegt waar de twee helften heen moeten. De privésleutel hoort
+nergens anders dan in de repository-secrets: wie hem heeft kan meldingen
+namens deze app versturen.
+
+### Wat dit niet oplost
+
+Het agenda-abonnement blijft staan en is niet vervangen. Het werkt zonder
+meldingsrecht, zonder sleutels, zonder dat er ergens een lijst met toestellen
+ligt, en op elk apparaat. Push kan één ding dat de agenda niet kan: kijken of
+jíj nog iets open hebt staan. Dat is de hele meerwaarde, en het is genoeg —
+maar het is geen reden om het andere weg te halen.
