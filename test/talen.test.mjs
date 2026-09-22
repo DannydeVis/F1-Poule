@@ -79,6 +79,9 @@ const MAG_GELIJK = new Set([
   // De afkortingen op de aftelklok. "u" wordt "h", maar dag en minuut
   // beginnen in beide talen met dezelfde letter.
   'd', 'm',
+  // De kop van het jokerpaneel. Een joker heet in het Engels ook een joker;
+  // "Joker: actief" en "Joker: op" verschillen wél en staan er dus niet bij.
+  'Joker',
 ]);
 const zelfde = paren.filter(([nl, en]) => nl === en).map(([nl]) => nl);
 check('alleen woorden die in beide talen hetzelfde zijn, staan er gelijk in',

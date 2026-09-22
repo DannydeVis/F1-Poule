@@ -95,8 +95,8 @@ await openRace('Shanghai');
 check('op een weekend dat nog moet komen staat de jokerregel wel',
   (await page.$('.jokerregel')) !== null);
 check('en die zegt hoeveel je er nog hebt',
-  (await tekst('.jokerregel .label')) === 'nog 5 van je 5 jokers',
-  await tekst('.jokerregel .label'));
+  (await tekst('.jokerregel .jokertekst')) === 'Joker Nog 5 van je 5 te vergeven dit seizoen.',
+  await tekst('.jokerregel .jokertekst'));
 
 await page.click('#jokerknop');
 await page.waitForSelector('.melding');
@@ -107,7 +107,8 @@ check('en de joker staat in de database',
   gezet.length === 1 && String(gezet[0].race_id) === '2' && gezet[0].member_id === 'lid-1',
   JSON.stringify(gezet));
 check('de regel zegt nu dat het weekend dubbel telt',
-  (await tekst('.jokerregel .label')).includes('dubbel'), await tekst('.jokerregel .label'));
+  (await tekst('.jokerregel .jokertekst')).includes('verdubbeld'),
+  await tekst('.jokerregel .jokertekst'));
 
 // En hij is ook te lézen. De knop ernaast staat op flex:none en .knop staat
 // op width:100%; samen betekende dat "geef mij alles en krimp niet", en dan
@@ -118,19 +119,27 @@ check('de regel zegt nu dat het weekend dubbel telt',
 // Vandaar een meting en geen momentopname: een schermafdruk vergelijken zou
 // op elke lettertypewijziging afgaan, en dit gaat om de verhouding.
 const jokermaat = () => page.$eval('.jokerregel', (el) => {
-  const l = el.querySelector('.label'), k = el.querySelector('.knop');
+  const tekstvak = el.querySelector('.jokertekst');
+  const uitleg = el.querySelector('.jokeruitleg');
+  const knop = el.querySelector('.knop');
+  const ster = el.querySelector('.jokerster');
   const s = getComputedStyle(el);
-  const binnen = el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight);
-  const regelhoogte = parseFloat(getComputedStyle(l).lineHeight) || 16;
+  const gat = parseFloat(s.columnGap) || 0;
+  // Het paneel heeft drie kinderen met twee gaten ertussen: de schijf, de
+  // tekst en de knop.
+  const binnen = el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight)
+    - ster.getBoundingClientRect().width - knop.getBoundingClientRect().width - 2 * gat;
+  const regelhoogte = parseFloat(getComputedStyle(uitleg).lineHeight) || 16;
   return {
-    label: l.getBoundingClientRect().width,
-    knop: k.getBoundingClientRect().width,
-    // Wat er naast de knop overblijft. Dít hoort de tekst te krijgen, en het
-    // is de enige maat die niet meebeweegt met de breedte van het scherm --
-    // op 1100px staat de app in twee kolommen en is de rechterkolom van
-    // zichzelf smal, dus een vast aantal regels zegt daar niets.
-    ruimte: binnen - k.getBoundingClientRect().width - (parseFloat(s.columnGap) || 0),
-    regels: Math.round(l.getBoundingClientRect().height / regelhoogte),
+    label: tekstvak.getBoundingClientRect().width,
+    knop: knop.getBoundingClientRect().width,
+    // Wat er naast de schijf en de knop overblijft. Dít hoort de tekst te
+    // krijgen, en het is de enige maat die niet meebeweegt met de breedte van
+    // het scherm -- op 1100px staat de app in twee kolommen en is de
+    // rechterkolom van zichzelf smal, dus een vast aantal regels zegt daar
+    // niets.
+    ruimte: binnen,
+    regels: Math.round(uitleg.getBoundingClientRect().height / regelhoogte),
   };
 });
 
@@ -210,7 +219,8 @@ await openRace('Shanghai');
 check('op een gereden weekend staat er geen knop meer',
   (await page.$('#jokerknop')) === null);
 check('maar wel dat de joker er ligt',
-  (await tekst('.jokerregel .label')).includes('dubbel'), await tekst('.jokerregel .label'));
+  (await tekst('.jokerregel .jokertekst')).includes('verdubbeld'),
+  await tekst('.jokerregel .jokertekst'));
 await terug();
 
 // --- 6. vijf is vijf ------------------------------------------------------
@@ -234,8 +244,8 @@ await page.waitForSelector('[data-race]');
 
 await openRace('Suzuka');
 check('met vijf jokers gezet is er niets meer te vergeven',
-  (await tekst('.jokerregel .label')) === 'je jokers zijn op',
-  await tekst('.jokerregel .label'));
+  (await tekst('.jokerregel .jokertekst')) === 'Joker: op Je hebt ze dit seizoen alle 5 gebruikt.',
+  await tekst('.jokerregel .jokertekst'));
 check('en de knop staat er niet', (await page.$('#jokerknop')) === null);
 
 // Eentje terugnemen maakt weer plek.
@@ -244,8 +254,8 @@ await page.click('#jokerknop');
 await page.waitForFunction(() => globalThis.__db.jokers.length === 4);
 await openRace('Suzuka');
 check('eentje terugnemen maakt weer plek',
-  (await tekst('.jokerregel .label')) === 'nog 1 van je 5 jokers',
-  await tekst('.jokerregel .label'));
+  (await tekst('.jokerregel .jokertekst')) === 'Joker Nog 1 van je 5 te vergeven dit seizoen.',
+  await tekst('.jokerregel .jokertekst'));
 check('en de knop is terug', (await page.$('#jokerknop')) !== null);
 
 // --- uitzetten ------------------------------------------------------------
