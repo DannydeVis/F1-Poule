@@ -821,6 +821,16 @@ verkennen*), eventueel met een `session_key`. Die laat zien of OpenF1 de race
 niet heeft (404) of dat we te snel vroegen (429). Dat verschil is belangrijk —
 een 429 lost zichzelf op, een 404 niet.
 
+**De app zegt het zelf.** Staat er een race een week na zijn deadline nog
+zonder uitslag en zonder streep, dan verschijnt er onder de seizoensvragen op
+de standpagina een amberen regel met zijn naam erin:
+
+> Kuala Lumpur heeft geen uitslag en is niet afgelast. Zolang dat zo blijft kan
+> het seizoen niet afgerond worden en blijven deze vragen ongescoord.
+
+Iedereen in de poule ziet die, want het gaat om ieders punten. De poulebaas is
+degene die hem oplost — zie hieronder.
+
 **Blijft het seizoen ergens op hangen?** De seizoensvragen worden pas gescoord
 als élke race een uitslag heeft of afgelast is. Blijft er één race hangen — wel
 gereden volgens de kalender, niets binnengekomen, niet afgelast — dan leveren
