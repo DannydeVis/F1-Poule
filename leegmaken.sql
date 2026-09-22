@@ -23,10 +23,19 @@ begin;
 
 -- Van onder naar boven uitgeschreven, ook al zou `delete from pools` in zijn
 -- eentje genoeg zijn: alles hangt met `on delete cascade` aan de poule. Twee
--- redenen om het toch voluit te zetten. Je ziet hier precies welke vijf
+-- redenen om het toch voluit te zetten. Je ziet hier precies welke zes
 -- tabellen geraakt worden zonder de sleutels in schema.sql na te lopen, en op
 -- een database van vóór die sleutels (waar een kolom nog nullable was) kan
 -- een cascade een losse rij laten staan die hier wel meegaat.
+--
+-- jokers staat vooraan omdat hij van drie kanten afhangt: de poule, de race
+-- en de speler. De trigger eromheen is er voor spelers -- "je joker ligt vast
+-- zodra het weekend begint" -- en niet voor de beheerder die de boel
+-- leegmaakt, dus die gaat hier even uit. Een cascade laat hij vanzelf door,
+-- maar dit is een rechtstreekse delete.
+alter table public.jokers disable trigger jokers_bewaken;
+delete from public.jokers;
+alter table public.jokers enable trigger jokers_bewaken;
 delete from public.answers;
 delete from public.pool_questions;
 delete from public.predictions;
@@ -55,6 +64,8 @@ union all
 select 'vragenkeuze per poule',(select count(*)::text from public.pool_questions)
 union all
 select 'oude voorspellingen', (select count(*)::text from public.predictions)
+union all
+select 'gezette jokers',       (select count(*)::text from public.jokers)
 union all
 select '— hieronder hoort niets weg te zijn —', ''
 union all

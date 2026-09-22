@@ -348,6 +348,33 @@ uitslag om een WK-stand uit te maken. De stand wordt trouwens berekend uit de
 races *vóór* dat weekend, niet uit de huidige — anders zou de score van een
 race in mei nog veranderen door wat er in september gebeurt.
 
+### 6b. Jokers
+
+Staat ook uit. De poulebaas zet hem aan in Poule → beheer, en dan heeft
+iedereen **vijf jokers voor dit seizoen**. Je legt er een op een weekend en dat
+hele weekend telt dubbel: de kwalificatie, de race, de sprint en alle losse
+vragen erbij.
+
+De joker staat op het racescherm, boven de tabbladen — hij geldt voor het hele
+weekend en niet voor één sessie. In de kalender zie je er een `2×` bij staan.
+
+Vijf dingen die daarbij vastliggen:
+
+- **Je moet hem neerleggen voordat er iets gereden is.** Zodra de eerste sessie
+  van dat weekend begint ligt hij vast. Dat is dus een gok op welk weekend jou
+  het beste ligt, en niet een knop om achteraf je beste weekend te verdubbelen.
+- **Weghalen kan ook niet meer** zodra dat weekend begonnen is. Anders zou je
+  na de kwalificatie nog kunnen besluiten dat het toch geen goed weekend was.
+- **Geen terugwerkende kracht.** Net als bij het punt hierboven bewaart
+  `pools.jokers_vanaf` *wanneer* het aanging. Een weekend dat toen al liep kan
+  geen joker meer krijgen.
+- **Uitzetten laat de gezette jokers staan**, ze tellen alleen niet meer mee.
+  Per ongeluk uitzetten en weer aanzetten kost dus niemand zijn keuzes.
+- **De regels staan in de database**, niet alleen in het scherm — trigger
+  `jokers_bewaken` in `schema.sql`. Een joker die je achteraf mag verzetten is
+  geen keuze maar een knop om de uitslag mee te herschrijven, en dat is te
+  belangrijk om aan de knoppen in de app over te laten. Zie ook §7.
+
 ---
 
 ## 7. Wie mag wat
