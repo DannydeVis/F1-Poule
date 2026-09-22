@@ -174,6 +174,38 @@ check('en de kalender zet er een merkteken bij',
 check('alleen bij dat ene weekend',
   (await page.$$('.jokervlag')).length === 1);
 
+// Het 2×-merkteken staat pal naast de Q/R/S-vinkjes, en die worden groen
+// zodra je die sessie hebt ingevuld. Sinds de joker groen is, is "gevuld
+// tegen omlijnd" het enige wat ze uit elkaar houdt: een dekkende pil naast
+// doorzichtige vakjes. Wordt de vlag ooit ook omlijnd, dan verdwijnt hij in
+// zijn buren -- en dat is precies het soort wijziging dat niemand opmerkt.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  db.answers.push({ pool_id: 'pool-1', race_id: 2, member_id: 'lid-1',
+    question_id: 'quali_top10',
+    waarde: ['1', '4', '16', '63', '81', '44', '12', '14', '10', '18'] });
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await page.waitForSelector('[data-race]');
+{
+  const naast = await page.$eval(`${rij('Shanghai')}`, (el) => {
+    const vlag = el.querySelector('.jokervlag');
+    const vinkje = el.querySelector('.mk i.aan');
+    const vul = (n) => n && getComputedStyle(n).backgroundColor;
+    return { vlag: vul(vlag), vinkje: vul(vinkje),
+             heeftVinkje: !!vinkje };
+  });
+  check('naast de joker staat een ingevuld sessievinkje', naast.heeftVinkje,
+    JSON.stringify(naast));
+  // Een dekkende kleur heeft geen alfa in rgb(); een doorzichtige wel.
+  check('het 2×-merkteken is gevuld, niet doorzichtig',
+    /^rgb\(/.test(naast.vlag) && !/rgba/.test(naast.vlag), naast.vlag);
+  check('en het sessievinkje juist wél, dus ze zien er anders uit',
+    /rgba/.test(naast.vinkje) && naast.vlag !== naast.vinkje,
+    `${naast.vlag} tegen ${naast.vinkje}`);
+}
+
 // Terugnemen kan: een misklik in ronde 2 hoort je niet de rest van het
 // seizoen te kosten.
 await openRace('Shanghai');
