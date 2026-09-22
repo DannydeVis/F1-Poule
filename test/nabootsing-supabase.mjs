@@ -110,9 +110,14 @@ const dubbelAccount = { data: null, error: { code: '23505',
 // ongeluk dezelfde array-instantie deelt met de "database".
 const kopie = (v) => JSON.parse(JSON.stringify(v));
 const gelijk = (a, b) => String(a) === String(b);
-// Een filter is [kolom, waarde] of [kolom, lijst, 'in'].
+// Een filter is [kolom, waarde], [kolom, lijst, 'in'] of [kolom, grens, 'lte'].
+// Die laatste is er voor de kalender: die haalt alles op tot en met het
+// seizoen dat de poule nu speelt, zodat terugbladeren geen tweede ronde naar
+// de server kost.
 const past = (rij, [k, v, op]) =>
-  op === 'in' ? (v ?? []).some((x) => gelijk(rij[k], x)) : gelijk(rij[k], v);
+  op === 'in'  ? (v ?? []).some((x) => gelijk(rij[k], x))
+  : op === 'lte' ? Number(rij[k]) <= Number(v)
+  : gelijk(rij[k], v);
 
 globalThis.__db = store;
 
@@ -336,6 +341,7 @@ function maakQuery(tabel) {
     select() { if (q._insert || q._upsert || q._update) q._selectNa = true; return q; },
     eq(k, v) { q._filters.push([k, v]); return q; },
     in(k, v) { q._filters.push([k, v, 'in']); return q; },
+    lte(k, v) { q._filters.push([k, v, 'lte']); return q; },
     is(k, v) {
       if (v !== null) throw new Error('de nabootsing kent alleen is(kolom, null)');
       q._isNull.push(k); return q;

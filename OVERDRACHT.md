@@ -4232,3 +4232,51 @@ op precies de foutmelding die de accountverwijdering geblokkeerd zou hebben.
 niet onder die uitzondering. Daar staat de trigger één regel lang uit, met de
 reden erbij: die regel is er voor spelers, niet voor de beheerder die de boel
 opruimt.
+
+---
+
+## Terugbladeren naar een vorig seizoen
+
+`ROUTEKAART.md` zei hierover: "nu bouwen betekent gokken hoe een archief eruit
+moet zien voordat er iets te archiveren valt". Dat bezwaar klopte, en het is
+opgelost door geen archief te bouwen.
+
+De gegevens stonden er namelijk al. Elke race draagt zijn `season` en elk
+antwoord hangt aan een race, dus een vorig seizoen ging nergens heen — het werd
+weggefilterd bij het ophalen, met `.eq('season', …)`. Eén regel.
+
+Wat er nu staat:
+
+- De kalender wordt opgehaald met `.lte('season', pouleSeizoen())`: alles tot
+  en met het seizoen dat de poule speelt. Dat groeit met 24 rijen per jaar.
+  Wordt dat ooit te veel, dan kan `poule_ophalen()` erbij zeggen in welke
+  seizoenen deze poule iets heeft staan en filtert die regel daarop.
+- `S.alleRaces` is wat er geladen is, `S.races` is de snede waar je naar kijkt.
+  De rest van het bestand loopt nog steeds over `S.races` — de stand, de
+  grafiek, de terugblik en de duels hoeven van het terugbladeren niets te
+  weten.
+- `pouleSeizoen()` is het seizoen dat de poule speelt, `seizoen()` het seizoen
+  dat je bekijkt. Die twee waren eerst hetzelfde; het verschil is de hele
+  functie.
+
+Drie dingen die aandacht kostten:
+
+**De keuzelijst hoort in de pagina en niet in de kop.** Op een telefoon staat
+`.kop` op `display:none` — daar heeft elke pagina zijn eigen `.smalkop`. Een
+seizoenskiezer in die kop zou op precies het apparaat waar de app voor gemaakt
+is onzichtbaar zijn. Hij staat nu boven de kalender en boven de stand.
+
+**`kiesSeizoen()` raakt `S.race` niet aan.** De eerste versie zette hem op
+null, want bij het wisselen van seizoen hoort een open racescherm te sluiten.
+Maar `laad()` roept `kiesSeizoen()` aan, en `laad()` draait ook direct na het
+opslaan van een voorspelling — terwijl je nog op dat scherm staat. Het sluiten
+doet nu de knop zelf.
+
+**De vragenset gaat mee en blijft op slot.** Een nieuw seizoen is een
+natuurlijk moment om de vragen te herzien, en toch kan het niet:
+`pool_questions` kent geen seizoen, dus een andere set zou de stand van vorig
+jaar met terugwerkende kracht veranderen. Wie dat ooit wél wil, weet nu de weg:
+een `season`-kolom op `pool_questions`, en `vraagActief()` het seizoen van de
+race meegeven in plaats van dat van de poule. Dat raakt `scoreTab()` en alles
+eronder, dus het is geen kolom maar een verbouwing — en daarom staat er nu
+"maak een nieuwe poule aan" in `BEDIENING.md` §6c.

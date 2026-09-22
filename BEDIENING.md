@@ -375,6 +375,26 @@ Vijf dingen die daarbij vastliggen:
   geen keuze maar een knop om de uitslag mee te herschrijven, en dat is te
   belangrijk om aan de knoppen in de app over te laten. Zie ook §7.
 
+### 6c. Een nieuw seizoen, en terug naar het vorige
+
+Een poule hoort bij een seizoen. Zodra alle races van dat seizoen gereden zijn
+verschijnt onder Poule → beheer de knop **Begin aan 2027** (of welk jaar er
+volgt). Zolang er nog iets te rijden valt staat hij uit — doorschuiven zou die
+race dan uit beeld halen.
+
+Doorschuiven gooit niets weg. Boven de kalender en boven de stand komt een
+keuzelijst te staan waarmee je terug kunt naar het vorige seizoen: dezelfde
+kalender, dezelfde stand, dezelfde grafiek, precies zoals ze waren. De
+spelers en de vragenset gaan mee naar het nieuwe jaar.
+
+Die keuzelijst is er alleen als er iets te kiezen valt. Een poule die één
+seizoen speelt ziet hem niet.
+
+**De vragenset blijft op slot.** Een nieuw seizoen lijkt een logisch moment om
+de vragen te herzien, maar de gekozen vragen hangen aan de poule en niet aan
+het seizoen — een andere set zou de stand van vorig jaar met terugwerkende
+kracht veranderen. Wie echt andere vragen wil, maakt een nieuwe poule aan.
+
 ---
 
 ## 7. Wie mag wat
