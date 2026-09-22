@@ -821,6 +821,24 @@ verkennen*), eventueel met een `session_key`. Die laat zien of OpenF1 de race
 niet heeft (404) of dat we te snel vroegen (429). Dat verschil is belangrijk —
 een 429 lost zichzelf op, een 404 niet.
 
+**Blijft het seizoen ergens op hangen?** De seizoensvragen worden pas gescoord
+als élke race een uitslag heeft of afgelast is. Blijft er één race hangen — wel
+gereden volgens de kalender, niets binnengekomen, niet afgelast — dan leveren
+die 150 punten nooit iets op en blijft "Begin aan het volgende seizoen" grijs.
+
+Onderaan `schema.sql` staan daarom drie regels die dat nu al laten zien:
+
+```
+afgelaste races                                        | 2
+seizoen 2026 rond                                      | nog 8 te gaan
+blijven hangen (deadline > week geleden, niets binnen) | 0
+```
+
+Die laatste hoort **nul** te zijn. De sync zet een race die OpenF1 een week na
+de deadline nog steeds niet heeft zelf op afgelast; staat er iets anders dan
+nul, dan is dat niet gebeurd en is het de moeite om `scripts/verkennen.mjs` op
+die race los te laten.
+
 **Races die niet bestaan.** OpenF1 heeft in 2026 een testrecord tussen de races
 staan: Kuala Lumpur op 4 oktober, officieel "FORMULA 1 GULF AIR BAHRAIN GRAND
 PRIX IN MALAYSIA 2026". De kalender nam dat gewoon over, en dan laat de app

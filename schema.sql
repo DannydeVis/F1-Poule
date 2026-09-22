@@ -1506,6 +1506,48 @@ union all
 select 'races met uitslag',
        (select count(*)::text from public.races where season = 2026 and race_result is not null)
 union all
+select 'afgelaste races',
+       (select count(*)::text from public.races where season = 2026 and afgelast)
+union all
+-- Rondt dit seizoen ooit af?
+--
+-- De seizoenslaag wordt pas gescoord als élke race een uitslag heeft of
+-- afgelast is -- zie seizoenKlaar() in index.html, dat met dezelfde maatstaf
+-- rekent. Blijft er één race hangen, dan levert die honderdvijftig punten
+-- nooit iets op en blijft "Begin aan het volgende seizoen" grijs. Zonder deze
+-- regel merk je dat pas in december.
+select 'seizoen 2026 rond',
+       case
+         -- Zonder kalender is er niets om rond te zijn. "ok" zou hier gelden
+         -- omdat er geen race is die tegenspreekt, en dat is precies het soort
+         -- ok waar je niets aan hebt.
+         when not exists (select 1 from public.races where season = 2026)
+           then 'geen kalender'
+         when not exists (
+              select 1 from public.races r
+              where r.season = 2026 and not r.afgelast
+                and r.race_result is null
+                and r.quali_result is null
+                and r.sprint_result is null)
+           then 'ok'
+         else 'nog ' || (select count(*)::text from public.races r
+              where r.season = 2026 and not r.afgelast
+                and r.race_result is null
+                and r.quali_result is null
+                and r.sprint_result is null) || ' te gaan' end
+union all
+-- En het getal dat zegt of dat vanzelf goed komt. De sync zet een race die
+-- OpenF1 een week na de deadline nog steeds niet heeft zelf op afgelast. Staat
+-- hier iets anders dan nul, dan is dat niet gebeurd -- en dan blijft de race
+-- voor iedereen op "wacht op uitslag" staan, wat niet te onderscheiden is van
+-- een app die stuk is.
+select 'blijven hangen (deadline > week geleden, niets binnen)',
+       (select count(*)::text from public.races r
+        where r.season = 2026 and not r.afgelast
+          and r.race_result is null and r.quali_result is null and r.sprint_result is null
+          and r.deadline_race is not null
+          and r.deadline_race < now() - interval '7 days')
+union all
 -- Alle zeven vlaggen. Er stonden er twee in, dus een met de hand ingevulde
 -- sprint, snelste ronde, snelste pitstop, safety car of rode vlag telde als
 -- nul -- terwijl dit juist de regel is die zegt "hier heeft iemand ingegrepen".

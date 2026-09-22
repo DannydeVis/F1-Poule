@@ -4911,3 +4911,47 @@ ingevuld".
 moet `rgb(...)` zijn (dekkend) en het vinkje `rgba(...)` (doorzichtig), en ze
 moeten van elkaar verschillen. Nagelopen op of het afgaat — de vlag terug op
 `--groen-vlak` met een rand laat allebei die controles zakken.
+
+---
+
+## Rondt het seizoen ooit af?
+
+De seizoenslaag wordt gescoord zodra `seizoenKlaar()` waar is, en dat is:
+
+```js
+S.races.length > 0 && S.races.every(r => heeftUitslag(r) || r.afgelast)
+```
+
+Élke race, zonder uitzondering. Blijft er één hangen — de kalender zegt dat hij
+gereden is, er is niets binnengekomen en hij staat niet op afgelast — dan wordt
+die honderdvijftig punten nooit uitgekeerd en blijft "Begin aan het volgende
+seizoen" grijs. Voor altijd, zonder foutmelding.
+
+Dat is geen theoretisch geval. Deze kalender heeft twee races die niet zijn
+doorgegaan en een testrecord van OpenF1 (Kuala Lumpur, `meeting_key` 1308
+terwijl het seizoen tussen 1279 en 1302 zit). Alle drie moeten op `afgelast`
+staan voordat het seizoen kan afronden. De sync doet dat zelf — een race die
+OpenF1 een week na de deadline nog steeds niet heeft wordt afgelast, en het
+spookrecord wordt doorgestreept bij het ophalen van de kalender — maar of dat
+gelúkt is stond nergens.
+
+Nu wel, in drie regels onderaan `schema.sql`:
+
+| regel | wat je eraan hebt |
+|---|---|
+| `afgelaste races` | hoeveel er doorgestreept zijn |
+| `seizoen 2026 rond` | `ok`, `nog N te gaan`, of `geen kalender` |
+| `blijven hangen (deadline > week geleden, niets binnen)` | **hoort nul te zijn** |
+
+Die laatste is de eigenlijke controle. Hij telt races waarvan de deadline meer
+dan een week geleden is, waar van geen enkele sessie een uitslag binnenkwam, en
+die niet afgelast zijn. Dat is precies het geval dat de sync had moeten
+opruimen, dus een getal boven nul zegt dat er iets niet werkt — en het zegt het
+in september in plaats van in december.
+
+`seizoen 2026 rond` heeft een derde antwoord dat er niet uitziet als een
+uitzondering maar het wel is: **`geen kalender`**. Op een lege database zou
+"ok" gelden omdat er geen race is die het tegenspreekt, en dat is precies het
+soort ok waar je niets aan hebt. `controle.test.sql` controleert alle drie de
+antwoorden, met een race die hangt, een race die afgelast is en een die
+gereden is.
