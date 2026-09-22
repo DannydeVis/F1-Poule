@@ -421,6 +421,32 @@ het een formulier; daarna zie je wat je hebt ingevuld, met een streepje in
 plaats van punten. Zodra alle races gereden zijn komt erbij te staan wat het
 werkelijk werd en wat het opleverde, en tellen die punten mee in de stand.
 
+#### Wanneer ze vastliggen
+
+De streep geldt **per antwoord** en niet per seizoen:
+
+- **Vóór de eerste race** mag alles: invullen, veranderen, weghalen. Wie op
+  tijd is kan zich nog bedenken.
+- **Daarna** mag je nog invullen wat je nog niet had, maar niet meer
+  veranderen wat er al staat. Eén schot, wanneer je ook binnenkomt.
+- **Als het seizoen erop zit** komt er niets meer bij; dan is het antwoord
+  bekend.
+
+Dat tweede punt is er voor wie halverwege instapt. Die heeft de gemiste races
+al als achterstand, en honderdvijftig punten die hij onmogelijk kon halen is
+een tweede straf voor hetzelfde. Staat er iets open, dan zegt het blok "nog 2
+in te vullen · het seizoen loopt al" en waarschuwt het erbij dat wat je nu
+kiest meteen vastligt.
+
+**Wat dit niet oplost:** wie in ronde 20 de kampioen aanwijst weet meer dan wie
+dat in ronde 1 deed. Dat is een echte scheefheid en geen bijwerking — voor een
+vriendenpoule weegt "mag ik wel meedoen" zwaarder. Wil je dat anders, dan is de
+plek `seizoenVraagOpen()` in `index.html` en de tak voor `'seizoen'` in
+`poule_antwoord_deadline()` in `schema.sql`; die twee horen hetzelfde te zeggen.
+
+De database bewaakt dit zelf, en ook tegen weghalen — anders zou je een
+antwoord kunnen wissen en opnieuw invoeren om er omheen te werken.
+
 Twee dingen om te weten:
 
 - **Ze tellen niet mee in "maximaal per weekend".** Dat getal gaat over één

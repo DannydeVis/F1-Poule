@@ -4725,3 +4725,102 @@ test op `sprint_handmatig`.
 Met opzet géén `grant`: de app vraagt deze view nooit op, en "hoeveel poules en
 spelers zijn er" is precies het soort overzicht dat fase 0 heeft dichtgezet.
 De test controleert dat `anon` en `authenticated` er niet bij kunnen.
+
+---
+
+## De seizoenslaag halverwege het seizoen
+
+Danny liet een scherm zien van een poule die al veertien races onderweg was:
+vier seizoensvragen, alle vier leeg, geen invoerveld, en erboven het woord
+**"ingevuld"**. Twee fouten in één blok.
+
+### De regel was te grof
+
+De streep gold per seizoen: vóór de eerste race mag alles, daarna niets meer.
+Dat is precies goed voor wie op tijd is, en het sluit iedereen buiten die
+halverwege instapt. Die heeft de gemiste races al als achterstand; er dan ook
+nog eens honderdvijftig punten bij optellen die hij onmogelijk kon halen is een
+tweede straf voor hetzelfde.
+
+De streep geldt nu **per antwoord**:
+
+| wanneer | invullen | veranderen | weghalen |
+|---|---|---|---|
+| vóór de eerste race | ja | ja | ja |
+| seizoen loopt | ja, als je nog niets had | nee | nee |
+| seizoen erop | nee | nee | nee |
+
+Eén schot, wanneer je ook binnenkomt. `seizoenVraagOpen(id)` in `index.html`
+en de tak voor `'seizoen'` in `poule_antwoord_deadline()` zeggen hetzelfde; wie
+er één verandert moet de andere mee.
+
+**Wat dit niet oplost, en met opzet niet:** wie in ronde 20 de kampioen
+aanwijst weet meer dan wie dat in ronde 1 deed. Dat is een echte scheefheid.
+Voor een vriendenpoule weegt "mag ik wel meedoen" zwaarder, en dat is een keuze
+en geen vergissing.
+
+### Het gat dat erbij hoorde
+
+De trigger stond op `before insert or update`. Wat je niet mocht wijzigen kon
+je dus wél verwijderen en opnieuw invoeren. Zolang alles op één harde streep
+stond viel dat niet op — na de start werd een insert net zo goed geweigerd.
+Zodra invullen ná de start mag, wordt het een werkend lek.
+
+De trigger staat nu ook op `delete`, met dezelfde cascade-uitzondering als bij
+de jokers (`pg_trigger_depth() > 1`): gaat de poule of de speler weg, dan horen
+de antwoorden mee. Zonder die uitzondering zou "verwijder mijn account"
+stranden op een antwoord dat vastligt, en dat is geen regel maar een val.
+
+`leegmaken.sql` zet de trigger er tijdelijk uit, net als bij de jokers — dat
+bestand is voor de beheerder, niet voor een speler.
+
+### En het woord "ingevuld"
+
+De kop van het blok was `open ? ... : uit ? ... : 'ingevuld'`. Die laatste tak
+kende maar één geval, dus met niets ingevuld stond er "ingevuld". Nu telt hij
+wat er nog openstaat en zegt hij "nog 2 in te vullen · het seizoen loopt al",
+met de waarschuwing erbij dat wat je nu kiest meteen vastligt.
+
+### Waar het getest wordt
+
+`test/seizoenslaag.test.sql` (nieuw, 11 controles) legt de hele tabel hierboven
+vast, inclusief het delete-gat en de cascade. `test/seizoenslaag.test.mjs` kreeg
+er een §4b bij: één antwoord uit de nabootsing halen zet precies de toestand
+van een late instapper neer, en dan hoort dat ene veld terug te komen terwijl
+de andere drie dicht blijven.
+
+De nabootsing dwingt geen deadlines af, dus de browsertest toetst de regel van
+de app en de SQL-test die van de database. Dat is geen dubbelop: de app bepaalt
+wat je ziet, de database bepaalt wat er kan — en wie de anon key uit de
+broncode plukt komt om het scherm heen, niet om een trigger.
+
+---
+
+## De jokerbalk op een breed scherm
+
+Uit hetzelfde bericht: op desktop stond de jokerbalk als een kolom van zestig
+pixels met één woord per regel, acht regels hoog.
+
+```css
+.knop{ ... width:100%}                        /* een knop pakt normaal de rij */
+.jokerregel .knop{flex:none; ...}             /* en krimpt hier niet mee      */
+```
+
+Samen betekent dat "geef mij alles en krimp niet". De knop eiste 100% van de
+rij op, de tekst ernaast werd tot zijn langste woord geknepen. Op een telefoon
+viel het niet op omdat de tekst daar tóch afbreekt; zodra er ruimte is wordt
+het meteen zichtbaar. Eén woord — `width:auto` — plus `flex:1;min-width:0` op
+de label ernaast, en de tekst krijgt wat er overblijft.
+
+De regressietest in `test/jokers.test.mjs` meet en vergelijkt geen plaatje: een
+schermafdruk zou op elke lettertypewijziging afgaan. Wat gemeten wordt is de
+verhouding — vult de tekst de ruimte naast de knop? — en dat is de enige maat
+die niet meebeweegt met de breedte van het scherm. Op 1100px staat de app in
+twee kolommen en is de rechterkolom van zichzelf smal; een vast aantal regels
+zou daar niets zeggen.
+
+Let op de `maat.ruimte > 40` in die test. Die stond er eerst niet, en toen bleek
+de controle leeg te lopen: zonder de fix komt `ruimte` negatief uit en klopt
+"label >= ruimte" ook op nul. Er moet eerst rúímte zijn. Nagelopen op of hij
+afgaat — met `width:auto` weggehaald zakken alle vier de breedtes én de
+regeltelling.

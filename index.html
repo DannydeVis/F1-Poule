@@ -449,7 +449,14 @@
     background:var(--amber-vlak)}
   .jokerregel.aan .label{color:var(--amber)}
   .jokerregel .mono{font-size:18px;color:var(--amber)}
-  .jokerregel .knop{flex:none;min-height:40px;padding:0 14px}
+  /* width:auto is hier het hele punt. .knop staat op width:100% omdat een knop
+     in deze app normaal de volle breedte pakt; in een flexrij mét flex:none
+     betekent dat "geef mij alles en krimp niet", en dan blijft er voor de
+     tekst ernaast één woord per regel over. */
+  .jokerregel .knop{flex:none;width:auto;min-height:40px;padding:0 14px}
+  /* En de tekst pakt wat overblijft. Zonder min-width:0 zou een lange zin de
+     rij breder maken dan het paneel in plaats van af te breken. */
+  .jokerregel .label{flex:1;min-width:0}
   /* Het merkteken in de kalender. Klein, naast de Q en de R, zodat je in één
      blik ziet waar je jokers liggen. */
   .jokervlag{font-family:var(--mono);font-size:11px;color:var(--amber);
@@ -2624,6 +2631,16 @@ const ENGELS = Object.fromEntries([
    'd'],
   ['m',
    'm'],
+
+  // ---- de seizoenslaag halverwege het seizoen ------------------
+  ['nog in te vullen · sluit {wanneer}',
+   'still to fill in · closes {wanneer}'],
+  ['nog {n} in te vullen · het seizoen loopt al',
+   '{n} still to fill in · the season is already running'],
+  ['Het seizoen loopt al, dus wat je nu invult ligt meteen vast. Wat '
+   + 'je eerder koos blijft staan zoals het staat.',
+   'The season is already running, so what you fill in now is locked straight '
+   + 'away. What you picked earlier stays as it is.'],
 ]);
 
 const TAALSLEUTEL = 'poule:taal';
@@ -3362,6 +3379,35 @@ const seizoenOpen = () => {
   const r = seizoenRace();
   const start = r ? weekendStart(r) : null;
   return start !== null && Date.now() < start;
+};
+
+// Mag ik déze vraag nog invullen?
+//
+// Eerst gold één streep voor alle vier: vóór de eerste race wel, daarna niet.
+// Dat sluit iedereen buiten die halverwege het seizoen instapt, en dat is
+// precies het soort speler dat je erbij wilt hebben -- die heeft de eerste
+// veertien races al gemist, en dan ook nog eens honderdvijftig punten die hij
+// onmogelijk kon halen is een tweede straf voor hetzelfde.
+//
+// Dus is de streep per vraag gaan gelden in plaats van per seizoen:
+//
+//   * vóór de eerste race mag alles, net als eerst -- invullen, veranderen,
+//     weghalen. Wie op tijd is kan zich nog bedenken.
+//   * daarna mag je invullen wat je nog niet had, maar niet meer veranderen
+//     wat er al staat. Eén schot, wanneer je ook binnenkomt.
+//   * en zodra het seizoen erop zit mag er niets meer bij, want dan is het
+//     antwoord bekend.
+//
+// Wat dit niet oplost: wie in ronde 20 de kampioen aanwijst weet meer dan wie
+// dat in ronde 1 deed. Dat is een echte scheefheid en geen bijwerking. Voor
+// een vriendenpoule weegt "mag ik wel meedoen" zwaarder -- zie BEDIENING.md
+// §6d als je dat anders wilt.
+const seizoenVraagOpen = (id) => {
+  if (seizoenOpen()) return true;
+  if (seizoenKlaar()) return false;
+  const race = seizoenRace();
+  if (!race || !S.ik) return false;
+  return leegAntwoord(vindAntwoord(race.id, S.ik.id, id)?.waarde);
 };
 // Het hele seizoen gereden? Een afgelaste race telt als geweest: daar komt
 // nooit meer een uitslag van.
@@ -5182,7 +5228,7 @@ function seizoenslaagBlok() {
 
   const regel = (id) => {
     const v = SEIZOENVRAAG[id], gekozen = mijn(id);
-    if (open) {
+    if (seizoenVraagOpen(id)) {
       const keuzes = v.soort === 'coureur'
         ? drivers.map(d => `<option value="${esc(d.nr)}" ${zelfde(d.nr, gekozen) ? 'selected' : ''
             }>${esc(d.naam)}</option>`).join('')
@@ -5218,19 +5264,30 @@ function seizoenslaagBlok() {
       </div>`;
   };
 
+  // Er staat nog iets open zolang minstens één vraag in te vullen is. Dat is
+  // niet hetzelfde als `open`: na de eerste race kan de een alles ingevuld
+  // hebben en de ander nog niets.
+  const teVullen = vragen.filter(seizoenVraagOpen);
+
   const kop = open
-    ? `nog in te vullen · sluit ${sluitTekst(new Date(weekendStart(race)).toISOString())}`
+    ? T('nog in te vullen · sluit {wanneer}',
+        { wanneer: sluitTekst(new Date(weekendStart(race)).toISOString()) })
     : uit ? T('seizoen {jaar} · {punten} punten',
               { jaar: seizoen(), punten: scoreSeizoen(S.ik.id) })
-          : T('ingevuld · wordt gescoord als het seizoen erop zit');
+    : teVullen.length ? T('nog {n} in te vullen · het seizoen loopt al',
+                          { n: teVullen.length })
+                      : T('ingevuld · wordt gescoord als het seizoen erop zit');
 
   return `
     <div class="scheiding"></div>
     <div class="seizoenslaag">
       <span class="label">${T('seizoensvragen')} · ${esc(kop)}</span>
       ${vragen.map(regel).join('')}
-      ${open ? `<p class="zacht" style="margin:0">${T('Deze vier vul je één keer per '
-        + 'seizoen in, vóór de eerste race. Daarna liggen ze vast tot het eind.')}</p>
+      ${teVullen.length ? `<p class="zacht" style="margin:0">${open
+        ? T('Deze vier vul je één keer per seizoen in, vóór de eerste race. '
+          + 'Daarna liggen ze vast tot het eind.')
+        : T('Het seizoen loopt al, dus wat je nu invult ligt meteen vast. Wat '
+          + 'je eerder koos blijft staan zoals het staat.')}</p>
         <button class="knop klein" id="seizoenOpslaan">${T('Opslaan')}</button>` : ''}
       ${S.seizoenFout ? `<p class="err">${esc(S.seizoenFout)}</p>` : ''}
     </div>`;
@@ -5261,9 +5318,13 @@ function knoopSeizoenslaag() {
 async function bewaarSeizoen() {
   const race = seizoenRace();
   if (!race) throw new Error(T('Er is nog geen kalender voor dit seizoen.'));
-  if (!seizoenOpen()) throw new Error(T('Het seizoen is al begonnen, de seizoensvragen liggen vast.'));
+  // Alleen de vragen die voor mij nog openstaan. Een antwoord dat al vastligt
+  // opnieuw meesturen zou de trigger in schema.sql terecht laten weigeren --
+  // en het scherm laten zakken op een vraag waar niets aan veranderd is.
+  const open = seizoenVragen().filter(seizoenVraagOpen);
+  if (!open.length) throw new Error(T('Het seizoen is al begonnen, de seizoensvragen liggen vast.'));
   const sleutel = { pool_id: S.poule.id, race_id: race.id, member_id: S.ik.id };
-  const wil = seizoenVragen().map(id => {
+  const wil = open.map(id => {
     const rauw = S.seizoenkeuze?.[id] ?? vindAntwoord(race.id, S.ik.id, id)?.waarde ?? '';
     if (leegAntwoord(rauw)) return [id, null];
     return [id, SEIZOENVRAAG[id].soort === 'getal' ? Number(rauw) : String(rauw)];

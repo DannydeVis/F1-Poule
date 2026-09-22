@@ -33,11 +33,18 @@ begin;
 -- zodra het weekend begint" -- en niet voor de beheerder die de boel
 -- leegmaakt, dus die gaat hier even uit. Een cascade laat hij vanzelf door,
 -- maar dit is een rechtstreekse delete.
-alter table public.jokers disable trigger jokers_bewaken;
+--
+-- Sinds de seizoensvragen halverwege in te vullen zijn geldt hetzelfde voor
+-- answers: wat er staat ligt vast, ook tegen een delete -- anders werkt
+-- weghalen-en-opnieuw-invoeren om de regel heen. Ook die trigger is er voor
+-- spelers en niet voor de beheerder die de boel leegmaakt.
+alter table public.jokers  disable trigger jokers_bewaken;
+alter table public.answers disable trigger answers_deadline;
 delete from public.push_abonnementen;
 delete from public.jokers;
-alter table public.jokers enable trigger jokers_bewaken;
 delete from public.answers;
+alter table public.answers enable trigger answers_deadline;
+alter table public.jokers  enable trigger jokers_bewaken;
 delete from public.pool_questions;
 delete from public.predictions;
 delete from public.pool_members;
