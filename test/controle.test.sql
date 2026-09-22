@@ -68,6 +68,32 @@ begin
   end if;
   raise notice 'ok: en met alle vragen terug staat hij weer op ok';
 
+  -- 3b. "bestaat de trigger" is niet hetzelfde als "doet hij zijn werk".
+  --
+  --     answers_deadline stond lang op `insert or update`. Een antwoord dat
+  --     vastligt kon je dan verwijderen en opnieuw invoeren: de regel omzeild
+  --     zonder hem te breken. De controleregel zei al die tijd 'ok', want hij
+  --     keek alleen of er een trigger met die naam stond.
+  drop trigger answers_deadline on public.answers;
+  create trigger answers_deadline before insert or update on public.answers
+    for each row execute function public.poule_antwoord_deadline();
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'deadline-trigger op answers';
+  if gevonden = 'ok' then
+    raise exception 'gezakt: een trigger zonder delete werd als ok gemeld';
+  end if;
+  raise notice 'ok: een trigger zonder delete wordt gemeld (%)', gevonden;
+
+  drop trigger answers_deadline on public.answers;
+  create trigger answers_deadline before insert or update or delete on public.answers
+    for each row execute function public.poule_antwoord_deadline();
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'deadline-trigger op answers';
+  if gevonden <> 'ok' then
+    raise exception 'gezakt: de volledige trigger geeft % in plaats van ok', gevonden;
+  end if;
+  raise notice 'ok: en met delete erbij staat hij weer op ok';
+
   -- 4. de puntentotalen. Eén getal over álle vragen stond er eerst, en dat
   --    gaf 377: weekend, sprint en seizoenslaag bij elkaar opgeteld. De app
   --    toont ze juist apart, want de sprint komt op zes van de vierentwintig
