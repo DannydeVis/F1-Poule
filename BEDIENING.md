@@ -814,11 +814,15 @@ Het bestand is `kalender.ics` naast `index.html`, en de sync schrijft het bij
 elke run — maar alleen als er echt iets veranderd is. Verschuift een sessie,
 dan past de sync het aan en volgt de agenda van iedere abonnee vanzelf.
 
-Waarom dit en geen mail of pushbericht: die vragen allebei om infrastructuur
-die er niet is (een mailleverancier met een sleutel, of VAPID-sleutels plus een
-pushdienst) én om een lijst met wie je wanneer bereikt. Dit vraagt om niets, en
-het bestand is voor iedereen hetzelfde — er gaat dus ook geen enkel gegeven van
-een speler naartoe.
+Waarom dit en geen mail: een mailleverancier met een sleutel is er niet, en er
+komt van alles bij kijken dat niets met een poule te maken heeft — afmelden,
+bounces, niet in de spammap belanden. Dit vraagt om niets, en het bestand is
+voor iedereen hetzelfde — er gaat dus ook geen enkel gegeven van een speler
+naartoe.
+
+Sinds §11c kan het ook met een pushmelding, en die kan wél zeggen "jij hebt nog
+niets ingevuld". Dit blijft ernaast staan: het werkt zonder meldingsrecht,
+zonder sleutels en zonder dat er ergens een lijst met toestellen ligt.
 
 Wees eerlijk over wat het niet kan: een agenda-item geldt voor iedereen en kan
 dus niet zeggen "jij hebt nog niets ingevuld". Het bereikt je wél, en dat is
@@ -831,6 +835,67 @@ Twee dingen om te weten:
   per agenda instelt. Daarom staat hij er wel, maar leunt niets erop.
 - **Het bestand in de repo is leeg tot de eerste sync draait.** Dat is een
   geldige agenda; hij vult zichzelf binnen het uur.
+
+---
+
+## 11c. Een seintje op je telefoon
+
+Onder **Profiel** staat "herinneringen": zet je dat aan, dan krijgt dat toestel
+een melding als een deadline nadert en jij nog niets hebt ingevuld. Anders dan
+de agenda hierboven kan dit wél naar jou persoonlijk kijken.
+
+De regel, en vooral wat hij niet doet:
+
+- Hooguit **één melding per toestel per ronde**, over de sessie die het eerst
+  dichtgaat.
+- Alleen binnen **drie uur** voor de deadline.
+- Alleen als jouw poule die vraag stelt en jij er **nog niets** op hebt
+  ingevuld. Wie invult krijgt niets.
+- Dezelfde melding komt **niet twee keer**: de sync onthoudt per toestel wat er
+  het laatst gestuurd is.
+- Op een **iPhone** werkt het alleen als RacePicks op je beginscherm staat.
+  Dat is een regel van iOS, niet van de app.
+
+### Dit staat uit tot je het inricht
+
+De app biedt het pas aan als er een VAPID-sleutelpaar is, en de sync stuurt
+pas iets als de privésleutel als secret klaarstaat. Zonder die twee verandert
+er niets en klaagt er niets.
+
+```
+node scripts/push-sleutels.mjs
+```
+
+Dat script drukt een vers paar af en zegt waar de twee helften heen moeten:
+
+1. De **publieke** helft in `index.html`, bij `VAPID_PUBLIEK` bovenaan. Die is
+   met opzet openbaar, net als de anon key.
+2. De **privé**-helft als repository-secret `VAPID_PRIVE` in GitHub →
+   Settings → Secrets and variables → Actions. Nergens anders: wie hem heeft
+   kan meldingen namens deze app sturen.
+3. En een secret `PUSH_CONTACT` met een mailadres dat je leest, bijvoorbeeld
+   `mailto:jij@voorbeeld.nl`. Pushdiensten willen weten wie de afzender is, en
+   gebruiken dat adres als er iets mis is met je verkeer.
+
+Sleutel kwijt? Maak een nieuw paar. Alle bestaande abonnementen vervallen dan —
+iedereen moet opnieuw op "Zet meldingen aan" tikken — maar er gaat niets anders
+verloren.
+
+### Wat er van je opgeslagen wordt
+
+Eén rij per toestel in `push_abonnementen`: het adres dat de pushdienst uitdeelt
+en twee sleutels van dat toestel. Geen mailadres, geen naam. Die rij is alleen
+voor jou leesbaar (en voor de sync), en verdwijnt zodra je meldingen uitzet, je
+speler weggaat of de pushdienst zegt dat het abonnement niet meer bestaat.
+
+### De service worker
+
+Meldingen ontvangen kan alleen met een service worker, en dat is precies de
+reden dat de app er lang geen had: een worker die verzoeken onderschept kan een
+oude versie of een oude stand tonen terwijl je denkt dat het klopt. `sw.js`
+heeft daarom **geen `fetch`-handler en cachet niets**. Hij toont een melding en
+brengt je naar de app als je erop tikt, meer niet. `test/meldingen.test.mjs`
+controleert dat ook echt: staat er ooit een fetch-handler in, dan zakt de test.
 
 ---
 
@@ -847,6 +912,10 @@ Wat de verklaring zegt, en waarom het waar is:
   account: een willekeurig nummer.
 - **Je mailadres alleen als je het zelf koppelt.** Zonder koppeling staat er
   geen mailadres.
+- **Eén regel per toestel als je meldingen aanzet** (§11c): het adres waar de
+  pushdienst een melding naartoe kan sturen plus twee sleutels van dat toestel.
+  Geen naam, geen mailadres, en weg zodra je ze weer uitzet. Die regel staat
+  alleen in de verklaring als de app meldingen ook echt kan aanbieden.
 - **Geen advertenties, analytics of trackers.** Er zit niets van dien aard in
   `index.html`; dat is te controleren.
 - **De lettertypen komen uit de app zelf.** Die stonden eerst bij Google Fonts;

@@ -854,6 +854,13 @@ const SEIZOEN = 2026;
 const pouleSeizoen = () => S.poule?.season ?? SEIZOEN;
 const seizoen = () => S.seizoen ?? pouleSeizoen();
 
+// De publieke helft van het VAPID-sleutelpaar, voor de deadlineherinneringen.
+// Leeg laten mag: dan biedt de app het gewoon niet aan en verandert er verder
+// niets. De privé-helft hoort NOOIT hier maar als repository-secret in GitHub
+// (VAPID_PRIVE), want daarmee kan iemand meldingen namens deze app sturen.
+// Een paar maken: `node scripts/push-sleutels.mjs`. Zie BEDIENING.md §11c.
+const VAPID_PUBLIEK = '';
+
 // Waar iemand terecht kan met een vraag over zijn gegevens. Leeg laten mag —
 // dan staat die regel er gewoon niet — maar een privacyverklaring zonder
 // contactadres is niet af. Vul hier een adres in dat je publiek wilt hebben;
@@ -2010,6 +2017,7 @@ const S = {
   beheerFout: '',
   omschrijving: null,   // getypte omschrijving, zolang die nog niet bewaard is
   omschrijvingFout: '',
+  push: null, pushFout: '',   // meldingen: 'aan' | 'uit' | 'geweigerd' | 'kan niet'
   mail:  { open: false, fout: '', gestuurd: '' },  // mailadres koppelen, onder Poule
   inlog: { open: false, fout: '', gestuurd: '' },  // inloggen op het beginscherm
   privacy: { open: false, fout: '' },             // wat de app van je weet
@@ -3095,6 +3103,11 @@ function toonApp() {
   knoopSeizoenslaag();
   knoopJokerZetten();
   knoopMail();
+  knoopMelding();
+  // Of meldingen aanstaan is een asynchrone vraag aan de browser. Eén keer
+  // stellen zodra het profielscherm open is, en dan opnieuw tekenen met het
+  // antwoord. S.push blijft daarna gevuld, dus dit loopt niet rond.
+  if (S.weergave === 'profiel' && S.push === null) pushInlezen().then(render);
   knoopPrivacy();
   knoopLosmaken();
   knoopUitloggen();
@@ -3779,9 +3792,124 @@ function profielPagina() {
     <p class="zacht" style="margin:-10px 0 0">Je speelt hier als
       <b>${esc(S.ik.naam)}</b>.</p>
     ${mailBlok()}
+    ${meldingBlok()}
     ${eigenLinkBlok()}
     ${uitlogBlok()}
     ${privacyBlok()}`;
+}
+
+// ---- herinneringen voor de deadline -------------------------
+//
+// Dit stond lang op de lijst met "bewust niet gebouwd", en de reden was de
+// service worker: zodra die verzoeken onderschept kan hij een oude stand
+// tonen alsof hij klopt. sw.js heeft daarom geen fetch-handler -- hij cachet
+// niets en onderschept niets, hij toont alleen een melding. Daarmee vervalt
+// dat bezwaar en blijft de rest staan: het agenda-abonnement doet hetzelfde
+// zonder meldingsrecht, en wie dit uitzet mist niets wat er niet al was.
+//
+// Leeg gelaten VAPID_PUBLIEK betekent: niet ingericht, dus niet aanbieden.
+const pushKan = () => !!VAPID_PUBLIEK && !DEMO
+  && typeof navigator !== 'undefined' && 'serviceWorker' in navigator
+  && typeof PushManager !== 'undefined' && typeof Notification !== 'undefined';
+
+// base64url naar bytes, want applicationServerKey wil ruwe bytes en de sleutel
+// staat als tekst in dit bestand.
+function sleutelBytes(tekst) {
+  const vul = '='.repeat((4 - tekst.length % 4) % 4);
+  const rauw = atob((tekst + vul).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(rauw, c => c.charCodeAt(0));
+}
+
+async function pushInlezen() {
+  if (!pushKan()) { S.push = 'kan niet'; return; }
+  try {
+    if (Notification.permission === 'denied') { S.push = 'geweigerd'; return; }
+    const reg = await navigator.serviceWorker.getRegistration();
+    const ab = reg ? await reg.pushManager.getSubscription() : null;
+    S.push = ab ? 'aan' : 'uit';
+  } catch { S.push = 'kan niet'; }
+}
+
+function meldingBlok() {
+  if (!pushKan() || !S.poule) return '';
+  const kop = `<div class="scheiding"></div><span class="label">herinneringen</span>`;
+  if (S.push === 'geweigerd') {
+    return `${kop}
+      <p class="zacht" style="margin:0">Je browser heeft meldingen voor deze site
+        geblokkeerd. Dat kan de app niet zelf terugdraaien — dat zit in de
+        instellingen van je browser, bij deze site. Je agenda kan het trouwens
+        ook: zie de knop onder Poule.</p>`;
+  }
+  if (S.push === 'aan') {
+    return `${kop}
+      <p class="zacht" style="margin:0">Dit toestel krijgt een seintje als een
+        deadline nadert en jij nog niets hebt ingevuld. Hooguit één per sessie,
+        en alleen als er echt iets open staat.</p>
+      <button class="knop klein" id="meldingUit">Zet meldingen uit</button>
+      ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}`;
+  }
+  return `${kop}
+    <p class="zacht" style="margin:0">Krijg een seintje op dit toestel als een
+      deadline nadert en je nog niets hebt ingevuld. Op een iPhone werkt dat
+      alleen als RacePicks op je beginscherm staat.</p>
+    <button class="knop klein" id="meldingAan">Zet meldingen aan</button>
+    ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}`;
+}
+
+function knoopMelding() {
+  const aan = app.querySelector('#meldingAan');
+  const uit = app.querySelector('#meldingUit');
+  if (aan) aan.onclick = async () => {
+    aan.disabled = true; S.pushFout = '';
+    try { await pushAanzetten(); }
+    catch (e) { S.pushFout = e.message; }
+    render();
+  };
+  if (uit) uit.onclick = async () => {
+    uit.disabled = true; S.pushFout = '';
+    try { await pushUitzetten(); }
+    catch (e) { S.pushFout = e.message; }
+    render();
+  };
+}
+
+async function pushAanzetten() {
+  const reg = await navigator.serviceWorker.register('sw.js');
+  await navigator.serviceWorker.ready;
+  // Pas vragen als er ook echt iets mee gedaan wordt. Een browser onthoudt een
+  // weigering, dus een prompt op het verkeerde moment kost je die kans.
+  const recht = await Notification.requestPermission();
+  if (recht !== 'granted') {
+    S.push = recht === 'denied' ? 'geweigerd' : 'uit';
+    throw new Error('Zonder toestemming kan er geen melding komen.');
+  }
+  const ab = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: sleutelBytes(VAPID_PUBLIEK),
+  });
+  const j = ab.toJSON();
+  const { error } = await db.from('push_abonnementen').upsert({
+    endpoint: j.endpoint, member_id: S.ik.id, pool_id: S.poule.id,
+    p256dh: j.keys.p256dh, auth: j.keys.auth, laatst: null,
+  }, { onConflict: 'endpoint' });
+  if (error) throw new Error(uitleg(error));
+  S.push = 'aan';
+  S.melding = 'Meldingen staan aan op dit toestel.';
+}
+
+async function pushUitzetten() {
+  const reg = await navigator.serviceWorker.getRegistration();
+  const ab = reg ? await reg.pushManager.getSubscription() : null;
+  if (ab) {
+    // Eerst de rij weg en dan pas afmelden: andersom weet je het endpoint niet
+    // meer als het afmelden lukt maar het verwijderen niet, en blijft er een
+    // rij achter waar nooit meer iets aankomt.
+    const { error } = await db.from('push_abonnementen').delete().eq('endpoint', ab.endpoint);
+    if (error) throw new Error(uitleg(error));
+    await ab.unsubscribe();
+  }
+  S.push = 'uit';
+  S.melding = 'Meldingen staan uit op dit toestel.';
 }
 
 // Staat ná het koppelblok en niet ervoor. Wie nog geen account gekoppeld
@@ -4045,6 +4173,11 @@ function privacyBlok() {
         mailadres van Google. Dat gebeurt alleen als je er zelf voor kiest —
         koppel je niets, of gebruik je een mailadres, dan komt Google er niet
         aan te pas.</p>
+      ${pushKan() ? `<p style="margin:0 0 10px"><b>Als je meldingen aanzet</b><br>
+        Dan komt er één regel bij per toestel: het adres waar je pushdienst
+        (Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee
+        sleutels van dat toestel. Geen naam en geen mailadres. Die regel gaat
+        weg zodra je meldingen uitzet.</p>` : ''}
       <p style="margin:0 0 10px"><b>Hoe lang</b><br>
         Zolang de poule bestaat. Hieronder kun je er zelf een eind aan maken.</p>
       <p style="margin:0"><b>Inzien</b><br>

@@ -24,6 +24,9 @@ je eigen computer.
 | `uitslagen.test.mjs` | De vier losse uitslagen uit de gegevens van OpenF1: vooral welke berichten van de wedstrijdleiding wél en niet een safety car zijn |
 | `duel-weergave.test.mjs` | Dat "jij" vaststaat aan je eigen cijfer in het onderlinge duel, en niet aan dat van de tegenstander |
 | `poules-en-omschrijving.test.mjs` | De omschrijving van een poule, en meer dan één poule op hetzelfde toestel: wisselen zonder de code, en een poule die weg is |
+| `push.test.mjs` | Het rekenwerk van web push, nagerekend tegen de testvectoren uit RFC 8291 en 8292. Draait zonder browser |
+| `herinneringen.test.mjs` | Wie er een seintje krijgt voor een deadline en vooral wie niet: hooguit één per toestel, niet twee keer dezelfde, en niet als je al invulde |
+| `meldingen.test.mjs` | Het scherm eromheen, plus dat `sw.js` geen fetch-handler heeft — een service worker die verzoeken onderschept kan een oude stand tonen alsof hij klopt |
 | `seizoenslaag.test.mjs` | De vier seizoensvragen: invullen kan alleen vóór de eerste race, tijdens het seizoen wordt er niets gescoord, en aan het eind komt de uitslag uit de races zelf |
 | `seizoensarchief.test.mjs` | Terugbladeren naar een vorig seizoen: de keuzelijst verschijnt pas bij twee seizoenen, doorschuiven kan pas als het huidige erop zit, en wat er was blijft precies zoals het was |
 | `jokers.test.mjs` | De vijf jokers: aanzetten geldt vanaf nu, een joker verdubbelt het weekend in de kalender én in de stand, en zodra het weekend begint ligt hij vast |

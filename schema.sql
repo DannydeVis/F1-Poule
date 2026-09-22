@@ -142,6 +142,27 @@ create table if not exists public.jokers (
   primary key (pool_id, race_id, member_id)
 );
 
+-- Waar een melding naartoe mag. Eén rij per toestel per speler: dezelfde
+-- speler op een telefoon en een laptop heeft twee abonnementen, en elk
+-- abonnement heeft zijn eigen sleutels. endpoint is de primaire sleutel omdat
+-- de pushdienst hem uitdeelt en garandeert dat hij uniek is.
+--
+-- Wat hier staat is niet gevoelig op zichzelf -- je kunt er geen melding mee
+-- lezen -- maar wel een aanwijzing over welk toestel iemand gebruikt. Dus
+-- staat het achter dezelfde muur als de rest: alleen je eigen rijen.
+create table if not exists public.push_abonnementen (
+  endpoint   text   not null primary key,
+  member_id  uuid   not null,
+  pool_id    uuid   not null,
+  p256dh     text   not null,
+  auth       text   not null,
+  created_at timestamptz not null default now(),
+  -- Waar de laatste melding over ging. Voorkomt dat de sync elk uur opnieuw
+  -- dezelfde herinnering stuurt: hij schrijft hier wat hij verstuurde en slaat
+  -- het de volgende ronde over.
+  laatst     text
+);
+
 -- ------------------------------------------------------------
 --  Kolommen bijwerken
 --  Het schema is tijdens de bouw meerdere keren veranderd en
@@ -472,6 +493,13 @@ alter table public.answers  add constraint answers_member_fk
 alter table public.answers drop constraint if exists answers_vraag_fk;
 alter table public.answers  add constraint answers_vraag_fk
   foreign key (question_id) references public.questions(id) on delete cascade;
+
+alter table public.push_abonnementen drop constraint if exists push_member_fk;
+alter table public.push_abonnementen  add constraint push_member_fk
+  foreign key (member_id) references public.pool_members(member_id) on delete cascade;
+alter table public.push_abonnementen drop constraint if exists push_pool_fk;
+alter table public.push_abonnementen  add constraint push_pool_fk
+  foreign key (pool_id) references public.pools(id) on delete cascade;
 
 alter table public.jokers drop constraint if exists jokers_pool_fk;
 alter table public.jokers  add constraint jokers_pool_fk
@@ -1094,6 +1122,7 @@ alter table public.questions      enable row level security;
 alter table public.pool_questions enable row level security;
 alter table public.answers        enable row level security;
 alter table public.jokers         enable row level security;
+alter table public.push_abonnementen enable row level security;
 
 -- Alle namen die dit bestand ooit gebruikt heeft, zodat een tweede run niet
 -- struikelt over een policy uit een vorige versie.
@@ -1120,6 +1149,7 @@ drop policy if exists answers_lezen     on public.answers;
 drop policy if exists answers_eigen     on public.answers;
 drop policy if exists jokers_lezen      on public.jokers;
 drop policy if exists jokers_eigen      on public.jokers;
+drop policy if exists push_eigen        on public.push_abonnementen;
 
 -- ---- poules -------------------------------------------------
 -- Lezen stond op `true`, en dat was het gat: met de publieke anon key was
@@ -1213,6 +1243,16 @@ create policy jokers_eigen on public.jokers
   using (public.mag_voor_speler(member_id))
   with check (public.mag_voor_speler(member_id));
 
+-- ---- waar een melding naartoe mag ---------------------------
+-- Anders dan bij de jokers: hier is er geen lezen-voor-je-medespelers. Een
+-- abonnement zegt iets over iemands toestel en niemand in de poule heeft dat
+-- nodig. Alleen je eigen rijen, in allebei de richtingen. De sync leest ze met
+-- de service_role key en gaat overal langs.
+create policy push_eigen on public.push_abonnementen
+  for all to anon, authenticated
+  using (public.mag_voor_speler(member_id))
+  with check (public.mag_voor_speler(member_id));
+
 -- predictions wordt door de app niet meer gebruikt — de antwoorden staan in
 -- answers — maar de tabel bestaat nog en krijgt dezelfde behandeling.
 create policy predictions_lezen on public.predictions
@@ -1242,6 +1282,7 @@ grant select, insert, update, delete on public.predictions    to anon, authentic
 grant select, insert, update, delete on public.pool_questions to anon, authenticated;
 grant select, insert, update, delete on public.answers        to anon, authenticated;
 grant select, insert, update, delete on public.jokers         to anon, authenticated;
+grant select, insert, update, delete on public.push_abonnementen to anon, authenticated;
 grant select on public.questions to anon, authenticated;
 
 -- races is het strengst, en met opzet: één tabel voor alle poules, dus wie
