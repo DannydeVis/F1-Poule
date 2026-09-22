@@ -32,6 +32,7 @@ je eigen computer.
 | `seizoenslaag.test.mjs` | De vier seizoensvragen: invullen kan alleen vóór de eerste race, tijdens het seizoen wordt er niets gescoord, en aan het eind komt de uitslag uit de races zelf |
 | `seizoensarchief.test.mjs` | Terugbladeren naar een vorig seizoen: de keuzelijst verschijnt pas bij twee seizoenen, doorschuiven kan pas als het huidige erop zit, en wat er was blijft precies zoals het was |
 | `jokers.test.mjs` | De vijf jokers: aanzetten geldt vanaf nu, een joker verdubbelt het weekend in de kalender én in de stand, en zodra het weekend begint ligt hij vast |
+| `talen.test.mjs` | De app in het Nederlands en het Engels: dat de browser beslist zolang jij niets kiest, dat jouw keuze daarvan wint en blijft staan, en twee controles op de woordenlijst zelf — geen dubbele sleutels, geen scheve {plaatshouders}, geen sleutel die nergens in de code staat, en geen zichtbare tekst die buiten `T()` om op het scherm komt |
 | `sprintweekend.test.mjs` | De derde sessie: dat een gewoon weekend er geen tab bij krijgt, dat een sprintweekend er wel een heeft en vóór de kwalificatie, dat hij voor halve punten telt, en dat automatisch invullen hem overslaat |
 | `poule-aanmaken.test.mjs` | Het aanmaken in vier stappen: de presets, de losse vragen met hun live puntentotaal, de gokwaarschuwing, en wat er in de database belandt |
 | `vragen-beheren.test.mjs` | De vragenset aanpassen onder Poule, en dat er niets meer verandert zodra hij op slot zit |

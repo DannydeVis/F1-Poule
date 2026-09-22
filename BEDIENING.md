@@ -951,6 +951,34 @@ Drie dingen om te weten:
 
 ---
 
+## 11e. Nederlands of Engels
+
+De app spreekt twee talen. Welke je krijgt bepaalt de app zelf zolang jij niets
+kiest: staat je telefoon of browser op Nederlands, dan krijg je Nederlands; al
+het andere krijgt Engels.
+
+Wil je iets anders, dan zijn er twee plekken:
+
+- **Op het beginscherm** staat rechtsboven een klein knopje, `EN` of `NL`.
+- **In de app** staat het onder **Profiel**, bij "taal". Dat is de plek die je
+  nodig hebt zodra je eenmaal in een poule zit, want dat beginscherm zie je dan
+  niet meer.
+
+Je keuze staat op dít toestel. Op je telefoon en je laptop kies je dus apart,
+net als bij het lijstje met je andere poules.
+
+Wat niet meevertaalt: de namen die uit de database komen. De poulenaam die
+iemand zelf heeft ingetypt blijft staan zoals hij is, en de racenamen komen van
+OpenF1 ("Las Vegas" heet in het Nederlands ook Las Vegas).
+
+Mist er een vertaling, dan staat die ene zin in het Nederlands tussen het
+Engels. Dat is met opzet: de Nederlandse zin is in de code de sleutel waarmee
+de Engelse opgezocht wordt, dus een gat levert nooit een lege knop op. Meld het
+of vul het aan in `ENGELS` bovenin `index.html`; het is één regel met de
+Nederlandse zin en de Engelse ernaast.
+
+---
+
 ## 12. Wat de app van je weet
 
 Onder **Profiel** staat een dichtgeklapt blok "wat de app van je weet". Daarin

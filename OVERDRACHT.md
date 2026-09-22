@@ -4533,3 +4533,92 @@ Er is geen lijst, geen zoekfunctie en geen naam in de url — alleen een
 willekeurige code van zes tekens uit een alfabet zonder verwarrende letters. Wie
 de link niet heeft komt er niet, en wie de link kwijtraakt maakt een nieuwe aan;
 de oude komt dan nergens meer uit.
+
+---
+
+## Nederlands en Engels
+
+Dit stond in ROUTEKAART.md als het duurste punt van fase 5, en het bezwaar was
+scherp: *"de tekst zit niet in een sleutel-waardelijst maar in de
+HTML-sjablonen. Dat is een vertaalslag én een verbouwing."* Dat eerste klopte,
+het tweede niet — omdat de tekst er niet uit hóéft.
+
+### De Nederlandse zin is de sleutel
+
+```js
+function T(nl, vars) {
+  const uit = (TAAL === 'en' && ENGELS[nl]) || nl;
+  return vars
+    ? uit.replace(/\{(\w+)\}/g, (heel, naam) => naam in vars ? String(vars[naam]) : heel)
+    : uit;
+}
+```
+
+Elf regels, en daar volgt de rest uit:
+
+- **Geen tweede naamgeving.** Er is geen `wis_alles_knop` die iemand over een
+  half jaar moet terugzoeken. In het sjabloon staat `T('Wis alles')`, en dat
+  leest als de knop die het is.
+- **Een gat valt terug, niet om.** Een zin die niet in `ENGELS` staat komt er
+  in het Nederlands uit. Het slechtste geval is één Nederlandse zin tussen het
+  Engels: lelijk, zichtbaar, en daarmee repareerbaar. Geen lege knop en geen
+  `[missing.key.42]`.
+- **De bestaande tests waren het vangnet.** De achtenvijftig testbestanden die
+  er stonden kijken allemaal naar de Nederlandse tekst. Die tekst veranderde
+  niet, dus ze bewaakten de hele omzetting zonder dat er één regel aan
+  veranderd hoefde te worden. Bij een omzetting van vierhonderd zinnen is dat
+  het verschil tussen doen en niet doen.
+
+`vars` is er voor de zinnen met een getal of een naam erin. Zonder dat zou je
+elke zin in stukjes moeten hakken, en in het Engels staat het getal soms ergens
+anders: `'{n} punten'` wordt `'{n} points'`, maar `'nog {over} van je {totaal}
+jokers'` wordt `'{over} of your {totaal} jokers left'`. Dezelfde plaatshouders,
+andere volgorde.
+
+### Welke taal je krijgt
+
+`beginTaal()` kijkt eerst naar `poule:taal` in localStorage. Staat daar niets,
+dan beslist `navigator.languages`: begint die met `nl`, dan Nederlands, anders
+Engels. Kies je zelf — de knop rechtsboven op het beginscherm, of het blok
+"taal" onder Profiel — dan wordt dat opgeslagen en wint het voortaan.
+
+Twee plekken voor één knop, en dat is geen slordigheid: wie eenmaal in een
+poule zit ziet het beginscherm nooit meer.
+
+### Wat er níét vertaald is, met reden
+
+- **De code zelf.** Functienamen, variabelen en commentaar blijven Nederlands.
+  Dat is de taal waarin over deze app nagedacht is; het vertalen zou de code
+  veranderen zonder dat één gebruiker er iets van merkt.
+- **Wat uit de database komt.** Poulenamen typt iemand zelf in, racenamen komen
+  van OpenF1. Die staan er zoals ze er staan.
+- **De merknaam en de twee taalnamen.** "RacePicks" blijft RacePicks, en de
+  knoppen "Nederlands" en "English" staan met opzet elk in hun eigen taal —
+  anders kan wie de verkeerde taal te zien krijgt de juiste niet herkennen.
+
+### Hoe dit heel blijft
+
+`test/talen.test.mjs` doet twee dingen die je met de hand fout doet.
+
+Het eerste is de woordenlijst zelf: geen dubbele sleutel (de tweede zou de
+eerste stilletjes overschrijven), geen lege kant, en elke `{plaatshouder}` in
+het Nederlands ook in het Engels — een `{n}` die in de vertaling `{count}` gaat
+heten belandt letterlijk als `{count}` op het scherm. De lijst wordt daarvoor
+niet met een regex gelezen maar als JavaScript geïmporteerd, want de lijst kent
+drie schrijfwijzen en elke regex die dat aankan mist stilzwijgend een vierde.
+En andersom: elke sleutel moet ook echt ergens in de code staan. Een sleutel
+die nergens voorkomt is blijven hangen nadat de zin veranderde, of er staat een
+typefout in de `T()`-aanroep die hem nooit vindt — allebei stil, allebei zo
+zichtbaar.
+
+Het tweede is het omgekeerde, en dat is de belangrijkste: **staat er nog
+zichtbare tekst buiten `T()` om?** De test gumt de woordenlijst weg, gumt elke
+`T(...)`-aanroep weg, gumt elke `${...}` weg die geen geneste template bevat,
+en kijkt wat er dan nog aan tekst tussen twee tags staat. Op de merknaam en de
+twee taalnamen na hoort dat leeg te zijn. Die check betrapt het nieuwe
+schermpje dat iemand over een jaar toevoegt en waarvan de tekst rechtstreeks in
+het sjabloon staat.
+
+Beide controles zijn nagelopen op of ze ook echt afgaan: met een dubbele
+sleutel erin valt de eerste om, en met één `T()` weggehaald noemt de tweede de
+regel en de zin.
