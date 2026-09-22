@@ -1541,12 +1541,20 @@ union all
 -- hier iets anders dan nul, dan is dat niet gebeurd -- en dan blijft de race
 -- voor iedereen op "wacht op uitslag" staan, wat niet te onderscheiden is van
 -- een app die stuk is.
+--
+-- Mét de namen erbij, want op het moment dat hier iets staat wil je weten
+-- wélke race en niet hoevéél. Zonder namen is de volgende stap "uitzoeken
+-- welke", en dat is precies de stap waar je op afhaakt.
 select 'blijven hangen (deadline > week geleden, niets binnen)',
-       (select count(*)::text from public.races r
-        where r.season = 2026 and not r.afgelast
-          and r.race_result is null and r.quali_result is null and r.sprint_result is null
-          and r.deadline_race is not null
-          and r.deadline_race < now() - interval '7 days')
+       coalesce((
+         select count(*)::text || ': ' || string_agg(r.name || ' (ronde ' || r.round || ')',
+                                                     ', ' order by r.round)
+         from public.races r
+         where r.season = 2026 and not r.afgelast
+           and r.race_result is null and r.quali_result is null and r.sprint_result is null
+           and r.deadline_race is not null
+           and r.deadline_race < now() - interval '7 days'
+       ), '0')
 union all
 -- Alle zeven vlaggen. Er stonden er twee in, dus een met de hand ingevulde
 -- sprint, snelste ronde, snelste pitstop, safety car of rode vlag telde als

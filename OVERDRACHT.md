@@ -4955,3 +4955,50 @@ uitzondering maar het wel is: **`geen kalender`**. Op een lege database zou
 soort ok waar je niets aan hebt. `controle.test.sql` controleert alle drie de
 antwoorden, met een race die hangt, een race die afgelast is en een die
 gereden is.
+
+---
+
+## Wanneer een vastgelopen race zichzelf níét opruimt
+
+De controleregel `blijven hangen` noemt sinds deze wijziging de races bij naam.
+Reden: op het moment dat er iets staat wil je weten wélke race, niet hoevéél.
+Zonder naam is de volgende stap "uitzoeken welke", en dat is de stap waar je op
+afhaakt.
+
+Belangrijker is wat eronder zit. De sync ruimt een niet-gereden race zelf op:
+
+```js
+if (!race.afgelast && raceOntbreekt
+    && lijktAfgelast({ raceGevonden: false, deadline: race.deadline_race })) {
+  patch.afgelast = true;
+```
+
+`lijktAfgelast()` is de makkelijke helft — zeven dagen na de racedeadline. De
+lastige helft is `raceOntbreekt`, en die staat maar op één plek waar:
+
+```js
+if ((!race.race_result || herkeuring) && race.race_key && rijp(race.deadline_race)) {
+  ...
+  raceOntbreekt = !raceGevonden && !race.race_result
+    && gemist.some((g) => g.startsWith('race_result') && g.includes('404'));
+}
+```
+
+Twee voorwaarden waar een race stilletjes op kan stranden:
+
+1. **Geen `race_key`.** Dan draait het hele blok niet, blijft `raceOntbreekt`
+   op `false` staan en wordt de race nooit afgelast — hoe lang je ook wacht.
+2. **Geen 404 maar een lege uitslag.** Alleen een 404 telt als bewijs, en dat
+   is met opzet zo: een 429 betekent dat wij te snel vroegen, en een
+   herkeuring zou anders een allang gereden race kunnen wegzetten. Maar een
+   sessierecord dat wél bestaat en geen resultaten heeft — precies wat een
+   testrecord is — geeft geen 404.
+
+Allebei eindigen in hetzelfde: `seizoen 2026 rond` komt nooit op `ok`, de
+seizoenslaag keert zijn honderdvijftig punten nooit uit, en "Begin aan het
+volgende seizoen" blijft grijs. Zonder foutmelding.
+
+Daarom noemt de regel de naam en staat in `BEDIENING.md` §11 de handmatige
+uitweg erbij (`update public.races set afgelast = true where ...`). Dit
+repareren in de sync zou betekenen dat je "leeg" als bewijs gaat accepteren, en
+dat is precies de aanname die de rest van dat blok zorgvuldig vermijdt.
