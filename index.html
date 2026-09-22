@@ -104,12 +104,13 @@
        vlakken en randen eronder zijn achtergronden en hoeven niets te halen;
        die blijven op de oorspronkelijke tint staan. */
     --groen:#117c3e; --groen-vlak:rgba(31,138,76,.12); --groen-rand:rgba(31,138,76,.45);
+    /* De rand van het jokerpaneel. --groen-rand is 45% dekking en verdwijnt
+       tegen het vlak eronder; deze is er om gezien te worden. --groen-ink is
+       de tekst ín de groene schijf: groen is donker in het licht en licht in
+       het donker, dus die keert mee om. Wit op #117c3e haalt 5,3:1 en bijna
+       zwart op #34b264 haalt 7,2:1. */
+    --groen-sterk:rgba(31,138,76,.85); --groen-ink:#ffffff;
     --amber:#986300; --amber-vlak:rgba(176,123,22,.10); --amber-rand:rgba(176,123,22,.40);
-    /* De rand van het jokerpaneel stond op --amber-rand: 40% dekking op één
-       pixel, en dat verdwijnt tegen het vlak eronder. Deze is er om gezien te
-       worden. --amber-ink is de tekst ín de amberen schijf; amber is donker in
-       het licht en licht in het donker, dus de ster keert mee om. */
-    --amber-sterk:rgba(176,123,22,.85); --amber-ink:#ffffff;
     /* De paars-groen-geel van een F1-timingscherm. Paars is de beste van de
        drie en hoort schaars te zijn — daarom alleen voor een exacte treffer. */
     --paars:#8b2fc9;
@@ -128,8 +129,8 @@
       --ink:#f2f3f5; --ink2:#9aa0a8; --ink3:#7b818a;
       --accent:#ee4d33; --accent-ink:#0b0b0c;
       --groen:#34b264; --groen-vlak:rgba(52,178,100,.16); --groen-rand:rgba(52,178,100,.50);
+      --groen-sterk:rgba(52,178,100,.70); --groen-ink:#0b0b0c;
       --amber:#e0a53a; --amber-vlak:rgba(224,165,58,.08); --amber-rand:rgba(224,165,58,.40);
-      --amber-sterk:rgba(224,165,58,.70); --amber-ink:#0b0b0c;
       --paars:#c084f5;
       --omkeer:#f2f3f5; --omkeer-ink:#0b0b0c;
       --vlag-a:#f2f3f5;
@@ -456,8 +457,8 @@
      je weekend. */
   .jokerregel{display:flex;align-items:center;gap:12px;
     border:2px dashed var(--stippel);border-radius:12px;padding:12px 14px}
-  .jokerregel.aan{border-style:solid;border-color:var(--amber-sterk);
-    background:var(--amber-vlak)}
+  .jokerregel.aan{border-style:solid;border-color:var(--groen-sterk);
+    background:var(--groen-vlak)}
 
   /* De schijf met de ster. Gevuld als de joker ligt, leeg als hij nog te
      vergeven is -- dat verschil zie je van een meter afstand, en de tekst
@@ -465,7 +466,7 @@
   .jokerster{flex:none;width:34px;height:34px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
     font-size:17px;line-height:1;background:var(--gedempt);color:var(--ink3)}
-  .jokerregel.aan .jokerster{background:var(--amber);color:var(--amber-ink)}
+  .jokerregel.aan .jokerster{background:var(--groen);color:var(--groen-ink)}
 
   /* De tekst pakt wat er naast de schijf en de knop overblijft. Zonder
      min-width:0 zou een lange zin de rij breder maken dan het paneel in
@@ -473,11 +474,11 @@
   .jokertekst{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
   .jokerkop{font-family:var(--cond);font-size:18px;font-weight:700;
     text-transform:uppercase;letter-spacing:.04em;color:var(--ink2)}
-  .jokerregel.aan .jokerkop{color:var(--amber)}
+  .jokerregel.aan .jokerkop{color:var(--groen)}
   .jokeruitleg{font-size:14px;color:var(--ink2)}
   .jokeruitleg b{color:var(--ink);font-weight:700}
-  .jokerregel.aan .jokeruitleg b{color:var(--amber)}
-  .jokerregel .mono{font-size:18px;color:var(--amber)}
+  .jokerregel.aan .jokeruitleg b{color:var(--groen)}
+  .jokerregel .mono{font-size:18px;color:var(--groen)}
   /* width:auto is hier het hele punt. .knop staat op width:100% omdat een knop
      in deze app normaal de volle breedte pakt; in een flexrij mét flex:none
      betekent dat "geef mij alles en krimp niet", en dan blijft er voor de
@@ -485,9 +486,15 @@
   .jokerregel .knop{flex:none;width:auto;min-height:40px;padding:0 14px}
   /* Het merkteken in de kalender. Klein, naast de Q en de R, zodat je in één
      blik ziet waar je jokers liggen. */
-  .jokervlag{font-family:var(--mono);font-size:11px;color:var(--amber);
-    border:1px solid var(--amber-rand);border-radius:4px;padding:0 4px;
-    background:var(--amber-vlak)}
+  /* Gevuld en niet omlijnd, en dat is geen smaak. Dit merkteken staat pal
+     naast de Q/R/S-vinkjes van .mk i.aan, en die zijn al groen-op-groen-vlak
+     met een groene rand: "deze sessie heb je ingevuld". Een groen 2× in
+     dezelfde behandeling zou daarin verdwijnen. Gevuld groen leest als iets
+     anders, en het is dezelfde taal als de gevulde schijf in het paneel:
+     vol = hier ligt je joker. */
+  .jokervlag{font-family:var(--mono);font-size:11px;font-weight:700;
+    color:var(--groen-ink);border-radius:4px;padding:0 5px;
+    background:var(--groen)}
 
   /* De seizoenskiezer. Alleen te zien zodra een poule meer dan één seizoen
      gespeeld heeft, want daarvoor valt er niets te kiezen. */

@@ -4848,15 +4848,15 @@ weekend telt dubbel` — met een rand van één pixel op `--amber-rand`, en dat 
 een grijstint die je moest zoeken, op het paneel dat juist het hardst om
 aandacht mag vragen: het verdubbelt je weekend.
 
-Nu: twee pixels, en `--amber-sterk` (85% in het licht, 70% in het donker).
+Nu: twee pixels, en `--groen-sterk` (85% in het licht, 70% in het donker).
 Plus de schijf, die het verschil van een meter afstand zichtbaar maakt —
 gevuld met een volle ster als de joker ligt, leeg met een open ster als hij nog
 te vergeven is. Wie het zeker wil weten leest de zin eronder; wie langsloopt
 ziet het aan de schijf.
 
-`--amber-ink` is de kleur van de ster ín die schijf. Amber is donker in het
-licht en licht in het donker, dus die keert mee om: wit op #986300 (5,6:1),
-bijna zwart op #e0a53a (9:1).
+`--groen-ink` is de kleur van de ster ín die schijf. Groen is donker in het
+licht en licht in het donker, dus die keert mee om: wit op #117c3e (5,3:1),
+bijna zwart op #34b264 (7,2:1).
 
 ### Wat er niet uit het ontwerp is overgenomen
 
@@ -4867,10 +4867,8 @@ Twee dingen, allebei omdat ze geen opmaak zijn maar een spelregel:
   — kwalificatie, sprint, race en alle losse vragen. Dat staat zo in
   `scoreWeekend()`, in `BEDIENING.md` §6b en in de trigger `jokers_bewaken`.
   Hem per voorspelling laten gelden is een ander spel, geen ander scherm.
-- **De groene kleur.** Groen betekent in deze app "nog open": de aftelklok, de
-  deadline, de meldingbalk. Een groen jokerpaneel zou dat woord een tweede
-  betekenis geven. Amber is bovendien de kleur die de joker overal elders al
-  heeft, tot aan het `2×`-merkteken in de kalender toe.
+(De groene kleur uit het ontwerp is er in tweede instantie wél gekomen; zie
+hieronder.)
 
 De kop van het ontwerp zei "Je punten voor deze **race** worden verdubbeld";
 dat is in deze app niet waar. Er staat nu "dit **weekend**".
@@ -4882,3 +4880,34 @@ vult, maar het paneel heeft nu drie kinderen in plaats van twee. De berekening
 trekt daarom ook de schijf en het tweede gat af, en de regeltelling kijkt naar
 `.jokeruitleg` en niet meer naar het hele tekstvak — dat bevat sinds deze
 wijziging twee regels, de kop en de uitleg.
+
+---
+
+## En toen werd de joker toch groen
+
+Het bezwaar hierboven — groen betekent in deze app "nog open" — is voorgelegd
+en Danny koos alsnog groen. Dat is zijn keuze; wat hier staat is hoe het is
+uitgevoerd, niet of het moest.
+
+De hele jokertaal is mee omgegaan, want twee jokerkleuren is erger dan één
+verkeerde: het paneel, de schijf, de kop, het vetgedrukte woord in de uitleg,
+de `2×` naast de knop en het merkteken in de kalender. `--amber-sterk` en
+`--amber-ink` zijn weg; er staat nu `--groen-sterk` en `--groen-ink`.
+
+### De botsing die er wél toe deed
+
+Niet de abstracte ("groen betekent open"), maar een concrete die pas bij het
+uitvoeren zichtbaar werd: het `2×` in de kalender staat **pal naast** de
+Q/R/S-vinkjes, en `.mk i.aan` is al groen-op-groen-vlak met een groene rand —
+"deze sessie heb je ingevuld". Een groen `2×` in dezelfde behandeling zou
+daar niet meer uit te halen zijn.
+
+Daarom is de vlag **gevuld** en niet omlijnd: een dekkende groene pil naast
+doorzichtige vakjes. Dat is ook dezelfde taal als de gevulde schijf in het
+paneel — vol betekent "hier ligt je joker", omlijnd betekent "dit heb je
+ingevuld".
+
+`jokers.test.mjs` legt dat vast met de berekende `backgroundColor`: de vlag
+moet `rgb(...)` zijn (dekkend) en het vinkje `rgba(...)` (doorzichtig), en ze
+moeten van elkaar verschillen. Nagelopen op of het afgaat — de vlag terug op
+`--groen-vlak` met een rand laat allebei die controles zakken.

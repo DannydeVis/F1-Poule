@@ -363,10 +363,15 @@ vragen erbij.
 De joker staat op het racescherm, boven de tabbladen — hij geldt voor het hele
 weekend en niet voor één sessie. In de kalender zie je er een `2×` bij staan.
 
-Het paneel zegt in één oogopslag waar je aan toe bent: een gevulde schijf met
-een ster en een doorlopende amberen rand als er een joker ligt, een lege schijf
-met een stippellijn als er nog een te vergeven is. Daaronder staat één zin die
-zegt wat het doet.
+Het paneel zegt in één oogopslag waar je aan toe bent: een gevulde groene
+schijf met een ster en een doorlopende rand als er een joker ligt, een lege
+schijf met een stippellijn als er nog een te vergeven is. Daaronder staat één
+zin die zegt wat het doet.
+
+In de kalender is het `2×` een gevuld groen pilletje. Dat is met opzet anders
+dan de Q/R/S-vinkjes ernaast, die ook groen worden zodra je die sessie hebt
+ingevuld: gevuld betekent "hier ligt je joker", omlijnd betekent "dit heb je
+ingevuld".
 
 Vijf dingen die daarbij vastliggen:
 
