@@ -562,13 +562,12 @@ hier omdat ze duur zijn, niet omdat ze slecht zijn.
 | ~~**Vorige seizoenen**~~ | *gebouwd, zie hieronder* | |
 | ~~**Publieke profielen**~~ | *gebouwd, zie hieronder* | |
 | ~~**Push-herinneringen**~~ | *gebouwd, zie hieronder* | |
-| **Internationale talen** | de app in het Engels | het grootste van deze vijf, en niet omdat er veel tekst is. De hele app is Nederlands tot in de functienamen en de commentaren; de tekst zit niet in een sleutel-waardelijst maar in de HTML-sjablonen. Dat is een vertaalslag én een verbouwing |
+| ~~**Internationale talen**~~ | *gebouwd, zie hieronder* | |
 | **Andere raceklassen** | F2, F3, MotoGP | vastgelopen op de data, niet op de app. De hele sync hangt aan OpenF1, en dat is F1-only. Een andere klasse betekent een tweede databron met een eigen vorm, en daar staat `scripts/sync.mjs` nu niet op ingericht |
 
-Over die laatste twee: allebei zijn het het soort punt dat klein klinkt in een
-lijstje en een week werk is in de praktijk. Als één van de twee toch moet, dan
-Engels eerst — dat maakt de app bereikbaar voor meer mensen zonder dat er een
-tweede databron bij komt.
+Over die laatste: het is het soort punt dat klein klinkt in een lijstje en een
+week werk is in de praktijk — en anders dan de andere vier stuit het op iets
+buiten deze repo.
 
 ### Waarom hier niets van gebouwd is, en dat geen uitstel is
 
@@ -587,16 +586,48 @@ geen tekort aan tijd:
   van genegeerd: `sw.js` heeft geen `fetch`-handler en cachet niets, dus hij
   kan geen oude stand tonen alsof hij klopt. Zie "Een seintje op je telefoon"
   hieronder.
-- **Internationale talen** is een verbouwing, geen vertaling — de app is
-  Nederlands tot in de functienamen. En hij is gebouwd voor een Nederlandse
-  vriendenpoule.
+- ~~**Internationale talen**~~ is gebouwd, en de verbouwing die hier gevreesd
+  werd is er niet gekomen: de Nederlandse zin is de sleutel geworden. Zie
+  "Nederlands en Engels" hieronder.
 - **Andere raceklassen** kán niet: `scripts/sync.mjs` hangt volledig aan
   OpenF1, en dat is F1-only. Dat is een feit over de buitenwereld, geen
   keuze in deze repo.
 
-Wat overblijft: internationale talen gaat tegen een beslissing in die eerder
-met reden genomen is, en andere raceklassen kan niet. Ze staan hier zodat de
-volgende die dit leest niet opnieuw hoeft uit te zoeken waarom ze er niet zijn.
+Wat overblijft is dat ene punt, en het kan niet. Het staat hier zodat de
+volgende die dit leest niet opnieuw hoeft uit te zoeken waarom het er niet is.
+
+### Nederlands en Engels
+
+Het bezwaar hierboven was terecht en klopte alleen niet helemaal: de tekst zat
+inderdaad in de HTML-sjablonen, maar daar hoefde hij niet uit. **De Nederlandse
+zin ís de sleutel.** `T('Wis alles')` zoekt die zin op in `ENGELS` en geeft hem
+onvertaald terug als hij er niet in staat.
+
+Dat scheelt precies de verbouwing die de tabel vreesde:
+
+- Er komt geen tweede lijst met sleutels als `wis_alles_knop` die na een half
+  jaar niemand meer kan lezen. Wie het sjabloon leest, leest de zin.
+- Een vergeten vertaling is geen kapotte knop maar een Nederlandse knop. Het
+  slechtste geval is lelijk en zichtbaar, en daarmee repareerbaar.
+- De achtenvijftig testbestanden die er al stonden kijken allemaal naar de
+  Nederlandse tekst. Die tekst is onaangeroerd, dus ze waren tijdens de hele
+  omzetting het vangnet — geen enkele test hoefde mee te veranderen.
+
+De taal komt uit de browser zolang je zelf niets kiest: een toestel dat op
+Nederlands staat krijgt Nederlands, al het andere Engels. Kies je zelf, dan
+wint dat en blijft het staan (`poule:taal` in localStorage). De knop staat
+rechtsboven op het beginscherm en nog eens op je profiel, want wie al in een
+poule zit komt op dat beginscherm nooit meer.
+
+`test/talen.test.mjs` bewaakt twee dingen die je met de hand fout doet: de
+woordenlijst zelf (geen dubbele sleutels, geen lege vertaling, en elke
+`{plaatshouder}` in beide talen) en het tegenovergestelde — of er nog
+zichtbare tekst in de sjablonen staat die niet door `T()` gaat. Dat tweede is
+de check die een nieuw schermpje betrapt dat iemand later toevoegt.
+
+Wat bewust Nederlands is gebleven: de functienamen, de variabelen en het
+commentaar. Die staan in de taal waarin over deze app nagedacht is, en dat
+vertalen zou de code veranderen zonder dat één gebruiker er iets van merkt.
 
 ### Je seizoen delen
 
@@ -810,11 +841,12 @@ Drie dingen om te weten als je hier verder bouwt:
 | ~~2~~ | ~~racescherm wordt dashboard~~ — **gebouwd** | grootste winst per uur werk, data is er al |
 | ~~3~~ | ~~positiewijziging, reeksen, grafiek~~ — **gebouwd**; recap en profielstatistieken bewust niet, zie `OVERDRACHT.md` | rekenwerk over wat er al ligt |
 | ~~4~~ | ~~toegankelijkheid, offlinescherm~~ — **gebouwd**; opsplitsen nagemeten en niet gedaan | onderhoud, als er geen haast is |
-| 5 | ~~vorige seizoenen~~, ~~push~~ en ~~publieke profielen~~ — **gebouwd**; talen en andere klassen bewust niet | talen gaat tegen een eerdere beslissing in, andere klassen kan niet (OpenF1 is F1-only) |
+| 5 | ~~vorige seizoenen~~, ~~push~~, ~~publieke profielen~~ en ~~talen~~ — **gebouwd**; andere klassen bewust niet | andere klassen kan niet (OpenF1 is F1-only) |
 
 Fase 0 tot en met 4 zijn gebouwd, en uit fase 5 "vorige seizoenen",
-"push-herinneringen" en "publieke profielen". De twee die overblijven staan er
-nog, maar niet als "nog niet aan toegekomen" — zie de redenen hierboven.
+"push-herinneringen", "publieke profielen" en "internationale talen". Er blijft
+één punt over, en dat staat er niet als "nog niet aan toegekomen": andere
+raceklassen stuit op OpenF1, niet op deze repo — zie de reden hierboven.
 
 Groep 4 is leeg: ~~sprintweekenden~~, ~~jokers~~, ~~seizoenslaag~~ en de
 ~~contrair-multiplier~~ zijn alle vier gebouwd.

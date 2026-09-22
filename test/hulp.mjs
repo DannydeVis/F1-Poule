@@ -34,7 +34,12 @@ export function maakControle(titel) {
 // userAgent doet zich voor als een ander apparaat. Nodig voor de iOS-kant van
 // "zet op beginscherm": daar bestaat de installatieprompt van Chrome niet en
 // hangt het scherm dus aan wat navigator.userAgent zegt.
-export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent } = {}) {
+// voorafAan() krijgt de Playwright-pagina in handen vlak vóór de eerste
+// navigatie. Daar hoort alles wat de app al bij het opstarten leest:
+// test/talen.test.mjs zet er bijvoorbeeld navigator.languages mee om, en dat
+// moet gebeurd zijn voordat de app zijn taal kiest.
+export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
+                                   taal = 'nl', voorafAan } = {}) {
   const map = mkdtempSync(join(tmpdir(), 'poule-test-'));
 
   const bron = readFileSync(indexPad ?? join(wortel, 'index.html'), 'utf8');
@@ -74,6 +79,15 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent } 
 
   const browser = await chromium.launch();
   const page = await browser.newPage(userAgent ? { userAgent } : {});
+  // De app kiest zijn taal uit de browser als niemand zelf iets gekozen heeft,
+  // en een testbrowser staat op Engels. Alle testen hieronder letten op de
+  // Nederlandse tekst, dus die keuze wordt hier gemaakt in plaats van per
+  // test. test/talen.test.mjs doet het juist zonder, en test daarmee de
+  // automatische keuze zelf.
+  if (taal) await page.addInitScript((t) => {
+    try { localStorage.setItem('poule:taal', t); } catch { /* niets */ }
+  }, taal);
+  if (voorafAan) await voorafAan(page);
   const jsFouten = [];
   page.on('pageerror', (e) => jsFouten.push(String(e)));
   const url = `http://127.0.0.1:${server.address().port}/`;
