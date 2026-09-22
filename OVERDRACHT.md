@@ -4672,3 +4672,56 @@ Waar die sweep niet komt is een tekenreeks die nergens tussen twee tags staat
 leesronde over álle string-literals opgespoord, met de hand nagelopen en
 gerepareerd. Dat is geen controle die in een test past: hij levert een paar
 honderd regels op waarvan de meeste CSS-klassen en element-id's zijn.
+
+---
+
+## De controletabel was zelf niet gecontroleerd
+
+Onderaan `schema.sql` staat een tabel die zegt hoe je database ervoor staat.
+Danny draaide hem op de productiedatabase en er stonden drie dingen in die
+verkeerd lazen. Geen van drieën was een datafout — het waren regels die niet
+waren meegegroeid met de app.
+
+| regel | stond er | hoort er te staan |
+|---|---|---|
+| vragen in de lijst | `14` | `ok` |
+| punten Simpel / Klassiek / Gevorderd | `100 / 145 / 377` | `100 / 145 / 202` |
+| handmatig ingevulde uitslagen | `0` | het echte aantal |
+
+**De vragenlijst** werd vergeleken met negen. Er staan er veertien sinds de
+sprint en de seizoenslaag erbij kwamen, dus hij liet het aantal zien in plaats
+van "ok" — wat leest als een waarschuwing terwijl er niets aan de hand is. Hij
+kijkt nu naar de namen die de presets in `index.html` gebruiken. Een telling
+zegt "ok" ook als er één ontbreekt en er een andere bij staat.
+
+**De presets** telden álle vragen bij elkaar op. Dat gaf 377: de 202 van een
+gewoon weekend, plus de sprint (25) en de seizoenslaag (150). Precies het
+getal dat de app bewust nooit toont, want de sprint komt op zes van de
+vierentwintig weekenden langs en de seizoenslaag één keer per jaar. De
+controletabel splitst ze nu net als `weekendSom()` dat doet.
+
+**Handmatig ingevuld** keek naar `quali_handmatig or race_handmatig`. Er zijn
+er zeven: daar kwamen sprint, snelste ronde, snelste pitstop, safety cars en
+rode vlag bij. Een met de hand gezette sprintuitslag telde dus als nul —
+en dit is nou juist de regel die hoort te zeggen "hier heeft iemand
+ingegrepen".
+
+### Waarom het een view is geworden
+
+Een controle die stilletjes veroudert is erger dan geen controle: hij laat je
+zoeken naar een probleem dat er niet is, en hij zwijgt over een probleem dat er
+wel is. De reden dat dit kon gebeuren is dat het een losse `select` onderaan
+een bestand was — je kreeg hem alleen te zien door het hele schema te draaien,
+en niets kon hem nalopen.
+
+Nu is het `public.poule_controle`. Dat scheelt twee dingen. Je kunt hem op elk
+moment opvragen met `select * from poule_controle;` in plaats van `schema.sql`
+opnieuw te moeten uitvoeren. En `test/controle.test.sql` kan hem bevragen: die
+haalt een vraag weg en kijkt of hij klaagt, en zet alle zeven handmatig-vlaggen
+één voor één aan om te zien of ze elk apart meegeteld worden. Dat laatste is
+nagelopen op of het afgaat — met de oude twee-vlaggen-telling terug zakt de
+test op `sprint_handmatig`.
+
+Met opzet géén `grant`: de app vraagt deze view nooit op, en "hoeveel poules en
+spelers zijn er" is precies het soort overzicht dat fase 0 heeft dichtgezet.
+De test controleert dat `anon` en `authenticated` er niet bij kunnen.

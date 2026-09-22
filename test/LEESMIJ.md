@@ -54,6 +54,7 @@ je eigen computer.
 | `mailkoppeling.test.mjs` | Je account meenemen met een mailadres: dat "gestuurd" niet "gekoppeld" is, dat een onbekend adres geen leeg account maakt, en vooral dat de sleutel uit de inloglink niet voor een poulecode wordt aangezien |
 | `vragen.test.sql` | De vragenlijst: dat de presets uit BEDIENING.md kloppen met de punten in de database, en dat vinkjes en antwoorden meegaan als een poule weggaat |
 | `jokers.test.sql` | De jokerregels waar de app niet omheen kan: vijf per seizoen, één per weekend, vast zodra dat weekend begint — en dat een cascade (poule of speler weg) er wél langs mag |
+| `controle.test.sql` | De controletabel die je onderaan `schema.sql` te zien krijgt: dat een ontbrekende vraag gemeld wordt, dat de presets 100 / 145 / 202 per weekend zijn met sprint en seizoen er apart onder, en dat alle zeven handmatig-vlaggen meetellen. Hij was verouderd, en een controle die het verkeerde meldt is erger dan geen controle |
 | `schema-gedrag.test.sql` | De deadline-trigger en het upsert-gedrag, tegen een echte PostgreSQL |
 | `schema-herstel.test.sql` | Of een tweede run van `schema.sql` een beschadigde tabel opruimt |
 | `verwijderen.test.sql` | "Verwijder mijn account" in twee smaken: alleen het account (de stand van de anderen blijft kloppen) of alles, en dat een poule zijn eigenaar kwijtraakt in plaats van naar een verdwenen speler te wijzen |

@@ -300,7 +300,9 @@ alter table public.predictions  add column if not exists updated_at  timestamptz
 -- ------------------------------------------------------------
 --  De vragenlijst
 --  Punten per weekend. De presets uit BEDIENING.md §3 tellen hiermee op
---  tot 100 (Simpel), 145 (Klassiek) en 202 (Gevorderd).
+--  tot 100 (Simpel), 145 (Klassiek) en 202 (Gevorderd) per weekend.
+--  Daarbovenop komt 25 op een sprintweekend en 150 over het hele seizoen;
+--  die staan apart omdat ze niet elk weekend langskomen.
 --  Opnieuw uit te voeren: bestaande rijen worden bijgewerkt, niet gedupliceerd.
 -- ------------------------------------------------------------
 
@@ -1356,8 +1358,18 @@ grant usage on all sequences in schema public to anon, authenticated;
 -- ------------------------------------------------------------
 --  Controle
 --  Hieronder moet overal 'ok' staan.
+--
+--  Als view en niet als losse select onderaan dit bestand. Twee redenen.
+--  Je kunt hem voortaan op elk moment opvragen -- `select * from
+--  poule_controle;` -- in plaats van het hele schema opnieuw te moeten
+--  draaien om te zien hoe je database ervoor staat. En belangrijker: een
+--  view is te bevragen vanuit een test, en deze regels waren stilletjes
+--  verouderd (ze telden negen vragen toen er veertien stonden en twee
+--  handmatig-vlaggen toen er zeven waren). Zie test/controle.test.sql.
 -- ------------------------------------------------------------
 
+drop view if exists public.poule_controle;
+create view public.poule_controle as
 select 'unieke sleutel op predictions' as controle,
        case when exists (
          select 1 from pg_constraint
@@ -1409,21 +1421,50 @@ union all
 select 'races met uitslag',
        (select count(*)::text from public.races where season = 2026 and race_result is not null)
 union all
+-- Alle zeven vlaggen. Er stonden er twee in, dus een met de hand ingevulde
+-- sprint, snelste ronde, snelste pitstop, safety car of rode vlag telde als
+-- nul -- terwijl dit juist de regel is die zegt "hier heeft iemand ingegrepen".
 select 'handmatig ingevulde uitslagen',
        (select count(*)::text from public.races
-        where season = 2026 and (quali_handmatig or race_handmatig))
+        where season = 2026
+          and (quali_handmatig or race_handmatig or sprint_handmatig
+               or fastest_lap_handmatig or fastest_pitstop_handmatig
+               or safety_cars_handmatig or rode_vlag_handmatig))
 union all
+-- Niet op een aantal maar op namen: een telling van veertien zegt "ok" ook
+-- als er één ontbreekt en er een andere bij staat, en hij gaat stilzwijgend
+-- stuk zodra er een vraag bij komt. Dit zijn de vragen waar de presets in
+-- index.html uit putten; ontbreekt er een, dan valt er in de app iets weg.
 select 'vragen in de lijst',
-       case when (select count(*) from public.questions) = 9
-       then 'ok' else (select count(*)::text from public.questions) end
+       case when (select count(*) from public.questions
+                  where id in ('quali_top10','race_top10','sprint_top10','winnaar','pole',
+                               'snelste_ronde','snelste_pitstop','teamgenoot_duels',
+                               'safety_cars','rode_vlag',
+                               'kampioen','constructeur','winnaars','vierde_team')) = 14
+       then 'ok'
+       else 'incompleet: ' || (select count(*)::text from public.questions) || ' vragen' end
 union all
-select 'punten Simpel / Klassiek / Gevorderd',
+-- Alleen wat élk weekend langskomt, net als weekendSom() in de app. De som
+-- over álle vragen stond hier eerst, en die gaf na de sprint en de
+-- seizoenslaag 377 -- een getal dat nergens op het scherm staat en achttien
+-- weekenden per jaar niet klopt.
+select 'punten per weekend: Simpel / Klassiek / Gevorderd',
        (select
           (select sum(punten)::text from public.questions
            where id in ('quali_top10','race_top10')) || ' / ' ||
           (select sum(punten)::text from public.questions
            where id in ('quali_top10','race_top10','winnaar','pole','snelste_ronde')) || ' / ' ||
-          (select sum(punten)::text from public.questions))
+          (select sum(punten)::text from public.questions
+           where sessie in ('quali','race')))
+union all
+-- De twee die apart staan: de sprint komt op zes van de vierentwintig
+-- weekenden langs en de seizoenslaag één keer per jaar.
+select 'daarbovenop: sprint / seizoen',
+       (select
+          (select coalesce(sum(punten), 0)::text from public.questions
+           where sessie = 'sprint') || ' / ' ||
+          (select coalesce(sum(punten), 0)::text from public.questions
+           where sessie = 'seizoen'))
 union all
 select 'winnaar ingevuld',
        (select count(*)::text from public.answers where question_id = 'winnaar')
@@ -1433,3 +1474,12 @@ union all
 -- Blijft staan zolang niet zeker is dat alles goed is overgezet; de app
 -- leest deze tabel niet meer.
 select 'oude voorspellingen (ongebruikt)', (select count(*)::text from public.predictions);
+
+-- Met opzet géén grant. De app vraagt deze view nooit op -- alleen jij draait
+-- schema.sql, en dat gaat in de Supabase SQL-editor langs de grants heen.
+-- Wat erin staat zijn tellingen en geen rijen, maar "hoeveel poules en
+-- spelers zijn er" is precies het soort overzicht dat fase 0 heeft
+-- dichtgezet, en een view die niemand nodig heeft hoort dicht te blijven.
+
+-- En hem meteen tonen, want daarvoor stond hij hier.
+select * from public.poule_controle;
