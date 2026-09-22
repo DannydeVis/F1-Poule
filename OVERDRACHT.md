@@ -4419,3 +4419,47 @@ meldingsrecht, zonder sleutels, zonder dat er ergens een lijst met toestellen
 ligt, en op elk apparaat. Push kan één ding dat de agenda niet kan: kijken of
 jíj nog iets open hebt staan. Dat is de hele meerwaarde, en het is genoeg —
 maar het is geen reden om het andere weg te halen.
+
+---
+
+## De contrair-multiplier, en waarom hij niet op de top 10 zit
+
+Het laatste punt uit groep 4. Het probleem: als iedereen bij "wie wint"
+dezelfde naam invult, maakt die vraag nul verschil in de stand. Iedereen krijgt
+hetzelfde, of iedereen krijgt niets. De vraag kost ruimte op het scherm en
+levert geen spanning op.
+
+De formule stond al in `ROUTEKAART.md`: `min(1 + (1 - aandeel), 2.0)`, waarbij
+`aandeel` het deel van de poule is dat hetzelfde antwoordde. Iedereen hetzelfde
+is 1,0; in je eentje goed in een poule van vier is 1,8.
+
+**Alleen de losse vragen.** Dat is de enige plek waar het ontwerp afwijkt van
+wat er in de routekaart stond, en het is een bewuste keuze. Bij een top 10 zou
+je per plek moeten uitrekenen hoe zeldzaam je was, en dan is niet meer na te
+vertellen waar een getal vandaan komt. Juist een puntentelling die je niet kunt
+naretellen sloopt het vertrouwen in een poule — dat is dezelfde afweging als
+bij `max(0, 5 - 2 * afstand)` in plaats van 10/1. De teamgenoot-duels vallen er
+om dezelfde reden buiten.
+
+**Afgerond op één decimaal, en dat is geen slordigheid.** De eerste versie
+rekende met de kale breuk en toonde `toFixed(1)`. Op een poule van vier gaf dat
+"×1,8" naast een getal dat uit 1,75 kwam — precies het soort ding waar iemand
+met een rekenmachine op stuit en waardoor hij de rest ook niet meer gelooft.
+De afronding zit nu in `contrairVoor()` zelf, dus het getal op het scherm is
+het getal waarmee gerekend is.
+
+**Het staat altijd bij de vraag.** `contrairNoot()` zet er "×1,5 (2 van de 4
+zeiden dit)" achter. Zonder die regel is een vraag die ineens 38 punten
+oplevert in plaats van 25 gewoon een fout.
+
+**Vier momenten, één patroon.** `autofill_vanaf`, `jokers_vanaf`,
+`contrair_vanaf` en het doorschuiven van `season` staan nu naast elkaar op de
+poulepagina, en ze hebben allemaal dezelfde vorm: een moment in plaats van een
+vinkje, en wat vóór dat moment gereden is verandert niet. Dat is met opzet één
+patroon geworden — wie er een vijfde bij bouwt weet hoe het hoort.
+
+**Wat het niet is.** Er zit geen bescherming in tegen een poule die de regel
+halverwege aan- en uitzet om een uitkomst te sturen. Die staat er ook niet bij
+de andere drie. Het is een vriendenpoule en de poulebaas kan sowieso de
+vragenset zien; de verdediging daartegen is dat iedereen ziet wanneer het
+aanging, niet dat het niet kan.

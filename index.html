@@ -1815,14 +1815,81 @@ const scoreTab = (p, race, welk) => {
   const duels = welk !== 'race' ? 0
     : scoreDuels(p?.teamgenoot_duels ?? [], race.race_result ?? [],
                  teamParen(race.drivers), puntenVoor('teamgenoot_duels'));
-  const los = coureurVragen(welk).reduce((n, id) =>
-    n + scoreEerste(antwoordVan(p, id), COUREURVRAAG[id].uitslag(race), puntenVoor(id)), 0);
+  // De losse vragen gaan door de contrair-vermenigvuldiger, als die aanstaat.
+  // De top 10 en de duels niet -- zie contrairVoor() voor waarom.
+  const los = coureurVragen(welk).reduce((n, id) => {
+    const antwoord = antwoordVan(p, id);
+    return n + Math.round(
+      scoreEerste(antwoord, COUREURVRAAG[id].uitslag(race), puntenVoor(id))
+      * contrairVoor(race, id, antwoord));
+  }, 0);
   const extra = extraVragen(welk).reduce((n, id) => {
     const v = EXTRAVRAAG[id];
-    return n + v.score(p?.[id] ?? null, race[v.kolom] ?? null, puntenVoor(id));
+    const antwoord = p?.[id] ?? null;
+    return n + Math.round(
+      v.score(antwoord, race[v.kolom] ?? null, puntenVoor(id))
+      * contrairVoor(race, id, antwoord));
   }, 0);
   return lijst + duels + los + extra;
 };
+
+// ---- contrair: zeldzaam goed antwoorden telt zwaarder --------
+//
+// Het probleem waar dit voor bestaat: als iedereen "Verstappen" invult bij
+// "wie wint", maakt die vraag nul verschil in de stand. Iedereen krijgt
+// hetzelfde, of iedereen krijgt niets. De vraag kost ruimte op het scherm en
+// levert geen spanning op.
+//
+// De formule komt uit ROUTEKAART.md: min(1 + (1 - aandeel), 2.0). Vulde
+// iedereen hetzelfde in, dan is het aandeel 1 en blijft de vermenigvuldiger
+// 1,0. Was jij de enige van de vijf, dan is het aandeel 0,2 en wordt het 1,8.
+//
+// Alleen de losse vragen, en dat is een keuze. Bij een top 10 zou je per plek
+// een zeldzaamheid moeten uitrekenen, en dan is niet meer uit te leggen waar
+// een getal vandaan komt -- terwijl juist een puntentelling die je niet kunt
+// navertellen het vertrouwen sloopt. De duels vallen er om dezelfde reden
+// buiten.
+const contrairAan = () => !!S.poule?.contrair_vanaf;
+function contrairVoor(race, id, antwoord) {
+  if (!contrairAan() || leegAntwoord(antwoord)) return 1;
+  // Niet met terugwerkende kracht, zelfde streep als bij de jokers.
+  const start = weekendStart(race);
+  if (start === null || start < Date.parse(S.poule.contrair_vanaf)) return 1;
+  const gegeven = S.leden
+    .map(l => {
+      const pred = vindPred(race.id, l.member_id);
+      return COUREURVRAAG[id] ? antwoordVan(pred, id) : pred?.[id] ?? null;
+    })
+    .filter(a => !leegAntwoord(a));
+  // In je eentje is niets zeldzaam, en met één inzending is het aandeel per
+  // definitie 1. Allebei geven ze 1,0 -- maar expliciet is duidelijker dan
+  // erop vertrouwen dat de deling dat toevallig ook doet.
+  if (gegeven.length < 2) return 1;
+  const zelfdeAntwoord = gegeven.filter(a => zelfde(a, antwoord)).length;
+  // Afgerond op één decimaal, en dat is geen slordigheid maar de kern: het
+  // scherm toont "×1,8" en dan hoort er ook met 1,8 gerekend te zijn. Met de
+  // kale breuk stond er ×1,8 naast een getal dat uit 1,75 kwam, en dan klopt
+  // je eigen puntentelling niet meer als je hem naretelt.
+  return Math.round(Math.min(1 + (1 - zelfdeAntwoord / gegeven.length), 2) * 10) / 10;
+}
+
+// Hoe je dat op het scherm uitlegt. Zonder deze regel is een vraag die
+// ineens 18 punten oplevert in plaats van 10 gewoon een fout.
+function contrairNoot(race, id, antwoord) {
+  const keer = contrairVoor(race, id, antwoord);
+  if (keer === 1) return '';
+  const gegeven = S.leden
+    .map(l => {
+      const pred = vindPred(race.id, l.member_id);
+      return COUREURVRAAG[id] ? antwoordVan(pred, id) : pred?.[id] ?? null;
+    })
+    .filter(a => !leegAntwoord(a));
+  const zelfdeAntwoord = gegeven.filter(a => zelfde(a, antwoord)).length;
+  const hoeveel = zelfdeAntwoord === 1
+    ? 'je was de enige'
+    : `${zelfdeAntwoord} van de ${gegeven.length} zeiden dit`;
+  return ` · ×${keer.toFixed(1).replace('.', ',')} (${hoeveel})`;
+}
 
 // De race waar de seizoensantwoorden aan hangen: ronde 1 van dit seizoen. Dat
 // is geen truc om ze ergens kwijt te kunnen -- het is precies de deadline die
@@ -3099,6 +3166,7 @@ function toonApp() {
   knoopOpenbaar();
   knoopAutofill();
   knoopJokers();
+  knoopContrair();
   knoopSeizoen();
   knoopSeizoenslaag();
   knoopJokerZetten();
@@ -3760,6 +3828,7 @@ function poulePagina(rijen) {
     ${openbaarBlok()}
     ${autofillBlok()}
     ${jokersBlok()}
+    ${contrairBlok()}
     ${nieuwSeizoenBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}`;
@@ -4504,6 +4573,49 @@ function nieuwSeizoenBlok() {
          kun je hier doorschuiven naar ${pouleSeizoen() + 1}. Dit jaar blijft
          daarna te bekijken; er gaat niets weg.`}</p>
     <button class="knop klein" id="nieuwSeizoenKnop" ${klaar ? '' : 'disabled'}>Begin aan ${pouleSeizoen() + 1}</button>`;
+}
+
+// De derde streep in het seizoen, na automatisch invullen en de jokers. Ze
+// hebben allemaal dezelfde vorm omdat ze allemaal hetzelfde probleem hebben:
+// een regel die de telling verandert mag nooit terugwerken over een weekend
+// dat al gereden is.
+function contrairBlok() {
+  if (!magBeheren()) return '';
+  const vanaf = S.poule.contrair_vanaf;
+  return `
+    <div class="scheiding"></div>
+    <span class="label">contrair voorspellen</span>
+    <p class="zacht" style="margin:0">${vanaf
+      ? `Sinds ${esc(datumKort(vanaf))} tellen de losse vragen zwaarder als je
+         antwoord zeldzaam was: was je de enige die het goed had, dan bijna
+         dubbel. Wie hetzelfde invulde als de rest houdt gewoon de volle
+         punten. Weekenden van vóór die datum blijven zoals ze waren.`
+      : `Als iedereen bij "wie wint" dezelfde naam invult, maakt die vraag geen
+         verschil in de stand. Aanzetten laat de losse vragen zwaarder tellen
+         naarmate minder mensen hetzelfde zeiden — maximaal bijna dubbel. De
+         top 10 en de duels blijven zoals ze zijn. Alleen vanaf nu.`}</p>
+    <button class="knop klein" id="contrairKnop">${vanaf ? 'Zet weer uit' : 'Zet aan'}</button>`;
+}
+
+function knoopContrair() {
+  const knop = app.querySelector('#contrairKnop');
+  if (!knop) return;
+  knop.onclick = async () => {
+    knop.disabled = true;
+    const nu = S.poule.contrair_vanaf ? null : new Date().toISOString();
+    try {
+      if (!DEMO) {
+        const { error } = await db.from('pools')
+          .update({ contrair_vanaf: nu }).eq('id', S.poule.id);
+        if (error) throw new Error(uitleg(error));
+      }
+      S.poule.contrair_vanaf = nu;
+      S.melding = nu
+        ? 'Contrair voorspellen staat aan, vanaf nu.'
+        : 'Contrair voorspellen staat weer uit.';
+    } catch (e) { S.melding = e.message; }
+    render();
+  };
 }
 
 function knoopJokers() {
@@ -5353,7 +5465,8 @@ function coureurUitslag(r, mijn, id) {
     return `<p class="label amber" style="margin:0">${v.mis} · ${punten} punten laten liggen</p>`;
   }
   const d = drv(r, gekozen);
-  const gescoord = scoreEerste(gekozen, werkelijk, punten);
+  const gescoord = Math.round(scoreEerste(gekozen, werkelijk, punten)
+    * contrairVoor(r, id, gekozen));
   const plek = werkelijk.findIndex(x => zelfde(x, gekozen));
   // Bij een uitslag die maar één naam lang is zegt "werd P4" niets; dan is
   // het nuttiger om te zien wie het wél werd.
@@ -5362,6 +5475,7 @@ function coureurUitslag(r, mijn, id) {
     : plek === -1 ? 'niet gefinisht' : 'werd P' + (plek + 1);
   return `
     <span class="label">${v.label} · ${punten} punten${
+      esc(contrairNoot(r, id, gekozen))}${
       r[v.vlag] ? ' · handmatig ingevuld' : ''}</span>
     <div class="sr" style="border-left-color:${esc(d.kleur)}">
       <span class="pos">${v.letter}</span>
@@ -5381,17 +5495,19 @@ function extraUitslag(r, mijn, id) {
   if (leegAntwoord(gekozen)) {
     return `<p class="label amber" style="margin:0">${v.mis} · ${punten} punten laten liggen</p>`;
   }
-  const gescoord = v.score(gekozen, werkelijk, punten);
+  const gescoord = Math.round(v.score(gekozen, werkelijk, punten)
+    * contrairVoor(r, id, gekozen));
   return `
     <span class="label">${v.label} · ${punten} punten${
+      esc(contrairNoot(r, id, gekozen))}${
       r[v.vlag] ? ' · handmatig ingevuld' : ''}</span>
     <div class="sr">
       <span class="pos">${v.letter}</span>
       <span class="code">${esc(String(v.soort === 'getal' ? gekozen : (gekozen ? 'ja' : 'nee')))}</span>
-      <span class="werd">${gescoord === punten
+      <span class="werd">${zelfde(gekozen, werkelijk)
         ? 'precies goed'
         : `het werd ${esc(String(v.toon(werkelijk)))}`}</span>
-      <span class="pts ${gescoord === punten ? 'v5' : gescoord ? 'v3' : 'v0'}">${gescoord}</span>
+      <span class="pts ${zelfde(gekozen, werkelijk) ? 'v5' : gescoord ? 'v3' : 'v0'}">${gescoord}</span>
     </div>`;
 }
 

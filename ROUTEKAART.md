@@ -235,13 +235,26 @@ overstap in één keer, niet halverwege.
 
 ## Groep 4: seizoensmechaniek
 
-### Contrair-multiplier
+### ~~Contrair-multiplier~~ — gebouwd
 Punten schalen met hoe zeldzaam je antwoord was binnen de poule:
-`min(1 + (1 - aandeel), 2.0)`. Iedereen dezelfde gok is 1x, in je eentje goed
-gokken bijna 2x.
+`min(1 + (1 - aandeel), 2.0)`, afgerond op één decimaal. Iedereen dezelfde gok
+is 1×, in je eentje goed gokken 1,8× in een poule van vijf.
 
 Lost het probleem op dat "wie wint" nul verschil maakt als iedereen dezelfde
 naam invult. Corrigeert zichzelf als één team het seizoen domineert.
+
+**Alleen de losse vragen.** Bij een top 10 zou je per plek een zeldzaamheid
+moeten uitrekenen, en dan is niet meer uit te leggen waar een getal vandaan
+komt — terwijl juist een puntentelling die je niet kunt navertellen het
+vertrouwen sloopt. De duels vallen er om dezelfde reden buiten.
+
+**Afgerond op één decimaal, en dat is geen slordigheid.** Het scherm toont
+"×1,8", dus er hoort ook met 1,8 gerekend te zijn. Met de kale breuk stond er
+×1,8 naast een getal dat uit 1,75 kwam.
+
+Aan te zetten door de poulebaas, met dezelfde streep als de jokers en
+automatisch invullen: `pools.contrair_vanaf`, en een weekend dat toen al liep
+telt niet mee.
 
 ### ~~Jokers~~ — gebouwd
 Vijf per seizoen, één per weekend, en dat weekend telt dubbel. Hij moet liggen
@@ -652,14 +665,14 @@ Drie keuzes die daarbij gemaakt zijn:
 
 ---
 
-## En dan nog dit, uit groep 4
+## En dan nog dit, uit groep 4 — inmiddels alle vier gebouwd
 
-Vier punten die er al langer liggen en die geen van alle in het nieuwe plan
-voorkomen:
+Vier punten die er lang lagen en die geen van alle in het nieuwe plan
+voorkwamen:
 
 | | wat het is | de haak eraan |
 |---|---|---|
-| Contrair-multiplier | punten schalen met hoe zeldzaam je antwoord was | verandert wat een punt waard is |
+| ~~Contrair-multiplier~~ | *gebouwd, zie hierboven* | |
 | ~~Jokers~~ | *gebouwd, zie hierboven* | |
 | ~~Seizoenslaag~~ | *gebouwd, zie hierboven* | |
 | ~~Sprintweekenden~~ | *gebouwd, zie hieronder* | |
@@ -669,17 +682,20 @@ gebouwd waren: midden in een lopend seizoen de puntentelling omgooien is geen
 verbetering, ook niet als de nieuwe regel op zichzelf beter is. Kijk hoe de twee
 die er al waren dat hebben opgelost: "slechtste twee races" staat náást de stand
 in plaats van erin, en "automatisch invullen" geldt alleen vanaf het moment dat
-de poulebaas hem aanzet. Wie aan de contrair-multiplier begint — de enige die
-overblijft — beantwoordt die vraag dus eerst: geldt dit vanaf nu, of met
-terugwerkende kracht over races die al gereden zijn?
+de poulebaas hem aanzet. Alle vier beantwoorden die vraag nu, en op twee
+manieren: de sprint en de seizoenslaag ontweken hem (het zijn vragen, dus een
+lopende poule krijgt ze niet), de jokers en contrair kregen dezelfde streep als
+automatisch invullen.
 
-De drie die inmiddels gebouwd zijn beantwoordden hem, en op twee manieren. De
-sprint en de seizoenslaag konden het ontwijken — het zijn vragen, en een poule
-kiest zijn vragen bij het aanmaken, dus een lopende poule krijgt ze simpelweg
-niet. De joker kon dat niet, want hij is geen vraag maar een regel over de
-telling zelf. Die heeft daarom dezelfde streep gekregen als automatisch
-invullen: `pools.jokers_vanaf` bewaart wanneer hij aanging, en een weekend dat
-toen al liep telt niet mee.
+De sprint en de seizoenslaag konden het ontwijken — het zijn vragen, en een
+poule kiest zijn vragen bij het aanmaken, dus een lopende poule krijgt ze
+simpelweg niet. De jokers en de contrair-multiplier konden dat niet, want dat
+zijn geen vragen maar regels over de telling zelf. Die hebben daarom dezelfde
+streep gekregen als automatisch invullen: `pools.jokers_vanaf` en
+`pools.contrair_vanaf` bewaren wanneer ze aangingen, en een weekend dat toen al
+liep telt niet mee. Vier van die momenten staan er nu naast elkaar op de
+poulepagina, en dat is met opzet één patroon: wie er een vijfde bij bouwt weet
+hoe het hoort.
 
 ### De seizoenslaag
 
@@ -772,10 +788,8 @@ Fase 0 tot en met 4 zijn gebouwd, en uit fase 5 "vorige seizoenen" en
 "push-herinneringen". De drie die overblijven staan er nog, maar niet als "nog
 niet aan toegekomen" — zie de redenen hierboven.
 
-Uit groep 4 zijn inmiddels ook ~~sprintweekenden~~, ~~jokers~~ en de
-~~seizoenslaag~~ gebouwd. Alleen de contrair-multiplier ligt er nog; die raakt
-de telling en heeft dus eerst een antwoord nodig op "geldt dit vanaf nu of met
-terugwerkende kracht".
+Groep 4 is leeg: ~~sprintweekenden~~, ~~jokers~~, ~~seizoenslaag~~ en de
+~~contrair-multiplier~~ zijn alle vier gebouwd.
 
 **Fase 0 staat ook echt live**, en dat is iets anders dan gemerged. Op
 21 september is `schema.sql` tegen de productiedatabase gedraaid en nagemeten:
