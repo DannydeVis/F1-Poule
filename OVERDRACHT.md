@@ -4774,6 +4774,15 @@ stranden op een antwoord dat vastligt, en dat is geen regel maar een val.
 `leegmaken.sql` zet de trigger er tijdelijk uit, net als bij de jokers — dat
 bestand is voor de beheerder, niet voor een speler.
 
+En de controleregel erover is meegegaan. Die keek of er een trigger met die
+naam stond, en zei dus "ok" over een half dichte deur: `insert or update` ziet
+er in `pg_trigger` net zo uit als `insert or update or delete`. Hij leest nu
+het bitmasker (`tgtype & 4/8/16`) en meldt **"ZONDER DELETE — draai schema.sql
+opnieuw"** als er een van de drie ontbreekt. Dat is de enige manier waarop je
+aan een draaiende database ziet of deze fix er al in zit — en precies het geval
+waar Danny in zat toen hij de tabel liet zien: alles op ok, met het gat nog
+open.
+
 ### En het woord "ingevuld"
 
 De kop van het blok was `open ? ... : uit ? ... : 'ingevuld'`. Die laatste tak
