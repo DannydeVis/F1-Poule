@@ -427,6 +427,34 @@ Twee dingen om te weten:
   verschillende winnaars is het aantal verschillende namen dat een race won.
   Niemand hoeft iets in te voeren.
 
+### 6e. Contrair voorspellen
+
+Ook uit. Als iedereen bij "wie wint" dezelfde naam invult maakt die vraag geen
+verschil in de stand: iedereen krijgt hetzelfde, of iedereen krijgt niets. Zet
+de poulebaas dit aan, dan tellen de losse vragen zwaarder naarmate minder
+mensen hetzelfde zeiden.
+
+De formule: `1 + (1 − aandeel)`, afgerond op één decimaal en nooit hoger dan 2.
+In een poule van vier betekent dat:
+
+| Wie zei hetzelfde als jij | Vermenigvuldiger | Een winnaar van 25 wordt |
+|---|---|---|
+| iedereen (4 van de 4) | ×1,0 | 25 |
+| de helft (2 van de 4) | ×1,5 | 38 |
+| alleen jij (1 van de 4) | ×1,8 | 45 |
+
+Vier dingen die daarbij vastliggen:
+
+- **Alleen de losse vragen.** De top 10 en de teamgenoot-duels blijven zoals ze
+  zijn. Bij een top 10 zou je per plek moeten uitrekenen hoe zeldzaam je was,
+  en dan is niet meer na te vertellen waar een getal vandaan komt.
+- **Het staat er altijd bij.** Op het uitslagscherm zie je "×1,5 (2 van de 4
+  zeiden dit)" naast de vraag. Een vraag die ineens 38 punten oplevert in
+  plaats van 25 zonder uitleg is gewoon een fout.
+- **Afgerond op één decimaal**, zodat het getal op het scherm hetzelfde is als
+  het getal waarmee gerekend is.
+- **Geen terugwerkende kracht**, net als bij de twee punten hierboven.
+
 ---
 
 ## 7. Wie mag wat

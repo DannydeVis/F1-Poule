@@ -195,6 +195,10 @@ alter table public.pools        add column if not exists autofill_vanaf timestam
 -- vinkje maar een moment, zodat een weekend dat al gereden is niet met
 -- terugwerkende kracht dubbel gaat tellen. Leeg = uit.
 alter table public.pools        add column if not exists jokers_vanaf timestamptz;
+-- Contrair: een goed antwoord dat bijna niemand gaf telt zwaarder. Derde keer
+-- hetzelfde patroon en om dezelfde reden -- een moment, geen vinkje, zodat een
+-- weekend dat al gereden is niet met terugwerkende kracht anders gaat tellen.
+alter table public.pools        add column if not exists contrair_vanaf timestamptz;
 
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
