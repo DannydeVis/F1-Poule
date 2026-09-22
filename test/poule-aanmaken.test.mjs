@@ -76,10 +76,10 @@ check('en klappen open als je erom vraagt',
   await page.$eval('.vragenlijst', (n) => !n.classList.contains('hide')));
 
 const regels = await page.$$eval('.vraagregel', (n) => n.map((b) => b.dataset.vraagAan));
-// Tien uit schema.sql plus de verzonnen 'regen' die deze test er zelf bij
+// Veertien uit schema.sql plus de verzonnen 'regen' die deze test er zelf bij
 // zet: de lijst komt uit de database en niet uit een lijstje in index.html.
 check('elke vraag uit de database staat in de lijst',
-  regels.length === 11 && regels.includes('regen'), `${regels.length}: ${regels.join(', ')}`);
+  regels.length === 15 && regels.includes('regen'), `${regels.length}: ${regels.join(', ')}`);
 
 const aanVoor = await page.textContent('.somregel .getal');
 await page.click('[data-vraag-aan="safety_cars"]');

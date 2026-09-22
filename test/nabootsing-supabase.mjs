@@ -63,6 +63,10 @@ const beginstand = {
     { id:'safety_cars',      naam:'Aantal safety cars',  punten:12, sessie:'race',  soort:'getal',   gok:true,  volgorde:80 },
     { id:'rode_vlag',        naam:'Rode vlag',           punten:20, sessie:'race',  soort:'janee',   gok:true,  volgorde:90 },
     { id:'sprint_top10',     naam:'Top 10 sprint',       punten:25, sessie:'sprint',soort:'top10',   gok:false, volgorde:25 },
+  { id:'kampioen',         naam:'Wereldkampioen',      punten:50, sessie:'seizoen',soort:'coureur',gok:false, volgorde:210 },
+  { id:'constructeur',     naam:'Constructeurstitel',  punten:40, sessie:'seizoen',soort:'team',   gok:false, volgorde:220 },
+  { id:'winnaars',         naam:'Aantal verschillende racewinnaars', punten:30, sessie:'seizoen',soort:'getal', gok:false, volgorde:230 },
+  { id:'vierde_team',      naam:'Welk team wordt vierde', punten:30, sessie:'seizoen',soort:'team', gok:false, volgorde:240 },
   ],
   // Leeg: een poule zonder eigen keuze doet aan alles mee.
   pool_questions: [],

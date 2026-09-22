@@ -4280,3 +4280,68 @@ een `season`-kolom op `pool_questions`, en `vraagActief()` het seizoen van de
 race meegeven in plaats van dat van de poule. Dat raakt `scoreTab()` en alles
 eronder, dus het is geen kolom maar een verbouwing — en daarom staat er nu
 "maak een nieuwe poule aan" in `BEDIENING.md` §6c.
+
+---
+
+## De seizoenslaag
+
+Vier vragen die je vóór de eerste race invult en die pas aan het eind van het
+jaar gescoord worden: wereldkampioen (50), constructeurstitel (40), aantal
+verschillende racewinnaars (30), welk team vierde wordt (30). Samen 150 punten,
+ongeveer zes races aan gewicht.
+
+**Ze konden de overgangsregeling ontwijken, net als de sprint.** Het zijn
+vragen, en een poule kiest zijn vragen bij het aanmaken; de set gaat op slot
+zodra de eerste race gescoord is. Een poule die nu loopt heeft ze dus niet in
+`pool_questions` staan en merkt er niets van. Dat is de reden dat dit kon en de
+contrair-multiplier nog steeds niet: die is geen vraag maar een regel over de
+telling zelf.
+
+**Ze hangen aan ronde 1, en dat is geen truc.** De antwoorden gaan in `answers`
+met de `race_id` van de eerste race van het seizoen. Dat lijkt een plek zoeken
+voor iets wat nergens hoort, maar het is precies de deadline die ze nodig
+hebben: je vult ze in voordat er iets gereden is. `poule_antwoord_deadline()`
+heeft daarvoor een eigen tak —
+
+    when 'seizoen' then least(r.deadline_sprint, r.deadline_quali, r.deadline_race)
+
+— en dus de vroegste sessie van dat weekend, niet de race. Zonder die tak
+zouden ze op de race-deadline vallen en kon je de wereldkampioen nog kiezen
+terwijl de eerste kwalificatie liep. Dat staat vast in
+`test/schema-gedrag.test.sql` §10.
+
+**De uitslag komt uit de races.** `wkStand()` telt het echte WK-puntenschema op
+over alle races van het seizoen — 25-18-15-12-10-8-6-4-2-1 voor een race en
+8-7-6-5-4-3-2-1 voor een sprint — en groepeert dat per coureur en per team. De
+teamindeling komt uit de deelnemerslijsten van diezelfde races. Daaruit rollen
+de kampioen, de constructeurstitel en het vierde team. Het aantal verschillende
+winnaars is een `Set` over `race_result[0]`.
+
+Dat sprintpunten meetellen is geen detail: op een seizoen met zes sprints gaat
+het om 48 punten per coureur, meer dan een racezege, en een kampioenschap dat
+ze weglaat geeft gewoon het verkeerde antwoord.
+
+**Twee dingen die de telling raken:**
+
+- **Gescoord wordt er pas als het seizoen erop zit** (`seizoenKlaar()`: elke
+  race heeft een uitslag of is afgelast). Een halve WK-stand is geen kampioen,
+  en een tussenstand zou suggereren dat het al vastligt. Tot die tijd staat er
+  een streepje bij elke vraag.
+- **Alleen in de volledige stand.** `standRijen(tot)` wordt ook gebruikt om de
+  stand van vóór een weekend na te rekenen, voor de pijlen omhoog en omlaag.
+  Een eindstand hoort daar niet in: dat zou de pijlen van het laatste weekend
+  laten slaan op punten die niets met dat weekend te maken hebben. Vandaar de
+  `tot === Infinity`.
+
+**Het aanmaakscherm telt nu in drie bakjes.** "Maximaal per weekend" gaat over
+één weekend; de sprint komt op zes weekenden langs en de seizoenslaag één keer
+per jaar. Alle drie bij elkaar optellen zou een preset laten beloven wat hij
+niet elk weekend geeft. `weekendSom()`, `sprintSom()` en `seizoenSom()` delen
+ze op aan de hand van `questions.sessie`, zodat er maar één plek is waar dat
+onderscheid staat.
+
+**Waarom hier geen keuzeblad zit.** De rest van de app laat je een coureur
+kiezen via een blad dat je openklikt — dat is er omdat een lijst van twaalf
+coureurs bij elke vraag het racescherm onbruikbaar lang maakte. Deze vier
+vragen zie je één keer per jaar, en dan is een gewone `<select>` korter,
+toegankelijker en sneller.

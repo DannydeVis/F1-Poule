@@ -273,10 +273,12 @@ Staat uit tot de poulebaas hem aanzet, en dan alleen vanaf dat moment — zie
 weekend mee: de seizoensstand houdt je aangehaakt, een weekend winnen is iets
 wat je doet.
 
-### Seizoenslaag
-Vragen die je vóór race 1 invult en aan het eind scoort: wereldkampioen,
-constructeurstitel, aantal verschillende winnaars, welk team wordt vierde. Rond
-de 150 punten in totaal, dus zes races aan gewicht.
+### ~~Seizoenslaag~~ — gebouwd
+Vier vragen die je vóór race 1 invult en aan het eind scoort: wereldkampioen
+(50), constructeurstitel (40), aantal verschillende racewinnaars (30) en welk
+team vierde wordt (30). Samen 150 punten, dus ongeveer zes races aan gewicht.
+Ze staan als gewone vragen in `questions` met `sessie = 'seizoen'`, dus een
+poule kiest ze bij het aanmaken — en een poule die nu loopt krijgt ze niet.
 
 ### ~~Sprintweekenden~~ — gebouwd
 Zes weekenden per seizoen hebben een derde sessie. De sync haalt hem op via
@@ -622,7 +624,7 @@ voorkomen:
 |---|---|---|
 | Contrair-multiplier | punten schalen met hoe zeldzaam je antwoord was | verandert wat een punt waard is |
 | ~~Jokers~~ | *gebouwd, zie hierboven* | |
-| Seizoenslaag | vragen vóór race 1, gescoord aan het eind | hoort aan het begin van een seizoen te beginnen |
+| ~~Seizoenslaag~~ | *gebouwd, zie hierboven* | |
 | ~~Sprintweekenden~~ | *gebouwd, zie hieronder* | |
 
 Ze raken alle vier de telling. Dat is de reden dat ze hier stonden en niet
@@ -630,16 +632,37 @@ gebouwd waren: midden in een lopend seizoen de puntentelling omgooien is geen
 verbetering, ook niet als de nieuwe regel op zichzelf beter is. Kijk hoe de twee
 die er al waren dat hebben opgelost: "slechtste twee races" staat náást de stand
 in plaats van erin, en "automatisch invullen" geldt alleen vanaf het moment dat
-de poulebaas hem aanzet. Wie aan de twee die overblijven begint beantwoordt die
-vraag dus eerst: geldt dit vanaf nu, of met terugwerkende kracht over races die
-al gereden zijn?
+de poulebaas hem aanzet. Wie aan de contrair-multiplier begint — de enige die
+overblijft — beantwoordt die vraag dus eerst: geldt dit vanaf nu, of met
+terugwerkende kracht over races die al gereden zijn?
 
-De twee die inmiddels gebouwd zijn beantwoordden hem allebei, en op een andere
-manier. De sprint kon het ontwijken — een poule kiest zijn vragen bij het
-aanmaken, dus een lopende poule krijgt hem simpelweg niet. De joker kon dat
-niet, want hij is geen vraag maar een regel over de telling zelf. Die heeft
-daarom dezelfde streep gekregen als automatisch invullen: `pools.jokers_vanaf`
-bewaart wanneer hij aanging, en een weekend dat toen al liep telt niet mee.
+De drie die inmiddels gebouwd zijn beantwoordden hem, en op twee manieren. De
+sprint en de seizoenslaag konden het ontwijken — het zijn vragen, en een poule
+kiest zijn vragen bij het aanmaken, dus een lopende poule krijgt ze simpelweg
+niet. De joker kon dat niet, want hij is geen vraag maar een regel over de
+telling zelf. Die heeft daarom dezelfde streep gekregen als automatisch
+invullen: `pools.jokers_vanaf` bewaart wanneer hij aanging, en een weekend dat
+toen al liep telt niet mee.
+
+### De seizoenslaag
+
+Vier vragen op `sessie = 'seizoen'`. Wat daarbij te weten valt:
+
+- **Ze hangen aan ronde 1.** De antwoorden gaan in `answers` met de `race_id`
+  van de eerste race van dat seizoen. Dat is geen truc om ze ergens kwijt te
+  kunnen: het is precies de deadline die ze nodig hebben. De trigger
+  `poule_antwoord_deadline()` heeft een eigen tak die voor `'seizoen'` de
+  vroegste sessie van dat weekend pakt, dus "voordat er iets gereden is".
+- **De uitslag komt uit de races zelf.** `wkStand()` telt het echte
+  WK-puntenschema op over alle races van het seizoen, sprintpunten inbegrepen
+  (8-7-6-5-4-3-2-1). Daaruit rollen de kampioen, de constructeurstitel en het
+  vierde team. Het aantal verschillende winnaars is een `Set` over
+  `race_result[0]`.
+- **Gescoord wordt er pas als het seizoen erop zit.** Een halve WK-stand is
+  geen kampioen, en een tussenstand tonen zou suggereren dat het al vastligt.
+- **Alleen in de volledige stand.** `standRijen(tot)` wordt ook gebruikt om de
+  stand van vóór een weekend na te rekenen (voor de pijlen omhoog en omlaag);
+  daar hoort een eindstand niet in thuis.
 
 ### Jokers, en waarom er vijf zijn en niet per vraag
 
@@ -706,10 +729,16 @@ Drie dingen om te weten als je hier verder bouwt:
 | ~~2~~ | ~~racescherm wordt dashboard~~ — **gebouwd** | grootste winst per uur werk, data is er al |
 | ~~3~~ | ~~positiewijziging, reeksen, grafiek~~ — **gebouwd**; recap en profielstatistieken bewust niet, zie `OVERDRACHT.md` | rekenwerk over wat er al ligt |
 | ~~4~~ | ~~toegankelijkheid, offlinescherm~~ — **gebouwd**; opsplitsen nagemeten en niet gedaan | onderhoud, als er geen haast is |
-| 5 | talen, andere klassen, push, publieke profielen, vorige seizoenen | **bewust niet gebouwd** — drie gaan tegen een eerdere beslissing in, één wacht op het seizoenseinde, één kan niet (OpenF1 is F1-only) |
+| 5 | ~~vorige seizoenen~~ — **gebouwd**; talen, andere klassen, push, publieke profielen bewust niet | drie gaan tegen een eerdere beslissing in, één kan niet (OpenF1 is F1-only) |
 
-Fase 0 tot en met 4 zijn gebouwd. Fase 5 staat er nog, maar niet als
-"nog niet aan toegekomen" — zie de redenen hierboven.
+Fase 0 tot en met 4 zijn gebouwd, en uit fase 5 "vorige seizoenen". De vier die
+overblijven staan er nog, maar niet als "nog niet aan toegekomen" — zie de
+redenen hierboven.
+
+Uit groep 4 zijn inmiddels ook ~~sprintweekenden~~, ~~jokers~~ en de
+~~seizoenslaag~~ gebouwd. Alleen de contrair-multiplier ligt er nog; die raakt
+de telling en heeft dus eerst een antwoord nodig op "geldt dit vanaf nu of met
+terugwerkende kracht".
 
 **Fase 0 staat ook echt live**, en dat is iets anders dan gemerged. Op
 21 september is `schema.sql` tegen de productiedatabase gedraaid en nagemeten:

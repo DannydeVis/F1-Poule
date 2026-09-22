@@ -24,6 +24,7 @@ je eigen computer.
 | `uitslagen.test.mjs` | De vier losse uitslagen uit de gegevens van OpenF1: vooral welke berichten van de wedstrijdleiding wél en niet een safety car zijn |
 | `duel-weergave.test.mjs` | Dat "jij" vaststaat aan je eigen cijfer in het onderlinge duel, en niet aan dat van de tegenstander |
 | `poules-en-omschrijving.test.mjs` | De omschrijving van een poule, en meer dan één poule op hetzelfde toestel: wisselen zonder de code, en een poule die weg is |
+| `seizoenslaag.test.mjs` | De vier seizoensvragen: invullen kan alleen vóór de eerste race, tijdens het seizoen wordt er niets gescoord, en aan het eind komt de uitslag uit de races zelf |
 | `seizoensarchief.test.mjs` | Terugbladeren naar een vorig seizoen: de keuzelijst verschijnt pas bij twee seizoenen, doorschuiven kan pas als het huidige erop zit, en wat er was blijft precies zoals het was |
 | `jokers.test.mjs` | De vijf jokers: aanzetten geldt vanaf nu, een joker verdubbelt het weekend in de kalender én in de stand, en zodra het weekend begint ligt hij vast |
 | `sprintweekend.test.mjs` | De derde sessie: dat een gewoon weekend er geen tab bij krijgt, dat een sprintweekend er wel een heeft en vóór de kwalificatie, dat hij voor halve punten telt, en dat automatisch invullen hem overslaat |

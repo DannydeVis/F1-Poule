@@ -15,10 +15,10 @@ declare
   lid   uuid;
   n     int;
 begin
-  -- 1. de tien vragen staan er
+  -- 1. de veertien vragen staan er
   select count(*) into n from questions;
-  if n <> 10 then raise exception 'gezakt: % vragen in plaats van 10', n; end if;
-  raise notice 'ok: tien vragen in de lijst';
+  if n <> 14 then raise exception 'gezakt: % vragen in plaats van 14', n; end if;
+  raise notice 'ok: veertien vragen in de lijst';
 
   -- 2. de presets uit BEDIENING.md kloppen met de punten in de database
   select sum(punten) into n from questions where id in ('quali_top10','race_top10');
@@ -28,18 +28,28 @@ begin
   where id in ('quali_top10','race_top10','winnaar','pole','snelste_ronde');
   if n <> 145 then raise exception 'gezakt: Klassiek is % punten in plaats van 145', n; end if;
 
-  -- Zonder de sprint, want die bestaat op zes van de vierentwintig weekenden.
-  -- Meetellen zou het maximum van een gewoon weekend te hoog zetten; de app
-  -- rekent hem er in weekendSom() om dezelfde reden uit.
-  select sum(punten) into n from questions where id <> 'sprint_top10';
+  -- Alleen wat élk weekend langskomt. De sprint bestaat op zes van de
+  -- vierentwintig weekenden en de seizoenslaag één keer per jaar; die
+  -- meetellen zou het maximum van een gewoon weekend te hoog zetten. De app
+  -- rekent ze er in weekendSom() om precies dezelfde reden uit.
+  select sum(punten) into n from questions where sessie in ('quali', 'race');
   if n not between 190 and 210 then
     raise exception 'gezakt: Gevorderd is % punten, niet ongeveer 200', n;
   end if;
+  raise notice 'ok: presets tellen op tot 100 / 145 / % punten', n;
 
   select punten into n from questions where id = 'sprint_top10';
   if n <> 25 then raise exception 'gezakt: de sprint is % punten in plaats van 25', n; end if;
   raise notice 'ok: de sprint telt voor halve punten mee';
-  raise notice 'ok: presets tellen op tot 100 / 145 / % punten', n;
+
+  -- De seizoenslaag: rond de 150, dus ongeveer zes races aan gewicht. Staat zo
+  -- in ROUTEKAART.md en dat getal hoort te kloppen met wat er in de database
+  -- staat, anders belooft het aanmaakscherm iets anders dan het geeft.
+  select sum(punten) into n from questions where sessie = 'seizoen';
+  if n <> 150 then raise exception 'gezakt: de seizoenslaag is % punten, niet 150', n; end if;
+  select count(*) into n from questions where sessie = 'seizoen';
+  if n <> 4 then raise exception 'gezakt: % seizoensvragen in plaats van 4', n; end if;
+  raise notice 'ok: vier seizoensvragen, samen 150 punten';
 
   -- 2b. de losse punten zelf. index.html telt niet meer met eigen getallen
   --     maar leest ze hiervandaan, dus dit is de enige plek waar ze staan —
@@ -56,10 +66,10 @@ begin
   raise notice 'ok: de losse puntenwaarden staan zoals de app ze verwacht';
 
   -- 3. elke vraag hangt aan een bestaande sessie en een bekend soort
-  select count(*) into n from questions where sessie not in ('quali','sprint','race');
+  select count(*) into n from questions where sessie not in ('quali','sprint','race','seizoen');
   if n <> 0 then raise exception 'gezakt: % vragen met een onbekende sessie', n; end if;
   select count(*) into n from questions
-  where soort not in ('top10','coureur','getal','janee','duels');
+  where soort not in ('top10','coureur','getal','janee','duels','team');
   if n <> 0 then raise exception 'gezakt: % vragen met een onbekend soort', n; end if;
   raise notice 'ok: sessie en soort zijn overal ingevuld';
 
@@ -126,6 +136,6 @@ begin
 
   -- 9. maar de vragenlijst zelf blijft natuurlijk staan
   select count(*) into n from questions;
-  if n <> 10 then raise exception 'gezakt: de vragenlijst is aangetast (% rijen)', n; end if;
+  if n <> 14 then raise exception 'gezakt: de vragenlijst is aangetast (% rijen)', n; end if;
   raise notice 'ok: de vragenlijst zelf blijft ongemoeid';
 end $$;
