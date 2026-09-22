@@ -139,6 +139,17 @@ jobs:
           psql -d vragen -v ON_ERROR_STOP=1 -f schema.sql
           psql -d vragen -v ON_ERROR_STOP=1 -f test/vragen.test.sql
 
+      # De seizoensvragen: invullen mag zolang het seizoen loopt -- ook voor
+      # wie halverwege instapt -- maar wat er staat ligt vast, tegen een
+      # wijziging én tegen een delete. Dat laatste is het gat dat er was:
+      # weghalen-en-opnieuw-invoeren werkte om de regel heen.
+      - name: seizoensvragen — invullen mag later, veranderen niet
+        run: |
+          createdb seizoen
+          psql -d seizoen -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d seizoen -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d seizoen -v ON_ERROR_STOP=1 -f test/seizoenslaag.test.sql
+
       # De controletabel onderaan schema.sql, die je zelf te zien krijgt als je
       # het schema draait. Hij was stilletjes verouderd -- negen vragen geteld
       # waar er veertien staan, twee handmatig-vlaggen waar er zeven zijn --

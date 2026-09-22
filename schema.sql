@@ -602,6 +602,41 @@ create trigger predictions_deadline
 -- de database is afgedwongen, dus die mag niet wegvallen doordat de app naar
 -- een andere tabel schrijft. Welke deadline geldt hangt af van de vraag:
 -- questions.sessie zegt of hij aan de kwalificatie of aan de race hangt.
+-- Is het seizoen waar deze race bij hoort al begonnen? Dat is het moment
+-- waarop de seizoensvragen vastliggen: de eerste sessie van ronde 1. `least`
+-- slaat lege deadlines over, dus een weekend zonder sprint werkt gewoon.
+create or replace function public.poule_seizoen_gestart(p_race_id bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(now() > least(r.deadline_sprint, r.deadline_quali, r.deadline_race), false)
+  from public.races r where r.id = p_race_id;
+$$;
+
+-- En is het erop zit? Dan mag er niets meer bij, want dan is het antwoord
+-- bekend. Dezelfde maatstaf als seizoenKlaar() in index.html: een race telt
+-- als geweest zodra er van één sessie een uitslag is, en een afgelaste race
+-- telt ook mee -- daar komt nooit meer iets van.
+create or replace function public.poule_seizoen_voorbij(p_race_id bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select not exists (
+    select 1 from public.races r
+    where r.season = (select season from public.races where id = p_race_id)
+      and not r.afgelast
+      and r.race_result is null
+      and r.quali_result is null
+      and r.sprint_result is null
+  );
+$$;
+
 create or replace function public.poule_antwoord_deadline()
 returns trigger
 language plpgsql
@@ -612,6 +647,23 @@ declare
   sessie_van text;
   deadline   timestamptz;
 begin
+  -- Weghalen. Dat liep hier eerst niet langs, en dat was een gat: wat je niet
+  -- mag wijzigen kon je wél verwijderen en opnieuw invoeren. Alleen de
+  -- seizoenslaag ligt vast; een gewoon antwoord mag gewoon weg.
+  --
+  -- Een cascade mag er altijd langs -- gaat de poule of de speler weg, dan
+  -- horen de antwoorden mee. Zelfde uitzondering als bij de jokers, en op
+  -- dezelfde manier te herkennen: een cascade zit een triggerlaag dieper dan
+  -- een delete uit de app.
+  if tg_op = 'DELETE' then
+    if pg_trigger_depth() > 1 then return old; end if;
+    select q.sessie into sessie_van from public.questions q where q.id = old.question_id;
+    if sessie_van = 'seizoen' and public.poule_seizoen_gestart(old.race_id) then
+      raise exception 'Je seizoensantwoord ligt vast zodra het seizoen begonnen is';
+    end if;
+    return old;
+  end if;
+
   -- Een ongewijzigd antwoord opnieuw wegschrijven mag altijd; anders
   -- blokkeert een verstreken deadline het opslaan van een ándere vraag.
   if tg_op = 'UPDATE' and new.waarde is not distinct from old.waarde then
@@ -643,6 +695,27 @@ begin
   from public.races r where r.id = new.race_id;
   if not found then return new; end if;
 
+  -- De seizoenslaag heeft zijn eigen regel, en die is losser dan een deadline.
+  --
+  -- Eerst gold: vóór de eerste race wel, daarna nooit meer. Dat sluit iedereen
+  -- buiten die halverwege instapt -- en die heeft de gemiste races al als
+  -- achterstand; honderdvijftig punten die hij onmogelijk kon halen is een
+  -- tweede straf voor hetzelfde.
+  --
+  -- Nu geldt de streep per antwoord in plaats van per seizoen: invullen mag
+  -- zolang het seizoen loopt, maar wat er eenmaal staat ligt vast. Eén schot,
+  -- wanneer je ook binnenkomt. Zie BEDIENING.md §6d.
+  if sessie_van = 'seizoen' and public.poule_seizoen_gestart(new.race_id) then
+    if tg_op = 'UPDATE' then
+      raise exception 'Je seizoensantwoord ligt vast zodra het seizoen begonnen is';
+    end if;
+    if public.poule_seizoen_voorbij(new.race_id) then
+      raise exception 'Het seizoen is voorbij, de seizoensvragen zijn gescoord';
+    end if;
+    new.updated_at = now();
+    return new;
+  end if;
+
   if deadline is not null and now() > deadline then
     if sessie_van = 'quali' then
       raise exception 'De kwalificatie van deze race is gesloten';
@@ -661,7 +734,7 @@ end $$;
 
 drop trigger if exists answers_deadline on public.answers;
 create trigger answers_deadline
-  before insert or update on public.answers
+  before insert or update or delete on public.answers
   for each row execute function public.poule_antwoord_deadline();
 
 -- ------------------------------------------------------------

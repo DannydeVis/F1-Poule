@@ -109,6 +109,56 @@ check('en de joker staat in de database',
 check('de regel zegt nu dat het weekend dubbel telt',
   (await tekst('.jokerregel .label')).includes('dubbel'), await tekst('.jokerregel .label'));
 
+// En hij is ook te lézen. De knop ernaast staat op flex:none en .knop staat
+// op width:100%; samen betekende dat "geef mij alles en krimp niet", en dan
+// bleef er voor de tekst één woord per regel over -- acht regels hoog, zestig
+// pixels breed. Op een telefoon viel dat niet op omdat de tekst daar tóch
+// afbreekt; op een breder scherm was het meteen zichtbaar.
+//
+// Vandaar een meting en geen momentopname: een schermafdruk vergelijken zou
+// op elke lettertypewijziging afgaan, en dit gaat om de verhouding.
+const jokermaat = () => page.$eval('.jokerregel', (el) => {
+  const l = el.querySelector('.label'), k = el.querySelector('.knop');
+  const s = getComputedStyle(el);
+  const binnen = el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight);
+  const regelhoogte = parseFloat(getComputedStyle(l).lineHeight) || 16;
+  return {
+    label: l.getBoundingClientRect().width,
+    knop: k.getBoundingClientRect().width,
+    // Wat er naast de knop overblijft. Dít hoort de tekst te krijgen, en het
+    // is de enige maat die niet meebeweegt met de breedte van het scherm --
+    // op 1100px staat de app in twee kolommen en is de rechterkolom van
+    // zichzelf smal, dus een vast aantal regels zegt daar niets.
+    ruimte: binnen - k.getBoundingClientRect().width - (parseFloat(s.columnGap) || 0),
+    regels: Math.round(l.getBoundingClientRect().height / regelhoogte),
+  };
+});
+
+for (const breedte of [420, 760, 1100, 1500]) {
+  await page.setViewportSize({ width: breedte, height: 900 });
+  await page.waitForTimeout(120);
+  const maat = await jokermaat();
+  // De eerste helft van deze voorwaarde is geen franje: zonder de fix eist de
+  // knop de hele rij op, komt `ruimte` negatief uit en zou "label >= ruimte"
+  // ook op nul kloppen. Er moet dus eerst rúímte zijn.
+  check(`op ${breedte}px vult de tekst de ruimte naast de knop`,
+    maat.ruimte > 40 && maat.label >= maat.ruimte - 2,
+    `label ${Math.round(maat.label)}px van ${Math.round(maat.ruimte)}px beschikbaar`);
+}
+
+// En in één kolom, waar de hele breedte van het paneel beschikbaar is, past
+// hij ook echt op één regel. Dat is het verschil met wat er stond: zestig
+// pixels breed en acht regels hoog.
+await page.setViewportSize({ width: 760, height: 900 });
+await page.waitForTimeout(120);
+const breed = await jokermaat();
+check('en in één kolom past de regel op één regel',
+  breed.regels === 1, `${breed.regels} regels, label ${Math.round(breed.label)}px`);
+// Terug naar de maat waarop de rest van dit bestand geschreven is. Zonder dit
+// staat de navigatie in een andere gedaante en vindt terug() zijn knop niet.
+await page.setViewportSize({ width: 1280, height: 720 });
+await page.waitForTimeout(120);
+
 await terug();
 check('en de kalender zet er een merkteken bij',
   (await page.$(`${rij('Shanghai')} .jokervlag`)) !== null);

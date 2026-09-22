@@ -10,10 +10,15 @@
 // Wat hier vastligt:
 //   1. Het blok staat er alleen als de poule deze vragen stelt.
 //   2. Invullen kan zolang de eerste race nog niet begonnen is.
-//   3. Daarna liggen ze vast, en de database weigert een wijziging ook echt.
-//   4. Zolang het seizoen loopt worden ze niet gescoord. Een halve WK-stand
+//   3. Wat je ingevuld hebt ligt daarna vast, en de database weigert een
+//      wijziging ook echt.
+//   4. Maar wat je nog níét had ingevuld mag je alsnog invullen, ook als het
+//      seizoen al loopt. Dat is er voor wie halverwege instapt: die heeft de
+//      gemiste races al als achterstand, en honderdvijftig punten die hij
+//      onmogelijk kon halen is een tweede straf voor hetzelfde.
+//   5. Zolang het seizoen loopt worden ze niet gescoord. Een halve WK-stand
 //      is geen kampioen.
-//   5. Aan het eind worden ze gescoord uit de races zelf, sprintpunten
+//   6. Aan het eind worden ze gescoord uit de races zelf, sprintpunten
 //      inbegrepen, en tellen ze mee in de stand.
 
 import { maakControle, startPagina, meedoen } from './hulp.mjs';
@@ -105,9 +110,54 @@ check('en er staat bij elke vraag een streepje in plaats van een getal',
   halverwege.every((x) => x === '—'), halverwege.join(' '));
 
 // (Dat de database zo'n wijziging óók weigert, en niet alleen dit scherm,
-// staat in test/schema-gedrag.test.sql: de trigger poule_antwoord_deadline()
+// staat in test/seizoenslaag.test.sql: de trigger poule_antwoord_deadline()
 // heeft een eigen tak voor sessie 'seizoen'. Hier gaat het erom dat je er op
-// het scherm niet meer bij kunt.)
+// het scherm niet meer bij kunt. De nabootsing dwingt geen deadlines af, dus
+// wat hieronder getest wordt is de regel van de app zelf.)
+
+// --- 4b. wie nog niets had mag alsnog ------------------------------------
+// De streep geldt per antwoord en niet per seizoen. Iemand die halverwege
+// instapt heeft niets ingevuld, en die hoort gewoon te kunnen kiezen.
+//
+// Nagebootst door één antwoord uit de database te halen: precies de toestand
+// van een speler die deze vraag nooit beantwoord heeft.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  db.answers = db.answers.filter((a) => a.question_id !== 'constructeur');
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await naarStand();
+
+const open = await page.$$eval('[data-seizoenvraag]', (n) =>
+  n.map((e) => e.dataset.seizoenvraag));
+check('de vraag die je nog niet had is weer in te vullen',
+  open.length === 1 && open[0] === 'constructeur', open.join(', '));
+check('en de drie die je wél had blijven dicht',
+  (await page.$$('.seizoenvraag.klaar')).length === 3);
+check('het blok zegt hoeveel er nog openstaat',
+  (await tekst('.seizoenslaag .label')).includes('nog 1 in te vullen'),
+  await tekst('.seizoenslaag .label'));
+check('met de waarschuwing dat het nu meteen vastligt',
+  (await tekst('.seizoenslaag')).includes('ligt meteen vast'),
+  (await tekst('.seizoenslaag')).slice(0, 220));
+
+await page.selectOption('[data-seizoenvraag="constructeur"]', 'McLaren');
+await page.click('#seizoenOpslaan');
+await page.waitForSelector('.melding');
+
+const naLater = await page.evaluate(() => globalThis.__db.answers
+  .filter((a) => a.question_id === 'constructeur')
+  .map((a) => `${a.waarde}@${a.race_id}`));
+check('invullen tijdens het seizoen komt gewoon in de database',
+  naLater.length === 1 && naLater[0] === 'McLaren@1', naLater.join(' '));
+
+await naarStand();
+check('en daarna staat het formulier weer helemaal dicht',
+  (await page.$('[data-seizoenvraag]')) === null);
+check('met de kop die zegt dat alles ingevuld is',
+  (await tekst('.seizoenslaag .label')).includes('wordt gescoord'),
+  await tekst('.seizoenslaag .label'));
 
 // --- 5. en aan het eind wordt er gescoord ---------------------------------
 // Alle drie de races gereden. Verstappen (1) wint er twee en Norris (4) één,

@@ -122,14 +122,18 @@ begin
   raise notice 'ok: een seizoensantwoord kan zolang het weekend nog niet begon';
 
   -- De kwalificatie begint. De race staat nog een dag open, dus een
-  -- race-antwoord mag nog -- maar de seizoenslaag niet meer.
+  -- race-antwoord mag nog -- maar wat je bij de seizoenslaag koos ligt vast.
+  --
+  -- Alleen dat ene punt hier; de volledige regel (invullen mag later nog wél,
+  -- veranderen en weghalen niet, en na de laatste race komt er niets meer bij)
+  -- staat in test/seizoenslaag.test.sql.
   update races set deadline_quali = now() - interval '1 minute' where id = 4;
   begin
     update answers set waarde = '"4"'::jsonb
      where pool_id = poule and race_id = 4 and question_id = 'kampioen';
     raise exception 'gezakt: een seizoensantwoord werd na de start nog gewijzigd';
   exception when others then
-    if sqlerrm not like '%seizoen is al begonnen%' then raise; end if;
+    if sqlerrm not like '%ligt vast%' then raise; end if;
     raise notice 'ok: seizoensantwoord na de start geweigerd (%)', sqlerrm;
   end;
 end $$;
