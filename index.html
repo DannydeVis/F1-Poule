@@ -456,6 +456,13 @@
     border:1px solid var(--amber-rand);border-radius:4px;padding:0 4px;
     background:var(--amber-vlak)}
 
+  /* De seizoenskiezer. Alleen te zien zodra een poule meer dan één seizoen
+     gespeeld heeft, want daarvoor valt er niets te kiezen. */
+  .seizoenbalk{display:flex;align-items:center;gap:10px}
+  .seizoenbalk select{font-family:var(--mono);font-size:14px;color:var(--ink);
+    background:var(--paneel);border:1px solid var(--lijn);border-radius:8px;
+    padding:8px 10px;min-height:44px}
+
   /* Een vraag als één regel: naam, keuze, punten. Twaalf coureurknoppen per
      vraag maakte het scherm onbruikbaar lang op een telefoon. */
   .kiesregels{display:flex;flex-direction:column;gap:6px}
@@ -819,11 +826,18 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // zonder dat hier iets bijgewerkt hoeft te worden.
 const SEIZOEN = 2026;
 
-// Welk seizoen kijk ik nu? De poule bepaalt dat, niet de klok en niet een
-// constante in dit bestand. Stond hier hardgecodeerd op 2026, en dat had op
-// 1 januari 2027 betekend dat iedereen een lege kalender zag tot iemand dit
-// bestand aanpaste.
-const seizoen = () => S.poule?.season ?? SEIZOEN;
+// Twee seizoenen, en ze zijn niet hetzelfde.
+//
+// pouleSeizoen() is het seizoen dat deze poule nu speelt. Dat staat in de
+// database en de poulebaas schuift het door zodra het volgende begint.
+// Stond hier hardgecodeerd op 2026, en dat had op 1 januari 2027 betekend dat
+// iedereen een lege kalender zag tot iemand dit bestand aanpaste.
+//
+// seizoen() is het seizoen waar je nú naar kijkt. Meestal hetzelfde, maar wie
+// terugbladert naar vorig jaar krijgt daar een andere kalender, een andere
+// stand en een andere grafiek — zonder dat er iets aan de poule verandert.
+const pouleSeizoen = () => S.poule?.season ?? SEIZOEN;
+const seizoen = () => S.seizoen ?? pouleSeizoen();
 
 // Waar iemand terecht kan met een vraag over zijn gegevens. Leeg laten mag —
 // dan staat die regel er gewoon niet — maar een privacyverklaring zonder
@@ -1844,6 +1858,10 @@ const S = {
     : null,
   ik:    DEMO ? { id:'m1', naam:'Danny' } : null,
   races: [], leden: [], preds: [],
+  // alleRaces is alles wat er geladen is, S.races alleen het seizoen waar je
+  // nu naar kijkt. De rest van het bestand loopt over S.races en hoeft van
+  // het terugbladeren dus niets te weten.
+  alleRaces: [], seizoen: null,
   antwoorden: [], vragen: [], poulevragen: [], jokers: [],
   race:  null, tab: 'quali',
   keuze: { quali: [], race: [], winnaar: '', pole: '', duels: [],
@@ -2228,7 +2246,7 @@ const puntenVoor = (id) =>
 
 async function laad() {
   if (DEMO) {
-    S.races = demoRaces; S.leden = demoLeden;
+    S.alleRaces = demoRaces; S.races = demoRaces; S.leden = demoLeden;
     S.vragen = demoVragen; S.poulevragen = demoVragen.map(v => v.id);
     S.antwoorden = demoAntwoorden();
     S.jokers = demoJokers;
@@ -2240,7 +2258,12 @@ async function laad() {
   // poule_ophalen(). Sinds de leespolicies dicht staan is dat niet alleen
   // veiliger maar ook minder werk: één ronde in plaats van drie.
   const [races, vragen, inhoud] = await Promise.all([
-    db.from('races').select('*').eq('season', seizoen()).order('round'),
+    // Niet alleen dit seizoen: alles tot en met dit seizoen, zodat terugkijken
+    // geen tweede ronde naar de server kost. Dat groeit met 24 rijen per jaar.
+    // Wordt dat ooit te veel, dan kan poule_ophalen() erbij zeggen in welke
+    // seizoenen deze poule iets heeft staan en filtert deze regel daarop.
+    db.from('races').select('*').lte('season', pouleSeizoen())
+      .order('season').order('round'),
     db.from('questions').select('*').order('volgorde'),
     pouleOphalen({ p_id: S.poule.id }),
   ]);
@@ -2249,7 +2272,7 @@ async function laad() {
   const stuk = [races, vragen, inhoud].find(r => r.error);
   if (stuk) throw new Error(uitleg(stuk.error));
   if (!inhoud.data) throw new Error('Deze poule bestaat niet meer.');
-  S.races = races.data ?? [];
+  S.alleRaces = races.data ?? [];
   S.vragen = vragen.data ?? [];
   S.leden = inhoud.data.leden ?? [];
   S.antwoorden = inhoud.data.antwoorden ?? [];
@@ -2258,7 +2281,37 @@ async function laad() {
   // De poule zelf komt mee, dus een omschrijving die iemand anders net
   // aanpaste staat er meteen goed bij.
   if (inhoud.data.poule) S.poule = inhoud.data.poule;
+  kiesSeizoen(S.seizoen);
   bouwPreds();
+}
+
+// ---- terugbladeren naar een vorig seizoen -------------------------
+//
+// De gegevens stonden er al: elke race draagt zijn `season`, en antwoorden
+// hangen aan een race. Het enige wat een vorig seizoen onzichtbaar maakte was
+// de filter op het ophalen. Dus is dit geen archief met een eigen vorm maar
+// een andere snede door wat er al is -- precies zoals ROUTEKAART.md vroeg:
+// niet gokken hoe een archief eruit moet zien voordat er iets te archiveren
+// valt.
+// Raakt S.race met opzet niet aan: laad() roept dit aan en dat gebeurt ook
+// direct na het opslaan van een voorspelling, terwijl je nog op het racescherm
+// staat. Het scherm sluiten hoort bij het wisselen van seizoen, niet bij het
+// opnieuw indelen -- dus dat doet de knop zelf.
+function kiesSeizoen(jaar) {
+  S.seizoen = jaar ?? pouleSeizoen();
+  S.races = S.alleRaces.filter(r => zelfde(r.season, S.seizoen));
+}
+
+// In welke seizoenen heeft deze poule iets gedaan? Het huidige telt altijd
+// mee, ook als er nog niets ingevuld is -- anders zou een verse poule geen
+// enkel seizoen hebben. Nieuwste eerst.
+function gespeeldeSeizoenen() {
+  const jaren = new Set([pouleSeizoen()]);
+  for (const a of S.antwoorden) {
+    const r = S.alleRaces.find(x => zelfde(x.id, a.race_id));
+    if (r) jaren.add(r.season);
+  }
+  return [...jaren].sort((a, b) => b - a);
 }
 
 // ---- de weg naar binnen -------------------------------------------
@@ -2883,6 +2936,7 @@ function toonApp() {
   knoopOpenbaar();
   knoopAutofill();
   knoopJokers();
+  knoopSeizoen();
   knoopJokerZetten();
   knoopMail();
   knoopPrivacy();
@@ -2929,6 +2983,7 @@ function racesPagina(volgend) {
     ${!opslagWerkt ? `<div class="waarschuwing"><span class="label">gele vlag</span>
       Deze browser mag niets onthouden, dus je moet de poulecode elke keer opnieuw
       invullen. Sta opslag voor deze site toe, of gebruik geen privévenster.</div>` : ''}
+    ${seizoenBalk()}
     ${volgend ? hero(volgend) : ''}
     <span class="label">kalender</span>
     <div class="kalender">${komend.map(x => kalenderRij(x.r, x.st)).join('') || leeg}</div>
@@ -3131,6 +3186,7 @@ function standPagina(rijen) {
   const balk = (p) => Math.round(48 + (hoogste ? p / hoogste : 0) * 76);
   const volgorde = top.length === 3 ? [top[1], top[0], top[2]] : [];
   return `
+    ${seizoenBalk()}
     <div style="display:flex;align-items:center;gap:12px">
       <h1 class="middel">Stand</h1>
       <span class="mono" style="color:var(--ink3);margin-left:auto">na ${gereden()} van ${S.races.length}</span>
@@ -3400,6 +3456,7 @@ function poulePagina(rijen) {
     ${openbaarBlok()}
     ${autofillBlok()}
     ${jokersBlok()}
+    ${nieuwSeizoenBlok()}
     ${beheerBlok()}
     ${pouleLijstBlok()}`;
 }
@@ -3949,6 +4006,80 @@ function jokersBlok() {
          neerleggen voordat er iets gereden is, dus het is een gok op welk weekend
          jou het beste ligt. Alleen vanaf nu — wat al gereden is verandert niet.`}</p>
     <button class="knop klein" id="jokersKnop">${vanaf ? 'Zet weer uit' : 'Zet aan'}</button>`;
+}
+
+// Zolang er één seizoen is staat hier niets: een keuzelijst met één regel erin
+// is geen keuze, en een lege balk boven elke kalender is alleen maar ruis.
+//
+// Hij staat boven de kalender en boven de stand, en niet in de kop bovenaan.
+// Die kop bestaat op een telefoon namelijk niet -- daar staat `.kop` op
+// display:none en heeft elke pagina zijn eigen titel. Iets wat je moet kunnen
+// bedienen hoort dus in de pagina zelf.
+function seizoenBalk() {
+  const jaren = gespeeldeSeizoenen();
+  if (jaren.length < 2) return '';
+  return `
+    <label class="seizoenbalk">
+      <span class="label">seizoen</span>
+      <select id="seizoenkeuze" aria-label="Welk seizoen wil je zien">
+        ${jaren.map(j => `<option value="${j}" ${j === seizoen() ? 'selected' : ''}>${j}${
+          j === pouleSeizoen() ? '' : ' · afgelopen'}</option>`).join('')}
+      </select>
+    </label>`;
+}
+
+function knoopSeizoen() {
+  const keuze = app.querySelector('#seizoenkeuze');
+  if (keuze) keuze.onchange = () => {
+    kiesSeizoen(Number(keuze.value));
+    // Een race van het oude seizoen blijft anders openstaan naast een
+    // kalender die hem niet meer kent.
+    S.race = null; S.bekijk = null;
+    render();
+  };
+  const nieuw = app.querySelector('#nieuwSeizoenKnop');
+  if (!nieuw) return;
+  nieuw.onclick = async () => {
+    nieuw.disabled = true;
+    const volgend = pouleSeizoen() + 1;
+    try {
+      if (!DEMO) {
+        const { error } = await db.from('pools')
+          .update({ season: volgend }).eq('id', S.poule.id);
+        if (error) throw new Error(uitleg(error));
+      }
+      S.poule.season = volgend;
+      // Opnieuw laden, want de kalender van het nieuwe seizoen staat nog niet
+      // in S.alleRaces -- die is opgehaald tot en met het oude.
+      await laad();
+      kiesSeizoen(volgend);
+      S.race = null; S.bekijk = null;
+      S.melding = `Jullie spelen nu seizoen ${volgend}. ${volgend - 1} blijft `
+        + 'te bekijken via de keuzelijst boven de kalender.';
+    } catch (e) { S.melding = e.message; }
+    render();
+  };
+}
+
+// De poulebaas schuift het seizoen door. Alleen als dit seizoen echt klaar is:
+// zolang er nog een race te rijden valt zou doorschuiven betekenen dat die
+// nergens meer te zien is.
+function nieuwSeizoenBlok() {
+  if (!magBeheren()) return '';
+  const vanDitJaar = S.alleRaces.filter(r => zelfde(r.season, pouleSeizoen()));
+  const klaar = vanDitJaar.length > 0 && vanDitJaar.every(r => heeftUitslag(r) || r.afgelast);
+  return `
+    <div class="scheiding"></div>
+    <span class="label">seizoen ${pouleSeizoen()}</span>
+    <p class="zacht" style="margin:0">${klaar
+      ? `Alle races van ${pouleSeizoen()} zijn gereden. Doorschuiven naar
+         ${pouleSeizoen() + 1} zet de kalender van volgend jaar klaar; dit jaar
+         blijft gewoon te bekijken via de keuzelijst bovenaan, met de stand en
+         alles wat erbij hoort. De vragenset en de spelers gaan mee.`
+      : `Er moet nog gereden worden dit seizoen. Zodra de laatste race erop zit
+         kun je hier doorschuiven naar ${pouleSeizoen() + 1}. Dit jaar blijft
+         daarna te bekijken; er gaat niets weg.`}</p>
+    <button class="knop klein" id="nieuwSeizoenKnop" ${klaar ? '' : 'disabled'}>Begin aan ${pouleSeizoen() + 1}</button>`;
 }
 
 function knoopJokers() {

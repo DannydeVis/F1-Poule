@@ -544,7 +544,7 @@ hier omdat ze duur zijn, niet omdat ze slecht zijn.
 
 | | wat het is | wat het echt kost |
 |---|---|---|
-| **Vorige seizoenen** | 2026 → archief → 2027 | de enige die de database echt raakt: `season` staat overal al, maar een poule hangt nu aan één seizoen. Hoort erbij zodra dit seizoen afloopt, en geen dag eerder |
+| ~~**Vorige seizoenen**~~ | *gebouwd, zie hieronder* | |
 | **Publieke profielen** | je statistieken op een eigen pagina | kan pas ná fase 0. Nu is álles publiek leesbaar, dus "publiek profiel" zou niets toevoegen behalve een url |
 | **Push-herinneringen** | melding vóór de deadline | vraagt een service worker, een meldingsrecht dat mensen weigeren, en een server die op tijd wakker wordt. Het agenda-abonnement doet dit al zonder dat alles |
 | **Internationale talen** | de app in het Engels | het grootste van deze vijf, en niet omdat er veel tekst is. De hele app is Nederlands tot in de functienamen en de commentaren; de tekst zit niet in een sleutel-waardelijst maar in de HTML-sjablonen. Dat is een vertaalslag én een verbouwing |
@@ -560,9 +560,11 @@ tweede databron bij komt.
 Fase 0 tot en met 4 staan er. Fase 5 niet, en dat is een keuze per punt en
 geen tekort aan tijd:
 
-- **Vorige seizoenen** vraagt een migratie voor gegevens die nog niet bestaan.
-  Het is september; dit seizoen loopt. Nu bouwen betekent gokken hoe een
-  archief eruit moet zien voordat er iets te archiveren valt.
+- ~~**Vorige seizoenen**~~ is gebouwd, en juist door die twijfel klein
+  gebleven. Er is geen archief met een eigen vorm gekomen: de gegevens stonden
+  er al (elke race draagt zijn `season`, elk antwoord hangt aan een race) en
+  het enige wat een vorig seizoen onzichtbaar maakte was de filter bij het
+  ophalen. Zie "Terugbladeren" hieronder.
 - **Publieke profielen** is technisch pas mogelijk sinds fase 0 — maar het zou
   juist de deur weer openzetten die fase 0 dichtdeed. En de standpagina toont
   binnen een poule al alles wat zo'n profiel zou zeggen.
@@ -578,8 +580,36 @@ geen tekort aan tijd:
   keuze in deze repo.
 
 Drie van de vijf gaan tegen een beslissing in die eerder met reden genomen is.
-Eén wacht op het einde van het seizoen. Eén kan niet. Ze staan hier zodat de
-volgende die dit leest niet opnieuw hoeft uit te zoeken waarom ze er niet zijn.
+Eén kan niet. Ze staan hier zodat de volgende die dit leest niet opnieuw hoeft
+uit te zoeken waarom ze er niet zijn.
+
+### Terugbladeren naar een vorig seizoen
+
+Wat er wél gebouwd is, en waarom het zo klein kon blijven.
+
+Een poule hoort bij een seizoen (`pools.season`) en de kalender werd opgehaald
+met `.eq('season', …)`. Dat was het hele probleem: de gegevens van vorig jaar
+gingen nergens heen, ze werden alleen weggefilterd. Dus haalt de app nu alles
+op tot en met het seizoen dat de poule speelt (`.lte`), houdt dat in
+`S.alleRaces`, en is `S.races` de snede waar je nu naar kijkt. De rest van het
+bestand loopt nog steeds over `S.races` en hoeft van het terugbladeren niets
+te weten.
+
+Drie keuzes die daarbij gemaakt zijn:
+
+- **De keuzelijst staat in de pagina, niet in de kop.** Op een telefoon staat
+  `.kop` op `display:none` en heeft elke pagina zijn eigen titel. Iets wat je
+  moet kunnen bedienen hoort dus in de pagina zelf — hier boven de kalender en
+  boven de stand.
+- **Doorschuiven kan pas als het seizoen erop zit.** Zolang er nog een race te
+  rijden valt zou doorschuiven betekenen dat die nergens meer te zien is.
+- **De vragenset gaat mee en blijft op slot.** Een nieuw seizoen zou een
+  natuurlijk moment zijn om de vragen te herzien, maar `pool_questions` kent
+  geen seizoen: een andere set zou de stand van vorig jaar met terugwerkende
+  kracht veranderen. Wie echt andere vragen wil maakt een nieuwe poule aan. Wil
+  je dat ooit wél, dan is de weg: een `season`-kolom op `pool_questions` en
+  `vraagActief()` het seizoen van de race meegeven in plaats van dat van de
+  poule.
 
 ---
 
