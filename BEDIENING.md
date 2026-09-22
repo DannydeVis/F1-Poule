@@ -395,6 +395,38 @@ de vragen te herzien, maar de gekozen vragen hangen aan de poule en niet aan
 het seizoen — een andere set zou de stand van vorig jaar met terugwerkende
 kracht veranderen. Wie echt andere vragen wil, maakt een nieuwe poule aan.
 
+### 6d. De seizoenslaag
+
+Vier vragen die je één keer per jaar invult, vóórdat er iets gereden is, en die
+pas aan het eind van het seizoen gescoord worden:
+
+| Vraag | Punten |
+|---|---|
+| Wereldkampioen | 50 |
+| Constructeurstitel | 40 |
+| Aantal verschillende racewinnaars | 30 |
+| Welk team wordt vierde | 30 |
+
+Samen 150 punten, ongeveer zes races aan gewicht. Ze staan als gewone vragen in
+de lijst bij het aanmaken, dus een poule kiest zelf of ze meedoen — ze zitten in
+**Gevorderd** en zijn los aan te vinken.
+
+Het blok staat op de standpagina. Zolang de eerste race nog niet begonnen is is
+het een formulier; daarna zie je wat je hebt ingevuld, met een streepje in
+plaats van punten. Zodra alle races gereden zijn komt erbij te staan wat het
+werkelijk werd en wat het opleverde, en tellen die punten mee in de stand.
+
+Twee dingen om te weten:
+
+- **Ze tellen niet mee in "maximaal per weekend".** Dat getal gaat over één
+  weekend en deze vragen komen één keer per jaar langs. Het aanmaakscherm noemt
+  ze er apart bij.
+- **De uitslag komt uit de races zelf.** De app telt het echte WK-puntenschema
+  op over alle races van het seizoen, inclusief de sprintpunten, en leest
+  daaruit de kampioen, de constructeurstitel en het vierde team af. Het aantal
+  verschillende winnaars is het aantal verschillende namen dat een race won.
+  Niemand hoeft iets in te voeren.
+
 ---
 
 ## 7. Wie mag wat

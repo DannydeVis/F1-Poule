@@ -274,7 +274,15 @@ insert into public.questions (id, naam, punten, sessie, soort, gok, volgorde) va
   -- punten. Een sprint is een derde van een race lang en hoort niet net zo
   -- zwaar te wegen als het weekend zelf. De app schaalt dat met `weging` in
   -- SESSIES; dit getal is wat het aanmaakscherm optelt bij de presets.
-  ('sprint_top10',     'Top 10 sprint',       25, 'sprint','top10',   false, 25)
+  ('sprint_top10',     'Top 10 sprint',       25, 'sprint','top10',   false, 25),
+  -- De seizoenslaag: vier vragen die je vóór de eerste race invult en die pas
+  -- aan het eind van het jaar gescoord worden. Samen 150 punten, dus ongeveer
+  -- zes races aan gewicht. Ze hangen aan sessie 'seizoen' en niet aan een
+  -- weekend; de app telt ze daarom apart en niet mee in "maximaal per weekend".
+  ('kampioen',         'Wereldkampioen',      50, 'seizoen','coureur', false, 210),
+  ('constructeur',     'Constructeurstitel',  40, 'seizoen','team',    false, 220),
+  ('winnaars',         'Aantal verschillende racewinnaars', 30, 'seizoen','getal', false, 230),
+  ('vierde_team',      'Welk team wordt vierde', 30, 'seizoen','team',  false, 240)
 on conflict (id) do update set
   naam = excluded.naam, punten = excluded.punten, sessie = excluded.sessie,
   soort = excluded.soort, gok = excluded.gok, volgorde = excluded.volgorde;
@@ -568,10 +576,15 @@ begin
   -- en dat betekende dat elke sessie die niet 'quali' heette stilletjes aan de
   -- race-deadline hing -- voor een sprint dus de verkeerde, en zonder dat
   -- iemand het zou merken.
+  --
+  -- De seizoenslaag hangt aan de éérste sessie van de race waar hij op staat.
+  -- De app schrijft die antwoorden weg op ronde 1 van het seizoen, dus dit is
+  -- precies "voordat er iets gereden is" -- en daarna nooit meer.
   select case sessie_van
-           when 'quali'  then r.deadline_quali
-           when 'sprint' then r.deadline_sprint
-           else               r.deadline_race
+           when 'quali'   then r.deadline_quali
+           when 'sprint'  then r.deadline_sprint
+           when 'seizoen' then least(r.deadline_sprint, r.deadline_quali, r.deadline_race)
+           else                r.deadline_race
          end
     into deadline
   from public.races r where r.id = new.race_id;
@@ -582,6 +595,8 @@ begin
       raise exception 'De kwalificatie van deze race is gesloten';
     elsif sessie_van = 'sprint' then
       raise exception 'De sprint van deze race is gesloten';
+    elsif sessie_van = 'seizoen' then
+      raise exception 'Het seizoen is al begonnen, de seizoensvragen liggen vast';
     else
       raise exception 'De race is gesloten';
     end if;

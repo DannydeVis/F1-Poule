@@ -463,6 +463,21 @@
     background:var(--paneel);border:1px solid var(--lijn);border-radius:8px;
     padding:8px 10px;min-height:44px}
 
+  /* De seizoenslaag: vier vragen die je één keer per jaar invult. Hier geen
+     keuzeblad zoals bij de coureurs per race -- dit is een formulier dat je
+     één keer ziet, en dan is een gewone keuzelijst duidelijker en korter. */
+  .seizoenslaag{display:flex;flex-direction:column;gap:8px}
+  .seizoenvraag{display:grid;grid-template-columns:1fr auto;align-items:center;
+    gap:6px 12px;padding:12px;border:1px solid var(--lijn);border-radius:10px}
+  .seizoenvraag .nm{font-size:16px;display:flex;flex-direction:column;gap:2px;min-width:0}
+  .seizoenvraag .ptn{font-family:var(--mono);font-size:16px;color:var(--ink2);
+    grid-row:1;grid-column:2}
+  .seizoenvraag select,.seizoenvraag input{grid-column:1/-1;width:100%;
+    font-family:var(--cond);font-size:18px;color:var(--ink);background:var(--paneel);
+    border:1px solid var(--lijn);border-radius:8px;padding:10px;min-height:52px}
+  .seizoenvraag.klaar{grid-template-columns:1fr auto}
+  .seizoenvraag .ptn.groen{color:var(--groen)}
+
   /* Een vraag als één regel: naam, keuze, punten. Twaalf coureurknoppen per
      vraag maakte het scherm onbruikbaar lang op een telefoon. */
   .kiesregels{display:flex;flex-direction:column;gap:6px}
@@ -1615,11 +1630,71 @@ const EXTRAVRAAG = {
   },
 };
 
+// ---- de seizoenslaag ----------------------------------------
+// Vier vragen die je vóór de eerste race invult en die pas aan het eind van
+// het jaar gescoord worden. Samen 150 punten, ongeveer zes races aan gewicht.
+//
+// Ze hangen niet aan een weekend maar aan het seizoen, en dat is de reden dat
+// ze een eigen tabel hebben in plaats van een regel in COUREURVRAAG: er is
+// geen sessie om ze onder te hangen, geen tab om ze op te zetten, en hun
+// uitslag komt niet uit één race maar uit alle races samen.
+//
+// Zonder `score` is het alles of niets: je noemt de goede naam of je noemt
+// hem niet. Alleen bij een getal bestaat "bijna".
+const SEIZOENVRAAG = {
+  kampioen: {
+    soort:'coureur', kop:'wie wordt wereldkampioen?', label:'wereldkampioen',
+    mis:'geen coureur gekozen',
+  },
+  constructeur: {
+    soort:'team', kop:'welk team wint de constructeurstitel?',
+    label:'constructeurstitel', mis:'geen team gekozen',
+  },
+  winnaars: {
+    soort:'getal', kop:'hoeveel verschillende coureurs winnen er een race?',
+    label:'verschillende winnaars', mis:'geen aantal ingevuld',
+    uitleg:'Tel alleen races, geen sprints.',
+    toon: (w) => `${w} verschillende winnaar${w === 1 ? '' : 's'}`,
+    score: (g, w, p) => scoreGetal(g, w, p),
+  },
+  vierde_team: {
+    soort:'team', kop:'welk team wordt vierde bij de constructeurs?',
+    label:'vierde team', mis:'geen team gekozen',
+  },
+};
+
+// Het sprintpuntenschema van het WK. Staat naast WK_PUNTEN omdat een sprint
+// acht plekken beloont en een race tien -- en een kampioenschap dat de sprint
+// niet meetelt zou op een sprintseizoen gewoon het verkeerde antwoord geven.
+const WK_SPRINTPUNTEN = [8, 7, 6, 5, 4, 3, 2, 1];
+
+// De WK-stand over een lijst races: per coureur en per team. Dit is het
+// échte kampioenschap, niet de poulestand -- het is het antwoord op de
+// seizoensvragen en heeft niets te maken met wat iemand hier scoort.
+function wkStand(races) {
+  const perCoureur = new Map(), perTeam = new Map(), teamVan = new Map();
+  for (const r of races) {
+    for (const d of r.drivers ?? []) teamVan.set(String(d.nr), d.team);
+    const tel = (lijst, schema) => (lijst ?? []).forEach((nr, i) => {
+      if (!schema[i]) return;
+      perCoureur.set(String(nr), (perCoureur.get(String(nr)) ?? 0) + schema[i]);
+    });
+    tel(r.race_result, WK_PUNTEN);
+    tel(r.sprint_result, WK_SPRINTPUNTEN);
+  }
+  for (const [nr, punten] of perCoureur) {
+    const team = teamVan.get(nr);
+    if (team) perTeam.set(team, (perTeam.get(team) ?? 0) + punten);
+  }
+  return { perCoureur, perTeam };
+}
+
 // Welke van die vragen op deze tab horen, en meedoen in deze poule.
 const coureurVragen = (welk) =>
   Object.keys(COUREURVRAAG).filter(id => COUREURVRAAG[id].sessie === welk && vraagActief(id));
 const extraVragen = (welk) =>
   Object.keys(EXTRAVRAAG).filter(id => EXTRAVRAAG[id].sessie === welk && vraagActief(id));
+const seizoenVragen = () => Object.keys(SEIZOENVRAAG).filter(vraagActief);
 
 // Een antwoord dat er niet is. Voor deze twee vragen is dat null en niet ''
 // of false, want 0 en "nee" zijn wél antwoorden.
@@ -1667,6 +1742,14 @@ const SESSIEVOLGORDE = ['sprint', 'quali', 'race'];
 // verschillende vragen.
 const sessieOpWeekend = (r, welk) => !!r?.[SESSIES[welk].deadline];
 const weekendSessies = (r) => SESSIEVOLGORDE.filter(w => sessieOpWeekend(r, w));
+
+// Wanneer het weekend begint: de vroegste deadline die het heeft. Niet
+// deadline_quali, want op een sprintweekend gaat de sprint voor.
+const weekendStart = (r) => {
+  const tijden = weekendSessies(r)
+    .map(w => Date.parse(r[SESSIES[w].deadline])).filter(t => !isNaN(t));
+  return tijden.length ? Math.min(...tijden) : null;
+};
 
 // Welke sessies van dit weekend zijn al begonnen? Drie keer in dit bestand
 // stond dit als een handgeschreven `{ quali: ..., race: ... }`, en zo'n
@@ -1733,6 +1816,53 @@ const scoreTab = (p, race, welk) => {
   }, 0);
   return lijst + duels + los + extra;
 };
+
+// De race waar de seizoensantwoorden aan hangen: ronde 1 van dit seizoen. Dat
+// is geen truc om ze ergens kwijt te kunnen -- het is precies de deadline die
+// ze nodig hebben. Je vult ze in voordat er iets gereden is, en de trigger in
+// schema.sql rekent daar ook op.
+const seizoenRace = () => S.races.reduce((a, r) => !a || r.round < a.round ? r : a, null);
+const seizoenOpen = () => {
+  const r = seizoenRace();
+  const start = r ? weekendStart(r) : null;
+  return start !== null && Date.now() < start;
+};
+// Het hele seizoen gereden? Een afgelaste race telt als geweest: daar komt
+// nooit meer een uitslag van.
+const seizoenKlaar = () =>
+  S.races.length > 0 && S.races.every(r => heeftUitslag(r) || r.afgelast);
+
+// De vier antwoorden, uit de races zelf. Pas als het seizoen erop zit, want
+// een halve WK-stand is geen kampioen.
+function seizoenUitslag() {
+  if (!seizoenKlaar()) return null;
+  const { perCoureur, perTeam } = wkStand(S.races);
+  const teams = [...perTeam.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
+  const coureurs = [...perCoureur.entries()].sort((a, b) => b[1] - a[1]);
+  return {
+    kampioen:     coureurs[0]?.[0] ?? null,
+    constructeur: teams[0] ?? null,
+    vierde_team:  teams[3] ?? null,
+    winnaars: new Set(S.races.map(r => r.race_result?.[0]).filter(Boolean)).size,
+  };
+}
+
+// Wat één speler aan de seizoenslaag verdient. Nul zolang het seizoen loopt:
+// er valt nog niets te scoren, en een tussenstand zou suggereren dat het al
+// vastligt.
+function scoreSeizoen(memberId) {
+  const uit = seizoenUitslag();
+  const race = seizoenRace();
+  if (!uit || !race) return 0;
+  return seizoenVragen().reduce((n, id) => {
+    const gegeven = vindAntwoord(race.id, memberId, id)?.waarde;
+    const werkelijk = uit[id];
+    if (leegAntwoord(gegeven) || leegAntwoord(werkelijk)) return n;
+    const v = SEIZOENVRAAG[id], punten = puntenVoor(id);
+    return n + (v.score ? v.score(gegeven, werkelijk, punten)
+                        : (zelfde(gegeven, werkelijk) ? punten : 0));
+  }, 0);
+}
 
 // ---- jokers -------------------------------------------------
 // Vijf per seizoen, en het weekend waarop je er een legt telt dubbel. Het
@@ -1833,6 +1963,10 @@ const demoVragen = [
   { id:'safety_cars',      naam:'Aantal safety cars',  punten:12, sessie:'race',  soort:'getal',   gok:true,  volgorde:80 },
   { id:'rode_vlag',        naam:'Rode vlag',           punten:20, sessie:'race',  soort:'janee',   gok:true,  volgorde:90 },
   { id:'sprint_top10',     naam:'Top 10 sprint',       punten:25, sessie:'sprint',soort:'top10',   gok:false, volgorde:25 },
+  { id:'kampioen',         naam:'Wereldkampioen',      punten:50, sessie:'seizoen',soort:'coureur',gok:false, volgorde:210 },
+  { id:'constructeur',     naam:'Constructeurstitel',  punten:40, sessie:'seizoen',soort:'team',   gok:false, volgorde:220 },
+  { id:'winnaars',         naam:'Aantal verschillende racewinnaars', punten:30, sessie:'seizoen',soort:'getal', gok:false, volgorde:230 },
+  { id:'vierde_team',      naam:'Welk team wordt vierde', punten:30, sessie:'seizoen',soort:'team', gok:false, volgorde:240 },
 ];
 
 // Dezelfde demovoorspellingen, maar als rijen zoals answers ze bewaart.
@@ -1862,6 +1996,7 @@ const S = {
   // nu naar kijkt. De rest van het bestand loopt over S.races en hoeft van
   // het terugbladeren dus niets te weten.
   alleRaces: [], seizoen: null,
+  seizoenkeuze: null, seizoenFout: '',   // de seizoenslaag, zolang die openstaat
   antwoorden: [], vragen: [], poulevragen: [], jokers: [],
   race:  null, tab: 'quali',
   keuze: { quali: [], race: [], winnaar: '', pole: '', duels: [],
@@ -2091,7 +2226,8 @@ const VRAAG_VELD = { quali_top10:'quali_top10', race_top10:'race_top10', winnaar
 // vooruitlopen op de app zonder dat er halve schermen ontstaan.
 const GEBOUWD = ['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole',
                  'teamgenoot_duels', 'snelste_ronde', 'snelste_pitstop',
-                 'safety_cars', 'rode_vlag'];
+                 'safety_cars', 'rode_vlag',
+                 ...Object.keys(SEIZOENVRAAG)];
 
 // ---- automatisch invullen bij vergeten ----------------------
 // Van de drie dingen die een vriendenpoule slopen was "mensen vergeten in te
@@ -2240,7 +2376,8 @@ const vraagActief = (id) =>
 // die de lijst nog niet heeft geladen.
 const VRAAG_PUNTEN = { quali_top10:50, race_top10:50, sprint_top10:25, winnaar:25, pole:10,
                        teamgenoot_duels:15, snelste_ronde:10, snelste_pitstop:10,
-                       safety_cars:12, rode_vlag:20 };
+                       safety_cars:12, rode_vlag:20,
+                       kampioen:50, constructeur:40, winnaars:30, vierde_team:30 };
 const puntenVoor = (id) =>
   S.vragen.find(v => v.id === id)?.punten ?? VRAAG_PUNTEN[id] ?? 0;
 
@@ -2472,6 +2609,12 @@ function standRijen(tot = Infinity) {
       if (r.round >= tot) continue;
       punten += scoreWeekend(vindPred(r.id, l.member_id), r);
     }
+    // De seizoenslaag telt één keer mee, aan het eind van het jaar. Alleen in
+    // de volledige stand: `tot` bestaat om de stand van vóór een weekend na te
+    // rekenen, en daar hoort een eindstand niet in thuis -- dat zou de pijlen
+    // van het laatste weekend laten slaan op punten die niets met dat weekend
+    // te maken hebben.
+    if (tot === Infinity) punten += scoreSeizoen(l.member_id);
     return { id:l.member_id, naam:l.display_name, punten,
              mij:zelfde(l.member_id, S.ik.id) };
   }).sort((a,b) => b.punten - a.punten || String(a.naam).localeCompare(String(b.naam)));
@@ -2723,17 +2866,25 @@ const PRESETS = {
   gevorderd: { naam:'Gevorderd', uitleg:'alles wat er is',
                vragen:['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole',
                        'snelste_ronde', 'snelste_pitstop', 'teamgenoot_duels',
-                       'safety_cars', 'rode_vlag'] },
+                       'safety_cars', 'rode_vlag',
+                       'kampioen', 'constructeur', 'winnaars', 'vierde_team'] },
 };
 
 const puntenSom = (ids) => ids.reduce((n, id) => n + puntenVoor(id), 0);
 
-// Wat een gewoon weekend maximaal oplevert. De sprint hoort daar niet in: die
-// bestaat op zes van de vierentwintig weekenden, dus hem meetellen zet het
-// maximum achttien keer per seizoen te hoog. Hij wordt apart genoemd.
+// Wat een gewoon weekend maximaal oplevert. Drie bakjes, want niet alles komt
+// even vaak langs: de sprint bestaat op zes van de vierentwintig weekenden en
+// de seizoenslaag één keer per jaar. Allebei meetellen in "maximaal per
+// weekend" zou dat getal achttien weekenden lang te hoog zetten, dus ze staan
+// apart -- en ze wórden apart genoemd, want een preset die 350 punten belooft
+// en er 202 geeft is erger dan een preset die het uitlegt.
 const SPRINTVRAAG = 'sprint_top10';
-const weekendSom = (ids) => puntenSom(ids.filter(id => id !== SPRINTVRAAG));
-const sprintSom = (ids) => ids.includes(SPRINTVRAAG) ? puntenVoor(SPRINTVRAAG) : 0;
+const BUITEN_WEEKEND = ['sprint', 'seizoen'];
+const sessieVan = (id) => S.vragen.find(v => v.id === id)?.sessie
+  ?? (id === SPRINTVRAAG ? 'sprint' : SEIZOENVRAAG[id] ? 'seizoen' : 'race');
+const weekendSom = (ids) => puntenSom(ids.filter(id => !BUITEN_WEEKEND.includes(sessieVan(id))));
+const sprintSom  = (ids) => puntenSom(ids.filter(id => sessieVan(id) === 'sprint'));
+const seizoenSom = (ids) => puntenSom(ids.filter(id => sessieVan(id) === 'seizoen'));
 const isGok = (id) => !!S.vragen.find(v => v.id === id)?.gok;
 const welkPreset = (ids) => Object.keys(PRESETS).find(k =>
   PRESETS[k].vragen.length === ids.length && PRESETS[k].vragen.every(v => ids.includes(v)));
@@ -2775,6 +2926,7 @@ function vragenVoet(gekozen) {
   const gok = puntenSom(gekozen.filter(isGok));
   const nu = puntenSom(gekozen.filter(id => GEBOUWD.includes(id)));
   const sprint = sprintSom(gekozen);
+  const seizoensvragen = seizoenSom(gekozen);
   return `
     <div class="somregel">
       <span class="label">maximaal per weekend</span>
@@ -2782,6 +2934,9 @@ function vragenVoet(gekozen) {
     </div>
     ${sprint ? `<p class="zacht" style="margin:0">Op een sprintweekend komt daar
       ${sprint} bij, voor de top 10 van de sprint. Dat zijn er zes per seizoen.</p>` : ''}
+    ${seizoensvragen ? `<p class="zacht" style="margin:0">En ${seizoensvragen} punten
+      aan seizoensvragen: die vul je één keer in, vóór de eerste race, en ze worden
+      aan het eind van het jaar gescoord.</p>` : ''}
     ${nu < totaal ? `<p class="zacht" style="margin:0">Daarvan wordt nu ${nu} punten
       al gevraagd. De rest staat klaar en gaat vanzelf meetellen zodra hij er is.</p>` : ''}
     ${!gekozen.length ? `<p class="mono amber" style="margin:0">Kies er minstens één.</p>` : ''}
@@ -2937,6 +3092,7 @@ function toonApp() {
   knoopAutofill();
   knoopJokers();
   knoopSeizoen();
+  knoopSeizoenslaag();
   knoopJokerZetten();
   knoopMail();
   knoopPrivacy();
@@ -3200,6 +3356,7 @@ function standPagina(rijen) {
     ${rijen.length ? (() => { const w = positieWissels();
         return rijen.map((r, i) => standRij(r, i, rijen, w)).join(''); })()
       : `<p class="zacht" style="margin:0">Nog niemand meegedaan.</p>`}
+    ${seizoenslaagBlok()}
     ${weekendRanglijst()}
     ${streepBlok()}
     ${seizoensGrafiek()}
@@ -3372,6 +3529,140 @@ function weekendRanglijst() {
 // Nadrukkelijk naast de stand en niet in plaats van. De officiële stand blijft
 // wat hij is; iemands punten midden in een lopend seizoen afpakken is geen
 // verbetering, ook niet als de uitkomst eerlijker is.
+// ---- de seizoenslaag op het scherm --------------------------
+// Eén blok met drie gedaanten: een formulier zolang het seizoen nog niet
+// begonnen is, daarna wat je hebt ingevuld, en aan het eind wat het opleverde.
+// Dezelfde plek in alle drie de gevallen, want het is dezelfde vraag.
+function seizoenslaagBlok() {
+  const vragen = seizoenVragen();
+  if (!vragen.length || !S.ik) return '';
+  const race = seizoenRace();
+  if (!race) return '';
+  const open = seizoenOpen();
+  const uit = seizoenUitslag();
+  const drivers = S.races.find(r => (r.drivers ?? []).length)?.drivers ?? [];
+  const teams = [...new Set(drivers.map(d => d.team))].sort();
+  const mijn = (id) => S.seizoenkeuze?.[id] ?? vindAntwoord(race.id, S.ik.id, id)?.waarde ?? '';
+
+  const toon = (id, waarde) => {
+    if (leegAntwoord(waarde)) return null;
+    const v = SEIZOENVRAAG[id];
+    if (v.toon) return v.toon(waarde);
+    if (v.soort === 'coureur') return drv(race, waarde).naam;
+    return String(waarde);
+  };
+
+  const regel = (id) => {
+    const v = SEIZOENVRAAG[id], gekozen = mijn(id);
+    if (open) {
+      const keuzes = v.soort === 'coureur'
+        ? drivers.map(d => `<option value="${esc(d.nr)}" ${zelfde(d.nr, gekozen) ? 'selected' : ''
+            }>${esc(d.naam)}</option>`).join('')
+        : v.soort === 'team'
+          ? teams.map(t => `<option value="${esc(t)}" ${zelfde(t, gekozen) ? 'selected' : ''
+              }>${esc(t)}</option>`).join('')
+          : null;
+      return `
+        <label class="seizoenvraag">
+          <span class="nm">${esc(v.kop)}${v.uitleg
+            ? ` <span class="zacht">${esc(v.uitleg)}</span>` : ''}</span>
+          ${keuzes !== null
+            ? `<select data-seizoenvraag="${esc(id)}">
+                 <option value="">— kies —</option>${keuzes}</select>`
+            : `<input type="number" min="1" max="24" inputmode="numeric"
+                 data-seizoenvraag="${esc(id)}" value="${esc(gekozen)}">`}
+          <span class="ptn">${puntenVoor(id)}</span>
+        </label>`;
+    }
+    const mijnTekst = toon(id, gekozen) ?? v.mis;
+    const echtTekst = uit ? toon(id, uit[id]) : null;
+    const punten = uit ? (() => {
+      if (leegAntwoord(gekozen) || leegAntwoord(uit[id])) return 0;
+      return v.score ? v.score(gekozen, uit[id], puntenVoor(id))
+                     : (zelfde(gekozen, uit[id]) ? puntenVoor(id) : 0);
+    })() : null;
+    return `
+      <div class="seizoenvraag klaar">
+        <span class="nm">${esc(v.label)}
+          <span class="zacht">${esc(mijnTekst)}${echtTekst
+            ? ` · het werd ${echtTekst}` : ''}</span></span>
+        <span class="ptn ${punten ? 'groen' : ''}">${punten === null ? '—' : punten}</span>
+      </div>`;
+  };
+
+  const kop = open
+    ? `nog in te vullen · sluit ${sluitTekst(new Date(weekendStart(race)).toISOString())}`
+    : uit ? `seizoen ${seizoen()} · ${scoreSeizoen(S.ik.id)} punten`
+          : 'ingevuld · wordt gescoord als het seizoen erop zit';
+
+  return `
+    <div class="scheiding"></div>
+    <div class="seizoenslaag">
+      <span class="label">seizoensvragen · ${esc(kop)}</span>
+      ${vragen.map(regel).join('')}
+      ${open ? `<p class="zacht" style="margin:0">Deze vier vul je één keer per
+        seizoen in, vóór de eerste race. Daarna liggen ze vast tot het eind.</p>
+        <button class="knop klein" id="seizoenOpslaan">Opslaan</button>` : ''}
+      ${S.seizoenFout ? `<p class="err">${esc(S.seizoenFout)}</p>` : ''}
+    </div>`;
+}
+
+function knoopSeizoenslaag() {
+  app.querySelectorAll('[data-seizoenvraag]').forEach(el => {
+    el.onchange = () => {
+      S.seizoenkeuze = { ...(S.seizoenkeuze ?? {}), [el.dataset.seizoenvraag]: el.value };
+    };
+  });
+  const knop = app.querySelector('#seizoenOpslaan');
+  if (!knop) return;
+  knop.onclick = async () => {
+    knop.disabled = true;
+    S.seizoenFout = '';
+    try {
+      await bewaarSeizoen();
+      S.seizoenkeuze = null;
+      S.melding = 'Je seizoensvragen zijn opgeslagen.';
+    } catch (e) { S.seizoenFout = e.message; }
+    render();
+  };
+}
+
+// Dezelfde vorm als bewaar(): alleen wat er staat, en een leeg antwoord haalt
+// zijn rij weg in plaats van er een lege waarde in te zetten.
+async function bewaarSeizoen() {
+  const race = seizoenRace();
+  if (!race) throw new Error('Er is nog geen kalender voor dit seizoen.');
+  if (!seizoenOpen()) throw new Error('Het seizoen is al begonnen, de seizoensvragen liggen vast.');
+  const sleutel = { pool_id: S.poule.id, race_id: race.id, member_id: S.ik.id };
+  const wil = seizoenVragen().map(id => {
+    const rauw = S.seizoenkeuze?.[id] ?? vindAntwoord(race.id, S.ik.id, id)?.waarde ?? '';
+    if (leegAntwoord(rauw)) return [id, null];
+    return [id, SEIZOENVRAAG[id].soort === 'getal' ? Number(rauw) : String(rauw)];
+  });
+  const opslaan = wil.filter(([, w]) => w !== null);
+  const wissen  = wil.filter(([, w]) => w === null)
+                     .filter(([id]) => vindAntwoord(race.id, S.ik.id, id));
+
+  if (DEMO) {
+    for (const [id, waarde] of opslaan) zetAntwoord(sleutel, id, waarde);
+    for (const [id] of wissen) wisAntwoord(sleutel, id);
+    return;
+  }
+  if (opslaan.length) {
+    const { error } = await db.from('answers')
+      .upsert(opslaan.map(([id, waarde]) => ({ ...sleutel, question_id: id, waarde })),
+              { onConflict: 'pool_id,race_id,member_id,question_id' });
+    if (error) throw new Error(uitleg(error));
+  }
+  for (const [id] of wissen) {
+    const { error } = await db.from('answers').delete()
+      .eq('pool_id', sleutel.pool_id).eq('race_id', sleutel.race_id)
+      .eq('member_id', sleutel.member_id).eq('question_id', id);
+    if (error) throw new Error(uitleg(error));
+  }
+  await laad();
+}
+
 function streepBlok() {
   if (!S.ik || S.leden.length < 2) return '';
   const rijen = streepStand();
@@ -4355,14 +4646,6 @@ function raceDetailKop() {
     </div>
     <div id="paneel"></div>`;
 }
-
-// Wanneer het weekend begint: de vroegste deadline die het heeft. Niet
-// deadline_quali, want op een sprintweekend gaat de sprint voor.
-const weekendStart = (r) => {
-  const tijden = weekendSessies(r)
-    .map(w => Date.parse(r[SESSIES[w].deadline])).filter(t => !isNaN(t));
-  return tijden.length ? Math.min(...tijden) : null;
-};
 
 // Mag er op dit weekend nog een joker bij of af? Twee voorwaarden, en ze
 // staan allebei ook in de trigger in schema.sql -- deze hier is er om de knop

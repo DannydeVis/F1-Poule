@@ -73,7 +73,7 @@ begin
   raise notice 'ok: de kalender en de uitslagen staan er nog';
 
   select count(*) into n from questions;
-  if n <> 10 then raise exception 'gezakt: % vragen over in plaats van 10', n; end if;
+  if n <> 14 then raise exception 'gezakt: % vragen over in plaats van 14', n; end if;
   raise notice 'ok: de vragenlijst staat er nog';
 
   -- Accounts blijven met opzet staan: een account is geen speler. Het blok

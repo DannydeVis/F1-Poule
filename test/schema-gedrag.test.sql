@@ -107,6 +107,31 @@ begin
     if sqlerrm not like '%race is gesloten%' then raise; end if;
     raise notice 'ok: winnaar voor een gesloten race geweigerd (%)', sqlerrm;
   end;
+
+  -- 10. de seizoenslaag hangt aan de éérste sessie van de race waar hij op
+  --     staat, en niet aan de race. Dat verschil is het hele punt: de
+  --     seizoensvragen vul je in voordat er íéts gereden is. Zonder de eigen
+  --     tak in de trigger zouden ze op de race-deadline vallen, en dan kon je
+  --     de wereldkampioen nog kiezen terwijl de eerste kwalificatie liep.
+  insert into races (id, season, round, name, deadline_quali, deadline_race)
+  values (4, 2026, 4, 'Bahrein', now() + interval '1 day', now() + interval '2 days');
+  insert into pool_questions (pool_id, question_id) values (poule, 'kampioen')
+  on conflict do nothing;
+  insert into answers (pool_id, race_id, member_id, question_id, waarde)
+  values (poule, 4, lid, 'kampioen', '"1"'::jsonb);
+  raise notice 'ok: een seizoensantwoord kan zolang het weekend nog niet begon';
+
+  -- De kwalificatie begint. De race staat nog een dag open, dus een
+  -- race-antwoord mag nog -- maar de seizoenslaag niet meer.
+  update races set deadline_quali = now() - interval '1 minute' where id = 4;
+  begin
+    update answers set waarde = '"4"'::jsonb
+     where pool_id = poule and race_id = 4 and question_id = 'kampioen';
+    raise exception 'gezakt: een seizoensantwoord werd na de start nog gewijzigd';
+  exception when others then
+    if sqlerrm not like '%seizoen is al begonnen%' then raise; end if;
+    raise notice 'ok: seizoensantwoord na de start geweigerd (%)', sqlerrm;
+  end;
 end $$;
 
 -- Beschadig de tabel voor de hersteltest: dubbele rij, geen unieke sleutel.
