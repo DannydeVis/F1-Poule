@@ -36,14 +36,17 @@ const beginstand = {
     // niet uit elkaar lopen bij het terugzoeken van een voorspelling.
     { id:1, season:2026, round:1, name:'Melbourne', drivers:DRIVERS,
       deadline_quali:uur(24), deadline_race:uur(48), quali_result:null, race_result:null,
+      deadline_sprint:null, sprint_result:null, sprint_key:null,
       fastest_lap:null, fastest_pitstop:null, safety_cars:null, rode_vlag:null },
     { id:2, season:2026, round:2, name:'Shanghai', drivers:DRIVERS,
       // kwalificatie dicht, race nog open: hier moet bewaren blijven werken
       deadline_quali:uur(-2), deadline_race:uur(48), quali_result:null, race_result:null,
+      deadline_sprint:null, sprint_result:null, sprint_key:null,
       fastest_lap:null, fastest_pitstop:null, safety_cars:null, rode_vlag:null },
     { id:3, season:2026, round:3, name:'Suzuka', drivers:null,
       // geen deelnemerslijst: de app hoort uit te leggen dat die vanzelf komt
       deadline_quali:uur(72), deadline_race:uur(96), quali_result:null, race_result:null,
+      deadline_sprint:null, sprint_result:null, sprint_key:null,
       fastest_lap:null, fastest_pitstop:null, safety_cars:null, rode_vlag:null },
   ],
   predictions: [],
@@ -59,6 +62,7 @@ const beginstand = {
     { id:'teamgenoot_duels', naam:'Teamgenoot-duels',    punten:15, sessie:'race',  soort:'duels',   gok:false, volgorde:70 },
     { id:'safety_cars',      naam:'Aantal safety cars',  punten:12, sessie:'race',  soort:'getal',   gok:true,  volgorde:80 },
     { id:'rode_vlag',        naam:'Rode vlag',           punten:20, sessie:'race',  soort:'janee',   gok:true,  volgorde:90 },
+    { id:'sprint_top10',     naam:'Top 10 sprint',       punten:25, sessie:'sprint',soort:'top10',   gok:false, volgorde:25 },
   ],
   // Leeg: een poule zonder eigen keuze doet aan alles mee.
   pool_questions: [],

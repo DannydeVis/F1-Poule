@@ -110,6 +110,15 @@ async function kalender() {
   const qualis = await openf1(`sessions?year=${SEIZOEN}&session_name=Qualifying`);
   const perMeeting = new Map(qualis.map((q) => [q.meeting_key, q]));
 
+  // Sprintweekenden: zes keer per seizoen, met een eigen sessie en een eigen
+  // uitslag. Die telden tot nu toe nergens mee omdat hier alleen Qualifying en
+  // Race werden opgehaald. Een weekend zonder sprint houdt deze kolommen leeg,
+  // en dáár hangt de app aan: een sessie "bestaat" zodra er een deadline staat.
+  await wacht(700);
+  const sprints = await openf1(`sessions?year=${SEIZOEN}&session_name=Sprint`);
+  const sprintPerMeeting = new Map(sprints.map((s) => [s.meeting_key, s]));
+  if (sprints.length) console.log(`  ${sprints.length} sprintsessies gevonden`);
+
   // OpenF1 heeft in 2026 een testrecord tussen de races staan: Kuala Lumpur,
   // officieel "FORMULA 1 GULF AIR BAHRAIN GRAND PRIX IN MALAYSIA 2026", met
   // een meeting_key (1308) buiten de hele reeks van het seizoen. Zonder deze
@@ -143,6 +152,7 @@ async function kalender() {
   const rijen = opDatum
     .map((race) => {
       const quali = perMeeting.get(race.meeting_key);
+      const sprint = sprintPerMeeting.get(race.meeting_key);
       return {
         season: SEIZOEN,
         round: ronde.get(String(race.session_key)),
@@ -150,7 +160,12 @@ async function kalender() {
         country: race.country_name,
         race_key: race.session_key,
         quali_key: quali?.session_key ?? null,
+        // Null en niet weglaten: gaat een weekend van sprint naar geen sprint
+        // (of andersom), dan hoort de oude waarde weg. Weglaten zou hem laten
+        // staan, en dan houdt de app een sprint-tab over die nergens op slaat.
+        sprint_key: sprint?.session_key ?? null,
         deadline_quali: quali?.date_start ?? race.date_start,
+        deadline_sprint: sprint?.date_start ?? null,
         deadline_race: race.date_start,
       };
     });
@@ -400,6 +415,10 @@ async function uitslagen(races) {
     if ((!race.quali_result || herkeuring) && race.quali_key && rijp(race.deadline_quali)) {
       await probeer(patch, 'quali_result', () => nieuweUitslag(race.quali_key,
         race.quali_result, `ronde ${race.round} ${race.name} kwalificatie`), gemist);
+    }
+    if ((!race.sprint_result || herkeuring) && race.sprint_key && rijp(race.deadline_sprint)) {
+      await probeer(patch, 'sprint_result', () => nieuweUitslag(race.sprint_key,
+        race.sprint_result, `ronde ${race.round} ${race.name} sprint`), gemist);
     }
     // Of de race-uitslag er is, houden we apart bij: als OpenF1 hem niet
     // heeft is dat straks het bewijs dat de race is afgelast.

@@ -206,6 +206,16 @@ alter table public.races        add column if not exists drivers        jsonb;
 alter table public.races        add column if not exists quali_result   text[];
 alter table public.races        add column if not exists race_result    text[];
 alter table public.races        add column if not exists quali_handmatig boolean not null default false;
+
+-- Sprintweekenden. Zes keer per seizoen rijdt de Formule 1 op zaterdag een
+-- korte race met een eigen uitslag, en die telde tot nu toe nergens mee -- de
+-- sync haalde alleen Qualifying en Race op. Een gewoon weekend houdt deze drie
+-- kolommen leeg, en dáár hangt alles aan: de app beschouwt een sessie als
+-- "bestaat dit weekend" zodra er een deadline staat.
+alter table public.races        add column if not exists sprint_key      bigint;
+alter table public.races        add column if not exists deadline_sprint timestamptz;
+alter table public.races        add column if not exists sprint_result   text[];
+alter table public.races        add column if not exists sprint_handmatig boolean not null default false;
 alter table public.races        add column if not exists race_handmatig  boolean not null default false;
 -- Losse uitslagen die niet uit een volgorde te halen zijn: één coureurnummer.
 -- De sync vult alleen wat leeg is, dus wat hier met de hand in gaat blijft
@@ -243,7 +253,12 @@ insert into public.questions (id, naam, punten, sessie, soort, gok, volgorde) va
   ('snelste_pitstop',  'Snelste pitstop',     10, 'race',  'coureur', false, 60),
   ('teamgenoot_duels', 'Teamgenoot-duels',    15, 'race',  'duels',   false, 70),
   ('safety_cars',      'Aantal safety cars',  12, 'race',  'getal',   true,  80),
-  ('rode_vlag',        'Rode vlag',           20, 'race',  'janee',   true,  90)
+  ('rode_vlag',        'Rode vlag',           20, 'race',  'janee',   true,  90),
+  -- 25 en niet 50: dezelfde top 10 met dezelfde 5/3/1 per plek, maar halve
+  -- punten. Een sprint is een derde van een race lang en hoort niet net zo
+  -- zwaar te wegen als het weekend zelf. De app schaalt dat met `weging` in
+  -- SESSIES; dit getal is wat het aanmaakscherm optelt bij de presets.
+  ('sprint_top10',     'Top 10 sprint',       25, 'sprint','top10',   false, 25)
 on conflict (id) do update set
   naam = excluded.naam, punten = excluded.punten, sessie = excluded.sessie,
   soort = excluded.soort, gok = excluded.gok, volgorde = excluded.volgorde;
@@ -522,7 +537,15 @@ begin
   select q.sessie into sessie_van from public.questions q where q.id = new.question_id;
   if not found then return new; end if;
 
-  select case when sessie_van = 'quali' then r.deadline_quali else r.deadline_race end
+  -- Per sessie zijn eigen deadline. Stond als `case ... else deadline_race`,
+  -- en dat betekende dat elke sessie die niet 'quali' heette stilletjes aan de
+  -- race-deadline hing -- voor een sprint dus de verkeerde, en zonder dat
+  -- iemand het zou merken.
+  select case sessie_van
+           when 'quali'  then r.deadline_quali
+           when 'sprint' then r.deadline_sprint
+           else               r.deadline_race
+         end
     into deadline
   from public.races r where r.id = new.race_id;
   if not found then return new; end if;
@@ -530,6 +553,8 @@ begin
   if deadline is not null and now() > deadline then
     if sessie_van = 'quali' then
       raise exception 'De kwalificatie van deze race is gesloten';
+    elsif sessie_van = 'sprint' then
+      raise exception 'De sprint van deze race is gesloten';
     else
       raise exception 'De race is gesloten';
     end if;

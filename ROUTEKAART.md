@@ -274,9 +274,11 @@ Vragen die je vóór race 1 invult en aan het eind scoort: wereldkampioen,
 constructeurstitel, aantal verschillende winnaars, welk team wordt vierde. Rond
 de 150 punten in totaal, dus zes races aan gewicht.
 
-### Sprintweekenden
-Sprints hebben een eigen sessie via `session_name = 'Sprint'`. Alle resolvers
-werken ongewijzigd op een andere `session_key`. Verkorte set op halve punten.
+### ~~Sprintweekenden~~ — gebouwd
+Zes weekenden per seizoen hebben een derde sessie. De sync haalt hem op via
+`session_name = 'Sprint'`, de app zet er een derde tabblad voor neer, en de
+top 10 van de sprint telt voor halve punten. Zie "Sprintweekenden" hieronder
+voor waarom dit pas kon nadat `SESSIES` er was.
 
 ---
 
@@ -587,15 +589,49 @@ voorkomen:
 | Contrair-multiplier | punten schalen met hoe zeldzaam je antwoord was | verandert wat een punt waard is |
 | Jokers | vijf per seizoen, dubbele punten | nieuwe keuze per race, dus nieuw scherm |
 | Seizoenslaag | vragen vóór race 1, gescoord aan het eind | hoort aan het begin van een seizoen te beginnen |
-| Sprintweekenden | de sprint als eigen sessie meetellen | de sync pakt nu alleen `session_name=Race` en `Qualifying` |
+| ~~Sprintweekenden~~ | *gebouwd, zie hieronder* | |
 
-Alle vier raken de telling. Dat is de reden dat ze hier nog staan en niet
-gebouwd zijn: midden in een lopend seizoen de puntentelling omgooien is geen
+Ze raken alle vier de telling. Dat is de reden dat ze hier stonden en niet
+gebouwd waren: midden in een lopend seizoen de puntentelling omgooien is geen
 verbetering, ook niet als de nieuwe regel op zichzelf beter is. Kijk hoe de twee
 die er wél zijn dat hebben opgelost: "slechtste twee races" staat náást de stand
 in plaats van erin, en "automatisch invullen" geldt alleen vanaf het moment dat
-de poulebaas hem aanzet. Wie hieraan begint beantwoordt die vraag dus eerst:
-geldt dit vanaf nu, of met terugwerkende kracht over races die al gereden zijn?
+de poulebaas hem aanzet. Wie aan de drie die overblijven begint beantwoordt die
+vraag dus eerst: geldt dit vanaf nu, of met terugwerkende kracht over races die
+al gereden zijn?
+
+### Sprintweekenden, en waarom die er nu wel zijn
+
+De sprint kon dit probleem omzeilen, en dat is de enige reden dat hij er als
+eerste van de vier uit is. Een poule kiest bij het aanmaken welke vragen ze
+stelt, en die set gaat op slot zodra de eerste race gescoord is. Een poule die
+nu loopt heeft `sprint_top10` dus domweg niet in zijn lijst staan en merkt er
+niets van; een poule die na dit seizoen wordt aangemaakt kan hem aanzetten. De
+telling van een lopende poule verandert nergens — geen streep nodig, geen
+knop, geen "vanaf nu".
+
+Wat het wél kostte was de tweedeling. De app was rond precies twee sessies
+gebouwd: veertien keer stond er ergens `welk === 'quali' ? r.quali_result :
+r.race_result`, en drie keer een handgeschreven `{ quali: ..., race: ... }`.
+Zo'n object zegt `undefined` over een sessie die het niet kent, en `undefined`
+is niet dicht — een sprint zou dus ná zijn eigen deadline nog invulbaar zijn
+geweest. Dat is eerst in één tabel (`SESSIES`) getrokken, in een eigen commit
+zonder gedragsverandering, en pas daarna kwam de sprint erbij.
+
+Drie dingen om te weten als je hier verder bouwt:
+
+- **De sprint gaat vóór de kwalificatie.** De sprintkwalificatie ligt op
+  vrijdag en de sprint zaterdagochtend; de gewone kwalificatie is zaterdag ná
+  de sprint. `SESSIEVOLGORDE` staat daarom op `['sprint', 'quali', 'race']`, en
+  `openLijst()` kijkt naar de klok en niet naar die lijst.
+- **Halve punten zitten in `SESSIES.sprint.weging`**, niet in het puntenaantal
+  van de vraag. Dezelfde top 10, dezelfde 5/3/1 per plek, maal 0,5.
+- **"Maximaal per weekend" laat de sprint erbuiten.** Hij bestaat op zes van de
+  vierentwintig weekenden; meetellen zet het maximum achttien keer per seizoen
+  te hoog. Hij wordt eronder apart genoemd. Zie `weekendSom()` en `sprintSom()`.
+- **Automatisch invullen slaat de sprint over.** Die regel bestaat om een
+  gemist weekend niet je seizoen te laten kosten, en een sprint is daar geen
+  onderdeel van.
 
 ---
 
