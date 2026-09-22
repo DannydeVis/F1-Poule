@@ -4463,3 +4463,73 @@ halverwege aan- en uitzet om een uitkomst te sturen. Die staat er ook niet bij
 de andere drie. Het is een vriendenpoule en de poulebaas kan sowieso de
 vragenset zien; de verdediging daartegen is dat iedereen ziet wanneer het
 aanging, niet dat het niet kan.
+
+---
+
+## Je seizoen delen, zonder de deur van fase 0 weer open te zetten
+
+Een publiek profiel stond op de lijst met "bewust niet gebouwd", en het bezwaar
+was scherp: fase 0 heeft er werk van gemaakt dat je alleen ziet wat bij jouw
+poule hoort, en een publieke pagina die een poule uitleest draait dat terug.
+
+Dus werkt het andersom. **Er gaat geen enkel leesrecht open.**
+
+Je eigen app rekent je cijfers uit — met `standRijen()`, `scoreWeekend()` en
+`scoreLijst()`, dezelfde functies die de stand tekenen — en legt het resultaat
+als één blokje jsonb op je eigen rij in `pool_members`. De publieke pagina
+leest alleen dat blokje, via `publiek_profiel(code)`: een `security
+definer`-functie met precies één `select` erin die precies één kolom
+teruggeeft. Geen join, geen naam uit `pool_members`, geen poule, geen
+medespelers, geen antwoorden.
+
+Dat lost meteen een tweede probleem op dat niet in het bezwaar stond: er is nog
+steeds maar één plek waar de punten uitgerekend worden. Een profielpagina die
+de score in PL/pgSQL nabouwt zou binnen een half jaar iets anders zeggen dan de
+stand, en dan geloof je geen van beide meer.
+
+### Wat erin gaat, en waarom zo weinig
+
+    { naam, seizoen, punten, plek, spelers, gereden, races, beste, exact, bijgewerkt }
+
+Je naam, je getallen, en "van 6 spelers" zonder te zeggen wie die vijf anderen
+zijn of hoe de poule heet. Dat is van hen, niet van jou. `publiek-profiel.test.mjs`
+controleert dat ook echt: de poulenaam, de poulecode en de naam van een
+medespeler mogen nergens in de momentopname of op de pagina voorkomen.
+
+### De kolomgrens op pool_members
+
+`profiel_code` is de link naar je pagina, en die deel je zelf of niet — ook
+niet met je medespelers. RLS werkt per rij en kan dat onderscheid niet maken.
+Een grant per kolom wel:
+
+    revoke select on public.pool_members from anon, authenticated;
+    grant select (member_id, pool_id, display_name, user_id, created_at)
+      on public.pool_members to anon, authenticated;
+
+Dat is de enige tabel in dit schema met zo'n grens. Twee gevolgen om te
+onthouden:
+
+- **Je eigen code krijg je gewoon te zien.** `poule_ophalen()` geeft
+  `profiel_code` en `profiel` mee voor de rijen die aan jouw account hangen, en
+  die functie is `security definer` en gaat dus langs de grants heen.
+- **`.select()` zonder kolommen werkt niet meer op deze tabel.** PostgREST
+  vertaalt dat naar `select *`, en dan struikelt hij over `profiel_code`. Bij
+  het losmaken van een speler staat daarom `.select('member_id')`. Wie hier
+  ooit een `select *` neerzet krijgt "permission denied for column" en weet nu
+  waarom.
+
+### Hoe vers de pagina is
+
+`misschienSnapshot()` draait aan het eind van `render()`, hooguit één keer per
+minuut, en `ververSnapshot()` schrijft alleen als er echt een getal veranderd
+is. Anders zou elke klik een rij wegschrijven. Gevolg: de pagina is zo vers als
+jouw laatste bezoek, en dat staat er onderaan bij. Dat is eerlijker dan doen
+alsof hij live is.
+
+### Wat het niet is
+
+Geen profiel over meerdere poules heen, en geen profiel dat je kunt opzoeken.
+Er is geen lijst, geen zoekfunctie en geen naam in de url — alleen een
+willekeurige code van zes tekens uit een alfabet zonder verwarrende letters. Wie
+de link niet heeft komt er niet, en wie de link kwijtraakt maakt een nieuwe aan;
+de oude komt dan nergens meer uit.

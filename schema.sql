@@ -204,6 +204,18 @@ alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
 alter table public.pool_members add column if not exists created_at   timestamptz not null default now();
 alter table public.pool_members add column if not exists user_id      uuid;
+-- Een publiek profiel: een code om te delen en een momentopname van je
+-- cijfers. Allebei leeg tot je het zelf aanzet.
+--
+-- Let op wat er NIET gebeurt: er wordt geen leesrecht op je poule opengezet.
+-- De cijfers worden door je eigen app uitgerekend -- met dezelfde functies die
+-- de stand tekenen -- en als jsonb hier neergelegd. De publieke pagina leest
+-- alleen dat blokje. Zo blijft de muur van fase 0 staan en is er ook maar één
+-- plek waar de punten uitgerekend worden.
+alter table public.pool_members add column if not exists profiel_code text;
+alter table public.pool_members add column if not exists profiel      jsonb;
+create unique index if not exists pool_members_profiel_code_uniek
+  on public.pool_members (profiel_code) where profiel_code is not null;
 
 -- De verwijzing apart, want `add column if not exists` neemt geen foreign key
 -- mee bij een tabel die de kolom al had.
@@ -857,10 +869,17 @@ as $$
   )
   select case when not exists (select 1 from poule) then null else jsonb_build_object(
     'poule',      (select to_jsonb(p) from poule p),
+    -- profiel_code en profiel alleen voor je eigen speler: dat is wat het
+    -- deelscherm nodig heeft. Die van je medespelers gaan je niet aan -- een
+    -- gedeelde pagina deel je zelf, of niet.
     'leden',      coalesce((select jsonb_agg(jsonb_build_object(
                      'member_id',    m.member_id,
                      'display_name', m.display_name,
-                     'user_id',      m.user_id) order by m.created_at)
+                     'user_id',      m.user_id,
+                     'profiel_code', case when m.user_id is not null and m.user_id = auth.uid()
+                                          then m.profiel_code end,
+                     'profiel',      case when m.user_id is not null and m.user_id = auth.uid()
+                                          then m.profiel end) order by m.created_at)
                    from public.pool_members m, poule p where m.pool_id = p.id), '[]'::jsonb),
     'antwoorden', coalesce((select jsonb_agg(to_jsonb(a))
                    from public.answers a, poule p where a.pool_id = p.id), '[]'::jsonb),
@@ -874,6 +893,24 @@ as $$
                      'race_id', j.race_id, 'member_id', j.member_id))
                    from public.jokers j, poule p where j.pool_id = p.id), '[]'::jsonb)
   ) end;
+$$;
+
+-- Een publiek profiel ophalen. Net als poule_ophalen() een functie en geen
+-- policy, en om dezelfde reden: een policy kan niet eisen dát je filtert, dus
+-- "één profiel op zijn code" en "alle profielen uitlezen" zouden hetzelfde
+-- recht zijn. Deze functie geeft precies één blokje jsonb terug -- dat wat de
+-- speler zelf gepubliceerd heeft -- en verder niets: geen naam uit
+-- pool_members, geen poule, geen medespelers, geen antwoorden.
+create or replace function public.publiek_profiel(p_code text)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select m.profiel from public.pool_members m
+   where p_code is not null and m.profiel_code = p_code and m.profiel is not null
+   limit 1;
 $$;
 
 -- Meedoen aan een poule: een speler aanmaken en meteen terugkrijgen.
@@ -1025,6 +1062,7 @@ grant execute on function public.poule_aanmaken(text, text, text, text[]) to ano
 revoke all on function public.poule_ophalen(text, uuid) from public;
 revoke all on function public.poule_meedoen(uuid, text) from public;
 grant execute on function public.poule_ophalen(text, uuid) to anon, authenticated;
+grant execute on function public.publiek_profiel(text) to anon, authenticated;
 grant execute on function public.poule_meedoen(uuid, text) to anon, authenticated;
 
 -- ------------------------------------------------------------
@@ -1281,7 +1319,18 @@ create policy predictions_eigen on public.predictions
 grant usage on schema public to anon, authenticated;
 
 grant select, insert, update, delete on public.pools          to anon, authenticated;
-grant select, insert, update, delete on public.pool_members   to anon, authenticated;
+-- pool_members is de enige tabel met een kolomgrens erin. Lezen mag op alles
+-- behalve profiel_code en profiel: die eerste is de link naar je publieke
+-- pagina, en die deel je zelf of niet -- ook niet met je medespelers. RLS werkt
+-- per rij en kan dat onderscheid niet maken, een grant per kolom wel.
+--
+-- Je eigen code krijg je gewoon te zien: poule_ophalen() geeft hem mee voor de
+-- rijen die aan jouw account hangen, en die functie is security definer en gaat
+-- hier dus langs.
+grant insert, update, delete on public.pool_members to anon, authenticated;
+revoke select on public.pool_members from anon, authenticated;
+grant select (member_id, pool_id, display_name, user_id, created_at)
+  on public.pool_members to anon, authenticated;
 grant select, insert, update, delete on public.predictions    to anon, authenticated;
 grant select, insert, update, delete on public.pool_questions to anon, authenticated;
 grant select, insert, update, delete on public.answers        to anon, authenticated;

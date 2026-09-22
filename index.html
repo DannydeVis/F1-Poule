@@ -463,6 +463,13 @@
     background:var(--paneel);border:1px solid var(--lijn);border-radius:8px;
     padding:8px 10px;min-height:44px}
 
+  /* De drie getallen op een gedeelde profielpagina. */
+  .pgetallen{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .pgetal{display:flex;flex-direction:column;gap:2px;padding:12px;
+    border:1px solid var(--lijn);border-radius:10px}
+  .pgetal b{font-family:var(--mono);font-size:26px;line-height:1}
+  .pgetal .zacht{font-size:12px}
+
   /* De seizoenslaag: vier vragen die je één keer per jaar invult. Hier geen
      keuzeblad zoals bij de coureurs per race -- dit is een formulier dat je
      één keer ziet, en dan is een gewone keuzelijst duidelijker en korter. */
@@ -2085,6 +2092,8 @@ const S = {
   omschrijving: null,   // getypte omschrijving, zolang die nog niet bewaard is
   omschrijvingFout: '',
   push: null, pushFout: '',   // meldingen: 'aan' | 'uit' | 'geweigerd' | 'kan niet'
+  deelFout: '',               // het delen van je eigen cijfers, onder Profiel
+  profiel: null,              // een publiek profiel dat je via een link opent
   mail:  { open: false, fout: '', gestuurd: '' },  // mailadres koppelen, onder Poule
   inlog: { open: false, fout: '', gestuurd: '' },  // inloggen op het beginscherm
   privacy: { open: false, fout: '' },             // wat de app van je weet
@@ -2115,6 +2124,10 @@ const zelfde = (a, b) => String(a) === String(b);
 const vindPred = (raceId, memberId) =>
   S.preds.find(p => zelfde(p.race_id, raceId) && zelfde(p.member_id, memberId));
 // </knip zoeken>
+
+// Mijn eigen rij uit de spelerslijst. S.ik draagt alleen id en naam, en voor
+// het publieke profiel is ook de rest van de rij nodig.
+const ikRij = () => S.leden.find(l => zelfde(l.member_id, S.ik?.id)) ?? null;
 
 const vindAntwoord = (raceId, memberId, vraagId) =>
   S.antwoorden.find(a => zelfde(a.race_id, raceId) && zelfde(a.member_id, memberId)
@@ -2856,6 +2869,16 @@ function codeUitLink() {
   } catch { return ''; }
 }
 
+// De code uit een gedeelde profiellink. Acht tekens uit een klein alfabet, en
+// dat is meteen de controle: alles wat daar niet op lijkt is geen profielcode
+// en hoort het gewone startscherm te geven.
+function profielUitLink() {
+  try {
+    const code = (new URLSearchParams(location.search).get('profiel') ?? '').trim();
+    return /^[a-z2-9]{6,16}$/.test(code) ? code : '';
+  } catch { return ''; }
+}
+
 // Wie de link opent. Zonder dit maakt dezelfde persoon zichzelf op zijn
 // laptop opnieuw aan en staat hij twee keer in de stand, met zijn punten
 // verdeeld over de twee. Zie OVERDRACHT.md over waarom dit geen inlog is.
@@ -3172,10 +3195,12 @@ function toonApp() {
   knoopJokerZetten();
   knoopMail();
   knoopMelding();
+  knoopDelen();
   // Of meldingen aanstaan is een asynchrone vraag aan de browser. Eén keer
   // stellen zodra het profielscherm open is, en dan opnieuw tekenen met het
   // antwoord. S.push blijft daarna gevuld, dus dit loopt niet rond.
   if (S.weergave === 'profiel' && S.push === null) pushInlezen().then(render);
+  misschienSnapshot();
   knoopPrivacy();
   knoopLosmaken();
   knoopUitloggen();
@@ -3862,6 +3887,7 @@ function profielPagina() {
       <b>${esc(S.ik.naam)}</b>.</p>
     ${mailBlok()}
     ${meldingBlok()}
+    ${deelBlok()}
     ${eigenLinkBlok()}
     ${uitlogBlok()}
     ${privacyBlok()}`;
@@ -4071,8 +4097,12 @@ function knoopLosmaken() {
     }
     knop.disabled = true;
     const id = knop.dataset.losmaken;
+    // .select('member_id') en niet .select(): dat laatste vraagt om alle
+    // kolommen, en op pool_members staat leesrecht per kolom (profiel_code
+    // hoort niet bij wat je medespelers mogen zien). Eén kolom is genoeg om
+    // te weten of de update een rij raakte.
     const { data, error } = await db.from('pool_members')
-      .update({ user_id: null }).eq('member_id', id).select();
+      .update({ user_id: null }).eq('member_id', id).select('member_id');
     if (error || !data?.length) {
       S.melding = error ? uitleg(error)
         : 'Losmaken lukte niet. Alleen de poulebaas mag dat, en de database '
@@ -4112,6 +4142,226 @@ function eigenLinkBlok() {
     <button class="knop klein" id="eigenlink">Kopieer je eigen link</button>
     <textarea class="veld tekstblok hide" id="eigenlinkveld" readonly rows="3"
       aria-label="Je eigen link om zelf te kopiëren"></textarea>`;
+}
+
+// ---- je seizoen delen buiten de poule -----------------------
+//
+// Dit stond op de lijst met "bewust niet gebouwd", en het bezwaar was dat het
+// de deur weer openzet die fase 0 dichtdeed: een publiek profiel dat je poule
+// uitleest is precies wat daar afgesloten is.
+//
+// Daarom werkt het andersom. Je eigen app rekent je cijfers uit -- met exact
+// dezelfde functies die de stand tekenen -- en legt dat als één blokje jsonb
+// op je eigen spelersrij. De publieke pagina leest alleen dat blokje, via een
+// functie die niets anders kan teruggeven. Er gaat dus geen enkel leesrecht
+// open, en er is nog steeds maar één plek waar de punten uitgerekend worden.
+//
+// Wat erin gaat is met opzet karig: jouw naam, jouw getallen, en "van 6
+// spelers" zonder te zeggen wie die vijf anderen zijn of hoe de poule heet.
+// Dat is van hen, niet van jou.
+function maakSnapshot() {
+  const rijen = standRijen();
+  const i = rijen.findIndex(r => r.mij);
+  if (i === -1) return null;
+  const gescoord = S.races.filter(heeftUitslag);
+  const beste = gescoord
+    .map(r => ({ naam: r.name, punten: scoreWeekend(vindPred(r.id, S.ik.id), r) }))
+    .sort((a, b) => b.punten - a.punten)[0] ?? null;
+  // Hoeveel plekken je precies goed had, over het hele seizoen. Hetzelfde
+  // getal dat op een uitslagscherm onder "x van de 10 exact voorspeld" staat.
+  let exact = 0;
+  for (const r of gescoord) {
+    const p = vindPred(r.id, S.ik.id);
+    if (!p) continue;
+    for (const w of weekendSessies(r)) {
+      exact += scoreLijst(p[SESSIES[w].vraag] ?? [], r[SESSIES[w].uitslag] ?? [])
+        .regels.filter(x => x.punten === 5).length;
+    }
+  }
+  return {
+    naam: S.ik.naam,
+    seizoen: seizoen(),
+    punten: rijen[i].punten,
+    plek: i + 1,
+    spelers: rijen.length,
+    gereden: gescoord.length,
+    races: S.races.length,
+    beste,
+    exact,
+    bijgewerkt: new Date().toISOString(),
+  };
+}
+
+const profielLink = (code) =>
+  `${location.origin}${location.pathname}?profiel=${encodeURIComponent(code)}`;
+
+function deelBlok() {
+  if (!S.ik || DEMO) return '';
+  const code = ikRij()?.profiel_code ?? null;
+  const kop = `<div class="scheiding"></div><span class="label">je seizoen delen</span>`;
+  if (!code) {
+    return `${kop}
+      <p class="zacht" style="margin:0">Zet dit aan en je krijgt een link naar een
+        pagina met jouw cijfers: je punten, je plek en je beste weekend. Wie die
+        link heeft ziet <b>alleen jouw getallen</b> — niet de poule, niet je
+        medespelers en niet wat iemand heeft ingevuld.</p>
+      <button class="knop klein" id="deelAan">Maak een deelbare pagina</button>
+      ${S.deelFout ? `<p class="err">${esc(S.deelFout)}</p>` : ''}`;
+  }
+  return `${kop}
+    <p class="zacht" style="margin:0">Je pagina staat online en wordt bijgewerkt
+      elke keer dat je de app opent.</p>
+    <textarea class="veld tekstblok" id="deellinkveld" readonly rows="2"
+      aria-label="De link naar je publieke pagina">${esc(profielLink(code))}</textarea>
+    <button class="knop klein" id="deelKopieer">Kopieer de link</button>
+    <button class="knop klein" id="deelUit">Haal de pagina weg</button>
+    ${S.deelFout ? `<p class="err">${esc(S.deelFout)}</p>` : ''}`;
+}
+
+function knoopDelen() {
+  const aan = app.querySelector('#deelAan');
+  const uit = app.querySelector('#deelUit');
+  const kopieer = app.querySelector('#deelKopieer');
+  if (aan) aan.onclick = async () => {
+    aan.disabled = true; S.deelFout = '';
+    try { await deelAanzetten(); } catch (e) { S.deelFout = e.message; }
+    render();
+  };
+  if (uit) uit.onclick = async () => {
+    uit.disabled = true; S.deelFout = '';
+    try { await deelUitzetten(); } catch (e) { S.deelFout = e.message; }
+    render();
+  };
+  if (kopieer) kopieer.onclick = async () => {
+    const code = ikRij()?.profiel_code;
+    if (!code) return;
+    kopieer.textContent = (await naarKlembord(profielLink(code)))
+      ? 'Gekopieerd' : 'Kopieer de link';
+  };
+}
+
+// Een code van acht tekens, en niet je member_id: dat id staat in je eigen
+// link waarmee je jezelf meeneemt, en die hoort juist geheim te blijven.
+const nieuweProfielCode = () => {
+  const bytes = new Uint8Array(6);
+  crypto.getRandomValues(bytes);
+  return [...bytes].map(b => 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]).join('');
+};
+
+async function deelAanzetten() {
+  const snapshot = maakSnapshot();
+  if (!snapshot) throw new Error('Er valt nog niets te delen.');
+  const code = nieuweProfielCode();
+  const { error } = await db.from('pool_members')
+    .update({ profiel_code: code, profiel: snapshot }).eq('member_id', S.ik.id);
+  if (error) throw new Error(uitleg(error));
+  const rij = S.leden.find(l => zelfde(l.member_id, S.ik.id));
+  if (rij) { rij.profiel_code = code; rij.profiel = snapshot; }
+  S.melding = 'Je pagina staat online.';
+}
+
+async function deelUitzetten() {
+  const { error } = await db.from('pool_members')
+    .update({ profiel_code: null, profiel: null }).eq('member_id', S.ik.id);
+  if (error) throw new Error(uitleg(error));
+  const rij = S.leden.find(l => zelfde(l.member_id, S.ik.id));
+  if (rij) { rij.profiel_code = null; rij.profiel = null; }
+  S.melding = 'Je pagina is weggehaald.';
+}
+
+// Eén keer per minuut mag hij kijken of er iets veranderd is, en dat is ruim
+// genoeg: render() draait bij elke klik en dit hoeft niet per klik.
+let laatsteSnapshot = 0;
+function misschienSnapshot() {
+  if (!S.ik || !S.poule || Date.now() - laatsteSnapshot < 60e3) return;
+  laatsteSnapshot = Date.now();
+  // Fire-and-forget: een mislukte bijwerking van je publieke pagina mag nooit
+  // een scherm ophouden of een foutmelding opleveren. De pagina is dan gewoon
+  // even niet bij.
+  ververSnapshot().catch(() => {});
+}
+
+// Bijwerken zodra je de app opent, maar alleen als het echt anders is. Anders
+// schrijft elke keer laden een rij weg voor een getal dat niet veranderd is.
+async function ververSnapshot() {
+  if (DEMO || !S.ik) return;
+  const rij = ikRij();
+  if (!rij?.profiel_code) return;
+  const nieuw = maakSnapshot();
+  if (!nieuw) return;
+  const oud = rij.profiel ?? {};
+  const zelfdeCijfers = ['punten', 'plek', 'spelers', 'gereden', 'exact', 'naam']
+    .every(k => String(oud[k]) === String(nieuw[k]))
+    && String(oud.beste?.punten) === String(nieuw.beste?.punten);
+  if (zelfdeCijfers) return;
+  rij.profiel = nieuw;
+  await db.from('pool_members').update({ profiel: nieuw }).eq('member_id', S.ik.id);
+}
+
+// De publieke pagina. Eén kaart met cijfers, en verder niets: geen poule, geen
+// medespelers, geen navigatie naar binnen. Wat hier staat is wat de speler
+// zelf gepubliceerd heeft, en het komt uit één functie die niets anders kan
+// teruggeven.
+async function toonProfiel(code) {
+  app.innerHTML = `<div class="toegang"><div class="kaart"><div class="kaart-in">
+    <p class="zacht" style="margin:0">Even kijken…</p></div></div></div>`;
+  let p = null, stuk = false;
+  try {
+    const { data, error } = await db.rpc('publiek_profiel', { p_code: code });
+    if (error) stuk = true; else p = data;
+  } catch { stuk = true; }
+
+  const omheen = (binnen) => `
+    <div class="toegang"><div class="kaart"><div class="baan"></div>
+      <div class="kaart-in">
+        <div class="merk">
+          <span class="blok"></span>
+          <span class="naam">RacePicks</span>
+          <span class="code">${esc(String(p?.seizoen ?? seizoen()))}</span>
+        </div>
+        ${binnen}
+      </div>
+    </div></div>`;
+
+  const zonder = (tekst) => omheen(`
+    <div>
+      <h1 class="groot">${esc(tekst)}</h1>
+      <p class="zacht" style="margin:12px 0 0">Misschien is de pagina
+        weggehaald, of klopt de link niet helemaal.</p>
+    </div>
+    <a class="knop" href="${esc(location.pathname)}">Naar RacePicks</a>`);
+  if (stuk) { app.innerHTML = zonder('Dat lukte even niet'); return; }
+  if (!p) { app.innerHTML = zonder('Deze pagina bestaat niet'); return; }
+
+  const getal = (label, waarde, klein = '') => `
+    <div class="pgetal">
+      <span class="label">${esc(label)}</span>
+      <b>${esc(String(waarde))}</b>
+      ${klein ? `<span class="zacht">${esc(klein)}</span>` : ''}
+    </div>`;
+
+  app.innerHTML = omheen(`
+    <div>
+      <h1 class="groot">${esc(p.naam ?? 'Speler')}</h1>
+      <p class="zacht" style="margin:12px 0 0">Zo staat het ervoor in de poule.</p>
+    </div>
+    <div class="pgetallen">
+      ${getal('punten', p.punten ?? 0)}
+      ${getal('plek', `${p.plek ?? '—'}e`, `van ${p.spelers ?? '?'}`)}
+      ${getal('races', p.gereden ?? 0, `van ${p.races ?? '?'}`)}
+    </div>
+    <div class="veldblok">
+      ${p.beste ? `<p class="zacht" style="margin:0">Beste weekend:
+        <b>${esc(p.beste.naam)}</b> met ${esc(String(p.beste.punten))} punten.</p>` : ''}
+      ${p.exact ? `<p class="zacht" style="margin:0">${esc(String(p.exact))} keer een
+        coureur precies op de goede plek gezet.</p>` : ''}
+      <p class="zacht" style="margin:0">Dit is één speler uit een vriendenpoule.
+        De poule zelf, de medespelers en wie wat voorspelde staan hier niet —
+        die zie je alleen als je meedoet.</p>
+    </div>
+    <a class="knop primair" href="${esc(location.pathname)}">Zelf een poule beginnen</a>
+    ${p.bijgewerkt ? `<p class="label" style="margin:0">bijgewerkt ${
+      esc(datumKort(p.bijgewerkt))}</p>` : ''}`);
 }
 
 // ---- je account meenemen met een mailadres ------------------
@@ -4242,6 +4492,10 @@ function privacyBlok() {
         mailadres van Google. Dat gebeurt alleen als je er zelf voor kiest —
         koppel je niets, of gebruik je een mailadres, dan komt Google er niet
         aan te pas.</p>
+      ${ikRij()?.profiel_code ? `<p style="margin:0 0 10px"><b>Je gedeelde pagina</b><br>
+        Je hebt je seizoen gedeeld. Op die pagina staan je naam, je punten, je
+        plek en je beste weekend — niet je poule, niet je medespelers en niet
+        wat iemand heeft ingevuld. Haal hem weg en die gegevens zijn ook weg.</p>` : ''}
       ${pushKan() ? `<p style="margin:0 0 10px"><b>Als je meldingen aanzet</b><br>
         Dan komt er één regel bij per toestel: het adres waar je pushdienst
         (Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee
@@ -6504,6 +6758,13 @@ if (DEMO) {
 // Terug naar de poule die je het laatst gebruikte, zodat de poulecode niet
 // elke keer opnieuw ingetypt hoeft te worden.
 async function hervat() {
+  // Een gedeelde profiellink gaat overal voor: wie die aanklikt wil één
+  // pagina zien en niet in iemands poule belanden. Hij logt je ook nergens
+  // op in en raakt je eigen poule niet aan -- herlaad zonder de parameter en
+  // je bent gewoon weer waar je was.
+  const profielCode = profielUitLink();
+  if (profielCode) { await toonProfiel(profielCode); return; }
+
   // Een link met een code gaat voor op de poule die je het laatst gebruikte:
   // wie zo'n link aanklikt wil naar díé poule, niet naar zijn vorige.
   const uitLink = codeUitLink();

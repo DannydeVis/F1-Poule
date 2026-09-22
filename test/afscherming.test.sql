@@ -28,10 +28,14 @@ insert into pools (id, name, join_code, is_public) values
   ('dddd1111-0000-0000-0000-000000000001', 'Poule van Dana', 'DANA01', false),
   ('eeee2222-0000-0000-0000-000000000002', 'Open poule',     'OPEN01', true);
 
-insert into pool_members (member_id, pool_id, display_name, user_id) values
+-- Dana heeft haar seizoen gedeeld: een code en een momentopname. Die twee
+-- kolommen horen niet leesbaar te zijn voor haar medespelers.
+insert into pool_members (member_id, pool_id, display_name, user_id,
+                          profiel_code, profiel) values
   ('dddd3333-0000-0000-0000-000000000001',
    'dddd1111-0000-0000-0000-000000000001', 'Dana',
-   'dddddddd-0000-0000-0000-000000000001');
+   'dddddddd-0000-0000-0000-000000000001',
+   'geheim01', '{"naam":"Dana","punten":1}'::jsonb);
 
 update pools set owner_member_id = 'dddd3333-0000-0000-0000-000000000001'
 where id = 'dddd1111-0000-0000-0000-000000000001';
@@ -134,6 +138,43 @@ begin
   -- want een joker verdubbelt wat iemand dat weekend scoorde.
   select count(*) into n from jokers;
   if n <> 1 then raise exception 'gezakt: Fred ziet de jokers van zijn poule niet'; end if;
+
+  -- Maar niet alles van een medespeler. profiel_code is de link naar iemands
+  -- publieke pagina, en die deel je zelf of niet. RLS werkt per rij en kan dat
+  -- onderscheid niet maken; een grant per kolom wel. (Dana heeft er bovenaan
+  -- dit bestand al een gekregen -- Fred kan die niet zelf zetten, en dat is
+  -- precies goed.)
+  begin
+    perform profiel_code from pool_members
+     where member_id = 'dddd3333-0000-0000-0000-000000000001';
+    raise exception 'gezakt: Fred kon de profielcode van Dana lezen';
+  exception when insufficient_privilege then
+    raise notice 'ok: de profielcode van een medespeler is niet te lezen';
+  end;
+  begin
+    perform profiel from pool_members;
+    raise exception 'gezakt: de momentopname van een medespeler was te lezen';
+  exception when insufficient_privilege then
+    raise notice 'ok: en de momentopname ook niet';
+  end;
+  -- De gewone kolommen wel, anders zou de spelerslijst niet meer werken.
+  select count(*) into n from pool_members
+   where pool_id = 'dddd1111-0000-0000-0000-000000000001' and display_name is not null;
+  if n <> 2 then raise exception 'gezakt: de namen van de medespelers zijn ook dicht'; end if;
+  raise notice 'ok: naam, id en account blijven gewoon leesbaar';
+
+  -- En de publieke pagina is wél op te vragen, maar alleen op zijn code en
+  -- alleen wat erin gepubliceerd is.
+  if public.publiek_profiel('geheim01') is null then
+    raise exception 'gezakt: een gepubliceerd profiel was niet op te halen';
+  end if;
+  if public.publiek_profiel('bestaatniet') is not null then
+    raise exception 'gezakt: een verzonnen code leverde toch een profiel op';
+  end if;
+  if public.publiek_profiel(null) is not null then
+    raise exception 'gezakt: zonder code kwam er toch een profiel uit';
+  end if;
+  raise notice 'ok: een publiek profiel komt alleen op zijn eigen code tevoorschijn';
   select count(*) into n from pool_members
    where pool_id = 'dddd1111-0000-0000-0000-000000000001';
   if n <> 2 then raise exception 'gezakt: Fred ziet % medespelers in plaats van 2', n; end if;
