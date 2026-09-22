@@ -157,6 +157,28 @@ await openRaceTab('Suzuka');
 check('en het scherm zegt dat je de enige was',
   (await tekst('#paneel')).includes('je was de enige'),
   (await tekst('#paneel')).slice(0, 250));
+
+// De vermenigvuldiger is het enige getal in deze app met een decimaal erin,
+// dus dit is de plek waar te zien is of het scheidingsteken bij de taal hoort.
+// "×1,8" leest in het Engels als achttien.
+await page.click('[data-weergave="profiel"]');
+await page.waitForSelector('[data-taal="en"]:not([disabled])');
+await page.click('[data-taal="en"]');
+await page.waitForSelector('[data-taal="nl"]:not([disabled])');
+await naarRaces();
+await openRaceTab('Suzuka');
+{
+  const engels = await tekst('#paneel');
+  check('in het Engels staat er ×1.8 met een punt', engels.includes('\u00d71.8'),
+    engels.match(/\u00d7[\d.,]+[^)]*\)/)?.[0] ?? engels.slice(0, 200));
+  check('en niet ×1,8 met een komma', !engels.includes('\u00d71,8'));
+  check('met de uitleg erbij, ook vertaald',
+    engels.includes('you were the only one'), engels.slice(0, 250));
+}
+await page.click('[data-weergave="profiel"]');
+await page.waitForSelector('[data-taal="nl"]:not([disabled])');
+await page.click('[data-taal="nl"]');
+await page.waitForSelector('[data-taal="en"]:not([disabled])');
 await naarRaces();
 
 // --- 2. iedereen hetzelfde: geen verschil --------------------------------

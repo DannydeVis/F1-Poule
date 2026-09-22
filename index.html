@@ -2598,6 +2598,32 @@ const ENGELS = Object.fromEntries([
    '{n} point'],
   ['demo',
    'demo'],
+
+  // ---- losse woorden die buiten de sjablonen stonden -----------
+  ['Zeker weten?',
+   'Are you sure?'],
+  ['zeker weten?',
+   'are you sure?'],
+  ['Bezig...',
+   'Working...'],
+  ['Terug naar het overzicht',
+   'Back to the overview'],
+  ['Vul een naam in',
+   'Enter a name'],
+  ['Kies minstens één vraag',
+   'Pick at least one question'],
+  ['handmatig ingevuld',
+   'filled in by hand'],
+  ['ja',
+   'yes'],
+  ['nee',
+   'no'],
+  ['u',
+   'h'],
+  ['d',
+   'd'],
+  ['m',
+   'm'],
 ]);
 
 const TAALSLEUTEL = 'poule:taal';
@@ -3324,7 +3350,7 @@ function contrairNoot(race, id, antwoord) {
     ? T('je was de enige')
     : T('{zelfde} van de {totaal} zeiden dit',
         { zelfde: zelfdeAntwoord, totaal: gegeven.length });
-  return ` · ×${keer.toFixed(1).replace('.', ',')} (${hoeveel})`;
+  return ` · ×${komma(keer)} (${hoeveel})`;
 }
 
 // De race waar de seizoensantwoorden aan hangen: ronde 1 van dit seizoen. Dat
@@ -3603,12 +3629,15 @@ function resterend(iso) {
 
 function klokTekst(iso, kort) {
   const r = resterend(iso);
-  if (!r) return kort ? 'gesloten' : `gesloten`;
+  if (!r) return T('gesloten');
   const eenheid = (getal, teken) => kort ? `${getal}${teken}` : `${getal}<i>${teken}</i>`;
+  // De letters zijn afkortingen van woorden, dus ze veranderen mee: een uur is
+  // een hour. d en m vallen toevallig samen.
+  const u = T('u');
   // Boven de twee dagen zijn losse uren onleesbaar; daaronder juist wel.
   return r.totaalUren >= 48
-    ? `${eenheid(r.dagen, 'd')} ${eenheid(r.uren, 'u')}`
-    : `${eenheid(r.totaalUren, 'u')} ${eenheid(r.minuten, 'm')}`;
+    ? `${eenheid(r.dagen, T('d'))} ${eenheid(r.uren, u)}`
+    : `${eenheid(r.totaalUren, u)} ${eenheid(r.minuten, T('m'))}`;
 }
 
 // Startlichten: hoe dichter de deadline, hoe meer lampjes branden.
@@ -3633,13 +3662,19 @@ function tikken() {
   tikker = setInterval(tikkenBij, 30000);
 }
 
+// De datumnotatie hoort bij de taal, niet bij de code: "za 14:00" in een
+// Engels scherm is net zo raar als "Sat 14:00" in een Nederlands scherm.
+// en-GB en niet en-US, want dit is een Europese sport op een 24-uursklok --
+// "2:00 pm" bij een kwalificatie zou niemand hier helpen.
+const streek = () => TAAL === 'en' ? 'en-GB' : 'nl-NL';
+
 const sluitTekst = (iso) => new Date(iso)
-  .toLocaleString('nl-NL', { weekday:'short', hour:'2-digit', minute:'2-digit' });
+  .toLocaleString(streek(), { weekday:'short', hour:'2-digit', minute:'2-digit' });
 
 // Een datum zonder tijd, voor regels waar het om de dag gaat en niet om het
 // uur ("sinds 19 september").
 const datumKort = (iso) => new Date(iso)
-  .toLocaleDateString('nl-NL', { day:'numeric', month:'long' });
+  .toLocaleDateString(streek(), { day:'numeric', month:'long' });
 
 // ============================================================
 //  Foutmeldingen
@@ -4986,7 +5021,10 @@ function coureurOveral(nr) {
   return drv({}, nr);
 }
 
-const komma = (n) => n.toFixed(1).replace('.', ',');
+// Eén cijfer achter de komma -- of achter de punt. "78,0" leest in het Engels
+// als achtenzeventigduizend, dus het scheidingsteken hoort bij de taal en niet
+// bij de code.
+const komma = (n) => TAAL === 'en' ? n.toFixed(1) : n.toFixed(1).replace('.', ',');
 
 // ---- je seizoen als lijn -------------------------------------
 // De stand zegt waar je nu staat, de pijltjes waar je vandaan komt sinds de
@@ -5545,10 +5583,10 @@ function knoopUitloggen() {
   knop.onclick = async () => {
     if (knop.dataset.zeker !== 'ja') {
       knop.dataset.zeker = 'ja';
-      knop.textContent = 'Zeker weten?';
+      knop.textContent = T('Zeker weten?');
       setTimeout(() => {
         if (!knop.isConnected) return;
-        knop.dataset.zeker = ''; knop.textContent = 'Uitloggen';
+        knop.dataset.zeker = ''; knop.textContent = T('Uitloggen');
       }, 6000);
       return;
     }
@@ -5595,7 +5633,7 @@ function knoopLosmaken() {
   app.querySelectorAll('[data-losmaken]').forEach(knop => knop.onclick = async () => {
     if (knop.dataset.zeker !== 'ja') {
       knop.dataset.zeker = 'ja';
-      knop.textContent = 'zeker weten?';
+      knop.textContent = T('zeker weten?');
       setTimeout(() => {
         if (!knop.isConnected) return;
         knop.dataset.zeker = ''; knop.textContent = 'losmaken';
@@ -6205,7 +6243,7 @@ function knoopOmschrijving() {
   bewaren.onclick = async () => {
     const tekst = schoon(veld.value);
     bewaren.disabled = true;
-    bewaren.textContent = 'Bezig...';
+    bewaren.textContent = T('Bezig...');
     try {
       // Leeg opslaan is de omschrijving weghalen, niet een lege regel bewaren:
       // anders staat er straks een leeg zinnetje onder de naam.
@@ -6586,7 +6624,7 @@ function knoopBeheer() {
   const claim = app.querySelector('#pouleClaimen');
   if (claim) claim.onclick = async () => {
     claim.disabled = true;
-    claim.textContent = 'Bezig...';
+    claim.textContent = T('Bezig...');
     // Alleen zetten als er nog geen poulebaas is: twee mensen die tegelijk op
     // deze knop drukken mogen niet allebei winnen. Zie ook §7 van
     // BEDIENING.md — de database dwingt dit nog niet zelf af.
@@ -6608,7 +6646,7 @@ function knoopBeheer() {
   if (bewaren) bewaren.onclick = async () => {
     if (!S.beheer) { S.melding = T('Er was niets veranderd.'); render(); return; }
     bewaren.disabled = true;
-    bewaren.textContent = 'Bezig...';
+    bewaren.textContent = T('Bezig...');
     try {
       await vragenBewaren(S.beheer);
       S.beheer = null; S.beheerFout = '';
@@ -6679,7 +6717,7 @@ function raceDetailKop() {
   const nogOpen = Date.now() < new Date(iso).getTime();
   return `
     <div class="detailkop">
-      <button class="terug" id="terug" aria-label="Terug naar het overzicht">←</button>
+      <button class="terug" id="terug" aria-label="${T('Terug naar het overzicht')}">←</button>
       <span class="dtitel">${esc(r.name)}</span>
       ${nogOpen
         ? `<span class="mono groen" data-tot="${esc(iso)}" data-kort="1">${klokTekst(iso, true)}</span>`
@@ -6965,7 +7003,7 @@ function invulWeergave(paneel, r, dicht) {
         // er niets meer terug te zetten.
         if (!wis.isConnected) return;
         wis.dataset.zeker = '';
-        wis.textContent = 'Wis alles';
+        wis.textContent = T('Wis alles');
         wis.classList.remove('zeker');
       }, 5000);
       return;
@@ -7291,7 +7329,7 @@ function coureurUitslag(r, mijn, id) {
   return `
     <span class="label">${T('{wat} · {n} punten', { wat: esc(T(v.label)), n: punten })}${
       esc(contrairNoot(r, id, gekozen))}${
-      r[v.vlag] ? ' · handmatig ingevuld' : ''}</span>
+      r[v.vlag] ? ` · ${T('handmatig ingevuld')}` : ''}</span>
     <div class="sr" style="border-left-color:${esc(d.kleur)}">
       <span class="pos">${v.letter}</span>
       <span class="code">${esc(d.code)}</span>
@@ -7316,12 +7354,13 @@ function extraUitslag(r, mijn, id) {
   return `
     <span class="label">${T('{wat} · {n} punten', { wat: esc(T(v.label)), n: punten })}${
       esc(contrairNoot(r, id, gekozen))}${
-      r[v.vlag] ? ' · handmatig ingevuld' : ''}</span>
+      r[v.vlag] ? ` · ${T('handmatig ingevuld')}` : ''}</span>
     <div class="sr">
       <span class="pos">${v.letter}</span>
-      <span class="code">${esc(String(v.soort === 'getal' ? gekozen : (gekozen ? 'ja' : 'nee')))}</span>
+      <span class="code">${esc(String(v.soort === 'getal' ? gekozen
+        : (gekozen ? T('ja') : T('nee'))))}</span>
       <span class="werd">${zelfde(gekozen, werkelijk)
-        ? 'precies goed'
+        ? T('precies goed')
         : T('het werd {wat}', { wat: esc(String(v.toon(werkelijk))) })}</span>
       <span class="pts ${zelfde(gekozen, werkelijk) ? 'v5' : gescoord ? 'v3' : 'v0'}">${gescoord}</span>
     </div>`;
@@ -7724,7 +7763,7 @@ function kiesSpeler() {
 
   app.querySelector('#maak').onclick = async () => {
     const naam = app.querySelector('#naam').value.trim();
-    if (!naam) { app.querySelector('#f').textContent = 'Vul een naam in'; return; }
+    if (!naam) { app.querySelector('#f').textContent = T('Vul een naam in'); return; }
 
     // Bestaat die naam al in deze poule, dan is dit dezelfde persoon op een
     // ander toestel. Een tweede speler aanmaken zou hem zijn voorspellingen
@@ -7922,7 +7961,7 @@ function maakKnoppen(m) {
       if (!m.speler.trim()) { fout(T('Vul je eigen naam in')); return; }
       m.stap = 3; m.fout = ''; render(); return;
     }
-    if (!m.vragen.length) { fout('Kies minstens één vraag'); return; }
+    if (!m.vragen.length) { fout(T('Kies minstens één vraag')); return; }
     m.bezig = true; m.fout = ''; render();
     try { await pouleAanmaken(m); }
     catch (e) { m.bezig = false; fout(e.message); return; }

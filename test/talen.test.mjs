@@ -76,6 +76,9 @@ check('elke {plaatshouder} komt in beide talen voor',
 const MAG_GELIJK = new Set([
   'Races', 'races', 'Race', 'race', 'Sprint', 'sprint', 'demo',
   'Pole position', 'pole', 'safety cars', 'jokers', 'top 10', '{wie} won',
+  // De afkortingen op de aftelklok. "u" wordt "h", maar dag en minuut
+  // beginnen in beide talen met dezelfde letter.
+  'd', 'm',
 ]);
 const zelfde = paren.filter(([nl, en]) => nl === en).map(([nl]) => nl);
 check('alleen woorden die in beide talen hetzelfde zijn, staan er gelijk in',
@@ -191,6 +194,29 @@ await page.waitForSelector('#paneel');
 const paneel = await tekst(page, '#paneel');
 check('en het invulscherm van een race', /Save|Clear everything|tap to pick/i.test(paneel),
   paneel.slice(0, 110));
+
+// --- 4b. de klok en de kalender horen ook bij de taal ---------------------
+// Dit is de fout die je maakt als je alleen de zinnen vertaalt: "za 14:00" in
+// een Engels scherm is net zo raar als "Sat 14:00" in een Nederlands scherm.
+//
+// Het decimaalteken hoort in dezelfde categorie ("78,0" leest in het Engels
+// als achtenzeventigduizend), maar op deze schermen staat geen enkel getal met
+// een decimaal. Die controle staat daarom in contrair.test.mjs, bij de ×1,8
+// die daar wél op het scherm komt -- een controle op een scherm zonder
+// decimalen zou altijd slagen en niets bewaken.
+{
+  // De aftelklok in de racelijst: "3d 4h" en niet "3d 4u".
+  const klok = await page.$$eval('[data-tot]', (n) => n.map((e) => e.textContent.trim()));
+  check('de aftelklok telt in h en niet in u',
+    klok.length > 0 && klok.every((t) => !/\du\b/.test(t)), klok.slice(0, 3).join(' | '));
+
+  // De deadline onder een race staat als "closes Sat 14:00".
+  const dagen = await page.evaluate(() =>
+    document.querySelector('#app').textContent.replace(/\s+/g, ' '));
+  check('en de weekdag staat in het Engels',
+    !/\b(ma|di|wo|do|vr|za|zo) \d\d:/.test(dagen),
+    dagen.match(/.{0,14}(ma|di|wo|do|vr|za|zo) \d\d:.{0,10}/)?.[0] ?? '');
+}
 
 // --- 5. terug naar Nederlands, van binnenuit ------------------------------
 // Niet via de knop op het beginscherm maar via het profielscherm: wie al in

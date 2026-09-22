@@ -4585,6 +4585,26 @@ Engels. Kies je zelf — de knop rechtsboven op het beginscherm, of het blok
 Twee plekken voor één knop, en dat is geen slordigheid: wie eenmaal in een
 poule zit ziet het beginscherm nooit meer.
 
+### Getallen en datums zijn ook tekst
+
+De valkuil bij een vertaling is dat je alleen de zinnen ziet. Drie dingen
+staan er op het scherm die geen zin zijn en toch bij de taal horen:
+
+- **Het decimaalteken.** `komma()` gaf altijd `78,0`, en dat leest in het
+  Engels als achtenzeventigduizend. Nu hangt het scheidingsteken aan `TAAL`.
+  De enige plek waar een decimaal op het scherm komt is de
+  contrair-vermenigvuldiger, en daar staat de controle dan ook:
+  `contrair.test.mjs` kijkt of er `×1.8` staat en niet `×1,8`. Een controle op
+  een scherm zonder decimalen zou altijd slagen en niets bewaken.
+- **De datumnotatie.** `sluitTekst()` en `datumKort()` stonden vast op
+  `nl-NL`. Nu kiest `streek()` de locale. Bewust `en-GB` en niet `en-US`: dit
+  is een Europese sport op een 24-uursklok, en "2:00 pm" bij een kwalificatie
+  helpt hier niemand.
+- **De afkortingen op de aftelklok.** `3d 4u` is Nederlands; een uur is een
+  hour. `d` en `m` vallen toevallig samen, en daarom staan ze in
+  `test/talen.test.mjs` in de lijst van zinnen die in beide talen hetzelfde
+  mogen zijn — anders zou de controle op kopieerfouten erover struikelen.
+
 ### De melding op je telefoon is de uitzondering
 
 Eén stuk tekst kan niet uit `ENGELS` komen: de push-herinnering. Die wordt
@@ -4644,4 +4664,11 @@ het sjabloon staat.
 
 Beide controles zijn nagelopen op of ze ook echt afgaan: met een dubbele
 sleutel erin valt de eerste om, en met één `T()` weggehaald noemt de tweede de
-regel en de zin.
+regel en de zin. Hetzelfde geldt voor de klok en de kalender: met `streek()`
+weer vastgezet op `nl-NL` zakken de twee controles die daarover gaan.
+
+Waar die sweep niet komt is een tekenreeks die nergens tussen twee tags staat
+— `knop.textContent = 'Bezig...'` bijvoorbeeld. Die zijn met een aparte
+leesronde over álle string-literals opgespoord, met de hand nagelopen en
+gerepareerd. Dat is geen controle die in een test past: hij levert een paar
+honderd regels op waarvan de meeste CSS-klassen en element-id's zijn.
