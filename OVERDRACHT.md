@@ -4585,13 +4585,36 @@ Engels. Kies je zelf — de knop rechtsboven op het beginscherm, of het blok
 Twee plekken voor één knop, en dat is geen slordigheid: wie eenmaal in een
 poule zit ziet het beginscherm nooit meer.
 
+### De melding op je telefoon is de uitzondering
+
+Eén stuk tekst kan niet uit `ENGELS` komen: de push-herinnering. Die wordt
+opgesteld door `scripts/herinneringen.mjs` in een GitHub-runner, en daar is
+geen browser, geen `TAAL` en geen localStorage. De enige plek waar de keuze
+dan kan staan is de database, dus staat er een kolom `taal` op
+`push_abonnementen`.
+
+Per abonnement en niet per speler, want een abonnement is een toestel: je
+telefoon op Engels en je laptop op Nederlands is een gewoon geval, en de twee
+rijen weten het elk voor zichzelf.
+
+`pushAanzetten()` schrijft `TAAL` mee bij het aanmelden, en `zetTaal()` roept
+`pushTaalBijwerken()` aan — bewust zonder `await` en zonder foutmelding. Van
+taal wisselen mag nooit blijven hangen op een netwerkverzoek, en het ergste
+wat er misgaat is één herinnering in de vorige taal.
+
+De woordenlijst aan die kant is geen tweede kopie van `ENGELS` maar zeven
+zinnen in `WOORDEN`, want daar gaat de hele melding over. Alles wat geen `'en'`
+is valt terug op Nederlands, dus een abonnement uit de tijd vóór deze kolom
+werkt gewoon door.
+
 ### Wat er níét vertaald is, met reden
 
 - **De code zelf.** Functienamen, variabelen en commentaar blijven Nederlands.
   Dat is de taal waarin over deze app nagedacht is; het vertalen zou de code
   veranderen zonder dat één gebruiker er iets van merkt.
 - **Wat uit de database komt.** Poulenamen typt iemand zelf in, racenamen komen
-  van OpenF1. Die staan er zoals ze er staan.
+  van OpenF1. Die staan er zoals ze er staan — ook in de melding: daar staat
+  "Suzuka: qualifying closes in 2 hours".
 - **De merknaam en de twee taalnamen.** "RacePicks" blijft RacePicks, en de
   knoppen "Nederlands" en "English" staan met opzet elk in hun eigen taal —
   anders kan wie de verkeerde taal te zien krijgt de juiste niet herkennen.

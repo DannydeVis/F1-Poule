@@ -134,6 +134,48 @@ begin
   end;
 end $$;
 
+-- 11. In welke taal een herinnering aankomt.
+--
+--     De app vertaalt zichzelf in de browser, maar een push wordt verstuurd
+--     door scripts/sync.mjs in een GitHub-runner. Die heeft geen browser en
+--     kan de taal dus nergens anders vandaan halen dan uit deze kolom. Staat
+--     de standaardwaarde verkeerd, dan krijgt iedereen die de app in het
+--     Engels gebruikt zijn meldingen in het Nederlands -- en dat zie je pas
+--     op iemands telefoon.
+do $$
+declare poule uuid; lid uuid; gevonden text;
+begin
+  select id into poule from pools limit 1;
+  select member_id into lid from pool_members where pool_id = poule limit 1;
+
+  insert into push_abonnementen (endpoint, member_id, pool_id, p256dh, auth)
+  values ('https://push.voorbeeld/zonder', lid, poule, 'p', 'a');
+  select taal into gevonden from push_abonnementen
+   where endpoint = 'https://push.voorbeeld/zonder';
+  if gevonden is distinct from 'nl' then
+    raise exception 'gezakt: een abonnement zonder taal kreeg % in plaats van nl', gevonden;
+  end if;
+  raise notice 'ok: zonder opgave staat een abonnement op Nederlands';
+
+  insert into push_abonnementen (endpoint, member_id, pool_id, p256dh, auth, taal)
+  values ('https://push.voorbeeld/engels', lid, poule, 'p', 'a', 'en');
+  select taal into gevonden from push_abonnementen
+   where endpoint = 'https://push.voorbeeld/engels';
+  if gevonden is distinct from 'en' then
+    raise exception 'gezakt: de opgegeven taal werd niet bewaard (%)', gevonden;
+  end if;
+  raise notice 'ok: een abonnement kan op Engels staan';
+
+  -- Twee toestellen van dezelfde speler mogen elk hun eigen taal hebben: de
+  -- telefoon op Engels en de laptop op Nederlands is een gewoon geval.
+  if (select count(distinct taal) from push_abonnementen where member_id = lid) <> 2 then
+    raise exception 'gezakt: twee toestellen van één speler delen hun taal';
+  end if;
+  raise notice 'ok: twee toestellen van één speler hebben elk hun eigen taal';
+
+  delete from push_abonnementen where member_id = lid;
+end $$;
+
 -- Beschadig de tabel voor de hersteltest: dubbele rij, geen unieke sleutel.
 alter table predictions drop constraint predictions_uniek;
 alter table predictions disable trigger predictions_deadline;

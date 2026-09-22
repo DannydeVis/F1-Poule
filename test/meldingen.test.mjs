@@ -103,4 +103,72 @@ const METSLEUTEL = (bron) => bron.replace(
   await stoppen();
 }
 
+// ---- aanzetten levert een rij op, in de taal van dit scherm --------------
+// Een echte pushManager.subscribe() kan niet in een testbrowser: daar hoort
+// een pushdienst aan te pas te komen. Wat hier nagebootst wordt is dus precies
+// die dienst, en niet de app — de app doorloopt gewoon zijn eigen weg.
+//
+// Wat er te controleren valt is wat de sync straks leest. Die draait in een
+// GitHub-runner zonder browser en kan de taal nergens anders vandaan halen dan
+// uit deze rij, dus als hij hier niet in staat komt elke melding in het
+// Nederlands aan, ook bij wie de app in het Engels gebruikt.
+{
+  const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
+  const pad = join(process.env.TMPDIR ?? '/tmp', `poule-push3-${process.pid}.html`);
+  const { writeFileSync } = await import('node:fs');
+  writeFileSync(pad, METSLEUTEL(bron));
+
+  const { page, jsFouten, stoppen } = await startPagina({ indexPad: pad });
+  await page.addInitScript(() => {
+    Object.defineProperty(Notification, 'permission', { get: () => 'granted' });
+    Notification.requestPermission = async () => 'granted';
+    const ab = {
+      endpoint: 'https://push.voorbeeld/abc',
+      toJSON: () => ({ endpoint: 'https://push.voorbeeld/abc',
+                       keys: { p256dh: 'p256', auth: 'auth' } }),
+      unsubscribe: async () => true,
+    };
+    let aangemeld = null;
+    const reg = {
+      pushManager: {
+        subscribe: async () => { aangemeld = ab; return ab; },
+        getSubscription: async () => aangemeld,
+      },
+    };
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      get: () => ({ register: async () => reg, ready: Promise.resolve(reg),
+                    getRegistration: async () => reg }),
+    });
+  });
+  await page.reload();
+  await meedoen(page);
+  await page.click('[data-weergave="profiel"]');
+  await page.waitForSelector('#meldingAan');
+  await page.click('#meldingAan');
+  await page.waitForSelector('#meldingUit');
+
+  const rijen = () => page.evaluate(() => globalThis.__db.push_abonnementen);
+  const na = await rijen();
+  check('aanzetten schrijft één abonnement weg', na.length === 1, JSON.stringify(na));
+  check('met het endpoint, de sleutels en de speler erbij',
+    na[0]?.endpoint === 'https://push.voorbeeld/abc' && na[0]?.p256dh === 'p256'
+      && !!na[0]?.member_id && !!na[0]?.pool_id, JSON.stringify(na[0]));
+  check('en met de taal van dit scherm erbij', na[0]?.taal === 'nl', na[0]?.taal);
+
+  // Van taal wisselen terwijl de meldingen aanstaan. De sync hoort daarna de
+  // nieuwe taal te lezen, anders blijft de melding in het Nederlands komen.
+  await page.click('[data-taal="en"]');
+  await page.waitForFunction(
+    () => globalThis.__db.push_abonnementen[0]?.taal === 'en', null, { timeout: 5000 })
+    .catch(() => {});
+  const naWissel = await rijen();
+  check('van taal wisselen werkt het abonnement bij', naWissel[0]?.taal === 'en',
+    JSON.stringify(naWissel[0]));
+  check('en er komt geen tweede rij bij', naWissel.length === 1);
+
+  check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
+  await stoppen();
+}
+
 process.exit(afronden() ? 0 : 1);

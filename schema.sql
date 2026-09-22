@@ -160,7 +160,12 @@ create table if not exists public.push_abonnementen (
   -- Waar de laatste melding over ging. Voorkomt dat de sync elk uur opnieuw
   -- dezelfde herinnering stuurt: hij schrijft hier wat hij verstuurde en slaat
   -- het de volgende ronde over.
-  laatst     text
+  laatst     text,
+  -- In welke taal de melding moet. De app vertaalt zichzelf in de browser,
+  -- maar een push komt uit scripts/sync.mjs en die heeft geen browser -- dus
+  -- moet de keuze hier staan. Per abonnement en niet per speler: dezelfde
+  -- persoon kan zijn telefoon op Engels en zijn laptop op Nederlands hebben.
+  taal       text not null default 'nl'
 );
 
 -- ------------------------------------------------------------
@@ -284,6 +289,8 @@ alter table public.races        add column if not exists safety_cars            
 alter table public.races        add column if not exists rode_vlag                 boolean;
 alter table public.races        add column if not exists safety_cars_handmatig     boolean not null default false;
 alter table public.races        add column if not exists rode_vlag_handmatig       boolean not null default false;
+
+alter table public.push_abonnementen add column if not exists taal text not null default 'nl';
 
 alter table public.predictions  add column if not exists quali_top10 text[];
 alter table public.predictions  add column if not exists race_top10  text[];
