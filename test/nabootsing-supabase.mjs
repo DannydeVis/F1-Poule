@@ -593,8 +593,15 @@ const functies = {
       (p_code && gelijk(String(p.join_code).toUpperCase(), String(p_code).toUpperCase()))
       || (p_id && gelijk(p.id, p_id)));
     if (!poule) return { data: null, error: null };
+    // profiel_code en profiel alleen voor je eigen speler, net als in
+    // schema.sql: die van je medespelers gaan je niet aan.
+    const ik = wieBenIk();
     const leden = store.pool_members.filter((m) => gelijk(m.pool_id, poule.id))
-      .map(({ member_id, display_name, user_id }) => ({ member_id, display_name, user_id }));
+      .map((m) => ({
+        member_id: m.member_id, display_name: m.display_name, user_id: m.user_id,
+        profiel_code: m.user_id && gelijk(m.user_id, ik) ? m.profiel_code ?? null : null,
+        profiel: m.user_id && gelijk(m.user_id, ik) ? m.profiel ?? null : null,
+      }));
     return { data: {
       poule: kopie(poule),
       leden: kopie(leden),
@@ -604,6 +611,11 @@ const functies = {
       jokers: (store.jokers ?? []).filter((j) => gelijk(j.pool_id, poule.id))
         .map(({ race_id, member_id }) => ({ race_id, member_id })),
     }, error: null };
+  },
+
+  publiek_profiel({ p_code } = {}) {
+    const lid = store.pool_members.find((m) => p_code && m.profiel_code === p_code && m.profiel);
+    return { data: lid ? kopie(lid.profiel) : null, error: null };
   },
 
   poule_meedoen({ p_pool, p_naam } = {}) {

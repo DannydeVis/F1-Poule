@@ -560,7 +560,7 @@ hier omdat ze duur zijn, niet omdat ze slecht zijn.
 | | wat het is | wat het echt kost |
 |---|---|---|
 | ~~**Vorige seizoenen**~~ | *gebouwd, zie hieronder* | |
-| **Publieke profielen** | je statistieken op een eigen pagina | kan pas ná fase 0. Nu is álles publiek leesbaar, dus "publiek profiel" zou niets toevoegen behalve een url |
+| ~~**Publieke profielen**~~ | *gebouwd, zie hieronder* | |
 | ~~**Push-herinneringen**~~ | *gebouwd, zie hieronder* | |
 | **Internationale talen** | de app in het Engels | het grootste van deze vijf, en niet omdat er veel tekst is. De hele app is Nederlands tot in de functienamen en de commentaren; de tekst zit niet in een sleutel-waardelijst maar in de HTML-sjablonen. Dat is een vertaalslag én een verbouwing |
 | **Andere raceklassen** | F2, F3, MotoGP | vastgelopen op de data, niet op de app. De hele sync hangt aan OpenF1, en dat is F1-only. Een andere klasse betekent een tweede databron met een eigen vorm, en daar staat `scripts/sync.mjs` nu niet op ingericht |
@@ -580,9 +580,9 @@ geen tekort aan tijd:
   er al (elke race draagt zijn `season`, elk antwoord hangt aan een race) en
   het enige wat een vorig seizoen onzichtbaar maakte was de filter bij het
   ophalen. Zie "Terugbladeren" hieronder.
-- **Publieke profielen** is technisch pas mogelijk sinds fase 0 — maar het zou
-  juist de deur weer openzetten die fase 0 dichtdeed. En de standpagina toont
-  binnen een poule al alles wat zo'n profiel zou zeggen.
+- ~~**Publieke profielen**~~ is gebouwd, en juist niet op de manier die de
+  deur weer zou openzetten: er gaat geen leesrecht open. Zie "Je seizoen delen"
+  hieronder.
 - ~~**Push-herinneringen**~~ is gebouwd, en het bezwaar is opgelost in plaats
   van genegeerd: `sw.js` heeft geen `fetch`-handler en cachet niets, dus hij
   kan geen oude stand tonen alsof hij klopt. Zie "Een seintje op je telefoon"
@@ -594,10 +594,38 @@ geen tekort aan tijd:
   OpenF1, en dat is F1-only. Dat is een feit over de buitenwereld, geen
   keuze in deze repo.
 
-Wat overblijft: publieke profielen en internationale talen gaan allebei tegen
-een beslissing in die eerder met reden genomen is, en andere raceklassen kan
-niet. Ze staan hier zodat de volgende die dit leest niet opnieuw hoeft uit te
-zoeken waarom ze er niet zijn.
+Wat overblijft: internationale talen gaat tegen een beslissing in die eerder
+met reden genomen is, en andere raceklassen kan niet. Ze staan hier zodat de
+volgende die dit leest niet opnieuw hoeft uit te zoeken waarom ze er niet zijn.
+
+### Je seizoen delen
+
+Het bezwaar tegen een publiek profiel was dat het de deur weer openzet die
+fase 0 dichtdeed. Dus werkt het andersom: **er gaat geen enkel leesrecht open.**
+
+Je eigen app rekent je cijfers uit — met exact dezelfde functies die de stand
+tekenen — en legt dat als één blokje jsonb op je eigen spelersrij. De publieke
+pagina leest alleen dat blokje, via `publiek_profiel(code)`: een `security
+definer`-functie die niets anders kán teruggeven. Geen naam uit
+`pool_members`, geen poule, geen medespelers, geen antwoorden.
+
+Dat lost meteen het tweede probleem op: er is nog steeds maar één plek waar de
+punten uitgerekend worden. Een profielpagina die de score in PL/pgSQL nabouwt
+zou binnen een half jaar iets anders zeggen dan de stand.
+
+Drie dingen om te weten:
+
+- **Wat erin gaat is karig, en met opzet.** Je naam, je punten, je plek, "van 6
+  spelers", je beste weekend en hoe vaak je een coureur precies goed zette. Niet
+  hoe de poule heet, niet wie erin zitten. Dat is van hen, niet van jou.
+- **`pool_members` heeft nu een kolomgrens.** `profiel_code` is de link naar je
+  pagina, en die deel je zelf of niet — ook niet met je medespelers. RLS werkt
+  per rij en kan dat onderscheid niet maken; `grant select (kolom, …)` wel. Je
+  eigen code krijg je gewoon te zien, want `poule_ophalen()` geeft hem mee en
+  die functie gaat als `security definer` langs de grants heen.
+- **De pagina is zo vers als jouw laatste bezoek.** De momentopname wordt
+  bijgewerkt als je de app opent en er iets veranderd is, hooguit één keer per
+  minuut. Dat staat er ook op ("bijgewerkt 3 okt").
 
 ### Een seintje op je telefoon
 
@@ -782,11 +810,11 @@ Drie dingen om te weten als je hier verder bouwt:
 | ~~2~~ | ~~racescherm wordt dashboard~~ — **gebouwd** | grootste winst per uur werk, data is er al |
 | ~~3~~ | ~~positiewijziging, reeksen, grafiek~~ — **gebouwd**; recap en profielstatistieken bewust niet, zie `OVERDRACHT.md` | rekenwerk over wat er al ligt |
 | ~~4~~ | ~~toegankelijkheid, offlinescherm~~ — **gebouwd**; opsplitsen nagemeten en niet gedaan | onderhoud, als er geen haast is |
-| 5 | ~~vorige seizoenen~~ en ~~push~~ — **gebouwd**; talen, andere klassen, publieke profielen bewust niet | twee gaan tegen een eerdere beslissing in, één kan niet (OpenF1 is F1-only) |
+| 5 | ~~vorige seizoenen~~, ~~push~~ en ~~publieke profielen~~ — **gebouwd**; talen en andere klassen bewust niet | talen gaat tegen een eerdere beslissing in, andere klassen kan niet (OpenF1 is F1-only) |
 
-Fase 0 tot en met 4 zijn gebouwd, en uit fase 5 "vorige seizoenen" en
-"push-herinneringen". De drie die overblijven staan er nog, maar niet als "nog
-niet aan toegekomen" — zie de redenen hierboven.
+Fase 0 tot en met 4 zijn gebouwd, en uit fase 5 "vorige seizoenen",
+"push-herinneringen" en "publieke profielen". De twee die overblijven staan er
+nog, maar niet als "nog niet aan toegekomen" — zie de redenen hierboven.
 
 Groep 4 is leeg: ~~sprintweekenden~~, ~~jokers~~, ~~seizoenslaag~~ en de
 ~~contrair-multiplier~~ zijn alle vier gebouwd.

@@ -24,6 +24,7 @@ je eigen computer.
 | `uitslagen.test.mjs` | De vier losse uitslagen uit de gegevens van OpenF1: vooral welke berichten van de wedstrijdleiding wél en niet een safety car zijn |
 | `duel-weergave.test.mjs` | Dat "jij" vaststaat aan je eigen cijfer in het onderlinge duel, en niet aan dat van de tegenstander |
 | `poules-en-omschrijving.test.mjs` | De omschrijving van een poule, en meer dan één poule op hetzelfde toestel: wisselen zonder de code, en een poule die weg is |
+| `publiek-profiel.test.mjs` | Je seizoen delen: dat de cijfers kloppen met de stand, en vooral dat er geen poulenaam, poulecode of medespeler op de gedeelde pagina staat |
 | `contrair.test.mjs` | Punten schalen met hoe zeldzaam je antwoord was: de formule uit ROUTEKAART.md nagerekend op een poule van vier, en dat de top 10 erbuiten blijft |
 | `push.test.mjs` | Het rekenwerk van web push, nagerekend tegen de testvectoren uit RFC 8291 en 8292. Draait zonder browser |
 | `herinneringen.test.mjs` | Wie er een seintje krijgt voor een deadline en vooral wie niet: hooguit één per toestel, niet twee keer dezelfde, en niet als je al invulde |

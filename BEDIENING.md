@@ -927,6 +927,30 @@ controleert dat ook echt: staat er ooit een fetch-handler in, dan zakt de test.
 
 ---
 
+## 11d. Je seizoen delen buiten de poule
+
+Onder **Profiel** staat "je seizoen delen". Zet je dat aan, dan krijg je een
+link naar een pagina met jouw cijfers: je punten, je plek, hoeveel races er
+gereden zijn, je beste weekend, en hoe vaak je een coureur precies goed zette.
+
+**Wat er níét op staat:** de naam van je poule, wie er meedoen, wat iemand
+heeft ingevuld, of de poulecode. Er staat "1e van 6" — niet wie die vijf
+anderen zijn. Wie de link opent kan van daaruit ook nergens je poule in; de
+enige knop is "Zelf een poule beginnen".
+
+Drie dingen om te weten:
+
+- **De link is van jou.** Ook je medespelers kunnen hem niet opzoeken; de
+  database geeft die kolom niet vrij. Deel je hem, dan kan iedereen met die
+  link de pagina zien, dus deel hem zoals je een foto deelt.
+- **De pagina is zo vers als jouw laatste bezoek.** Hij wordt bijgewerkt als jij
+  de app opent en er iets veranderd is. De datum staat er onderaan bij.
+- **Weghalen is echt weghalen.** "Haal de pagina weg" wist de code en de
+  cijfers; de link geeft daarna "deze pagina bestaat niet". Een nieuwe pagina
+  krijgt een nieuwe code, dus de oude link komt nooit meer ergens uit.
+
+---
+
 ## 12. Wat de app van je weet
 
 Onder **Profiel** staat een dichtgeklapt blok "wat de app van je weet". Daarin
@@ -940,6 +964,9 @@ Wat de verklaring zegt, en waarom het waar is:
   account: een willekeurig nummer.
 - **Je mailadres alleen als je het zelf koppelt.** Zonder koppeling staat er
   geen mailadres.
+- **Een momentopname van je cijfers als je je seizoen deelt** (§11d): je naam,
+  je punten, je plek en je beste weekend. Alleen als je het zelf aanzet, en weg
+  zodra je het weer uitzet.
 - **Eén regel per toestel als je meldingen aanzet** (§11c): het adres waar de
   pushdienst een melding naartoe kan sturen plus twee sleutels van dat toestel.
   Geen naam, geen mailadres, en weg zodra je ze weer uitzet. Die regel staat
