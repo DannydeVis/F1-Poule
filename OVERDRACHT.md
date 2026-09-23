@@ -5540,3 +5540,66 @@ nagaat, naast de drie hoofduitkomsten.
 De tabel gaat hier niet weg. Dat blijft een beslissing voor wie de database
 bezit, niet voor `schema.sql`. Wat er wel is, is het antwoord dat je nodig
 hebt om die beslissing in één minuut te nemen.
+
+---
+
+## Een afgekapte naam was nergens meer te lezen
+
+In de schermafdrukken stond de poulenaam als `VRIJDAGMIDDAGPOU…`. Dat is op
+zichzelf goed — afkappen met een ellipsis is beter dan een kop die over drie
+regels uitloopt — maar alleen als je hem ergens kunt nalezen. Dat kon niet.
+
+Eerst gemeten, met lange namen in de nabootsing, over alle vier de schermen:
+
+```
+--- races:
+    GEEN span.nm     "Danny van der Meulen-Hoogendoorn"
+    GEEN span.ptitel "Vrijdagmiddagpoule met de collega's van ..."
+--- stand / poule / profiel: hetzelfde beeld
+```
+
+Dertien plekken in de opmaak kappen af, en op elk scherm raakte zowel de
+poulenaam als de spelersnaam onleesbaar. Bij vrienden met een dubbele
+achternaam gebeurt dat meteen, en dan staat er iemand in de stand van wie je
+niet kunt zien wie het is.
+
+### Waarom dit niet bij het tekenen kan
+
+De voor de hand liggende oplossing is een `title` meegeven in de sjablonen.
+Dat is achttien plekken werk, en het klopt niet: **afkappen hangt van de
+breedte af, niet alleen van de tekst.** Een naam die op 1280 past wordt op 900
+afgekapt, en andersom. Een title die bij het tekenen gezet wordt is dus óf
+altijd aanwezig — ook op een naam die prima past, en dan is het een tooltip
+die herhaalt wat je al leest — óf verkeerd zodra iemand zijn venster
+versleept.
+
+Dus wordt het gemeten: `titelsBijAfkappen()` zet een `title` als
+`scrollWidth > clientWidth`, en haalt hem weer weg als hij niet meer nodig is.
+Aan dezelfde `MutationObserver` als de omroep en het focusherstel, plus een
+`resize`-luisteraar, want bij een maatverandering verandert de DOM niet en
+vuurt die waarnemer dus niet.
+
+Kosten nagemeten: acht elementen, 0,032 ms per ronde. Het lezen van
+`scrollWidth` dwingt een herberekening van de opmaak af, dus dat was de moeite
+van het meten waard voordat het in een waarnemer terechtkwam.
+
+Let op bij wijzigen: die waarnemer kijkt naar `childList`, `subtree` en
+`characterData` en **niet** naar attributen. Daarom roept het zetten van een
+`title` hem niet opnieuw aan. Zet daar ooit `attributes: true` bij, dan is dit
+een oneindige lus.
+
+### Het "jij" hoorde er niet in
+
+In de stand zit het label "jij" ín de naamregel. `textContent` levert dan
+"Danny van der Meulen-Hoogendoorn de Vries jij" op, en een tooltip die dat
+zegt leest als een fout. `eigenTekst()` neemt daarom alleen de losse
+tekstknopen van het element zelf, en valt terug op het geheel als de hele
+tekst in een kind zit.
+
+### Nagemeten
+
+`test/lange-namen.test.mjs`, tien checks, en alle drie de onderdelen zijn
+eruit gesloopt om te zien dat de bijbehorende check zakt: zonder de titels,
+zonder het opruimen bij breder worden, en zonder het weglaten van het label.
+Plus de tegenkant: een naam die past — een racenaam uit OpenF1 — hoort juist
+geen tooltip te krijgen.
