@@ -36,15 +36,23 @@ begin
   end if;
   raise notice 'ok: de bestaande primaire sleutel is niet aangetast';
 
-  -- 3. de foreign key die eerst 42830 gaf, ligt er nu wel
+  -- 3. de foreign key die eerst 42830 gaf, ligt er nu wel.
+  --    Stond eerst op predictions; die tabel is weg, maar answers wijst naar
+  --    dezelfde kolom en liep dus tegen dezelfde 42830 aan.
   if not exists (
     select 1 from pg_constraint
-    where conrelid = 'public.predictions'::regclass
-      and conname  = 'predictions_member_fk'
+    where conrelid = 'public.answers'::regclass
+      and conname  = 'answers_member_fk'
   ) then
-    raise exception 'gezakt: predictions_member_fk ontbreekt';
+    raise exception 'gezakt: answers_member_fk ontbreekt';
   end if;
-  raise notice 'ok: foreign key van predictions naar pool_members ligt er';
+  raise notice 'ok: foreign key van answers naar pool_members ligt er';
+
+  -- 3b. en de oude tabel is meegenomen, ook vanuit deze structuur.
+  if to_regclass('public.predictions') is not null then
+    raise exception 'gezakt: predictions staat er nog na een run op een oude structuur';
+  end if;
+  raise notice 'ok: de oude predictions-tabel is ook hier opgeruimd';
 
   -- 4. de gegevens die er al stonden zijn er nog
   select count(*) into n from public.pool_members;

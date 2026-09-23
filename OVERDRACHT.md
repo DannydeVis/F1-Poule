@@ -3602,9 +3602,9 @@ laten staan. Vandaar een eigen bestand.
 
 ### Wat weg gaat en wat niet
 
-Weg: poules, spelers, antwoorden, de vragenkeuze per poule, en de rijen in de
-oude `predictions`-tabel. Blijven: de races met hun deelnemerslijsten en
-uitslagen, de vragenlijst zelf, en de accounts.
+Weg: poules, spelers, antwoorden en de vragenkeuze per poule. Blijven: de
+races met hun deelnemerslijsten en uitslagen, de vragenlijst zelf, en de
+accounts.
 
 Dat laatste is de enige echte keuze in dit bestand. Een account is niet
 hetzelfde als een speler: `auth.users` zegt wie je bent, `pool_members` zegt
@@ -5541,6 +5541,10 @@ De tabel gaat hier niet weg. Dat blijft een beslissing voor wie de database
 bezit, niet voor `schema.sql`. Wat er wel is, is het antwoord dat je nodig
 hebt om die beslissing in één minuut te nemen.
 
+> **Achterhaald.** Dat antwoord kwam er: `allemaal overgezet naar answers`.
+> Zie "De predictions-tabel is weg" hieronder — de regels uit dit hoofdstuk
+> bestaan niet meer, want er valt niets meer te tellen.
+
 ---
 
 ## Een afgekapte naam was nergens meer te lezen
@@ -5603,3 +5607,94 @@ eruit gesloopt om te zien dat de bijbehorende check zakt: zonder de titels,
 zonder het opruimen bij breder worden, en zonder het weglaten van het label.
 Plus de tegenkant: een naam die past — een racenaam uit OpenF1 — hoort juist
 geen tooltip te krijgen.
+
+---
+
+## De predictions-tabel is weg
+
+Danny's uitdraai zei `1 — allemaal overgezet naar answers`, en op de vraag wat
+ermee moest: *"ik zou niet weten wat het is, kijk maar wat je er mee doet."*
+Dus weg ermee.
+
+### Eerst overzetten, dán weggooien
+
+Niet met een kale `drop`. `schema.sql` zet nu eerst over wat er nog in zit en
+laat de tabel daarná vallen, in die volgorde. Dat is het hele punt: draait dit
+op een database die de migratie nooit gedraaid heeft — en die bestaan, want de
+migratie zat pas in een latere versie — dan mag er niets verdwijnen.
+
+Het blok begint met `if to_regclass('public.predictions') is null then return`,
+dus de tweede run slaat zichzelf over. PL/pgSQL bereidt een statement pas voor
+bij de eerste uitvoering, en daarom mogen de `alter table`- en `select`-regels
+daaronder gewoon naar een tabel verwijzen die niet meer bestaat.
+
+### Drie dingen die de oude opruimlogica deed, nu anders
+
+De `delete`-blokken die vóór de migratie draaiden bestonden alleen om de
+sleutels op `predictions` te kúnnen leggen. Die sleutels zijn er niet meer,
+dus die deletes ook niet — maar wat ze regelden geldt nog wel:
+
+- **Dubbele rijen.** Zonder unieke sleutel kon een "wijziging" een tweede rij
+  opleveren; de laatst bijgewerkte is dan de goede. Dat is nu een
+  `distinct on (pool_id, race_id, member_id) ... order by updated_at desc` in
+  de migratie zelf: deterministisch, in plaats van het aan `on conflict` over
+  te laten welke rij er toevallig eerst langskomt.
+- **Verweesde rijen.** `answers` heeft foreign keys, dus een rij die naar een
+  verdwenen poule, race of speler wijst past daar niet in. Die worden nu
+  overgeslagen met drie `exists`-voorwaarden, in plaats van eerst verwijderd.
+  Slaat de migratie er eentje over, dan gaat de rest gewoon door.
+- **Ontbrekende kolommen.** Dit was bijna misgegaan. `race_winnaar` en
+  `updated_at` kwamen pas later bij `predictions`; op een echt oude database
+  bestaan ze niet, en dan klapt de `select` op precies de database waarvoor
+  deze migratie bedoeld is. De vier `add column if not exists` staan daarom nu
+  binnen de bewaking. `test/oude-structuur.sql` maakt zo'n tabel zonder die
+  kolommen aan, en die test wees het aan.
+
+### Wat er uit de controletabel verdween
+
+Drie regels gingen over een tabel die er niet meer is: `unieke sleutel op
+predictions`, `deadline-trigger` (die op predictions) en `dubbele
+voorspellingen`. Plus de regel uit het vorige hoofdstuk, die de vraag
+beantwoordde die nu beantwoord is. `deadline-trigger op answers` blijft, en
+draagt nu de kolomnamen van de view.
+
+### De testen: overgezet, niet weggegooid
+
+`schema-gedrag.test.sql` testte negen gedragingen op `predictions`. Acht
+daarvan bestaan nog gewoon, alleen op `answers`, en zijn woordelijk overgezet:
+een antwoord hoort geweigerd te worden zodra de deadline die erbij hoort
+verstreken is, en welke deadline dat is hangt van de vraag af.
+
+Eén is níét meegekomen, en dat is met opzet: de controle dat het meesturen van
+een ongewijzigde quali-kolom het opslaan niet blokkeert. Dat was een valkuil
+van één brede rij met een kolom per vraag. In `answers` staat elke vraag op
+zijn eigen rij, dus dat geval kán niet meer bestaan — een test ervoor zou
+coverage voorwenden die nergens over gaat.
+
+`schema-herstel.test.sql` is van karakter veranderd en daardoor beter. Hij
+controleerde of een tweede run een beschadigde `predictions` opruimde; die
+reparatielogica bestaat niet meer. Nu zet `schema-gedrag.test.sql` aan het eind
+een échte oude database neer — een `predictions` zonder sleutel en zonder
+trigger, met vier rijen — en controleert `schema-herstel.test.sql` na de tweede
+run alle vier de gevallen:
+
+```
+ok: de oude predictions-tabel is weg
+ok: wat er nog in zat is eerst overgezet
+ok: van twee dubbele rijen is de nieuwste overgezet
+ok: en wat er al stond is niet overschreven
+ok: een rij naar een verdwenen race is overgeslagen, niet geklapt
+```
+
+Dat is precies de riskante kant van deze wijziging, en die was eerst nergens
+getest.
+
+### En de rest
+
+`oude-structuur-controle.sql` keek of de foreign key die 42830 gaf er lag; die
+zat op `predictions`. `answers` wijst naar dezelfde kolom en liep tegen
+dezelfde fout aan, dus die check kijkt nu daarnaar — en controleert er meteen
+bij dat de oude tabel ook vanuit die structuur opgeruimd wordt.
+`leegmaken.sql`, `diagnose.sql` en de nabootsing zijn meegegaan. `reset.sql`
+houdt zijn `drop table if exists`: die is er juist om een oude wereld op te
+ruimen.

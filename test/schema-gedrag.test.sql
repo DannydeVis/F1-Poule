@@ -1,10 +1,21 @@
--- Gedrag van schema.sql: de deadline-trigger en de unieke sleutel.
+-- Gedrag van schema.sql: de deadline-trigger op answers.
 -- Draai dit na schema.sql. Elke mislukte controle gooit een exception,
 -- zodat psql met ON_ERROR_STOP=1 de build laat zakken.
 --
--- Sluit af met een opzettelijk beschadigde tabel (dubbele rij, geen unieke
--- sleutel), zodat schema-herstel.test.sql kan controleren of een tweede run
--- van schema.sql dat opruimt.
+-- Deze controles stonden eerst op de oude predictions-tabel. Die is weg, maar
+-- het gedrag niet: een antwoord hoort geweigerd te worden zodra de deadline
+-- die erbij hoort verstreken is, en welke deadline dat is hangt van de vraag
+-- af. Dat is precies zo overgezet naar answers.
+--
+-- Eén controle is níét meegekomen, en dat is met opzet. Die ging erover dat
+-- het meesturen van een ongewijzigde quali-kolom het opslaan niet mocht
+-- blokkeren -- een valkuil van één brede rij met een kolom per vraag. In
+-- answers staat elke vraag op zijn eigen rij, dus dat geval kán niet meer
+-- bestaan; een test ervoor zou coverage voorwenden die nergens over gaat.
+--
+-- Sluit af met een nagebootste oude database: een predictions-tabel met rijen
+-- die nog niet overgezet zijn, zodat schema-herstel.test.sql kan controleren
+-- of een tweede run van schema.sql ze overzet én de tabel laat vallen.
 
 \set ON_ERROR_STOP on
 
@@ -25,15 +36,17 @@ declare
   n     int;
 begin
   -- 1. race-top-10 opslaan terwijl de kwalificatie al gesloten is
-  insert into predictions (pool_id, race_id, member_id, race_top10)
-  values (poule, 1, lid, tien);
-  select array_length(race_top10, 1) into n from predictions where race_id = 1;
+  insert into answers (pool_id, race_id, member_id, question_id, waarde)
+  values (poule, 1, lid, 'race_top10', to_jsonb(tien));
+  select jsonb_array_length(waarde) into n
+    from answers where race_id = 1 and question_id = 'race_top10';
   if n is distinct from 10 then raise exception 'gezakt: race-top-10 niet opgeslagen (%)', n; end if;
   raise notice 'ok: race-top-10 opslaan terwijl de kwalificatie dicht is';
 
   -- 2. de kwalificatie invullen na de deadline hoort geweigerd te worden
   begin
-    update predictions set quali_top10 = array['1','2','3'] where race_id = 1;
+    insert into answers (pool_id, race_id, member_id, question_id, waarde)
+    values (poule, 1, lid, 'quali_top10', to_jsonb(array['1','2','3']));
     raise exception 'gezakt: de gesloten kwalificatie werd toch geaccepteerd';
   exception when others then
     if sqlerrm not like '%kwalificatie%gesloten%' then raise; end if;
@@ -41,67 +54,66 @@ begin
   end;
 
   -- 3. de race-top-10 mag nog wel gewijzigd worden
-  update predictions set race_top10 = array['4','1','16','63','44','81','12','10','14','18']
-  where race_id = 1;
+  update answers set waarde = to_jsonb(array['4','1','16','63','44','81','12','10','14','18'])
+  where race_id = 1 and question_id = 'race_top10';
   raise notice 'ok: race-top-10 wijzigen mag nog';
 
-  -- 4. kernpunt: opslaan met de ongewijzigde quali-kolom erbij.
-  --    Een trigger die op "kolom aanwezig" test in plaats van op "kolom
-  --    gewijzigd" blokkeert dit ten onrechte.
-  update predictions
-  set quali_top10 = quali_top10,
-      race_top10  = array['16','1','4','63','44','81','12','10','14','18']
-  where race_id = 1;
-  raise notice 'ok: ongewijzigde quali-kolom meesturen blokkeert het opslaan niet';
-
-  -- 5. upsert gedraagt zich als update, niet als nieuwe rij
-  insert into predictions (pool_id, race_id, member_id, race_top10)
-  values (poule, 1, lid, array['81','1','4','63','44','16','12','10','14','18'])
-  on conflict (pool_id, race_id, member_id) do update
-  set race_top10 = excluded.race_top10;
-  select count(*) into n from predictions where race_id = 1;
+  -- 4. upsert gedraagt zich als update en niet als nieuwe rij. Zonder die
+  --    sleutel lijkt bewaren willekeurig wel en niet te werken: je wijzigt
+  --    iets, er komt een tweede rij bij, en welke van de twee je terugkrijgt
+  --    is een gok. De app schrijft precies zo weg.
+  insert into answers (pool_id, race_id, member_id, question_id, waarde)
+  values (poule, 1, lid, 'race_top10',
+          to_jsonb(array['81','1','4','63','44','16','12','10','14','18']))
+  on conflict (pool_id, race_id, member_id, question_id) do update
+  set waarde = excluded.waarde;
+  select count(*) into n from answers where race_id = 1 and question_id = 'race_top10';
   if n <> 1 then raise exception 'gezakt: upsert maakte % rijen in plaats van 1', n; end if;
   raise notice 'ok: upsert werkt de bestaande rij bij';
 
-  -- 6. een race die nog helemaal openstaat
-  insert into predictions (pool_id, race_id, member_id, quali_top10)
-  values (poule, 2, lid, tien);
+  -- 5. een race die nog helemaal openstaat
+  insert into answers (pool_id, race_id, member_id, question_id, waarde)
+  values (poule, 2, lid, 'quali_top10', to_jsonb(tien));
   raise notice 'ok: voorspelling voor een volledig open race';
 
-  -- 7. de race-deadline wordt ook bewaakt
+  -- 6. de race-deadline wordt ook bewaakt
   begin
     update races set deadline_race = now() - interval '1 hour' where id = 2;
-    update predictions set race_top10 = tien where race_id = 2;
+    insert into answers (pool_id, race_id, member_id, question_id, waarde)
+    values (poule, 2, lid, 'race_top10', to_jsonb(tien));
     raise exception 'gezakt: de gesloten race werd toch geaccepteerd';
   exception when others then
     if sqlerrm not like '%race is gesloten%' then raise; end if;
     raise notice 'ok: gesloten race geweigerd (%)', sqlerrm;
   end;
 
-  -- 8. de losse winnaar hangt aan dezelfde deadline als de race-top-10.
+  -- 7. de losse winnaar hangt aan dezelfde deadline als de race-top-10.
   --    De exception hierboven draait zijn eigen blok terug, dus de deadline
   --    van race 2 staat hier weer in de toekomst.
-  update predictions set race_winnaar = '1' where race_id = 2;
-  if (select race_winnaar from predictions where race_id = 2) is distinct from '1' then
+  insert into answers (pool_id, race_id, member_id, question_id, waarde)
+  values (poule, 2, lid, 'winnaar', to_jsonb('1'::text));
+  if (select waarde from answers where race_id = 2 and question_id = 'winnaar')
+     is distinct from to_jsonb('1'::text) then
     raise exception 'gezakt: winnaar niet opgeslagen terwijl de race openstond';
   end if;
   raise notice 'ok: winnaar invullen mag zolang de race openstaat';
 
   begin
     update races set deadline_race = now() - interval '1 hour' where id = 2;
-    update predictions set race_winnaar = '4' where race_id = 2;
+    update answers set waarde = to_jsonb('4'::text)
+    where race_id = 2 and question_id = 'winnaar';
     raise exception 'gezakt: de winnaar werd na de deadline toch gewijzigd';
   exception when others then
     if sqlerrm not like '%race is gesloten%' then raise; end if;
     raise notice 'ok: winnaar wijzigen na de deadline geweigerd (%)', sqlerrm;
   end;
 
-  -- 9. en bij een nieuwe rij telt de winnaar net zo goed mee
+  -- 8. en bij een nieuwe rij telt de winnaar net zo goed mee
   insert into races (id, season, round, name, deadline_quali, deadline_race)
   values (3, 2026, 3, 'Suzuka', now() - interval '2 days', now() - interval '1 day');
   begin
-    insert into predictions (pool_id, race_id, member_id, race_winnaar)
-    values (poule, 3, lid, '1');
+    insert into answers (pool_id, race_id, member_id, question_id, waarde)
+    values (poule, 3, lid, 'winnaar', to_jsonb('1'::text));
     raise exception 'gezakt: een winnaar voor een gesloten race werd toch aangenomen';
   exception when others then
     if sqlerrm not like '%race is gesloten%' then raise; end if;
@@ -180,19 +192,74 @@ begin
   delete from push_abonnementen where member_id = lid;
 end $$;
 
--- Beschadig de tabel voor de hersteltest: dubbele rij, geen unieke sleutel.
-alter table predictions drop constraint predictions_uniek;
-alter table predictions disable trigger predictions_deadline;
-insert into predictions (pool_id, race_id, member_id, race_top10, updated_at)
-values ('11111111-1111-1111-1111-111111111111', 1,
-        '22222222-2222-2222-2222-222222222222',
-        array['99','1','4','63','44','16','12','10','14','18'], now() + interval '1 minute');
-alter table predictions enable trigger predictions_deadline;
+-- ------------------------------------------------------------
+--  Zet een oude database neer voor de hersteltest
+-- ------------------------------------------------------------
+--
+-- schema.sql laat predictions tegenwoordig vallen, maar pas nádat hij eruit
+-- heeft overgezet wat er nog in zat. Dat is de riskante kant van die
+-- wijziging: draait hij op een database die de migratie nooit gedraaid heeft,
+-- dan mag er niets verdwijnen.
+--
+-- Hieronder staat zo'n database, met opzet zonder unieke sleutel en zonder
+-- trigger -- precies zoals de tabel er vóór de migratie uitzag. Er gaan drie
+-- soorten rijen in, en schema-herstel.test.sql controleert er straks alle
+-- drie van:
+--
+--   1. een gewone rij die overgezet hoort te worden;
+--   2. twee rijen voor dezelfde speler en race, waarvan de nieuwste moet
+--      winnen -- vroeger ruimde schema.sql die eerst op, nu kiest de
+--      migratie met distinct on;
+--   3. een rij die naar een verdwenen race wijst. answers heeft foreign
+--      keys, dus die kán daar niet in; hij hoort overgeslagen te worden in
+--      plaats van de hele migratie te laten klappen.
+
+create table public.predictions (
+  pool_id     uuid   not null,
+  race_id     bigint not null,
+  member_id   uuid   not null,
+  quali_top10 text[],
+  race_top10  text[],
+  race_winnaar text,
+  updated_at  timestamptz not null default now()
+);
+
+insert into public.predictions (pool_id, race_id, member_id, race_top10, updated_at)
+values
+  -- 1. race 3 is gesloten en heeft nog niets in answers: die moet mee.
+  --    Meteen het bewijs dat de migratie de deadline-trigger uitzet, want
+  --    langs die trigger zou dit geweigerd worden.
+  ('11111111-1111-1111-1111-111111111111', 3,
+   '22222222-2222-2222-2222-222222222222',
+   array['55','1','4','63','44','16','12','10','14','18'], now() - interval '1 day'),
+  -- 2. twee rijen voor race 1; de nieuwste heeft 99 op P1. answers heeft voor
+  --    race 1 al een race_top10 staan, dus geen van beide mag die
+  --    overschrijven -- maar de quali erbij hieronder wél.
+  ('11111111-1111-1111-1111-111111111111', 1,
+   '22222222-2222-2222-2222-222222222222',
+   array['11','1','4','63','44','16','12','10','14','18'], now() - interval '2 days'),
+  ('11111111-1111-1111-1111-111111111111', 1,
+   '22222222-2222-2222-2222-222222222222',
+   array['99','1','4','63','44','16','12','10','14','18'], now() - interval '1 hour'),
+  -- 3. race 404 bestaat niet.
+  ('11111111-1111-1111-1111-111111111111', 404,
+   '22222222-2222-2222-2222-222222222222',
+   array['1','2','3','4','5','6','7','8','9','10'], now());
+
+-- De nieuwste van die twee krijgt ook een quali mee, want dát is wat er nog
+-- niet in answers staat. Komt straks de 11 in plaats van de 99 terug, dan
+-- heeft distinct on de verkeerde rij gekozen.
+update public.predictions
+   set quali_top10 = array['99','1','4','63','44','16','12','10','14','18']
+ where race_id = 1 and quali_top10 is null and race_top10[1] = '99';
+update public.predictions
+   set quali_top10 = array['11','1','4','63','44','16','12','10','14','18']
+ where race_id = 1 and quali_top10 is null and race_top10[1] = '11';
 
 do $$
 declare n int;
 begin
-  select count(*) into n from predictions where race_id = 1;
-  if n <> 2 then raise exception 'opzet mislukt: % rijen in plaats van 2', n; end if;
-  raise notice 'opzet: 2 dubbele rijen klaargezet voor de hersteltest';
+  select count(*) into n from public.predictions;
+  if n <> 4 then raise exception 'opzet mislukt: % rijen in plaats van 4', n; end if;
+  raise notice 'opzet: een oude database met 4 voorspellingen klaargezet';
 end $$;
