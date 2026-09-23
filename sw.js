@@ -1,4 +1,4 @@
-// De service worker van RacePicks.
+// De service worker van Predict the Race.
 //
 // Let op wat hier NIET staat: er is geen `fetch`-handler. Dat is met opzet en
 // het is de reden dat deze app jarenlang geen service worker had. Zodra een
@@ -21,14 +21,14 @@ self.addEventListener('push', (e) => {
   // intrekken.
   let bericht = {};
   try { bericht = e.data ? e.data.json() : {}; } catch { bericht = {}; }
-  const titel = bericht.titel || 'RacePicks';
+  const titel = bericht.titel || 'Predict the Race';
   e.waitUntil(self.registration.showNotification(titel, {
     body: bericht.tekst || 'Er staat iets open in je poule.',
-    icon: 'pictogrammen/racepicks-192.png',
-    badge: 'pictogrammen/racepicks-192.png',
+    icon: 'pictogrammen/predicttherace-192.png',
+    badge: 'pictogrammen/predicttherace-192.png',
     // Dezelfde tag voor dezelfde sessie: een tweede herinnering vervangt de
     // eerste in plaats van ernaast te komen staan.
-    tag: bericht.tag || 'racepicks',
+    tag: bericht.tag || 'predicttherace',
     data: { url: bericht.url || './' },
   }));
 });

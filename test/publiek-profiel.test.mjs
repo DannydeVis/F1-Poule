@@ -112,11 +112,11 @@ check('wel een uitnodiging om zelf te beginnen',
 // --- 4. een verzonnen code ------------------------------------------------
 await page.goto(`${url}?profiel=bestaatniet`);
 await page.waitForFunction(() => document.body.textContent.includes('bestaat niet')
-  || document.body.textContent.includes('Naar RacePicks'));
+  || document.body.textContent.includes('Naar Predict the Race'));
 const leeg = (await page.textContent('#app')).replace(/\s+/g, ' ');
 check('een code die niet bestaat geeft een nette pagina',
   leeg.includes('bestaat niet'), leeg.slice(0, 140));
-check('en een weg terug naar de app', leeg.includes('Naar RacePicks'));
+check('en een weg terug naar de app', leeg.includes('Naar Predict the Race'));
 
 // Iets wat er niet eens uitziet als een code hoort gewoon het startscherm te
 // geven, en niet een foutpagina over een profiel dat niemand bedoelde.

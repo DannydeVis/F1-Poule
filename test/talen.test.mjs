@@ -297,7 +297,7 @@ check('en <html lang> staat weer op nl',
   kaal = kaal.replace(/<!--[\s\S]*?-->/g, gum);
 
   // Alleen de merknaam en de twee taalnamen horen onvertaald op het scherm.
-  const MAG_ONVERTAALD = new Set(['RacePicks', 'Nederlands', 'English']);
+  const MAG_ONVERTAALD = new Set(['Predict the Race', 'Nederlands', 'English']);
   const gaten = [];
   let inBlok = false;
   for (const [nr, regel] of kaal.split('\n').entries()) {

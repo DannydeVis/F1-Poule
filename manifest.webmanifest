@@ -1,6 +1,6 @@
 {
-  "name": "RacePicks",
-  "short_name": "RacePicks",
+  "name": "Predict the Race",
+  "short_name": "PredictRace",
   "description": "Het F1-voorspelspel voor jou en je vrienden. Voorspel de grid, versla je maten en win het weekend.",
   "lang": "nl",
   "start_url": ".",
@@ -10,7 +10,7 @@
   "background_color": "#0b0b0c",
   "theme_color": "#0b0b0c",
   "icons": [
-    { "src": "pictogrammen/racepicks-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "pictogrammen/racepicks-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "pictogrammen/predicttherace-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "pictogrammen/predicttherace-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
