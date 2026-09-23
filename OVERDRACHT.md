@@ -5276,3 +5276,40 @@ staan op veel schermen vast klaar te wachten en hebben niets te zeggen; die
 worden overgeslagen. En verder niets: een schermlezer die bij elke tik het
 halve scherm opnieuw voorgelezen krijgt is net zo onbruikbaar als eentje die
 zwijgt.
+
+---
+
+## De controletabel wist niets van de jokergrens
+
+Danny stuurde zijn uitdraai van `poule_controle` en vroeg zich af of zijn
+`schema.sql`-run geland was. Uit die tabel viel dat niet op te maken, en dat
+is een tekort van de tabel en niet van de vraag: de jokergrens verhuisde in
+#102 van de app naar de database, en er kwam geen regel over in de
+controletabel. Precies het soort wijziging waarvan je wilt weten of hij bij
+jou ook is aangekomen — en dat is waar die tabel voor bestaat.
+
+Twee regels erbij:
+
+- **`jokeraantal: grens en bewaking`** — of de check `pools_jokers_aantal`
+  (1 t/m 5) er ligt en of de trigger `pools_jokeraantal` er is, die verlagen
+  onder wat er al ligt tegenhoudt. Ontbreekt er een, dan zegt de regel welke
+  en dat je `schema.sql` opnieuw moet draaien.
+- **`poules met een eigen jokeraantal`** — hoeveel poules van de standaard
+  vijf afwijken. Nul betekent: niemand heeft eraan gezeten.
+
+### De kolom zelf krijgt geen eigen regel
+
+Dat is met opzet en het is geen slordigheid. De tweede regel hierboven telt op
+`pools.jokers_aantal`, dus de view hángt van die kolom af: zonder kolom bestaat
+de view niet eens. Een regel "staat de kolom er?" zou dus altijd `ok` zeggen —
+een controle die per constructie niet kan afgaan. Wat wél los kan ontbreken is
+de grens en de bewaking, en daar gaan de regels dan ook over.
+
+### Beide faaltakken zijn nagemeten
+
+`test/controle.test.sql` §6 loopt alle drie de uitkomsten langs: vers gedraaid
+schema is `ok`, trigger weg geeft `ZONDER BEWAKING`, constraint weg geeft
+`GRENS 1-5 ONTBREEKT`, en daarna staat alles weer terug. Plus de teller, in
+beide richtingen: een poule die afwijkt telt mee, en terug op vijf niet meer.
+Een regel die alleen `ok` kan zeggen controleert niets — dat was de hele les
+van de vorige keer dat deze tabel verouderd bleek.

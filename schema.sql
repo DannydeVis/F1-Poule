@@ -1519,6 +1519,31 @@ select 'deadline-trigger op answers',
              and (tgtype & 4) > 0 and (tgtype & 16) > 0 and (tgtype & 8) > 0) then 'ok'
          else 'ZONDER DELETE — draai schema.sql opnieuw' end
 union all
+-- De jokergrens zit sinds kort in de database en niet meer in de app, en dat
+-- is precies het soort wijziging waarvan je wilt weten of hij bij jou ook
+-- geland is. Zonder deze regels stond er in de controletabel niets over, en
+-- kon een uitdraai je dus niet vertellen of je schema.sql-run gelukt was.
+--
+-- De kolom zelf krijgt geen eigen regel: de tweede regel hieronder telt erop,
+-- dus zonder die kolom bestaat deze view niet eens en zou zo'n regel altijd
+-- 'ok' zeggen. Wat wél los kan ontbreken is de grens eromheen en de bewaking
+-- die verlagen tegenhoudt, en daar gaat het hier dan ook over.
+select 'jokeraantal: grens en bewaking',
+       case
+         when not exists (
+           select 1 from pg_constraint
+           where conrelid = 'public.pools'::regclass
+             and conname = 'pools_jokers_aantal') then 'GRENS 1-5 ONTBREEKT — draai schema.sql opnieuw'
+         when not exists (
+           select 1 from pg_trigger
+           where tgrelid = 'public.pools'::regclass
+             and tgname = 'pools_jokeraantal') then 'ZONDER BEWAKING — draai schema.sql opnieuw'
+         else 'ok' end
+union all
+-- Vijf is de standaard. Dit getal zegt of iemand er bewust van afgeweken is.
+select 'poules met een eigen jokeraantal',
+       (select count(*)::text from public.pools where jokers_aantal <> 5)
+union all
 select 'dubbele voorspellingen',
        case when (select count(*) from (
          select 1 from public.predictions
