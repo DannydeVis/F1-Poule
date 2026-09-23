@@ -5698,3 +5698,57 @@ bij dat de oude tabel ook vanuit die structuur opgeruimd wordt.
 `leegmaken.sql`, `diagnose.sql` en de nabootsing zijn meegegaan. `reset.sql`
 houdt zijn `drop table if exists`: die is er juist om een oude wereld op te
 ruimen.
+
+---
+
+## Rustiger typografie: niet alles kan even hard schreeuwen
+
+Danny liet een mockup zien die ChatGPT gemaakt had en zei wat hij ervan wilde:
+*"niet de functies, maar wel het design spreekt me aan"*, en *"met name die
+kleine lettertype"*.
+
+Het eerste dat opviel bij het vergelijken: het design-DNA klopte al. Diezelfde
+Barlow, dezelfde Barlow Condensed voor de grote dingen, Space Mono voor de
+labels, en in het donker is de accentkleur van de app (`#ee4d33`) vrijwel
+identiek aan die van de mockup. Er was dus niets om over te nemen aan kleur of
+letterkeuze.
+
+Wat wél verschilde is hoe die middelen ingezet worden, en daar zit het woord
+"klein" in. In de mockup is bijna alles klein en rustig -- de navigatie, de
+namen in de ranglijst -- zodat een paar dingen écht groot kunnen zijn: de
+paginatitel, de afteller, de punten. In deze app stond bijna álles in
+condensed hoofdletters op twintig pixels of meer. De navigatie schreeuwde even
+hard als de paginatitel ernaast, een spelersnaam woog net zo zwaar als zijn
+puntentotaal, en als alles even hard schreeuwt hoor je niets.
+
+### Wat er stiller is geworden
+
+| wat | was | is |
+|---|---|---|
+| navigatie | condensed 18/21px, hoofdletters, bold | 14/15px, gewone schrijfwijze |
+| naam in de stand (`.speler`) | condensed 26px, hoofdletters | 16px |
+| naam in het zijpaneel (`.strij`) | condensed 24px, hoofdletters | 15px |
+| speler onderin de zijbalk | condensed 20px, hoofdletters | 15px |
+| racenaam in de kalender | condensed 24px, hoofdletters | 16px |
+| naam in de restlijst | condensed 20px, hoofdletters | 15px |
+| toelichtende tekst (`.zacht`) | 15px | 14px |
+
+### Wat met opzet groot bleef
+
+De racenaam op de weekendkaart, de afteller, de puntentotalen, de paginatitel
+-- en de namen op het podium. Dat laatste is geen inconsistentie: een podium
+ís het moment dat eruit hoort te springen, en nu de rest stil is springt het
+er ook echt uit. Hetzelfde geldt voor de kop boven iemands profiel: dat is een
+titel en geen lijstregel.
+
+De coureurscodes (VER, NOR, LEC) blijven hoofdletters, want dat zíjn ze.
+
+### Wat dit niet is
+
+Geen nieuwe schermen, geen stat-tegels, geen iconen in de navigatie. Danny
+vroeg om het design, niet om de functies uit die mockup, en dat verschil is
+hier aangehouden.
+
+Alle 65 testbestanden bleven groen: de hoofdletters kwamen van
+`text-transform` in de CSS, dus `textContent` verandert niet en geen enkele
+test die op tekst let merkt er iets van.

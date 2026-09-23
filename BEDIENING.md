@@ -1239,6 +1239,13 @@ accentkleur. Die slaat aan bij toetsenbordbediening. Eerder stond hier dat een
 een kale `.focus()` geeft de ring wel degelijk. Dat is maar goed ook, want het
 focusherstel hieronder leunt erop.
 
+**Niet alles kan even hard schreeuwen.** Groot, condensed en in hoofdletters
+is voorbehouden aan wat eruit hoort te springen: de racenaam op de
+weekendkaart, de afteller, de puntentotalen, een paginatitel, en de namen op
+het podium. Een navigatie-item, een naam in een lijst of een racenaam in de
+kalender is géén kop — die staan klein en in gewone schrijfwijze. Zet je iets
+nieuws groot, vraag je dan af wat er daardoor stiller moet worden.
+
 **Een afgekapte naam krijgt zijn volledige tekst als tooltip**, en een naam
 die past juist niet. Dat wordt gemeten na het tekenen en na een
 maatverandering, want of er afgekapt wordt hangt van de breedte af. Geef een

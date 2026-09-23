@@ -160,7 +160,7 @@
   .mono{font-family:var(--mono);font-size:11px}
   .cond{font-family:var(--cond);font-weight:700;text-transform:uppercase}
   .groen{color:var(--groen)} .amber{color:var(--amber)} .accentkleur{color:var(--accent)}
-  .zacht{color:var(--ink2);font-size:15px}
+  .zacht{color:var(--ink2);font-size:14px}
   .hide{display:none!important}
 
   .knop{
@@ -302,8 +302,11 @@
   .speler:hover{transform:translateX(4px);background:var(--gedempt)}
   .speler.zelf{border-left-color:var(--accent)}
   .speler .nr{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ink3)}
-  .speler .nm{font-family:var(--cond);font-size:26px;font-weight:600;
-    text-transform:uppercase;flex:1;min-width:0;overflow:hidden;
+  /* Een naam is geen kop. In condensed hoofdletters op 26 pixels weegt
+     "Danny" net zo zwaar als het aantal punten ernaast, terwijl dat tweede is
+     waar de stand over gaat. */
+  .speler .nm{font-size:16px;font-weight:600;letter-spacing:.01em;
+    flex:1;min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
   .speler .ptn{font-family:var(--mono);font-size:11px;color:var(--ink2)}
   /* Alleen zichtbaar voor de poulebaas, en alleen bij een speler die aan een
@@ -332,9 +335,14 @@
     border-top:1px solid var(--lijn);
     padding:8px 12px calc(8px + env(safe-area-inset-bottom));
   }
+  /* De navigatie is geen kop. Hij stond in condensed hoofdletters op 18 en 21
+     pixels en schreeuwde daarmee even hard als de paginatitel ernaast -- en
+     als alles even hard schreeuwt hoor je niets. Nu klein en in gewone
+     schrijfwijze, zodat de titel, de afteller en de punten het toneel
+     krijgen. */
   .navknop{
-    flex:1;min-height:48px;border-radius:10px;font-family:var(--cond);
-    font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    flex:1;min-height:48px;border-radius:10px;
+    font-size:14px;font-weight:600;letter-spacing:.01em;
     color:var(--ink2);transition:background .18s,color .18s;
   }
   .navknop:hover{background:var(--paneel2);color:var(--ink)}
@@ -418,8 +426,8 @@
     color:var(--ink3);min-width:44px;line-height:1}
   .race.open .rnd{color:var(--ink)}
   .rinfo{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
-  .rinfo .nm{font-family:var(--cond);font-size:24px;font-weight:600;
-    text-transform:uppercase;line-height:1;overflow:hidden;
+  .rinfo .nm{font-size:16px;font-weight:600;letter-spacing:.01em;
+    line-height:1.2;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
   .st{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
   .st.klaar{color:var(--amber)} .st.open{color:var(--groen)}
@@ -720,8 +728,8 @@
   .v5{color:var(--paars)} .v3{color:var(--groen)} .v1{color:var(--amber)} .v0{color:var(--ink3)}
   .rest{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;
     background:var(--paneel);border-radius:8px}
-  .rest .nm{font-family:var(--cond);font-size:20px;font-weight:600;
-    text-transform:uppercase;flex:1;min-width:0;overflow:hidden;
+  .rest .nm{font-size:15px;font-weight:600;letter-spacing:.01em;
+    flex:1;min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
   .rest .t{font-family:var(--cond);font-size:22px;font-weight:700;color:var(--ink2)}
   .rest.winnaar{border-left:4px solid var(--accent);padding-left:12px}
@@ -776,8 +784,8 @@
   .strij .p{font-family:var(--cond);font-size:30px;font-weight:700;
     color:var(--ink3);min-width:34px}
   .strij.zelf .p{color:var(--ink)}
-  .strij .nm{font-family:var(--cond);font-size:24px;font-weight:600;
-    text-transform:uppercase;flex:1;min-width:0;overflow:hidden;
+  .strij .nm{font-size:15px;font-weight:600;letter-spacing:.01em;
+    flex:1;min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
   .jij{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
     text-transform:none;color:var(--accent)}
@@ -854,15 +862,15 @@
     .nav{position:static;flex-direction:column;background:transparent;
       border:0;border-top:0;padding:0;gap:6px}
     .shell.detail .nav{display:flex}
-    .navknop{min-height:56px;padding:0 14px;text-align:left;justify-content:flex-start;
-      font-size:21px;font-weight:600;border-left:4px solid transparent;border-radius:10px}
+    .navknop{min-height:48px;padding:0 14px;text-align:left;justify-content:flex-start;
+      font-size:15px;font-weight:600;border-left:4px solid transparent;border-radius:10px}
     .navknop[aria-current="true"]{background:var(--paneel2);color:var(--ink);
       border-left-color:var(--accent)}
     .zijvoet{margin-top:auto;display:flex;flex-direction:column;gap:14px}
     .zijspeler{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 14px;
       background:var(--paneel2);border-radius:10px}
-    .zijspeler .nm{font-family:var(--cond);font-size:20px;font-weight:600;
-      text-transform:uppercase;flex:1;min-width:0;overflow:hidden;
+    .zijspeler .nm{font-size:15px;font-weight:600;letter-spacing:.01em;
+      flex:1;min-width:0;overflow:hidden;
       text-overflow:ellipsis;white-space:nowrap}
     .zijspeler .t{font-family:var(--mono);font-size:11px;color:var(--ink2)}
     .zijcode{display:flex;flex-direction:column;gap:6px}
