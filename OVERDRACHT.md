@@ -5813,3 +5813,66 @@ uitnodigingslinks en OAuth-redirects werken op elk domein waar hij draait.
 En let op het moment: een geïnstalleerde tegel pakt de naam van het moment van
 installeren en werkt die niet bij. Hoe langer je wacht, hoe meer mensen
 "RacePicks" op hun beginscherm houden tot ze hem weggooien en opnieuw zetten.
+
+---
+
+## Tweede ronde naar dat ontwerp: het ging niet alleen om de letter
+
+De eerste pas maakte de typografie stiller, en dat was niet genoeg. Danny:
+*"ik denk dat je beter moet kijken naar de voorbeelden. ook die banen zijn nog
+groot, het gaat niet alleen om de lettertype maar de mockup ziet er gewoon net
+wat beter uit."*
+
+Terecht. Bij het naast elkaar leggen van zijn schermafdruk en de mockup zaten
+de verschillen niet in de lettergrootte maar in vier andere dingen.
+
+### 1. Kleur was de standaard geworden in plaats van de uitzondering
+
+Elke rij had een balk van vier pixels aan de linkerkant: groen voor een open
+race, de teamkleur voor elke coureur in de uitslag, grijs voor de rest. Op een
+scherm met twintig rijen zijn dat twintig gekleurde balken, en dan betekent
+kleur niets meer. In de mockup is bijna alles neutraal en licht alleen je
+eigen regel op.
+
+Die balken zijn nu drie pixels, met een kader van één pixel eromheen dat het
+werk doet. De teamkleuren blijven — ze zeggen iets — maar ze domineren niet
+meer.
+
+### 2. De startlichten waren een meetinstrument geworden
+
+Vijf balken van zes pixels hoog over de volle breedte van de kaart, met een
+animatie erop. Ze namen meer ruimte dan de sessies eronder, terwijl het een
+terloopse aanwijzing is hoe dichtbij de deadline is. Nu drie pixels.
+
+### 3. De knop schreeuwde harder dan de racenaam
+
+`.knop` stond in condensed hoofdletters op 22 pixels met letterspatiëring,
+zestig pixels hoog, over de volle breedte. Dat is groter dan de naam van de
+race erboven. Nu gewone schrijfwijze op 16 pixels en 52 hoog — hij blijft de
+duidelijkste plek op het scherm doordat hij vol in het accent staat, niet
+doordat hij het hardst roept.
+
+### 4. De drukste regel van het scherm was de kop
+
+Poulenaam, seizoen, aantal spelers, de afteller en de hoofdknop stonden alle
+vijf op één regel. In de mockup staat het kleine regeltje *boven* de titel.
+Dat is precies wat er nu gebeurt: eerst waar je bent (`SEIZOEN 2026 · 3
+SPELERS`), dan hoe het heet. Eén element minder op de drukste regel.
+
+### Rijhoogtes
+
+Kalender 76 → 64, stand 68 → 58, zijpaneel 64 → 56, uitslagrij 52 → 46. Dat
+was het andere deel van "die banen zijn nog groot": rijen met één regel tekst
+op 76 pixels staan leeg.
+
+### Onderweg een race in mijn eigen test gevonden
+
+`toegankelijk.test.mjs` zakte in de volle suite op "beginscherm: geen koppen",
+en slaagde los drie keer achter elkaar. Geen fout in de app: de eerste keuring
+las de DOM vóórdat de app getekend had. `startPagina()` keert terug zodra de
+pagina geladen is, maar de app tekent pas na een async import en een ronde
+naar de database. Los won hij die race, in de volle suite niet. Er staat nu
+een `waitForSelector('#code')` voor.
+
+Dezelfde soort fout als die in `vangnet.test.mjs`: een test die van iets
+uitgaat in plaats van erop te wachten.
