@@ -60,6 +60,11 @@ async function keur(waar) {
     m.koppen.join(' ') || '(geen koppen)');
 }
 
+// Erop wachten en er niet van uitgaan. startPagina() keert terug zodra de
+// pagina geladen is, maar de app tekent zichzelf pas na een async import en
+// een ronde naar de database. Zonder dit meet de eerste keuring een lege
+// #app -- los draait dat groen, en in de volle suite verliest hij de race.
+await page.waitForSelector('#code');
 await keur('beginscherm');
 
 check('de pagina zegt in welke taal hij staat',

@@ -163,11 +163,15 @@
   .zacht{color:var(--ink2);font-size:14px}
   .hide{display:none!important}
 
+  /* Een knop is een knop en geen kop. In condensed hoofdletters op 22 pixels
+     over de volle breedte woog de opslaanknop zwaarder dan de racenaam
+     erboven. Gewone schrijfwijze, kleiner, en een randje minder hoog: hij
+     blijft de duidelijkste plek op het scherm doordat hij vol in het accent
+     staat, niet doordat hij het hardst roept. */
   .knop{
-    display:flex;align-items:center;justify-content:center;
-    min-height:60px;padding:0 18px;border-radius:10px;width:100%;
-    font-family:var(--cond);font-size:22px;font-weight:700;
-    text-transform:uppercase;letter-spacing:.06em;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    min-height:52px;padding:0 18px;border-radius:10px;width:100%;
+    font-size:16px;font-weight:600;letter-spacing:.01em;
     transition:transform .18s var(--soepel),filter .18s,border-color .18s,background .18s;
   }
   /* Sommige knoppen zijn een link, want ze gaan ergens heen (webcal://). */
@@ -175,22 +179,21 @@
   .knop.primair{background:var(--accent);color:var(--accent-ink)}
   .knop.primair:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08)}
   .knop.spook{background:transparent;border:1px solid var(--lijn);color:var(--ink);
-    font-size:20px;font-weight:600;min-height:56px}
+    font-size:15px;font-weight:600;min-height:48px}
   .knop.spook:hover{border-color:var(--accent);background:var(--paneel)}
-  .knop.wit{background:var(--omkeer);color:var(--omkeer-ink);min-height:56px;font-size:20px}
+  .knop.wit{background:var(--omkeer);color:var(--omkeer-ink);min-height:50px;font-size:16px}
   .knop.wit:hover{transform:translateY(-2px)}
   /* De enige knop die met opzet de huisstijl niet volgt. Zijn hele waarde zit
      in herkenbaarheid: het officiële logo, gewone schrijfwijze in plaats van
      kapitalen, en een vlak dat in beide thema's leest als de knop die overal
      elders ook op dezelfde plek staat. */
   .knop.google{background:var(--paneel);color:var(--ink);border:1px solid var(--lijn);
-    gap:12px;min-height:56px;font-family:var(--sans);font-size:17px;font-weight:600;
-    text-transform:none;letter-spacing:0}
+    gap:12px;min-height:50px;font-size:16px;font-weight:600}
   .knop.google:hover:not(:disabled){border-color:var(--ink3);background:var(--paneel2)}
   .knop.google svg{width:20px;height:20px;flex:none}
   .knop:disabled{background:var(--gedempt);color:var(--ink3);cursor:default;transform:none;filter:none}
-  .knop.klein{min-height:52px;font-family:var(--sans);font-size:15px;font-weight:600;
-    text-transform:none;letter-spacing:0;color:var(--ink2);border:1px solid var(--lijn)}
+  .knop.klein{min-height:44px;font-size:14px;font-weight:600;
+    color:var(--ink2);border:1px solid var(--lijn)}
   .knop.klein:hover{border-color:var(--ink3);color:var(--ink)}
 
   /* Een poule om naartoe te gaan: naam groot, waar hij over gaat eronder, de
@@ -294,9 +297,9 @@
 
   /* ---- spelerkeuze ---------------------------------------- */
   .speler{
-    display:flex;align-items:center;gap:14px;width:100%;min-height:68px;
+    display:flex;align-items:center;gap:14px;width:100%;min-height:58px;
     padding:0 18px;background:var(--paneel2);border:1px solid var(--lijn);
-    border-left:4px solid var(--lijn);border-radius:10px;text-align:left;
+    border-left:3px solid var(--lijn);border-radius:12px;text-align:left;
     transition:transform .18s var(--soepel),background .18s;animation:schuif .4s both;
   }
   .speler:hover{transform:translateX(4px);background:var(--gedempt)}
@@ -373,12 +376,15 @@
 
   /* ---- hero: eerstvolgende deadline ----------------------- */
   .hero{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;
-    padding:18px;display:flex;flex-direction:column;gap:14px}
+    padding:22px;display:flex;flex-direction:column;gap:16px}
   .hero-kop{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
   .klok{font-family:var(--cond);font-size:54px;font-weight:700;line-height:.9}
   .klok i{font-style:normal;font-size:22px;color:var(--ink2)}
-  .lampjes{display:flex;gap:6px}
-  .lampjes span{flex:1;height:6px;border-radius:3px;background:var(--gedempt)}
+  /* Vijf balken van zes pixels hoog namen meer ruimte dan de sessies eronder.
+     Het is een terloopse aanwijzing hoe dichtbij de deadline is, geen
+     meetinstrument. */
+  .lampjes{display:flex;gap:5px}
+  .lampjes span{flex:1;height:3px;border-radius:2px;background:var(--gedempt)}
   .lampjes span.aan{background:var(--accent);animation:lampjes 1.6s infinite}
   .wachtop{font-size:11px;letter-spacing:.06em}
   /* De circuitnaam hoort het grootste op de kaart te zijn na de klok: dat is
@@ -410,10 +416,13 @@
     text-transform:uppercase;color:var(--ink3)}
 
   /* ---- kalender ------------------------------------------- */
+  /* Elke rij had een balk van vier pixels links. Op een scherm met twintig
+     rijen is dat twintig gekleurde balken, en dan betekent kleur niets meer.
+     Drie pixels, en het kader eromheen doet het werk. */
   .race{
-    display:flex;align-items:center;gap:14px;width:100%;min-height:76px;
-    padding:10px 16px;background:var(--paneel);border:1px solid var(--lijn);
-    border-left:4px solid transparent;border-radius:12px;text-align:left;
+    display:flex;align-items:center;gap:14px;width:100%;min-height:64px;
+    padding:8px 16px;background:var(--paneel);border:1px solid var(--lijn);
+    border-left:3px solid transparent;border-radius:12px;text-align:left;
     transition:transform .18s var(--soepel),border-color .18s;
   }
   .race:hover{transform:translateX(4px);border-color:var(--ink3)}
@@ -707,8 +716,9 @@
   .score .getal{font-family:var(--cond);font-size:64px;font-weight:700;
     line-height:.85;color:var(--groen)}
   .strip{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
-  .sr{display:flex;align-items:center;gap:10px;min-height:52px;padding:0 12px;
-    background:var(--paneel);border-left:4px solid var(--lijn);border-radius:8px}
+  .sr{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 12px;
+    background:var(--paneel);border:1px solid var(--lijn);
+    border-left:3px solid var(--lijn);border-radius:10px}
   /* "Zo dichtbij": waar de punten bleven, in gewone zinnen. Bewust geen
      tabel — dit is bedoeld om voor te lezen in de groepsapp. */
   .bijna{background:var(--paneel2);border:1px solid var(--lijn);border-radius:12px;
@@ -780,12 +790,12 @@
     font-family:var(--cond);font-size:28px;font-weight:700;
     background:var(--paneel2);color:var(--ink2)}
   .trede.eerste .balk{background:var(--accent);color:var(--accent-ink);font-size:40px}
-  .strij{display:flex;align-items:center;gap:14px;min-height:64px;padding:0 16px;
+  .strij{display:flex;align-items:center;gap:14px;min-height:56px;padding:0 16px;
     background:var(--paneel);border:1px solid var(--lijn);
-    border-left:4px solid transparent;border-radius:10px}
+    border-left:3px solid transparent;border-radius:12px}
   .strij.zelf{border-left-color:var(--accent)}
-  .strij .p{font-family:var(--cond);font-size:30px;font-weight:700;
-    color:var(--ink3);min-width:34px}
+  .strij .p{font-family:var(--cond);font-size:24px;font-weight:700;
+    color:var(--ink3);min-width:28px}
   .strij.zelf .p{color:var(--ink)}
   .strij .nm{font-size:15px;font-weight:600;letter-spacing:.01em;
     flex:1;min-width:0;overflow:hidden;
@@ -903,18 +913,23 @@
     .zijcode .waarde{font-family:var(--mono);font-size:20px;font-weight:700;letter-spacing:.22em}
 
     .hoofd{height:100vh;overflow:hidden}
-    .kop{display:flex;align-items:center;gap:18px;padding:20px 28px;
+    /* Seizoen en aantal spelers stonden náást de poulenaam en vochten daar om
+       dezelfde regel als de afteller en de knop. Ze horen erbóven: eerst waar
+       je bent, dan hoe het heet. Dat scheelt een element op de drukste regel
+       van het scherm. */
+    .kop{display:flex;align-items:center;gap:18px;padding:18px 28px;
       border-bottom:1px solid var(--lijn);flex:none}
-    .kop .ptitel{font-family:var(--cond);font-size:34px;font-weight:700;
+    .koptekst{display:flex;flex-direction:column;gap:3px;min-width:0;margin-right:auto}
+    .kop .ptitel{font-family:var(--cond);font-size:32px;font-weight:700;
       text-transform:uppercase;line-height:1;min-width:0;overflow:hidden;
       text-overflow:ellipsis;white-space:nowrap}
-    .kop .meta{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
-      color:var(--ink3);flex:none}
-    .pil{margin-left:auto;display:flex;align-items:center;gap:10px;padding:10px 14px;
+    .kop .meta{font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+      text-transform:uppercase;color:var(--ink3);flex:none;white-space:nowrap;
+      overflow:hidden;text-overflow:ellipsis}
+    .pil{display:flex;align-items:center;gap:10px;padding:9px 13px;
       background:var(--paneel);border:1px solid var(--lijn);border-radius:10px;flex:none}
     .pil .mono{color:var(--groen)}
-    .kop .knop{width:auto;min-height:52px;font-size:19px;flex:none}
-    .kop .meta{display:none}
+    .kop .knop{width:auto;min-height:44px;font-size:15px;flex:none}
     .meldingbalk{padding:18px 28px 0}
     .tabs button{font-size:17px;padding:0 8px;min-width:0}
     .kolommen{display:grid;grid-template-columns:1.1fr .9fr;overflow:hidden}
@@ -932,10 +947,9 @@
   }
   @media (min-width:1280px){
     .zijbalk{width:264px;padding:24px 18px}
-    .kop{padding:24px 32px}
-    .kop .meta{display:block}
+    .kop{padding:20px 32px}
     .meldingbalk{padding:20px 32px 0}
-    .kop .ptitel{font-size:38px}
+    .kop .ptitel{font-size:36px}
     .tabs button{font-size:19px}
     .kol{padding:26px 32px 40px}
     .coureurs{grid-template-columns:1fr 1fr}
@@ -5159,10 +5173,12 @@ function toonApp() {
       <main class="hoofd" tabindex="-1">
         <div class="baan"></div>
         <div class="kop">
-          <span class="ptitel">${esc(S.poule.name)}</span>
-          <span class="meta">${T('seizoen {jaar} · {n} {spelers}', {
-            jaar: seizoen(), n: S.leden.length,
-            spelers: S.leden.length === 1 ? T('speler') : T('spelers') })}</span>
+          <div class="koptekst">
+            <span class="meta">${T('seizoen {jaar} · {n} {spelers}', {
+              jaar: seizoen(), n: S.leden.length,
+              spelers: S.leden.length === 1 ? T('speler') : T('spelers') })}</span>
+            <span class="ptitel">${esc(S.poule.name)}</span>
+          </div>
           ${volgend ? `<span class="pil"><span class="stip klopt"></span>
             <span class="mono">${T('{race} sluit in', {
               race: esc(volgend.race.name.toLowerCase()) })}
