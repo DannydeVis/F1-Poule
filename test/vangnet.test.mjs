@@ -57,6 +57,25 @@ const tekst = async (kies) => (await page.textContent(kies)).replace(/\s+/g, ' '
 const sleutels = () => page.evaluate(() =>
   Object.keys(localStorage).filter(k => k.startsWith('poule:')).sort());
 
+// jsFouten wordt door Playwright asynchroon gevuld. Wie er meteen in kijkt
+// leest hem misschien te vroeg, en dat zakt dan zonder dat er iets mis is.
+const wachtOpFout = async (stuk) => {
+  for (let i = 0; i < 100; i++) {
+    if (jsFouten.some(f => f.includes(stuk))) return;
+    await new Promise(r => setTimeout(r, 50));
+  }
+};
+
+// Alle checks hieronder lezen Nederlandse tekst, en dit bestand zet zijn taal
+// zelf (zie hierboven). Gaat dát mis, dan zakken ze allemaal op iets wat niets
+// met het vangnet te maken heeft. Vandaar eerst deze: dan staat er meteen wát
+// er aan de hand is in plaats van tien raadselachtige tekstmismatches.
+check('de app draait in het Nederlands, anders zegt de rest niets',
+  (await page.evaluate(() => localStorage.getItem('poule:taal'))) === 'nl'
+    && (await page.getAttribute('html', 'lang')) === 'nl',
+  `sleutel=${await page.evaluate(() => localStorage.getItem('poule:taal'))} `
+    + `lang=${await page.getAttribute('html', 'lang')}`);
+
 await meedoen(page);
 
 // Een scherm onthouden om straks te kunnen zien dat het weggaat.
@@ -82,7 +101,13 @@ check('de technische reden staat erbij om door te geven',
   (await tekst('#kapotreden')) === 'proefklap', await tekst('#kapotreden'));
 
 // ---- 3: geen doofpot ------------------------------------------------------
+// Erop wachten en er niet van uitgaan. Het vangnet gooit de fout opnieuw op in
+// een setTimeout, en die moet daarna nog via de browser naar deze kant komen.
+// Het vangnetscherm staat er al voordat dat rond is. Hier haalde hij het altijd
+// -- de tekstchecks hierboven geven precies genoeg vertraging -- en in de CI
+// één keer niet. Dat was geen fout in de app maar een race in deze test.
 
+await wachtOpFout('proefklap');
 check('de fout staat gewoon in de console, het vangnet slikt hem niet in',
   jsFouten.some(f => f.includes('proefklap')), jsFouten.join(' | '));
 
