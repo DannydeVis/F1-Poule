@@ -1239,6 +1239,15 @@ accentkleur. Die slaat aan bij toetsenbordbediening. Eerder stond hier dat een
 een kale `.focus()` geeft de ring wel degelijk. Dat is maar goed ook, want het
 focusherstel hieronder leunt erop.
 
+**Labels horen aan hun veld te hangen.** Een `<span class="label">` boven een
+invoerveld ziet eruit als een label maar is het niet: gebruik
+`<label class="label" for="...">`. Dat kost niets aan opmaak en maakt het woord
+ook aanklikbaar. `test/toegankelijk.test.mjs` keurt dit per scherm, dus een
+nieuw veld zonder label laat de testen zakken.
+
+**Elk scherm begint bij een h1** en slaat geen koppenniveau over. Dezelfde test
+let daarop.
+
 **De focus overleeft een hertekening.** De app vervangt bij elke tik het hele
 scherm, dus het element dat de focus had bestaat daarna niet meer. Zonder
 ingrijpen valt de focus terug op de body en begint de volgende Tab weer

@@ -5392,3 +5392,42 @@ oplevert. Nagemeten in Chromium klopt dat hier niet: een kale `.focus()` geeft
 wel degelijk de ring. Daarom is er geen toetsenbord-detectie nodig en is het
 herstel één regel. De test controleert die ring ook, want focus zonder ring is
 voor wie kijkt net zo goed verdwaald zijn.
+
+---
+
+## De rest van de toegankelijkheidsronde
+
+Na de omroep en het focusherstel bleef de vraag: wat is er nog meer stuk? Weer
+eerst gemeten in plaats van gegokt, met een script dat alle zes de schermen
+langsloopt. Drie dingen kwamen eruit.
+
+**Twee invoervelden zonder label.** Boven allebei stond een
+`<span class="label">`: het zíét eruit als een label, maar er is niets dat het
+aan het veld koppelt. Een schermlezer zegt dan alleen "invoerveld". Het ging om
+`#code` — het poulecodeveld, het állereerste wat iemand aanraakt — en
+`#pouleomschrijving`. Allebei nu een echte `<label for=>`. Dat kost niets aan
+opmaak (`.veldblok` is een flexkolom, dus een `<label>` valt precies zo als een
+`<span>`) en levert er en passant bij op dat je op het woord kunt tikken om in
+het veld te komen.
+
+**Het racesscherm had geen h1.** Stand, poule en profiel hadden er alle drie
+een; races begon bij een `<h2 class="heronaam">`. Wie op koppen navigeert vond
+daar dus geen ingang. Die kop is nu een `<h1>` — `.heronaam` zet grootte,
+gewicht, regelhoogte en marge zelf, dus er verandert niets aan het beeld. Het
+racescherm erfde hetzelfde probleem, want op desktop blijft de linkerkolom de
+raceslijst tonen.
+
+### De test keurt schermen, geen gevallen
+
+`test/toegankelijk.test.mjs` loopt de zes schermen af en stelt er per stuk
+dezelfde vier vragen aan: heeft elke knop een naam, elk invoerveld een label,
+elke afbeelding een alt, en is er een h1 zonder overgeslagen niveau.
+
+Dat is met opzet zo opgezet en niet als lijstje losse gevallen. Een test die
+"`#code` heeft een label" zegt, zegt niets over het volgende veld dat iemand
+toevoegt. Een test die "geen enkel veld op het beginscherm mist een label"
+zegt, keurt ook alles wat er later bij komt. Komt er een scherm bij, dan is het
+één regel: `await keur('nieuwscherm')`.
+
+Nagemeten door de oude opmaak terug te zetten: vier checks zakken, en ze noemen
+precies het element dat mankeert (`input#code.veld`, koppen `2`).
