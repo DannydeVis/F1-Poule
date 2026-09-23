@@ -94,8 +94,10 @@ begin
     insert into jokers (pool_id, race_id, member_id) values (poule, open6, lid);
     raise exception 'gezakt: een zesde joker werd aangenomen';
   exception when others then
-    if sqlerrm not like '%vijf jokers%' then raise; end if;
-    raise notice 'ok: de zesde joker wordt geweigerd';
+    -- "5 jokers" en niet "vijf": de melding noemt sinds deze poule het aantal
+    -- kiest het getal dat er echt geldt, en dat kan ook 2 zijn.
+    if sqlerrm not like '%5 jokers%' then raise; end if;
+    raise notice 'ok: de zesde joker wordt geweigerd (%)', sqlerrm;
   end;
 
   -- Eentje weghalen maakt weer plek. Anders zou een misklik in ronde 1 je de
@@ -152,4 +154,91 @@ begin
   select count(*) into n from jokers where pool_id = poule;
   if n <> 0 then raise exception 'gezakt: % jokers bleven staan', n; end if;
   raise notice 'ok: jokers gaan mee als de poule weggaat';
+end $$;
+
+-- ---- hoeveel jokers geeft deze poule? -----------------------------------
+--
+-- Stond als vaste 5 in de app. Nu kiest de poule het, één tot vijf, en dan
+-- zijn er twee dingen die de database moet bewaken: dat de teller dát getal
+-- aanhoudt en niet vijf, en dat je het niet onder wat er al ligt kunt zetten.
+-- Dat tweede is het nare geval: de poulebaas zet het op 1 terwijl drie mensen
+-- er vier hebben liggen, en dan klopt er niets meer.
+
+\set ON_ERROR_STOP on
+
+do $$
+declare
+  poule  uuid := '77777777-7777-7777-7777-777777777777';
+  lid    uuid := '88888888-8888-8888-8888-888888888888';
+  n      int;
+begin
+  insert into pools (id, name, season, join_code, jokers_vanaf)
+  values (poule, 'Jokertelling', 2026, 'JKA001', now() - interval '30 days');
+  insert into pool_members (member_id, pool_id, display_name) values (lid, poule, 'Danny');
+
+  -- Standaard vijf, ook voor een poule die er niets over zegt.
+  select jokers_aantal into n from pools where id = poule;
+  if n <> 5 then raise exception 'gezakt: standaard is % in plaats van 5', n; end if;
+  raise notice 'ok: een poule krijgt standaard vijf jokers';
+
+  -- Buiten bereik kan niet. Nul is geen keuze maar "de regel uit", en dat doet
+  -- jokers_vanaf al.
+  begin
+    update pools set jokers_aantal = 0 where id = poule;
+    raise exception 'gezakt: nul jokers werd aangenomen';
+  exception when others then
+    if sqlerrm not like '%pools_jokers_aantal%' then raise; end if;
+    raise notice 'ok: nul jokers wordt geweigerd';
+  end;
+  begin
+    update pools set jokers_aantal = 6 where id = poule;
+    raise exception 'gezakt: zes jokers werd aangenomen';
+  exception when others then
+    if sqlerrm not like '%pools_jokers_aantal%' then raise; end if;
+    raise notice 'ok: zes jokers wordt ook geweigerd';
+  end;
+
+  -- Twee is een geldige keuze, en dan is de derde er een te veel.
+  update pools set jokers_aantal = 2 where id = poule;
+  for i in 1..6 loop
+    insert into races (id, season, round, name, deadline_quali, deadline_race)
+    values (9500 + i, 2026, 100 + i,
+            'Toekomst ' || i, now() + interval '10 days', now() + interval '11 days');
+  end loop;
+
+  insert into jokers (pool_id, race_id, member_id) values (poule, 9501, lid);
+  insert into jokers (pool_id, race_id, member_id) values (poule, 9502, lid);
+  raise notice 'ok: met het aantal op twee passen er twee';
+
+  begin
+    insert into jokers (pool_id, race_id, member_id) values (poule, 9503, lid);
+    raise exception 'gezakt: de derde joker werd aangenomen bij een aantal van twee';
+  exception when others then
+    if sqlerrm not like '%2 jokers%' then raise; end if;
+    raise notice 'ok: de derde wordt geweigerd, met het juiste getal erin (%)', sqlerrm;
+  end;
+
+  -- Omhoog mag altijd: iedereen krijgt er evenveel bij.
+  update pools set jokers_aantal = 4 where id = poule;
+  insert into jokers (pool_id, race_id, member_id) values (poule, 9503, lid);
+  raise notice 'ok: omhoog bijstellen geeft meteen ruimte';
+
+  -- Omlaag mag, maar niet onder wat er al ligt. Er liggen er drie.
+  update pools set jokers_aantal = 3 where id = poule;
+  raise notice 'ok: omlaag tot precies wat er ligt mag';
+  begin
+    update pools set jokers_aantal = 2 where id = poule;
+    raise exception 'gezakt: het aantal werd onder wat er ligt gezet';
+  exception when others then
+    if sqlerrm not like '%ligt al iemand%' then raise; end if;
+    raise notice 'ok: onder wat er al ligt wordt geweigerd (%)', sqlerrm;
+  end;
+
+  -- En een joker terugnemen maakt dat weer mogelijk.
+  delete from jokers where pool_id = poule and race_id = 9503;
+  update pools set jokers_aantal = 2 where id = poule;
+  raise notice 'ok: na het terugnemen van een joker kan het wel';
+
+  delete from pools where id = poule;
+  delete from races where id between 9501 and 9506;
 end $$;

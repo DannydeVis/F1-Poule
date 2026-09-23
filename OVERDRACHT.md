@@ -5045,3 +5045,60 @@ punten laten liggen", onleesbaar voor twee regels lopende tekst. Het is nu
 `seizoenslaag.test.mjs` §4c legt alle drie vast: twee dagen na de deadline
 zwijgt hij, tien dagen erna noemt hij de race bij naam, en een afgelaste race
 houdt niets tegen.
+
+---
+
+## Het aantal jokers is een keuze van de poule geworden
+
+Er stond in `index.html` een comment dat dit expres géén databasekolom was:
+
+> Het getal is een spelregel zoals 5/3/1 dat is, dus het staat hier en niet in
+> de database: een poule die er vier of zes zou willen is een andere vraag dan
+> deze.
+
+Dat klopte, tot Danny die andere vraag stelde. Het is nu `pools.jokers_aantal`,
+één tot vijf, standaard vijf — ook voor elke poule van vóór de kolom.
+
+**Nul zit er niet bij.** Nul jokers is de regel uitzetten, en dat doet
+`jokers_vanaf` al. Twee knoppen voor hetzelfde is een uitnodiging om ze uit
+elkaar te laten lopen.
+
+### Waar je het kiest, en waarom daar
+
+Het gevraagde was "als je een poule maakt". Dat is het niet geworden: jokers
+zitten niet in de aanmaakstappen. Die gaan over de naam, jouw naam en de
+vragenset, en jokers staan daarna nog gewoon uit. Een aantal kiezen voor iets
+wat je nog niet hebt aangezet is een vraag zonder aanleiding.
+
+De keuzelijst staat daarom in het jokerblok onder **Poule → beheer**, op
+precies het moment dat je besluit dát je jokers wilt. Wil je het alsnog als
+vierde stap in het aanmaakscherm, dan is dat een kleine verplaatsing.
+
+### Twee regels in de database, niet één
+
+De voor de hand liggende (`poule_joker_bewaken` leest het aantal in plaats van
+een vaste 5) en de omgekeerde, die minder opvalt:
+
+```sql
+if new.jokers_aantal < hoogst then
+  raise exception 'Er ligt al iemand met % jokers, dus % kan niet', hoogst, new.jokers_aantal;
+```
+
+Zonder die tweede zet de poulebaas het op 1 terwijl drie mensen er vier hebben
+liggen. Dan gaat `jokersOver()` negatief, en zegt het scherm "je hebt je 1
+jokers al gezet" tegen iemand die er vier heeft. Omhoog mag wél altijd:
+iedereen krijgt er evenveel bij, dus dat scheeft niets.
+
+`jokers.test.sql` legt beide kanten vast, inclusief dat omlaag tot precies wat
+er ligt wél mag en dat een joker terugnemen weer ruimte maakt.
+
+### Wat er meeverschoof
+
+De foutmelding van de trigger zei "je vijf jokers" voluit; die noemt nu het
+getal dat echt geldt (`'Je hebt je % jokers...'`). De assertie in
+`jokers.test.sql` die op `%vijf jokers%` zocht is daarop bijgewerkt — en dat is
+precies waarom die test er staat.
+
+En `test/nabootsing-supabase.mjs` telt nu ook mee: de nabootsing kende de grens
+van vijf helemaal niet, want die zat in de app. Nu hij in de database zit,
+hoort de nabootsing hem na te doen.

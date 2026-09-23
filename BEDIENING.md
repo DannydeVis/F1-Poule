@@ -355,8 +355,8 @@ race in mei nog veranderen door wat er in september gebeurt.
 
 ### 6b. Jokers
 
-Staat ook uit. De poulebaas zet hem aan in Poule → beheer, en dan heeft
-iedereen **vijf jokers voor dit seizoen**. Je legt er een op een weekend en dat
+Staat ook uit. De poulebaas zet hem aan in Poule → beheer, en kiest daar ook
+**hoeveel jokers iedereen krijgt: één tot vijf** (standaard vijf). Je legt er een op een weekend en dat
 hele weekend telt dubbel: de kwalificatie, de race, de sprint en alle losse
 vragen erbij.
 
@@ -383,6 +383,10 @@ Vijf dingen die daarbij vastliggen:
 - **Geen terugwerkende kracht.** Net als bij het punt hierboven bewaart
   `pools.jokers_vanaf` *wanneer* het aanging. Een weekend dat toen al liep kan
   geen joker meer krijgen.
+- **Het aantal kun je bijstellen**, ook terwijl de jokers al aanstaan. Omhoog
+  mag altijd — iedereen krijgt er evenveel bij. Omlaag mag niet ónder wat
+  iemand al heeft liggen; anders zou je iemand jokers afpakken die hij al
+  ingezet heeft. De database weigert dat, en het scherm zegt waarom.
 - **Uitzetten laat de gezette jokers staan**, ze tellen alleen niet meer mee.
   Per ongeluk uitzetten en weer aanzetten kost dus niemand zijn keuzes.
 - **De regels staan in de database**, niet alleen in het scherm — trigger

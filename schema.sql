@@ -200,6 +200,15 @@ alter table public.pools        add column if not exists autofill_vanaf timestam
 -- vinkje maar een moment, zodat een weekend dat al gereden is niet met
 -- terugwerkende kracht dubbel gaat tellen. Leeg = uit.
 alter table public.pools        add column if not exists jokers_vanaf timestamptz;
+-- Hoeveel jokers een speler dit seizoen heeft. Stond als vaste 5 in
+-- index.html, met de redenering dat het een spelregel is zoals 5/3/1. Dat
+-- klopte tot iemand vroeg of het per poule kon -- en dan is het geen regel van
+-- de app meer maar een keuze van de poule. Eén tot vijf: nul jokers is de
+-- regel uitzetten, en dat doet `jokers_vanaf` al.
+alter table public.pools        add column if not exists jokers_aantal int not null default 5;
+alter table public.pools        drop constraint if exists pools_jokers_aantal;
+alter table public.pools         add constraint pools_jokers_aantal
+  check (jokers_aantal between 1 and 5);
 -- Contrair: een goed antwoord dat bijna niemand gaf telt zwaarder. Derde keer
 -- hetzelfde patroon en om dezelfde reden -- een moment, geen vinkje, zodat een
 -- weekend dat al gereden is niet met terugwerkende kracht anders gaat tellen.
@@ -739,7 +748,8 @@ create trigger answers_deadline
 
 -- ------------------------------------------------------------
 --  Jokers
---  Vijf per seizoen, één per weekend, en alleen zolang dat weekend nog
+--  Eén tot vijf per seizoen (de poule kiest), één per weekend, en alleen
+--  zolang dat weekend nog
 --  helemaal openstaat. Dit is de tweede regel die hard in de database zit,
 --  en om dezelfde reden als de deadline: een joker die je achteraf mag
 --  verzetten is geen keuze maar een knop om de uitslag mee te herschrijven.
@@ -757,6 +767,7 @@ declare
   eerste   timestamptz;
   seizoen  int;
   gezet    int;
+  mag      int;
 begin
   rij := coalesce(new, old);
 
@@ -796,18 +807,50 @@ begin
 
   if tg_op = 'DELETE' then return old; end if;
 
-  -- Vijf per seizoen. De rij zelf niet meetellen, anders kun je een
-  -- bestaande joker niet meer opnieuw wegschrijven.
+  -- Zoveel als deze poule er geeft. De rij zelf niet meetellen, anders kun je
+  -- een bestaande joker niet meer opnieuw wegschrijven.
+  select p.jokers_aantal into mag from public.pools p where p.id = new.pool_id;
   select count(*) into gezet
   from public.jokers j join public.races r on r.id = j.race_id
   where j.pool_id = new.pool_id and j.member_id = new.member_id
     and r.season = seizoen and j.race_id <> new.race_id;
-  if gezet >= 5 then
-    raise exception 'Je hebt je vijf jokers voor dit seizoen al gezet';
+  if gezet >= mag then
+    raise exception 'Je hebt je % jokers voor dit seizoen al gezet', mag;
   end if;
 
   return new;
 end $$;
+
+-- Het aantal omlaag zetten mag niet ónder wat er al ligt.
+--
+-- Zonder deze regel zet de poulebaas het op 1 terwijl drie mensen er vier
+-- hebben liggen, en dan klopt er niets meer: jokersOver() in de app gaat
+-- negatief, en "je hebt je 1 jokers al gezet" slaat nergens op bij iemand die
+-- er vier heeft. Omhoog mag altijd -- iedereen krijgt er evenveel bij.
+create or replace function public.poule_jokeraantal_bewaken()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare hoogst int;
+begin
+  if new.jokers_aantal = old.jokers_aantal then return new; end if;
+  select coalesce(max(t.aantal), 0) into hoogst from (
+    select count(*) as aantal
+    from public.jokers j join public.races r on r.id = j.race_id
+    where j.pool_id = new.id and r.season = new.season
+    group by j.member_id) t;
+  if new.jokers_aantal < hoogst then
+    raise exception 'Er ligt al iemand met % jokers, dus % kan niet', hoogst, new.jokers_aantal;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists pools_jokeraantal on public.pools;
+create trigger pools_jokeraantal
+  before update on public.pools
+  for each row execute function public.poule_jokeraantal_bewaken();
 
 drop trigger if exists jokers_bewaken on public.jokers;
 create trigger jokers_bewaken

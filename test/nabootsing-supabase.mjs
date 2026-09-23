@@ -230,6 +230,16 @@ function jokerGeweigerd(rij) {
   if (start < Date.parse(poule.jokers_vanaf)) {
     return 'Dit weekend liep al toen de jokers aangezet werden';
   }
+  // Hoeveel er in déze poule mogen. Stond hier niet, want het was een vaste 5
+  // in de app; nu is het een kolom en kan een poule er twee hebben. De rij
+  // zelf telt niet mee, net als in de trigger -- anders kun je een bestaande
+  // joker niet opnieuw wegschrijven.
+  const mag = poule.jokers_aantal ?? 5;
+  const gezet = store.jokers.filter((j) =>
+    gelijk(j.pool_id, rij.pool_id) && gelijk(j.member_id, rij.member_id)
+    && !gelijk(j.race_id, rij.race_id)
+    && store.races.some((r) => gelijk(r.id, j.race_id) && r.season === race.season)).length;
+  if (gezet >= mag) return `Je hebt je ${mag} jokers voor dit seizoen al gezet`;
   return null;
 }
 const jokerFout = (bericht) => ({ data: null, error: { code: 'P0001', message: bericht } });

@@ -306,6 +306,43 @@ check('en de merktekens zijn weg', (await page.$('.jokervlag')) === null);
 check('maar de gezette jokers staan er nog in de database',
   (await page.evaluate(() => globalThis.__db.jokers.length)) === 4);
 
+// --- hoeveel jokers geeft deze poule? ------------------------------------
+// Stond als vaste 5 in de app. Nu kiest de poule het bij het aanzetten, en
+// dan moet alles wat "5" zei dat getal volgen: de uitleg, de teller op het
+// racescherm en de grens waarop de database nee zegt.
+await page.click('[data-weergave="poule"]');
+await page.waitForSelector('#jokersKnop');
+await page.click('#jokersKnop');                 // weer aan
+await page.waitForSelector('.melding');
+
+check('bij de jokers staat een keuzelijst voor het aantal',
+  (await page.$('#jokeraantal')) !== null);
+check('die op vijf staat zolang er niets gekozen is',
+  (await page.$eval('#jokeraantal', (el) => el.value)) === '5');
+check('met één tot en met vijf erin, en geen nul',
+  (await page.$$eval('#jokeraantal option', (n) => n.map((e) => e.value).join(',')))
+    === '1,2,3,4,5');
+
+await page.selectOption('#jokeraantal', '2');
+await page.waitForFunction(() => globalThis.__db.pools[0].jokers_aantal === 2);
+check('kiezen schrijft het aantal weg', true,
+  String(await page.evaluate(() => globalThis.__db.pools[0].jokers_aantal)));
+check('en de uitleg eronder noemt datzelfde getal',
+  (await tekst('#app')).includes('2 jokers'),
+  (await tekst('#app')).match(/[^.]*\d jokers[^.]*\./)?.[0] ?? '');
+
+// Het racescherm telt nu tot twee, niet tot vijf.
+await terug();
+await openRace('Extra 1');
+// Er liggen op dit punt al jokers, dus hij zegt "alle 2 gebruikt" en niet
+// "nog x van je 2" -- allebei goed, zolang er maar 2 staat en geen 5. Dat
+// laatste is wat er vóór deze wijziging stond.
+{
+  const jk = await tekst('.jokerregel .jokertekst');
+  check('de teller op het racescherm volgt het nieuwe aantal',
+    jk.includes('2') && !jk.includes('5'), jk);
+}
+
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
 await stoppen();
