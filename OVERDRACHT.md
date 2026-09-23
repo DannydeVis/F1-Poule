@@ -5102,3 +5102,177 @@ precies waarom die test er staat.
 En `test/nabootsing-supabase.mjs` telt nu ook mee: de nabootsing kende de grens
 van vijf helemaal niet, want die zat in de app. Nu hij in de database zit,
 hoort de nabootsing hem na te doen.
+
+---
+
+## Een vangnet onder het tekenen
+
+Tot hier had de app precies één manier om te falen die de gebruiker iets
+vertelde: `toonFout()`, en die gaat over het láden. Voor een fout tijdens het
+*tekenen* van een scherm was er niets, en dat is niet hetzelfde geval.
+
+`render()` deed dit:
+
+```js
+function render() {
+  if (S.maak)   { maakPagina(); return; }
+  if (!S.poule) { toonStart(); return; }
+  if (!S.ik)    { kiesSpeler(); return; }
+  toonApp();
+}
+```
+
+Klapte er iets in `toonApp()`, dan gebeurde er letterlijk niets. Twee smaken,
+allebei naar:
+
+- **Vóór `app.innerHTML =`.** Het oude scherm bleef staan. Je tikt op Stand,
+  er verandert niks, je tikt nog eens, er verandert nog steeds niks.
+- **Ná `app.innerHTML =`, tijdens het knopen van de handlers.** Het nieuwe
+  scherm staat er, ziet er normaal uit, en geen enkele knop doet iets.
+
+Het tweede is het ergste, want er is niets te zien waar iets aan te zien is.
+En in beide gevallen was er geen weg terug: herladen tekent hetzelfde scherm,
+dus dezelfde fout. Voor wie de app als tegel op zijn beginscherm heeft is de
+enige uitweg dan "site-instellingen → gegevens wissen", en dat vindt een
+normaal mens niet.
+
+### Wat er nu gebeurt
+
+`render()` staat in een `try`, en `toonKapot()` neemt het over: wat er misging
+(in mono, gedempt, duidelijk niet-advies maar iets om door te geven), de
+geruststelling dat je inzendingen in de database staan en niet in dit scherm,
+en twee uitwegen.
+
+### De twee uitwegen, en waarom het er twee zijn
+
+**Opnieuw proberen** gooit eerst het onthouden scherm weg en herlaadt dan pas.
+Zonder dat eerste stuk is het een knop die gegarandeerd hetzelfde doet — de
+app onthoudt welk scherm je open had (`poule:<poule>:<lid>:scherm`), dus na een
+herlaadbeurt komt hij precies terug op het scherm dat net klapte. Weggooien
+kost niets: het ergste wat je verliest is dat je weer op het racesoverzicht
+begint.
+
+**Begin op dit toestel opnieuw** is het laatste redmiddel en vergeet alles wat
+onder `poule:` staat — welke poule, wie je bent, welke poules je kent. Twee
+tikken, hetzelfde patroon als "alles wissen", en de tweede tik zegt erbij wat
+het betekent: je kiest daarna je naam opnieuw in de poule. Dat kan ook, want
+een bestaande speler aanwijzen is precies hoe je binnenkwam.
+
+Eén sleutel blijft staan: `poule:taal`. Die hoort niet bij het probleem en wel
+bij het ongemak — iemand die de app op Engels heeft gezet wil na een storing
+geen Nederlands terug. Veilig ook: die waarde wordt nergens anders voor
+gebruikt dan als opzoekwaarde in het woordenboek, en wat er niet in staat valt
+terug op het Nederlands. Een corrupte taalsleutel kán je dus niet buitensluiten.
+
+### Wat het vangnet met opzet níét doet
+
+**De fout opslokken.** In de `catch` staat:
+
+```js
+setTimeout(() => { throw fout; });
+toonKapot(fout);
+```
+
+Die `setTimeout` gooit hem buiten de `catch` opnieuw op, ongevangen, zodat hij
+gewoon in de console belandt — en daarmee in `page.on('pageerror')`, waar elke
+browsertest op let. Zonder die regel zou dit vangnet elke renderbug in de hele
+testsuite onzichtbaar maken. Een vangnet dat bugs verstopt is erger dan geen
+vangnet, en `test/vangnet.test.mjs` legt dat vast: haal die ene regel weg en de
+test zakt.
+
+**Een werkend scherm wegvagen.** Er hangen ook luisteraars op `error` en
+`unhandledrejection`, voor het geval dat een klik stilletjes strandt buiten het
+tekenen om. Die krijgen géén heel scherm maar een balkje onderaan
+(`#stillefout`), weg te klikken. Een losse mislukte belofte is geen reden om
+iemand uit een app te gooien waar hij net in zat te werken. En ook hier: geen
+`preventDefault()`, dus de fout blijft in de console staan.
+
+**Zichzelf laten overtekenen.** `render()` begint met `if (kapot) return;`.
+Zonder dat zou de eerste de beste achtergebleven handler het vangnet
+overschrijven met precies dezelfde klap, en is de uitweg onbereikbaar.
+
+### Over de test
+
+De klap moet van buitenaf komen, want de app heeft geen knop die hem
+veroorzaakt. `test/vangnet.test.mjs` vervangt via `addInitScript` de
+`querySelectorAll` van `Element.prototype` door eentje die gooit zodra er naar
+`[data-weergave]` gevraagd wordt. Dat is het eerste wat `toonApp()` doet ná het
+zetten van `innerHTML`, dus het nabootst precies de nare smaak: het scherm
+staat er, de knoppen doen niets.
+
+Eén valkuil zat in de opstelling zelf. `startPagina()` zet `poule:taal` bij
+élke navigatie terug, dus na de wisbeurt-plus-herlaadbeurt staat die sleutel er
+hoe dan ook weer — de check "de taalkeuze bleef staan" slaagde ook toen ik de
+uitzondering eruit sloopte. Vacuüm dus. De test zet de taal nu zelf, eenmalig,
+met een vlag die `test:` heet in plaats van `poule:` en de wisbeurt daarom
+overleeft. Nu zakt hij wel als de uitzondering weggaat.
+
+---
+
+## De omroep: wat de app zegt, ook voor wie het niet ziet
+
+De app is een single-page app die bij elke tik `app.innerHTML` in zijn geheel
+vervangt. Voor wie kijkt is dat prima. Voor wie met een schermlezer werkt is
+het stilte: een DOM die onder je vandaan vervangen wordt, wordt niet
+voorgelezen. Elke melding ("Voorspelling voor Shanghai opgeslagen", "Iedereen
+heeft nu 3 jokers dit seizoen") en elke foutregel stond er dus wel, en kwam
+bij een deel van de mensen niet aan. `grep -c aria-live index.html` gaf nul.
+
+### Het vak
+
+Eén `<div id="omroep" aria-live="polite" aria-atomic="true">` in de `body`,
+**buiten `#app`**. Dat "buiten" is de hele truc en geen netheid: een live
+region die op hetzelfde moment ontstaat als zijn inhoud wordt níét
+voorgelezen. Hij moet er al staan en daarna pas veranderen. Stond hij in
+`#app`, dan werd hij bij elke hertekening opnieuw gemaakt en zei hij nooit
+iets. `test/omroep.test.mjs` zet daarom een merkteken op het element en kijkt
+of dat een hertekening overleeft.
+
+Verstopt met de gebruikelijke `.alleenlezer` (1 pixel, `clip-path`), en
+nadrukkelijk niet met `display:none` of `visibility:hidden` — die halen het
+uit de voorleesvolgorde, en dan valt er niets meer te roepen.
+
+### Waarom het aan de DOM hangt en niet aan render()
+
+De eerste opzet riep aan het einde van `render()` wat er te melden viel. Dat
+leek de ene plek die niemand kan vergeten — `S.melding` wordt op 33 plekken
+gezet en een `.err` op 19, en die wilde ik geen van alle aanraken.
+
+Het was te weinig, en de test wees het aan. De foutregel na een mislukte
+opslag komt niet uit `render()` maar uit `invulWeergave(paneel, r, dicht)`,
+rechtstreeks aangeroepen in de `catch` van de opslaanknop. Er zijn meer van
+die paden en er komen er bij.
+
+Dus hangt de omroep nu aan een `MutationObserver` op `#app`. Wat er ook
+tekent, langs welke weg ook, nu of later: komt er een melding of een foutregel
+op het scherm, dan wordt hij geroepen. Aan een plek die niemand hoeft te
+onthouden valt niets te vergeten.
+
+### Hetzelfde bericht, en hetzelfde bericht opnieuw
+
+Twee gevallen die op elkaar lijken en tegengesteld moeten uitpakken:
+
+- **Het bericht staat er nog** en het scherm wordt om iets anders opnieuw
+  getekend. Niet opnieuw roepen.
+- **Hetzelfde bericht, nieuw voorval** — je tikt nog eens op opslaan en
+  krijgt dezelfde fout. Wél opnieuw roepen, want stilte klinkt als gelukt.
+
+Het onderscheid zit in de elementen, niet in de tekst: `invulWeergave()`
+vervangt `paneel.innerHTML`, dus de tweede fout staat in een *nieuw* element.
+`kijkOfErIetsTeMeldenIs()` vergelijkt daarom tekst én elementidentiteit.
+
+En omdat een live region alleen op verandering reageert, maakt `omroep()` het
+vak eerst leeg en zet de tekst een tik later. Zonder die lege tussenstap is
+dezelfde tekst geen verandering en blijft het stil. Dat is precies wat de test
+meet: hij neemt de opeenvolging van waarden op zoals een schermlezer die
+meekrijgt, en eist dat er een lege stap tussen zit. Het vak in de test zelf
+leegmaken zou die check vacuüm maken — dan slaagt hij ook als de app het niet
+doet.
+
+### Wat er níét geroepen wordt
+
+Alleen de eerste melding en de eerste gevúlde foutregel. Lege `.err`-elementen
+staan op veel schermen vast klaar te wachten en hebben niets te zeggen; die
+worden overgeslagen. En verder niets: een schermlezer die bij elke tik het
+halve scherm opnieuw voorgelezen krijgt is net zo onbruikbaar als eentje die
+zwijgt.

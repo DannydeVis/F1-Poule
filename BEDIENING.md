@@ -1237,8 +1237,31 @@ zie `.merk .wisselknop`.
 accentkleur. Die slaat alleen aan bij toetsenbordbediening; een `.focus()`
 vanuit script telt niet mee, en een test die dat niet weet faalt onterecht.
 
+**Schermlezers.** De app vervangt bij elke tik het hele scherm, en daar leest
+een schermlezer niets van voor. Meldingen en foutregels gaan daarom óók naar
+een onzichtbaar vak buiten `#app` (`#omroep`, `aria-live="polite"`), dat er de
+hele tijd staat en alleen van inhoud verandert. Zet dat vak nooit in `#app` en
+verberg het nooit met `display:none` of `visibility:hidden` — in beide gevallen
+zegt het niets meer. Er is niets aan te roepen vanuit nieuwe code: een
+`MutationObserver` kijkt mee met wat er getekend wordt, langs welk pad dan ook.
+
 **Zonder verbinding** krijg je een eigen scherm ("Even geen bereik") en geen
 leeg vlak. Dat laatste was wat er gebeurde: de app haalt supabase-js op met een
 `await import` op modulenniveau, en als die mislukt stopt het hele script
 voordat er ook maar iets getekend is. Er is met opzet geen service worker — een
 oude stand tonen alsof hij klopt is erger dan een foutmelding.
+
+**Als een scherm vastloopt** ("Dit scherm liep vast") krijg je te zien wat er
+misging, plus twee uitwegen. *Opnieuw proberen* vergeet eerst welk scherm je
+open had staan en herlaadt dan — anders komt de app terug op precies het scherm
+dat net klapte en gebeurt hetzelfde nog eens. Helpt dat niet, dan vergeet
+*Begin op dit toestel opnieuw* alles wat dit toestel van je weet: welke poule,
+wie je bent, welke poules je kent. Twee tikken, net als bij "alles wissen".
+Je inzendingen staan in de database en niet in dat scherm, dus die raak je niet
+kwijt — je wijst na afloop opnieuw je naam aan in de poule. Je taalkeuze blijft
+staan.
+
+Gaat er iets mis búíten het tekenen om, dan verschijnt er alleen een balkje
+onderaan. Een losse mislukte handeling is geen reden om je uit de app te
+gooien; het balkje zegt alleen dat het scherm misschien niet meer klopt, en is
+weg te klikken.
