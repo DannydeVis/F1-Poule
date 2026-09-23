@@ -5313,3 +5313,82 @@ schema is `ok`, trigger weg geeft `ZONDER BEWAKING`, constraint weg geeft
 beide richtingen: een poule die afwijkt telt mee, en terug op vijf niet meer.
 Een regel die alleen `ok` kan zeggen controleert niets — dat was de hele les
 van de vorige keer dat deze tabel verouderd bleek.
+
+---
+
+## De focus overleefde geen enkele tik
+
+Na de omroep bleef er nog een gat in dezelfde hoek, en dit was het ergere van
+de twee. Eerst gemeten, net als bij `aria-live`:
+
+```
+na twee keer Tab:       button.navknop "Races"
+na Enter (navigatie):   (body — focus kwijt)
+focus op een tabknop:   button "Race"
+na Enter (tabwissel):   (body — focus kwijt)
+```
+
+Elke tik vervangt `app.innerHTML` in zijn geheel, dus het element dat de focus
+had bestaat daarna niet meer en de focus valt terug op de body. Niet alleen
+bij navigeren — ook bij een tabwissel binnen hetzelfde scherm, en dat is het
+geval dat je het vaakst tegenkomt. Wie met een toetsenbord werkt moest dus na
+élke handeling opnieuw vanaf het begin van de pagina tabben. Dat is geen
+ongemak maar onbruikbaarheid.
+
+### Een handvat, geen verwijzing
+
+Een verwijzing naar het oude element bewaren heeft geen zin: dat element is
+weg. Wat wel werkt is een *handvat* — het eerste dat het herkenbaar maakt,
+`id` of het eerste gevulde `data-*`-attribuut. De knoppen in deze app dragen
+die allemaal (`data-weergave`, `data-tab`, `data-race`, `data-vraagplek`), dus
+na de hertekening is het nieuwe element gewoon terug te vinden.
+
+Met opzet geen samengestelde CSS-selector maar een `{soort, waarde}`-paar dat
+met een predicaat gezocht wordt. Een aanhalingsteken in een attribuutwaarde
+zou anders ontsnapt moeten worden, en daar gaat zoiets altijd een keer mis.
+
+### Waar het aan hangt
+
+Aan dezelfde `MutationObserver` als de omroep, en om dezelfde reden: er zijn
+meerdere tekenpaden (`render()`, `invulWeergave()`, `vulPaneel()`) en er komen
+er bij. Aan een plek die niemand hoeft te onthouden valt niets te vergeten.
+
+### Drie stukken, alle drie nagemeten
+
+1. **Herstellen** — zonder dit zakken zes van de twaalf checks.
+2. **Terugvallen op de inhoud** als het handvat niet meer bestaat. Focus op
+   `.hoofd` (die daarvoor `tabindex="-1"` kreeg), zodat de volgende Tab dáár
+   begint en een schermlezer de nieuwe inhoud oppakt. Zonder dit zakken er
+   drie.
+3. **Niet stelen.** Staat de focus al ergens in de app, dan blijft hij daar.
+   Zonder dit zou "herstellen" ook mogen betekenen: altijd terug naar het
+   laatste handvat springen, ook als je inmiddels ergens anders staat.
+
+### Over dat derde punt, en een test die eerst niets bewees
+
+Mijn eerste versie van die laatste check focuste een element dát een handvat
+heeft. Dan wijst het handvat naar precies het element waar de focus al staat,
+en komt het met en zonder waarborg op hetzelfde neer — de check slaagde ook
+met de waarborg eruit gesloopt.
+
+Hij meet nu met een element zónder handvat, want alleen dan verschillen de
+twee uitkomsten. In de hele app is er precies één knop die daaraan voldoet: de
+agendalink op het poulescherm, een `<a>` zonder id en zonder data-attribuut.
+Verdwijnt die ooit, dan zakt deze test en niet de app; zoek dan een andere.
+
+### En een valkuil bij het meten zelf
+
+De eerste opzet gebruikte `#terug` als "knop die verdwijnt". Op 1280 breed
+bestaat die knop wel in de DOM maar staat hij verborgen — op desktop staat de
+lijst er altijd naast, dus er is niets om naar terug te gaan.
+`page.focus('#terug')` liet de focus daardoor gewoon op de body staan, en dan
+meet je niets. Die stap draait nu op 390 breed, waar de knop echt bestaat en
+echt verdwijnt, met een check ervoor dat hij ook werkelijk te focussen was.
+
+### Over de focusring
+
+`BEDIENING.md` zei dat een `.focus()` vanuit script geen `:focus-visible`
+oplevert. Nagemeten in Chromium klopt dat hier niet: een kale `.focus()` geeft
+wel degelijk de ring. Daarom is er geen toetsenbord-detectie nodig en is het
+herstel één regel. De test controleert die ring ook, want focus zonder ring is
+voor wie kijkt net zo goed verdwaald zijn.

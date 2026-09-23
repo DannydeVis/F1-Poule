@@ -346,6 +346,10 @@
   .zijvoet{display:none}
 
   .hoofd{flex:1;display:flex;flex-direction:column;min-width:0}
+  /* Dit is een opvangpunt voor de focus na een schermwissel, geen knop. Een
+     rand van twee pixels om de hele middenkolom is lawaai; waar het hier om
+     gaat is waar de volgende Tab begint en wat een schermlezer voorleest. */
+  .hoofd:focus{outline:none}
   .kop{display:none}
   .kolommen{flex:1;display:block;min-height:0}
   /* Ruimte onderaan voor de vaste tabbalk, zodat die niets afdekt. */
@@ -4082,6 +4086,70 @@ function boodschapOpScherm() {
     tekst: [melding, fout].map(e => e && e.textContent.trim()).filter(Boolean).join('. ') };
 }
 
+// ============================================================
+//  De focus overleeft een hertekening
+// ============================================================
+
+// Elke tik vervangt app.innerHTML in zijn geheel, dus het element dat de
+// focus had bestaat daarna niet meer en de focus valt terug op de body.
+// Nagemeten: tab naar Stand, druk Enter -- focus kwijt. Zet een tabblad om in
+// het racescherm -- focus kwijt. Wie met een toetsenbord werkt moet dus na
+// elke handeling opnieuw vanaf het begin van de pagina tabben, en dat maakt
+// de app in de praktijk onbruikbaar zonder muis.
+//
+// Het nieuwe element is meestal gewoon terug te vinden: knoppen dragen een id
+// of een data-attribuut dat zegt wát ze zijn (data-weergave, data-tab,
+// data-race). Vandaar een handvat in plaats van een verwijzing naar het oude
+// element -- dat is namelijk weg.
+
+let focusHandvat = null;
+
+// Het eerste dat dit element herkenbaar maakt. Geen samengestelde selector:
+// aanhalingstekens in een waarde zouden dan ontsnapt moeten worden, en daar
+// gaat zoiets altijd een keer mis.
+function handvatVan(el) {
+  if (!el || !el.attributes || el === app) return null;
+  if (el.id) return { soort: 'id', waarde: el.id };
+  for (const at of el.attributes) {
+    if (at.name.startsWith('data-') && at.value) {
+      return { soort: at.name, waarde: at.value };
+    }
+  }
+  return null;
+}
+
+function zoekTerug(h) {
+  if (!h) return null;
+  if (h.soort === 'id') {
+    return [...app.querySelectorAll('[id]')].find(e => e.id === h.waarde) ?? null;
+  }
+  return [...app.querySelectorAll(`[${h.soort}]`)]
+    .find(e => e.getAttribute(h.soort) === h.waarde) ?? null;
+}
+
+app.addEventListener('focusin', (e) => {
+  const h = handvatVan(e.target);
+  if (h) focusHandvat = h;
+});
+
+function herstelFocus() {
+  // Staat de focus nog ergens in de app, dan is er niets kwijtgeraakt en valt
+  // er niets te herstellen. Alleen ingrijpen als hij écht weggevallen is,
+  // anders sleept dit iemand weg uit het veld waar hij in staat te typen.
+  const nu = document.activeElement;
+  if (nu && nu !== document.body && app.contains(nu)) return;
+  if (!focusHandvat) return;
+
+  const terug = zoekTerug(focusHandvat);
+  if (terug) { terug.focus(); return; }
+
+  // Niet terug te vinden: dan is dit geen hertekening van hetzelfde scherm
+  // maar een wissel naar een ander. De focus hoort dan naar de nieuwe inhoud,
+  // zodat de volgende Tab daar begint en een schermlezer hem oppakt.
+  const hoofd = app.querySelector('.hoofd');
+  if (hoofd) { hoofd.focus(); focusHandvat = null; }
+}
+
 let vorigeBoodschap = { melding: null, fout: null, tekst: '' };
 
 function kijkOfErIetsTeMeldenIs() {
@@ -4099,7 +4167,10 @@ function kijkOfErIetsTeMeldenIs() {
   omroep(nu.tekst);
 }
 
-new MutationObserver(kijkOfErIetsTeMeldenIs)
+// Eén waarnemer voor allebei: wat er ook tekent, langs welke weg ook, de
+// melding wordt geroepen en de focus komt terug. Aan een plek die niemand
+// hoeft te onthouden valt niets te vergeten.
+new MutationObserver(() => { kijkOfErIetsTeMeldenIs(); herstelFocus(); })
   .observe(app, { childList: true, subtree: true, characterData: true });
 
 // Een fout buiten het tekenen om -- een klik die stilletjes strandt, een
@@ -4990,7 +5061,7 @@ function toonApp() {
         </div>
       </aside>
 
-      <main class="hoofd">
+      <main class="hoofd" tabindex="-1">
         <div class="baan"></div>
         <div class="kop">
           <span class="ptitel">${esc(S.poule.name)}</span>
