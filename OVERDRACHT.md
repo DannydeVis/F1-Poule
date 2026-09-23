@@ -5206,3 +5206,73 @@ hoe dan ook weer — de check "de taalkeuze bleef staan" slaagde ook toen ik de
 uitzondering eruit sloopte. Vacuüm dus. De test zet de taal nu zelf, eenmalig,
 met een vlag die `test:` heet in plaats van `poule:` en de wisbeurt daarom
 overleeft. Nu zakt hij wel als de uitzondering weggaat.
+
+---
+
+## De omroep: wat de app zegt, ook voor wie het niet ziet
+
+De app is een single-page app die bij elke tik `app.innerHTML` in zijn geheel
+vervangt. Voor wie kijkt is dat prima. Voor wie met een schermlezer werkt is
+het stilte: een DOM die onder je vandaan vervangen wordt, wordt niet
+voorgelezen. Elke melding ("Voorspelling voor Shanghai opgeslagen", "Iedereen
+heeft nu 3 jokers dit seizoen") en elke foutregel stond er dus wel, en kwam
+bij een deel van de mensen niet aan. `grep -c aria-live index.html` gaf nul.
+
+### Het vak
+
+Eén `<div id="omroep" aria-live="polite" aria-atomic="true">` in de `body`,
+**buiten `#app`**. Dat "buiten" is de hele truc en geen netheid: een live
+region die op hetzelfde moment ontstaat als zijn inhoud wordt níét
+voorgelezen. Hij moet er al staan en daarna pas veranderen. Stond hij in
+`#app`, dan werd hij bij elke hertekening opnieuw gemaakt en zei hij nooit
+iets. `test/omroep.test.mjs` zet daarom een merkteken op het element en kijkt
+of dat een hertekening overleeft.
+
+Verstopt met de gebruikelijke `.alleenlezer` (1 pixel, `clip-path`), en
+nadrukkelijk niet met `display:none` of `visibility:hidden` — die halen het
+uit de voorleesvolgorde, en dan valt er niets meer te roepen.
+
+### Waarom het aan de DOM hangt en niet aan render()
+
+De eerste opzet riep aan het einde van `render()` wat er te melden viel. Dat
+leek de ene plek die niemand kan vergeten — `S.melding` wordt op 33 plekken
+gezet en een `.err` op 19, en die wilde ik geen van alle aanraken.
+
+Het was te weinig, en de test wees het aan. De foutregel na een mislukte
+opslag komt niet uit `render()` maar uit `invulWeergave(paneel, r, dicht)`,
+rechtstreeks aangeroepen in de `catch` van de opslaanknop. Er zijn meer van
+die paden en er komen er bij.
+
+Dus hangt de omroep nu aan een `MutationObserver` op `#app`. Wat er ook
+tekent, langs welke weg ook, nu of later: komt er een melding of een foutregel
+op het scherm, dan wordt hij geroepen. Aan een plek die niemand hoeft te
+onthouden valt niets te vergeten.
+
+### Hetzelfde bericht, en hetzelfde bericht opnieuw
+
+Twee gevallen die op elkaar lijken en tegengesteld moeten uitpakken:
+
+- **Het bericht staat er nog** en het scherm wordt om iets anders opnieuw
+  getekend. Niet opnieuw roepen.
+- **Hetzelfde bericht, nieuw voorval** — je tikt nog eens op opslaan en
+  krijgt dezelfde fout. Wél opnieuw roepen, want stilte klinkt als gelukt.
+
+Het onderscheid zit in de elementen, niet in de tekst: `invulWeergave()`
+vervangt `paneel.innerHTML`, dus de tweede fout staat in een *nieuw* element.
+`kijkOfErIetsTeMeldenIs()` vergelijkt daarom tekst én elementidentiteit.
+
+En omdat een live region alleen op verandering reageert, maakt `omroep()` het
+vak eerst leeg en zet de tekst een tik later. Zonder die lege tussenstap is
+dezelfde tekst geen verandering en blijft het stil. Dat is precies wat de test
+meet: hij neemt de opeenvolging van waarden op zoals een schermlezer die
+meekrijgt, en eist dat er een lege stap tussen zit. Het vak in de test zelf
+leegmaken zou die check vacuüm maken — dan slaagt hij ook als de app het niet
+doet.
+
+### Wat er níét geroepen wordt
+
+Alleen de eerste melding en de eerste gevúlde foutregel. Lege `.err`-elementen
+staan op veel schermen vast klaar te wachten en hebben niets te zeggen; die
+worden overgeslagen. En verder niets: een schermlezer die bij elke tik het
+halve scherm opnieuw voorgelezen krijgt is net zo onbruikbaar als eentje die
+zwijgt.

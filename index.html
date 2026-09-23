@@ -803,6 +803,13 @@
     padding:14px;color:var(--ink2);font-size:14px}
   .uitleg b{color:var(--ink)}
 
+  /* ---- alleen voor schermlezers ---------------------------- */
+  /* Niet display:none en niet visibility:hidden -- allebei halen het uit de
+     voorleesvolgorde, en dan valt er niets meer om te roepen. */
+  .alleenlezer{position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+    overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
+    border:0}
+
   /* ---- rode vlag ------------------------------------------ */
   .rodevlag{display:flex;flex-direction:column;gap:14px;background:var(--paneel);
     border:1px solid var(--lijn);border-radius:14px;padding:20px}
@@ -899,6 +906,12 @@
 </head>
 <body>
 <div id="app"></div>
+<!-- De omroep voor schermlezers. Staat met opzet buiten #app: de app vervangt
+     app.innerHTML bij elke tik in zijn geheel, en een live region die op
+     hetzelfde moment ontstaat als zijn inhoud wordt niet voorgelezen -- hij
+     moet er al staan en daarna pas veranderen. Vandaar hier, één keer, voor
+     de hele looptijd van de pagina. -->
+<div id="omroep" class="alleenlezer" aria-live="polite" aria-atomic="true"></div>
 
 <script type="module">
 // ============================================================
@@ -4023,6 +4036,71 @@ function toonKapot(fout) {
     location.reload();
   };
 }
+
+// ============================================================
+//  De omroep: wat er te melden valt, ook voor wie het niet ziet
+// ============================================================
+
+// De app zegt van alles op het scherm -- "Opgeslagen", "Iedereen heeft nu 3
+// jokers dit seizoen", een foutregel onder een veld -- en daarvan kwam niets
+// aan bij wie met een schermlezer werkt. Niet omdat de tekst er niet stond,
+// maar omdat er bij elke tik een compleet nieuwe app.innerHTML verschijnt, en
+// een schermlezer een DOM die onder hem vandaan vervangen wordt niet voorleest.
+//
+// Eén vak buiten #app lost het voorlezen op. De vraag is dan nog wannéér er
+// iets in gezet wordt. De eerste opzet hing dat aan het einde van render(),
+// en dat was te weinig: de foutregel na een mislukte opslag wordt getekend
+// door invulWeergave(), rechtstreeks, zonder render(). Er zijn meer van die
+// paden, en er komen er bij.
+//
+// Vandaar dat de omroep aan de DOM zelf hangt en niet aan de tekenroutines.
+// Wat er ook tekent, langs welke weg ook, nu of later: als er een melding of
+// een foutregel op het scherm belandt, wordt hij geroepen. Aan een plek die
+// niemand hoeft te onthouden valt ook niets te vergeten.
+
+const omroepvak = document.getElementById('omroep');
+
+function omroep(tekst) {
+  if (!omroepvak) return;
+  const schoon = (tekst ?? '').replace(/\s+/g, ' ').trim();
+  // Eerst leegmaken, dan zetten. Twee keer dezelfde tekst is voor een live
+  // region geen verandering en dus stilte, terwijl twee keer dezelfde fout
+  // juist wél twee keer iets is om te weten.
+  omroepvak.textContent = '';
+  if (schoon) setTimeout(() => { omroepvak.textContent = schoon; }, 60);
+}
+
+// De eerste regel met inhoud. Lege foutregels staan er op veel schermen vast
+// klaar te wachten, en die hebben niets te zeggen.
+const eersteMet = (kies) =>
+  [...app.querySelectorAll(kies)].find(e => (e.textContent ?? '').trim());
+
+function boodschapOpScherm() {
+  const melding = eersteMet('.meldingbalk .melding');
+  const fout    = eersteMet('.err, .foutregel');
+  return { melding, fout,
+    tekst: [melding, fout].map(e => e && e.textContent.trim()).filter(Boolean).join('. ') };
+}
+
+let vorigeBoodschap = { melding: null, fout: null, tekst: '' };
+
+function kijkOfErIetsTeMeldenIs() {
+  const nu = boodschapOpScherm();
+  // Dezelfde tekst uit dezelfde elementen is hetzelfde bericht dat er nog
+  // staat -- dat hoeft niet bij elke hertekening opnieuw. Dezelfde tekst uit
+  // een nieuw element is een nieuw voorval: opnieuw op opslaan getikt, opnieuw
+  // dezelfde fout. Dat hoort wél geroepen te worden, anders klinkt de tweede
+  // poging als stilte en dus als gelukt.
+  const zelfde = nu.tekst === vorigeBoodschap.tekst
+    && nu.melding === vorigeBoodschap.melding
+    && nu.fout === vorigeBoodschap.fout;
+  vorigeBoodschap = nu;
+  if (zelfde || !nu.tekst) return;
+  omroep(nu.tekst);
+}
+
+new MutationObserver(kijkOfErIetsTeMeldenIs)
+  .observe(app, { childList: true, subtree: true, characterData: true });
 
 // Een fout buiten het tekenen om -- een klik die stilletjes strandt, een
 // belofte die niemand opvangt -- mag een werkend scherm niet wegvagen. Die

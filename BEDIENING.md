@@ -1237,6 +1237,14 @@ zie `.merk .wisselknop`.
 accentkleur. Die slaat alleen aan bij toetsenbordbediening; een `.focus()`
 vanuit script telt niet mee, en een test die dat niet weet faalt onterecht.
 
+**Schermlezers.** De app vervangt bij elke tik het hele scherm, en daar leest
+een schermlezer niets van voor. Meldingen en foutregels gaan daarom óók naar
+een onzichtbaar vak buiten `#app` (`#omroep`, `aria-live="polite"`), dat er de
+hele tijd staat en alleen van inhoud verandert. Zet dat vak nooit in `#app` en
+verberg het nooit met `display:none` of `visibility:hidden` — in beide gevallen
+zegt het niets meer. Er is niets aan te roepen vanuit nieuwe code: een
+`MutationObserver` kijkt mee met wat er getekend wordt, langs welk pad dan ook.
+
 **Zonder verbinding** krijg je een eigen scherm ("Even geen bereik") en geen
 leeg vlak. Dat laatste was wat er gebeurde: de app haalt supabase-js op met een
 `await import` op modulenniveau, en als die mislukt stopt het hele script
