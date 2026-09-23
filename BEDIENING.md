@@ -1242,3 +1242,18 @@ leeg vlak. Dat laatste was wat er gebeurde: de app haalt supabase-js op met een
 `await import` op modulenniveau, en als die mislukt stopt het hele script
 voordat er ook maar iets getekend is. Er is met opzet geen service worker — een
 oude stand tonen alsof hij klopt is erger dan een foutmelding.
+
+**Als een scherm vastloopt** ("Dit scherm liep vast") krijg je te zien wat er
+misging, plus twee uitwegen. *Opnieuw proberen* vergeet eerst welk scherm je
+open had staan en herlaadt dan — anders komt de app terug op precies het scherm
+dat net klapte en gebeurt hetzelfde nog eens. Helpt dat niet, dan vergeet
+*Begin op dit toestel opnieuw* alles wat dit toestel van je weet: welke poule,
+wie je bent, welke poules je kent. Twee tikken, net als bij "alles wissen".
+Je inzendingen staan in de database en niet in dat scherm, dus die raak je niet
+kwijt — je wijst na afloop opnieuw je naam aan in de poule. Je taalkeuze blijft
+staan.
+
+Gaat er iets mis búíten het tekenen om, dan verschijnt er alleen een balkje
+onderaan. Een losse mislukte handeling is geen reden om je uit de app te
+gooien; het balkje zegt alleen dat het scherm misschien niet meer klopt, en is
+weg te klikken.

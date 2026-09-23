@@ -808,6 +808,26 @@
     border:1px solid var(--lijn);border-radius:14px;padding:20px}
   .rodevlag .label{color:var(--accent)}
 
+  /* ---- vangnet onder het tekenen --------------------------- */
+  /* De technische reden is er om door te geven, niet om te lezen: mono en
+     gedempt, zodat hij duidelijk niet tot het advies erboven hoort. */
+  .foutregel{margin:0;padding:10px 12px;border-radius:10px;background:var(--paneel2);
+    border:1px solid var(--lijn);color:var(--ink2);font-family:var(--mono);
+    font-size:12px;line-height:1.5;word-break:break-word}
+  .knoptekst{background:none;border:0;padding:0;font:inherit;color:var(--accent);
+    text-decoration:underline;cursor:pointer;text-align:left}
+  .knoptekst:hover{color:var(--ink)}
+  .stillefout{position:fixed;left:12px;right:12px;bottom:12px;z-index:60;
+    display:flex;gap:12px;align-items:center;justify-content:space-between;
+    background:var(--paneel);border:1px solid var(--accent);border-radius:12px;
+    padding:12px 14px;color:var(--ink2);font-size:13px;
+    box-shadow:0 8px 28px rgba(0,0,0,.35)}
+  .stillefout button{background:none;border:0;padding:0;font:inherit;flex:none;
+    color:var(--accent);text-decoration:underline;cursor:pointer}
+  @media (min-width:960px){
+    .stillefout{left:auto;right:20px;bottom:20px;max-width:420px}
+  }
+
   /* ---- iPad en desktop ------------------------------------ */
   @media (min-width:960px){
     .shell{flex-direction:row}
@@ -2694,6 +2714,24 @@ const ENGELS = Object.fromEntries([
    'How many jokers does everyone get this season'],
   ['Iedereen heeft nu {n} jokers dit seizoen.',
    'Everyone now has {n} jokers this season.'],
+
+  // ---- het vangnet onder het tekenen ---------------------------
+  ['vastgelopen',
+   'stalled'],
+  ['Dit scherm liep vast',
+   'This screen got stuck'],
+  ['Er ging iets mis bij het tekenen van dit scherm. Wat je hebt ingevuld '
+   + 'staat veilig in de database -- dit gaat alleen over wat je hier ziet.',
+   'Something went wrong while drawing this screen. What you filled in is safe '
+   + 'in the database -- this is only about what you see here.'],
+  ['Blijft het misgaan?',
+   'Does it keep going wrong?'],
+  ['Begin op dit toestel opnieuw',
+   'Start over on this device'],
+  ['Zeker weten? Tik nog een keer. Je kiest daarna je naam opnieuw in de poule.',
+   'Are you sure? Tap again. You will pick your name in the pool again afterwards.'],
+  ['Er ging iets mis op de achtergrond. Het scherm klopt misschien niet meer.',
+   'Something went wrong in the background. This screen may no longer be right.'],
 ]);
 
 const TAALSLEUTEL = 'poule:taal';
@@ -3890,6 +3928,126 @@ function toonFout(bericht) {
 }
 
 // ============================================================
+//  Vangnet: als het tekenen zelf klapt
+// ============================================================
+
+// toonFout() hierboven gaat over het laden: er was iets mis met de gegevens en
+// de app weet dat. Dit gaat over het geval daaronder, dat tot nu toe helemaal
+// niet opgevangen werd: een fout tijdens het opbouwen van een scherm. Dan
+// gebeurde er letterlijk niets -- app.innerHTML bleef staan zoals hij stond,
+// of hij stond er wel maar zonder werkende knoppen. Op een telefoon is dat
+// niet te onderscheiden van "de app is stuk", en er was geen weg terug:
+// herladen tekent precies hetzelfde scherm, dus precies dezelfde fout.
+//
+// Twee uitwegen, op volgorde van wat ze kosten. De eerste gooit alleen weg
+// welk scherm je open had staan. Dat is de waarschijnlijkste oorzaak (een
+// onthouden race die niet meer bestaat, een tabblad dat weg is) en het kost je
+// niets. De tweede vergeet dit toestel helemaal, en zegt er eerlijk bij wat
+// dat betekent: je naam in de poule kies je daarna opnieuw.
+
+const SCHERMSTAART = ':scherm';
+
+// De sleutels opsommen kan op zichzelf al klappen -- privémodus, geblokkeerde
+// opslag -- en juist hier mag niets meer klappen.
+function pouleSleutels(staart) {
+  const uit = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith('poule:')) continue;
+      if (staart && !k.endsWith(staart)) continue;
+      uit.push(k);
+    }
+  } catch { /* niets te doen */ }
+  return uit;
+}
+
+const vergeetSchermen = () => pouleSleutels(SCHERMSTAART).forEach(wis);
+
+// Alles behalve de taalkeuze. Die is geen onderdeel van het probleem en wel
+// van het ongemak: iemand die de app op Engels heeft gezet wil na een storing
+// niet ineens Nederlands terugkrijgen. Veilig om te laten staan ook, want die
+// sleutel wordt nergens anders voor gebruikt dan als opzoekwaarde in het
+// woordenboek, en wat er niet in staat valt gewoon terug op het Nederlands.
+const vergeetToestel = () =>
+  pouleSleutels().filter(k => k !== TAALSLEUTEL).forEach(wis);
+
+// Staat het vangnet eenmaal op het scherm, dan blijft het daar staan. Een
+// achtergebleven handler die alsnog render() aanroept mag het niet wegpoetsen
+// en de gebruiker terugzetten in dezelfde klap.
+let kapot = false;
+
+function toonKapot(fout) {
+  kapot = true;
+  const bericht = (fout && fout.message) ? fout.message : String(fout ?? '');
+  app.innerHTML = `
+    <div class="toegang"><div class="kaart"><div class="baan"></div>
+      <div class="kaart-in">
+        <div class="rodevlag">
+          <span class="label">${T('vastgelopen')}</span>
+          <h1 class="middel">${T('Dit scherm liep vast')}</h1>
+          <p class="zacht" style="margin:0">${T('Er ging iets mis bij het tekenen '
+            + 'van dit scherm. Wat je hebt ingevuld staat veilig in de database '
+            + '-- dit gaat alleen over wat je hier ziet.')}</p>
+          ${bericht ? `<p class="foutregel" id="kapotreden">${esc(bericht)}</p>` : ''}
+          <button class="knop wit" id="opnieuw">${T('Opnieuw proberen')}</button>
+          <p class="zacht" style="margin:0;font-size:13px">
+            ${T('Blijft het misgaan?')}
+            <button class="knoptekst" id="kapotwis" type="button">${
+              T('Begin op dit toestel opnieuw')}</button>
+          </p>
+        </div>
+      </div>
+    </div></div>`;
+
+  // Opnieuw proberen gooit het onthouden scherm weg voordat het herlaadt.
+  // Anders is "opnieuw proberen" een knop die gegarandeerd hetzelfde doet.
+  app.querySelector('#opnieuw').onclick = () => {
+    vergeetSchermen();
+    location.reload();
+  };
+
+  // Hetzelfde tweetikpatroon als bij "alles wissen": de eerste tik vraagt,
+  // de tweede doet. Geen browserdialoog, want dat is niet te vertalen en op
+  // een telefoon niet te onderscheiden van een storing.
+  const knop = app.querySelector('#kapotwis');
+  let gevraagd = false;
+  knop.onclick = () => {
+    if (!gevraagd) {
+      gevraagd = true;
+      knop.textContent = T('Zeker weten? Tik nog een keer. '
+        + 'Je kiest daarna je naam opnieuw in de poule.');
+      return;
+    }
+    vergeetToestel();
+    location.reload();
+  };
+}
+
+// Een fout buiten het tekenen om -- een klik die stilletjes strandt, een
+// belofte die niemand opvangt -- mag een werkend scherm niet wegvagen. Die
+// krijgt een balkje: genoeg om te zien dat er iets niet klopte, niet genoeg
+// om je uit de app te gooien.
+function meldStilleFout() {
+  if (kapot) return;
+  if (document.querySelector('#stillefout')) return;
+  const balk = document.createElement('div');
+  balk.id = 'stillefout';
+  balk.className = 'stillefout';
+  balk.innerHTML = `<span>${T('Er ging iets mis op de achtergrond. '
+    + 'Het scherm klopt misschien niet meer.')}</span>
+    <button type="button" id="stillefoutweg">${T('Sluiten')}</button>`;
+  document.body.appendChild(balk);
+  balk.querySelector('#stillefoutweg').onclick = () => balk.remove();
+}
+
+// Met opzet geen preventDefault(): de fout hoort gewoon in de console te
+// blijven staan. Dit is een vangnet voor de gebruiker, geen doofpot voor de
+// ontwikkelaar -- en de testen kijken naar diezelfde console.
+window.addEventListener('error', meldStilleFout);
+window.addEventListener('unhandledrejection', meldStilleFout);
+
+// ============================================================
 //  Data laden
 // ============================================================
 
@@ -4694,10 +4852,24 @@ const laatsteMetUitslag = () =>
 // ============================================================
 
 function render() {
-  if (S.maak)   { maakPagina(); return; }
-  if (!S.poule) { toonStart(); return; }
-  if (!S.ik)    { kiesSpeler(); return; }
-  toonApp();
+  // Eenmaal vastgelopen blijft het vangnet staan. Zonder dit zou de eerste de
+  // beste achtergebleven handler het scherm overtekenen met precies dezelfde
+  // fout, en is de uitweg onbereikbaar.
+  if (kapot) return;
+  try {
+    if (S.maak)   { maakPagina(); return; }
+    if (!S.poule) { toonStart(); return; }
+    if (!S.ik)    { kiesSpeler(); return; }
+    toonApp();
+  } catch (fout) {
+    // De fout blijft een fout. Hij hoort in de console en daarmee in de
+    // testen, en niet stilletjes opgeslokt omdat er nu een net onder hangt --
+    // een vangnet dat bugs onzichtbaar maakt is erger dan geen vangnet.
+    // Buiten de catch opnieuw opgooien, zodat hij ongevangen naar boven komt
+    // zonder deze aanroep alsnog af te breken.
+    setTimeout(() => { throw fout; });
+    toonKapot(fout);
+  }
 }
 
 // De navigatie. Als functie en niet als vaste tabel, want de namen hangen aan
