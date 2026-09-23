@@ -5488,3 +5488,55 @@ regel dat stil kan sneuvelen. `test/toegankelijk.test.mjs` controleert nu
 allebei de kanten: met de voorkeur staat alles uit, en zónder de voorkeur staat
 het juist aan. Die tweede is er omdat de eerste anders ook zou slagen als er
 helemaal geen animaties meer waren.
+
+---
+
+## "Kan die oude predictions-tabel weg?" — nu beantwoordbaar
+
+De `predictions`-tabel wordt door de app niet meer gebruikt; de antwoorden
+staan sinds de migratie in `answers`. Hij staat er alleen nog voor wie zijn
+oude gegevens nog niet had overgezet. Weghalen is dus op enig moment de
+bedoeling, maar het is een onomkeerbare ingreep op andermans gegevens, en de
+vraag die daaraan voorafgaat is: *zit er nog iets in dat nergens anders staat?*
+
+De controletabel gaf daar geen antwoord op. Er stond alleen een getal:
+
+```
+oude voorspellingen (ongebruikt) | 1
+```
+
+Daar kun je niets mee. Eén rij in een ongebruikte tabel — en dan?
+
+### Wat de regel nu zegt
+
+Elke rij in `predictions` levert maximaal drie antwoorden op: `quali_top10`,
+`race_top10` en `winnaar`. Staat elk daarvan ook in `answers`, dan bevat die
+rij niets meer dat nergens anders staat. Dat is exact te controleren, en dus
+doet de regel dat nu:
+
+```
+oude voorspellingen (ongebruikt) | 1 — allemaal overgezet naar answers
+oude voorspellingen (ongebruikt) | 3 — LET OP: 2 nog niet overgezet
+oude voorspellingen (ongebruikt) | 0
+```
+
+Bij nul blijft het een kale nul: er valt niets uit te leggen over een lege
+tabel.
+
+### Woordelijk dezelfde voorwaarden als de migratie
+
+De `where` in deze regel is met opzet letterlijk dezelfde als die van de
+migratie hierboven in `schema.sql`, inclusief dat een lege lijst *"niet
+ingevuld"* betekent en dus niet telt als iets wat mist. Zonder dat zou de
+tabel eeuwig "nog niet overgezet" melden voor rijen waar niets in staat.
+
+Lopen die twee ooit uit de pas, dan meldt deze regel iets wat de migratie niet
+doet — en een controle die het verkeerde zegt is erger dan geen controle. Dat
+is precies waarom `test/controle.test.sql` §7 ook die lege lijst apart
+nagaat, naast de drie hoofduitkomsten.
+
+### Wat er níét gebeurt
+
+De tabel gaat hier niet weg. Dat blijft een beslissing voor wie de database
+bezit, niet voor `schema.sql`. Wat er wel is, is het antwoord dat je nodig
+hebt om die beslissing in één minuut te nemen.

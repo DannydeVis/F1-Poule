@@ -285,3 +285,80 @@ begin
   raise notice 'ok: en terug op vijf telt hij niet meer mee';
   delete from public.pools where name = 'Controlepoule';
 end $$;
+
+-- ============================================================
+--  7. Kan die oude predictions-tabel weg?
+-- ============================================================
+--
+-- De regel zei alleen hoeveel rijen er nog in stonden, en daar kun je niets
+-- mee: de vraag erachter is altijd of die tabel weg kan. Dat is precies te
+-- beantwoorden -- elke rij levert maximaal drie antwoorden op, en staan die
+-- alle drie in answers, dan zit er niets meer in dat nergens anders staat.
+--
+-- Alle drie de uitkomsten worden langsgelopen, want een regel die maar één
+-- ding kan zeggen controleert niets.
+
+do $$
+declare gevonden text; pid uuid; mid uuid;
+begin
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'oude voorspellingen (ongebruikt)';
+  if gevonden <> '0' then
+    raise exception 'gezakt: met een lege tabel zegt hij "%"', gevonden;
+  end if;
+  raise notice 'ok: een lege tabel is gewoon nul, zonder verdere uitleg';
+
+  insert into public.pools (name, season) values ('Controlepoule', 2026)
+    returning id into pid;
+  insert into public.pool_members (pool_id, display_name) values (pid, 'Proef')
+    returning member_id into mid;
+  insert into public.races (id, season, round, name, deadline_quali, deadline_race)
+  values (9201, 2026, 92, 'Controlerace',
+          now() + interval '1 day', now() + interval '2 days');
+
+  -- Een voorspelling die nergens anders staat: die mag níét weggegooid worden.
+  alter table public.predictions disable trigger predictions_deadline;
+  insert into public.predictions (pool_id, race_id, member_id, race_winnaar)
+  values (pid, 9201, mid, '1');
+  alter table public.predictions enable trigger predictions_deadline;
+
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'oude voorspellingen (ongebruikt)';
+  if gevonden not like '%LET OP: 1 nog niet overgezet%' then
+    raise exception 'gezakt: een niet-overgezette rij wordt niet gemeld, hij zegt "%"', gevonden;
+  end if;
+  raise notice 'ok: wat nog niet overgezet is wordt gemeld (%)', gevonden;
+
+  -- En zodra hij wél in answers staat, mag de tabel weg.
+  alter table public.answers disable trigger answers_deadline;
+  insert into public.answers (pool_id, race_id, member_id, question_id, waarde)
+  values (pid, 9201, mid, 'winnaar', to_jsonb('1'::text));
+  alter table public.answers enable trigger answers_deadline;
+
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'oude voorspellingen (ongebruikt)';
+  if gevonden not like '%allemaal overgezet%' then
+    raise exception 'gezakt: een overgezette rij wordt niet als zodanig gemeld: "%"', gevonden;
+  end if;
+  raise notice 'ok: en zodra alles overgezet is zegt hij dat (%)', gevonden;
+
+  -- Een lege lijst telt niet als iets wat mist -- dezelfde regel als de
+  -- migratie zelf. Zonder dit zou de tabel eeuwig "nog niet overgezet" melden
+  -- voor rijen waar niets in staat.
+  alter table public.predictions disable trigger predictions_deadline;
+  update public.predictions set quali_top10 = array[]::text[]
+   where pool_id = pid and race_id = 9201;
+  alter table public.predictions enable trigger predictions_deadline;
+
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'oude voorspellingen (ongebruikt)';
+  if gevonden not like '%allemaal overgezet%' then
+    raise exception 'gezakt: een lege lijst telt ten onrechte als niet overgezet: "%"', gevonden;
+  end if;
+  raise notice 'ok: een lege lijst telt niet als iets wat mist';
+
+  delete from public.predictions where pool_id = pid;
+  delete from public.answers where pool_id = pid;
+  delete from public.races where id = 9201;
+  delete from public.pools where id = pid;
+end $$;
