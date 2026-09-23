@@ -2686,6 +2686,14 @@ const ENGELS = Object.fromEntries([
    + 'kan het seizoen niet afgerond worden en blijven deze vragen ongescoord.',
    '{races} has no result and is not marked cancelled. While that is the case '
    + 'the season cannot be wrapped up and these questions stay unscored.'],
+
+  // ---- het aantal jokers per poule -----------------------------
+  ['hoeveel per speler',
+   'how many per player'],
+  ['Hoeveel jokers krijgt iedereen dit seizoen',
+   'How many jokers does everyone get this season'],
+  ['Iedereen heeft nu {n} jokers dit seizoen.',
+   'Everyone now has {n} jokers this season.'],
 ]);
 
 const TAALSLEUTEL = 'poule:taal';
@@ -3514,17 +3522,25 @@ function scoreSeizoen(memberId) {
 }
 
 // ---- jokers -------------------------------------------------
-// Vijf per seizoen, en het weekend waarop je er een legt telt dubbel. Het
-// getal is een spelregel zoals 5/3/1 dat is, dus het staat hier en niet in
-// de database: een poule die er vier of zes zou willen is een andere vraag
-// dan deze.
-const JOKERS_PER_SEIZOEN = 5;
+// Eén tot vijf per seizoen, en het weekend waarop je er een legt telt dubbel.
+//
+// Het getal stond hier als vaste 5, met de redenering dat het een spelregel is
+// zoals 5/3/1 dat is en dus niet in de database hoort. Dat klopte tot iemand
+// vroeg of het per poule kon -- en dan is het geen regel van de app meer maar
+// een keuze van de poule. Vijf blijft de standaard, ook voor een poule van
+// vóór deze kolom.
+//
+// Nul zit er niet bij: nul jokers is de regel uitzetten, en dat doet
+// `jokers_vanaf` al.
+const JOKERS_STANDAARD = 5;
+const JOKERKEUZES = [1, 2, 3, 4, 5];
+const jokersPerSeizoen = () => S.poule?.jokers_aantal ?? JOKERS_STANDAARD;
 const jokersAan = () => !!S.poule?.jokers_vanaf;
 const heeftJoker = (raceId, memberId) => jokersAan()
   && S.jokers.some(j => zelfde(j.race_id, raceId) && zelfde(j.member_id, memberId));
 // Hoeveel er nog liggen. Alleen dit seizoen, want de teller loopt per
 // seizoen -- net als in de trigger die hem in de database bewaakt.
-const jokersOver = (memberId) => JOKERS_PER_SEIZOEN - S.jokers.filter(j =>
+const jokersOver = (memberId) => jokersPerSeizoen() - S.jokers.filter(j =>
   zelfde(j.member_id, memberId) && S.races.some(r => zelfde(r.id, j.race_id))).length;
 
 // Alleen de sessies die dít weekend bestaan. Een gewoon weekend heeft geen
@@ -3659,6 +3675,7 @@ const S = {
   beheerFout: '',
   omschrijving: null,   // getypte omschrijving, zolang die nog niet bewaard is
   omschrijvingFout: '',
+  jokerFout: '',        // het aantal jokers bijstellen, onder Poule → beheer
   push: null, pushFout: '',   // meldingen: 'aan' | 'uit' | 'geweigerd' | 'kan niet'
   deelFout: '',               // het delen van je eigen cijfers, onder Profiel
   profiel: null,              // een publiek profiel dat je via een link opent
@@ -6461,12 +6478,20 @@ function jokersBlok() {
         + 'weekend, en dat weekend telt dan dubbel. Een joker moet liggen vóórdat de '
         + 'eerste sessie begint en kan daarna niet meer verzet worden. Weekenden van '
         + 'vóór die datum blijven zoals ze waren.',
-        { datum: esc(datumKort(vanaf)), n: JOKERS_PER_SEIZOEN })
+        { datum: esc(datumKort(vanaf)), n: jokersPerSeizoen() })
       : T('Aanzetten geeft iedereen {n} jokers voor dit seizoen: je legt er een op '
         + 'een weekend en dat weekend telt dubbel. Je moet hem neerleggen voordat er '
         + 'iets gereden is, dus het is een gok op welk weekend jou het beste ligt. '
         + 'Alleen vanaf nu — wat al gereden is verandert niet.',
-        { n: JOKERS_PER_SEIZOEN })}</p>
+        { n: jokersPerSeizoen() })}</p>
+    <label class="seizoenbalk">
+      <span class="label">${T('hoeveel per speler')}</span>
+      <select id="jokeraantal" aria-label="${T('Hoeveel jokers krijgt iedereen dit seizoen')}">
+        ${JOKERKEUZES.map(n => `<option value="${n}" ${
+          n === jokersPerSeizoen() ? 'selected' : ''}>${n}</option>`).join('')}
+      </select>
+    </label>
+    ${S.jokerFout ? `<p class="err">${esc(S.jokerFout)}</p>` : ''}
     <button class="knop klein" id="jokersKnop">${
       vanaf ? T('Zet weer uit') : T('Zet aan')}</button>`;
 }
@@ -6592,6 +6617,28 @@ function knoopContrair() {
 }
 
 function knoopJokers() {
+  // Het aantal. Mag ook terwijl de jokers al aanstaan -- omhoog is voor
+  // iedereen hetzelfde, en omlaag houdt de trigger in schema.sql tegen zodra
+  // er al iemand meer heeft liggen. De foutmelding daarvan komt hier op het
+  // scherm, want anders verspringt de keuzelijst terug zonder uitleg.
+  const aantal = app.querySelector('#jokeraantal');
+  if (aantal) aantal.onchange = async () => {
+    const wil = Number(aantal.value);
+    const oud = jokersPerSeizoen();
+    if (wil === oud) return;
+    aantal.disabled = true; S.jokerFout = '';
+    try {
+      if (!DEMO) {
+        const { error } = await db.from('pools')
+          .update({ jokers_aantal: wil }).eq('id', S.poule.id);
+        if (error) throw new Error(uitleg(error));
+      }
+      S.poule.jokers_aantal = wil;
+      S.melding = T('Iedereen heeft nu {n} jokers dit seizoen.', { n: wil });
+    } catch (e) { S.jokerFout = e.message; }
+    render();
+  };
+
   const knop = app.querySelector('#jokersKnop');
   if (!knop) return;
   knop.onclick = async () => {
@@ -6609,6 +6656,7 @@ function knoopJokers() {
       // per ongeluk uitzetten en weer aanzetten geen verlies.
       S.melding = nu ? T('Jokers staan aan, vanaf nu.') : T('Jokers staan weer uit.');
     } catch (e) { S.melding = e.message; }
+    S.jokerFout = '';
     render();
   };
 }
@@ -6902,9 +6950,9 @@ function jokerRegel(r) {
   const uitleg = ligt
     ? T('Je punten voor dit weekend worden <b>verdubbeld</b>.')
     : over > 0 ? T('Nog <b>{over}</b> van je {totaal} te vergeven dit seizoen.',
-                   { over, totaal: JOKERS_PER_SEIZOEN })
+                   { over, totaal: jokersPerSeizoen() })
                : T('Je hebt ze dit seizoen alle {totaal} gebruikt.',
-                   { totaal: JOKERS_PER_SEIZOEN });
+                   { totaal: jokersPerSeizoen() });
   return `
     <div class="jokerregel ${ligt ? 'aan' : ''}">
       <span class="jokerster" aria-hidden="true">${ligt ? '★' : '☆'}</span>
