@@ -4167,11 +4167,67 @@ function kijkOfErIetsTeMeldenIs() {
   omroep(nu.tekst);
 }
 
-// Eén waarnemer voor allebei: wat er ook tekent, langs welke weg ook, de
-// melding wordt geroepen en de focus komt terug. Aan een plek die niemand
-// hoeft te onthouden valt niets te vergeten.
-new MutationObserver(() => { kijkOfErIetsTeMeldenIs(); herstelFocus(); })
-  .observe(app, { childList: true, subtree: true, characterData: true });
+// ============================================================
+//  Een afgekapte naam is nergens meer te lezen
+// ============================================================
+
+// Namen die niet passen worden met een ellipsis afgekapt: "Danny van der
+// Meulen-Hoogen...". Dat is prima zolang je ze ergens anders kunt nalezen, en
+// dat kan niet -- gemeten op elk scherm, zowel voor de poulenaam als voor de
+// spelersnamen. Bij vrienden met een dubbele achternaam gebeurt dat meteen.
+//
+// Een title erop lost het op, maar alleen als hij er ook echt afgekapt is:
+// een tooltip die herhaalt wat je al leest is ruis. En of er afgekapt wordt
+// hangt van de breedte af en niet alleen van de tekst -- een naam die op 1280
+// past wordt op 900 afgekapt -- dus dit valt bij het tekenen niet te bepalen.
+// Vandaar meten, na het tekenen en na een maatverandering.
+
+// Alleen de losse tekst van het element zelf, zonder ingesloten labels: in
+// de stand zit er een "jij" in de naamregel, en een tooltip die "Danny van
+// der Meulen-Hoogendoorn jij" zegt leest als een fout. Staat de hele tekst in
+// een kind, dan is er niets eigens en valt het terug op het geheel.
+function eigenTekst(el) {
+  const los = [...el.childNodes]
+    .filter(n => n.nodeType === Node.TEXT_NODE)
+    .map(n => n.textContent).join('').trim();
+  return los || (el.textContent ?? '').trim();
+}
+
+function titelsBijAfkappen() {
+  for (const el of app.querySelectorAll('.nm, .ptitel')) {
+    const tekst = eigenTekst(el);
+    if (tekst && el.scrollWidth > el.clientWidth + 1) {
+      if (el.getAttribute('title') !== tekst) el.setAttribute('title', tekst);
+    } else if (el.hasAttribute('title')) {
+      // Past hij weer -- breder venster, kortere naam -- dan moet de tooltip
+      // ook weer weg. Anders blijft er eentje hangen die niets toevoegt.
+      el.removeAttribute('title');
+    }
+  }
+}
+
+// Bij een maatverandering verandert er niets aan de DOM, dus de waarnemer
+// hieronder vuurt niet. Eén keer per rustmoment is genoeg; tijdens het
+// slepen van een vensterrand hoeft dit niet honderd keer.
+let maatTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(maatTimer);
+  maatTimer = setTimeout(titelsBijAfkappen, 150);
+});
+
+// Eén waarnemer voor alle drie: wat er ook tekent, langs welke weg ook, de
+// melding wordt geroepen, de focus komt terug en een afgekapte naam krijgt
+// zijn volledige tekst mee. Aan een plek die niemand hoeft te onthouden valt
+// niets te vergeten.
+//
+// Let op: deze waarnemer kijkt niet naar attributen, dus het zetten van een
+// title hieronder roept hem niet opnieuw aan. Zou hij dat wel doen, dan was
+// dit een oneindige lus.
+new MutationObserver(() => {
+  kijkOfErIetsTeMeldenIs();
+  herstelFocus();
+  titelsBijAfkappen();
+}).observe(app, { childList: true, subtree: true, characterData: true });
 
 // Een fout buiten het tekenen om -- een klik die stilletjes strandt, een
 // belofte die niemand opvangt -- mag een werkend scherm niet wegvagen. Die

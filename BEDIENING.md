@@ -1239,6 +1239,13 @@ accentkleur. Die slaat aan bij toetsenbordbediening. Eerder stond hier dat een
 een kale `.focus()` geeft de ring wel degelijk. Dat is maar goed ook, want het
 focusherstel hieronder leunt erop.
 
+**Een afgekapte naam krijgt zijn volledige tekst als tooltip**, en een naam
+die past juist niet. Dat wordt gemeten na het tekenen en na een
+maatverandering, want of er afgekapt wordt hangt van de breedte af. Geef een
+element dat een naam toont dus de klasse `nm` (of `ptitel`), dan gaat dat
+vanzelf; een title in het sjabloon zetten werkt niet, want die klopt na het
+verslepen van een vensterrand niet meer.
+
 **Labels horen aan hun veld te hangen.** Een `<span class="label">` boven een
 invoerveld ziet eruit als een label maar is het niet: gebruik
 `<label class="label" for="...">`. Dat kost niets aan opmaak en maakt het woord
