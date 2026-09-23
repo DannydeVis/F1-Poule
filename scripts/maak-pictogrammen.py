@@ -1,4 +1,4 @@
-# Maakt de pictogrammen van RacePicks voor "zet op beginscherm":
+# Maakt de pictogrammen van Predict the Race voor "zet op beginscherm":
 #
 #     python3 scripts/maak-pictogrammen.py pictogrammen
 #
@@ -40,8 +40,8 @@ def startgrid(N, rand=0.17):
     """Het startgrid: twee kolommen, om en om verspringend. Alleen rechte
     hoeken, dus geen anti-aliasing nodig en overal scherp.
 
-    Eén vak is de pole en staat in het accent; de rest is ink. Dat is de
-    "picks" uit RacePicks: één keuze die eruit springt op een grid. Eerder
+    Eén vak is de pole en staat in het accent; de rest is ink. Dat is waar de
+    app over gaat: één keuze die eruit springt op een grid. Eerder
     wisselden de kleuren om en om, en dan is het een streepjespatroon — op een
     tegel van 48 pixels leest dat als ruis in plaats van als één ding.
 
@@ -71,12 +71,12 @@ def startgrid(N, rand=0.17):
 for N in (192, 512):
     # Maskable: de veilige zone is de binnenste 80%, en alles wat telt blijft
     # daarbinnen, want Android snijdt er zijn eigen vorm uit.
-    n = png(f"{sys.argv[1]}/racepicks-{N}.png", N, N, startgrid(N))
-    print(f"racepicks-{N}.png  {n} bytes")
+    n = png(f"{sys.argv[1]}/predicttherace-{N}.png", N, N, startgrid(N))
+    print(f"predicttherace-{N}.png  {n} bytes")
 
 # iOS snijdt niet, het legt er alleen ronde hoeken omheen. De veilige zone van
 # een maskable icoon is daar dus verspilde ruimte: het motief komt klein uit
 # met een brede rand eromheen. Vandaar een eigen, vullende variant. 180 is de
 # maat die een iPhone op zijn scherpst vraagt; een iPad schaalt hem terug.
-n = png(f"{sys.argv[1]}/racepicks-apple-180.png", 180, 180, startgrid(180, 0.08))
-print(f"racepicks-apple-180.png  {n} bytes")
+n = png(f"{sys.argv[1]}/predicttherace-apple-180.png", 180, 180, startgrid(180, 0.08))
+print(f"predicttherace-apple-180.png  {n} bytes")

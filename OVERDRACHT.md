@@ -1,4 +1,4 @@
-# RacePicks: overdracht
+# Predict the Race: overdracht
 
 Poule-app voor F1 kwalificatie- en race-top-10 voorspellen met vrienden.
 Single-file frontend (`index.html`), Supabase als backend (`schema.sql`),
@@ -4635,7 +4635,8 @@ werkt gewoon door.
 - **Wat uit de database komt.** Poulenamen typt iemand zelf in, racenamen komen
   van OpenF1. Die staan er zoals ze er staan — ook in de melding: daar staat
   "Suzuka: qualifying closes in 2 hours".
-- **De merknaam en de twee taalnamen.** "RacePicks" blijft RacePicks, en de
+- **De merknaam en de twee taalnamen.** De merknaam blijft staan zoals hij is
+  (inmiddels "Predict the Race"), en de
   knoppen "Nederlands" en "English" staan met opzet elk in hun eigen taal —
   anders kan wie de verkeerde taal te zien krijgt de juiste niet herkennen.
 
@@ -5752,3 +5753,63 @@ hier aangehouden.
 Alle 65 testbestanden bleven groen: de hoofdletters kwamen van
 `text-transform` in de CSS, dus `textContent` verandert niet en geen enkele
 test die op tekst let merkt er iets van.
+
+---
+
+## Van RacePicks naar Predict the Race
+
+Danny kocht `predicttherace.com`, en daarmee verviel de reden waarom de vorige
+naam bleef staan: `racepicks.com` was bezet en uitwijken naar een `.app` of
+`.nl` leek goedkoper dan hernoemen. Nu er een `.com` ligt is de naam
+meeverhuisd.
+
+De checklist uit `ROUTEKAART.md` klopte: dertien plekken, en nergens anders.
+Het gewone woord "poule" is met opzet níét meeveranderd — je speelt nog steeds
+in een poule, met een poulecode en een poulebaas.
+
+### Wat er veranderde
+
+`index.html` (22 plekken: de titel, de apple-titel, de vijf merkbalken, de
+pictogramverwijzingen, en de zinnen waar de naam ín staat — die laatste aan
+allebei de kanten van het woordenboek, want de Nederlandse zin ís de sleutel),
+`manifest.webmanifest`, `sw.js`, de pictogrammen, en vier testbestanden die op
+de naam letten.
+
+### Twee dingen die aandacht vroegen
+
+**`short_name` is niet dezelfde naam.** Dat is het label ónder het pictogram op
+een beginscherm, en dat kapt rond de twaalf tekens af: "Predict the Race" zou
+daar "Predict the…" worden. Er staat nu `PredictRace`. Dat is de enige plek waar
+een tweede schrijfwijze bestaat, en het is bewust.
+
+**Het merkblok moest opnieuw.** "RacePicks" paste op 24 pixels naast het blokje
+en de wisselknop; "Predict the Race" niet — gemeten: er blijft 121 pixel over
+en op 17px heeft de naam er precies 121 nodig. Precies passen is geen passen,
+dus het is 16px geworden, met de ondertitel "voor jou en je vrienden" op een
+eigen regel eronder. Dat is meteen de lockup uit de mockup die de aanleiding
+was, en klein mag hier: een merkblok hoeft niet het luidste op het scherm te
+zijn.
+
+Onderweg heeft de talentest zijn werk gedaan. Een eerdere poging brak het
+woordmerk over twee regels met een extra `<span>`, en toen zakte de sweep op
+"er staat zichtbare tekst buiten `T()` om: Predict". Terecht: dat was een los
+tekstdeel geworden. Het is niet op de uitzonderingslijst gezet maar opgelost —
+de naam is weer één tekstknoop, en de wisselknop deelt de regel.
+
+### Het pictogram is niet veranderd
+
+Alleen de bestandsnaam. Het motief -- één vak in het accent op een startgrid,
+"één keuze die eruit springt" -- gaat over voorspellen en niet over de oude
+naam, dus het werkt bij deze net zo goed. `scripts/maak-pictogrammen.py` heeft
+ze opnieuw weggeschreven; die heeft geen beeldbibliotheek nodig.
+
+### Wat jij nog moet doen, buiten deze repo
+
+Zie `ROUTEKAART.md`: in Google Cloud de nieuwe origin toevoegen, in Supabase de
+Site URL en de Redirect URLs, een `CNAME` voor GitHub Pages, en een DNS-record.
+De app zelf hoeft niets: `linkBasis()` leest `location.origin` uit, dus
+uitnodigingslinks en OAuth-redirects werken op elk domein waar hij draait.
+
+En let op het moment: een geïnstalleerde tegel pakt de naam van het moment van
+installeren en werkt die niet bij. Hoe langer je wacht, hoe meer mensen
+"RacePicks" op hun beginscherm houden tot ze hem weggooien en opnieuw zetten.

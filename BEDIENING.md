@@ -1,4 +1,4 @@
-# RacePicks: bediening en schermindeling
+# Predict the Race: bediening en schermindeling
 
 Ontwerp voor de navigatie en het aanmaakproces. Hoort bij `ROUTEKAART.md`.
 
@@ -275,14 +275,14 @@ poule-app leeft op een telefoon, dus dat is geen franje.
 De pictogrammen staan in `pictogrammen/` en zijn `maskable`: Android snijdt ze
 in de vorm van het toestel, en alles wat telt blijft binnen de veilige zone.
 Het motief is het startgrid met één vak in het accent — de pole. Dat ene vak
-ís de "picks" uit RacePicks: één keuze die eruit springt op een grid. Eerder
+ís waar de app over gaat: één keuze die eruit springt op een grid. Eerder
 wisselden alle vakken om en om van kleur, en dan is het een streepjespatroon;
 op een tegel van 48 pixels leest dat als ruis in plaats van als één ding.
 Ze worden gemaakt door `scripts/maak-pictogrammen.py` — met de hand, want er is
 geen beeldbibliotheek en er hoeft er ook geen te komen: het motief is het
 startgrid uit het ontwerp, en dat bestaat uit rechthoeken.
 
-iOS krijgt een eigen pictogram, `racepicks-apple-180.png`. Apple snijdt namelijk
+iOS krijgt een eigen pictogram, `predicttherace-apple-180.png`. Apple snijdt namelijk
 niet, het legt er alleen ronde hoeken omheen — de veilige zone van een maskable
 icoon is daar dus verspilde ruimte en het motief zou klein uitkomen met een
 brede rand. Vandaar een vullende variant, uit hetzelfde script.
@@ -967,7 +967,7 @@ De regel, en vooral wat hij niet doet:
   ingevuld. Wie invult krijgt niets.
 - Dezelfde melding komt **niet twee keer**: de sync onthoudt per toestel wat er
   het laatst gestuurd is.
-- Op een **iPhone** werkt het alleen als RacePicks op je beginscherm staat.
+- Op een **iPhone** werkt het alleen als Predict the Race op je beginscherm staat.
   Dat is een regel van iOS, niet van de app.
 - De melding komt **in de taal van dat toestel**: dezelfde taal waarin je de
   app gebruikte toen je hem aanzette. Wissel je later van taal, dan gaat de

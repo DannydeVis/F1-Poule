@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>RacePicks</title>
+<title>Predict the Race</title>
 <meta name="color-scheme" content="dark light">
 <meta name="description" content="Het F1-voorspelspel voor jou en je vrienden. Voorspel de grid, versla je maten en win het weekend. Gratis, zonder wachtwoord.">
 <!-- "Zet op beginscherm" geeft hiermee een echte app-tegel in plaats van een
@@ -11,13 +11,13 @@
      geen franje. De pictogrammen zijn maskable: Android snijdt ze in de vorm
      van het toestel, en alles wat telt blijft binnen de veilige zone. -->
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="pictogrammen/racepicks-192.png" sizes="192x192">
+<link rel="icon" href="pictogrammen/predicttherace-192.png" sizes="192x192">
 <!-- iOS snijdt geen eigen vorm uit het icoon, het legt er alleen ronde hoeken
      omheen. Het maskable pictogram hierboven komt daar dus klein uit met een
      brede rand; vandaar een eigen, vullende variant. -->
-<link rel="apple-touch-icon" href="pictogrammen/racepicks-apple-180.png">
+<link rel="apple-touch-icon" href="pictogrammen/predicttherace-apple-180.png">
 <meta name="theme-color" content="#0b0b0c">
-<meta name="apple-mobile-web-app-title" content="RacePicks">
+<meta name="apple-mobile-web-app-title" content="Predict the Race">
 <!-- display:standalone uit het manifest is wat een iPhone sinds 16.4 leest;
      dit is de oude schakelaar, voor toestellen die daar nog onder zitten. -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -325,7 +325,10 @@
     border-bottom:1px solid var(--lijn);padding:12px 14px;
     display:flex;flex-direction:column;gap:12px;
   }
+  /* Op een telefoon staat hier de poulenaam en niet die van de app: je weet
+     welke app je open hebt, je wilt weten in welke poule je zit. */
   .zijbalk .merknaam{display:none}
+  .merkregel{display:none}
   /* Vast onderin: daar zit je duim. De balk staat in de DOM nog in de
      zijbalk, want op een breed scherm hoort hij daar wel gewoon in mee te
      lopen; position:fixed haalt hem hier alleen even uit de stroom. */
@@ -855,8 +858,31 @@
       border-right:1px solid var(--lijn);padding:22px 16px;gap:26px;
       height:100vh;position:sticky;top:0;
     }
-    .zijbalk .merknaam{display:block}
+    /* Op een breed scherm andersom: de poulenaam staat al groot in de kop.
+       Naam en ondertitel in een kolom naast het blok, zoals een merkblok
+       hoort -- en kleiner dan de 24px van de toegangsschermen, want "Predict
+       the Race" is langer dan waar die maat op berekend was. */
+    .merk{flex-wrap:wrap;row-gap:6px}
+    /* "Predict the Race" past niet naast het blok én de wisselknop. De knop
+       zakt daarom naar de tweede regel, naast de ondertitel -- dan houdt de
+       naam 180 pixel over en past hij op één regel. Dat is beter dan hem
+       opbreken: een woordmerk dat uit twee tekstknopen bestaat levert in
+       textContent "Predictthe Race" op, en daar leest zowel de
+       tooltip-bij-afkappen als de talentest uit. */
+    /* 16 en niet groter: naast het blok en de wisselknop blijft er 121 pixel
+       over, en "Predict the Race" heeft er op 17px precies 121 nodig. Precies
+       passen is geen passen -- één andere letterval en hij is afgekapt. Klein
+       mag hier ook: een merkblok hoeft niet het luidste op het scherm te
+       zijn, en de ondertitel eronder maakt er een lockup van. */
+    .zijbalk .merknaam{display:block;font-size:16px;letter-spacing:.04em;
+      flex:1;min-width:0}
     .zijbalk .merkpoule{display:none}
+    /* Een eigen regel over de volle breedte. Naast de wisselknop bleef er
+       121 pixel over en daar past hij niet in; dan zou hij afgekapt worden
+       en dat is erger dan geen ondertitel. */
+    .merkregel{display:block;width:100%;font-family:var(--mono);font-size:9px;
+      letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     /* Breed genoeg voor een zijbalk: dan hoort de navigatie daar gewoon in
        mee te lopen, niet als vaste balk over de inhoud heen. */
     .nav{position:static;flex-direction:column;background:transparent;
@@ -1440,9 +1466,9 @@ const ENGELS = Object.fromEntries([
   // ---- op je beginscherm zetten --------------------------------
   ['op je beginscherm',
    'add to home screen'],
-  ['Zet RacePicks op je beginscherm, dan '
+  ['Zet Predict the Race op je beginscherm, dan '
    + 'opent hij als een app: eigen tegel, eigen venster, geen adresbalk.',
-   'Add RacePicks to your home screen and it opens like an app: its own '
+   'Add Predict the Race to your home screen and it opens like an app: its own '
    + 'tile, its own window, no address bar.'],
   ['Zet op beginscherm',
    'Add to home screen'],
@@ -1749,10 +1775,10 @@ const ENGELS = Object.fromEntries([
    'no connection'],
   ['Even geen bereik',
    'No signal right now'],
-  ['RacePicks haalt de standen live op, '
+  ['Predict the Race haalt de standen live op, '
    + 'dus zonder verbinding valt er niets te laten zien. Je inzendingen '
    + 'staan veilig; zodra je weer online bent staat alles er gewoon.',
-   'RacePicks fetches the standings live, so there is nothing to show without '
+   'Predict the Race fetches the standings live, so there is nothing to show without '
    + 'a connection. Your entries are safe; as soon as you are back online it is '
    + 'all there again.'],
   ['Opnieuw proberen',
@@ -2131,9 +2157,9 @@ const ENGELS = Object.fromEntries([
    'Turn notifications off'],
   ['Krijg een seintje op dit toestel als een '
    + 'deadline nadert en je nog niets hebt ingevuld. Op een iPhone werkt dat '
-   + 'alleen als RacePicks op je beginscherm staat.',
+   + 'alleen als Predict the Race op je beginscherm staat.',
    'Get a nudge on this device when a deadline is close and you have not filled '
-   + 'anything in. On an iPhone this only works if RacePicks is on your home '
+   + 'anything in. On an iPhone this only works if Predict the Race is on your home '
    + 'screen.'],
   ['Zet meldingen aan',
    'Turn notifications on'],
@@ -2468,8 +2494,8 @@ const ENGELS = Object.fromEntries([
    + 'weggehaald, of klopt de link niet helemaal.',
    'Maybe the page was '
    + 'removed, or the link is not quite right.'],
-  ['Naar RacePicks',
-   'Go to RacePicks'],
+  ['Naar Predict the Race',
+   'Go to Predict the Race'],
   ['Dat lukte even niet',
    'That did not work'],
   ['Deze pagina bestaat niet',
@@ -2739,6 +2765,10 @@ const ENGELS = Object.fromEntries([
    'How many jokers does everyone get this season'],
   ['Iedereen heeft nu {n} jokers dit seizoen.',
    'Everyone now has {n} jokers this season.'],
+
+  // ---- het merkblok --------------------------------------------
+  ['voor jou en je vrienden',
+   'for you and your friends'],
 
   // ---- het vangnet onder het tekenen ---------------------------
   ['vastgelopen',
@@ -3927,7 +3957,7 @@ function geenVerbinding() {
         <div class="rodevlag">
           <span class="label">${T('geen verbinding')}</span>
           <h1 class="middel">${T('Even geen bereik')}</h1>
-          <p class="zacht" style="margin:0">${T('RacePicks haalt de standen live op, '
+          <p class="zacht" style="margin:0">${T('Predict the Race haalt de standen live op, '
             + 'dus zonder verbinding valt er niets te laten zien. Je inzendingen '
             + 'staan veilig; zodra je weer online bent staat alles er gewoon.')}</p>
           <button class="knop wit" id="opnieuw">${T('Opnieuw proberen')}</button>
@@ -5103,10 +5133,11 @@ function toonApp() {
       <aside class="zijbalk">
         <div class="merk">
           <span class="blok"></span>
-          <span class="naam merknaam">RacePicks</span>
+          <span class="naam merknaam">Predict the Race</span>
           <span class="naam merkpoule">${esc(S.poule.name)}</span>
           <button class="wisselknop" id="anderePoule" type="button"
             title="${T('Wissel van poule')}">${T('Wissel')}</button>
+          <span class="merkregel">${T('voor jou en je vrienden')}</span>
         </div>
         <nav class="nav">
           ${Object.entries(navNamen()).map(([w, naam]) => `<button class="navknop"
@@ -6014,7 +6045,7 @@ function meldingBlok() {
   return `${kop}
     <p class="zacht" style="margin:0">${T('Krijg een seintje op dit toestel als een '
       + 'deadline nadert en je nog niets hebt ingevuld. Op een iPhone werkt dat '
-      + 'alleen als RacePicks op je beginscherm staat.')}</p>
+      + 'alleen als Predict the Race op je beginscherm staat.')}</p>
     <button class="knop klein" id="meldingAan">${T('Zet meldingen aan')}</button>
     ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}`;
 }
@@ -6422,7 +6453,7 @@ async function toonProfiel(code) {
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
-          <span class="naam">RacePicks</span>
+          <span class="naam">Predict the Race</span>
           <span class="code">${esc(String(p?.seizoen ?? seizoen()))}</span>
         </div>
         ${binnen}
@@ -6435,7 +6466,7 @@ async function toonProfiel(code) {
       <p class="zacht" style="margin:12px 0 0">${T('Misschien is de pagina '
         + 'weggehaald, of klopt de link niet helemaal.')}</p>
     </div>
-    <a class="knop" href="${esc(location.pathname)}">${T('Naar RacePicks')}</a>`);
+    <a class="knop" href="${esc(location.pathname)}">${T('Naar Predict the Race')}</a>`);
   if (stuk) { app.innerHTML = zonder(T('Dat lukte even niet')); return; }
   if (!p) { app.innerHTML = zonder(T('Deze pagina bestaat niet')); return; }
 
@@ -8243,7 +8274,7 @@ function koppelVraagScherm() {
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
-          <span class="naam">RacePicks</span>
+          <span class="naam">Predict the Race</span>
           <span class="code">${esc(S.poule.join_code ?? S.poule.name)}</span>
         </div>
         <div>
@@ -8282,7 +8313,7 @@ function kiesSpeler() {
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
-          <span class="naam">RacePicks</span>
+          <span class="naam">Predict the Race</span>
           <span class="code">${esc(S.poule.join_code ?? S.poule.name)}</span>
         </div>
         <div>
@@ -8424,7 +8455,7 @@ function maakPagina() {
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
-          <span class="naam">RacePicks</span>
+          <span class="naam">Predict the Race</span>
           <span class="code">${T('stap {n} van 4', { n: m.stap })}</span>
         </div>
         <div class="stappen">
@@ -8676,7 +8707,7 @@ function installBlok() {
   const kop = `<div class="scheiding"></div>
     <div class="veldblok">
       <span class="label">${T('op je beginscherm')}</span>
-      <p class="zacht" style="margin:0">${T('Zet RacePicks op je beginscherm, dan '
+      <p class="zacht" style="margin:0">${T('Zet Predict the Race op je beginscherm, dan '
         + 'opent hij als een app: eigen tegel, eigen venster, geen adresbalk.')}</p>`;
   if (installPrompt) {
     return `${kop}
@@ -8833,7 +8864,7 @@ function toonStart() {
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
-          <span class="naam">RacePicks</span>
+          <span class="naam">Predict the Race</span>
           <span class="code">${seizoen()}</span>
           ${taalKnop()}
         </div>

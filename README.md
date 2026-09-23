@@ -1,4 +1,4 @@
-# RacePicks
+# Predict the Race
 
 **Het F1-voorspelspel voor jou en je vrienden. Voorspel de grid, versla je
 maten en win het weekend.**

@@ -96,7 +96,7 @@ const manifest = await page.evaluate(async () => {
 });
 check('het manifest is er en is te laden', manifest && !manifest.fout, JSON.stringify(manifest));
 check('met een naam, een startpunt en een eigen venster',
-  manifest?.name === 'RacePicks' && !!manifest?.start_url && manifest?.display === 'standalone',
+  manifest?.name === 'Predict the Race' && !!manifest?.start_url && manifest?.display === 'standalone',
   JSON.stringify({ n: manifest?.name, s: manifest?.start_url, d: manifest?.display }));
 check('en pictogrammen die Android in zijn eigen vorm mag snijden',
   (manifest?.icons ?? []).length >= 2

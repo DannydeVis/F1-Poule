@@ -1,4 +1,4 @@
-# RacePicks: wat er nog bij kan
+# Predict the Race: wat er nog bij kan
 
 Overzicht van alles wat besproken is, plus nieuwe ideeën, op volgorde van
 wat het oplevert gedeeld door wat het kost.
@@ -24,15 +24,15 @@ deze lijst gaat daarom over sociale mechaniek, niet over voorspellingen.
 
 ---
 
-## Op de rol: een eigen domein
+## ~~Op de rol: een eigen domein~~ — het is `predicttherace.com`
 
-`racepicks.com` bleek bezet. De naam RacePicks zit inmiddels wél in de app, en
-dat hoeft geen probleem te zijn — een `.com` die weg is betekent niet dat de
-naam weg is. `.app`, `.nl` of `.eu` houden hem gewoon overeind, en dat scheelt
-een hernoeming. Wordt het toch een andere naam, zie dan de checklist onderaan
-dit hoofdstuk: dat is twintig minuten werk, geen verbouwing.
+`racepicks.com` bleek bezet, en in plaats van uit te wijken naar een `.app` of
+een `.nl` is het een andere naam geworden: **`predicttherace.com`**, gekocht.
+De app heet sindsdien Predict the Race, en de hernoeming die hieronder als
+checklist stond is gedaan.
 
-Hieronder staat `<domein>` voor wat het ook wordt. Zodra dat er is:
+Wat er nog moet gebeuren is niet in deze repo maar bij de diensten eromheen.
+Hieronder staat `<domein>` voor `predicttherace.com`:
 
 - **Google Cloud** (Google Auth Platform → Clients): `https://<domein>`
   toevoegen als Authorized JavaScript origin, en
@@ -58,7 +58,11 @@ Hieronder staat `<domein>` voor wat het ook wordt. Zodra dat er is:
   aan te passen via Authentication → Emails → sjablonen, zonder dat
   daarvoor het domein nodig is.
 
-### Als de naam tóch verandert
+### ~~Als de naam tóch verandert~~ — gedaan
+
+Dit was de checklist, en hij is afgelopen bij de overstap naar Predict the
+Race. Hij blijft staan omdat hij nog steeds klopt: mocht de naam ooit weer
+veranderen, dan is dit waar hij zit.
 
 De merknaam zit op dertien plekken, en nergens anders. Het gewone woord
 "poule" is met opzet níét meeveranderd — je speelt nog steeds in een poule,
@@ -380,12 +384,13 @@ nog niemand vreemd op zit is onderhoud; erna is het een incident.
 
 ---
 
-## ~~Fase 1: RacePicks worden~~ — gebouwd, op het domein na
+## ~~Fase 1: een eigen naam~~ — gebouwd, en inmiddels Predict the Race
 
 **Gedaan:** de naam, de positioneringszin, het icoon en het manifest. **Nog
 open, en dat is jouw kant:** een domein kiezen en live zetten — zie bovenaan
 dit bestand voor de instellingen bij Google Cloud, Supabase en GitHub Pages
-die daarbij horen. `racepicks.com` bleek bezet; de naam zelf kan blijven.
+die daarbij horen. `racepicks.com` bleek bezet, en het is uiteindelijk een
+andere naam geworden: Predict the Race, op `predicttherace.com`.
 
 De app heette overal "Poule". Een eigen domein staat al langer op de rol (zie bovenaan dit bestand voor de instellingen die daarbij horen).
 
@@ -401,7 +406,7 @@ De app heette overal "Poule". Een eigen domein staat al langer op de rol (zie bo
 
 Niet "een website waar je F1-voorspellingen kunt invullen", maar:
 
-> **RacePicks is the F1 prediction game for you and your friends. Pick the
+> **Predict the Race is the F1 prediction game for you and your friends. Pick the
 > grid, beat your mates and win the weekend.**
 
 Dat is de betere van de twee, en niet alleen als marketingzin: het beschrijft
@@ -837,7 +842,7 @@ Drie dingen om te weten als je hier verder bouwt:
 | fase | wat | waarom daar |
 |---|---|---|
 | ~~0~~ | ~~RLS dichtzetten~~ — **gebouwd**, zie `OVERDRACHT.md` | het enige dat een publieke launch tegenhield |
-| ~~1~~ | ~~RacePicks: naam, icoon~~ — **gebouwd**; alleen het domein is nog van jou | vóórdat mensen "Poule" op hun beginscherm zetten |
+| ~~1~~ | ~~Een eigen naam en icoon~~ — **gebouwd**, en inmiddels Predict the Race op een gekocht domein | vóórdat mensen "Poule" op hun beginscherm zetten |
 | ~~2~~ | ~~racescherm wordt dashboard~~ — **gebouwd** | grootste winst per uur werk, data is er al |
 | ~~3~~ | ~~positiewijziging, reeksen, grafiek~~ — **gebouwd**; recap en profielstatistieken bewust niet, zie `OVERDRACHT.md` | rekenwerk over wat er al ligt |
 | ~~4~~ | ~~toegankelijkheid, offlinescherm~~ — **gebouwd**; opsplitsen nagemeten en niet gedaan | onderhoud, als er geen haast is |
