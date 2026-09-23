@@ -57,6 +57,16 @@ const tekst = async (kies) => (await page.textContent(kies)).replace(/\s+/g, ' '
 const sleutels = () => page.evaluate(() =>
   Object.keys(localStorage).filter(k => k.startsWith('poule:')).sort());
 
+// Alle checks hieronder lezen Nederlandse tekst, en dit bestand zet zijn taal
+// zelf (zie hierboven). Gaat dát mis, dan zakken ze allemaal op iets wat niets
+// met het vangnet te maken heeft. Vandaar eerst deze: dan staat er meteen wát
+// er aan de hand is in plaats van tien raadselachtige tekstmismatches.
+check('de app draait in het Nederlands, anders zegt de rest niets',
+  (await page.evaluate(() => localStorage.getItem('poule:taal'))) === 'nl'
+    && (await page.getAttribute('html', 'lang')) === 'nl',
+  `sleutel=${await page.evaluate(() => localStorage.getItem('poule:taal'))} `
+    + `lang=${await page.getAttribute('html', 'lang')}`);
+
 await meedoen(page);
 
 // Een scherm onthouden om straks te kunnen zien dat het weggaat.
