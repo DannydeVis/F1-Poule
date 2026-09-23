@@ -74,26 +74,13 @@ create table if not exists public.races (
   rode_vlag_handmatig       boolean not null default false
 );
 
-create table if not exists public.predictions (
-  pool_id     uuid   not null,
-  race_id     bigint not null,
-  member_id   uuid   not null,
-  quali_top10 text[],
-  race_top10  text[],
-  -- De winnaar apart, 25 punten. Hangt aan de race-deadline, net als
-  -- race_top10, en wordt door dezelfde trigger bewaakt.
-  race_winnaar text,
-  updated_at  timestamptz not null default now()
-);
-
 -- ------------------------------------------------------------
 --  Vragen
 --  Zie BEDIENING.md. Vaste kolommen werken tot een stuk of drie vragen;
 --  daarboven is een rij per vraag eenvoudiger, en pas dan kan een poule
 --  zelf kiezen wat er meedoet.
 --
---  De app leest en schrijft deze tabellen sinds de migratie; de kolommen
---  op predictions hierboven staan er alleen nog voor de oude gegevens.
+--  De app leest en schrijft deze tabellen sinds de migratie.
 -- ------------------------------------------------------------
 
 create table if not exists public.questions (
@@ -301,11 +288,6 @@ alter table public.races        add column if not exists rode_vlag_handmatig    
 
 alter table public.push_abonnementen add column if not exists taal text not null default 'nl';
 
-alter table public.predictions  add column if not exists quali_top10 text[];
-alter table public.predictions  add column if not exists race_top10  text[];
-alter table public.predictions  add column if not exists race_winnaar text;
-alter table public.predictions  add column if not exists updated_at  timestamptz not null default now();
-
 -- ------------------------------------------------------------
 --  De vragenlijst
 --  Punten per weekend. De presets uit BEDIENING.md §3 tellen hiermee op
@@ -350,51 +332,42 @@ alter table public.pools alter column join_code set not null;
 alter table public.pools alter column join_code set default upper(substr(md5(random()::text), 1, 6));
 
 -- ------------------------------------------------------------
---  Opruimen voor de sleutels erop kunnen
---  Alleen rijen die index.html sowieso niet kan tonen of scoren.
--- ------------------------------------------------------------
-
-do $$
-declare weg int;
-begin
-  -- Voorspellingen zonder poule, race of speler zijn niet te koppelen.
-  delete from public.predictions
-  where pool_id is null or race_id is null or member_id is null;
-  get diagnostics weg = row_count;
-  if weg > 0 then raise notice 'onbruikbare voorspellingen verwijderd: %', weg; end if;
-
-  -- Wijzen naar een race, poule of speler die niet meer bestaat.
-  delete from public.predictions p
-  where not exists (select 1 from public.races        r where r.id = p.race_id)
-     or not exists (select 1 from public.pools        o where o.id = p.pool_id)
-     or not exists (select 1 from public.pool_members m where m.member_id = p.member_id);
-  get diagnostics weg = row_count;
-  if weg > 0 then raise notice 'verweesde voorspellingen verwijderd: %', weg; end if;
-
-  -- Dubbelen ontstaan doordat een upsert zonder unieke sleutel elke keer
-  -- een nieuwe rij aanmaakte. De laatst bijgewerkte rij is de goede.
-  delete from public.predictions p
-  using public.predictions q
-  where p.pool_id = q.pool_id and p.race_id = q.race_id and p.member_id = q.member_id
-    and (p.updated_at, p.ctid) < (q.updated_at, q.ctid);
-  get diagnostics weg = row_count;
-  if weg > 0 then raise notice 'dubbele voorspellingen opgeruimd: %', weg; end if;
-end $$;
-
--- ------------------------------------------------------------
---  Van predictions naar answers
---  De app schrijft voorspellingen nu weg als één rij per vraag. Bestaande
---  voorspellingen verhuizen hier mee, zodat niemand zijn ingevulde races
---  kwijtraakt. Opnieuw uit te voeren: al verhuisde rijen blijven staan en
---  worden niet overschreven, want daar staat inmiddels de nieuwste versie.
---  De deadline-trigger gaat er even uit: deze voorspellingen zijn destijds
---  op tijd ingevuld, en een race van vorig jaar zou nu geweigerd worden.
---  Bij de allereerste run bestaat die trigger nog niet.
+--  Van predictions naar answers, en daarna is predictions weg
+--
+--  De app schrijft voorspellingen weg als één rij per vraag in answers. De
+--  oude tabel predictions, met de hele top 10 in één veld, wordt nergens meer
+--  gelezen -- hij stond er alleen nog voor wie zijn gegevens nog niet had
+--  overgezet. Dat is nu het laatste wat er met hem gebeurt: overzetten wat er
+--  nog in zit, en hem dan laten vallen.
+--
+--  De volgorde is het hele punt. Eerst overzetten, dán weggooien, zodat dit
+--  ook goed gaat op een database die deze migratie nooit gedraaid heeft.
+--  Opnieuw uit te voeren: de tweede keer bestaat de tabel niet meer en slaat
+--  dit blok zichzelf over.
+--
+--  De deadline-trigger gaat er even uit: deze voorspellingen zijn destijds op
+--  tijd ingevuld, en een race van vorig jaar zou nu geweigerd worden. Bij de
+--  allereerste run bestaat die trigger nog niet.
 -- ------------------------------------------------------------
 
 do $$
 declare over int; met_trigger boolean;
 begin
+  if to_regclass('public.predictions') is null then return; end if;
+
+  -- Een database van vóór de migratie mist kolommen die hieronder gelezen
+  -- worden -- race_winnaar en updated_at kwamen er pas later bij. Zonder dit
+  -- klapt de select op precies de database waarvoor deze migratie bedoeld is.
+  -- Ze worden hier aangevuld; de tabel gaat er een paar regels verderop toch
+  -- uit. (Deze staan ná de bewaking hierboven, en PL/pgSQL bereidt een
+  -- statement pas voor bij de eerste uitvoering, dus op een database zonder
+  -- predictions wordt hier niets van aangeraakt.)
+  alter table public.predictions add column if not exists quali_top10  text[];
+  alter table public.predictions add column if not exists race_top10   text[];
+  alter table public.predictions add column if not exists race_winnaar text;
+  alter table public.predictions add column if not exists updated_at
+    timestamptz not null default now();
+
   select exists (
     select 1 from pg_trigger
     where tgrelid = 'public.answers'::regclass and tgname = 'answers_deadline'
@@ -403,7 +376,15 @@ begin
 
   insert into public.answers (pool_id, race_id, member_id, question_id, waarde, updated_at)
   select p.pool_id, p.race_id, p.member_id, v.question_id, v.waarde, p.updated_at
-  from public.predictions p
+  -- distinct on in plaats van eerst de dubbelen opruimen. Zonder de unieke
+  -- sleutel kon een "wijziging" vroeger een tweede rij opleveren; dan is de
+  -- laatst bijgewerkte de goede. Dit kiest er deterministisch één, in plaats
+  -- van het aan on conflict over te laten welke er toevallig eerst is.
+  from (
+    select distinct on (pool_id, race_id, member_id) *
+    from public.predictions
+    order by pool_id, race_id, member_id, updated_at desc
+  ) p
   cross join lateral (values
       ('quali_top10'::text, to_jsonb(p.quali_top10)),
       ('race_top10',  to_jsonb(p.race_top10)),
@@ -411,6 +392,13 @@ begin
     ) as v(question_id, waarde)
   -- Een lege lijst is "niet ingevuld", geen antwoord van nul coureurs.
   where v.waarde is not null and v.waarde <> 'null'::jsonb and v.waarde <> '[]'::jsonb
+    -- answers heeft foreign keys, dus een rij die naar een verdwenen poule,
+    -- race of speler wijst past daar niet in. Vroeger werden die eerst
+    -- verwijderd; nu worden ze gewoon overgeslagen, want de tabel gaat er
+    -- hieronder toch uit.
+    and exists (select 1 from public.pools        o where o.id = p.pool_id)
+    and exists (select 1 from public.races        r where r.id = p.race_id)
+    and exists (select 1 from public.pool_members m where m.member_id = p.member_id)
   on conflict (pool_id, race_id, member_id, question_id) do nothing;
   get diagnostics over = row_count;
   if over > 0 then raise notice 'voorspellingen overgezet naar answers: %', over; end if;
@@ -418,18 +406,16 @@ begin
   if met_trigger then alter table public.answers enable trigger answers_deadline; end if;
 end $$;
 
+-- En weg ermee. cascade neemt meteen mee wat er nog aan hing: de index, de
+-- deadline-trigger, de sleutels en de RLS-regels.
+drop table if exists public.predictions cascade;
+
 -- ------------------------------------------------------------
 --  Sleutels
---  Zonder de unieke sleutel op predictions wordt elke "wijziging" een
---  nieuwe rij en lijkt bewaren willekeurig wel en niet te werken.
 -- ------------------------------------------------------------
 
 alter table public.races       drop constraint if exists races_seizoen_ronde;
 alter table public.races        add constraint races_seizoen_ronde unique (season, round);
-
-alter table public.predictions drop constraint if exists predictions_uniek;
-alter table public.predictions  add constraint predictions_uniek
-  unique (pool_id, race_id, member_id);
 
 -- Een foreign key eist een unieke sleutel op precies de kolom waarnaar hij
 -- wijst. In een oudere tabelstructuur zit member_id soms in een samengestelde
@@ -494,20 +480,8 @@ alter table public.pool_members drop constraint if exists pool_members_pool_fk;
 alter table public.pool_members  add constraint pool_members_pool_fk
   foreign key (pool_id) references public.pools(id) on delete cascade;
 
-alter table public.predictions drop constraint if exists predictions_pool_fk;
-alter table public.predictions  add constraint predictions_pool_fk
-  foreign key (pool_id) references public.pools(id) on delete cascade;
-
-alter table public.predictions drop constraint if exists predictions_race_fk;
-alter table public.predictions  add constraint predictions_race_fk
-  foreign key (race_id) references public.races(id) on delete cascade;
-
-alter table public.predictions drop constraint if exists predictions_member_fk;
-alter table public.predictions  add constraint predictions_member_fk
-  foreign key (member_id) references public.pool_members(member_id) on delete cascade;
-
 -- Alles wat aan een poule hangt gaat mee als die poule weggaat, net als
--- pool_members en predictions hierboven.
+-- pool_members hierboven.
 alter table public.pool_questions drop constraint if exists pool_questions_pool_fk;
 alter table public.pool_questions  add constraint pool_questions_pool_fk
   foreign key (pool_id) references public.pools(id) on delete cascade;
@@ -547,7 +521,6 @@ alter table public.jokers  add constraint jokers_member_fk
 
 create index if not exists answers_pool_race_idx on public.answers (pool_id, race_id);
 create index if not exists jokers_pool_lid_idx on public.jokers (pool_id, member_id);
-create index if not exists predictions_pool_idx on public.predictions (pool_id);
 create index if not exists pool_members_pool_idx on public.pool_members (pool_id);
 create index if not exists races_seizoen_idx on public.races (season, round);
 
@@ -601,11 +574,6 @@ begin
   new.updated_at = now();
   return new;
 end $$;
-
-drop trigger if exists predictions_deadline on public.predictions;
-create trigger predictions_deadline
-  before insert or update on public.predictions
-  for each row execute function public.poule_deadline_bewaken();
 
 -- Dezelfde bewaking voor answers. De deadline is het enige wat hier hard in
 -- de database is afgedwongen, dus die mag niet wegvallen doordat de app naar
@@ -1284,7 +1252,6 @@ grant execute on function public.verwijder_mijn_account(boolean) to authenticate
 alter table public.pools        enable row level security;
 alter table public.pool_members enable row level security;
 alter table public.races        enable row level security;
-alter table public.predictions  enable row level security;
 alter table public.questions      enable row level security;
 alter table public.pool_questions enable row level security;
 alter table public.answers        enable row level security;
@@ -1304,9 +1271,6 @@ drop policy if exists pool_members_bijwerken on public.pool_members;
 drop policy if exists races_open        on public.races;
 drop policy if exists races_all         on public.races;
 drop policy if exists races_lezen       on public.races;
-drop policy if exists predictions_open  on public.predictions;
-drop policy if exists predictions_lezen on public.predictions;
-drop policy if exists predictions_eigen on public.predictions;
 drop policy if exists questions_lezen   on public.questions;
 drop policy if exists pool_questions_open on public.pool_questions;
 drop policy if exists pool_questions_lezen   on public.pool_questions;
@@ -1420,15 +1384,6 @@ create policy push_eigen on public.push_abonnementen
   using (public.mag_voor_speler(member_id))
   with check (public.mag_voor_speler(member_id));
 
--- predictions wordt door de app niet meer gebruikt — de antwoorden staan in
--- answers — maar de tabel bestaat nog en krijgt dezelfde behandeling.
-create policy predictions_lezen on public.predictions
-  for select to anon, authenticated using (public.is_member(pool_id));
-create policy predictions_eigen on public.predictions
-  for all to anon, authenticated
-  using (public.mag_voor_speler(member_id))
-  with check (public.mag_voor_speler(member_id));
-
 -- ------------------------------------------------------------
 --  Rechten op tabelniveau
 --  Supabase geeft anon en authenticated standaard alles op `public`. Dat is
@@ -1456,7 +1411,6 @@ grant insert, update, delete on public.pool_members to anon, authenticated;
 revoke select on public.pool_members from anon, authenticated;
 grant select (member_id, pool_id, display_name, user_id, created_at)
   on public.pool_members to anon, authenticated;
-grant select, insert, update, delete on public.predictions    to anon, authenticated;
 grant select, insert, update, delete on public.pool_questions to anon, authenticated;
 grant select, insert, update, delete on public.answers        to anon, authenticated;
 grant select, insert, update, delete on public.jokers         to anon, authenticated;
@@ -1486,27 +1440,13 @@ grant usage on all sequences in schema public to anon, authenticated;
 
 drop view if exists public.poule_controle;
 create view public.poule_controle as
-select 'unieke sleutel op predictions' as controle,
-       case when exists (
-         select 1 from pg_constraint
-         where conrelid = 'public.predictions'::regclass
-           and conname = 'predictions_uniek'
-       ) then 'ok' else 'ONTBREEKT' end as uitkomst
-union all
-select 'deadline-trigger',
-       case when exists (
-         select 1 from pg_trigger
-         where tgrelid = 'public.predictions'::regclass
-           and tgname = 'predictions_deadline'
-       ) then 'ok' else 'ONTBREEKT' end
-union all
 -- Niet alleen "bestaat hij", maar ook "vuurt hij op alle drie". Deze trigger
 -- stond lang op `insert or update`, en dan kon je een antwoord dat vastligt
 -- verwijderen en opnieuw invoeren -- de regel omzeild zonder hem te breken.
 -- Een controle die dat niet ziet zegt 'ok' over een half dichte deur.
 --
 -- tgtype is een bitmasker: 4 = insert, 8 = delete, 16 = update.
-select 'deadline-trigger op answers',
+select 'deadline-trigger op answers' as controle,
        case
          when not exists (
            select 1 from pg_trigger
@@ -1517,7 +1457,7 @@ select 'deadline-trigger op answers',
            where tgrelid = 'public.answers'::regclass
              and tgname = 'answers_deadline'
              and (tgtype & 4) > 0 and (tgtype & 16) > 0 and (tgtype & 8) > 0) then 'ok'
-         else 'ZONDER DELETE — draai schema.sql opnieuw' end
+         else 'ZONDER DELETE — draai schema.sql opnieuw' end as uitkomst
 union all
 -- De jokergrens zit sinds kort in de database en niet meer in de app, en dat
 -- is precies het soort wijziging waarvan je wilt weten of hij bij jou ook
@@ -1543,12 +1483,6 @@ union all
 -- Vijf is de standaard. Dit getal zegt of iemand er bewust van afgeweken is.
 select 'poules met een eigen jokeraantal',
        (select count(*)::text from public.pools where jokers_aantal <> 5)
-union all
-select 'dubbele voorspellingen',
-       case when (select count(*) from (
-         select 1 from public.predictions
-         group by pool_id, race_id, member_id having count(*) > 1) d) = 0
-       then 'ok' else 'NOG AANWEZIG' end
 union all
 select 'aantal poules',        (select count(*)::text from public.pools)
 union all
@@ -1672,42 +1606,7 @@ union all
 select 'winnaar ingevuld',
        (select count(*)::text from public.answers where question_id = 'winnaar')
 union all
-select 'ingevulde antwoorden',   (select count(*)::text from public.answers)
-union all
--- Blijft staan zolang niet zeker is dat alles goed is overgezet; de app
--- leest deze tabel niet meer.
--- Het getal alleen zei niets waar je iets aan had: "er staan nog 3 rijen in
--- een tabel die de app niet gebruikt" -- en dan? De vraag erachter is altijd
--- "kan die tabel weg", en die is precies te beantwoorden. Elke rij in
--- predictions levert maximaal drie antwoorden op (quali_top10, race_top10,
--- winnaar); staat elk daarvan ook in answers, dan zit er niets meer in dat
--- nergens anders staat.
---
--- Dezelfde voorwaarden als de migratie zelf hierboven, met opzet woordelijk:
--- een lege lijst is "niet ingevuld" en telt dus niet als iets wat mist. Gaan
--- die twee uit de pas lopen, dan meldt deze regel iets wat de migratie niet
--- doet, en dat is erger dan geen regel.
-select 'oude voorspellingen (ongebruikt)',
-       case when (select count(*) from public.predictions) = 0 then '0'
-       else (select count(*)::text from public.predictions) || (
-         select case when count(*) = 0
-                     then ' — allemaal overgezet naar answers'
-                     else format(' — LET OP: %s nog niet overgezet', count(*)) end
-         from public.predictions p
-         cross join lateral (values
-             ('quali_top10'::text, to_jsonb(p.quali_top10)),
-             ('race_top10',        to_jsonb(p.race_top10)),
-             ('winnaar',           to_jsonb(p.race_winnaar))
-           ) as v(question_id, waarde)
-         where v.waarde is not null
-           and v.waarde <> 'null'::jsonb and v.waarde <> '[]'::jsonb
-           and not exists (
-             select 1 from public.answers a
-             where a.pool_id   = p.pool_id
-               and a.race_id   = p.race_id
-               and a.member_id = p.member_id
-               and a.question_id = v.question_id))
-       end;
+select 'ingevulde antwoorden',   (select count(*)::text from public.answers);
 
 -- Met opzet géén grant. De app vraagt deze view nooit op -- alleen jij draait
 -- schema.sql, en dat gaat in de Supabase SQL-editor langs de grants heen.

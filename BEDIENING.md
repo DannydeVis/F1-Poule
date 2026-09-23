@@ -661,7 +661,7 @@ De policies eronder staan nu op:
 |---|---|
 | `pools` | leden, plus iedereen voor poules die op openbaar staan |
 | `pool_members` | je eigen spelers, plus de medespelers in je eigen poules |
-| `answers`, `pool_questions`, `predictions` | leden van die poule |
+| `answers`, `pool_questions` | leden van die poule |
 | `races`, `questions` | iedereen — dit is gedeelde naslag, geen poulegegevens |
 
 Let op bij het aanpassen hiervan: in Postgres heeft `returning` net zo goed
@@ -1192,7 +1192,7 @@ onomkeerbaar:
 ### leegmaken.sql: schone start, kalender blijft
 
 Voor "ik wil opnieuw beginnen met de poules". Weg gaan de poules, de spelers,
-de antwoorden, de vragenkeuze per poule en de oude `predictions`-rijen. Blijven
+de antwoorden en de vragenkeuze per poule. Blijven
 staan de 24 races met hun deelnemerslijsten en uitslagen, de vragenlijst zelf,
 en alle accounts.
 

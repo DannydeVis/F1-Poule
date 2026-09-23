@@ -49,7 +49,6 @@ const beginstand = {
       deadline_sprint:null, sprint_result:null, sprint_key:null,
       fastest_lap:null, fastest_pitstop:null, safety_cars:null, rode_vlag:null },
   ],
-  predictions: [],
   // De negen vragen zoals schema.sql ze wegschrijft. Compleet, want het
   // aanmaakscherm laat ze allemaal zien — ook die de app nog niet stelt.
   questions: [
@@ -96,7 +95,6 @@ const bewaren = () => { try { sessionStorage.setItem(BEWAAR, JSON.stringify(stor
 // Wordt door ontbrekende-sleutel.test.mjs leeggemaakt om een database zonder
 // unieke sleutel na te bootsen.
 const UNIEK = {
-  predictions: ['pool_id', 'race_id', 'member_id'],
   answers:     ['pool_id', 'race_id', 'member_id', 'question_id'],
   push_abonnementen: ['endpoint'],
 };
@@ -175,8 +173,7 @@ function isLid(poolId) {
 function magLezen(tabel, rij) {
   if (tabel === 'pools')          return !!rij.is_public || isLid(rij.id);
   if (tabel === 'pool_members')   return gelijk(rij.user_id, wieBenIk()) || isLid(rij.pool_id);
-  if (tabel === 'answers' || tabel === 'predictions'
-      || tabel === 'pool_questions') return isLid(rij.pool_id);
+  if (tabel === 'answers' || tabel === 'pool_questions') return isLid(rij.pool_id);
   return true;   // races en questions zijn gedeelde gegevens
 }
 
@@ -187,7 +184,7 @@ const geweigerd = { data: null, error: { code: '42501',
   message: 'new row violates row-level security policy' } };
 
 function magSchrijven(tabel, rij) {
-  if (tabel === 'answers' || tabel === 'predictions' || tabel === 'jokers'
+  if (tabel === 'answers' || tabel === 'jokers'
       || tabel === 'push_abonnementen') {
     return magVoorSpeler(rij.member_id);
   }
@@ -199,7 +196,7 @@ function magSchrijven(tabel, rij) {
 
 // Welke bestaande rijen mag ik überhaupt aanraken?
 function magRaken(tabel, rij) {
-  if (tabel === 'answers' || tabel === 'predictions' || tabel === 'jokers'
+  if (tabel === 'answers' || tabel === 'jokers'
       || tabel === 'push_abonnementen') {
     return magVoorSpeler(rij.member_id);
   }
@@ -695,9 +692,8 @@ const functies = {
         if (mijne.some((m) => gelijk(m.member_id, p.owner_member_id))) p.owner_member_id = null;
       }
       const ids = mijne.map((m) => String(m.member_id));
-      for (const tabel of ['answers', 'predictions']) {
-        store[tabel] = (store[tabel] ?? []).filter((r) => !ids.includes(String(r.member_id)));
-      }
+      store.answers = (store.answers ?? [])
+        .filter((r) => !ids.includes(String(r.member_id)));
       store.pool_members = store.pool_members.filter((m) => !gelijk(m.user_id, ik));
     } else {
       for (const m of mijne) m.user_id = null;

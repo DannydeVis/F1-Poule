@@ -6,8 +6,8 @@
 --  tabellen zelf, waarna je schema.sql opnieuw moet draaien én de kalender
 --  opnieuw moet ophalen. Dit bestand raakt de structuur niet aan.
 --
---  Wat weggaat          poules, spelers, antwoorden, de vragenkeuze per
---                       poule, en de rijen in de oude predictions-tabel
+--  Wat weggaat          poules, spelers, antwoorden en de vragenkeuze per
+--                       poule
 --  Wat blijft           de 24 races met hun deelnemerslijsten en uitslagen,
 --                       de vragenlijst zelf, en alle accounts
 --
@@ -46,7 +46,6 @@ delete from public.answers;
 alter table public.answers enable trigger answers_deadline;
 alter table public.jokers  enable trigger jokers_bewaken;
 delete from public.pool_questions;
-delete from public.predictions;
 delete from public.pool_members;
 delete from public.pools;
 
@@ -70,8 +69,6 @@ union all
 select 'ingevulde antwoorden',(select count(*)::text from public.answers)
 union all
 select 'vragenkeuze per poule',(select count(*)::text from public.pool_questions)
-union all
-select 'oude voorspellingen', (select count(*)::text from public.predictions)
 union all
 select 'gezette jokers',       (select count(*)::text from public.jokers)
 union all

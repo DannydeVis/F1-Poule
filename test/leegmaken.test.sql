@@ -39,8 +39,6 @@ begin
                    deadline_race  = now() - interval '1 day',
                    race_result    = array['1','4','16']
    where id = race;
-  insert into predictions (pool_id, race_id, member_id)
-    values (poule, race, lid);
   raise notice 'ok: testpoule klaargezet';
 end $$;
 
@@ -58,8 +56,6 @@ begin
   if n <> 0 then raise exception 'gezakt: nog % antwoorden over', n; end if;
   select count(*) into n from pool_questions;
   if n <> 0 then raise exception 'gezakt: nog % vragenkeuzes over', n; end if;
-  select count(*) into n from predictions;
-  if n <> 0 then raise exception 'gezakt: nog % oude voorspellingen over', n; end if;
   select count(*) into n from jokers;
   if n <> 0 then raise exception 'gezakt: nog % jokers over', n; end if;
   raise notice 'ok: poules, spelers en inzendingen zijn weg';

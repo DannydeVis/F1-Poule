@@ -14,7 +14,7 @@ with verwacht as (
     ('pools',        1),
     ('pool_members', 2),
     ('races',        3),
-    ('predictions',  4)
+    ('answers',      4)
   ) as v(tabel, volgorde)
 ),
 bestaat as (
@@ -78,10 +78,10 @@ union all
 select '— trigger —',
        case when exists (
          select 1 from pg_trigger
-         where tgrelid = to_regclass('public.predictions')
-           and tgname = 'predictions_deadline'
+         where tgrelid = to_regclass('public.answers')
+           and tgname = 'answers_deadline'
        ) then 'aanwezig' else 'ontbreekt' end,
-       '-', '-', 'deadline-bewaking op predictions'
+       '-', '-', 'deadline-bewaking op answers'
 
 union all
 
@@ -92,7 +92,7 @@ select '— RLS —',
          from pg_class c
          join pg_namespace n on n.oid = c.relnamespace
          where n.nspname = 'public'
-           and c.relname in ('pools','pool_members','races','predictions')
+           and c.relname in ('pools','pool_members','races','answers')
        ), 'geen tabellen'),
        '-', '-', 'row level security per tabel'
 
