@@ -1676,7 +1676,38 @@ select 'ingevulde antwoorden',   (select count(*)::text from public.answers)
 union all
 -- Blijft staan zolang niet zeker is dat alles goed is overgezet; de app
 -- leest deze tabel niet meer.
-select 'oude voorspellingen (ongebruikt)', (select count(*)::text from public.predictions);
+-- Het getal alleen zei niets waar je iets aan had: "er staan nog 3 rijen in
+-- een tabel die de app niet gebruikt" -- en dan? De vraag erachter is altijd
+-- "kan die tabel weg", en die is precies te beantwoorden. Elke rij in
+-- predictions levert maximaal drie antwoorden op (quali_top10, race_top10,
+-- winnaar); staat elk daarvan ook in answers, dan zit er niets meer in dat
+-- nergens anders staat.
+--
+-- Dezelfde voorwaarden als de migratie zelf hierboven, met opzet woordelijk:
+-- een lege lijst is "niet ingevuld" en telt dus niet als iets wat mist. Gaan
+-- die twee uit de pas lopen, dan meldt deze regel iets wat de migratie niet
+-- doet, en dat is erger dan geen regel.
+select 'oude voorspellingen (ongebruikt)',
+       case when (select count(*) from public.predictions) = 0 then '0'
+       else (select count(*)::text from public.predictions) || (
+         select case when count(*) = 0
+                     then ' — allemaal overgezet naar answers'
+                     else format(' — LET OP: %s nog niet overgezet', count(*)) end
+         from public.predictions p
+         cross join lateral (values
+             ('quali_top10'::text, to_jsonb(p.quali_top10)),
+             ('race_top10',        to_jsonb(p.race_top10)),
+             ('winnaar',           to_jsonb(p.race_winnaar))
+           ) as v(question_id, waarde)
+         where v.waarde is not null
+           and v.waarde <> 'null'::jsonb and v.waarde <> '[]'::jsonb
+           and not exists (
+             select 1 from public.answers a
+             where a.pool_id   = p.pool_id
+               and a.race_id   = p.race_id
+               and a.member_id = p.member_id
+               and a.question_id = v.question_id))
+       end;
 
 -- Met opzet géén grant. De app vraagt deze view nooit op -- alleen jij draait
 -- schema.sql, en dat gaat in de Supabase SQL-editor langs de grants heen.
