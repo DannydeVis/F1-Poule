@@ -5277,7 +5277,7 @@ function hero(volgend) {
         <span class="mono groen">${T('sluit {wanneer}', {
           wanneer: esc(sluitTekst(volgend.iso)) })}</span>
       </div>
-      <h2 class="heronaam">${esc(r.name)}</h2>
+      <h1 class="heronaam">${esc(r.name)}</h1>
       <div class="klok" data-tot="${esc(volgend.iso)}">${klokTekst(volgend.iso)}</div>
       <div class="lampjes">${Array.from({length:5}, (_,i) =>
         `<span class="${i < aan ? 'aan' : ''}" style="animation-delay:${(i * .12).toFixed(2)}s"></span>`).join('')}</div>
@@ -6687,7 +6687,7 @@ function omschrijvingBlok() {
   const nu = S.omschrijving ?? S.poule.beschrijving ?? '';
   return `
     <div class="scheiding"></div>
-    <span class="label">${T('waar gaat het over?')}</span>
+    <label class="label" for="pouleomschrijving">${T('waar gaat het over?')}</label>
     <input class="veld" id="pouleomschrijving" maxlength="120" autocomplete="off"
       placeholder="${T("Met de collega's, om de eer")}" value="${esc(nu)}">
     <div style="display:flex;gap:8px">
@@ -8786,7 +8786,7 @@ function toonStart() {
         </div>
         <div class="scheiding"></div>` : ''}
         <div class="veldblok">
-          <span class="label">${T('poulecode')}</span>
+          <label class="label" for="code">${T('poulecode')}</label>
           <input class="veld code" id="code" maxlength="6" placeholder="ABC123"
             value="${esc(S.linkCode)}"
             autocomplete="off" autocapitalize="characters" spellcheck="false">
