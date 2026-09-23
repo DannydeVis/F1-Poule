@@ -207,3 +207,81 @@ begin
 
   delete from public.races where id = 9101;
 end $$;
+
+-- ============================================================
+--  6. De jokergrens: staat hij er, en ziet de tabel het als hij weg is
+-- ============================================================
+--
+-- De jokergrens verhuisde van de app naar de database, en de controletabel
+-- zei er niets over. Een uitdraai kon je dus niet vertellen of je
+-- schema.sql-run gelukt was -- en dat is precies waar die tabel voor is.
+--
+-- Alle drie de uitkomsten worden hier langsgelopen, want een regel die alleen
+-- 'ok' kan zeggen controleert niets.
+
+do $$
+declare
+  gevonden text;
+  n        int;
+begin
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'jokeraantal: grens en bewaking';
+  if gevonden is null then
+    raise exception 'gezakt: de regel over de jokergrens staat niet in de tabel';
+  end if;
+  if gevonden <> 'ok' then
+    raise exception 'gezakt: vers gedraaid schema zegt al "%"', gevonden;
+  end if;
+  raise notice 'ok: een vers gedraaid schema meldt de jokergrens als in orde';
+
+  -- De bewaking weg: verlagen onder wat er ligt zou dan stilletjes mogen.
+  drop trigger pools_jokeraantal on public.pools;
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'jokeraantal: grens en bewaking';
+  if gevonden not like 'ZONDER BEWAKING%' then
+    raise exception 'gezakt: zonder de trigger zegt de tabel "%"', gevonden;
+  end if;
+  raise notice 'ok: een ontbrekende bewaking wordt gemeld (%)', gevonden;
+  create trigger pools_jokeraantal
+    before update on public.pools
+    for each row execute function public.poule_jokeraantal_bewaken();
+
+  -- De grens weg: dan mag er ineens nul of zes in.
+  alter table public.pools drop constraint pools_jokers_aantal;
+  select uitkomst into gevonden from public.poule_controle
+   where controle = 'jokeraantal: grens en bewaking';
+  if gevonden not like 'GRENS 1-5 ONTBREEKT%' then
+    raise exception 'gezakt: zonder de check zegt de tabel "%"', gevonden;
+  end if;
+  raise notice 'ok: een ontbrekende grens wordt gemeld (%)', gevonden;
+  alter table public.pools add constraint pools_jokers_aantal
+    check (jokers_aantal between 1 and 5);
+
+  -- En de teller die zegt of iemand ervan afgeweken is.
+  select uitkomst::int into n from public.poule_controle
+   where controle = 'poules met een eigen jokeraantal';
+  if n <> 0 then
+    raise exception 'gezakt: zonder afwijking telt hij er %', n;
+  end if;
+  raise notice 'ok: zonder afwijking staat de teller op nul';
+
+  -- Dit bestand maakt zelf geen poules aan, dus hier eentje die alleen voor
+  -- deze telling bestaat en meteen weer weggaat. pools.id is een uuid.
+  insert into public.pools (name, season, jokers_aantal)
+  values ('Controlepoule', 2026, 3);
+  select uitkomst::int into n from public.poule_controle
+   where controle = 'poules met een eigen jokeraantal';
+  if n <> 1 then
+    raise exception 'gezakt: na één afwijking telt hij er %', n;
+  end if;
+  raise notice 'ok: en een poule die ervan afwijkt wordt geteld';
+
+  update public.pools set jokers_aantal = 5 where name = 'Controlepoule';
+  select uitkomst::int into n from public.poule_controle
+   where controle = 'poules met een eigen jokeraantal';
+  if n <> 0 then
+    raise exception 'gezakt: terug op vijf telt hij er nog %', n;
+  end if;
+  raise notice 'ok: en terug op vijf telt hij niet meer mee';
+  delete from public.pools where name = 'Controlepoule';
+end $$;
