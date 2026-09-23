@@ -1234,8 +1234,20 @@ allebei aanhouden. Het zichtbare vlak mag kleiner zijn dan het aanraakgebied —
 zie `.merk .wisselknop`.
 
 **Toetsenbord.** `:focus-visible` geeft een rand van 2 pixels in de
-accentkleur. Die slaat alleen aan bij toetsenbordbediening; een `.focus()`
-vanuit script telt niet mee, en een test die dat niet weet faalt onterecht.
+accentkleur. Die slaat aan bij toetsenbordbediening. Eerder stond hier dat een
+`.focus()` vanuit script niet meetelt; nagemeten in Chromium klopt dat niet —
+een kale `.focus()` geeft de ring wel degelijk. Dat is maar goed ook, want het
+focusherstel hieronder leunt erop.
+
+**De focus overleeft een hertekening.** De app vervangt bij elke tik het hele
+scherm, dus het element dat de focus had bestaat daarna niet meer. Zonder
+ingrijpen valt de focus terug op de body en begint de volgende Tab weer
+bovenaan de pagina — na élke handeling. Er wordt daarom een *handvat* onthouden
+(het `id` of het eerste gevulde `data-*`-attribuut) en na de hertekening
+teruggezocht. Is de knop echt verdwenen, dan gaat de focus naar `.hoofd`, die
+daarvoor `tabindex="-1"` heeft. Geef een knop die na een hertekening terug moet
+komen dus altijd een `id` of een `data-`attribuut; zonder allebei is hij niet
+terug te vinden.
 
 **Schermlezers.** De app vervangt bij elke tik het hele scherm, en daar leest
 een schermlezer niets van voor. Meldingen en foutregels gaan daarom óók naar
