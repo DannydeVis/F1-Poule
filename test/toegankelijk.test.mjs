@@ -79,6 +79,39 @@ for (const w of ['stand', 'poule', 'profiel']) {
   await keur(w);
 }
 
+// ---- bewegingsvoorkeur --------------------------------------------------
+// De app heeft 25 animaties en overgangen en één regel die ze allemaal
+// uitzet. Die regel werkt, en dat is precies het soort ding dat stil kan
+// sneuvelen -- iemand zet ergens een !important neer en niemand merkt het.
+
+await page.emulateMedia({ reducedMotion: 'reduce' });
+await page.click('[data-weergave="races"]');
+await page.waitForSelector('[data-race]');
+
+const beweging = () => page.evaluate(() => {
+  const lamp = document.querySelector('.lampjes span');
+  const knop = document.querySelector('.knop');
+  return {
+    lamp: lamp ? getComputedStyle(lamp).animationName : '(geen lampje)',
+    knop: knop ? getComputedStyle(knop).transitionDuration : '(geen knop)',
+  };
+});
+
+{
+  const b = await beweging();
+  check('met "liever minder beweging" staat de animatie uit',
+    b.lamp === 'none', JSON.stringify(b));
+  check('en de overgangen ook',
+    b.knop === '0s', JSON.stringify(b));
+}
+
+await page.emulateMedia({ reducedMotion: 'no-preference' });
+{
+  const b = await beweging();
+  check('zonder die voorkeur beweegt het wel, anders meet het bovenstaande niets',
+    b.lamp !== 'none' && b.knop !== '0s', JSON.stringify(b));
+}
+
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
 await stoppen();

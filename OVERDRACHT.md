@@ -5431,3 +5431,60 @@ zegt, keurt ook alles wat er later bij komt. Komt er een scherm bij, dan is het
 
 Nagemeten door de oude opmaak terug te zetten: vier checks zakken, en ze noemen
 precies het element dat mankeert (`input#code.veld`, koppen `2`).
+
+---
+
+## Een visuele ronde die niets opleverde, en dat is de uitkomst
+
+Na de toegankelijkheidsronde heb ik de app bekeken zoals iemand hem gebruikt:
+schermafdrukken van alle zes de schermen, op 1280 en op 390 breed. Dat leverde
+twee keer een alarm op dat na meten geen alarm bleek. Allebei staan ze hier,
+zodat de volgende die ze ziet niet opnieuw begint te repareren.
+
+**De opslaanbalk leek P8 en P9 te bedekken.** Op de afdruk van het racescherm
+staat "NOG NIETS GEKOZEN" middenin de lijst met plekken, met P10 er onderuit
+piepend. Dat ziet eruit als een kapotte opmaak. Gemeten:
+
+```
+bovenaan:  balk 670-760, bedekteSlots [8, 9]
+onderaan:  balk 670-760, bedekteSlots []
+```
+
+`.opslaanbalk` is `position:sticky;bottom:0` in een kolom die zelf scrolt
+(`section.kol`, `overflow-y:auto`, inhoud 1001 in een vak van 710). Tijdens het
+scrollen zweeft hij over de lijst -- dat hoort bij een sticky actiebalk -- en
+onderaan gescrold keert hij terug naar zijn eigen plek en bedekt hij niets.
+Alles is bereikbaar. De veertig pixels inhoud die onder de balk zichtbaar
+blijven zijn de `padding-bottom` van de kolom, en dat is precies waarom hij
+niet tegen de onderrand plakt.
+
+**De navigatie leek middenin het poulescherm te staan.** Dat was een artefact
+van `fullPage: true`: sticky elementen belanden in een aan elkaar genaaide
+afdruk op hun vastgezette positie, dus middenin. In een gewone
+vensterafdruk staat de navigatie waar hij hoort, onderaan het scherm.
+
+Les voor de volgende keer: een `fullPage`-afdruk liegt over alles wat sticky
+is. Neem een vensterafdruk, of beter: meet.
+
+### En een check die het niet werd
+
+Ik wilde de eerste bevinding vastleggen met een controle: "onderaan gescrold
+bedekt de opslaanbalk geen enkele plek". Hij slaagde -- maar hij bleef ook
+slagen toen ik de balk verving door een vaste werkbalk over de volle breedte,
+en dat is precies het faalgeval waarvoor hij bedoeld was. Een controle die niet
+kan afgaan om de reden waarvoor hij bestaat is geen controle.
+
+Hij is er weer uit. De eigenschap is trouwens al gedekt, en beter: `kiesTien()`
+in `test/hulp.mjs` klikt in elke test die een top 10 invult alle tien de
+plekken aan. Raakt er eentje onbereikbaar, dan zakt dat meteen op een stuk of
+tien plaatsen.
+
+### Wat er wel bij kwam
+
+De bewegingsvoorkeur. De app heeft 25 animaties en overgangen en één regel die
+ze allemaal uitzet (`@media (prefers-reduced-motion:reduce)` met een
+`*`-selector en `!important`). Die werkt -- nagemeten -- en het is het soort
+regel dat stil kan sneuvelen. `test/toegankelijk.test.mjs` controleert nu
+allebei de kanten: met de voorkeur staat alles uit, en zónder de voorkeur staat
+het juist aan. Die tweede is er omdat de eerste anders ook zou slagen als er
+helemaal geen animaties meer waren.
