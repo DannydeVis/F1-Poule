@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Maakt de landingspagina's, de sitemap, robots.txt, llms.txt en 404.html uit
- * site/teksten.mjs.
+ * Maakt de landingspagina's, de privacyverklaring, de sitemap, robots.txt,
+ * llms.txt en 404.html uit site/teksten.mjs en site/privacy.mjs.
  *
  *   node scripts/maak-site.mjs              schrijft alles weg
  *   node scripts/maak-site.mjs --controle   zegt alleen of het nog klopt
@@ -35,6 +35,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { teksten, TALEN, STANDAARD, BASIS, BIJGEWERKT, MAKER, BRON } from '../site/teksten.mjs';
+import { PRIVACY, CONTACT, PRIVACY_BIJGEWERKT, privacyTaal } from '../site/privacy.mjs';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CONTROLE = process.argv.includes('--controle');
@@ -85,6 +86,11 @@ const urlVan = (code) => `${BASIS}/${teksten[code].pad ? teksten[code].pad + '/'
 // dannydevis.github.io/F1-Poule/, waar alles een map dieper staat.
 const naar = (van, doel) => `${teksten[van].pad ? '../' : ''}${teksten[doel].pad ? teksten[doel].pad + '/' : ''}`;
 const voor = (code) => (teksten[code].pad ? '../' : '');
+const PRIVACY_TALEN = Object.keys(PRIVACY);
+const privacyUrl = (taal) => `${BASIS}/${PRIVACY[taal].pad}/`;
+// Van een landingspagina naar de privacyverklaring in zijn taal, of de Engelse.
+const naarPrivacy = (code) => `${voor(code)}${PRIVACY[privacyTaal(code)].pad}/`;
+const privacyHreflang = (code) => (privacyTaal(code) === code ? '' : ` hreflang="${privacyTaal(code)}"`);
 
 // ------------------------------------------------------------
 //  Vormgeving: dezelfde tokens en letters als de app
@@ -557,7 +563,7 @@ ${jsonLd(code)}
 
 <section class="blok">
   <div class="binnen duo">
-    <article><h2>${esc(t.privacy.kop)}</h2><p>${esc(t.privacy.tekst)}</p></article>
+    <article><h2>${esc(t.privacy.kop)}</h2><p>${esc(t.privacy.tekst)} <a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.privacy.meer)}</a></p></article>
     <article><h2>${esc(t.maker.kop)}</h2><p>${esc(vul(t.maker.tekst, vars))} <a href="${BRON}" rel="noopener">github.com/DannydeVis/F1-Poule</a></p></article>
   </div>
 </section>
@@ -585,6 +591,7 @@ ${jsonLd(code)}
       `<li><a href="${naar(code, c)}" hreflang="${c}" lang="${c}" data-taal="${c}">${esc(teksten[c].naam)}</a></li>`).join('')}</ul></div>
     <ul>
       <li><a href="${app}">${esc(t.voet.app)}</a></li>
+      <li><a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.voet.privacy)}</a></li>
       <li><a href="${BRON}" rel="noopener">${esc(t.voet.bron)}</a></li>
       <li><a href="https://openf1.org" rel="noopener">${esc(t.voet.data)}</a></li>
     </ul>
@@ -592,6 +599,93 @@ ${jsonLd(code)}
   </div>
 </footer>
 <script>${taalScript(code)}</script>
+</body>
+</html>
+`;
+}
+
+// ------------------------------------------------------------
+//  De privacyverklaring
+// ------------------------------------------------------------
+
+// Een gewone leespagina: geen hero, geen plaatjes, geen taalbalkje. Wel
+// dezelfde kop, letters en kleuren, zodat hij bij de site hoort, en net als de
+// rest niets van een andere website.
+const PRIVACY_CSS = `
+  .verklaring{padding:48px 0 72px}
+  .verklaring .binnen{max-width:760px}
+  .verklaring h1{font-family:var(--cond);font-weight:700;text-transform:uppercase;font-size:clamp(38px,7vw,60px);
+    line-height:.95;margin:0 0 18px;letter-spacing:.01em}
+  .verklaring .inleiding{margin:0 0 10px}
+  .verklaring section{padding:26px 0 6px;border-top:1px solid var(--lijn);margin-top:26px}
+  .verklaring h2{font-size:clamp(24px,3.6vw,30px);margin:0 0 10px}
+  .verklaring p{margin:0 0 12px;line-height:1.65}
+  .verklaring a{color:var(--accent-tekst);overflow-wrap:anywhere}
+`;
+
+function privacyPagina(taal) {
+  const t = PRIVACY[taal];
+  const ander = PRIVACY_TALEN.find((c) => c !== taal);
+  const p = '../'.repeat(t.pad.split('/').length);
+  const thuis = `${p}${teksten[taal].pad ? teksten[taal].pad + '/' : ''}`;
+  const app = `${p}app/`;
+  const hreflang = [...PRIVACY_TALEN.map((c) => `<link rel="alternate" hreflang="${c}" href="${privacyUrl(c)}">`),
+    `<link rel="alternate" hreflang="x-default" href="${privacyUrl(STANDAARD)}">`].join('\n');
+  // De enige plekken waar HTML in de tekst komt, en alleen via deze twee.
+  const alinea = (s) => esc(s)
+    .replace('{contact}', `<a href="mailto:${esc(CONTACT)}">${esc(CONTACT)}</a>`)
+    .replace('{ap}', `<a href="${esc(t.apUrl)}" rel="noopener">${esc(t.ap)}</a>`);
+  return `<!DOCTYPE html>
+<html lang="${taal}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${esc(t.titel)}</title>
+<meta name="description" content="${esc(t.omschrijving)}">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="${privacyUrl(taal)}">
+${hreflang}
+<meta name="theme-color" content="#0b0b0c">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="${p}pictogrammen/predicttherace-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="${p}pictogrammen/predicttherace-apple-180.png">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Predict the Race">
+<meta property="og:url" content="${privacyUrl(taal)}">
+<meta property="og:title" content="${esc(t.titel)}">
+<meta property="og:description" content="${esc(t.omschrijving)}">
+<meta property="og:locale" content="${t.locale}">
+<style>${lettertypen(p)}${CSS}${PRIVACY_CSS}</style>
+</head>
+<body>
+<header class="kop">
+  <div class="binnen">
+    <a class="merk" href="${thuis}" aria-label="Predict the Race"><span class="blok"></span><b>Predict the Race</b></a>
+    <a class="knop klein" href="${app}">${esc(t.app)}</a>
+  </div>
+</header>
+<main class="verklaring">
+  <div class="binnen">
+    <h1>${esc(t.kop)}</h1>
+    <p class="inleiding">${esc(t.intro)}</p>
+    <p class="label"><time datetime="${PRIVACY_BIJGEWERKT}">${esc(t.bijgewerkt)}</time></p>
+${t.secties.map(([kop, alineas]) => `    <section>
+      <h2>${esc(kop)}</h2>
+${alineas.map((a) => `      <p>${alinea(a)}</p>`).join('\n')}
+    </section>`).join('\n')}
+  </div>
+</main>
+<footer class="voet">
+  <div class="binnen">
+    <ul>
+      <li><a href="${thuis}">${esc(t.terug)}</a></li>
+      <li><a href="${app}">${esc(t.app)}</a></li>
+      <li><a href="${p}${PRIVACY[ander].pad}/" hreflang="${ander}" lang="${ander}">${esc(t.ander)}</a></li>
+      <li><a href="${BRON}" rel="noopener">${esc(teksten[taal].voet.bron)}</a></li>
+    </ul>
+    <small>${esc(teksten[taal].voet.disclaimer)}</small>
+  </div>
+</footer>
 </body>
 </html>
 `;
@@ -615,6 +709,14 @@ ${alt}
     <changefreq>monthly</changefreq>
     <priority>${c === 'nl' || c === STANDAARD ? '1.0' : '0.9'}</priority>
     <image:image><image:loc>${BASIS}/site/og/og-${c}.jpg</image:loc></image:image>
+  </url>`).join('\n')}
+${PRIVACY_TALEN.map((c) => `  <url>
+    <loc>${privacyUrl(c)}</loc>
+${[...PRIVACY_TALEN.map((a) => `    <xhtml:link rel="alternate" hreflang="${a}" href="${privacyUrl(a)}"/>`),
+  `    <xhtml:link rel="alternate" hreflang="x-default" href="${privacyUrl(STANDAARD)}"/>`].join('\n')}
+    <lastmod>${PRIVACY_BIJGEWERKT}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>`).join('\n')}
 </urlset>
 `;
@@ -676,6 +778,7 @@ ${en.antwoord.tekst}
 - Languages of this page: ${TALEN.map((c) => `${teksten[c].naam} (${urlVan(c)})`).join(', ')}
 - App languages: English, Dutch
 - Price: free, no ads, no trackers, no money involved
+- Privacy: ${privacyUrl('en')} (Dutch: ${privacyUrl('nl')})
 - Made by: ${MAKER.naam} (${MAKER.url}); source code: ${BRON}
 - Data source for calendar and results: OpenF1 (https://openf1.org)
 - Not affiliated with Formula 1, the FIA or any F1 team
@@ -764,6 +867,7 @@ for (const code of TALEN) {
   const pad = teksten[code].pad ? join(teksten[code].pad, 'index.html') : 'index.html';
   bestanden.set(pad, pagina(code));
 }
+for (const taal of PRIVACY_TALEN) bestanden.set(join(PRIVACY[taal].pad, 'index.html'), privacyPagina(taal));
 bestanden.set('sitemap.xml', sitemap());
 bestanden.set('robots.txt', ROBOTS);
 bestanden.set('llms.txt', llms());

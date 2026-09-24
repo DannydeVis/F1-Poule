@@ -1181,12 +1181,28 @@ Google" of "Inloggen met je mailadres" op het beginscherm, niet je naam
 opnieuw aanklikken in de spelerslijst (dat geeft nu netjes "hoort bij een
 ander toestel", precies zoals bij elk ander toestel dat al bij iemand hoort).
 
-### Twee dingen die jij nog moet invullen
+### De verklaring op de site
 
-1. **Een contactadres.** Bovenin `index.html` staat `PRIVACY_CONTACT = ''`.
-   Zolang dat leeg is, staat er geen contactregel in de verklaring — en een
-   privacyverklaring zonder contactadres is niet af. Let op: die pagina is
-   publiek, dus zet er een adres in dat je publiek wilt hebben.
+Sinds 24 september 2026 staat dezelfde verklaring ook als losse pagina op de
+site: `predicttherace.com/privacy/` en `/en/privacy/`, gemaakt door
+`scripts/maak-site.mjs` uit `site/privacy.mjs`. Voor wie de app nog niet
+heeft, voor Google (het inlogscherm vraagt om een privacylink), en elke
+landingspagina linkt ernaar. De app linkt er ook naar, onderaan de
+verklaring, in de taal van de app.
+
+Verander je iets aan wat de app bewaart of naar wie het gaat, pas dan beide
+aan: `privacyBlok()` in de app en `site/privacy.mjs`, en draai
+`node scripts/maak-site.mjs`. `test/privacypagina.test.mjs` zakt als de twee
+een verschillende dienst noemen.
+
+### Nog één ding om in te vullen
+
+1. ~~**Een contactadres.**~~ Ingevuld: `PRIVACY_CONTACT` in `app/index.html`
+   en `CONTACT` in `site/privacy.mjs`, en de test houdt die twee gelijk. Het
+   adres is publiek: het staat op de site en in deze openbare repo, dus
+   spamfilters krijgen er werk aan. Een eigen adres op het domein
+   (`privacy@predicttherace.com`, bij TransIP als doorsturing naar je eigen
+   mail) kan later: dan verander je die twee regels.
 2. **Waar de database staat.** De verklaring zegt "in een database bij
    Supabase". In welke regio dat is, staat in je Supabase-dashboard
    (Settings → General). Voor Nederlandse gebruikers is dat het vermelden
@@ -1484,10 +1500,9 @@ opent de app voortaan in een browservenster.
   een deel de zoekfunctie van ChatGPT; onder **AI Performance** zie je
   wanneer de site daar geciteerd wordt.
 - **Google Cloud → Branding**: de links naar de privacyverklaring en de
-  voorwaarden wezen naar `dannydevis.github.io/F1-Poule/`; zet ze op
-  `https://predicttherace.com/`. Een losse privacypagina is er nog niet (de
-  verklaring staat in de app, §12), en die wil Google zien zodra je ooit
-  verificatie aanvraagt.
+  voorwaarden wezen naar `dannydevis.github.io/F1-Poule/`. Privacy hoort op
+  `https://predicttherace.com/privacy/` (de losse pagina, zie §12); het vakje
+  voor de voorwaarden is niet verplicht en mag leeg.
 - Klein, maar handig: de repo → het tandwieltje bij **About** → Website:
   `https://predicttherace.com`.
 
