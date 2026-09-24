@@ -343,7 +343,8 @@ het seizoen haalt dan de hele rest van deze lijst bij elkaar.
 
 Groep 1, 2 en 3 staan er, en uit groep 4 "slechtste twee races vallen weg" en
 "automatisch invullen bij vergeten" — daarmee zijn alle drie de kwalen bovenaan
-deze lijst aangepakt.
+deze lijst aangepakt. (Het eerste is op 24 september 2026 weer weggehaald: in
+een kleine poule herhaalde het blok de stand erboven. Zie `OVERDRACHT.md`.)
 
 Wat hieronder staat is een nieuw plan, in fases. Het komt uit een doorlichting
 van de app van buitenaf, naast wat er in groep 4 nog lag. De volgorde is niet
@@ -747,8 +748,8 @@ voorkwamen:
 Ze raken alle vier de telling. Dat is de reden dat ze hier stonden en niet
 gebouwd waren: midden in een lopend seizoen de puntentelling omgooien is geen
 verbetering, ook niet als de nieuwe regel op zichzelf beter is. Kijk hoe de twee
-die er al waren dat hebben opgelost: "slechtste twee races" staat náást de stand
-in plaats van erin, en "automatisch invullen" geldt alleen vanaf het moment dat
+die er al waren dat hebben opgelost: "slechtste twee races" stond náást de stand
+in plaats van erin (en is inmiddels weggehaald), en "automatisch invullen" geldt alleen vanaf het moment dat
 de poulebaas hem aanzet. Alle vier beantwoorden die vraag nu, en op twee
 manieren: de sprint en de seizoenslaag ontweken hem (het zijn vragen, dus een
 lopende poule krijgt ze niet), de jokers en contrair kregen dezelfde streep als

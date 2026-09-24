@@ -2024,25 +2024,9 @@ const ENGELS = Object.fromEntries([
    + 'places off. Whoever scores most in a weekend wins that weekend, even if '
    + 'they are behind over the season.'],
 
-  // ---- weekendwinst, streep en duels ---------------------------
+  // ---- weekendwinst en duels -----------------------------------
   ['weekendoverwinningen',
    'weekend wins'],
-  ['Weggestreept: {wat}.',
-   'Dropped: {wat}.'],
-  [' en ',
-   ' and '],
-  ['Daarmee sta je {dan} in plaats van {nu}.',
-   'That puts you {dan} instead of {nu}.'],
-  ['Dat verandert niets aan je plek.',
-   'That does not change your position.'],
-  ['zonder je slechtste weekend',
-   'without your worst weekend'],
-  ['zonder je slechtste {n} weekenden',
-   'without your worst {n} weekends'],
-  ['Per twaalf gereden races valt je slechtste weekend hier weg, dus bij een '
-   + 'heel seizoen zijn dat er twee. De stand hierboven telt gewoon alles mee.',
-   'For every twelve races run, your worst weekend drops out here, so a full '
-   + 'season drops two. The table above still counts everything.'],
   ['onderlinge duels · jij tegen',
    'head to head · you against'],
   ['{n}× gelijk',
@@ -3259,43 +3243,6 @@ export function raceGemiddelden(rijen = [], { minSpelers = 2 } = {}) {
 // pakte, opgeteld over het seizoen. Een weekend waarin geen van beiden iets
 // heeft ingeleverd telt niet mee; dat is geen gelijkspel maar een weekend
 // dat er voor dit duel niet was.
-/**
- * De stand als je slechtste weekenden niet meetelden.
- *
- * Waarom dit er is: een poule valt uit elkaar zodra de helft niet meer kan
- * winnen. Eén gemiste race — vakantie, bruiloft, gewoon vergeten — kost je
- * vijftig tot honderd punten, en dat haal je in een seizoen niet meer terug.
- * Daarna kijkt die persoon niet meer.
- *
- * De regel groeit mee met het seizoen, en dat is met opzet. Zou je meteen
- * vanaf race één je slechtste twee wegstrepen, dan telt er na drie races nog
- * één race mee en is de stand onzin. Nu valt er per twaalf gescoorde races
- * één weekend af: bij een seizoen van vierentwintig zijn dat er twee, precies
- * zoals het bedoeld was.
- *
- * Let op wat dit níét doet: het rekent niet de officiële stand om. Het staat
- * ernaast, als antwoord op "hoe ver sta ik echt achter". Iemands punten
- * midden in een lopend seizoen afpakken is geen verbetering, ook niet als de
- * uitkomst eerlijker is.
- */
-export function zonderSlechtste(weekenden = [], { perAantal = 12, maxWeg = 2 } = {}) {
-  const lijst = (weekenden ?? [])
-    .filter((w) => w && Number.isFinite(Number(w.punten)))
-    .map((w) => ({ naam: String(w.naam ?? ''), punten: Number(w.punten) }));
-  const volledig = lijst.reduce((s, w) => s + w.punten, 0);
-
-  const aantalWeg = Math.min(maxWeg, Math.floor(lijst.length / perAantal));
-  if (aantalWeg < 1) return { totaal: volledig, volledig, weg: [], telt: lijst.length };
-
-  // Bij gelijke punten op naam sorteren, anders wijst hij bij elke keer
-  // verversen een ander weekend aan terwijl er niets veranderd is.
-  const oplopend = [...lijst].sort((a, b) => a.punten - b.punten
-    || a.naam.localeCompare(b.naam));
-  const weg = oplopend.slice(0, aantalWeg);
-  const totaal = volledig - weg.reduce((s, w) => s + w.punten, 0);
-  return { totaal, volledig, weg, telt: lijst.length - aantalWeg };
-}
-
 export function duelStand(regels = []) {
   let ik = 0, ander = 0, gelijk = 0;
   for (const r of regels) {
@@ -5071,22 +5018,6 @@ function duels() {
                 || String(a.naam).localeCompare(String(b.naam)));
 }
 
-// De stand met ieders slechtste weekenden eruit. Dezelfde punten, andere
-// optelling — zie zonderSlechtste() voor waarom dit naast de stand staat en
-// niet in plaats van.
-function streepStand() {
-  const gescoord = S.races.filter(heeftUitslag);
-  return S.leden.map(l => ({
-    id: l.member_id,
-    naam: l.display_name,
-    mij: zelfde(l.member_id, S.ik.id),
-    ...zonderSlechtste(gescoord.map(r => ({
-      naam: r.name,
-      punten: scoreWeekend(vindPred(r.id, l.member_id), r),
-    }))),
-  })).sort((a, b) => b.totaal - a.totaal || String(a.naam).localeCompare(String(b.naam)));
-}
-
 function weekendOverwinningen() {
   const telling = new Map(S.leden.map(l =>
     [String(l.member_id), { naam:l.display_name, aantal:0, mij:zelfde(l.member_id, S.ik.id) }]));
@@ -5788,7 +5719,6 @@ function standPagina(rijen) {
       : `<p class="zacht" style="margin:0">${T('Nog niemand meegedaan.')}</p>`}
     ${seizoenslaagBlok()}
     ${weekendRanglijst()}
-    ${streepBlok()}
     ${seizoensGrafiek()}
     ${terugblikBlok()}
     ${duelLijst()}
@@ -5960,14 +5890,6 @@ function weekendRanglijst() {
     </div>`).join('')}</div>`;
 }
 
-// "Hoe ver sta ik echt achter?" Eén gemiste race kost je vijftig tot honderd
-// punten, en wie dat in april overkomt kijkt in juni niet meer. Dit blok laat
-// de stand zien zonder ieders slechtste weekenden — dezelfde punten, andere
-// optelling.
-//
-// Nadrukkelijk naast de stand en niet in plaats van. De officiële stand blijft
-// wat hij is; iemands punten midden in een lopend seizoen afpakken is geen
-// verbetering, ook niet als de uitkomst eerlijker is.
 // ---- de seizoenslaag op het scherm --------------------------
 // Eén blok met drie gedaanten: een formulier zolang het seizoen nog niet
 // begonnen is, daarna wat je hebt ingevuld, en aan het eind wat het opleverde.
@@ -6123,43 +6045,6 @@ async function bewaarSeizoen() {
     if (error) throw new Error(uitleg(error));
   }
   await laad();
-}
-
-function streepBlok() {
-  if (!S.ik || S.leden.length < 2) return '';
-  const rijen = streepStand();
-  const aantalWeg = rijen[0]?.weg?.length ?? 0;
-  if (!aantalWeg) return '';
-
-  const ik = rijen.find(r => r.mij);
-  const nu = standRijen();
-  const plekNu = nu.findIndex(r => r.mij) + 1;
-  const plekDan = rijen.findIndex(r => r.mij) + 1;
-
-  // Wie het hele seizoen nog niets gescoord heeft streept nullen weg, en daar
-  // valt niets zinnigs over te zeggen. Maar één weekend van nul punten tussen
-  // de rest is juist het geval waarvoor dit blok bestaat — dat weg filteren
-  // omdat het toevallig nul is haalt de zin weg bij precies de persoon die
-  // hem moet lezen. De test ving dat; ik had er zelf overheen gekeken.
-  const eigen = ik?.volledig ? (ik.weg ?? []) : [];
-  const zin = !eigen.length ? ''
-    : T('Weggestreept: {wat}.', { wat: eigen
-        .map(w => `<b>${esc(w.naam)}</b> (${w.punten})`).join(T(' en ')) })
-      + (plekNu && plekDan && plekNu !== plekDan
-        ? ' ' + T('Daarmee sta je {dan} in plaats van {nu}.',
-                  { dan: rang(plekDan), nu: rang(plekNu) })
-        : ' ' + T('Dat verandert niets aan je plek.'));
-
-  return `<span class="label">${aantalWeg === 1
-      ? T('zonder je slechtste weekend')
-      : T('zonder je slechtste {n} weekenden', { n: aantalWeg })}</span>
-    <div class="groep">${rijen.map(r => `<div class="rest ${r.mij ? 'winnaar' : ''}">
-      <span class="nm">${esc(r.naam)}${r.mij ? ` <span class="jij">${T('jij')}</span>` : ''}</span>
-      <span class="t">${r.totaal}</span>
-    </div>`).join('')}</div>
-    <p class="zacht" style="margin:6px 0 0">${zin}
-      ${T('Per twaalf gereden races valt je slechtste weekend hier weg, dus bij een '
-        + 'heel seizoen zijn dat er twee. De stand hierboven telt gewoon alles mee.')}</p>`;
 }
 
 // Waar mensen elkaar in de groepsapp op aanspreken, veel meer dan op de

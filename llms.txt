@@ -98,7 +98,7 @@ The start of the session. The qualifying top 10 closes when qualifying starts, t
 
 ### What if I forget a race?
 
-Then you score nothing that weekend, unless the league admin has switched on auto-fill: then you get the championship order as your top 10. There is also a table without your worst weekends, so one missed race does not ruin your season.
+Then you score nothing that weekend, unless the league admin has switched on auto-fill: then you get the championship order as your top 10.
 
 ### What is a joker?
 

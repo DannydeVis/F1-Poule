@@ -2720,7 +2720,10 @@ wachten.
 
 ---
 
-## Zonder je slechtste weekend
+## ~~Zonder je slechtste weekend~~ — weggehaald
+
+> Op 24 september 2026 weer uit de app gehaald; zie "Zonder je slechtste
+> weekend, weggehaald" onderaan. Wat hieronder staat is hoe het was.
 
 Uit groep 4 van de routekaart: "Bij 24 races tellen de beste 22. Vangt één
 vakantie en één ramprace op."
@@ -6631,3 +6634,31 @@ doorzichtig, geen grijze pixels. Ook dat de app en elke pagina van de site
 het gebruiken. Vier mutanten zakken elk op de juiste controle: een logo met
 de schaduw uit de bron, de app terug naar het rode blokje, de site terug naar
 het blokje, en het logo weg.
+
+## Zonder je slechtste weekend, weggehaald
+
+Het blok op de standpagina stond er sinds augustus als vangnet: de stand
+zonder ieders slechtste weekend(en), naast de echte stand. Het was bedoeld
+voor wie een weekend mist en daarna denkt dat hij niet meer mee kan doen.
+
+In de praktijk herhaalde het in Danny's poule de stand erboven: dezelfde
+volgorde, dezelfde punten, met eronder "Dat verandert niets aan je plek". Twee
+lijsten die hetzelfde zeggen maken de pagina langer en niet duidelijker, en
+Danny's oordeel was kort: weg ermee.
+
+Wat er weg is:
+
+- **In de app**: `streepBlok()` (het blok), `streepStand()` en
+  `zonderSlechtste()` (de rekenkant), en de zeven vertaalde zinnen die alleen
+  daar gebruikt werden. De officiële stand telde altijd al alles mee, dus aan
+  de punten verandert niets.
+- **Op de voorpagina**: de zin "Er is ook een stand zonder je slechtste
+  weekenden" in het antwoord op "Wat als ik een race vergeet?", in alle zeven
+  talen, en dus ook in de JSON-LD en `llms.txt`.
+- **De tests**: `test/streep.test.mjs` en `test/streep-weergave.test.mjs`
+  testten alleen dit blok.
+
+Wie een weekend mist heeft nog steeds automatisch invullen (als de poulebaas
+dat aanzet) en de jokers. Komt het vangnet ooit terug, dan staat het oude
+hoofdstuk hierboven, en de code in de geschiedenis van de repo (commit vóór
+deze).
