@@ -434,6 +434,7 @@ ${code === 'nl' ? `<script>${DOORSTUREN}</script>\n` : ''}<meta name="viewport" 
 ${hreflang}
 <meta name="theme-color" content="#0b0b0c">
 <meta name="color-scheme" content="light dark">
+<link rel="icon" href="${p}favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" href="${p}pictogrammen/predicttherace-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="${p}pictogrammen/predicttherace-apple-180.png">
 <link rel="preload" href="${p}lettertypen/barlow-condensed-700-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -444,6 +445,7 @@ ${hreflang}
 <meta property="og:title" content="${esc(t.ogTitel)}">
 <meta property="og:description" content="${esc(t.omschrijving)}">
 <meta property="og:image" content="${BASIS}/site/og/og-${code}.jpg">
+<meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="${esc(t.ogTitel)}">
@@ -647,6 +649,7 @@ function privacyPagina(taal) {
 ${hreflang}
 <meta name="theme-color" content="#0b0b0c">
 <meta name="color-scheme" content="light dark">
+<link rel="icon" href="${p}favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" href="${p}pictogrammen/predicttherace-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="${p}pictogrammen/predicttherace-apple-180.png">
 <meta property="og:type" content="article">

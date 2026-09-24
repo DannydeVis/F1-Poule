@@ -11,6 +11,10 @@
 //
 // Geen HTML in de teksten: ze gaan ook de JSON-LD en llms.txt in. Waar iets
 // vet moet, doet de sjabloon dat.
+//
+// ogRegel is de korte regel op het deelplaatje (site/og/og-<taal>.jpg), onder
+// PREDICT THE RACE. Die maakt scripts/maak-beelden.mjs; na een wijziging hier
+// moet dat script opnieuw.
 
 export const BASIS = 'https://predicttherace.com';
 export const BIJGEWERKT = '2026-09-24';
@@ -30,6 +34,7 @@ export const teksten = {
     titel: 'Predict the Race – gratis F1-poule met je vrienden',
     omschrijving: 'Voorspel per Formule 1-race de top 10 van kwalificatie en race en speel tegen je vrienden in je eigen poule. Uitslagen komen vanzelf binnen. Gratis.',
     ogTitel: 'Predict the Race – voorspel de grid, versla je vrienden',
+    ogRegel: 'Voorspel. Speel. Win.',
     nav: { hoe: 'Zo werkt het', punten: 'Punten', faq: 'Vragen', app: 'Open de app', taal: 'Taal' },
     hero: {
       boven: 'Gratis F1-voorspelspel',
@@ -133,6 +138,7 @@ export const teksten = {
     titel: 'Predict the Race – free F1 prediction game for friends',
     omschrijving: 'Predict the top 10 of every Formula 1 qualifying and race and play against your friends in your own league. Results come in automatically. Free.',
     ogTitel: 'Predict the Race – predict the grid, beat your friends',
+    ogRegel: 'Predict. Play. Win.',
     nav: { hoe: 'How it works', punten: 'Scoring', faq: 'FAQ', app: 'Open the app', taal: 'Language' },
     hero: {
       boven: 'Free F1 prediction game',
@@ -236,6 +242,7 @@ export const teksten = {
     titel: 'Predict the Race – kostenloses F1-Tippspiel mit Freunden',
     omschrijving: 'Tippe bei jedem Formel-1-Rennen die Top 10 von Qualifying und Rennen und spiele in deiner eigenen Tipprunde gegen Freunde. Ergebnisse kommen automatisch. Gratis.',
     ogTitel: 'Predict the Race – tippe die Startaufstellung, schlag deine Freunde',
+    ogRegel: 'Tippen. Spielen. Gewinnen.',
     nav: { hoe: 'So funktioniert es', punten: 'Punkte', faq: 'Fragen', app: 'App öffnen', taal: 'Sprache' },
     hero: {
       boven: 'Kostenloses F1-Tippspiel',
@@ -339,6 +346,7 @@ export const teksten = {
     titel: 'Predict the Race – pronostics F1 gratuits entre amis',
     omschrijving: 'Pronostiquez le top 10 des qualifications et de chaque Grand Prix de Formule 1 et affrontez vos amis dans votre propre ligue. Résultats automatiques. Gratuit.',
     ogTitel: 'Predict the Race – pronostiquez la grille, battez vos amis',
+    ogRegel: 'Pronostique. Joue. Gagne.',
     nav: { hoe: 'Comment ça marche', punten: 'Points', faq: 'Questions', app: 'Ouvrir l\'appli', taal: 'Langue' },
     hero: {
       boven: 'Jeu de pronostics F1 gratuit',
@@ -442,6 +450,7 @@ export const teksten = {
     titel: 'Predict the Race – porra de F1 gratis con tus amigos',
     omschrijving: 'Predice el top 10 de la clasificación y de cada carrera de Fórmula 1 y compite con tus amigos en tu propia liga. Los resultados llegan solos. Gratis.',
     ogTitel: 'Predict the Race – predice la parrilla, gana a tus amigos',
+    ogRegel: 'Predice. Juega. Gana.',
     nav: { hoe: 'Cómo funciona', punten: 'Puntos', faq: 'Preguntas', app: 'Abrir la app', taal: 'Idioma' },
     hero: {
       boven: 'Juego de predicciones de F1 gratis',
@@ -545,6 +554,7 @@ export const teksten = {
     titel: 'Predict the Race – pronostici F1 gratis con gli amici',
     omschrijving: 'Pronostica la top 10 delle qualifiche e di ogni gara di Formula 1 e sfida i tuoi amici nella tua lega. I risultati arrivano da soli. Gratis.',
     ogTitel: 'Predict the Race – pronostica la griglia, batti i tuoi amici',
+    ogRegel: 'Pronostica. Gioca. Vinci.',
     nav: { hoe: 'Come funziona', punten: 'Punti', faq: 'Domande', app: 'Apri l\'app', taal: 'Lingua' },
     hero: {
       boven: 'Gioco di pronostici F1 gratis',
@@ -648,6 +658,7 @@ export const teksten = {
     titel: 'Predict the Race – bolão de F1 grátis com seus amigos',
     omschrijving: 'Dê seu palpite no top 10 da classificação e de cada corrida de Fórmula 1 e dispute com seus amigos no seu próprio bolão. Resultados automáticos. Grátis.',
     ogTitel: 'Predict the Race – acerte o grid, vença seus amigos',
+    ogRegel: 'Palpite. Jogue. Ganhe.',
     nav: { hoe: 'Como funciona', punten: 'Pontos', faq: 'Perguntas', app: 'Abrir o app', taal: 'Idioma' },
     hero: {
       boven: 'Jogo de palpites de F1 grátis',

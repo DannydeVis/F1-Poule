@@ -98,9 +98,12 @@ check('het manifest is er en is te laden', manifest && !manifest.fout, JSON.stri
 check('met een naam, een startpunt en een eigen venster',
   manifest?.name === 'Predict the Race' && !!manifest?.start_url && manifest?.display === 'standalone',
   JSON.stringify({ n: manifest?.name, s: manifest?.start_url, d: manifest?.display }));
-check('en pictogrammen die Android in zijn eigen vorm mag snijden',
-  (manifest?.icons ?? []).length >= 2
-    && manifest.icons.every((i) => (i.purpose ?? '').includes('maskable')),
+// Een gewone versie en een maskable versie, allebei in 192 en 512. Eén bestand
+// voor allebei knipt Android de poot van de P af (zie test/beelden.test.mjs).
+const maten = (doel) => (manifest?.icons ?? [])
+  .filter((i) => (i.purpose ?? 'any').split(/\s+/).includes(doel)).map((i) => i.sizes).sort().join();
+check('en pictogrammen die Android in zijn eigen vorm mag snijden, naast de gewone',
+  maten('maskable') === '192x192,512x512' && maten('any') === '192x192,512x512',
   JSON.stringify(manifest?.icons));
 
 const plaatjes = await page.evaluate(async (icons) => {

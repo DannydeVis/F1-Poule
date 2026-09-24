@@ -6401,3 +6401,93 @@ Acht mutanten, en elk ervan zakt op de controle die erbij hoort:
 - het adres als tekst in plaats van als maillink.
 
 `test/site.test.mjs` verwacht de twee pagina's nu ook in de sitemap.
+
+## Het logo en het deelplaatje
+
+Op 24 september 2026 kwam Danny met een logo (een P die uit drie banen lijkt
+te bestaan, oranje op zwart) en een ontwerp voor het plaatje dat verschijnt
+als iemand een link deelt: een baan van bovenaf, met links PREDICT THE RACE,
+een korte regel en het domein. Beide zitten er nu in.
+
+### De bron
+
+`site/bron/` bewaart wat hij aanleverde, zodat alles opnieuw te maken is:
+
+- `pictogram.png`: de P op zwart, 512×512. Het app-pictogram.
+- `logo.webp`: de P los, doorzichtig, 1254×1254. Voor de meldingsbadge, en
+  voor later (een logo in de kop van de site of de app).
+- `baan.webp`: de achtergrond van het deelplaatje, zonder tekst.
+
+### De pictogrammen: `scripts/maak-pictogrammen.mjs`
+
+- **Gewoon** (192 en 512): de bron zelf. De 512 gaat er ongewijzigd in; de
+  PNG-encoder van de browser zou hem bijna twee keer zo groot maken.
+- **Maskable** (192 en 512): Android knipt er een cirkel of druppel uit, en
+  alleen het middelste rondje van 80% blijft gegarandeerd staan. De poot van
+  de P ligt in de bron op 44% van het midden, dus net buiten. In de maskable
+  versie staat hij op 82%. Het manifest had één bestand voor allebei
+  (`"any maskable"`); dan kies je tussen een afgeknipte poot en een pictogram
+  dat overal te klein staat. Nu zijn het vier regels.
+- **iPhone** (180): op zwart, want iOS maakt doorzichtig zwart of wit.
+- **Meldingsbadge** (96): het icoontje in de statusbalk van Android. Daar telt
+  alleen de vorm; een volledig plaatje wordt een wit vierkantje. Dit is de P
+  uit `logo.webp` in wit op doorzichtig, en `sw.js` gebruikt hem.
+- **`favicon.ico`** (16, 32, 48): wat browsers en zoekmachines vanzelf
+  opvragen, ook op `404.html`. Een ICO mag PNG's bevatten; het script schrijft
+  de kop zelf.
+
+Wie de app al op zijn beginscherm heeft: Android haalt het nieuwe pictogram
+binnen een paar dagen zelf op, een iPhone pas als je hem opnieuw toevoegt.
+Door de verhuizing naar het domein moest iedereen dat toch al.
+
+### De deelplaatjes: `scripts/maak-beelden.mjs og`
+
+Eén per taal, in `site/og/`. De achtergrond, de rode streep, PREDICT THE RACE
+en het domein zijn overal hetzelfde; de regel eronder komt uit `ogRegel` in
+`site/teksten.mjs` ("Voorspel. Speel. Win.", "Predict. Play. Win.",
+"Tippen. Spielen. Gewinnen." enzovoort).
+
+De maten zijn nagemeten op zijn voorbeeld, en de letter is dezelfde:
+DejaVu Sans. Dat is niet de letter van de site, maar wel die van het ontwerp.
+Hij staat op elke Linux en niet op een Mac, dus het script stopt als hij
+ontbreekt, in plaats van stilletjes in een andere letter te tekenen. Het
+stopt ook als een regel zo lang is dat hij onder de baan doorloopt.
+
+Ongeveer 126 kB per plaatje. WhatsApp laat een voorbeeld weg boven de
+300 kB. De landingspagina's zeggen er nu ook bij dat het een JPEG is
+(`og:image:type`).
+
+Een link die al eens gedeeld is, houdt bij WhatsApp en Facebook het oude
+plaatje tot hun cache verloopt. Via de Sharing Debugger van Facebook
+(developers.facebook.com/tools/debug) kun je die voor een adres verversen,
+en dat geldt dan ook voor WhatsApp.
+
+### Hoe het getest is
+
+`test/beelden.test.mjs` (50 controles):
+
+- elk pictogram op zijn maat, en het manifest met een gewone en een aparte
+  maskable versie;
+- de P binnen de veilige cirkel. De test bekijkt ook dat de gewone versie
+  daar wél buiten steekt, anders bewijst die controle niets;
+- de pictogrammen voor iPhone en maskable nergens doorzichtig, de badge wit
+  op doorzichtig;
+- `favicon.ico` met 16, 32 en 48;
+- per taal een eigen JPEG van 1200×630 onder de 300 kB, met een eigen regel;
+- op elke pagina een link naar favicon en iPhone-pictogram, en die bestaan.
+
+Negen mutanten, en elk ervan zakt op de controle die erbij hoort:
+
+- de gewone versie als maskable;
+- het manifest terug naar `"any maskable"`;
+- een doorzichtig iPhone-pictogram;
+- de badge terug naar het volle pictogram;
+- geen `favicon.ico`;
+- het Duitse plaatje gelijk aan het Engelse;
+- een Italiaans plaatje van 438 kB;
+- `og:image:type` weg;
+- de privacypagina zonder favicon.
+
+`test/eerste-indruk.test.mjs` eiste dat élk pictogram in het manifest
+maskable was: precies de oude opzet. Die controle vraagt nu om een gewone en
+een maskable versie, allebei in 192 en 512.

@@ -3,7 +3,8 @@
  * De plaatjes voor de landingspagina: schermafdrukken van de app en een
  * deelplaatje (Open Graph) per taal.
  *
- *   node scripts/maak-beelden.mjs
+ *   node scripts/maak-beelden.mjs        schermafdrukken én deelplaatjes
+ *   node scripts/maak-beelden.mjs og     alleen de deelplaatjes
  *
  * Geen onderdeel van de gewone gang van zaken: draai dit als de app er anders
  * uit is gaan zien, en zet de nieuwe plaatjes in de repo. Het gebruikt de
@@ -96,43 +97,54 @@ async function schermen(taal, poulenaam) {
   await stoppen();
 }
 
-await schermen('nl', 'Vrijdagmiddagpoule');
-await schermen('en', 'Sunday Grid Club');
+const ALLEEN_OG = process.argv.includes('og');
+if (!ALLEEN_OG) {
+  await schermen('nl', 'Vrijdagmiddagpoule');
+  await schermen('en', 'Sunday Grid Club');
+}
 
 // ---- deelplaatjes ----------------------------------------------------------
-// Eén per taal, met de kop uit de landingspagina en een telefoon ernaast. In
-// HTML getekend met de lettertypen van de app, en dan gefotografeerd.
+// Eén per taal: wat WhatsApp, Google, LinkedIn en de rest laten zien als
+// iemand een link naar de site deelt. Het ontwerp is van Danny: de baan uit
+// site/bron/baan.webp met rechts de bocht, links PREDICT THE RACE met de rode
+// streep, een korte regel in de taal van de pagina (ogRegel in teksten.mjs) en
+// het domein. De maten zijn nagemeten op zijn voorbeeld.
+//
+// In DejaVu Sans, niet in de letters van de site: zo zag het voorbeeld eruit.
+// Die letter staat op elke Linux (en in deze omgeving), maar niet op een Mac;
+// daarom stopt het script als hij ontbreekt, in plaats van stilletjes in een
+// andere letter te tekenen. 1200×630 en ruim onder de 300 kB, want daarboven
+// laat WhatsApp het plaatje weg.
+const baan = `data:image/webp;base64,${readFileSync(join(wortel, 'site', 'bron', 'baan.webp')).toString('base64')}`;
 const { page, stoppen } = await startPagina({ taal: 'nl' });
-const lettertype = (bestand) =>
-  `data:font/woff2;base64,${readFileSync(join(wortel, 'lettertypen', bestand)).toString('base64')}`;
+await page.setViewportSize({ width: 1200, height: 630 });
 for (const code of TALEN) {
   const t = teksten[code];
-  const telefoon = `data:image/jpeg;base64,${readFileSync(join(wortel, 'site', 'beeld',
-    `races-${t.schermen}-donker.jpg`)).toString('base64')}`;
-  await page.setViewportSize({ width: 1200, height: 630 });
-  await page.setContent(`<!DOCTYPE html><html><head><style>
-    @font-face{font-family:K;src:url(${lettertype('barlow-condensed-700-latin.woff2')})}
-    @font-face{font-family:B;src:url(${lettertype('barlow-600-latin.woff2')})}
-    @font-face{font-family:M;src:url(${lettertype('space-mono-400-latin.woff2')})}
-    *{box-sizing:border-box}body{margin:0;width:1200px;height:630px;overflow:hidden;background:#0b0b0c;color:#f2f3f5;
-      font-family:B;position:relative}
-    .gloed{position:absolute;inset:0;background:radial-gradient(60% 70% at 10% 10%,rgba(238,77,51,.28),transparent 60%)}
-    .p1{position:absolute;right:250px;top:-70px;font-family:K;font-size:520px;line-height:1;color:#fff;opacity:.04}
-    .tekst{position:absolute;left:72px;top:70px;width:660px}
-    .merk{display:flex;align-items:center;gap:14px;font-family:K;font-size:34px;text-transform:uppercase;letter-spacing:.03em}
-    .blok{width:30px;height:30px;border-radius:5px;background:#ee4d33}
-    h1{font-family:K;font-size:94px;line-height:.9;text-transform:uppercase;margin:58px 0 26px}
-    h1 span{display:block}h1 span+span{color:#ee4d33}
-    p{font-family:M;font-size:22px;letter-spacing:.12em;text-transform:uppercase;color:#7ee0a3;margin:0}
-    .tel{position:absolute;right:86px;top:56px;width:260px;border-radius:32px;border:8px solid #1d1f24;overflow:hidden;
-      transform:rotate(-3deg);box-shadow:0 40px 80px -20px rgba(0,0,0,.8)}
-    .tel img{display:block;width:100%}
-  </style></head><body><div class="gloed"></div><div class="p1">P1</div>
-    <div class="tekst"><div class="merk"><span class="blok"></span>Predict the Race</div>
-      <h1>${t.hero.kop.map((r) => `<span>${r}</span>`).join('')}</h1><p>${t.hero.boven}</p></div>
-    <div class="tel"><img src="${telefoon}"></div></body></html>`);
+  await page.setContent(`<!DOCTYPE html><html lang="${code}"><head><style>
+    *{box-sizing:border-box}
+    body{margin:0;width:1200px;height:630px;overflow:hidden;position:relative;
+      background:#f6f3ee url(${baan}) center/cover no-repeat;font-family:'DejaVu Sans'}
+    .streep{position:absolute;left:76px;top:161px;width:14px;height:110px;border-radius:7px;background:#e5402a}
+    h1{position:absolute;left:117px;top:161px;margin:0;font-size:58px;line-height:66px;font-weight:700;color:#152231}
+    p{position:absolute;left:79px;top:323px;margin:0;font-size:30.8px;color:#344252}
+    .domein{position:absolute;left:79px;top:505px;font-size:24px;font-weight:700;color:#df4527}
+  </style></head><body><div class="streep"></div><h1>PREDICT<br>THE RACE</h1>
+    <p>${t.ogRegel}</p><div class="domein">predicttherace.com</div></body></html>`);
   await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(100);
+  // Of een systeemletter er is zie je alleen aan de maat: ontbreekt hij, dan
+  // valt de browser terug op de volgende in de rij en wordt de tekst anders
+  // breed. document.fonts.check() zegt bij systeemletters altijd ja.
+  const erIs = await page.evaluate(() => {
+    const maat = (f) => { const c = document.createElement('canvas').getContext('2d');
+      c.font = `700 58px ${f}`; return c.measureText('PREDICT THE RACE').width; };
+    return maat("'DejaVu Sans', monospace") !== maat('monospace')
+      && maat("'DejaVu Sans', serif") !== maat('serif');
+  });
+  if (!erIs) throw new Error('DejaVu Sans ontbreekt; draai dit op Linux');
+  // Past de regel? Hij mag niet onder de baan doorlopen.
+  const breed = await page.evaluate(() => document.querySelector('p').getBoundingClientRect().right);
+  if (breed > 560) throw new Error(`${code}: de regel "${t.ogRegel}" is te lang (${Math.round(breed)} px)`);
+  await page.waitForTimeout(50);
   writeFileSync(join(wortel, 'site', 'og', `og-${code}.jpg`),
     await page.screenshot({ type: 'jpeg', quality: 86 }));
 }

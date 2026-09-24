@@ -58,9 +58,13 @@ De pagina's in de hoofdmap en in de taalmappen worden niet met de hand
 bewerkt. Pas `site/teksten.mjs` aan en draai:
 
 ```bash
-node scripts/maak-site.mjs      # de pagina's, sitemap.xml, robots.txt, llms.txt, 404.html
-node scripts/maak-beelden.mjs   # alleen als de app er anders uitziet: schermafdrukken en deelplaatjes
+node scripts/maak-site.mjs          # de pagina's, sitemap.xml, robots.txt, llms.txt, 404.html
+node scripts/maak-beelden.mjs       # alleen als de app er anders uitziet: schermafdrukken en deelplaatjes
+node scripts/maak-beelden.mjs og    # alleen de deelplaatjes (na een nieuwe ogRegel)
+node scripts/maak-pictogrammen.mjs  # alleen als het logo verandert: pictogrammen en favicon.ico
 ```
+
+Het logo en de achtergrond van het deelplaatje staan in `site/bron/`.
 
 De punten in de puntentabel komen uit de app zelf; `test/site.test.mjs` zakt
 als de pagina's niet meer kloppen met wat de generator maakt.
