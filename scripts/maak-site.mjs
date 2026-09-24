@@ -394,16 +394,18 @@ function taalScript(code) {
 //     het voorbeeld van de app: een klein pictogram in plaats van het
 //     deelplaatje. Een geïnstalleerde app op Android heeft toch al een poule
 //     op het toestel, en valt dus onder de regel hieronder.
-//   - Een terugkerende speler (er staat een poule op dit toestel), maar niet
-//     als hij van een eigen pagina komt: wie in de app op het logo tikt of
-//     vanaf /en/ terugklikt, wil deze pagina juist zien.
+//   - Een terugkerende speler (er staat een poule op dit toestel).
+//   - Maar nooit wie van een eigen pagina komt: wie in de app op "Naar de
+//     voorpagina" tikt (onder Profiel) of vanaf /en/ terugklikt, wil deze
+//     pagina juist zien. Die controle staat daarom vóór die van de
+//     iPhone-beginschermapp, anders stuurde zo'n app je meteen terug.
 const DOORSTUREN = `(function(){try{
   var l=location,naar=function(){l.replace('app/'+l.search+l.hash)};
   var sleutels=[];try{new URLSearchParams(l.search).forEach(function(v,k){sleutels.push(k)})}catch(e){}
   if(sleutels.some(function(k){return !/^(utm_|fbclid$|gclid$|msclkid$|ref$|mc_)/.test(k)}))return naar();
   if(l.hash.indexOf('=')>-1)return naar();
-  if(navigator.standalone)return naar();
   var ref=document.referrer||'';if(ref&&ref.indexOf(l.origin)===0)return;
+  if(navigator.standalone)return naar();
   for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i)||'';
     if(k.indexOf('poule:')===0&&k!=='poule:taal')return naar()}
 }catch(e){}})();`;

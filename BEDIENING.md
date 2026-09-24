@@ -92,6 +92,11 @@ jezelf naar een ander toestel mee te nemen (zie §4), wat de app van je weet
 en hoe je dat weghaalt (zie §12), en — alleen als er een weg terug is —
 uitloggen.
 
+Helemaal onderaan: **Naar de voorpagina**. Wie een poule op zijn toestel heeft,
+gaat vanaf predicttherace.com meteen de app in. Deze knop is de weg terug naar
+de voorpagina, in de taal van de app, en daar blijf je dan ook, ook in een app
+op het beginscherm van een iPhone.
+
 ---
 
 ## 3. Poule aanmaken: vier stappen

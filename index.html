@@ -7,8 +7,8 @@
   var sleutels=[];try{new URLSearchParams(l.search).forEach(function(v,k){sleutels.push(k)})}catch(e){}
   if(sleutels.some(function(k){return !/^(utm_|fbclid$|gclid$|msclkid$|ref$|mc_)/.test(k)}))return naar();
   if(l.hash.indexOf('=')>-1)return naar();
-  if(navigator.standalone)return naar();
   var ref=document.referrer||'';if(ref&&ref.indexOf(l.origin)===0)return;
+  if(navigator.standalone)return naar();
   for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i)||'';
     if(k.indexOf('poule:')===0&&k!=='poule:taal')return naar()}
 }catch(e){}})();</script>
