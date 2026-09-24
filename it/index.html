@@ -460,11 +460,13 @@
   .beelden img{display:block;width:100%;height:auto}
   .beelden figcaption{color:var(--ink2);font-size:15px;max-width:22em}
 
-  .duo{display:grid;gap:18px}
-  .duo article{background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:26px}
-  .duo h2{font-size:clamp(26px,3.4vw,32px);margin:0 0 10px}
-  .duo p{margin:0;color:var(--ink2)}
-  .duo a{color:var(--accent-tekst)}
+  /* Eén kaart over privacy. Hier stond er een tweede naast ("Wie zit
+     erachter?"); die is op verzoek weg. Smal gehouden, zodat de regels niet
+     over de hele breedte lopen. */
+  .los article{background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:26px;max-width:760px}
+  .los h2{font-size:clamp(26px,3.4vw,32px);margin:0 0 10px}
+  .los p{margin:0;color:var(--ink2)}
+  .los a{color:var(--accent-tekst)}
 
   .faq{display:grid;gap:10px;max-width:880px}
   .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px}
@@ -502,7 +504,6 @@
     .stappen{grid-template-columns:repeat(2,1fr)}
     .functies{grid-template-columns:repeat(2,1fr)}
     .beelden{grid-template-columns:repeat(3,1fr)}
-    .duo{grid-template-columns:1fr 1fr}
     .tabellen{grid-template-columns:1fr 1fr}
     .aanbod{left:auto;right:20px;bottom:20px;max-width:460px}
   }
@@ -634,9 +635,8 @@
 </section>
 
 <section class="blok">
-  <div class="binnen duo">
+  <div class="binnen los">
     <article><h2>Niente pubblicità, niente tracker</h2><p>Predict the Race non ha pubblicità, né analytics, né tracker, e non rivende nulla. Si gioca con un codice e un nome; un indirizzo email serve solo se vuoi portare il tuo account su un altro dispositivo. Questa pagina non carica nulla da altri siti. <a href="../en/privacy/" hreflang="en">Leggi l’informativa completa sulla privacy (in inglese)</a></p></article>
-    <article><h2>Chi c'è dietro?</h2><p>Predict the Race è realizzato da Danny de Visser ed è nato come lega per un gruppo di amici. Non ci sono investitori né inserzionisti, e non ci sono soldi in gioco: niente quota, niente montepremi, niente premi. Si gioca per la gloria. Il codice sorgente è pubblico su GitHub. <a href="https://github.com/DannydeVis/F1-Poule" rel="noopener">github.com/DannydeVis/F1-Poule</a></p></article>
   </div>
 </section>
 

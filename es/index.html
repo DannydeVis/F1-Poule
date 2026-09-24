@@ -460,11 +460,13 @@
   .beelden img{display:block;width:100%;height:auto}
   .beelden figcaption{color:var(--ink2);font-size:15px;max-width:22em}
 
-  .duo{display:grid;gap:18px}
-  .duo article{background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:26px}
-  .duo h2{font-size:clamp(26px,3.4vw,32px);margin:0 0 10px}
-  .duo p{margin:0;color:var(--ink2)}
-  .duo a{color:var(--accent-tekst)}
+  /* Eén kaart over privacy. Hier stond er een tweede naast ("Wie zit
+     erachter?"); die is op verzoek weg. Smal gehouden, zodat de regels niet
+     over de hele breedte lopen. */
+  .los article{background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:26px;max-width:760px}
+  .los h2{font-size:clamp(26px,3.4vw,32px);margin:0 0 10px}
+  .los p{margin:0;color:var(--ink2)}
+  .los a{color:var(--accent-tekst)}
 
   .faq{display:grid;gap:10px;max-width:880px}
   .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px}
@@ -502,7 +504,6 @@
     .stappen{grid-template-columns:repeat(2,1fr)}
     .functies{grid-template-columns:repeat(2,1fr)}
     .beelden{grid-template-columns:repeat(3,1fr)}
-    .duo{grid-template-columns:1fr 1fr}
     .tabellen{grid-template-columns:1fr 1fr}
     .aanbod{left:auto;right:20px;bottom:20px;max-width:460px}
   }
@@ -634,9 +635,8 @@
 </section>
 
 <section class="blok">
-  <div class="binnen duo">
+  <div class="binnen los">
     <article><h2>Sin anuncios, sin rastreadores</h2><p>Predict the Race no tiene anuncios, ni analítica, ni rastreadores, y no vende nada a terceros. Juegas con un código y un nombre; solo necesitas un correo si quieres llevar tu cuenta a otro dispositivo. Esta página no carga nada de otros sitios web. <a href="../en/privacy/" hreflang="en">Leer la política de privacidad completa (en inglés)</a></p></article>
-    <article><h2>¿Quién está detrás?</h2><p>Predict the Race lo hace Danny de Visser y empezó como la porra de un grupo de amigos. No hay inversores ni anunciantes detrás, y no hay dinero en juego: ni entrada, ni bote, ni premios. Se juega por el orgullo. El código fuente es público en GitHub. <a href="https://github.com/DannydeVis/F1-Poule" rel="noopener">github.com/DannydeVis/F1-Poule</a></p></article>
   </div>
 </section>
 
