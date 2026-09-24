@@ -25,7 +25,9 @@ self.addEventListener('push', (e) => {
   e.waitUntil(self.registration.showNotification(titel, {
     body: bericht.tekst || 'Er staat iets open in je poule.',
     icon: 'pictogrammen/predicttherace-192.png',
-    badge: 'pictogrammen/predicttherace-192.png',
+    // Android gebruikt voor de badge alleen de vorm; een vol pictogram wordt
+    // daar een wit vierkantje. Deze is de P in wit op doorzichtig.
+    badge: 'pictogrammen/predicttherace-badge-96.png',
     // Dezelfde tag voor dezelfde sessie: een tweede herinnering vervangt de
     // eerste in plaats van ernaast te komen staan.
     tag: bericht.tag || 'predicttherace',
