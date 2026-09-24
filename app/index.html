@@ -4513,6 +4513,14 @@ function meldStilleFout(e) {
   // Het probeert dat zelf opnieuw, en aan het scherm verandert er niets; een
   // balkje dat zegt dat het scherm misschien niet klopt is dan alleen schrik.
   if (fout?.name === 'AuthRetryableFetchError') return;
+  // "Script error." is alles wat een browser zegt over een fout in een script
+  // van een andere herkomst, zonder melding en zonder foutobject. Dat is hier
+  // nooit de app zelf: die staat in deze pagina, en supabase-js komt als
+  // module binnen, en van een module geeft de browser de echte melding door.
+  // Wat overblijft is wat de browser er zelf in zet: een extensie, een
+  // advertentieblokker, een wachtwoordbeheerder. Daar kan niemand iets mee,
+  // en het scherm klopt er gewoon om. Gezien op een iPhone in Safari.
+  if (!fout && /^Script error\.?$/.test(String(e?.message ?? '').trim())) return;
   if (document.querySelector('#stillefout')) return;
   const wat = String(fout?.message ?? e?.message ?? fout ?? '').trim().slice(0, 160);
   const balk = document.createElement('div');

@@ -158,6 +158,13 @@ await page.waitForTimeout(300);
 check('een haperende verbinding bij het verversen van de inlog geeft geen balkje',
   (await page.$('#stillefout')) === null);
 
+// En een fout zonder inhoud uit een script van buiten de app: een extensie of
+// blokker in de browser. Op een iPhone kwam dat als "Script error." in beeld.
+await page.evaluate(() => { window.dispatchEvent(new ErrorEvent('error', { message: 'Script error.' })); });
+await page.waitForTimeout(300);
+check('een "Script error." van buiten de app geeft geen balkje',
+  (await page.$('#stillefout')) === null);
+
 await page.evaluate(() => { Promise.reject(new Error('losse belofte')); });
 await page.waitForSelector('#stillefout');
 
