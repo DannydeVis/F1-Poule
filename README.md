@@ -12,6 +12,9 @@ houden.
 Gratis, geen wachtwoord, en er zit geen geld in — geen inleg, geen pot, geen
 prijzen. Je speelt om de eer.
 
+**[predicttherace.com](https://predicttherace.com)** — de app staat op
+[predicttherace.com/app/](https://predicttherace.com/app/).
+
 ---
 
 ## Hoe het in elkaar zit
@@ -22,7 +25,7 @@ prijzen. Je speelt om de eer.
 | **Landingspagina** | `index.html` en `en/`, `de/`, `fr/`, `es/`, `it/`, `pt/` — gemaakt door `scripts/maak-site.mjs` uit `site/teksten.mjs` |
 | **Database** | Supabase (PostgreSQL), met row level security |
 | **Uitslagen** | [OpenF1](https://openf1.org), opgehaald door een GitHub Action |
-| **Hosting** | GitHub Pages, vanaf `main` |
+| **Hosting** | GitHub Pages, vanaf `main`, op `predicttherace.com` (zie `BEDIENING.md` §15) |
 | **Tests** | Playwright, die de app en de site in een echte browser naspeelt |
 
 Dat eerste is een keuze en geen achterstand. De app is klein genoeg om in één

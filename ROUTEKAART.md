@@ -31,39 +31,25 @@ een `.nl` is het een andere naam geworden: **`predicttherace.com`**, gekocht.
 De app heet sindsdien Predict the Race, en de hernoeming die hieronder als
 checklist stond is gedaan.
 
-Wat er nog moet gebeuren is niet in deze repo maar bij de diensten eromheen.
-Hieronder staat `<domein>` voor `predicttherace.com`:
+De repo is omgezet: de landingspagina, de sitemap, de agenda en de meldingen
+wijzen naar `https://predicttherace.com`, en `test/domein.test.mjs` houdt dat
+gelijk. Wat er nog moet gebeuren is niet in deze repo maar bij de diensten
+eromheen, en dat staat stap voor stap in **`BEDIENING.md` §15**: DNS, GitHub
+Pages, Supabase, Google Cloud, de spelers, en daarna Search Console en Bing.
 
-- **Google Cloud** (Google Auth Platform → Clients): `https://<domein>`
-  toevoegen als Authorized JavaScript origin, en
-  `https://etifamdwqxjfaeaordlr.supabase.co/auth/v1/callback` staat er al
-  goed (die verandert niet — dat is Supabase's adres, niet dat van de app).
-  De oude GitHub Pages-origin mag erbij blijven staan zolang die nog gebruikt
-  wordt.
-- **Supabase** (Authentication → URL Configuration): Site URL naar
-  `https://<domein>`, en `https://<domein>/**` toevoegen aan
-  Redirect URLs. De oude GitHub Pages-regel pas weghalen als niemand die
-  link meer gebruikt.
-- **GitHub Pages**: een `CNAME`-bestand met je domein erin, plus een
-  DNS-record bij de domeinregistrar die naar GitHub Pages wijst.
-- De app zelf hoeft niet aangepast: `linkBasis()` leest `location.origin`
-  dynamisch uit, dus uitnodigingslinks en OAuth-redirects werken vanzelf op
-  elk domein waar de app draait.
-- **Het `CNAME`-bestand pas als de DNS klaarstaat.** Zodra het erin staat
+Twee dingen daaruit die je niet wilt leren door ze mis te doen:
+
+- **Eerst de DNS, dan het domein in GitHub opslaan.** Zodra het daar staat
   stuurt GitHub elke bezoeker van `dannydevis.github.io/F1-Poule/` door naar
-  het domein; wijst de DNS dan nog nergens heen, dan is de site plat.
+  het domein; wijst de DNS dan nog nergens heen, dan is de site plat. Het
+  `CNAME`-bestand zet GitHub bij het opslaan zelf in `main`.
 - **Een nieuw adres is een nieuw toestel.** Wat de app onthoudt (welke poule,
   wie je bent, het anonieme account) staat per adres in de browser. Op het
-  nieuwe domein begint iedereen dus opnieuw: wie Google of een mailadres heeft
-  gekoppeld logt gewoon in, wie dat niet heeft kan zijn eigen speler niet
-  meer claimen tot de poulebaas hem losmaakt. Laat iedereen vóór de overstap
-  zijn account koppelen (de koppelvraag in de app vraagt er al om), of plan
-  een moment waarop de poulebaas bereikbaar is.
-- **Daarna: Google Search Console en Bing Webmaster Tools.** Het domein
-  verifiëren (een TXT-record in de DNS is het netst) en
-  `https://predicttherace.com/sitemap.xml` indienen. De landingspagina's in
-  zeven talen, de sitemap en `robots.txt` staan er al klaar; zie
-  `OVERDRACHT.md`, "Een landingspagina in zeven talen".
+  nieuwe domein logt iedereen één keer opnieuw in; wie geen Google of mail
+  gekoppeld heeft moet door de poulebaas worden losgemaakt.
+
+Wat er daarna nog kan:
+
 - **Eigen SMTP met een adres op je eigen domein.** Nu staat er in elke mail (magic
   link, mailkoppeling) een afzenderadres van Supabase zelf
   (`noreply@mail.app.supabase.io`) — dat kan pas veranderen naar iets met
@@ -164,7 +150,7 @@ met de kopieerknop hierboven heb je daarmee je herinneringssysteem, zonder
 mailserver of pushmeldingen.
 
 ### ~~Uitnodigingslink met de code erin~~ — gebouwd
-`https://dannydevis.github.io/F1-Poule/?code=10D4FD` en de app vult de
+`https://predicttherace.com/app/?code=10D4FD` en de app vult de
 poulecode automatisch in. Scheelt je vrienden een stap en een typefout.
 
 ### ~~Handmatig een uitslag invullen in de app~~ — gebouwd, en weer weggehaald
