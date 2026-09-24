@@ -6552,6 +6552,28 @@ hapert, meestal net als een telefoon het tabblad weer wakker maakt. Het
 probeert dat zelf opnieuw, en aan het scherm verandert niets. Of dit de fout
 van Danny's schermafdruk was, weten we niet. De volgende keer staat het erbij.
 
+### Daarna: "Script error."
+
+Een half uur later stond de oorzaak er voor het eerst onder: `Script error.`
+Meer zegt een browser niet over een fout in een script van een andere
+herkomst: geen melding, geen regel, geen foutobject. In deze app is dat nooit
+de app zelf. Die staat als één script in de pagina, en supabase-js komt als
+module van esm.sh binnen, en van een module geeft de browser de echte melding
+door. Wat overblijft is wat Safari er zelf in zet: een extensie, een
+advertentieblokker, een wachtwoordbeheerder. Daar kan de speler niets mee, en
+het scherm klopt er gewoon om. Zo'n fout geeft nu geen balkje meer. Elke fout
+mét inhoud nog steeds wel.
+
+### Waarom de voorpagina voor Danny zelf de app is
+
+Tikte Danny op predicttherace.com, dan kwam hij meteen in de app. Dat is de
+regel van de terugkerende speler: wie een poule op het toestel heeft en de
+site intikt of een link volgt, wil naar zijn poule. Een nieuwe bezoeker, en
+het voorbeeld in een berichtenapp, zien de voorpagina wel. Wie met een poule
+toch de voorpagina wil zien, komt er via een eigen pagina (de privacypagina
+→ "Naar de voorpagina"), via `/en/` (alleen `/` stuurt door), of in een
+privévenster.
+
 ### Hoe het getest is
 
 - `test/domein.test.mjs`: de app heeft het deelplaatje met het volle adres,
@@ -6560,8 +6582,9 @@ van Danny's schermafdruk was, weten we niet. De volgende keer staat het erbij.
 - `test/doorsturen.test.mjs`: een iPhone-beginschermapp (`navigator.standalone`)
   gaat naar de app. Een venster dat zich als standalone meldt zonder poule op
   het toestel (een linkvoorbeeld) blijft op de voorpagina.
-- `test/vangnet.test.mjs`: een haperende inlogverversing geeft geen balkje; een
-  andere losse fout wel, met de melding erbij.
+- `test/vangnet.test.mjs`: een haperende inlogverversing geeft geen balkje,
+  een "Script error." zonder inhoud ook niet; een andere losse fout wel, met de
+  melding erbij.
 
 Acht mutanten, en elk ervan zakt op de controle die erbij hoort:
 
@@ -6572,4 +6595,5 @@ Acht mutanten, en elk ervan zakt op de controle die erbij hoort:
 - de `display-mode`-regel terug;
 - de iPhone-regel weg;
 - de haperende verbinding die weer een balkje geeft;
-- geen foutmelding in het balkje.
+- geen foutmelding in het balkje;
+- en later, bij "Script error.": het filter weg (twee controles zakken).
