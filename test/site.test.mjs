@@ -25,6 +25,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { maakControle, startSite, wortel } from './hulp.mjs';
 import { teksten, TALEN, STANDAARD, BASIS } from '../site/teksten.mjs';
+import { PRIVACY } from '../site/privacy.mjs';
 
 const { check, afronden } = maakControle('de landingspagina in zeven talen');
 
@@ -216,9 +217,15 @@ await stoppen();
 {
   const sitemap = readFileSync(join(wortel, 'sitemap.xml'), 'utf8');
   const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  check('de sitemap noemt elke taal', JSON.stringify(locs) === JSON.stringify(TALEN.map(urlVan)), locs.join(' '));
-  const perUrl = sitemap.split('<url>').slice(1).map((u) => (u.match(/hreflang="/g) ?? []).length);
-  check('met bij elke url alle alternatieven', perUrl.every((n) => n === TALEN.length + 1), perUrl.join());
+  // Eerst de zeven landingspagina's, dan de privacyverklaring in zijn twee
+  // talen (zie test/privacypagina.test.mjs voor die pagina's zelf).
+  const privacy = Object.values(PRIVACY).map((p) => `${BASIS}/${p.pad}/`);
+  check('de sitemap noemt elke taal, en de privacyverklaring',
+    JSON.stringify(locs) === JSON.stringify([...TALEN.map(urlVan), ...privacy]), locs.join(' '));
+  const perUrl = sitemap.split('<url>').slice(1).map((u) => ({
+    loc: u.match(/<loc>([^<]+)</)?.[1], n: (u.match(/hreflang="/g) ?? []).length }));
+  check('met bij elke url alle alternatieven', perUrl.every(({ loc, n }) =>
+    n === (privacy.includes(loc) ? privacy.length : TALEN.length) + 1), perUrl.map((u) => u.n).join());
   check('en niet de app', !sitemap.includes('/app/'));
 
   const robots = readFileSync(join(wortel, 'robots.txt'), 'utf8');

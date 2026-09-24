@@ -6322,3 +6322,82 @@ Wat anders liep dan het stappenplan zei, en daarin inmiddels verbeterd is:
   draait bij elke sync-run; een handmatige run was genoeg.
 - **Google Branding verwees voor privacy en voorwaarden naar het oude adres.**
   Die links stonden nergens in de repo, dus ook de test kon ze niet vinden.
+
+## De privacyverklaring als losse pagina
+
+De verklaring stond alleen in de app, onder Profiel. Dat was genoeg voor wie
+al speelt, maar niet voor wie wil weten waar hij aan begint, en niet voor
+Google: het inlogscherm vraagt om een openbare link naar een
+privacyverklaring. Daar stond nog het oude adres, en daar stond alleen de
+landingspagina.
+
+Nu staat hij op `predicttherace.com/privacy/` en `/en/privacy/`. Twee talen,
+net als de app; de Duitse, Franse, Spaanse, Italiaanse en Portugese
+landingspagina's linken naar de Engelse, en zeggen dat erbij.
+
+### Hoe het in elkaar zit
+
+- **`site/privacy.mjs`** heeft de tekst, het contactadres (`CONTACT`) en de
+  datum. Geen HTML in de tekst; de sjabloon maakt links van `{contact}` en
+  `{ap}` (de Autoriteit Persoonsgegevens).
+- **`scripts/maak-site.mjs`** maakt er de twee pagina's van, met dezelfde kop,
+  letters en kleuren als de landingspagina maar zonder hero, plaatjes of
+  taalbalkje. Ze staan in de sitemap (met hreflang tussen de twee) en in
+  `llms.txt`. Elke landingspagina linkt ernaar vanuit het blok "Geen
+  advertenties" en vanuit de voet.
+- **De app** heeft nu een contactadres (`PRIVACY_CONTACT`), als maillink, en
+  een link naar de losse pagina in zijn eigen taal. Links in een `.uitleg`
+  hebben de tekstkleur met een streep eronder; zonder dat werden ze het blauw
+  van de browser, en dat haalt op donker het contrast niet.
+
+### Wat er inhoudelijk bij kwam
+
+De pagina zegt twee dingen die de app nog niet zei:
+
+- **GitHub Pages ziet je IP-adres.** Dat doet elke webserver, en de site en de
+  app staan daar. Het staat nu ook in de app, onder "Waar het staat".
+- **Wat de app op je toestel bewaart**: in welke poule je zit, wie je bent en
+  je taal. Geen trackingcookie, maar het hoort gezegd.
+
+En de rechten die er horen te staan: inzien en weghalen (in de app zelf),
+corrigeren of vragen (per mail), en klagen bij de Autoriteit
+Persoonsgegevens.
+
+### Het contactadres is publiek
+
+Het staat op de site en in deze openbare repo. Wie het ooit wil vervangen
+door een adres op het domein (`privacy@predicttherace.com` als doorsturing
+bij TransIP), verandert `CONTACT` in `site/privacy.mjs` en `PRIVACY_CONTACT`
+in de app, en draait de generator. De test zakt als er maar één van de twee
+verandert.
+
+### Hoe het getest is
+
+`test/privacypagina.test.mjs` (45 controles):
+
+- Het contactadres is in de app en op de pagina hetzelfde.
+- De diensten die de app noemt staan ook op de pagina, en andersom, in beide
+  talen. Dezelfde beloften ook: IP-adres, "alleen als je het zelf koppelt",
+  "geen trackers", "niet terug te draaien". De zinnen staan in de broncode van
+  de app in stukken (`'… zelf ' + 'koppelt'`), dus de test plakt die eerst aan
+  elkaar.
+- De pagina's zelf: taal, titel en omschrijving, één h1 en een h2 per
+  onderwerp, canonical, hreflang, geen verzoek naar buiten, geen 404, geen
+  kapotte link, contrast in licht en donker, geen horizontale scroll op 360
+  pixels.
+- Elke landingspagina linkt ernaar, en de app ook, in zijn eigen taal. Het
+  adres bestaat (200), het contactadres is een maillink, en de links hebben
+  de tekstkleur.
+
+Acht mutanten, en elk ervan zakt op de controle die erbij hoort:
+
+- een ander adres in de app;
+- esm.sh weg van de Nederlandse pagina;
+- Apple en Mozilla weg uit de app;
+- de voetlink weg;
+- de app die altijd naar de Nederlandse pagina linkt;
+- de linkkleur weg;
+- x-default naar de Nederlandse pagina;
+- het adres als tekst in plaats van als maillink.
+
+`test/site.test.mjs` verwacht de twee pagina's nu ook in de sitemap.

@@ -23,6 +23,7 @@ prijzen. Je speelt om de eer.
 |---|---|
 | **App** | `app/index.html` — één bestand, geen bouwstap, geen framework |
 | **Landingspagina** | `index.html` en `en/`, `de/`, `fr/`, `es/`, `it/`, `pt/` — gemaakt door `scripts/maak-site.mjs` uit `site/teksten.mjs` |
+| **Privacyverklaring** | `privacy/` en `en/privacy/` — uit `site/privacy.mjs`, door dezelfde generator |
 | **Database** | Supabase (PostgreSQL), met row level security |
 | **Uitslagen** | [OpenF1](https://openf1.org), opgehaald door een GitHub Action |
 | **Hosting** | GitHub Pages, vanaf `main`, op `predicttherace.com` (zie `BEDIENING.md` §15) |

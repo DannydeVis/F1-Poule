@@ -303,6 +303,9 @@
   .waarschuwing .label{color:var(--amber)}
   .leeg .middel{font-size:26px}
   .uitleg b,.leeg b{color:var(--ink)}
+  /* Een link midden in de tekst: de tekstkleur met een streep eronder, niet
+     het blauw van de browser (dat haalt op donker het contrast niet). */
+  .uitleg a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
   /* flex:none, geen min-height:0. De kolommen zijn flexkolommen die op een
      breed scherm zelf scrollen, en een flexitem met min-height:0 mag door de
      browser tot niets worden platgedrukt zodra de inhoud niet past. Dat
@@ -1117,9 +1120,10 @@ const VAPID_PUBLIEK = '';
 
 // Waar iemand terecht kan met een vraag over zijn gegevens. Leeg laten mag —
 // dan staat die regel er gewoon niet — maar een privacyverklaring zonder
-// contactadres is niet af. Vul hier een adres in dat je publiek wilt hebben;
-// deze pagina is voor iedereen te lezen. Zie BEDIENING.md §12.
-const PRIVACY_CONTACT = '';
+// contactadres is niet af. Dit adres is publiek: het staat ook op de
+// privacypagina van de site (site/privacy.mjs, CONTACT), en
+// test/privacypagina.test.mjs houdt die twee gelijk. Zie BEDIENING.md §12.
+const PRIVACY_CONTACT = 'devisser.danny@gmail.com';
 
 const DEMO = !SUPABASE_URL || !SUPABASE_ANON_KEY;
 
@@ -2411,11 +2415,13 @@ const ENGELS = Object.fromEntries([
    + 'are yours. <b>Your email address only if you link it yourself</b> — if you '
    + 'do not, there is no email address.'],
   ['<b>Waar het staat</b><br>'
-   + 'In een database bij Supabase. De kalender, de coureurs en de uitslagen '
-   + 'komen van OpenF1; daar staat niets van jou in.',
+   + 'In een database bij Supabase. De app zelf staat bij GitHub Pages, dat net '
+   + 'als elke webserver je IP-adres ziet als je hem opent. De kalender, de '
+   + 'coureurs en de uitslagen komen van OpenF1; daar staat niets van jou in.',
    '<b>Where it lives</b><br>'
-   + 'In a database at Supabase. The calendar, the drivers and the results come '
-   + 'from OpenF1; nothing of yours is in there.'],
+   + 'In a database at Supabase. The app itself is hosted on GitHub Pages, which, '
+   + 'like any web server, sees your IP address when you open it. The calendar, '
+   + 'the drivers and the results come from OpenF1; nothing of yours is in there.'],
   ['<b>Wat er niet gebeurt</b><br>'
    + 'Geen advertenties, geen analytics, geen trackers, en er wordt niets '
    + 'doorverkocht of gedeeld. De lettertypen staan in de app zelf, dus daar '
@@ -2465,6 +2471,10 @@ const ENGELS = Object.fromEntries([
    + 'predictions and your points.'],
   ['Een vraag erover? {adres}',
    'Questions about it? {adres}'],
+  ['Deze verklaring staat ook als {link} op de site, voor wie de app nog niet heeft.',
+   'This statement is also on the site as a {link}, for anyone who does not have the app yet.'],
+  ['losse pagina',
+   'separate page'],
 
   // ---- weggaan -------------------------------------------------
   ['<b>Weggaan</b><br>'
@@ -6825,8 +6835,9 @@ function privacyBlok() {
         + 'voorspellingen van jou zijn. <b>Je mailadres alleen als je het zelf '
         + 'koppelt</b> — doe je dat niet, dan staat er geen mailadres.')}</p>
       <p style="margin:0 0 10px">${T('<b>Waar het staat</b><br>'
-        + 'In een database bij Supabase. De kalender, de coureurs en de uitslagen '
-        + 'komen van OpenF1; daar staat niets van jou in.')}</p>
+        + 'In een database bij Supabase. De app zelf staat bij GitHub Pages, dat net '
+        + 'als elke webserver je IP-adres ziet als je hem opent. De kalender, de '
+        + 'coureurs en de uitslagen komen van OpenF1; daar staat niets van jou in.')}</p>
       <p style="margin:0 0 10px">${T('<b>Wat er niet gebeurt</b><br>'
         + 'Geen advertenties, geen analytics, geen trackers, en er wordt niets '
         + 'doorverkocht of gedeeld. De lettertypen staan in de app zelf, dus daar '
@@ -6853,10 +6864,18 @@ function privacyBlok() {
       <p style="margin:0">${T('<b>Inzien</b><br>'
         + 'Alles wat de app van je weet staat in de app zelf: je naam, je '
         + 'voorspellingen en je punten.')}${PRIVACY_CONTACT ? `<br>
-        ${T('Een vraag erover? {adres}', { adres: esc(PRIVACY_CONTACT) })}` : ''}</p>
+        ${T('Een vraag erover? {adres}', { adres: `<a href="mailto:${esc(PRIVACY_CONTACT)}">${
+          esc(PRIVACY_CONTACT)}</a>` })}` : ''}</p>
+      <p style="margin:10px 0 0">${T('Deze verklaring staat ook als {link} op de site, voor wie de app nog niet heeft.',
+        { link: `<a href="${privacyPagina()}">${T('losse pagina')}</a>` })}</p>
     </div>
     ${weggaanBlok()}`;
 }
+
+// De privacypagina van de site, één map boven de app (zie agendaLink() voor
+// waarom via new URL). Engels alleen als de app Engels praat; de site heeft de
+// verklaring in dezelfde twee talen als de app.
+const privacyPagina = () => new URL(TAAL === 'en' ? '../en/privacy/' : '../privacy/', linkBasis()).href;
 
 // De twee manieren om weg te gaan. Het verschil is niet cosmetisch, dus het
 // staat er ook zo: de eerste laat de poule van je medespelers heel, de tweede
