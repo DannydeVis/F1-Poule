@@ -26,6 +26,11 @@
  *       Het kleine icoontje in de statusbalk van Android bij een melding.
  *       Android gebruikt daar alleen de vorm (de alfa) en kleurt die zelf; een
  *       volledig pictogram wordt een wit vierkantje.
+ *   pictogrammen/predicttherace-logo.png
+ *       De P zelf, in zijn eigen kleuren op doorzichtig, zonder de schaduw uit
+ *       de bron en strak bijgesneden: het logo in de kop van de app en de site,
+ *       waar eerst een rood blokje stond. 128 pixels, voor een logo van 22 tot
+ *       30 pixels op een scherm dat drie pixels per pixel tekent.
  *   favicon.ico (16, 32 en 48)
  *       Wat browsers en zoekmachines vanzelf opvragen, ook op pagina's zonder
  *       <link rel="icon">, zoals 404.html. Google wil een veelvoud van 48.
@@ -105,6 +110,42 @@ for (const maat of [192, 512]) {
 }
 schrijf('pictogrammen/predicttherace-apple-180.png', await teken({ ...pictogram, maat: 180, achter: '#000' }));
 schrijf('pictogrammen/predicttherace-badge-96.png', await teken({ ...logo, maat: 96, schaal: 0.9, alleenVorm: true }));
+
+// Het logo: dezelfde oranjetoets als de badge, maar met de kleur van de bron
+// erin, en bijgesneden tot de P zelf.
+schrijf('pictogrammen/predicttherace-logo.png', await page.evaluate(async ({ data, maat }) => {
+  const img = new Image(); img.src = `data:image/webp;base64,${data}`; await img.decode();
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height);
+  let links = c.width, rechts = 0, boven = c.height, onder = 0;
+  for (let i = 0; i < d.data.length; i += 4) {
+    const [r, , b, a] = d.data.slice(i, i + 4);
+    const alfa = Math.round(Math.max(0, Math.min(1, (r - b - 60) / 150)) * Math.min(1, a / 250) * 255);
+    d.data[i + 3] = alfa;
+    if (alfa > 16) {
+      const px = (i / 4) % c.width, py = Math.floor(i / 4 / c.width);
+      links = Math.min(links, px); rechts = Math.max(rechts, px);
+      boven = Math.min(boven, py); onder = Math.max(onder, py);
+    }
+  }
+  x.putImageData(d, 0, 0);
+  // Vierkant om de P heen, met een randje van 3% zodat de schuine punten niet
+  // tegen de kant komen.
+  const zijde = Math.round(Math.max(rechts - links, onder - boven) * 1.06);
+  const mx = (links + rechts) / 2, my = (boven + onder) / 2;
+  let doek = document.createElement('canvas'); doek.width = doek.height = zijde;
+  doek.getContext('2d').drawImage(c, mx - zijde / 2, my - zijde / 2, zijde, zijde, 0, 0, zijde, zijde);
+  while (doek.width / 2 >= maat) {
+    const half = document.createElement('canvas'); half.width = half.height = Math.round(doek.width / 2);
+    const h = half.getContext('2d'); h.imageSmoothingQuality = 'high';
+    h.drawImage(doek, 0, 0, half.width, half.height); doek = half;
+  }
+  const uit = document.createElement('canvas'); uit.width = uit.height = maat;
+  const u = uit.getContext('2d'); u.imageSmoothingQuality = 'high';
+  u.drawImage(doek, 0, 0, maat, maat);
+  return uit.toDataURL('image/png').split(',')[1];
+}, { ...logo, maat: 128 }));
 
 // favicon.ico: een ICO mag gewone PNG's bevatten, en dat doet elke browser van
 // de afgelopen tien jaar goed. Kop van 6 bytes, per plaatje 16 bytes, dan de

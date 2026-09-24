@@ -53,6 +53,7 @@ const PICTOGRAMMEN = {
   'pictogrammen/predicttherace-maskable-512.png': 512,
   'pictogrammen/predicttherace-apple-180.png': 180,
   'pictogrammen/predicttherace-badge-96.png': 96,
+  'pictogrammen/predicttherace-logo.png': 128,
 };
 for (const [pad, maat] of Object.entries(PICTOGRAMMEN)) {
   const m = existsSync(join(wortel, pad)) ? pngMaat(bestand(pad)) : null;
@@ -85,7 +86,7 @@ for (const [pad, maat] of Object.entries(PICTOGRAMMEN)) {
     const x = c.getContext('2d'); x.drawImage(img, 0, 0);
     const d = x.getImageData(0, 0, c.width, c.height).data;
     const m = c.width / 2, veilig = c.width * 0.4;
-    let buiten = 0, oranje = 0, doorzichtig = 0, gekleurd = 0, leeg = 0, vol = 0;
+    let buiten = 0, oranje = 0, doorzichtig = 0, gekleurd = 0, leeg = 0, vol = 0, grijs = 0;
     for (let y = 0; y < c.height; y++) for (let xx = 0; xx < c.width; xx++) {
       const i = (y * c.width + xx) * 4, [r, g, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
       const isOranje = a > 128 && r > 180 && r - b > 120;
@@ -94,9 +95,11 @@ for (const [pad, maat] of Object.entries(PICTOGRAMMEN)) {
       if (a < 255) doorzichtig++;
       if (a === 0) leeg++;
       if (a === 255) vol++;
+      // Zichtbaar en niet oranje: een schaduw of een rand van iets anders.
+      if (a > 30 && r - b < 60) grijs++;
       if (a > 0 && (r < 250 || g < 250 || b < 250)) gekleurd++;
     }
-    return { buiten, oranje, doorzichtig, gekleurd, leeg, vol, totaal: c.width * c.height };
+    return { buiten, oranje, doorzichtig, gekleurd, leeg, vol, grijs, totaal: c.width * c.height };
   }, bestand(pad).toString('base64'));
 
   const gewoon = await bekijk('pictogrammen/predicttherace-512.png');
@@ -114,6 +117,13 @@ for (const [pad, maat] of Object.entries(PICTOGRAMMEN)) {
   check('de meldingsbadge is een witte vorm op doorzichtig',
     badge.gekleurd === 0 && badge.leeg > badge.totaal / 3 && badge.vol > badge.totaal / 20,
     `${badge.gekleurd} gekleurd, ${badge.leeg} leeg, ${badge.vol} vol, van ${badge.totaal}`);
+  // Het logo in de kop: de oranje P op doorzichtig, zonder de grijze schaduw
+  // uit de bron (die zou op de donkere kop als een vlek staan), en groot genoeg
+  // in zijn vak dat hij op 24 pixels nog een P is.
+  const logo = await bekijk('pictogrammen/predicttherace-logo.png');
+  check('het logo is de oranje P op doorzichtig, zonder schaduw, en vult zijn vak',
+    logo.leeg > logo.totaal / 4 && logo.oranje > logo.totaal / 5 && logo.grijs === 0,
+    `${logo.oranje} oranje, ${logo.leeg} leeg, ${logo.grijs} grijs, van ${logo.totaal}`);
   await browser.close();
 }
 {
@@ -176,6 +186,23 @@ for (const [pad, maat] of Object.entries(PICTOGRAMMEN)) {
     nl.includes('<meta property="og:image:type" content="image/jpeg">')
     && nl.includes('<meta property="og:image:width" content="1200">')
     && nl.includes('<meta property="og:image:height" content="630">'));
+}
+
+// ---- 8. het logo in de kop, waar eerst een rood blokje stond ------------------------
+{
+  const app = bestand('app/index.html').toString();
+  const regel = app.match(/\.merk \.blok\{[^}]*\}/)?.[0] ?? '';
+  check('de app zet het logo in de kop, niet meer een rood vlak',
+    regel.includes('url(../pictogrammen/predicttherace-logo.png)') && !regel.includes('var(--accent)'), regel);
+  const kop = [
+    ...TALEN.map((c) => (teksten[c].pad ? `${teksten[c].pad}/index.html` : 'index.html')),
+    ...Object.values(PRIVACY).map((p) => `${p.pad}/index.html`),
+  ].filter((pad) => {
+    const m = bestand(pad).toString().match(/<a class="merk"[^>]*><img class="blok" src="([^"]+)" alt=""/);
+    return !(m && m[1].endsWith('pictogrammen/predicttherace-logo.png')
+      && existsSync(join(wortel, pad.split('/').slice(0, -1).join('/'), m[1])));
+  });
+  check('en elke pagina van de site ook, met een logo dat bestaat', kop.length === 0, kop.join(', '));
 }
 
 process.exit(afronden() ? 0 : 1);
