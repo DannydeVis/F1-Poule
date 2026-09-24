@@ -6574,6 +6574,15 @@ toch de voorpagina wil zien, komt er via een eigen pagina (de privacypagina
 → "Naar de voorpagina"), via `/en/` (alleen `/` stuurt door), of in een
 privévenster.
 
+Danny wilde het doorsturen zo houden, maar ook een weg terug. Die staat nu
+onderaan **Profiel**: "Naar de voorpagina", in de taal van de app. Het
+doorstuurscriptje laat iedereen staan die van een eigen pagina komt. Die
+controle stond ná die van de iPhone-beginschermapp, en daardoor stuurde zo'n
+app je meteen weer terug. Nu staat hij ervoor. `test/doorsturen.test.mjs`
+loopt het na, in het Nederlands, in het Engels en als iPhone-beginschermapp.
+Drie mutanten zakken elk op de juiste controle: de volgorde terug, geen knop,
+en altijd de Nederlandse voorpagina.
+
 ### Hoe het getest is
 
 - `test/domein.test.mjs`: de app heeft het deelplaatje met het volle adres,

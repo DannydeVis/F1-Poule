@@ -2500,6 +2500,12 @@ const ENGELS = Object.fromEntries([
    + 'predictions and your points.'],
   ['Een vraag erover? {adres}',
    'Questions about it? {adres}'],
+  ['over Predict the Race',
+   'about Predict the Race'],
+  ['Hoe het spel werkt, de punten en de veelgestelde vragen staan op de voorpagina.',
+   'How the game works, the scoring and the frequently asked questions are on the home page.'],
+  ['Naar de voorpagina',
+   'To the home page'],
   ['Deze verklaring staat ook als {link} op de site, voor wie de app nog niet heeft.',
    'This statement is also on the site as a {link}, for anyone who does not have the app yet.'],
   ['losse pagina',
@@ -6247,7 +6253,23 @@ function profielPagina() {
     ${deelBlok()}
     ${eigenLinkBlok()}
     ${uitlogBlok()}
-    ${privacyBlok()}`;
+    ${privacyBlok()}
+    ${voorpaginaBlok()}`;
+}
+
+// ---- terug naar de voorpagina --------------------------------
+// Wie een poule op dit toestel heeft, gaat vanaf de voorpagina (/) meteen de
+// app in; dat wil een speler bijna altijd. Maar de voorpagina (hoe het werkt,
+// de punten, de vragen) moet ook voor hem bereikbaar blijven. Via deze link
+// lukt dat: het doorstuurscriptje op / laat iedereen staan die van een eigen
+// pagina komt, ook in een app op het beginscherm van een iPhone.
+const voorpagina = () => new URL(TAAL === 'en' ? '../en/' : '../', linkBasis()).href;
+function voorpaginaBlok() {
+  return `<div class="scheiding"></div>
+    <span class="label">${T('over Predict the Race')}</span>
+    <p class="zacht" style="margin:0">${T('Hoe het spel werkt, de punten en de '
+      + 'veelgestelde vragen staan op de voorpagina.')}</p>
+    <a class="knop klein" id="voorpagina" href="${esc(voorpagina())}">${T('Naar de voorpagina')}</a>`;
 }
 
 // ---- herinneringen voor de deadline -------------------------

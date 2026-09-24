@@ -179,4 +179,48 @@ async function landt(pad, { voorafAan } = {}) {
   await stoppen();
 }
 
+// ---- 5. terug naar de voorpagina -------------------------------------------------
+// Een speler met een poule komt vanaf / meteen in de app, en dat blijft zo.
+// Maar de voorpagina moet ook voor hem bereikbaar blijven: onder Profiel staat
+// "Naar de voorpagina", en daar hoort hij dan ook te blijven. Ook in een app
+// op het beginscherm van een iPhone, waar het doorsturen anders als eerste
+// zou toeslaan.
+async function naarDeVoorpagina({ taal = 'nl', iphone = false } = {}) {
+  const { page, url, stoppen } = await startSite({ taal, voorafAan: iphone ? (p) => p.addInitScript(() => {
+    Object.defineProperty(navigator, 'standalone', { get: () => true });
+  }) : undefined });
+  await page.goto(url + 'app/?code=RTM026');
+  await page.waitForSelector('[data-lid]');
+  await page.click('[data-lid]');
+  await Promise.race([page.waitForSelector('#koppelnunniet'), page.waitForSelector('[data-race]')]);
+  if (await page.$('#koppelnunniet')) await page.click('#koppelnunniet');
+  await page.waitForSelector('[data-race]');
+  await page.click('[data-weergave="profiel"]');
+  if (!(await page.waitForSelector('#voorpagina', { timeout: 5000 }).catch(() => null))) {
+    await stoppen();
+    return { pad: '(geen knop onder Profiel)', kop: '' };
+  }
+  await page.click('#voorpagina');
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(300);
+  const uit = { pad: new URL(page.url()).pathname, kop: await page.textContent('h1') };
+  await stoppen();
+  return uit;
+}
+{
+  const r = await naarDeVoorpagina();
+  check('onder Profiel brengt "Naar de voorpagina" je naar de voorpagina, en daar blijf je',
+    r.pad === '/' && r.kop.includes('Voorspel de grid'), `${r.pad} ${r.kop}`);
+}
+{
+  const r = await naarDeVoorpagina({ iphone: true });
+  check('ook in een app op het beginscherm van een iPhone', r.pad === '/' && r.kop.includes('Voorspel de grid'),
+    `${r.pad} ${r.kop}`);
+}
+{
+  const r = await naarDeVoorpagina({ taal: 'en' });
+  check('en in het Engels naar de Engelse voorpagina', r.pad === '/en/' && r.kop.includes('Predict the grid'),
+    `${r.pad} ${r.kop}`);
+}
+
 process.exit(afronden() ? 0 : 1);
