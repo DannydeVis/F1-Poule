@@ -386,8 +386,14 @@ function taalScript(code) {
 //     vlaggetjes van een campagne gaat mee.
 //   - #access_token=, #error=: dezelfde inlog, maar in de hash. Een gewone
 //     ankerlink (#faq) heeft geen = en blijft gewoon hier.
-//   - Een geïnstalleerde app (standalone): die is ooit met start_url "." op
-//     het beginscherm gezet, en iOS werkt dat nooit meer bij.
+//   - Een app op het beginscherm van een iPhone (navigator.standalone): die
+//     is ooit met start_url "." op het beginscherm gezet, en iOS werkt dat
+//     nooit meer bij. Bewust níét display-mode: standalone. Dat is ook waar
+//     in de onzichtbare browservensters waarmee berichtenapps een voorbeeld
+//     van een link maken, en dan kreeg een gedeelde link naar de voorpagina
+//     het voorbeeld van de app: een klein pictogram in plaats van het
+//     deelplaatje. Een geïnstalleerde app op Android heeft toch al een poule
+//     op het toestel, en valt dus onder de regel hieronder.
 //   - Een terugkerende speler (er staat een poule op dit toestel), maar niet
 //     als hij van een eigen pagina komt: wie in de app op het logo tikt of
 //     vanaf /en/ terugklikt, wil deze pagina juist zien.
@@ -396,7 +402,7 @@ const DOORSTUREN = `(function(){try{
   var sleutels=[];try{new URLSearchParams(l.search).forEach(function(v,k){sleutels.push(k)})}catch(e){}
   if(sleutels.some(function(k){return !/^(utm_|fbclid$|gclid$|msclkid$|ref$|mc_)/.test(k)}))return naar();
   if(l.hash.indexOf('=')>-1)return naar();
-  if((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone)return naar();
+  if(navigator.standalone)return naar();
   var ref=document.referrer||'';if(ref&&ref.indexOf(l.origin)===0)return;
   for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i)||'';
     if(k.indexOf('poule:')===0&&k!=='poule:taal')return naar()}

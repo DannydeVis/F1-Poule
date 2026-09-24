@@ -6147,8 +6147,9 @@ bezoekers doorstuurt naar `app/` met alles wat er in de adresbalk stond:
 
 - elke querystring behalve campagnevlaggetjes (`utm_…`, `fbclid`, `gclid`);
 - een hash met een `=` erin (een inlogsleutel; `#faq` blijft gewoon hier);
-- een geïnstalleerde app (`display-mode: standalone`, of `navigator.standalone`
-  op iOS — daar wordt de start_url van een beginschermapp nooit bijgewerkt);
+- een app op het beginscherm van een iPhone (`navigator.standalone` — daar
+  wordt de start_url nooit bijgewerkt). Eerst stond hier ook `display-mode:
+  standalone`; dat is eruit, zie "Linkvoorbeelden en het foutbalkje";
 - een terugkerende speler (er staat een poule op dit toestel), behalve als hij
   van een eigen pagina komt: wie vanaf `/en/` of vanuit de app naar `/` klikt,
   wil de folder juist lezen.
@@ -6491,3 +6492,84 @@ Negen mutanten, en elk ervan zakt op de controle die erbij hoort:
 `test/eerste-indruk.test.mjs` eiste dat élk pictogram in het manifest
 maskable was: precies de oude opzet. Die controle vraagt nu om een gewone en
 een maskable versie, allebei in 192 en 512.
+
+## Linkvoorbeelden en het foutbalkje
+
+Dezelfde avond stuurde Danny drie schermafdrukken. Joey had om 17:37 in
+iMessage een link gekregen met het grote deelplaatje eronder, zoals het hoort.
+Om 18:09, na het nieuwe logo, gaven iMessage en WhatsApp bij dezelfde link
+alleen een klein pictogram. WhatsApp zette er "Het F1-voorspelspel voor jou en
+je vrienden. Voorspel de grid, …" bij, en dat is niet de omschrijving van de
+voorpagina maar die van de app. Het voorbeeld was dus van `app/` gemaakt. Op
+de derde schermafdruk stond in de app het balkje "Er ging iets mis op de
+achtergrond", zonder te zeggen wat.
+
+### Een link naar de app kreeg geen deelplaatje
+
+`app/index.html` had geen enkele `og:`-tag. Elk voorbeeld van een app-adres
+viel daardoor terug op het pictogram en de gewone omschrijving. Dat gold ook
+voor elke uitnodiging, want die wijzen sinds de verhuizing naar
+`app/?code=…`. Nu heeft de app dezelfde deeltags als de Nederlandse
+voorpagina: titel, omschrijving, het deelplaatje van 1200×630 en
+`summary_large_image`.
+
+Twee keuzes daarin:
+
+- **Geen `og:url`.** Anders wijst het voorbeeld naar `app/` zonder de
+  `?code=` erachter, en is de uitnodiging kwijt voor wie erop tikt.
+- **Het plaatje met het volle adres.** Een relatief adres pakt niet elke app
+  op. Het is de enige plek waar de app zijn eigen domein noemt;
+  `test/domein.test.mjs` sluit die tags uit van de regel "de app noemt geen
+  domein", en controleert dat ze gelijk zijn aan `BASIS` en aan
+  `teksten.nl`.
+
+### Waarom de voorpagina in het voorbeeld de app werd
+
+Het doorstuurscriptje op `/` stuurde ook alles door wat zich als
+`display-mode: standalone` meldt. Dat was bedoeld voor geïnstalleerde apps
+met de oude `start_url`. Maar de onzichtbare browservensters waarmee
+berichtenapps een voorbeeld maken, melden zich waarschijnlijk ook zo: er zit
+geen adresbalk omheen. Dan kreeg een gedeelde link naar de voorpagina het
+voorbeeld van de app. Waarom het om 17:37 nog goed ging en om 18:09 niet, is
+hier niet na te spelen: een echte iPhone kunnen we niet naspelen, en de site
+is vanuit deze omgeving niet bereikbaar.
+
+De regel is eruit. Er blijft `navigator.standalone` voor een app op het
+beginscherm van een iPhone. Op Android heeft een geïnstalleerde app toch al
+een poule op het toestel, en valt dus onder de regel van de terugkerende
+speler. Zou een voorbeeld desondanks bij de app uitkomen, dan krijgt het nu
+in elk geval het grote plaatje (zie hierboven).
+
+### Het balkje zegt nu wat er misging
+
+Op een telefoon is er geen console, dus "er ging iets mis" kon niemand
+verder helpen. Nu staat de melding er in klein schrift onder (hooguit 160
+tekens), en die staat dan op de schermafdruk die iemand stuurt.
+
+Eén soort fout krijgt geen balkje meer: `AuthRetryableFetchError`. Dat is
+supabase-js dat op de achtergrond je inlog ververst terwijl de verbinding
+hapert, meestal net als een telefoon het tabblad weer wakker maakt. Het
+probeert dat zelf opnieuw, en aan het scherm verandert niets. Of dit de fout
+van Danny's schermafdruk was, weten we niet. De volgende keer staat het erbij.
+
+### Hoe het getest is
+
+- `test/domein.test.mjs`: de app heeft het deelplaatje met het volle adres,
+  dezelfde titel en omschrijving als de voorpagina, en geen `og:url`. Buiten
+  die tags noemt de app nog steeds geen domein.
+- `test/doorsturen.test.mjs`: een iPhone-beginschermapp (`navigator.standalone`)
+  gaat naar de app. Een venster dat zich als standalone meldt zonder poule op
+  het toestel (een linkvoorbeeld) blijft op de voorpagina.
+- `test/vangnet.test.mjs`: een haperende inlogverversing geeft geen balkje; een
+  andere losse fout wel, met de melding erbij.
+
+Acht mutanten, en elk ervan zakt op de controle die erbij hoort:
+
+- geen `og:image` in de app;
+- een `og:url` in de app;
+- een andere titel in de app;
+- het domein buiten de deeltags;
+- de `display-mode`-regel terug;
+- de iPhone-regel weg;
+- de haperende verbinding die weer een balkje geeft;
+- geen foutmelding in het balkje.

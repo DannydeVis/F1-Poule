@@ -75,11 +75,9 @@ async function landt(pad, { voorafAan } = {}) {
 }
 {
   const r = await landt('', { voorafAan: (page) => page.addInitScript(() => {
-    const echt = window.matchMedia.bind(window);
-    window.matchMedia = (q) => (q.includes('display-mode: standalone')
-      ? { matches: true, media: q, addEventListener() {}, removeEventListener() {} } : echt(q));
+    Object.defineProperty(navigator, 'standalone', { get: () => true });
   }) });
-  check('een app die op het beginscherm staat opent de app, niet de folder', r.pad === '/app/', r.pad);
+  check('een app die op het beginscherm van een iPhone staat opent de app, niet de folder', r.pad === '/app/', r.pad);
   await r.stoppen();
 }
 {
@@ -94,6 +92,19 @@ async function landt(pad, { voorafAan } = {}) {
 }
 
 // ---- 2. wat op de landingspagina hoort ---------------------------------------------
+{
+  // Een berichtenapp die een voorbeeld van de link maakt, doet dat in een
+  // onzichtbaar browservenster dat zich als "standalone" meldt, zonder dat er
+  // een poule op staat. Die hoort de voorpagina te lezen, met het deelplaatje,
+  // en niet de app: dat gaf in iMessage en WhatsApp een klein pictogram.
+  const r = await landt('', { voorafAan: (page) => page.addInitScript(() => {
+    const echt = window.matchMedia.bind(window);
+    window.matchMedia = (q) => (q.includes('display-mode: standalone')
+      ? { matches: true, media: q, addEventListener() {}, removeEventListener() {} } : echt(q));
+  }) });
+  check('een linkvoorbeeld (standalone, niets op het toestel) blijft op de voorpagina', r.pad === '/', r.pad);
+  await r.stoppen();
+}
 {
   const r = await landt('');
   check('een nieuwe bezoeker ziet de landingspagina', r.pad === '/', r.pad);
