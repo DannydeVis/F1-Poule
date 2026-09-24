@@ -116,7 +116,10 @@ Op één scherm, gescheiden door koppen:
 - **Weekendoverwinningen** (wie won de meeste losse weekenden)
 - **Onderlinge duels** (jij tegen elke andere speler)
 
-Delen doe je onder de uitslag van een race (zie hierboven), niet hier.
+Onder de stand staat **Deel de stand**: hetzelfde venster als bij een
+uitslag, met een plaatje van de hele seizoensstand. Daarop staan de naam van
+de poule, na hoeveel races, de koploper, en iedereen met zijn punten en wie er
+sinds de vorige race geklommen of gezakt is. Ook hier kan de stand als tekst.
 
 ### Poule
 Leden, poulecode, uitnodiglink met deelknop, en de instellingen. Voor de

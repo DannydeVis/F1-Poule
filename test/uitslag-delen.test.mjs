@@ -16,6 +16,8 @@
 //      anders wordt het een download. Wegtikken is geen fout.
 //   6. Escape, het kruisje en naast het venster tikken sluiten het venster,
 //      en alleen het venster: de race eronder blijft open.
+//   7. Op het scherm Stand deelt "Deel de stand" de hele seizoensstand op
+//      dezelfde manier, met de koplopers en de pijltjes van de vorige race.
 //
 // Wat er op het plaatje staat wordt niet uit de pixels gelezen maar bij het
 // tekenen zelf opgevangen: elke fillText() komt met zijn plek en lettertype
@@ -262,12 +264,68 @@ await page.click('.deelvenster [data-sluit]');
 await page.waitForFunction(() => !document.querySelector('.deelvenster'));
 check('en het kruisje', true);
 
+// ---- de stand van het seizoen ------------------------------------------------------------------
+// Op het scherm Stand staat een eigen deelknop, voor de hele stand. Eerst
+// iets om te laten zien: Tim had Shanghai helemaal goed, en klimt daarmee van
+// elfde naar zevende. Anouk, Joey, Lotte en Sanne zakken elk een plek.
+await page.evaluate((uit) => {
+  const db = globalThis.__db;
+  const tim = db.pool_members.find((m) => m.display_name === 'Tim').member_id;
+  for (const a of db.answers) if (a.member_id === tim && String(a.race_id) === '2') a.waarde = uit;
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+}, UIT);
+await page.reload();
+await page.click('[data-weergave="stand"]');
+await page.waitForSelector('[data-deel-stand]', { timeout: 5000 }).catch(() => {});
+check('op het scherm Stand staat "Deel de stand"',
+  (await page.textContent('[data-deel-stand]').catch(() => '')).trim() === 'Deel de stand');
+await page.evaluate(() => { window.__getekend = []; window.__klembord = []; });
+await page.click('[data-deel-stand]');
+await page.waitForSelector('.deelvenster img');
+{
+  const v = await page.evaluate(async () => {
+    const img = document.querySelector('.deelvenster img');
+    await img.decode();
+    return { label: document.querySelector('.deelvenster').getAttribute('aria-label'),
+             b: img.naturalWidth, h: img.naturalHeight, alt: img.alt,
+             naam: document.querySelector('.deelvenster a[download]')?.getAttribute('download') };
+  });
+  check('die opent hetzelfde venster, met een plaatje van 1080 bij 1350',
+    v.label === 'Deel de stand' && v.b === 1080 && v.h === 1350, JSON.stringify(v));
+  check('met een eigen omschrijving en bestandsnaam',
+    v.alt === 'Stand van Vrijdagmiddagpoule na 2 races' && v.naam === 'predict-the-race-stand-vrijdagmiddagpoule.png',
+    `${v.alt} / ${v.naam}`);
+  const g = await page.evaluate(() => window.__getekend);
+  const t = g.map((x) => x.t);
+  check('bovenaan het seizoen, de poule groot, en na hoeveel races',
+    t.includes('STAND · SEIZOEN 2026') && t.includes('VRIJDAGMIDDAGPOULE') && t.includes('NA 2 VAN DE 3 RACES'),
+    t.slice(0, 5).join(' | '));
+  const kop = g.find((x) => x.t.startsWith('Bram, Fatima'));
+  check('met de koplopers, ingekort als het er zes zijn', t.includes('KOPLOPER') && kop?.t.endsWith('…'), kop?.t);
+  const punten = g.filter((x) => x.x === 1008 && x.uitlijnen === 'right' && /^\d+$/.test(x.t)).map((x) => Number(x.t));
+  check('de lijst is de stand van het seizoen, Tim als zevende',
+    punten.slice(0, 7).join() === '200,200,200,200,200,200,192', punten.join(','));
+  const pijlen = t.filter((x) => /^[▲▼]\d+$/.test(x));
+  check('met wie er sinds de vorige race geklommen of gezakt is',
+    pijlen.includes('▲4') && pijlen.filter((x) => x === '▼1').length >= 2, pijlen.join(' '));
+  const danny = t.indexOf('Danny');
+  check('en jij staat erop, ook onderaan', danny > -1 && t[danny + 1] === 'JIJ', t.slice(-12).join(' | '));
+}
+await page.click('.deelvenster [data-kopieer-tekst]');
+await page.waitForFunction(() => window.__klembord.length >= 1);
+{
+  const tekst = (await page.evaluate(() => window.__klembord[0]?.t)) ?? '';
+  check('de stand kan ook als tekst', tekst.startsWith('🏆 Vrijdagmiddagpoule, na 2 van de 3 races')
+    && /\n7\. Tim\s+192/.test(tekst), tekst.split('\n').slice(0, 3).join(' / '));
+}
+await page.keyboard.press('Escape');
+await page.waitForFunction(() => !document.querySelector('.deelvenster'));
+
 // ---- een ouder weekend ------------------------------------------------------------------------
 // Melbourne was de eerste race. Het plaatje daarvan hoort de stand van toen te
 // tonen, en die was er nog niet: na één race is dat dezelfde lijst nog eens.
 // Niet de stand van nu (na Shanghai) onder de kop "stand na ronde 1".
-await page.keyboard.press('Escape');
-await page.waitForSelector('.kol.links [data-race]');
+await page.click('[data-weergave="races"]');
 await openRace(page, 'Melbourne');
 await page.evaluate(() => { window.__getekend = []; });
 await page.click('[data-deel]');

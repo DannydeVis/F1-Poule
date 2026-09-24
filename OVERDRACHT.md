@@ -6888,3 +6888,34 @@ behalve met `{ verhaal: true }`. Dat doen `test/verhaal.test.mjs` en
 `test/verhaal.test.mjs` (50 controles) loopt alles hierboven langs, ook de
 keren dat hij níét hoort te komen. Elke regel is teruggezet tegen een mutant
 die hem weghaalt; ze zakken allemaal.
+
+## De stand delen
+
+Danny: *"Ik mis alleen nog het delen van de totale stand. Een losse deelknop
+daar."*
+
+Onder de stand op het scherm Stand staat nu **Deel de stand**. Die opent
+hetzelfde deelvenster als een uitslag (Delen of Opslaan, Kopieer plaatje,
+Kopieer als tekst), met een plaatje van de hele seizoensstand
+(`tekenStandplaatje()`). Daarop staan:
+
+- "stand · seizoen 2026", de naam van de poule groot, en na hoeveel races;
+- de koploper, of koplopers bij een gelijke stand;
+- iedereen met zijn punten, en een pijltje voor wie er sinds de vorige race
+  geklommen of gezakt is (`positieWissels()`, dezelfde als op het scherm).
+
+Past niet iedereen erop, dan geldt hetzelfde als bij de uitslag: "en nog 4",
+en jij staat er onderaan toch op. De knop staat er pas als er een race gereden
+is. De tekstversie (`standTekst()`) begint met 🏆 en de naam van de poule.
+
+Om dat te kunnen delen is het tekenen opgesplitst in stukken die beide
+plaatjes gebruiken: `deelDoek()` (achtergrond en kop), `deelKop()` (de grote
+naam), `deelKaart()` (winnaar of koploper), `deelLijst()` (de ranglijst, met
+"en nog …" en jouw rij) en `deelVoet()`. `openDeelvenster()` krijgt nu een
+beschrijving mee (`uitslagDelen(race)` of `standDelen()`): hoe het plaatje
+getekend wordt, hoe het bestand heet, wat een schermlezer erover zegt, en de
+tekstversie.
+
+Getest in `test/uitslag-delen.test.mjs` (nu 56 controles), met vier mutanten
+erbij (geen knop, geen pijltjes, maar één koploper, de verkeerde tekst). Ze
+zakken alle vier.
