@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { maakControle, wortel, startPagina, meedoen } from './hulp.mjs';
 
-const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
+const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
 const stukken = [
   /export function blindeVlek[\s\S]*?\n\}/,
   /export const PLEKBANDEN[\s\S]*?\n\];/,

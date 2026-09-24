@@ -19,7 +19,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { maakControle, wortel } from './hulp.mjs';
 
-const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
+const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
 const knip = bron.match(/export function zonderSlechtste[\s\S]*?\n\}/);
 if (!knip) {
   console.error('FOUT: zonderSlechtste() niet gevonden in index.html');

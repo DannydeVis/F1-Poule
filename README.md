@@ -18,11 +18,12 @@ prijzen. Je speelt om de eer.
 
 | | |
 |---|---|
-| **Frontend** | `index.html` — één bestand, geen bouwstap, geen framework |
+| **App** | `app/index.html` — één bestand, geen bouwstap, geen framework |
+| **Landingspagina** | `index.html` en `en/`, `de/`, `fr/`, `es/`, `it/`, `pt/` — gemaakt door `scripts/maak-site.mjs` uit `site/teksten.mjs` |
 | **Database** | Supabase (PostgreSQL), met row level security |
 | **Uitslagen** | [OpenF1](https://openf1.org), opgehaald door een GitHub Action |
 | **Hosting** | GitHub Pages, vanaf `main` |
-| **Tests** | Playwright, die `index.html` in een echte browser naspeelt |
+| **Tests** | Playwright, die de app en de site in een echte browser naspeelt |
 
 Dat eerste is een keuze en geen achterstand. De app is klein genoeg om in één
 bestand te passen, en zolang dat zo is kost een wijziging geen build, geen
@@ -37,14 +38,28 @@ cd F1-Poule
 python3 -m http.server 8000      # of welke statische server dan ook
 ```
 
-Open `http://localhost:8000`. Zonder Supabase-gegevens start de app in
-demomodus met verzonnen data — genoeg om alle schermen te zien.
+Open `http://localhost:8000` voor de landingspagina en
+`http://localhost:8000/app/` voor de app. Zonder Supabase-gegevens start de app
+in demomodus met verzonnen data — genoeg om alle schermen te zien.
 
 Voor een echte poule vervang je `SUPABASE_URL` en `SUPABASE_ANON_KEY` in
-`index.html` (bovenaan het scriptblok) door die van je eigen project, en draai
+`app/index.html` (bovenaan het scriptblok) door die van je eigen project, en draai
 je `schema.sql` in de SQL-editor van Supabase.
 Die anon key hoort publiek te zijn; wat hem veilig maakt zijn de policies.
 Zie `BEDIENING.md` §7.
+
+## De landingspagina
+
+De pagina's in de hoofdmap en in de taalmappen worden niet met de hand
+bewerkt. Pas `site/teksten.mjs` aan en draai:
+
+```bash
+node scripts/maak-site.mjs      # de pagina's, sitemap.xml, robots.txt, llms.txt, 404.html
+node scripts/maak-beelden.mjs   # alleen als de app er anders uitziet: schermafdrukken en deelplaatjes
+```
+
+De punten in de puntentabel komen uit de app zelf; `test/site.test.mjs` zakt
+als de pagina's niet meer kloppen met wat de generator maakt.
 
 ## De vier SQL-bestanden
 

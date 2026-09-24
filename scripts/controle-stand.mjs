@@ -28,7 +28,7 @@ import { rekenkern } from './knipsel.mjs';
 const POULE = process.env.POULE ?? 'Vrijdagmiddagpoule';
 const IK = (process.env.IK ?? 'danny').toLowerCase();
 
-const bron = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const bron = readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
 
 const SUPABASE_URL = bron.match(/const SUPABASE_URL = '([^']+)'/)?.[1];
 const SUPABASE_ANON_KEY = bron.match(/const SUPABASE_ANON_KEY = '([^']+)'/)?.[1];

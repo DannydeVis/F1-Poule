@@ -1,10 +1,13 @@
 # Predict the Race: overdracht
 
 Poule-app voor F1 kwalificatie- en race-top-10 voorspellen met vrienden.
-Single-file frontend (`index.html`), Supabase als backend (`schema.sql`),
-en een synchronisatie die de OpenF1-data binnenhaalt.
+Single-file frontend (`app/index.html`), Supabase als backend (`schema.sql`),
+en een synchronisatie die de OpenF1-data binnenhaalt. In de hoofdmap staat
+sinds 24 september 2026 de landingspagina, in zeven talen; zie het hoofdstuk
+"Een landingspagina in zeven talen" onderaan. **Waar in de oudere hoofdstukken
+`index.html` staat, is de app bedoeld — die heet nu `app/index.html`.**
 
-Live op: https://dannydevis.github.io/F1-Poule/
+Live op: https://dannydevis.github.io/F1-Poule/ (de app: …/F1-Poule/app/)
 Repo: https://github.com/DannydeVis/F1-Poule
 
 ## Stand van zaken
@@ -6102,3 +6105,128 @@ krijgt het aanbod niet.
   label "seizoen 2026 rond". Vanaf 2027 had hij niets gevonden, en
   `null <> 'geen kalender'` laat een `if` stilletjes slagen. Nu `like` en
   `is distinct from`.
+
+## Een landingspagina in zeven talen
+
+Danny: *"zullen we een landingpagina maken in alle talen net zoals
+padel-bracket.com? voeg gewoon toe wat we geleerd hebben met SEO, GEO, AEO
+enz."*
+
+### De opbouw, zoals bij padel-bracket.com
+
+| url | wat |
+|---|---|
+| `/` | landingspagina, Nederlands |
+| `/en/` `/de/` `/fr/` `/es/` `/it/` `/pt/` | dezelfde pagina in zes andere talen; `/en/` is x-default |
+| `/app/` | de app (was `/`) |
+| `/sitemap.xml` `/robots.txt` `/llms.txt` `/404.html` | voor zoekmachines en taalmodellen |
+
+De pagina's worden gemaakt door `scripts/maak-site.mjs` uit `site/teksten.mjs`
+en staan gewoon in de repo — GitHub Pages serveert ze zoals ze zijn, dus er is
+nog steeds geen bouwstap. Een tekst aanpassen is: `site/teksten.mjs` bewerken,
+`node scripts/maak-site.mjs` draaien, alles committen. Vergeet je het tweede,
+dan zakt `test/site.test.mjs`.
+
+De punten in de puntentabel komen niet uit de teksten maar uit de app: de
+generator leest `VRAGEN`, `PRESETS` en de formule uit `scoreLijst()` in
+`app/index.html`. Verandert daar iets, dan klopt de pagina na één keer
+opnieuw genereren vanzelf.
+
+De schermafdrukken en deelplaatjes (`site/beeld/`, `site/og/`) maakt
+`scripts/maak-beelden.mjs`, met de nabootsing uit de tests en verzonnen namen.
+Alleen nodig als de app er anders uit is gaan zien.
+
+### De app naar app/, zonder dat er iets breekt
+
+Alles wat er al rondging wijst naar `/`: uitnodigingen in groepsapps
+(`?code=RTM026`), je eigen link (`&speler=`), gedeelde profielen
+(`?profiel=`), inloglinks uit de mail en van Google (`#access_token=`, of
+`?code=` met een lange sleutel), en elke app die op een beginscherm staat.
+Bovenin de landingspagina staat daarom een scriptje, vóór alles, dat die
+bezoekers doorstuurt naar `app/` met alles wat er in de adresbalk stond:
+
+- elke querystring behalve campagnevlaggetjes (`utm_…`, `fbclid`, `gclid`);
+- een hash met een `=` erin (een inlogsleutel; `#faq` blijft gewoon hier);
+- een geïnstalleerde app (`display-mode: standalone`, of `navigator.standalone`
+  op iOS — daar wordt de start_url van een beginschermapp nooit bijgewerkt);
+- een terugkerende speler (er staat een poule op dit toestel), behalve als hij
+  van een eigen pagina komt: wie vanaf `/en/` of vanuit de app naar `/` klikt,
+  wil de folder juist lezen.
+
+Verder: de app verwijst met `../` naar de lettertypen, de pictogrammen, het
+manifest en `sw.js`, die allemaal in de hoofdmap blijven. `sw.js` blijft daar
+met opzet, zodat een eventueel pushabonnement op dezelfde plek blijft hangen.
+Het manifest heeft nu `"id": "./"` (dezelfde identiteit als voorheen, zodat
+een geïnstalleerde app niet als nieuwe app geldt) en `"start_url": "app/"`.
+De agendalink wordt met `new URL('../kalender.ics', …)` gemaakt; plakken gaf
+`app/kalender.ics`, een 404 — de test ving dat. En de app staat op `noindex`:
+de landingspagina is de pagina om gevonden te worden, en een uitnodiging met
+een poulecode erin hoort niet in zoekresultaten.
+
+Nieuwe uitnodigingen wijzen meteen naar `app/?code=…`; `linkBasis()` volgt de
+plek van de pagina. Het doorsturen is er alleen voor wat er al rondgaat.
+
+### Wat er van padel-bracket.com is overgenomen
+
+- **Alles in de HTML zelf.** De meeste AI-crawlers (GPTBot, ClaudeBot,
+  PerplexityBot) voeren geen JavaScript uit; wat pas na een script op het
+  scherm komt, bestaat voor hen niet.
+- **Een antwoordblok bovenaan** ("Wat is Predict the Race?"), een alinea die
+  zonder context te citeren is. Vragen als koppen, antwoorden eronder.
+- **De puntentelling als echte `<table>`**, en dezelfde tabel in `llms.txt`.
+  Tabellen worden door zoekmachines en taalmodellen het makkelijkst letterlijk
+  overgenomen.
+- **JSON-LD** in één `@graph`: WebSite, Organization, WebPage (met speakable
+  en dateModified), WebApplication (gratis, featureList, schermafdrukken),
+  FAQPage en HowTo. De FAQ in de JSON-LD is woord voor woord de FAQ op het
+  scherm; Google negeert een FAQPage die iets anders zegt dan de pagina.
+- **hreflang wederkerig** op elke pagina en in de sitemap, x-default naar
+  `/en/`, canonical naar zichzelf.
+- **robots.txt die de taalmodellen uitdrukkelijk toelaat**, en `llms.txt` met
+  de feiten in het Engels: wat het is, hoe het werkt, de punten, de FAQ.
+- **Een deelplaatje per taal** (1200×630) voor WhatsApp en sociale media, met
+  de kop in die taal.
+- **Wie het maakt** (E-E-A-T): een blok met de maker, een link naar de
+  broncode, en de disclaimer dat dit geen officiële F1-app is.
+
+### Wat er anders is dan bij padel-bracket.com
+
+- **Geen automatische doorverwijzing op browsertaal.** padel-bracket stuurt
+  een bezoeker met een Engelse browser van `/` naar `/en/`. Googlebot crawlt
+  met een Engelse browser, dus die ziet de Nederlandse pagina dan nooit. Hier
+  staat in plaats daarvan een balkje "This page is also available in English",
+  en een taal die je zelf kiest wordt onthouden.
+- **Geen analytics en geen lettertypen van Google.** De app belooft "geen
+  trackers" en laadt niets van buiten; de pagina ervoor doet hetzelfde. De
+  test controleert dat er geen enkel verzoek naar een andere host gaat.
+- **De app zegt eerlijk dat hij in twee talen is.** De Duitse, Franse,
+  Spaanse, Italiaanse en Portugese pagina's zeggen in de FAQ dat de app zelf
+  in het Engels en Nederlands is.
+
+### Wat pas werkt als het domein gekoppeld is
+
+Canonical, hreflang, sitemap en deelplaatjes wijzen naar
+`https://predicttherace.com`. Zolang de site op
+`dannydevis.github.io/F1-Poule/` staat, doet dat weinig: `robots.txt` en de
+sitemap worden alleen gelezen in de hoofdmap van een domein, en die is daar
+van GitHub. De pagina's werken wel gewoon (alle links zijn relatief), maar
+voor zoekmachines telt het pas vanaf de koppeling. Zie `ROUTEKAART.md`.
+
+### Hoe het getest is
+
+- `test/site.test.mjs` (159 controles): per taal de taal, titel- en
+  omschrijvingslengte, één h1, canonical, de hreflang-set, geldige JSON-LD
+  met FAQ en HowTo gelijk aan het scherm, de punten uit de app, alt-teksten,
+  links die bestaan, contrast in licht en donker, geen horizontale scroll op
+  360 pixels. Daarnaast: geen verzoek naar een andere host, geen 404, de app
+  op noindex met een manifest dat naar `app/` wijst, en sitemap, robots.txt,
+  llms.txt en 404.html. Vijf mutanten (een hreflang weg, een ander FAQ-antwoord
+  in de JSON-LD, Google Fonts erbij, noindex weg, andere punten in de app)
+  zakken elk op de juiste controle.
+- `test/doorsturen.test.mjs` (19): elke route van `/` naar de app en elke
+  route die op de landingspagina hoort te blijven, plus het codeveld en de
+  agendalink. Zeven mutanten, elk gevangen.
+- Voor beide draait de site zoals GitHub Pages hem serveert: `startSite()` in
+  `test/hulp.mjs`, met de nabootsing in plaats van Supabase.
+- De contrasttest ving de kolomkoppen van de puntentabel (4,19 in licht) en
+  witte tekst op de rode knop in donker; allebei rechtgezet.

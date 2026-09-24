@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { maakControle, wortel } from './hulp.mjs';
 
-const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
+const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
 const score = bron.match(/export function scoreLijst[\s\S]*?\n\}/);
 const bijna = bron.match(/export function bijnaGoed[\s\S]*?\n\}/);
 if (!score || !bijna) {

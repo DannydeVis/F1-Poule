@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Predict the Race – pronostics F1 gratuits entre amis</title>
+<meta name="description" content="Pronostiquez le top 10 des qualifications et de chaque Grand Prix de Formule 1 et affrontez vos amis dans votre propre ligue. Résultats automatiques. Gratuit.">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<link rel="canonical" href="https://predicttherace.com/fr/">
+<link rel="alternate" hreflang="nl" href="https://predicttherace.com/">
+<link rel="alternate" hreflang="en" href="https://predicttherace.com/en/">
+<link rel="alternate" hreflang="de" href="https://predicttherace.com/de/">
+<link rel="alternate" hreflang="fr" href="https://predicttherace.com/fr/">
+<link rel="alternate" hreflang="es" href="https://predicttherace.com/es/">
+<link rel="alternate" hreflang="it" href="https://predicttherace.com/it/">
+<link rel="alternate" hreflang="pt" href="https://predicttherace.com/pt/">
+<link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/">
+<meta name="theme-color" content="#0b0b0c">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../pictogrammen/predicttherace-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="../pictogrammen/predicttherace-apple-180.png">
+<link rel="preload" href="../lettertypen/barlow-condensed-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../lettertypen/barlow-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Predict the Race">
+<meta property="og:url" content="https://predicttherace.com/fr/">
+<meta property="og:title" content="Predict the Race – pronostiquez la grille, battez vos amis">
+<meta property="og:description" content="Pronostiquez le top 10 des qualifications et de chaque Grand Prix de Formule 1 et affrontez vos amis dans votre propre ligue. Résultats automatiques. Gratuit.">
+<meta property="og:image" content="https://predicttherace.com/site/og/og-fr.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Predict the Race – pronostiquez la grille, battez vos amis">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="nl_NL">
+<meta property="og:locale:alternate" content="en_GB">
+<meta property="og:locale:alternate" content="de_DE">
+<meta property="og:locale:alternate" content="es_ES">
+<meta property="og:locale:alternate" content="it_IT">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Predict the Race – pronostiquez la grille, battez vos amis">
+<meta name="twitter:description" content="Pronostiquez le top 10 des qualifications et de chaque Grand Prix de Formule 1 et affrontez vos amis dans votre propre ligue. Résultats automatiques. Gratuit.">
+<meta name="twitter:image" content="https://predicttherace.com/site/og/og-fr.jpg">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "WebSite",
+   "@id": "https://predicttherace.com/#website",
+   "name": "Predict the Race",
+   "url": "https://predicttherace.com/",
+   "inLanguage": [
+    "nl",
+    "en",
+    "de",
+    "fr",
+    "es",
+    "it",
+    "pt"
+   ],
+   "publisher": {
+    "@id": "https://predicttherace.com/#organisatie"
+   }
+  },
+  {
+   "@type": "Organization",
+   "@id": "https://predicttherace.com/#organisatie",
+   "name": "Predict the Race",
+   "url": "https://predicttherace.com/",
+   "logo": "https://predicttherace.com/pictogrammen/predicttherace-512.png",
+   "founder": {
+    "@type": "Person",
+    "name": "Danny de Visser",
+    "url": "https://github.com/DannydeVis"
+   },
+   "sameAs": [
+    "https://github.com/DannydeVis/F1-Poule"
+   ]
+  },
+  {
+   "@type": "WebPage",
+   "@id": "https://predicttherace.com/fr/#pagina",
+   "url": "https://predicttherace.com/fr/",
+   "name": "Predict the Race – pronostics F1 gratuits entre amis",
+   "description": "Pronostiquez le top 10 des qualifications et de chaque Grand Prix de Formule 1 et affrontez vos amis dans votre propre ligue. Résultats automatiques. Gratuit.",
+   "inLanguage": "fr",
+   "isPartOf": {
+    "@id": "https://predicttherace.com/#website"
+   },
+   "about": {
+    "@id": "https://predicttherace.com/#app"
+   },
+   "dateModified": "2026-09-24",
+   "primaryImageOfPage": "https://predicttherace.com/site/og/og-fr.jpg",
+   "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [
+     "#wat p",
+     ".faq p"
+    ]
+   }
+  },
+  {
+   "@type": "WebApplication",
+   "@id": "https://predicttherace.com/#app",
+   "name": "Predict the Race",
+   "url": "https://predicttherace.com/app/",
+   "applicationCategory": "GameApplication",
+   "applicationSubCategory": "Formula 1 prediction game",
+   "operatingSystem": "Web, iOS, Android",
+   "browserRequirements": "Requires JavaScript",
+   "inLanguage": [
+    "nl",
+    "en"
+   ],
+   "isAccessibleForFree": true,
+   "description": "Predict the Race est une application web gratuite pour jouer aux pronostics de Formule 1 entre amis, collègues ou en famille. À chaque week-end de course, chacun pronostique le top 10 des qualifications et de la course, plus quelques questions bonus comme le vainqueur et la pole position. Après chaque séance, les résultats officiels arrivent automatiquement et l'application calcule les points et le classement. On rejoint une ligue avec un code, sans mot de passe et sans payer.",
+   "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+   },
+   "featureList": [
+    "Résultats automatiques",
+    "Jokers",
+    "Face-à-face",
+    "Vainqueur du week-end",
+    "Partage dans le groupe",
+    "Échéances dans votre agenda",
+    "Oublié de pronostiquer ?",
+    "Questions de la saison",
+    "Privée ou publique"
+   ],
+   "screenshot": [
+    "https://predicttherace.com/site/beeld/races-en-donker.jpg",
+    "https://predicttherace.com/site/beeld/uitslag-en-donker.jpg",
+    "https://predicttherace.com/site/beeld/stand-en-donker.jpg"
+   ],
+   "author": {
+    "@type": "Person",
+    "name": "Danny de Visser",
+    "url": "https://github.com/DannydeVis"
+   }
+  },
+  {
+   "@type": "FAQPage",
+   "@id": "https://predicttherace.com/fr/#faq",
+   "inLanguage": "fr",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Predict the Race est-il gratuit ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Oui. Pas d'abonnement, pas de paiement, pas de publicité. Toutes les fonctions sont accessibles à tous."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Comment rejoindre une ligue ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Ouvrez le lien d'invitation reçu de l'administrateur, ou saisissez le code de six caractères. Choisissez ensuite votre nom, ou ajoutez-vous comme nouveau joueur."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Faut-il créer un compte ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Non, et aucun mot de passe n'est nécessaire. Pour jouer sur plusieurs appareils, vous pourrez vous connecter plus tard avec Google ou avec un lien reçu par e-mail."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Comment sont calculés les points ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Pour chaque pilote de votre top 10, vous recevez 5 points s'il termine exactement à cette place, 3 points pour une place d'écart et 1 point pour deux places d'écart. Les questions bonus comme le vainqueur et la pole position rapportent des points en plus."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "D'où viennent les résultats ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Le calendrier, la liste des engagés et les résultats viennent automatiquement d'OpenF1, une source publique de données de Formule 1. Après chaque qualification et course, les points sont calculés tout seuls."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Jusqu'à quand puis-je pronostiquer ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Jusqu'au début de la séance. Le top 10 des qualifications se ferme au départ des qualifications, celui de la course au départ de la course."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Et si j'oublie une course ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Vous ne marquez rien ce week-end-là, sauf si l'administrateur a activé le remplissage automatique : vous recevez alors l'ordre du championnat comme top 10. Il existe aussi un classement sans vos pires week-ends, pour qu'une course manquée ne gâche pas votre saison."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Qu'est-ce qu'un joker ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Un joker double tous vos points d'un week-end de course. Vous le jouez avant le début du week-end ; ensuite il est verrouillé. L'administrateur décide si les jokers sont utilisés et combien chacun en reçoit."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Est-ce que ça marche sur mon téléphone ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Oui, sur iPhone, Android et ordinateur, directement dans le navigateur. Ajoutez-la à votre écran d'accueil et elle fonctionne comme une appli classique."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "En quelles langues est l'appli ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "L'appli existe en anglais et en néerlandais et choisit automatiquement la langue de votre appareil, donc l'anglais sur un appareil en français. Cette page existe aussi en allemand, espagnol, italien et portugais."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Joue-t-on de l'argent ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Non. Il n'y a pas d'argent en jeu dans Predict the Race : pas de mise, pas de cagnotte, pas de prix. On joue pour la gloire."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Est-ce une application officielle de la Formule 1 ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Non. Predict the Race est un projet de fan indépendant, sans lien avec la Formule 1, la FIA ou une écurie."
+     }
+    }
+   ]
+  },
+  {
+   "@type": "HowTo",
+   "@id": "https://predicttherace.com/fr/#hoe",
+   "name": "Créer une ligue de pronostics F1 avec Predict the Race",
+   "description": "Une ligue de pronostics de Formule 1 entre amis en quatre étapes.",
+   "inLanguage": "fr",
+   "totalTime": "PT1M",
+   "estimatedCost": {
+    "@type": "MonetaryAmount",
+    "currency": "EUR",
+    "value": "0"
+   },
+   "step": [
+    {
+     "@type": "HowToStep",
+     "position": 1,
+     "name": "Créez une ligue",
+     "text": "Donnez un nom à votre ligue, choisissez les questions qui comptent et partagez le code ou le lien d'invitation dans votre groupe.",
+     "url": "https://predicttherace.com/fr/#hoe"
+    },
+    {
+     "@type": "HowToStep",
+     "position": 2,
+     "name": "Pronostiquez le top 10",
+     "text": "Avant les qualifications et avant la course, placez votre top 10 sur la grille. Les week-ends sprint, le sprint s'ajoute.",
+     "url": "https://predicttherace.com/fr/#hoe"
+    },
+    {
+     "@type": "HowToStep",
+     "position": 3,
+     "name": "Les résultats arrivent tout seuls",
+     "text": "Après chaque séance, l'application récupère le résultat officiel. Personne n'a besoin de noter ou de saisir quoi que ce soit.",
+     "url": "https://predicttherace.com/fr/#hoe"
+    },
+    {
+     "@type": "HowToStep",
+     "position": 4,
+     "name": "Gagnez le week-end",
+     "text": "Voyez tout de suite vos points, le classement, le vainqueur du week-end et votre bilan face à chaque ami.",
+     "url": "https://predicttherace.com/fr/#hoe"
+    }
+   ]
+  }
+ ]
+}
+</script>
+<style>
+  @font-face{font-family:'Barlow';font-style:normal;font-weight:400;font-display:swap;
+    src:url(../lettertypen/barlow-400-latin.woff2) format('woff2');
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'Barlow';font-style:normal;font-weight:400;font-display:swap;
+    src:url(../lettertypen/barlow-400-latin-ext.woff2) format('woff2');
+    unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
+  @font-face{font-family:'Barlow';font-style:normal;font-weight:600;font-display:swap;
+    src:url(../lettertypen/barlow-600-latin.woff2) format('woff2');
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'Barlow';font-style:normal;font-weight:600;font-display:swap;
+    src:url(../lettertypen/barlow-600-latin-ext.woff2) format('woff2');
+    unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
+  @font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:700;font-display:swap;
+    src:url(../lettertypen/barlow-condensed-700-latin.woff2) format('woff2');
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:700;font-display:swap;
+    src:url(../lettertypen/barlow-condensed-700-latin-ext.woff2) format('woff2');
+    unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
+  @font-face{font-family:'Space Mono';font-style:normal;font-weight:400;font-display:swap;
+    src:url(../lettertypen/space-mono-400-latin.woff2) format('woff2');
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'Space Mono';font-style:normal;font-weight:400;font-display:swap;
+    src:url(../lettertypen/space-mono-400-latin-ext.woff2) format('woff2');
+    unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
+  :root{
+    --bg:#f2f1ee;--paneel:#fff;--paneel2:#e9e8e4;--lijn:#dcdad5;
+    --ink:#14151a;--ink2:#5b5f67;--ink3:#696e75;--accent:#d93d24;--accent-ink:#fff;
+    --accent-tekst:#bf3219;--groen:#117c3e;
+    --nacht:#0b0b0c;--nacht2:#15161a;--nacht-lijn:#2b2e35;--nacht-ink:#f2f3f5;--nacht-ink2:#aab0b8;
+    --sans:Barlow,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+    --cond:"Barlow Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+    --mono:"Space Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#0b0b0c;--paneel:#15161a;--paneel2:#1d1f24;--lijn:#2b2e35;
+    --ink:#f2f3f5;--ink2:#a4aab2;--ink3:#8a9099;--accent:#ee4d33;--accent-ink:#0b0b0c;
+    --accent-tekst:#f26a52;--groen:#34b264;
+  }}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.55}
+  a{color:inherit}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+  .binnen{max-width:1120px;margin:0 auto;padding:0 20px}
+  .label{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+  .alleenlezer{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+  /* ---- kop ---- */
+  .kop{position:sticky;top:0;z-index:20;background:rgba(11,11,12,.92);backdrop-filter:saturate(1.4) blur(10px);
+    -webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--nacht-lijn);color:var(--nacht-ink)}
+  .kop .binnen{display:flex;align-items:center;gap:18px;min-height:64px}
+  .merk{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto;min-height:44px}
+  .merk .blok{width:22px;height:22px;border-radius:4px;background:var(--accent);flex:none}
+  .merk b{font-family:var(--cond);font-size:20px;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+  .kopnav{display:none;gap:22px}
+  .kopnav a{text-decoration:none;font-size:15px;font-weight:600;color:var(--nacht-ink2);padding:10px 0}
+  .kopnav a:hover{color:var(--nacht-ink)}
+  .taalmenu{position:relative}
+  .taalmenu summary{list-style:none;cursor:pointer;font-family:var(--mono);font-size:13px;letter-spacing:.1em;
+    border:1px solid var(--nacht-lijn);border-radius:8px;padding:0 10px;min-height:44px;min-width:52px;
+    display:flex;align-items:center;justify-content:center;color:var(--nacht-ink2)}
+  .taalmenu summary::-webkit-details-marker{display:none}
+  .taalmenu[open] summary,.taalmenu summary:hover{color:var(--nacht-ink);border-color:var(--nacht-ink2)}
+  .taalmenu ul{position:absolute;right:0;top:calc(100% + 8px);margin:0;padding:6px;list-style:none;min-width:170px;
+    background:var(--nacht2);border:1px solid var(--nacht-lijn);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.4)}
+  .taalmenu a{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:8px;
+    text-decoration:none;font-size:15px;color:var(--nacht-ink)}
+  .taalmenu a:hover{background:#1d1f24}
+  .taalmenu a[aria-current="page"]{color:var(--accent);font-weight:600}
+  .taalmenu a span{font-family:var(--mono);font-size:12px;color:var(--nacht-ink2)}
+  .knop{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 20px;
+    border-radius:10px;border:0;font:inherit;font-size:16px;font-weight:600;text-decoration:none;cursor:pointer;
+    background:var(--accent);color:var(--accent-ink);box-shadow:0 10px 26px -12px var(--accent);transition:filter .15s,transform .15s}
+  .knop:hover{filter:brightness(1.08)}
+  .knop:active{transform:scale(.985)}
+  .knop.klein{min-height:44px;padding:0 16px;font-size:15px}
+  .kop .knop{display:none}
+
+  /* ---- hero: altijd donker, zoals een nachtrace ---- */
+  .hero{position:relative;overflow:hidden;isolation:isolate;background:var(--nacht);color:var(--nacht-ink);
+    padding:56px 0 64px}
+  .hero::before{content:"";position:absolute;inset:0;z-index:-1;
+    background:radial-gradient(70% 60% at 12% 8%,rgba(238,77,51,.22),transparent 60%),
+      radial-gradient(50% 50% at 95% 100%,rgba(238,77,51,.10),transparent 60%)}
+  .hero::after{content:"P1";position:absolute;z-index:-1;right:-2%;top:-6%;font-family:var(--cond);font-weight:700;
+    font-size:min(46vw,440px);line-height:1;color:#fff;opacity:.035;pointer-events:none}
+  .hero .binnen{display:grid;gap:44px}
+  .boven{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;letter-spacing:.16em;
+    text-transform:uppercase;color:#7ee0a3;border:1px solid rgba(52,178,100,.45);background:rgba(52,178,100,.10);
+    border-radius:999px;padding:7px 14px}
+  .boven::before{content:"";width:8px;height:8px;border-radius:50%;background:#34b264}
+  .hero h1{font-family:var(--cond);font-weight:700;text-transform:uppercase;font-size:clamp(46px,9vw,84px);
+    line-height:.92;letter-spacing:.005em;margin:22px 0 20px}
+  .hero h1 span{display:block}
+  .hero h1 span+span{color:var(--accent)}
+  .hero .sub{font-size:19px;color:var(--nacht-ink2);max-width:36em;margin:0 0 28px}
+  .actie{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+  .codeveld{display:flex;flex-direction:column;gap:6px}
+  .codeveld label{font-size:13px;color:var(--nacht-ink2)}
+  .codeveld div{display:flex;border:1px solid var(--nacht-lijn);border-radius:10px;overflow:hidden;background:var(--nacht2)}
+  .codeveld input{width:128px;min-height:46px;border:0;background:none;color:var(--nacht-ink);padding:0 14px;
+    font-family:var(--mono);font-size:17px;letter-spacing:.18em;text-transform:uppercase}
+  .codeveld input::placeholder{color:#6f757e}
+  .codeveld input:focus{outline:none}
+  .codeveld div:focus-within{border-color:var(--nacht-ink2)}
+  .codeveld button{border:0;border-left:1px solid var(--nacht-lijn);background:none;color:var(--nacht-ink);
+    font:inherit;font-weight:600;font-size:15px;padding:0 16px;cursor:pointer;min-height:46px}
+  .codeveld button:hover{background:#1d1f24}
+  .vertrouwen{display:flex;flex-wrap:wrap;gap:8px 20px;margin:26px 0 0;padding:0;list-style:none;
+    font-size:14px;color:var(--nacht-ink2)}
+  .vertrouwen li{display:flex;align-items:center;gap:8px}
+  .vertrouwen li::before{content:"✓";color:#34b264;font-weight:700}
+  .telefoon{justify-self:center;position:relative;width:min(300px,78vw)}
+  .telefoon .scherm{border-radius:34px;border:8px solid #1d1f24;background:#1d1f24;overflow:hidden;
+    box-shadow:0 40px 80px -30px rgba(0,0,0,.8),0 0 0 1px #2b2e35;transform:rotate(-2deg)}
+  .telefoon img{display:block;width:100%;height:auto}
+  .telefoon .achter{position:absolute;width:82%;right:-26%;top:12%;z-index:-1;transform:rotate(6deg);opacity:.55}
+
+  /* ---- secties ---- */
+  section[id]{scroll-margin-top:76px}
+  section.blok{padding:72px 0}
+  section.blok+section.blok{border-top:1px solid var(--lijn)}
+  h2{font-family:var(--cond);font-weight:700;text-transform:uppercase;font-size:clamp(32px,5vw,46px);
+    line-height:1;margin:10px 0 18px;letter-spacing:.01em}
+  h3{font-size:18px;margin:0 0 6px;line-height:1.3}
+  .inleiding{font-size:18px;color:var(--ink2);max-width:40em;margin:0 0 30px}
+  .antwoord{padding:56px 0}
+  .antwoord .kader{background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:28px;
+    display:grid;gap:10px;max-width:880px}
+  .antwoord p{margin:0;font-size:18px;color:var(--ink2)}
+  .antwoord h2{font-size:clamp(28px,4vw,36px);margin:0 0 6px}
+
+  .stappen{list-style:none;margin:0;padding:0;display:grid;gap:14px;counter-reset:stap}
+  .stappen li{background:var(--paneel);border:1px solid var(--lijn);border-radius:16px;padding:22px 22px 22px 76px;
+    position:relative;counter-increment:stap}
+  .stappen li::before{content:counter(stap,decimal-leading-zero);position:absolute;left:22px;top:18px;
+    font-family:var(--cond);font-weight:700;font-size:36px;line-height:1;color:var(--accent)}
+  .stappen p{margin:0;color:var(--ink2);font-size:16px}
+
+  .tabel{width:100%;border-collapse:separate;border-spacing:0;background:var(--paneel);border:1px solid var(--lijn);
+    border-radius:16px;overflow:hidden;font-size:16px}
+  .tabel th,.tabel td{padding:14px 18px;text-align:left;border-top:1px solid var(--lijn)}
+  .tabel thead th{border-top:0;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink2);font-weight:400;background:var(--paneel2)}
+  .tabel td:last-child,.tabel th:last-child{text-align:right;width:36%}
+  .tabel td:last-child{font-family:var(--cond);font-weight:700;font-size:26px;line-height:1}
+  .tabel tr.top td:last-child{color:var(--accent-tekst)}
+  .tabellen{display:grid;gap:18px;margin-top:18px}
+  .tabellen .tabel td:last-child{font-size:22px}
+  .voorbeeld{margin:18px 0 0;color:var(--ink2);font-size:16px}
+  .presets{margin:22px 0 0;color:var(--ink2);font-size:16px;border-left:3px solid var(--accent);padding-left:14px}
+
+  .functies{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+  .functies li{background:var(--paneel);border:1px solid var(--lijn);border-radius:16px;padding:22px}
+  .functies li::before{content:"";display:block;width:26px;height:4px;border-radius:2px;background:var(--accent);margin-bottom:14px}
+  .functies p{margin:0;color:var(--ink2);font-size:16px}
+
+  .beelden{display:grid;gap:22px}
+  .beelden figure{margin:0;display:grid;gap:12px;justify-items:center;text-align:center}
+  .beelden .kader{width:min(260px,70vw);border-radius:26px;border:6px solid var(--paneel2);overflow:hidden;
+    box-shadow:0 24px 48px -28px rgba(0,0,0,.45)}
+  .beelden img{display:block;width:100%;height:auto}
+  .beelden figcaption{color:var(--ink2);font-size:15px;max-width:22em}
+
+  .duo{display:grid;gap:18px}
+  .duo article{background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:26px}
+  .duo h2{font-size:clamp(26px,3.4vw,32px);margin:0 0 10px}
+  .duo p{margin:0;color:var(--ink2)}
+  .duo a{color:var(--accent-tekst)}
+
+  .faq{display:grid;gap:10px;max-width:880px}
+  .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px}
+  .faq summary{cursor:pointer;list-style:none;padding:18px 54px 18px 20px;position:relative}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";position:absolute;right:20px;top:50%;transform:translateY(-50%);
+    font-family:var(--mono);font-size:20px;color:var(--ink3);transition:transform .2s}
+  .faq details[open] summary::after{content:"−"}
+  .faq h3{margin:0;font-size:17px}
+  .faq p{margin:0;padding:0 20px 20px;color:var(--ink2);font-size:16px}
+
+  .slot{background:var(--nacht);color:var(--nacht-ink);text-align:center;padding:76px 0;position:relative;overflow:hidden;isolation:isolate}
+  .slot::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(60% 80% at 50% 0%,rgba(238,77,51,.2),transparent 70%)}
+  .slot p{color:var(--nacht-ink2);font-size:18px;margin:0 auto 26px;max-width:32em}
+
+  .voet{background:var(--nacht);color:var(--nacht-ink2);border-top:1px solid var(--nacht-lijn);padding:40px 0 48px;font-size:14px}
+  .voet .binnen{display:grid;gap:24px}
+  .voet ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 18px}
+  .voet a{color:var(--nacht-ink);text-decoration:none;display:inline-block;padding:6px 0}
+  .voet a:hover{text-decoration:underline}
+  .voet .label{color:#8a9099;display:block;margin-bottom:6px}
+  .voet small{display:block;max-width:60em;line-height:1.6;color:#9aa0a8}
+
+  .aanbod{position:fixed;left:12px;right:12px;bottom:12px;z-index:30;display:flex;align-items:center;gap:12px;
+    background:var(--nacht2);color:var(--nacht-ink);border:1px solid var(--nacht-lijn);border-radius:14px;
+    padding:10px 10px 10px 16px;box-shadow:0 16px 40px rgba(0,0,0,.45);font-size:15px}
+  .aanbod span{flex:1}
+  .aanbod a{color:var(--accent-ink);background:var(--accent);border-radius:8px;padding:0 14px;min-height:44px;display:flex;
+    align-items:center;text-decoration:none;font-weight:600;white-space:nowrap}
+  .aanbod button{background:none;border:0;color:var(--nacht-ink2);font-size:20px;min-width:44px;min-height:44px;cursor:pointer}
+
+  @media (min-width:720px){
+    .kopnav{display:flex}
+    .kop .knop{display:inline-flex}
+    .stappen{grid-template-columns:repeat(2,1fr)}
+    .functies{grid-template-columns:repeat(2,1fr)}
+    .beelden{grid-template-columns:repeat(3,1fr)}
+    .duo{grid-template-columns:1fr 1fr}
+    .tabellen{grid-template-columns:1fr 1fr}
+    .aanbod{left:auto;right:20px;bottom:20px;max-width:460px}
+  }
+  @media (min-width:960px){
+    .hero{padding:84px 0 92px}
+    .hero .binnen{grid-template-columns:1.15fr .85fr;align-items:center}
+    .stappen{grid-template-columns:repeat(4,1fr)}
+    .stappen li{padding:74px 22px 22px}
+    .functies{grid-template-columns:repeat(3,1fr)}
+  }
+</style>
+</head>
+<body>
+<header class="kop">
+  <div class="binnen">
+    <a class="merk" href="../fr/" aria-label="Predict the Race"><span class="blok"></span><b>Predict the Race</b></a>
+    <nav class="kopnav" aria-label="Comment ça marche">
+      <a href="#hoe">Comment ça marche</a><a href="#punten">Points</a><a href="#faq">Questions</a>
+    </nav>
+    <details class="taalmenu">
+      <summary aria-label="Langue">FR</summary>
+      <ul><li><a href="../" hreflang="nl" lang="nl" data-taal="nl">Nederlands <span>NL</span></a></li><li><a href="../en/" hreflang="en" lang="en" data-taal="en">English <span>EN</span></a></li><li><a href="../de/" hreflang="de" lang="de" data-taal="de">Deutsch <span>DE</span></a></li><li><a href="../fr/" hreflang="fr" lang="fr" data-taal="fr" aria-current="page">Français <span>FR</span></a></li><li><a href="../es/" hreflang="es" lang="es" data-taal="es">Español <span>ES</span></a></li><li><a href="../it/" hreflang="it" lang="it" data-taal="it">Italiano <span>IT</span></a></li><li><a href="../pt/" hreflang="pt" lang="pt" data-taal="pt">Português <span>PT</span></a></li></ul>
+    </details>
+    <a class="knop klein" href="../app/">Ouvrir l'appli</a>
+  </div>
+</header>
+<main>
+<section class="hero">
+  <div class="binnen">
+    <div>
+      <span class="boven">Jeu de pronostics F1 gratuit</span>
+      <h1><span>Pronostiquez la grille.</span><span>Battez vos amis.</span></h1>
+      <p class="sub">Le jeu de pronostics F1 gratuit pour vous et vos amis. Pronostiquez le top 10 à chaque Grand Prix, les résultats arrivent tout seuls, et le classement se partage en un geste dans votre groupe.</p>
+      <div class="actie">
+        <a class="knop" href="../app/">Créer une ligue <span aria-hidden="true">→</span></a>
+        <form class="codeveld" action="../app/" method="get">
+          <label for="code">Vous avez un code ?</label>
+          <div>
+            <input id="code" name="code" required minlength="4" maxlength="12" pattern="[A-Za-z0-9]{4,12}"
+              autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="ABC123">
+            <button type="submit">Rejoindre</button>
+          </div>
+        </form>
+      </div>
+      <ul class="vertrouwen"><li>Gratuit</li><li>Sans mot de passe</li><li>Sans publicité</li><li>Sur tous les téléphones</li></ul>
+    </div>
+    <div class="telefoon">
+      <div class="achter scherm" aria-hidden="true"><img src="../site/beeld/stand-en-donker.jpg" alt="" width="390" height="844" loading="lazy" decoding="async"></div>
+      <div class="scherm"><img src="../site/beeld/races-en-donker.jpg" alt="L'aperçu des courses de Predict the Race avec la prochaine course et un compte à rebours" width="390" height="844" fetchpriority="high" decoding="async"></div>
+    </div>
+  </div>
+</section>
+
+<section class="antwoord" id="wat">
+  <div class="binnen">
+    <div class="kader">
+      <h2>Qu'est-ce que Predict the Race ?</h2>
+      <p>Predict the Race est une application web gratuite pour jouer aux pronostics de Formule 1 entre amis, collègues ou en famille. À chaque week-end de course, chacun pronostique le top 10 des qualifications et de la course, plus quelques questions bonus comme le vainqueur et la pole position. Après chaque séance, les résultats officiels arrivent automatiquement et l'application calcule les points et le classement. On rejoint une ligue avec un code, sans mot de passe et sans payer.</p>
+    </div>
+  </div>
+</section>
+
+<section class="blok" id="hoe">
+  <div class="binnen">
+    <h2>Comment ça marche</h2>
+    <ol class="stappen"><li><h3>Créez une ligue</h3><p>Donnez un nom à votre ligue, choisissez les questions qui comptent et partagez le code ou le lien d'invitation dans votre groupe.</p></li><li><h3>Pronostiquez le top 10</h3><p>Avant les qualifications et avant la course, placez votre top 10 sur la grille. Les week-ends sprint, le sprint s'ajoute.</p></li><li><h3>Les résultats arrivent tout seuls</h3><p>Après chaque séance, l'application récupère le résultat officiel. Personne n'a besoin de noter ou de saisir quoi que ce soit.</p></li><li><h3>Gagnez le week-end</h3><p>Voyez tout de suite vos points, le classement, le vainqueur du week-end et votre bilan face à chaque ami.</p></li></ol>
+  </div>
+</section>
+
+<section class="blok" id="punten">
+  <div class="binnen">
+    <h2>Comment les points sont attribués</h2>
+    <p class="inleiding">Pour chaque pilote de votre top 10, vous marquez des points selon votre proximité avec sa vraie position. Un pronostic presque juste rapporte donc aussi.</p>
+    <table class="tabel">
+      <thead><tr><th scope="col">Votre pronostic</th><th scope="col">Points par pilote</th></tr></thead>
+      <tbody><tr class="top"><td>Pile à la bonne place</td><td>5</td></tr><tr><td>Une place d'écart</td><td>3</td></tr><tr><td>Deux places d'écart</td><td>1</td></tr><tr><td>Trois places d'écart ou plus</td><td>0</td></tr></tbody>
+    </table>
+    <p class="voorbeeld">Exemple : vous placez un pilote en P1 et il termine deuxième. C'est une place d'écart, donc 3 points. Un top 10 parfait rapporte 50 points par séance.</p>
+    <div class="tabellen">
+      <table class="tabel">
+        <caption class="alleenlezer">Questions bonus à chaque week-end</caption>
+        <thead><tr><th scope="col">Questions bonus à chaque week-end</th><th scope="col">Points</th></tr></thead>
+        <tbody><tr><td>Vainqueur de la course</td><td>25</td></tr><tr><td>Pole position</td><td>10</td></tr><tr><td>Meilleur tour</td><td>10</td></tr><tr><td>Arrêt au stand le plus rapide</td><td>10</td></tr><tr><td>Duels entre coéquipiers</td><td>15</td></tr><tr><td>Nombre de voitures de sécurité</td><td>12</td></tr><tr><td>Drapeau rouge, oui ou non</td><td>20</td></tr><tr><td>Top 10 du sprint (week-ends sprint)</td><td>25</td></tr></tbody>
+      </table>
+      <table class="tabel">
+        <caption class="alleenlezer">Questions de la saison, une fois par an</caption>
+        <thead><tr><th scope="col">Questions de la saison, une fois par an</th><th scope="col">Points</th></tr></thead>
+        <tbody><tr><td>Champion du monde</td><td>50</td></tr><tr><td>Champion des constructeurs</td><td>40</td></tr><tr><td>Nombre de vainqueurs différents</td><td>30</td></tr><tr><td>Quelle écurie termine quatrième</td><td>30</td></tr></tbody>
+      </table>
+    </div>
+    <p class="presets">L'administrateur de la ligue choisit ce qui compte : Simple (seulement les deux top 10, 100 points par week-end), Classique (plus vainqueur, pole et meilleur tour, 145) ou Avancé (tout, 202 par week-end plus le sprint et la saison).</p>
+  </div>
+</section>
+
+<section class="blok" id="functies">
+  <div class="binnen">
+    <h2>Tout pour une ligue qui vit toute la saison</h2>
+    <ul class="functies"><li><h3>Résultats automatiques</h3><p>Le classement officiel arrive via OpenF1, et les pénalités d'après-course sont revérifiées.</p></li><li><h3>Jokers</h3><p>Jouez un joker sur un week-end et vos points comptent double. Cinq par saison par défaut, réglable par l'administrateur.</p></li><li><h3>Face-à-face</h3><p>À côté du classement, vous voyez pour chaque ami qui a gagné le plus souvent. C'est souvent de ça qu'on parle dans le groupe.</p></li><li><h3>Vainqueur du week-end</h3><p>Celui qui marque le plus de points sur un week-end gagne ce week-end, même s'il est derrière au championnat.</p></li><li><h3>Partage dans le groupe</h3><p>Un geste prépare le résultat du week-end en texte pour WhatsApp.</p></li><li><h3>Échéances dans votre agenda</h3><p>Abonnez-vous au calendrier et chaque échéance apparaît dans votre agenda, avec votre propre rappel.</p></li><li><h3>Oublié de pronostiquer ?</h3><p>Avec le remplissage automatique, celui qui n'envoie rien reçoit l'ordre du championnat comme top 10 au lieu de zéro.</p></li><li><h3>Questions de la saison</h3><p>Champion du monde, titre constructeurs et plus : un pronostic avant la première course, noté en fin d'année.</p></li><li><h3>Privée ou publique</h3><p>Gardez votre ligue privée avec un code, ou rendez-la visible pour que tout le monde puisse jouer.</p></li></ul>
+  </div>
+</section>
+
+<section class="blok" id="beelden">
+  <div class="binnen">
+    <h2>À quoi ça ressemble</h2>
+    <div class="beelden">
+      <figure>
+        <div class="kader"><picture>
+      <source srcset="../site/beeld/races-en-donker.jpg" media="(prefers-color-scheme: dark)">
+      <img src="../site/beeld/races-en-licht.jpg" alt="L'aperçu des courses de Predict the Race avec la prochaine course et un compte à rebours" width="390" height="844" loading="lazy" decoding="async">
+    </picture></div>
+        <figcaption>Le week-end en un coup d'œil : la prochaine course et le temps qu'il vous reste.</figcaption>
+      </figure>
+      <figure>
+        <div class="kader"><picture>
+      <source srcset="../site/beeld/uitslag-en-donker.jpg" media="(prefers-color-scheme: dark)">
+      <img src="../site/beeld/uitslag-en-licht.jpg" alt="Le résultat d'une course avec les points par pilote" width="390" height="844" loading="lazy" decoding="async">
+    </picture></div>
+        <figcaption>Après la course, vous voyez ce que votre pronostic a rapporté pour chaque pilote.</figcaption>
+      </figure>
+      <figure>
+        <div class="kader"><picture>
+      <source srcset="../site/beeld/stand-en-donker.jpg" media="(prefers-color-scheme: dark)">
+      <img src="../site/beeld/stand-en-licht.jpg" alt="Le classement d'une ligue avec le podium et le tableau" width="390" height="844" loading="lazy" decoding="async">
+    </picture></div>
+        <figcaption>Le classement, avec votre ligne mise en avant et les face-à-face en dessous.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="blok">
+  <div class="binnen duo">
+    <article><h2>Sans publicité, sans traceurs</h2><p>Predict the Race n'a ni publicité, ni outil d'analyse, ni traceur, et ne revend rien. Vous jouez avec un code et un nom ; une adresse e-mail n'est utile que si vous voulez emporter votre compte sur un autre appareil. Cette page ne charge rien depuis d'autres sites.</p></article>
+    <article><h2>Qui est derrière ?</h2><p>Predict the Race est créé par Danny de Visser et a commencé comme ligue pour un groupe d'amis. Il n'y a ni investisseurs ni annonceurs, et pas d'argent en jeu : pas de mise, pas de cagnotte, pas de prix. On joue pour la gloire. Le code source est public sur GitHub. <a href="https://github.com/DannydeVis/F1-Poule" rel="noopener">github.com/DannydeVis/F1-Poule</a></p></article>
+  </div>
+</section>
+
+<section class="blok" id="faq">
+  <div class="binnen">
+    <h2>Questions fréquentes</h2>
+    <div class="faq">
+      <details><summary><h3>Predict the Race est-il gratuit ?</h3></summary><p>Oui. Pas d'abonnement, pas de paiement, pas de publicité. Toutes les fonctions sont accessibles à tous.</p></details>
+      <details><summary><h3>Comment rejoindre une ligue ?</h3></summary><p>Ouvrez le lien d'invitation reçu de l'administrateur, ou saisissez le code de six caractères. Choisissez ensuite votre nom, ou ajoutez-vous comme nouveau joueur.</p></details>
+      <details><summary><h3>Faut-il créer un compte ?</h3></summary><p>Non, et aucun mot de passe n'est nécessaire. Pour jouer sur plusieurs appareils, vous pourrez vous connecter plus tard avec Google ou avec un lien reçu par e-mail.</p></details>
+      <details><summary><h3>Comment sont calculés les points ?</h3></summary><p>Pour chaque pilote de votre top 10, vous recevez 5 points s'il termine exactement à cette place, 3 points pour une place d'écart et 1 point pour deux places d'écart. Les questions bonus comme le vainqueur et la pole position rapportent des points en plus.</p></details>
+      <details><summary><h3>D'où viennent les résultats ?</h3></summary><p>Le calendrier, la liste des engagés et les résultats viennent automatiquement d'OpenF1, une source publique de données de Formule 1. Après chaque qualification et course, les points sont calculés tout seuls.</p></details>
+      <details><summary><h3>Jusqu'à quand puis-je pronostiquer ?</h3></summary><p>Jusqu'au début de la séance. Le top 10 des qualifications se ferme au départ des qualifications, celui de la course au départ de la course.</p></details>
+      <details><summary><h3>Et si j'oublie une course ?</h3></summary><p>Vous ne marquez rien ce week-end-là, sauf si l'administrateur a activé le remplissage automatique : vous recevez alors l'ordre du championnat comme top 10. Il existe aussi un classement sans vos pires week-ends, pour qu'une course manquée ne gâche pas votre saison.</p></details>
+      <details><summary><h3>Qu'est-ce qu'un joker ?</h3></summary><p>Un joker double tous vos points d'un week-end de course. Vous le jouez avant le début du week-end ; ensuite il est verrouillé. L'administrateur décide si les jokers sont utilisés et combien chacun en reçoit.</p></details>
+      <details><summary><h3>Est-ce que ça marche sur mon téléphone ?</h3></summary><p>Oui, sur iPhone, Android et ordinateur, directement dans le navigateur. Ajoutez-la à votre écran d'accueil et elle fonctionne comme une appli classique.</p></details>
+      <details><summary><h3>En quelles langues est l'appli ?</h3></summary><p>L'appli existe en anglais et en néerlandais et choisit automatiquement la langue de votre appareil, donc l'anglais sur un appareil en français. Cette page existe aussi en allemand, espagnol, italien et portugais.</p></details>
+      <details><summary><h3>Joue-t-on de l'argent ?</h3></summary><p>Non. Il n'y a pas d'argent en jeu dans Predict the Race : pas de mise, pas de cagnotte, pas de prix. On joue pour la gloire.</p></details>
+      <details><summary><h3>Est-ce une application officielle de la Formule 1 ?</h3></summary><p>Non. Predict the Race est un projet de fan indépendant, sans lien avec la Formule 1, la FIA ou une écurie.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="slot">
+  <div class="binnen">
+    <h2>Prêt pour la prochaine course ?</h2>
+    <p>Créez votre ligue en une minute et partagez le code avec vos amis.</p>
+    <a class="knop" href="../app/">Créer une ligue <span aria-hidden="true">→</span></a>
+  </div>
+</section>
+</main>
+<footer class="voet">
+  <div class="binnen">
+    <div><span class="label">Langue</span><ul><li><a href="../" hreflang="nl" lang="nl" data-taal="nl">Nederlands</a></li><li><a href="../en/" hreflang="en" lang="en" data-taal="en">English</a></li><li><a href="../de/" hreflang="de" lang="de" data-taal="de">Deutsch</a></li><li><a href="../fr/" hreflang="fr" lang="fr" data-taal="fr">Français</a></li><li><a href="../es/" hreflang="es" lang="es" data-taal="es">Español</a></li><li><a href="../it/" hreflang="it" lang="it" data-taal="it">Italiano</a></li><li><a href="../pt/" hreflang="pt" lang="pt" data-taal="pt">Português</a></li></ul></div>
+    <ul>
+      <li><a href="../app/">Ouvrir l'appli</a></li>
+      <li><a href="https://github.com/DannydeVis/F1-Poule" rel="noopener">Code source sur GitHub</a></li>
+      <li><a href="https://openf1.org" rel="noopener">Résultats via OpenF1</a></li>
+    </ul>
+    <small>Predict the Race est un projet de fan indépendant, sans lien avec la Formule 1, la FIA ou une écurie de F1. F1 et Formula 1 sont des marques de Formula One Licensing B.V.</small>
+  </div>
+</footer>
+<script>(function(){try{
+  var hier="fr",aanbod={"nl":{"p":"../","t":"Deze pagina bestaat ook in het Nederlands.","k":"Lees in het Nederlands"},"en":{"p":"../en/","t":"This page is also available in English.","k":"Read in English"},"de":{"p":"../de/","t":"Diese Seite gibt es auch auf Deutsch.","k":"Auf Deutsch lesen"},"fr":{"p":"../fr/","t":"Cette page existe aussi en français.","k":"Lire en français"},"es":{"p":"../es/","t":"Esta página también está en español.","k":"Leer en español"},"it":{"p":"../it/","t":"Questa pagina è disponibile anche in italiano.","k":"Leggi in italiano"},"pt":{"p":"../pt/","t":"Esta página também está em português.","k":"Ler em português"}},sleutel='site:taal';
+  document.querySelectorAll('[data-taal]').forEach(function(a){a.addEventListener('click',function(){
+    try{localStorage.setItem(sleutel,a.getAttribute('data-taal'))}catch(e){}})});
+  var gekozen=null;try{gekozen=localStorage.getItem(sleutel)}catch(e){}
+  if(gekozen)return;
+  var voorkeur=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||''])
+    .map(function(l){return String(l).slice(0,2).toLowerCase()});
+  var doel=null;for(var i=0;i<voorkeur.length;i++){if(aanbod[voorkeur[i]]){doel=voorkeur[i];break}}
+  if(!doel||doel===hier)return;
+  var balk=document.createElement('div');balk.className='aanbod';balk.setAttribute('role','region');
+  balk.setAttribute('aria-label',aanbod[doel].t);balk.lang=doel;
+  var s=document.createElement('span');s.textContent=aanbod[doel].t;
+  var a=document.createElement('a');a.href=aanbod[doel].p;a.hreflang=doel;a.textContent=aanbod[doel].k;
+  a.addEventListener('click',function(){try{localStorage.setItem(sleutel,doel)}catch(e){}});
+  var x=document.createElement('button');x.type='button';x.setAttribute('aria-label',"Fermer");x.textContent='×';
+  x.addEventListener('click',function(){try{localStorage.setItem(sleutel,hier)}catch(e){}balk.remove()});
+  balk.append(s,a,x);document.body.appendChild(balk);
+}catch(e){}})();</script>
+</body>
+</html>
