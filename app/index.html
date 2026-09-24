@@ -26,6 +26,25 @@
      hoofdmap is de pagina om gevonden te worden, en een uitnodigingslink met
      ?code= erin hoort al helemaal niet op straat. -->
 <meta name="robots" content="noindex">
+<!-- Wat een berichtenapp laat zien als iemand een link naar de app deelt. Dat
+     is meestal een uitnodiging (app/?code=...), en zonder deze regels werd dat
+     een klein pictogram met een losse zin. Nu hetzelfde grote plaatje als de
+     voorpagina. Met opzet zonder og:url: dan zou het voorbeeld naar app/
+     wijzen zonder de ?code= erachter. Het plaatje staat er met het volle
+     adres, want een relatief adres pakt niet elke app op; het is ook de enige
+     plek waar de app zijn domein noemt. test/domein.test.mjs houdt dit gelijk
+     aan BASIS en aan de Nederlandse teksten van de voorpagina. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Predict the Race">
+<meta property="og:title" content="Predict the Race – voorspel de grid, versla je vrienden">
+<meta property="og:description" content="Voorspel per Formule 1-race de top 10 van kwalificatie en race en speel tegen je vrienden in je eigen poule. Uitslagen komen vanzelf binnen. Gratis.">
+<meta property="og:image" content="https://predicttherace.com/site/og/og-nl.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Predict the Race – voorspel de grid, versla je vrienden">
+<meta property="og:locale" content="nl_NL">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   /* ==========================================================
      Lettertypen, uit deze repo en niet bij Google vandaan
@@ -952,6 +971,10 @@
     background:var(--paneel);border:1px solid var(--accent);border-radius:12px;
     padding:12px 14px;color:var(--ink2);font-size:13px;
     box-shadow:0 8px 28px rgba(0,0,0,.35);animation:schuif .25s var(--soepel) both}
+  /* Wat er misging, klein eronder: op een telefoon is er geen console, en zo
+     staat de oorzaak op de schermafdruk die iemand ons stuurt. */
+  .stillefout small{display:block;margin-top:4px;font-family:var(--mono);font-size:11px;
+    color:var(--ink2);overflow-wrap:anywhere}
   .stillefout button{background:none;border:0;padding:0;font:inherit;flex:none;
     color:var(--accent);text-decoration:underline;cursor:pointer}
   @media (min-width:960px){
@@ -4482,14 +4505,21 @@ new MutationObserver(() => {
 // belofte die niemand opvangt -- mag een werkend scherm niet wegvagen. Die
 // krijgt een balkje: genoeg om te zien dat er iets niet klopte, niet genoeg
 // om je uit de app te gooien.
-function meldStilleFout() {
+function meldStilleFout(e) {
   if (kapot) return;
+  const fout = e?.reason ?? e?.error ?? null;
+  // Een haperende verbinding terwijl supabase-js op de achtergrond je inlog
+  // ververst, meestal net nadat de telefoon het tabblad weer wakker maakt.
+  // Het probeert dat zelf opnieuw, en aan het scherm verandert er niets; een
+  // balkje dat zegt dat het scherm misschien niet klopt is dan alleen schrik.
+  if (fout?.name === 'AuthRetryableFetchError') return;
   if (document.querySelector('#stillefout')) return;
+  const wat = String(fout?.message ?? e?.message ?? fout ?? '').trim().slice(0, 160);
   const balk = document.createElement('div');
   balk.id = 'stillefout';
   balk.className = 'stillefout';
   balk.innerHTML = `<span>${T('Er ging iets mis op de achtergrond. '
-    + 'Het scherm klopt misschien niet meer.')}</span>
+    + 'Het scherm klopt misschien niet meer.')}${wat ? `<small>${esc(wat)}</small>` : ''}</span>
     <button type="button" id="stillefoutweg">${T('Sluiten')}</button>`;
   document.body.appendChild(balk);
   balk.querySelector('#stillefoutweg').onclick = () => balk.remove();

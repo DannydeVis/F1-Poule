@@ -23,7 +23,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { maakControle, wortel } from './hulp.mjs';
-import { BASIS } from '../site/teksten.mjs';
+import { BASIS, teksten } from '../site/teksten.mjs';
 
 const { check, afronden } = maakControle('het domein');
 const lees = (...pad) => readFileSync(join(wortel, ...pad), 'utf8');
@@ -73,11 +73,28 @@ check('er zijn bestanden om na te lopen', geserveerd.includes('app/index.html')
   const oud = geserveerd.filter((f) => /dannydevis\.github\.io/i.test(lees(f)));
   check('geen enkel geserveerd bestand noemt nog dannydevis.github.io', oud.length === 0, oud.join(', '));
 }
+// Op één plek na: de deeltags in de kop van de app (og:… en twitter:…). Een
+// voorbeeld in WhatsApp of iMessage heeft een volledig adres nodig voor het
+// plaatje. De rest van de app moet het blijven uitrekenen.
+const DEELTAG = /<meta (?:property="og:[^"]+"|name="twitter:[^"]+") content="[^"]*">\n?/g;
 {
   const vast = ['app/index.html', 'sw.js', 'manifest.webmanifest']
-    .filter((f) => lees(f).includes(basis.host));
-  check('de app, de service worker en het manifest noemen geen vast domein', vast.length === 0,
-    vast.join(', '));
+    .filter((f) => lees(f).replace(DEELTAG, '').includes(basis.host));
+  check('de app, de service worker en het manifest noemen geen vast domein (buiten de deeltags)',
+    vast.length === 0, vast.join(', '));
+}
+{
+  // Een link naar de app is meestal een uitnodiging. Die hoort in een
+  // berichtenapp hetzelfde grote plaatje te krijgen als de voorpagina.
+  const app = lees('app/index.html');
+  const og = (k) => app.match(new RegExp(`<meta property="og:${k}" content="([^"]*)">`))?.[1];
+  check('de app heeft het deelplaatje van de voorpagina, met het volle adres',
+    og('image') === `${BASIS}/site/og/og-nl.jpg` && og('image:width') === '1200' && og('image:height') === '630'
+    && app.includes('<meta name="twitter:card" content="summary_large_image">'), og('image') ?? '(geen)');
+  check('en dezelfde titel en omschrijving als de Nederlandse voorpagina',
+    og('title') === teksten.nl.ogTitel && og('description') === teksten.nl.omschrijving,
+    `${og('title')} / ${og('description')}`);
+  check('maar geen og:url, anders wijst het voorbeeld naar app/ zonder ?code=', og('url') === undefined);
 }
 
 process.exit(afronden() ? 0 : 1);

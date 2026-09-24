@@ -148,11 +148,24 @@ check('maar wie je bent weet hij nog wel',
 // Met opzet vóór het wissen hieronder, want daarna is er geen werkend scherm
 // meer om niet weggevaagd te worden.
 
+// Een haperende verbinding bij het verversen van de inlog: supabase-js
+// probeert het zelf opnieuw, en er klopt niets níét aan het scherm.
+await page.evaluate(() => {
+  const e = new Error('Load failed'); e.name = 'AuthRetryableFetchError';
+  Promise.reject(e);
+});
+await page.waitForTimeout(300);
+check('een haperende verbinding bij het verversen van de inlog geeft geen balkje',
+  (await page.$('#stillefout')) === null);
+
 await page.evaluate(() => { Promise.reject(new Error('losse belofte')); });
 await page.waitForSelector('#stillefout');
 
 check('een losse fout meldt zich in een balkje',
   (await tekst('#stillefout')).includes('op de achtergrond'), await tekst('#stillefout'));
+const detail = await page.$('#stillefout small');
+check('met erbij wat er misging, want op een telefoon is er geen console',
+  !!detail && (await detail.textContent()).includes('losse belofte'), await tekst('#stillefout'));
 check('en de app staat er gewoon nog',
   (await page.$('[data-race]')) !== null);
 
@@ -181,10 +194,11 @@ check('de taalkeuze niet, want die hoort niet bij het probleem',
   (await sleutels()).includes('poule:taal'), (await sleutels()).join(' '));
 
 // De console hoort alleen de fouten te bevatten die deze test zelf maakt: de
-// proefklap, twee keer opgegooid, en de losse belofte. Alles wat daar nog
-// meer in staat is een echte fout in de app.
-const vreemd = jsFouten.filter(f => !f.includes('proefklap') && !f.includes('losse belofte'));
-check('geen andere javascriptfouten dan de twee die deze test zelf maakt',
+// proefklap, twee keer opgegooid, de nagebootste haperende verbinding en de
+// losse belofte. Alles wat daar nog meer in staat is een echte fout in de app.
+const vreemd = jsFouten.filter(f => !f.includes('proefklap') && !f.includes('losse belofte')
+  && !f.includes('AuthRetryableFetchError'));
+check('geen andere javascriptfouten dan die deze test zelf maakt',
   vreemd.length === 0, vreemd.join(' | '));
 
 await stoppen();
