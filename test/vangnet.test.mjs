@@ -32,7 +32,9 @@ const { check, afronden } = maakControle('vangnet: als het tekenen klapt');
 // hij niet gespaard wordt. De vlag hieronder heet met opzet niet poule:iets,
 // want alles wat zo heet gaat juist weg.
 const { page, jsFouten, stoppen } = await startPagina({
-  taal: null,
+  // Ook geen standaardinstelling voor het verhaal: hieronder wordt gekeken of
+  // na "vergeet dit toestel" alleen poule:taal nog over is.
+  taal: null, verhaal: true,
   voorafAan: (p) => p.addInitScript(() => {
     try {
       if (!localStorage.getItem('test:taalgezet')) {

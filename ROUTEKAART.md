@@ -490,7 +490,7 @@ zet.
 | **Positiewijziging** | ↑2 / ↓1 sinds vorige race, naast de stand | een tweede keer `standRijen()` over de races tot en met de vorige |
 | **Reeksen** | "7 weekenden op rij ingeleverd" | telling over `heeftVoorspeld()`, die er al is — en let op: een automatisch ingevulde lijst telt níét mee, precies zoals hij ook geen weekend wint |
 | **Seizoensgrafiek** | je positie door het seizoen heen | dezelfde herhaalde stand als bij positiewijziging, als lijngrafiek |
-| **Race Recap** | persoonlijke pagina na iedere race | grotendeels al gebouwd, verspreid: "zo dichtbij", de weekendwinnaar, je score en de inkijk bij anderen. Dit is vooral samenbrengen |
+| **Race Recap** | persoonlijke pagina na iedere race | gebouwd als verhaal: na de uitslag speelt de app je weekend één keer af, schermpje voor schermpje (zie OVERDRACHT.md, "Het weekend als verhaal") |
 | **Profielstatistieken** | race wins, accuracy, beste circuit | rekenwerk over bestaande data, maar kijk eerst naar de drempels in de terugblik: onder een handvol races zegt zo'n percentage niets |
 
 **Share cards als afbeelding: gedaan, want er werd om gevraagd.** Hier stond

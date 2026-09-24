@@ -82,6 +82,26 @@ ziet het eerst in een venster, met daaronder:
 Past niet iedereen op het plaatje, dan staat er "en nog 4", en sta jij er
 toch op, onderaan. Het adres onderaan komt uit de adresbalk, niet uit de code.
 
+**Het weekend als verhaal.** Is de uitslag van de race binnen, dan speelt de
+app het weekend één keer af, zoals een story op Instagram: de startlichten en
+de race, je punten per sessie (je top 10 als tijdenbord: paars exact, groen
+één ernaast, amber twee), je weekend bij elkaar, wie er won, en wat het met
+de stand deed. Rechts tikken is verder, links terug, vasthouden pauzeert, en na
+een paar seconden gaat hij vanzelf door. **Overslaan** (of Escape) gaat meteen
+naar de uitslag; aan het eind staan **Bekijk de uitslag** en **Deel de
+uitslag**.
+
+Wanneer hij vanzelf komt:
+
+- alleen voor de laatste race met een uitslag, tot tien dagen na de start;
+- alleen als je dat weekend zelf iets had ingeleverd;
+- één keer per toestel;
+- alleen op het overzicht. Wie een race aan het invullen is of in de stand
+  zit, krijgt hem pas als hij terug is op het overzicht.
+
+Onder elke uitslag staat **Speel het weekend af** om hem opnieuw te zien. In
+Profiel zet je het vanzelf afspelen uit.
+
 ### Stand
 Op één scherm, gescheiden door koppen:
 - **Seizoensstand.** Per speler de plek, de punten, en het verschil met de
@@ -108,7 +128,8 @@ Alles wat over jou gaat, niet over de poule: als wie je hier speelt, je
 account koppelen aan een mailadres of Google (zie §7), je eigen link om
 jezelf naar een ander toestel mee te nemen (zie §4), wat de app van je weet
 en hoe je dat weghaalt (zie §12), en — alleen als er een weg terug is —
-uitloggen.
+uitloggen. Ook: of de app het weekend vanzelf afspeelt als de uitslag binnen
+is (zie Races).
 
 Helemaal onderaan: **Naar de voorpagina**. Wie een poule op zijn toestel heeft,
 gaat vanaf predicttherace.com meteen de app in. Deze knop is de weg terug naar

@@ -6794,3 +6794,97 @@ weer tonen, geen één-kolomsraster, geen Escape, geen letters laden, plekken
 als 1-2-3, de stand van nu onder een ouder weekend, jouw rij niet onderaan,
 AbortError als fout, geen revoke, Escape die doorlekt naar de race, focus die
 wegspringt, winnaars niet ingekort, de oude knop terug). Ze zakken allemaal.
+
+## Het weekend als verhaal
+
+Danny: *"Ik denk ook na over als de uitslag bekend is. Ipv dat mensen naar de
+pagina gaan dat er zodra de uitslag bekend is een animatie is, of een scherm
+waar je 1 voor 1 de punten ziet. Zoiets als een story op insta. Uiteraard ook
+te skippen om direct naar de uitslag te gaan. Denk na wat technisch mogelijk
+is."*
+
+### Wat technisch kan, en wat er gebouwd is
+
+Alles hiervan kan in de browser zelf, zonder video, server of bibliotheek:
+schermen van gewone HTML, CSS-animaties voor wat er binnenkomt, en een klok in
+`requestAnimationFrame` voor de balkjes bovenin. `speelVerhaal(race)` in
+`app/index.html` legt het over het hele scherm, los van `#app`, net als het
+deelvenster.
+
+De schermen (`verhaalDias()`):
+
+1. **Start**: vijf startlichten die één voor één aangaan en dan uit, daarna de
+   ronde en de race.
+2. **Per sessie** (kwalificatie, sprint, race): je punten groot, die optellen
+   van nul, hoeveel je er exact had, en je top 10 als tijdenbord: paars voor
+   exact, groen voor één ernaast, amber voor twee (de kleuren van
+   `puntKlasse()`).
+3. **Je weekend**: het totaal, de optelling per sessie, de joker als je die
+   had, en je plek in de poule, of "Jij wint het weekend!".
+4. **Wie won**: de weekenduitslag, van onder naar boven binnenkomend, de
+   winnaar als laatste. Hooguit zeven rijen; val jij erbuiten, dan sta je
+   als zevende.
+5. **De stand** na dit weekend (`standNaWeekend()`, dezelfde als op het
+   deelplaatje): "Je klimt naar 3e", met de pijltjes.
+6. **Einde**: Bekijk de uitslag, Deel de uitslag, Nog een keer.
+
+In een poule van één vallen 4 en 5 weg. Na de eerste race van het seizoen valt
+5 weg, want dan valt er niets te vergelijken.
+
+Bediening: rechts tikken is verder, links (het linkerderde) terug, vasthouden
+(langer dan een kwart seconde) pauzeert zonder te bladeren, de pijltjestoetsen
+bladeren. Na een paar seconden gaat hij vanzelf door; op een verborgen tabblad
+staat de klok stil. **Overslaan** en Escape sluiten het verhaal en openen de
+uitslag van die race, op het racetabblad. Escape wordt op `window` in de
+capture-fase afgevangen, zodat hij niet ook de race eronder weer sluit.
+
+Met "minder beweging" (prefers-reduced-motion) staan de getallen meteen op hun
+plek en beweegt er niets; de algemene regel in de stylesheet zet de animaties
+al uit. Doorbladeren gaat nog steeds vanzelf.
+
+### Wanneer hij vanzelf komt
+
+`verhaalKandidaat()` en `kijkNaarVerhaal()`, aangeroepen aan het eind van elke
+`toonApp()`:
+
+- alleen de **laatste race met een race-uitslag**. Na alleen de kwalificatie
+  nog niet, want het verhaal gaat over het hele weekend;
+- tot **tien dagen** na de start van de race. Wie pas bij de volgende race
+  weer kijkt krijgt hem nog, wie na de winterstop terugkomt niet;
+- alleen als je dat weekend **zelf iets had ingeleverd** (`heeftVoorspeld()`).
+  Het verhaal gaat over jouw punten, en een automatisch ingevulde lijst telt
+  niet;
+- **één keer per toestel**: `poule:<poule>:<speler>:verhaal` onthoudt welke
+  race je al zag. Dat wordt gezet zodra hij opent, niet pas aan het eind: wie
+  hem wegtikt wil hem de volgende keer niet alsnog krijgen;
+- alleen **op het overzicht**. Wie een race aan het invullen is, in de stand
+  kijkt of een ander venster open heeft, wordt niet onderbroken. Die krijgt hem
+  zodra hij terug is op het overzicht. Komt de uitslag binnen terwijl de app al
+  openstaat op het overzicht, dan speelt hij ook;
+- niet als het in Profiel **uit** staat (`poule:verhaal` = `uit`).
+
+Onder elke uitslag staat **Speel het weekend af** (alleen als je iets had
+ingeleverd), om hem opnieuw te zien.
+
+### Wat er nog kan: een melding als de uitslag binnen is
+
+Nu komt het verhaal zodra iemand de app opent. De echte "zodra de uitslag
+bekend is" is een pushmelding die de sync stuurt als hij een race-uitslag
+binnenhaalt. De meldingen zelf zijn er al (BEDIENING.md, herinneringen), maar
+de sleutels (VAPID) zijn nog niet ingesteld. Staan die er, dan is het één
+soort melding erbij in de sync, met als link de app. Het verhaal speelt dan
+vanzelf, want dat regelt de app al.
+
+### In de tests
+
+Het verhaal legt zich over het hele scherm zodra er een recente uitslag is
+waar jij iets voor inleverde, en tientallen tests zetten zo'n uitslag klaar om
+iets anders te controleren. Daarom zet `startPagina()` in `test/hulp.mjs` het
+standaard uit (`poule:verhaal` = `uit`, zoals een speler dat in Profiel doet),
+behalve met `{ verhaal: true }`. Dat doen `test/verhaal.test.mjs` en
+`test/vangnet.test.mjs` (die controleert dat na "vergeet dit toestel" alleen
+`poule:taal` overblijft).
+
+`test/verhaal.test.mjs` (50 controles) loopt alles hierboven langs, ook de
+keren dat hij níét hoort te komen. Elke regel is teruggezet tegen een mutant
+die hem weghaalt; ze zakken allemaal.

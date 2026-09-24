@@ -730,6 +730,93 @@
   .deelrij{display:flex;gap:8px}
   .deelrij .knop{flex:1}
 
+  /* ---- het weekend als verhaal ------------------------------ */
+  /* Altijd donker, zoals het deelplaatje: de kleuren worden hier opnieuw
+     gezet, zodat knoppen en labels erin vanzelf meegaan. Op een breed scherm
+     een staande kolom in het midden, zoals een telefoon. */
+  .verhaal{
+    --bg:#0b0b0c; --paneel:#15161a; --paneel2:#1d1f24; --gedempt:#2b2e35; --lijn:#2b2e35;
+    --ink:#f2f3f5; --ink2:#9aa0a8; --ink3:#7b818a;
+    --accent:#ee4d33; --accent-ink:#0b0b0c; --groen:#34b264; --amber:#e0a53a; --paars:#c084f5;
+    --omkeer:#f2f3f5; --omkeer-ink:#0b0b0c;
+    position:fixed;inset:0;z-index:80;display:flex;justify-content:center;
+    background:var(--bg);color:var(--ink);outline:none;
+    user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+    animation:invagen .2s both}
+  .verhaal-in{position:relative;width:100%;max-width:480px;height:100%;overflow:hidden;
+    display:flex;flex-direction:column;
+    padding:calc(12px + env(safe-area-inset-top)) 22px calc(20px + env(safe-area-inset-bottom))}
+  /* Een zachte gloed in het accent linksboven, zoals op de weekendkaart. */
+  .verhaal-in::before{content:"";position:absolute;inset:-20% -40% auto auto;width:90%;height:60%;
+    background:radial-gradient(closest-side,rgba(238,77,51,.18),transparent);pointer-events:none}
+  .verhaal-balkjes{display:flex;gap:4px}
+  .verhaal-balkjes span{flex:1;height:3px;border-radius:2px;background:rgba(242,243,245,.22);overflow:hidden}
+  .verhaal-balkjes i{display:block;height:100%;width:0;background:var(--ink)}
+  .verhaal-balk{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
+  .verhaal-merk{display:flex;align-items:center;gap:8px;font-family:var(--cond);font-weight:700;
+    font-size:15px;letter-spacing:.06em;text-transform:uppercase}
+  .verhaal-merk .blok{width:22px;height:22px;
+    background:url(../pictogrammen/predicttherace-logo.png) center/contain no-repeat}
+  .verhaal-sla{min-height:44px;padding:0 4px 0 16px;color:var(--ink2);font-size:14px;font-weight:600}
+  .verhaal-sla:hover{color:var(--ink)}
+  .verhaal-dia{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;
+    justify-content:center;gap:16px}
+  .verhaal-hint{margin:0;text-align:center;font-family:var(--mono);font-size:11px;color:var(--ink3)}
+  .verhaal[data-dia]:not([data-dia="1"]) .verhaal-hint{visibility:hidden}
+  .verhaal.pauze .verhaal-dia{opacity:.75}
+
+  .verhaal-label{font-family:var(--mono);font-size:12px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink3)}
+  .verhaal-groot{margin:0;font-family:var(--cond);font-weight:700;text-transform:uppercase;
+    font-size:clamp(52px,15vw,84px);line-height:.92;overflow-wrap:anywhere}
+  .verhaal-kop{margin:0;font-family:var(--cond);font-weight:700;font-size:clamp(34px,10vw,48px);line-height:1}
+  .verhaal-getal{font-family:var(--cond);font-weight:700;font-size:clamp(110px,34vw,168px);
+    line-height:.82;color:var(--accent);font-variant-numeric:tabular-nums}
+  .verhaal-zin{margin:0;font-size:18px;line-height:1.35;color:var(--ink2)}
+  .verhaal-plek{font-family:var(--cond);font-weight:700;font-size:30px;color:var(--ink)}
+  .verhaal-plek.winst{color:var(--accent)}
+
+  /* De vijf startlichten: één voor één aan, en dan tegelijk uit. */
+  .verhaal-lampen{display:flex;gap:10px}
+  .verhaal-lampen span{width:34px;height:34px;border-radius:50%;background:var(--gedempt);
+    animation:lampAan .12s calc(var(--i) * .36s) both,lampUit .08s 1.95s forwards}
+  @keyframes lampAan{to{background:var(--accent);box-shadow:0 0 18px rgba(238,77,51,.7)}}
+  @keyframes lampUit{to{background:var(--gedempt);box-shadow:none}}
+
+  /* Je top 10 als tijdenbord: paars exact, groen één ernaast, amber twee. */
+  .verhaal-bord{list-style:none;margin:6px 0 0;padding:0;display:grid;
+    grid-template-columns:repeat(5,1fr);gap:6px}
+  .verhaal-bord li{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 0 6px;
+    border-radius:8px;background:var(--paneel);border-bottom:3px solid var(--lijn)}
+  .verhaal-bord span{font-family:var(--mono);font-size:10px;color:var(--ink3)}
+  .verhaal-bord b{font-family:var(--cond);font-size:20px;letter-spacing:.03em}
+  .verhaal-bord i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--ink3)}
+  .verhaal-bord .v5{border-bottom-color:var(--paars)} .verhaal-bord .v5 i{color:var(--paars)}
+  .verhaal-bord .v3{border-bottom-color:var(--groen)} .verhaal-bord .v3 i{color:var(--groen)}
+  .verhaal-bord .v1{border-bottom-color:var(--amber)} .verhaal-bord .v1 i{color:var(--amber)}
+  .verhaal-bord .v5 b,.verhaal-bord .v3 b,.verhaal-bord .v1 b{color:var(--ink)}
+  .verhaal-bord .v0 b{color:var(--ink3)}
+
+  .verhaal-lijst{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .verhaal-lijst li{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 14px;
+    border-radius:10px;background:var(--paneel);border-left:4px solid transparent}
+  .verhaal-lijst .p{font-family:var(--mono);font-size:15px;color:var(--ink3);min-width:22px}
+  .verhaal-lijst .nm{flex:1;min-width:0;font-family:var(--cond);font-weight:600;font-size:22px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .verhaal-lijst b{font-family:var(--mono);font-size:17px}
+  .verhaal-lijst i{font-style:normal;font-family:var(--mono);font-size:12px;min-width:28px;text-align:right}
+  .verhaal-lijst i.op{color:var(--groen)} .verhaal-lijst i.neer{color:var(--accent)}
+  .verhaal-lijst .mij{border-left-color:var(--accent);
+    background:linear-gradient(90deg,rgba(238,77,51,.16),var(--paneel) 70%)}
+  .verhaal-lijst .winnaar{background:var(--accent);color:var(--accent-ink)}
+  .verhaal-lijst .winnaar .p,.verhaal-lijst .winnaar b{color:var(--accent-ink)}
+
+  .verhaal-acties{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+
+  /* Opkomen: een stukje omhoog en zichtbaar, elk met zijn eigen vertraging. */
+  .vh-op{animation:vhOp .5s var(--soepel) both}
+  @keyframes vhOp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
   /* ---- startgrid ------------------------------------------ */
   .grid10{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
   .slotrij{display:flex}
@@ -2794,6 +2881,31 @@ const ENGELS = Object.fromEntries([
   ['Kopieer plaatje', 'Copy image'],
   ['Kopieer als tekst', 'Copy as text'],
   ['Kopiëren lukt niet', 'Could not copy'],
+  // Het weekend als verhaal, na de uitslag.
+  ['De uitslag is binnen. Zo ging jouw weekend.', 'The results are in. This was your weekend.'],
+  ['jouw weekend', 'your weekend'],
+  ['met je joker: alles dubbel', 'with your joker: everything doubled'],
+  ['Jij wint het weekend!', 'You win the weekend!'],
+  ['{plek} van {n} in de poule', '{plek} of {n} in the pool'],
+  ['wie won het weekend?', 'who won the weekend?'],
+  ['Je klimt naar {plek}', 'You climb to {plek}'],
+  ['Je zakt naar {plek}', 'You drop to {plek}'],
+  ['Je blijft {plek}', 'You stay {plek}'],
+  ['Dat was het weekend', 'That was the weekend'],
+  ['Bekijk de uitslag', 'See the results'],
+  ['Nog een keer', 'Play again'],
+  ['{race}: jouw weekend', '{race}: your weekend'],
+  ['Overslaan', 'Skip'],
+  ['Tik rechts voor verder, links voor terug. Vasthouden pauzeert.',
+   'Tap right for next, left for back. Hold to pause.'],
+  ['Speel het weekend af', 'Replay the weekend'],
+  ['het weekend afspelen', 'replay the weekend'],
+  ['Als de uitslag binnen is, speelt de app je weekend één keer af: je punten, wie er won '
+    + 'en wat het met de stand deed. Onder elke uitslag kun je het opnieuw bekijken.',
+   'When the results are in, the app plays your weekend once: your points, who won and '
+    + 'what it did to the standings. You can watch it again below every result.'],
+  ['Aan', 'On'],
+  ['Uit', 'Off'],
   ['Uitslag om zelf te kopiëren',
    'Result to copy yourself'],
   ['Deze poule bestaat niet meer.',
@@ -5471,6 +5583,7 @@ function toonApp() {
   knoopMelding();
   knoopTaal();
   knoopTaalKeuze();
+  knoopVerhaal();
   knoopDelen();
   // Of meldingen aanstaan is een asynchrone vraag aan de browser. Eén keer
   // stellen zodra het profielscherm open is, en dan opnieuw tekenen met het
@@ -5492,6 +5605,7 @@ function toonApp() {
     render();
   };
   tikken();
+  kijkNaarVerhaal();
 }
 
 // ---- linkerkolom: races -------------------------------------
@@ -6190,6 +6304,7 @@ function profielPagina() {
     ${taalBlok()}
     ${mailBlok()}
     ${meldingBlok()}
+    ${verhaalBlok()}
     ${deelBlok()}
     ${eigenLinkBlok()}
     ${uitlogBlok()}
@@ -8151,6 +8266,8 @@ function opsomming(namen) {
 const DEELICOON = `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none"
   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>`;
+const SPEELICOON = `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
+  fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>`;
 
 function weekendVoet(r) {
   const winnaars = S.leden.length > 1 ? weekendWinnaars(r) : [];
@@ -8162,6 +8279,8 @@ function weekendVoet(r) {
           ik ? ` <span class="jij">${T('jij')}</span>` : ''}</span>
         <span class="t">${winnaars[0].punten}</span>
       </div></div>` : ''}
+    ${r.race_result?.length && heeftVoorspeld(r, S.ik.id) ? `<button class="knop spook" data-verhaal="${
+      esc(r.id)}">${SPEELICOON}${T('Speel het weekend af')}</button>` : ''}
     <button class="knop spook" data-deel="${esc(r.id)}">${DEELICOON}${T('Deel de uitslag')}</button>`;
 }
 
@@ -8544,6 +8663,303 @@ function knoopUitslagDelen(paneel) {
   paneel.querySelectorAll('[data-deel]').forEach(knop => knop.onclick = () => {
     const race = S.races.find(x => zelfde(x.id, knop.dataset.deel));
     if (race) openDeelvenster(race, knop);
+  });
+  paneel.querySelectorAll('[data-verhaal]').forEach(knop => knop.onclick = () => {
+    const race = S.races.find(x => zelfde(x.id, knop.dataset.verhaal));
+    if (race) speelVerhaal(race);
+  });
+}
+
+// ============================================================
+//  Het weekend als verhaal
+// ============================================================
+// Zodra de uitslag van een weekend binnen is, speelt de app het één keer af
+// als een reeks schermen, zoals een story op Instagram: de race, jouw punten
+// per sessie, je weekend, wie er won en wat het met de stand deed. Rechts
+// tikken gaat verder, links terug, vasthouden pauzeert, en Overslaan gaat
+// meteen naar de uitslag.
+//
+// Geen video en geen bibliotheek: gewone HTML met CSS-animaties, en een klok
+// in requestAnimationFrame voor de balkjes bovenin. Altijd donker, net als het
+// deelplaatje.
+//
+// Wanneer hij vanzelf opent staat in verhaalKandidaat(). Onder elke uitslag
+// staat een knop om hem opnieuw af te spelen, en in Profiel zet je het
+// vanzelf afspelen uit.
+
+// Zo lang na de start van de race speelt hij nog vanzelf af. Wie pas bij de
+// volgende race weer kijkt, krijgt hem nog; wie na de winterstop terugkomt
+// niet meer.
+const VERHAAL_RECENT = 10 * 864e5;
+const VERHAAL_UIT = 'poule:verhaal';
+const verhaalAan = () => lees(VERHAAL_UIT) !== 'uit';
+const verhaalSleutel = (poolId, memberId) => `poule:${poolId}:${memberId}:verhaal`;
+
+// De race die nu een verhaal krijgt, of null. Alleen de laatste race met een
+// uitslag, alleen als je daar zelf iets voor had ingeleverd (het verhaal gaat
+// over jouw punten), en maar één keer per toestel.
+function verhaalKandidaat(nu = Date.now()) {
+  if (!S.poule || !S.ik || !verhaalAan()) return null;
+  const r = S.races.filter(x => x.race_result?.length).sort((a, b) => b.round - a.round)[0];
+  if (!r) return null;
+  if (!(nu - Date.parse(r.deadline_race) < VERHAAL_RECENT)) return null;
+  if (!heeftVoorspeld(r, S.ik.id)) return null;
+  if (zelfde(lees(verhaalSleutel(S.poule.id, S.ik.id)), r.id)) return null;
+  return r;
+}
+
+// Na elke keer tekenen: staat er een verhaal klaar, en past het nu? Alleen op
+// het overzicht. Wie een race aan het invullen is of in de stand zit wordt
+// niet onderbroken; die krijgt hem zodra hij terug is op het overzicht.
+function kijkNaarVerhaal() {
+  if (S.weergave !== 'races' || S.race) return;
+  if (document.querySelector('.verhaal, [role="dialog"]')) return;
+  const r = verhaalKandidaat();
+  if (r) speelVerhaal(r);
+}
+
+const vertraging = (ms) => `style="animation-delay:${Math.round(ms)}ms"`;
+
+// De schermen zelf, als HTML. `duur` is hoe lang een scherm blijft staan
+// voordat het volgende komt; 0 is het laatste, dat blijft staan.
+function verhaalDias(race) {
+  const mijn = vindPred(race.id, S.ik.id);
+  const samen = S.leden.length > 1;
+  const dias = [];
+
+  // 1. De lichten gaan aan, en uit.
+  dias.push({ soort: 'start', duur: 4200, html: `
+    <div class="verhaal-lampen" aria-hidden="true">${[0, 1, 2, 3, 4].map(i =>
+      `<span style="--i:${i}"></span>`).join('')}</div>
+    <span class="verhaal-label vh-op" ${vertraging(2100)}>${
+      T('ronde {n}', { n: race.round })} · ${esc(race.season ?? seizoen())}</span>
+    <h2 class="verhaal-groot vh-op" ${vertraging(2200)}>${esc(race.name)}</h2>
+    <p class="verhaal-zin vh-op" ${vertraging(2400)}>${T('De uitslag is binnen. Zo ging jouw weekend.')}</p>` });
+
+  // 2. Per sessie: je punten, en je top 10 als tijdenbord.
+  for (const w of weekendSessies(race)) {
+    const lijst = mijn?.[SESSIES[w].vraag] ?? [];
+    const { regels } = scoreLijst(lijst, race[SESSIES[w].uitslag] ?? []);
+    const exact = regels.filter(x => x.punten === 5).length;
+    const punten = scoreTab(mijn, race, w);
+    const auto = mijn?.auto?.includes(SESSIES[w].vraag);
+    dias.push({ soort: w, duur: 5200, html: `
+      <span class="verhaal-label">${T(SESSIES[w].tablabel)}</span>
+      <b class="verhaal-getal" data-tel="${punten}">${punten}</b>
+      <p class="verhaal-zin">${regels.length
+        ? T('{n} van {totaal} exact voorspeld', { n: exact, totaal: regels.length })
+        : T('geen top 10 ingevuld')}${auto ? ` · ${T('automatisch ingevuld')}` : ''}</p>
+      ${regels.length ? `<ol class="verhaal-bord">${regels.map((x, i) => `
+        <li class="vh-op ${puntKlasse(x.punten)}" ${vertraging(350 + i * 90)}>
+          <span>P${x.voorspeld}</span><b>${esc(drv(race, x.nr).code)}</b><i>${x.punten}</i></li>`).join('')}
+      </ol>` : ''}` });
+  }
+
+  // 3. Je weekend bij elkaar.
+  const rijen = weekendUitslag(race) ?? [];
+  const plekken = gedeeldePlekken(rijen);
+  const mijnIndex = rijen.findIndex(r => r.mij);
+  const winnaars = samen ? weekendWinnaars(race) : [];
+  const ikWin = winnaars.some(w => w.mij);
+  const totaal = rijen[mijnIndex]?.punten ?? 0;
+  dias.push({ soort: 'weekend', duur: 4800, html: `
+    <span class="verhaal-label">${T('jouw weekend')}</span>
+    <b class="verhaal-getal" data-tel="${totaal}">${totaal}</b>
+    <p class="verhaal-zin">${weekendSessies(race).map(w =>
+      `${T(SESSIES[w].tablabel).toLowerCase()} ${scoreTab(mijn, race, w)}`).join(' + ')}${
+      heeftJoker(race.id, S.ik.id) ? `, ${T('met je joker: alles dubbel')}` : ''}</p>
+    ${samen ? `<p class="verhaal-zin verhaal-plek vh-op${ikWin ? ' winst' : ''}" ${vertraging(900)}>${ikWin
+      ? T('Jij wint het weekend!')
+      : T('{plek} van {n} in de poule', { plek: rang(plekken[mijnIndex]), n: rijen.length })}</p>` : ''}` });
+
+  // 4. Wie won: van onder naar boven, de winnaar als laatste.
+  if (samen) {
+    let toon = rijen.map((r, i) => ({ ...r, plek: plekken[i] }));
+    if (toon.length > 7) toon = mijnIndex >= 6 ? [...toon.slice(0, 6), toon[mijnIndex]] : toon.slice(0, 7);
+    const n = toon.length;
+    dias.push({ soort: 'poule', duur: 2600 + n * 420, html: `
+      <span class="verhaal-label">${T('wie won het weekend?')}</span>
+      <ol class="verhaal-lijst">${toon.map((r, i) => `
+        <li class="vh-op${r.mij ? ' mij' : ''}${r.plek === 1 && winnaars.length ? ' winnaar' : ''}"
+          ${vertraging(300 + (n - 1 - i) * 380)}>
+          <span class="p">${r.plek}</span><span class="nm">${esc(r.naam)}</span><b>${r.punten}</b></li>`).join('')}
+      </ol>` });
+  }
+
+  // 5. Wat het met de stand deed.
+  const stand = samen ? standNaWeekend(race) : [];
+  if (stand.length) {
+    const ik = stand.find(r => r.mij);
+    const kop = ik.wissel > 0 ? T('Je klimt naar {plek}', { plek: rang(ik.plek) })
+      : ik.wissel < 0 ? T('Je zakt naar {plek}', { plek: rang(ik.plek) })
+      : T('Je blijft {plek}', { plek: rang(ik.plek) });
+    const pijl = (w) => w > 0 ? `<i class="op">▲${w}</i>` : w < 0 ? `<i class="neer">▼${-w}</i>` : '<i></i>';
+    let toon = stand.slice(0, 5);
+    if (!toon.includes(ik)) toon = [...toon, ik];
+    dias.push({ soort: 'stand', duur: 5600, html: `
+      <span class="verhaal-label">${T('stand na ronde {n}', { n: race.round })}</span>
+      <h2 class="verhaal-kop vh-op">${kop}</h2>
+      <ol class="verhaal-lijst">${toon.map((r, i) => `
+        <li class="vh-op${r.mij ? ' mij' : ''}" ${vertraging(400 + i * 120)}>
+          <span class="p">${r.plek}</span><span class="nm">${esc(r.naam)}</span>${pijl(r.wissel)}<b>${r.punten}</b></li>`).join('')}
+      </ol>` });
+  }
+
+  // 6. Klaar: naar de uitslag, of delen.
+  dias.push({ soort: 'einde', duur: 0, html: `
+    <span class="verhaal-label">${esc(race.name)}</span>
+    <h2 class="verhaal-groot">${T('Dat was het weekend')}</h2>
+    <div class="verhaal-acties">
+      <button class="knop primair" data-verhaal-uitslag>${T('Bekijk de uitslag')}</button>
+      <button class="knop spook" data-verhaal-deel>${DEELICOON}${T('Deel de uitslag')}</button>
+      <button class="knop klein" data-verhaal-opnieuw>${T('Nog een keer')}</button>
+    </div>` });
+  return dias;
+}
+
+// Een getal telt op van nul naar wat het is, in een kleine seconde.
+function telOp(waar) {
+  waar.querySelectorAll('[data-tel]').forEach(el => {
+    const doel = Number(el.dataset.tel);
+    if (!doel) return;
+    const begin = performance.now();
+    el.textContent = '0';
+    const stap = (t) => {
+      if (!el.isConnected) return;
+      const f = Math.min(1, (t - begin) / 900);
+      el.textContent = String(Math.round(doel * (1 - (1 - f) ** 3)));
+      if (f < 1) requestAnimationFrame(stap);
+    };
+    requestAnimationFrame(stap);
+  });
+}
+
+function speelVerhaal(race) {
+  if (document.querySelector('.verhaal')) return;
+  // Gezien zodra hij opent, niet pas als hij af is: wie hem wegtikt wil hem
+  // niet bij de volgende keer openen alsnog krijgen.
+  if (S.poule && S.ik) schrijf(verhaalSleutel(S.poule.id, S.ik.id), String(race.id));
+  const dias = verhaalDias(race);
+  const rustig = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const el = document.createElement('div');
+  el.className = 'verhaal';
+  el.tabIndex = -1;
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('aria-label', T('{race}: jouw weekend', { race: race.name }));
+  el.innerHTML = `
+    <div class="verhaal-in">
+      <div class="verhaal-balkjes" aria-hidden="true">${dias.map(() => '<span><i></i></span>').join('')}</div>
+      <div class="verhaal-balk">
+        <span class="verhaal-merk"><span class="blok"></span>Predict the Race</span>
+        <button class="verhaal-sla" data-verhaal-sla>${T('Overslaan')}</button>
+      </div>
+      <div class="verhaal-dia" aria-live="polite"></div>
+      <p class="verhaal-hint">${T('Tik rechts voor verder, links voor terug. Vasthouden pauzeert.')}</p>
+    </div>`;
+  document.body.appendChild(el);
+  el.focus();
+
+  const balkjes = [...el.querySelectorAll('.verhaal-balkjes i')];
+  const dia = el.querySelector('.verhaal-dia');
+  let nr = 0, verstreken = 0, vorige = null, pauze = false, frame = 0;
+
+  const toon = (n) => {
+    nr = Math.max(0, Math.min(dias.length - 1, n));
+    verstreken = 0;
+    dia.innerHTML = dias[nr].html;
+    dia.dataset.soort = dias[nr].soort;
+    el.dataset.dia = String(nr + 1);
+    balkjes.forEach((b, i) => { b.style.width = i < nr ? '100%' : '0%'; });
+    if (!rustig) telOp(dia);
+    knoop();
+  };
+  const tik = (t) => {
+    frame = requestAnimationFrame(tik);
+    const dt = vorige === null ? 0 : t - vorige;
+    vorige = t;
+    if (pauze || document.hidden) return;
+    const { duur } = dias[nr];
+    if (!duur) { balkjes[nr].style.width = '100%'; return; }
+    verstreken += dt;
+    balkjes[nr].style.width = `${Math.min(100, (verstreken / duur) * 100)}%`;
+    if (verstreken >= duur) toon(nr + 1);
+  };
+  const sluit = (naarUitslag) => {
+    cancelAnimationFrame(frame);
+    window.removeEventListener('keydown', toets, true);
+    el.remove();
+    if (naarUitslag) openRace(race.id, 'race');
+  };
+  const knoop = () => {
+    const uitslag = dia.querySelector('[data-verhaal-uitslag]');
+    if (uitslag) { uitslag.onclick = () => sluit(true); uitslag.focus(); }
+    const opnieuw = dia.querySelector('[data-verhaal-opnieuw]');
+    if (opnieuw) opnieuw.onclick = () => toon(0);
+    const deel = dia.querySelector('[data-verhaal-deel]');
+    if (deel) deel.onclick = () => {
+      sluit(true);
+      openDeelvenster(race, app.querySelector(`[data-deel="${CSS.escape(String(race.id))}"]`));
+    };
+  };
+  el.querySelector('[data-verhaal-sla]').onclick = () => sluit(true);
+
+  // Escape is Overslaan, de pijltjes bladeren. Op window en in de
+  // capture-fase, zodat de app eronder er niets van merkt.
+  const toets = (ev) => {
+    if (ev.key === 'Escape') sluit(true);
+    else if (ev.key === 'ArrowRight') toon(nr + 1);
+    else if (ev.key === 'ArrowLeft') toon(nr - 1);
+    else return;
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+  };
+  window.addEventListener('keydown', toets, true);
+
+  // Tikken en vasthouden. Een tik op een knop is een knop, geen bladzijde.
+  let neer = false, houd = 0;
+  el.addEventListener('pointerdown', (ev) => {
+    if (ev.target.closest('button, a')) return;
+    neer = true;
+    houd = setTimeout(() => { pauze = true; el.classList.add('pauze'); }, 250);
+  });
+  const los = (ev, tellen) => {
+    clearTimeout(houd);
+    const gehouden = pauze;
+    pauze = false;
+    el.classList.remove('pauze');
+    if (!neer || gehouden || !tellen || ev.target.closest('button, a')) { neer = false; return; }
+    neer = false;
+    const vak = el.querySelector('.verhaal-in').getBoundingClientRect();
+    toon(ev.clientX < vak.left + vak.width / 3 ? nr - 1 : nr + 1);
+  };
+  el.addEventListener('pointerup', (ev) => los(ev, true));
+  el.addEventListener('pointercancel', (ev) => los(ev, false));
+
+  toon(0);
+  frame = requestAnimationFrame(tik);
+}
+
+// ---- het weekend afspelen: aan of uit -----------------------
+function verhaalBlok() {
+  const aan = verhaalAan();
+  return `
+    <div class="scheiding"></div>
+    <span class="label">${T('het weekend afspelen')}</span>
+    <p class="zacht" style="margin:0">${T('Als de uitslag binnen is, speelt de app je '
+      + 'weekend één keer af: je punten, wie er won en wat het met de stand deed. '
+      + 'Onder elke uitslag kun je het opnieuw bekijken.')}</p>
+    <div style="display:flex;gap:8px">
+      <button class="knop klein" data-verhaalstand="aan" ${aan ? 'disabled' : ''}>${T('Aan')}</button>
+      <button class="knop klein" data-verhaalstand="uit" ${aan ? '' : 'disabled'}>${T('Uit')}</button>
+    </div>`;
+}
+
+function knoopVerhaal() {
+  app.querySelectorAll('[data-verhaalstand]').forEach(b => b.onclick = () => {
+    schrijf(VERHAAL_UIT, b.dataset.verhaalstand);
+    render();
   });
 }
 

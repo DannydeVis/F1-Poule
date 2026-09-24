@@ -21,6 +21,7 @@ je eigen computer.
 | `pole-en-duels.test.mjs` | Diezelfde twee in de app: kiezen, opslaan, terugzien, en dat één keuze per team blijft staan |
 | `invulscherm.test.mjs` | Het keuzeblad: een plek aantikken en dán kiezen, P7 vóór P1 kunnen invullen, en dat een halve top 10 niet bewaard wordt |
 | `uitslag-delen.test.mjs` | Een race over het hele scherm op een computer (met Escape terug), en het deelplaatje: wat erop staat, gedeelde plekken, jij onderaan als je buiten de rand valt, Delen of Opslaan, en dat Escape alleen het venster sluit |
+| `verhaal.test.mjs` | Het weekend als verhaal: wanneer het vanzelf opent (en wanneer niet), de schermen, tikken, vasthouden, vanzelf verder, overslaan naar de uitslag, de instelling in Profiel en minder beweging |
 | `afgelast.test.mjs` | Een race die niet doorgegaan is: hij zegt dat, is niet in te vullen, en een uitslag wint alsnog van de vlag |
 | `uitslagen.test.mjs` | De vier losse uitslagen uit de gegevens van OpenF1: vooral welke berichten van de wedstrijdleiding wél en niet een safety car zijn |
 | `duel-weergave.test.mjs` | Dat "jij" vaststaat aan je eigen cijfer in het onderlinge duel, en niet aan dat van de tegenstander |
