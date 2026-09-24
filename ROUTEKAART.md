@@ -49,6 +49,21 @@ Hieronder staat `<domein>` voor `predicttherace.com`:
 - De app zelf hoeft niet aangepast: `linkBasis()` leest `location.origin`
   dynamisch uit, dus uitnodigingslinks en OAuth-redirects werken vanzelf op
   elk domein waar de app draait.
+- **Het `CNAME`-bestand pas als de DNS klaarstaat.** Zodra het erin staat
+  stuurt GitHub elke bezoeker van `dannydevis.github.io/F1-Poule/` door naar
+  het domein; wijst de DNS dan nog nergens heen, dan is de site plat.
+- **Een nieuw adres is een nieuw toestel.** Wat de app onthoudt (welke poule,
+  wie je bent, het anonieme account) staat per adres in de browser. Op het
+  nieuwe domein begint iedereen dus opnieuw: wie Google of een mailadres heeft
+  gekoppeld logt gewoon in, wie dat niet heeft kan zijn eigen speler niet
+  meer claimen tot de poulebaas hem losmaakt. Laat iedereen vóór de overstap
+  zijn account koppelen (de koppelvraag in de app vraagt er al om), of plan
+  een moment waarop de poulebaas bereikbaar is.
+- **Daarna: Google Search Console en Bing Webmaster Tools.** Het domein
+  verifiëren (een TXT-record in de DNS is het netst) en
+  `https://predicttherace.com/sitemap.xml` indienen. De landingspagina's in
+  zeven talen, de sitemap en `robots.txt` staan er al klaar; zie
+  `OVERDRACHT.md`, "Een landingspagina in zeven talen".
 - **Eigen SMTP met een adres op je eigen domein.** Nu staat er in elke mail (magic
   link, mailkoppeling) een afzenderadres van Supabase zelf
   (`noreply@mail.app.supabase.io`) — dat kan pas veranderen naar iets met

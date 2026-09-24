@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { maakControle, wortel } from './hulp.mjs';
 
-const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
+const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
 const stuk = bron.match(/export function scoreLijst[\s\S]*?\n\}/);
 if (!stuk) { console.error('FOUT: scoreLijst() niet gevonden in index.html'); process.exit(2); }
 

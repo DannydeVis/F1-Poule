@@ -28,7 +28,7 @@ if (!UID) {
   process.exit(2);
 }
 
-const bron = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const bron = readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
 const SUPABASE_URL = bron.match(/const SUPABASE_URL = '([^']+)'/)?.[1];
 const SUPABASE_ANON_KEY = bron.match(/const SUPABASE_ANON_KEY = '([^']+)'/)?.[1];
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {

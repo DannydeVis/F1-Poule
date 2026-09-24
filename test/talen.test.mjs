@@ -37,7 +37,7 @@ const tekst = async (page, kies) =>
 // sleutel en vertaling onder elkaar, en zinnen die over meerdere regels aan
 // elkaar geplakt staan) en elke regex die dat aankan mist stilletjes een
 // vierde. De array is geldig JavaScript, dus laat node hem zelf lezen.
-const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
+const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
 const begin = bron.indexOf('const ENGELS = Object.fromEntries([');
 const eind = bron.indexOf('\n]);', begin);
 if (begin === -1 || eind === -1) throw new Error('de woordenlijst staat niet in index.html');

@@ -3,7 +3,7 @@
 
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
-import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdtempSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,7 +42,7 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
                                    taal = 'nl', voorafAan } = {}) {
   const map = mkdtempSync(join(tmpdir(), 'poule-test-'));
 
-  const bron = readFileSync(indexPad ?? join(wortel, 'index.html'), 'utf8');
+  const bron = readFileSync(indexPad ?? join(wortel, 'app', 'index.html'), 'utf8');
   const html = bron.replace(
     /await import\(\s*'https:\/\/esm\.sh\/@supabase\/supabase-js@2'\s*\)/,
     "await import('./nabootsing-supabase.mjs')");
@@ -158,3 +158,58 @@ export async function kiesVoor(page, kies, nr) {
 // Welke coureur staat er nu op een plek of bij een vraag?
 export const opPlek = (page, kies) =>
   page.$eval(kies, (n) => n.querySelector('.code')?.textContent.trim() ?? '');
+
+// De site zoals GitHub Pages hem serveert: de landingspagina in de hoofdmap,
+// de talen in hun eigen map en de app in app/. startPagina() hierboven zet de
+// app op / en is er voor alles wat óver de app gaat; dit is er voor wat over
+// de weg ernaartoe gaat -- het doorsturen vanaf /, de paden tussen de mappen,
+// en wat een bezoeker zonder poule te zien krijgt.
+//
+// De app krijgt ook hier de nabootsing in plaats van Supabase. Alles wat naar
+// een andere host wil, wordt geweigerd en onthouden in `extern`: de pagina's
+// horen niets van buiten te laden.
+export async function startSite({ voorafAan, taal = null } = {}) {
+  const types = { '.html': 'text/html', '.mjs': 'text/javascript', '.js': 'text/javascript',
+                  '.woff2': 'font/woff2', '.png': 'image/png', '.jpg': 'image/jpeg',
+                  '.xml': 'application/xml', '.txt': 'text/plain', '.ics': 'text/calendar',
+                  '.webmanifest': 'application/manifest+json' };
+  const appBron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8').replace(
+    /await import\(\s*'https:\/\/esm\.sh\/@supabase\/supabase-js@2'\s*\)/,
+    "await import('./nabootsing-supabase.mjs')");
+  const server = createServer((req, res) => {
+    const pad = decodeURIComponent(req.url.split('?')[0]);
+    const stuur = (body, soort) => { res.writeHead(200, { 'Content-Type': soort }); res.end(body); };
+    if (pad === '/app/' || pad === '/app/index.html') return stuur(appBron, 'text/html');
+    if (pad === '/app/nabootsing-supabase.mjs') {
+      return stuur(readFileSync(join(hier, 'nabootsing-supabase.mjs')), 'text/javascript');
+    }
+    let vol = join(wortel, pad.replace(/^\//, ''));
+    try {
+      if (statSync(vol).isDirectory()) vol = join(vol, 'index.html');
+      stuur(readFileSync(vol), types[vol.slice(vol.lastIndexOf('.'))] ?? 'application/octet-stream');
+    } catch {
+      res.writeHead(404, { 'Content-Type': 'text/html' });
+      res.end(readFileSync(join(wortel, '404.html')));
+    }
+  });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const url = `http://127.0.0.1:${server.address().port}/`;
+  const browser = await chromium.launch();
+  const context = await browser.newContext();
+  const extern = [];
+  await context.route((u) => !u.href.startsWith(url), (route) => {
+    extern.push(route.request().url());
+    return route.abort();
+  });
+  if (taal) await context.addInitScript((t) => {
+    try { localStorage.setItem('poule:taal', t); } catch { /* niets */ }
+  }, taal);
+  const page = await context.newPage();
+  if (voorafAan) await voorafAan(page, context);
+  const jsFouten = [];
+  page.on('pageerror', (e) => jsFouten.push(String(e)));
+  return {
+    page, context, url, extern, jsFouten,
+    async stoppen() { await browser.close(); server.close(); },
+  };
+}

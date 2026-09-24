@@ -3,7 +3,7 @@
  *
  *     node scripts/push-sleutels.mjs
  *
- * Eén keer per project. De publieke helft gaat in index.html bij
+ * Eén keer per project. De publieke helft gaat in app/index.html bij
  * VAPID_PUBLIEK; die is met opzet openbaar, net als de anon key. De privé-
  * helft gaat als repository-secret VAPID_PRIVE naar GitHub en nergens anders
  * heen: wie hem heeft kan meldingen namens deze app versturen.
@@ -20,7 +20,7 @@ const { prive, publiek } = nieuwSleutelpaar();
 console.log(`
 Een vers VAPID-sleutelpaar.
 
-  1. In index.html, bij de instellingen bovenaan:
+  1. In app/index.html, bij de instellingen bovenaan:
 
      const VAPID_PUBLIEK = '${publiek}';
 
@@ -35,6 +35,6 @@ Een vers VAPID-sleutelpaar.
      naam:   PUSH_CONTACT
      waarde: mailto:jij@voorbeeld.nl
 
-Zet de privésleutel nergens anders neer. Hij hoort niet in index.html, niet in
+Zet de privésleutel nergens anders neer. Hij hoort niet in app/index.html, niet in
 een commit en niet in een chat.
 `);

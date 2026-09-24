@@ -48,7 +48,7 @@ const METSLEUTEL = (bron) => bron.replace(
   "const VAPID_PUBLIEK = 'BH5WKgOsOKGNJfEDcwTQxDETF_yim8P_gL4pfUy2MmZR3zHIcKyhp0el0BP8udhSNdt3P1N1hIxHVq2yU1V5rMM';");
 
 {
-  const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
+  const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
   const aangepast = METSLEUTEL(bron);
   if (aangepast === bron) throw new Error('VAPID_PUBLIEK staat niet meer leeg in index.html');
   const pad = join(process.env.TMPDIR ?? '/tmp', `poule-push-${process.pid}.html`);
@@ -77,7 +77,7 @@ const METSLEUTEL = (bron) => bron.replace(
 
 // ---- met een sleutel en toestemming: de knop staat er --------------------
 {
-  const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
+  const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
   const pad = join(process.env.TMPDIR ?? '/tmp', `poule-push2-${process.pid}.html`);
   const { writeFileSync } = await import('node:fs');
   writeFileSync(pad, METSLEUTEL(bron));
@@ -113,7 +113,7 @@ const METSLEUTEL = (bron) => bron.replace(
 // uit deze rij, dus als hij hier niet in staat komt elke melding in het
 // Nederlands aan, ook bij wie de app in het Engels gebruikt.
 {
-  const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
+  const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
   const pad = join(process.env.TMPDIR ?? '/tmp', `poule-push3-${process.pid}.html`);
   const { writeFileSync } = await import('node:fs');
   writeFileSync(pad, METSLEUTEL(bron));

@@ -19,7 +19,7 @@ import { maakControle, wortel } from './hulp.mjs';
 import { knipUit, rekenkern, BLOKKEN } from '../scripts/knipsel.mjs';
 
 const { check, afronden } = maakControle('knipsel: de rekenkern uit index.html');
-const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
+const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
 
 // ------------------------------------------------------------------
 // 1. Alle vier de blokken zijn er, en ze bevatten wat ze horen te bevatten.

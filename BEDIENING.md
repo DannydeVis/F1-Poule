@@ -2,6 +2,10 @@
 
 Ontwerp voor de navigatie en het aanmaakproces. Hoort bij `ROUTEKAART.md`.
 
+> **Sinds 24 september 2026 staat de app in `app/index.html`.** In de hoofdmap
+> staat nu de landingspagina (zie `OVERDRACHT.md`, "Een landingspagina in zeven
+> talen"). Waar hieronder `index.html` staat, is de app bedoeld.
+
 ---
 
 ## 1. Wat er eerst moet gebeuren

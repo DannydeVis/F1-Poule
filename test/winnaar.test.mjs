@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { maakControle, wortel } from './hulp.mjs';
 
-const bron = readFileSync(join(wortel, 'index.html'), 'utf8');
+const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
 const stuk = bron.match(/export function scoreEerste[\s\S]*?\n\}/);
 if (!stuk) { console.error('FOUT: scoreEerste() niet gevonden in index.html'); process.exit(2); }
 
