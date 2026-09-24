@@ -39,7 +39,7 @@ export function maakControle(titel) {
 // test/talen.test.mjs zet er bijvoorbeeld navigator.languages mee om, en dat
 // moet gebeurd zijn voordat de app zijn taal kiest.
 export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
-                                   taal = 'nl', voorafAan } = {}) {
+                                   taal = 'nl', verhaal = false, voorafAan } = {}) {
   const map = mkdtempSync(join(tmpdir(), 'poule-test-'));
 
   const bron = readFileSync(indexPad ?? join(wortel, 'app', 'index.html'), 'utf8');
@@ -87,6 +87,17 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
   if (taal) await page.addInitScript((t) => {
     try { localStorage.setItem('poule:taal', t); } catch { /* niets */ }
   }, taal);
+  // Het verhaal na een uitslag (speelVerhaal() in de app) legt zich over het
+  // hele scherm, zodra er een recente uitslag is waar jij iets voor inleverde.
+  // Tientallen tests zetten zo'n uitslag klaar om iets anders te bekijken, en
+  // horen daar niet over te struikelen. Dus staat het uit, zoals een speler
+  // het in Profiel uitzet, behalve in test/verhaal.test.mjs. Alleen als er
+  // nog niets staat, zodat een test het halverwege zelf aan kan zetten.
+  if (!verhaal) await page.addInitScript(() => {
+    try {
+      if (localStorage.getItem('poule:verhaal') === null) localStorage.setItem('poule:verhaal', 'uit');
+    } catch { /* niets */ }
+  });
   if (voorafAan) await voorafAan(page);
   const jsFouten = [];
   page.on('pageerror', (e) => jsFouten.push(String(e)));
