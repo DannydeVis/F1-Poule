@@ -137,7 +137,7 @@ const CSS = `
     -webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--nacht-lijn);color:var(--nacht-ink)}
   .kop .binnen{display:flex;align-items:center;gap:18px;min-height:64px}
   .merk{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto;min-height:44px}
-  .merk .blok{width:22px;height:22px;border-radius:4px;background:var(--accent);flex:none}
+  .merk .blok{width:24px;height:24px;flex:none;display:block}
   .merk b{font-family:var(--cond);font-size:20px;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
   .kopnav{display:none;gap:22px}
   .kopnav a{text-decoration:none;font-size:15px;font-weight:600;color:var(--nacht-ink2);padding:10px 0}
@@ -469,7 +469,7 @@ ${jsonLd(code)}
 <body>
 <header class="kop">
   <div class="binnen">
-    <a class="merk" href="${naar(code, code)}" aria-label="Predict the Race"><span class="blok"></span><b>Predict the Race</b></a>
+    <a class="merk" href="${naar(code, code)}" aria-label="Predict the Race"><img class="blok" src="${p}pictogrammen/predicttherace-logo.png" alt="" width="24" height="24"><b>Predict the Race</b></a>
     <nav class="kopnav" aria-label="${esc(t.nav.hoe)}">
       <a href="#hoe">${esc(t.nav.hoe)}</a><a href="#punten">${esc(t.nav.punten)}</a><a href="#faq">${esc(t.nav.faq)}</a>
     </nav>
@@ -669,7 +669,7 @@ ${hreflang}
 <body>
 <header class="kop">
   <div class="binnen">
-    <a class="merk" href="${thuis}" aria-label="Predict the Race"><span class="blok"></span><b>Predict the Race</b></a>
+    <a class="merk" href="${thuis}" aria-label="Predict the Race"><img class="blok" src="${p}pictogrammen/predicttherace-logo.png" alt="" width="24" height="24"><b>Predict the Race</b></a>
     <a class="knop klein" href="${app}">${esc(t.app)}</a>
   </div>
 </header>

@@ -342,7 +342,12 @@
   .baan{height:3px;background:var(--accent)}
   .kaart-in{padding:24px 22px 30px;display:flex;flex-direction:column;gap:24px}
   .merk{display:flex;align-items:center;gap:10px}
-  .merk .blok{width:26px;height:26px;border-radius:4px;background:var(--accent);flex:none}
+  /* Het logo, de P. Eerst stond hier een rood blokje, als plaatsvervanger tot
+     er een logo was. Als achtergrond en niet als <img>: het staat op zes
+     plekken in de sjablonen, en zo blijven die gewoon <span class="blok">.
+     Versiering, want de naam staat er meteen naast. */
+  .merk .blok{width:28px;height:28px;flex:none;
+    background:url(../pictogrammen/predicttherace-logo.png) center/contain no-repeat}
   .merk .naam{font-family:var(--cond);font-size:24px;font-weight:700;
     text-transform:uppercase;letter-spacing:.02em;min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}

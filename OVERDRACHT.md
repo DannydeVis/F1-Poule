@@ -6597,3 +6597,28 @@ Acht mutanten, en elk ervan zakt op de controle die erbij hoort:
 - de haperende verbinding die weer een balkje geeft;
 - geen foutmelding in het balkje;
 - en later, bij "Script error.": het filter weg (twee controles zakken).
+
+## Het logo in de kop, waar het rode blokje stond
+
+Het rode vierkantje naast de naam, in de app en op de site, was een
+plaatsvervanger tot er een logo was. Nu staat daar de P.
+
+- **`pictogrammen/predicttherace-logo.png`** (128×128) maakt
+  `scripts/maak-pictogrammen.mjs` uit `site/bron/logo.webp`. Het is de P in
+  zijn eigen kleuren op doorzichtig, en strak bijgesneden, zodat hij op 24
+  pixels nog een P is. De grijze schaduw uit de bron zit er niet in: die
+  stond op de donkere kop van de site als een vlek.
+- **In de app** is het een achtergrond van `.merk .blok`, 28 pixels. Het blok
+  staat op zes plekken in de sjablonen, en zo blijven die gewoon
+  `<span class="blok">`.
+- **Op de site** (voorpagina's en privacypagina) is het een `<img>` met een
+  relatief pad, 24 pixels. Daar weet de generator hoe diep de pagina staat.
+- De schermafdrukken op de voorpagina (`site/beeld/`) zijn opnieuw gemaakt,
+  want daarop stond de app nog met het blokje. De deelplaatjes veranderden
+  niet; die hebben geen kop.
+
+`test/beelden.test.mjs` controleert het logo: 128×128, oranje op
+doorzichtig, geen grijze pixels. Ook dat de app en elke pagina van de site
+het gebruiken. Vier mutanten zakken elk op de juiste controle: een logo met
+de schaduw uit de bron, de app terug naar het rode blokje, de site terug naar
+het blokje, en het logo weg.
