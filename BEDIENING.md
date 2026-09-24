@@ -1468,19 +1468,35 @@ opent de app voortaan in een browservenster.
 
 ### Stap 8: zoekmachines
 
-- **Google Search Console** → Add property → **Domain** → `predicttherace.com`
-  → het TXT-record dat Google geeft bij je registrar zetten → Verify. Dan onder
-  **Sitemaps**: `https://predicttherace.com/sitemap.xml`.
-- **Bing Webmaster Tools** → "Import from Google Search Console" is één klik
-  en neemt de sitemap mee. Op Bing leunen ook Copilot en voor een deel de
-  zoekfunctie van ChatGPT.
+- **Google Search Console** (search.google.com/search-console) → Add
+  property → het linkervak, **Domain** → `predicttherace.com`. Google geeft een
+  regel `google-site-verification=…`; die komt bij de registrar als TXT-record
+  op `@`, en dan **Verify** (lukt het niet meteen, een kwartier wachten). Daarna
+  onder **Sitemaps**: `sitemap.xml`. "Couldn't fetch" in de eerste dagen is
+  normaal bij een nieuw domein.
+- **Bing Webmaster Tools** (bing.com/webmasters). "Import from Google Search
+  Console" vindt een Domain-property **niet** ("we didn't find any sites from
+  GSC"): Bing neemt alleen URL-prefix-properties over. Dus handmatig: Add your
+  site manually → `https://predicttherace.com/` → **CNAME record**. Bing geeft
+  een naam (een code van 32 tekens) met als waarde `verify.bing.com`; die
+  CNAME bij de registrar, en dan Verify. Daarna onder **Sitemaps**:
+  `https://predicttherace.com/sitemap.xml`. Op Bing leunen ook Copilot en voor
+  een deel de zoekfunctie van ChatGPT; onder **AI Performance** zie je
+  wanneer de site daar geciteerd wordt.
+- **Google Cloud → Branding**: de links naar de privacyverklaring en de
+  voorwaarden wezen naar `dannydevis.github.io/F1-Poule/`; zet ze op
+  `https://predicttherace.com/`. Een losse privacypagina is er nog niet (de
+  verklaring staat in de app, §12), en die wil Google zien zodra je ooit
+  verificatie aanvraagt.
 - Klein, maar handig: de repo → het tandwieltje bij **About** → Website:
   `https://predicttherace.com`.
 
 ### Wat vanzelf gaat
 
-- **De agenda.** `kalender.ics` noemt nog het oude adres in elk item. De sync
-  schrijft hem opnieuw bij de dagelijkse run (04:23 UTC), met het nieuwe adres.
-  Wie er al op geabonneerd is hoeft niets te doen.
+- **De agenda.** `kalender.ics` noemt het adres van de app in elk item. De
+  sync schrijft hem bij elke run opnieuw als er iets verschilt, dus de eerste
+  run na de koppeling zet het nieuwe adres erin (Actions → Uitslagen
+  synchroniseren → Run workflow, als je niet wilt wachten). Wie er al op
+  geabonneerd is hoeft niets te doen.
 - **Meldingen** staan nog niet aan (§11c). Als ze aangaan is dat op het nieuwe
   adres, en daar wijzen ze ook heen.

@@ -6247,9 +6247,10 @@ GitHub Pages, Supabase, Google Cloud, zoekmachines) staat stap voor stap in
 - **`APP_URL` in `scripts/sync.mjs`** wijst nu naar
   `https://predicttherace.com/app/`. Dat adres komt in elk agenda-item en in
   elke melding. Bewust de app en niet de landingspagina: wie op een deadline
-  tikt wil invullen. `kalender.ics` noemt tot de eerstvolgende dagelijkse run
-  nog het oude adres; de sync schrijft hem dan zelf opnieuw, want hij vergelijkt
-  het hele bestand en niet alleen de races.
+  tikt wil invullen. `kalender.ics` noemde tot de eerstvolgende sync-run nog
+  het oude adres; de sync schrijft hem dan zelf opnieuw, want hij vergelijkt
+  het hele bestand en niet alleen de races. Dat was dezelfde middag: een
+  handmatige run na de koppeling zette het nieuwe adres in alle 96 links.
 - **De documentatie**: de "Live op"-regels, de voorbeeldlinks en de
   Redirect URL in `BEDIENING.md`. In de oude hoofdstukken hierboven staat het
   oude adres nog waar het over toen gaat.
@@ -6300,3 +6301,24 @@ noemen geen vast domein. Acht mutanten, elk op de juiste controle gezakt:
 `APP_URL` in de workflow, `CNAME` met `https://` en met `www.`, het oude adres
 terug in een opmerking in de app, het domein in de service worker, en `BASIS`
 met een slash erachter. Een goede `CNAME`, met en zonder regeleinde, slaagt.
+
+### Gekoppeld, dezelfde dag
+
+Het domein staat bij TransIP. Op 24 september 2026 zijn daar de vier A-records
+en de `www`-CNAME naar `dannydevis.github.io` gezet; de mailrecords van TransIP
+(`transip-*._domainkey`, `_dmarc`) staan ernaast en bijten niet. Daarna, in
+deze volgorde: het domein opgeslagen onder Settings → Pages (GitHub zette
+`CNAME` zelf in `main`), het certificaat en Enforce HTTPS, Supabase (Site URL en
+Redirect URLs), Google Cloud (JavaScript origin, en onder Branding de
+startpagina en de links naar privacy en voorwaarden), Search Console met de
+sitemap, en Bing.
+
+Wat anders liep dan het stappenplan zei, en daarin inmiddels verbeterd is:
+
+- **Bing kan een Domain-property uit Search Console niet overnemen.** De
+  import zegt dan "we didn't find any sites from GSC". Handmatig toevoegen met
+  een CNAME naar `verify.bing.com` werkte wel.
+- **De agenda hoefde niet op de dagelijkse run te wachten.** `schrijfAgenda()`
+  draait bij elke sync-run; een handmatige run was genoeg.
+- **Google Branding verwees voor privacy en voorwaarden naar het oude adres.**
+  Die links stonden nergens in de repo, dus ook de test kon ze niet vinden.
