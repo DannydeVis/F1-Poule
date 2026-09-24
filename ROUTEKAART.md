@@ -31,9 +31,11 @@ een `.nl` is het een andere naam geworden: **`predicttherace.com`**, gekocht.
 De app heet sindsdien Predict the Race, en de hernoeming die hieronder als
 checklist stond is gedaan.
 
-De repo is omgezet: de landingspagina, de sitemap, de agenda en de meldingen
-wijzen naar `https://predicttherace.com`, en `test/domein.test.mjs` houdt dat
-gelijk. Wat er nog moet gebeuren is niet in deze repo maar bij de diensten
+Sinds 24 september 2026 staat de site er ook echt op: DNS bij TransIP,
+GitHub Pages met HTTPS, Supabase, Google, Search Console en Bing zijn
+gekoppeld (zie `OVERDRACHT.md`, "Het eigen domein"). De landingspagina, de
+sitemap, de agenda en de meldingen wijzen naar `https://predicttherace.com`,
+en `test/domein.test.mjs` houdt dat gelijk. Wat er nog moet gebeuren is niet in deze repo maar bij de diensten
 eromheen, en dat staat stap voor stap in **`BEDIENING.md` §15**: DNS, GitHub
 Pages, Supabase, Google Cloud, de spelers, en daarna Search Console en Bing.
 
