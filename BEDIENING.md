@@ -364,9 +364,11 @@ De joker staat op het racescherm, boven de tabbladen — hij geldt voor het hele
 weekend en niet voor één sessie. In de kalender zie je er een `2×` bij staan.
 
 Het paneel zegt in één oogopslag waar je aan toe bent: een gevulde groene
-schijf met een ster en een doorlopende rand als er een joker ligt, een lege
-schijf met een stippellijn als er nog een te vergeven is. Daaronder staat één
-zin die zegt wat het doet.
+schijf met een ster op een groen vlak als er een joker ligt, een lege grijze
+schijf op een gewoon paneel als er nog een te vergeven is. Daaronder staat één
+zin die zegt wat het doet. (Tot het derde ontwerp had het lege paneel een
+stippelrand; die is weg, want een stippelrand leest als een vak dat je nog
+moet invullen, en geen enkele andere banner heeft er nog een.)
 
 In de kalender is het `2×` een gevuld groen pilletje. Dat is met opzet anders
 dan de Q/R/S-vinkjes ernaast, die ook groen worden zodra je die sessie hebt

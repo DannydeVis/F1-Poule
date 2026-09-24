@@ -99,6 +99,21 @@
        rangorde blijft zo groot als hij kan zijn. */
     --ink:#14151a; --ink2:#61656d; --ink3:#696e75;
     --accent:#d93d24; --accent-ink:#ffffff;
+    /* Het accent als vlak: de gloed achter je eigen regel in een lijst en
+       achter de weekendkaart. Nooit een achtergrond voor tekst in het accent
+       zelf -- daarvoor is hij te licht. */
+    --accent-vlak:rgba(217,61,36,.08); --accent-rand:rgba(217,61,36,.35);
+    /* Je eigen regel in een lijst: een zachte gloed die vanaf de accentstreep
+       wegloopt. Zegt "dit ben jij" zonder dat de hele regel gekleurd is. */
+    --eigen:linear-gradient(90deg,rgba(217,61,36,.09),transparent 70%);
+    /* Het accent als kleine tekst ("jij" achter je naam). Het gewone accent
+       haalt 4.52 op wit en zakt op die gloed onder de 4.5; deze haalt 5.0
+       zelfs op het warmste stuk ervan. */
+    --accent-tekst:#bf3219;
+    /* Een regel onder de muis. Niet --paneel2: daarop zakt de kleinste grijze
+       tekst (--ink3) naar 4.19, en een naam die onleesbaar wordt zodra je
+       ernaar wijst is precies verkeerd om. */
+    --zweef:#f5f4f1;
     /* Ook deze twee dragen kleine tekst ("sluit zo 09:04", "nog geen top 10")
        en haalden 4.38 en 3.69 tegen de achtergrond. Nu 4.55 en 4.51. De
        vlakken en randen eronder zijn achtergronden en hoeven niets te halen;
@@ -128,6 +143,12 @@
       /* Zelfde verhaal in het donker: #656b74 haalde 3.36. Nu 4.61/5.01. */
       --ink:#f2f3f5; --ink2:#9aa0a8; --ink3:#7b818a;
       --accent:#ee4d33; --accent-ink:#0b0b0c;
+      --accent-vlak:rgba(238,77,51,.12); --accent-rand:rgba(238,77,51,.45);
+      --eigen:linear-gradient(90deg,rgba(238,77,51,.14),transparent 70%);
+      --accent-tekst:#f26a52;
+      /* In het donker iets diéper dan het paneel in plaats van lichter:
+         alles lichter dan #15161a haalt --ink3 niet meer. */
+      --zweef:#111216;
       --groen:#34b264; --groen-vlak:rgba(52,178,100,.16); --groen-rand:rgba(52,178,100,.50);
       --groen-sterk:rgba(52,178,100,.70); --groen-ink:#0b0b0c;
       --amber:#e0a53a; --amber-vlak:rgba(224,165,58,.08); --amber-rand:rgba(224,165,58,.40);
@@ -141,6 +162,13 @@
   @keyframes inrij{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
   @keyframes lampjes{0%,100%{opacity:.18}50%{opacity:1}}
   @keyframes schuif{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes opkomen{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  /* Wat nieuw op het scherm komt, komt zacht op: een ander scherm, een race
+     die je opent, een melding die er net bij kwam. Welk element dat is
+     bepaalt markeerNieuw() in het script, niet de stylesheet -- een animatie
+     op een klasse zou bij elke keer tekenen opnieuw afspelen, en de app
+     tekent vaak. */
+  .intro{animation:opkomen .3s var(--soepel) both}
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation:none!important;transition:none!important}
   }
@@ -176,13 +204,18 @@
   }
   /* Sommige knoppen zijn een link, want ze gaan ergens heen (webcal://). */
   a.knop{text-decoration:none;color:inherit}
-  .knop.primair{background:var(--accent);color:var(--accent-ink)}
-  .knop.primair:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08)}
+  .knop.primair{background:var(--accent);color:var(--accent-ink);
+    box-shadow:0 8px 22px -12px var(--accent)}
+  .knop.primair:hover:not(:disabled){filter:brightness(1.08)}
+  /* Een knop geeft mee als je hem indrukt. Kleiner worden in plaats van
+     omhoogspringen bij aanwijzen: dat laatste deed elke knop in de app, en
+     een scherm waarop alles beweegt zodra je muis eroverheen gaat is onrustig. */
+  .knop:active:not(:disabled){transform:scale(.985)}
   .knop.spook{background:transparent;border:1px solid var(--lijn);color:var(--ink);
     font-size:15px;font-weight:600;min-height:48px}
   .knop.spook:hover{border-color:var(--accent);background:var(--paneel)}
   .knop.wit{background:var(--omkeer);color:var(--omkeer-ink);min-height:50px;font-size:16px}
-  .knop.wit:hover{transform:translateY(-2px)}
+  .knop.wit:hover{filter:brightness(1.1)}
   /* De enige knop die met opzet de huisstijl niet volgt. Zijn hele waarde zit
      in herkenbaarheid: het officiële logo, gewone schrijfwijze in plaats van
      kapitalen, en een vlak dat in beide thema's leest als de knop die overal
@@ -191,7 +224,8 @@
     gap:12px;min-height:50px;font-size:16px;font-weight:600}
   .knop.google:hover:not(:disabled){border-color:var(--ink3);background:var(--paneel2)}
   .knop.google svg{width:20px;height:20px;flex:none}
-  .knop:disabled{background:var(--gedempt);color:var(--ink3);cursor:default;transform:none;filter:none}
+  .knop:disabled{background:var(--gedempt);color:var(--ink3);cursor:default;transform:none;
+    filter:none;box-shadow:none}
   .knop.klein{min-height:44px;font-size:14px;font-weight:600;
     color:var(--ink2);border:1px solid var(--lijn)}
   .knop.klein:hover{border-color:var(--ink3);color:var(--ink)}
@@ -223,32 +257,54 @@
   }
   .scheiding{height:1px;background:var(--lijn)}
 
-  /* ---- meldingen ------------------------------------------ */
+  /* ---- meldingen en banners ------------------------------- */
+  /* Eén vorm voor alles wat iets meldt. Eerst had elke soort zijn eigen
+     jasje: een groen vlak, een geel vlak, een stippelrand, een grijs blok en
+     een wit blok. Op de standpagina stonden er vier verschillende onder
+     elkaar, en dan ziet een scherm eruit als een prikbord. Nu is het overal
+     een effen paneel met een dunne rand en een rondje ervoor, en zegt alleen
+     dat rondje wat voor melding het is: een vinkje, een uitroepteken, een i.
+     De tekst staat in gewone letter en in de gewone tekstkleur, want een
+     hele zin in groen of geel leest slecht. */
   .meldingbalk{padding:16px 16px 0}
-  .meldingbalk .melding{margin-bottom:0}
-  .melding{
-    display:flex;align-items:center;gap:12px;background:var(--groen-vlak);
-    border:1px solid var(--groen-rand);border-radius:12px;padding:14px 16px;
-    color:var(--groen);font-size:15px;font-weight:600;margin-bottom:14px;
-  }
-  .melding::before{content:"";width:10px;height:10px;border-radius:50%;
-    background:var(--groen);flex:none}
-  .waarschuwing{
-    display:flex;flex-direction:column;gap:8px;background:var(--amber-vlak);
-    border:1px solid var(--amber-rand);border-radius:12px;padding:16px;
-    color:var(--amber);font-size:15px;margin-bottom:14px;
-  }
+  .melding,.waarschuwing,.leeg,.uitleg,.bijna{
+    position:relative;display:block;background:var(--paneel);border:1px solid var(--lijn);
+    border-radius:14px;padding:14px 16px 14px 52px;margin:0;
+    color:var(--ink2);font-size:14px;line-height:1.5;flex:none}
+  .melding::before,.waarschuwing::before,.leeg::before,.uitleg::before,.bijna::before{
+    position:absolute;left:16px;top:13px;width:24px;height:24px;border-radius:50%;
+    display:grid;place-items:center;font-family:var(--sans);font-size:12px;
+    font-weight:700;line-height:1;font-style:normal;
+    background:var(--gedempt);color:var(--ink2)}
+  /* Het teken is versiering: de zin ernaast zegt het al. De tweede
+     content-regel geeft het een lege voorleestekst; een browser die dat niet
+     kent slaat die regel over en houdt de eerste. */
+  .melding::before{content:"✓";content:"✓" / "";
+    background:var(--groen-vlak);color:var(--groen)}
+  .waarschuwing::before{content:"!";content:"!" / "";
+    background:var(--amber-vlak);color:var(--amber)}
+  .leeg::before,.uitleg::before{content:"i";content:"i" / "";font-size:13px}
+  .bijna::before{content:"↗";content:"↗" / "";
+    background:var(--accent-vlak);color:var(--accent)}
+  /* De bevestiging na opslaan is één korte zin. Die hoeft niet de hele
+     breedte te beslaan; zo oogt hij als een seintje en niet als een balk. */
+  .melding{width:fit-content;max-width:100%;color:var(--ink);font-weight:600;
+    padding-top:13px;padding-bottom:13px}
+  /* Deze drie hebben een kopje en losse alinea's onder elkaar; .uitleg en
+     .melding zijn één doorlopende zin met vet erin, en die mogen geen
+     flexkolom zijn -- dan wordt elk stukje tekst tussen twee <b>'s een eigen
+     regel. */
+  .waarschuwing,.leeg,.bijna{display:flex;flex-direction:column;gap:6px;
+    align-items:flex-start}
   .waarschuwing .label{color:var(--amber)}
+  .leeg .middel{font-size:26px}
+  .uitleg b,.leeg b{color:var(--ink)}
   /* flex:none, geen min-height:0. De kolommen zijn flexkolommen die op een
      breed scherm zelf scrollen, en een flexitem met min-height:0 mag door de
      browser tot niets worden platgedrukt zodra de inhoud niet past. Dat
      gebeurde ook: de foutmelding stond er wel, met de juiste tekst, maar was
      nul pixels hoog. Een melding die je niet kunt lezen is geen melding. */
   .err{color:var(--accent);font-size:14px;margin:8px 0 0;flex:none}
-  .leeg{
-    display:flex;flex-direction:column;gap:12px;align-items:flex-start;
-    border:1px dashed var(--stippel);border-radius:14px;padding:20px;
-  }
 
   /* ---- toegangsschermen (poulecode, wie ben jij) ---------- */
   .toegang{min-height:100%;display:flex;justify-content:center;padding:20px 14px 60px}
@@ -284,6 +340,7 @@
      telefoon niet op één regel. Zonder dit valt het eind er stilletjes af. */
   .smalkop{overflow-wrap:anywhere}
   .veldblok{display:flex;flex-direction:column;gap:12px}
+  .stapinhoud{display:flex;flex-direction:column;gap:24px}
   /* De beheerkop krijgt een accentstreep aan de zijkant, en alles eronder
      hoort daar zichtbaar bij. Geen kadertje eromheen: dat zou een vijfde
      kader op een pagina maken die er al genoeg heeft. */
@@ -296,15 +353,17 @@
     color:var(--ink2);flex:none}
 
   /* ---- spelerkeuze ---------------------------------------- */
+  /* Een regel in een groep (zie ---- groepen), geen kaart op zichzelf. */
   .speler{
-    display:flex;align-items:center;gap:14px;width:100%;min-height:58px;
-    padding:0 18px;background:var(--paneel2);border:1px solid var(--lijn);
-    border-left:3px solid var(--lijn);border-radius:12px;text-align:left;
-    transition:transform .18s var(--soepel),background .18s;animation:schuif .4s both;
+    display:flex;align-items:center;gap:14px;width:100%;min-height:56px;
+    padding:0 16px 0 13px;background:transparent;border:0;
+    border-left:3px solid transparent;text-align:left;
+    transition:background .15s;
   }
-  .speler:hover{transform:translateX(4px);background:var(--gedempt)}
-  .speler.zelf{border-left-color:var(--accent)}
-  .speler .nr{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ink3)}
+  button.speler:hover{background:var(--zweef)}
+  .speler.zelf{border-left-color:var(--accent);background:var(--eigen)}
+  .speler.zelf .nr{color:var(--ink)}
+  .speler .nr{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink3)}
   /* Een naam is geen kop. In condensed hoofdletters op 26 pixels weegt
      "Danny" net zo zwaar als het aantal punten ernaast, terwijl dat tweede is
      waar de stand over gaat. */
@@ -375,8 +434,20 @@
   .shell.detail .kol.rechts{display:flex}
 
   /* ---- hero: eerstvolgende deadline ----------------------- */
-  .hero{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;
+  /* De weekendkaart krijgt een zachte gloed linksboven en het rondenummer
+     groot en bijna onzichtbaar op de achtergrond, zoals op een startnummer.
+     Allebei versiering: ze trekken het oog naar de kaart die ertoe doet
+     zonder dat er één woord bij komt. isolation houdt het watermerk achter de
+     tekst zonder dat de kaart zelf een z-index nodig heeft. */
+  /* flex:none om dezelfde reden als bij .err: overflow:hidden op een flexitem
+     laat de browser hem platdrukken, en dan viel de voet van de kaart weg. */
+  .hero{position:relative;isolation:isolate;overflow:hidden;flex:none;
+    background:radial-gradient(120% 80% at 0% 0%,var(--accent-vlak),transparent 60%),var(--paneel);
+    border:1px solid var(--lijn);border-radius:16px;
     padding:22px;display:flex;flex-direction:column;gap:16px}
+  .hero[data-ronde]::after{content:attr(data-ronde);position:absolute;z-index:-1;
+    right:-8px;top:-34px;font-family:var(--cond);font-weight:700;font-size:210px;
+    line-height:1;letter-spacing:-.02em;color:var(--ink);opacity:.045;pointer-events:none}
   .hero-kop{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
   .klok{font-family:var(--cond);font-size:54px;font-weight:700;line-height:.9}
   .klok i{font-style:normal;font-size:22px;color:var(--ink2)}
@@ -420,22 +491,21 @@
      rijen is dat twintig gekleurde balken, en dan betekent kleur niets meer.
      Drie pixels, en het kader eromheen doet het werk. */
   .race{
-    display:flex;align-items:center;gap:14px;width:100%;min-height:64px;
-    padding:8px 16px;background:var(--paneel);border:1px solid var(--lijn);
-    border-left:3px solid transparent;border-radius:12px;text-align:left;
-    transition:transform .18s var(--soepel),border-color .18s;
+    display:flex;align-items:center;gap:14px;width:100%;min-height:62px;
+    padding:8px 16px 8px 13px;background:transparent;border:0;
+    border-left:3px solid transparent;text-align:left;
+    transition:background .15s;
   }
-  .race:hover{transform:translateX(4px);border-color:var(--ink3)}
+  .race:hover{background:var(--zweef)}
   .race.open{border-left-color:var(--groen)}
-  .race.open:hover{border-left-color:var(--groen)}
-  .race.komt{background:transparent;border:1px dashed var(--stippel);color:var(--ink3)}
+  .race.komt{color:var(--ink3)}
   /* Een afgelaste race blijft staan maar hoort niet meer om aandacht te
      vragen: doorgestreept nummer, gedempt, en geen groene rand. */
   .race.afgelast{opacity:.55}
   .race.afgelast .rnd{text-decoration:line-through}
   .st.afgelast{color:var(--ink3)}
-  .race .rnd{font-family:var(--cond);font-size:34px;font-weight:700;
-    color:var(--ink3);min-width:44px;line-height:1}
+  .race .rnd{font-family:var(--cond);font-size:28px;font-weight:700;
+    color:var(--ink3);min-width:38px;line-height:1}
   .race.open .rnd{color:var(--ink)}
   .rinfo{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
   .rinfo .nm{font-size:16px;font-weight:600;letter-spacing:.01em;
@@ -463,10 +533,12 @@
   .terug:hover{border-color:var(--accent)}
   .dtitel{font-family:var(--cond);font-size:28px;font-weight:700;text-transform:uppercase;
     flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .tabs{display:flex;gap:6px;background:var(--paneel);border:1px solid var(--lijn);
-    border-radius:12px;padding:6px}
-  .tabs button{flex:1;min-height:52px;border-radius:8px;font-family:var(--cond);
-    font-size:19px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  /* Kwalificatie of race is een schakelaar, geen tweede rij koppen. Stond in
+     condensed hoofdletters op 19 pixels, even hard als de racenaam erboven. */
+  .tabs{display:flex;gap:4px;background:var(--paneel);border:1px solid var(--lijn);
+    border-radius:12px;padding:4px}
+  .tabs button{flex:1;min-height:44px;border-radius:9px;padding:0 8px;min-width:0;
+    font-size:15px;font-weight:600;letter-spacing:.01em;
     color:var(--ink2);transition:background .18s,color .18s}
   .tabs button:hover{background:var(--paneel2);color:var(--ink)}
   .tabs button[aria-selected="true"]{background:var(--omkeer);color:var(--omkeer-ink)}
@@ -479,15 +551,18 @@
      "er ligt een joker" en "er ligt er geen" een grijstint die je moet zoeken.
      Dit is het paneel dat het hardst om aandacht mag vragen: het verdubbelt
      je weekend. */
-  .jokerregel{display:flex;align-items:center;gap:12px;
-    border:2px dashed var(--stippel);border-radius:12px;padding:12px 14px}
-  .jokerregel.aan{border-style:solid;border-color:var(--groen-sterk);
-    background:var(--groen-vlak)}
+  /* Effen en niet gestippeld: een stippelrand zag eruit als een vak dat nog
+     ingevuld moest worden, en de andere banners zijn ook effen. Het verschil
+     tussen "ligt er" en "ligt er niet" zit in de gevulde schijf en het
+     groene vlak, niet in het soort streepje. */
+  .jokerregel{display:flex;align-items:center;gap:12px;background:var(--paneel);
+    border:1px solid var(--lijn);border-radius:14px;padding:12px 14px}
+  .jokerregel.aan{border-color:var(--groen-sterk);background:var(--groen-vlak)}
 
   /* De schijf met de ster. Gevuld als de joker ligt, leeg als hij nog te
      vergeven is -- dat verschil zie je van een meter afstand, en de tekst
      ernaast hoef je dan pas te lezen als je het zeker wilt weten. */
-  .jokerster{flex:none;width:34px;height:34px;border-radius:50%;
+  .jokerster{flex:none;width:32px;height:32px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
     font-size:17px;line-height:1;background:var(--gedempt);color:var(--ink3)}
   .jokerregel.aan .jokerster{background:var(--groen);color:var(--groen-ink)}
@@ -496,8 +571,7 @@
      min-width:0 zou een lange zin de rij breder maken dan het paneel in
      plaats van af te breken. */
   .jokertekst{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-  .jokerkop{font-family:var(--cond);font-size:18px;font-weight:700;
-    text-transform:uppercase;letter-spacing:.04em;color:var(--ink2)}
+  .jokerkop{font-size:14px;font-weight:700;letter-spacing:.01em;color:var(--ink)}
   .jokerregel.aan .jokerkop{color:var(--groen)}
   .jokeruitleg{font-size:14px;color:var(--ink2)}
   .jokeruitleg b{color:var(--ink);font-weight:700}
@@ -547,27 +621,29 @@
      één keer ziet, en dan is een gewone keuzelijst duidelijker en korter. */
   .seizoenslaag{display:flex;flex-direction:column;gap:8px}
   .seizoenvraag{display:grid;grid-template-columns:1fr auto;align-items:center;
-    gap:6px 12px;padding:12px;border:1px solid var(--lijn);border-radius:10px}
-  .seizoenvraag .nm{font-size:16px;display:flex;flex-direction:column;gap:2px;min-width:0}
-  .seizoenvraag .ptn{font-family:var(--mono);font-size:16px;color:var(--ink2);
+    gap:8px 12px;padding:14px 16px}
+  .seizoenvraag .nm{font-size:15px;font-weight:600;display:flex;flex-direction:column;
+    gap:2px;min-width:0}
+  .seizoenvraag .nm .zacht{font-weight:400}
+  .seizoenvraag .ptn{font-family:var(--mono);font-size:13px;color:var(--ink3);
     grid-row:1;grid-column:2}
   .seizoenvraag select,.seizoenvraag input{grid-column:1/-1;width:100%;
-    font-family:var(--cond);font-size:18px;color:var(--ink);background:var(--paneel);
-    border:1px solid var(--lijn);border-radius:8px;padding:10px;min-height:52px}
+    font-family:var(--sans);font-size:15px;color:var(--ink);background:var(--bg);
+    border:1px solid var(--lijn);border-radius:10px;padding:0 12px;min-height:48px}
   .seizoenvraag.klaar{grid-template-columns:1fr auto}
   .seizoenvraag .ptn.groen{color:var(--groen)}
 
   /* Een vraag als één regel: naam, keuze, punten. Twaalf coureurknoppen per
      vraag maakte het scherm onbruikbaar lang op een telefoon. */
-  .kiesregels{display:flex;flex-direction:column;gap:6px}
   .kiesregel{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;
-    min-height:52px;padding:0 14px;text-align:left;background:var(--paneel2);
-    border:1px solid var(--lijn);border-left:4px solid var(--lijn);border-radius:10px;
-    transition:background .18s}
-  .kiesregel:hover{background:var(--paneel)}
-  .kiesregel .nm{font-family:var(--cond);font-size:17px;color:var(--ink2)}
+    min-height:52px;padding:0 16px;text-align:left;background:transparent;border:0;
+    transition:background .15s}
+  .kiesregel:hover{background:var(--zweef)}
+  .kiesregel .nm{font-size:15px;font-weight:600;color:var(--ink2)}
   .kiesregel.vol .nm{color:var(--ink)}
-  .kiesregel .code{font-family:var(--cond);font-size:21px;font-weight:700;letter-spacing:.03em}
+  /* De teamkleur als streepje vóór de code, zoals in de uitslag. */
+  .kiesregel .code{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.03em;
+    border-left:3px solid var(--team,var(--lijn));padding-left:8px;line-height:1.1}
   .kiesregel .nogleeg{font-family:var(--mono);font-size:11px;text-transform:uppercase;
     letter-spacing:.08em;color:var(--accent)}
   .kiesregel .ptn{font-family:var(--mono);font-size:12px;color:var(--ink3);min-width:22px;
@@ -611,15 +687,21 @@
   .slot{
     width:86%;display:flex;align-items:center;gap:12px;min-height:48px;
     padding:0 12px;border-radius:10px;border:1px solid var(--lijn);
-    border-left:5px solid var(--lijn);background:var(--paneel2);
-    text-align:left;transition:background .15s;
+    border-left:3px solid var(--lijn);background:var(--paneel);
+    text-align:left;transition:background .15s,border-color .15s;
   }
-  .slot:hover{background:var(--paneel)}
-  .slot.vol{animation:inrij .4s both}
-  .slot.leegplek{background:transparent;border:1px dashed var(--stippel);
-    border-left:5px dashed var(--stippel)}
-  .slot.leegplek .who{font-family:var(--mono);font-size:11px;text-transform:uppercase;
-    letter-spacing:.06em;color:var(--ink3)}
+  .slot:hover{background:var(--zweef)}
+  /* Alleen de plek die net gevuld is rijdt binnen (zie markeerNieuw). Dit
+     stond op elke gevulde plek, en omdat het scherm na elke keuze opnieuw
+     getekend wordt reed de hele grid bij elke tik opnieuw binnen. */
+  .slot.intro{animation:inrij .35s var(--soepel) both}
+  /* Een lege plek met een streepjesrand van één pixel. Links stond een dikke
+     gestippelde balk van vijf pixels, en tien daarvan onder elkaar is een
+     rommelig scherm. De twee pixels extra links houden de tekst op dezelfde
+     plek als op een gevulde plek. */
+  .slot.leegplek{background:transparent;border:1px dashed var(--stippel);padding-left:14px}
+  .slot.leegplek:hover{border-color:var(--ink3)}
+  .slot.leegplek .who{font-size:13px;color:var(--ink3)}
   .slot .who .code{font-size:21px}
   .slot .pos{font-family:var(--mono);font-size:13px;font-weight:700;
     color:var(--ink3);min-width:32px;flex:none}
@@ -645,9 +727,9 @@
   .drv,.wknop{
     display:flex;align-items:center;gap:10px;min-height:60px;padding:0 12px;
     background:var(--paneel);border:1px solid var(--lijn);border-left:4px solid var(--lijn);
-    border-radius:10px;text-align:left;transition:transform .18s var(--soepel),background .18s;
+    border-radius:10px;text-align:left;transition:background .15s;
   }
-  .drv:hover:not(:disabled),.wknop:hover{transform:translateY(-2px);background:var(--paneel2)}
+  .drv:hover:not(:disabled),.wknop:hover{background:var(--zweef)}
   .drv:disabled{opacity:.3;cursor:default}
   .drv .code,.wknop .code{font-family:var(--cond);font-size:22px;font-weight:700}
   .drv .tm,.wknop .tm{font-family:var(--mono);font-size:10px;color:var(--ink2);margin-left:auto}
@@ -673,25 +755,23 @@
   .presets{display:flex;flex-direction:column;gap:8px}
   .preset{display:grid;grid-template-columns:1fr auto;gap:2px 12px;text-align:left;
     padding:14px 16px;background:var(--paneel);border:1px solid var(--lijn);
-    border-left:4px solid var(--lijn);border-radius:12px;
-    transition:transform .18s var(--soepel),background .18s}
-  .preset:hover{transform:translateY(-2px);background:var(--paneel2)}
-  .preset.aan{border-color:var(--accent);border-left-color:var(--accent);background:var(--paneel2)}
-  .preset .nm{font-family:var(--cond);font-size:22px;font-weight:700;letter-spacing:.02em}
+    border-radius:12px;transition:background .15s,border-color .15s}
+  .preset:hover{background:var(--zweef)}
+  .preset.aan{border-color:var(--accent);background:var(--accent-vlak)}
+  .preset .nm{font-size:16px;font-weight:700}
   .preset .zacht{grid-column:1;font-size:13px}
   .preset .ptn{grid-row:1/3;align-self:center;font-family:var(--mono);font-size:20px;
     color:var(--ink2)}
   .preset.aan .ptn{color:var(--accent)}
-  .vragenlijst{display:flex;flex-direction:column;gap:6px}
-  .vraagregel{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:10px;
-    text-align:left;padding:12px 14px;background:var(--paneel);border:1px solid var(--lijn);
-    border-radius:10px;transition:background .18s}
-  .vraagregel:hover:not(:disabled){background:var(--paneel2)}
+  .vraagregel{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:12px;
+    text-align:left;padding:12px 16px;background:transparent;border:0;
+    transition:background .15s}
+  .vraagregel:hover:not(:disabled){background:var(--zweef)}
   .vraagregel:disabled{opacity:.55;cursor:default}
   .vraagregel .vink{display:grid;place-items:center;width:24px;height:24px;border-radius:6px;
     border:1px solid var(--lijn);font-size:14px;color:var(--accent-ink)}
   .vraagregel.aan .vink{background:var(--accent);border-color:var(--accent)}
-  .vraagregel .nm{font-family:var(--cond);font-size:18px}
+  .vraagregel .nm{font-size:15px;font-weight:600}
   .vraagregel .ptn{font-family:var(--mono);font-size:14px;color:var(--ink2)}
   .binnenkort{font-family:var(--mono);font-size:9px;letter-spacing:.08em;
     text-transform:uppercase;color:var(--ink3);border:1px solid var(--lijn);
@@ -702,13 +782,12 @@
 
   .opslaanbalk{position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px;
     padding-top:10px;background:linear-gradient(transparent,var(--bg) 40%)}
-  .opslaanbalk .knop{min-height:64px}
+  .opslaanbalk .knop{min-height:56px}
   /* Wis alles hoort niet even zwaar te wegen als opslaan, tot hij vraagt of
      je het zeker weet — dan mag hij wel opvallen. */
   .opslaanbalk .wisknop{min-height:48px}
   .wisknop.zeker{color:var(--accent);border-color:var(--accent)}
   #paneel{display:flex;flex-direction:column;gap:14px;min-width:0}
-  .kalender{display:flex;flex-direction:column;gap:8px}
 
   /* ---- uitslag -------------------------------------------- */
   .score{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;
@@ -716,22 +795,30 @@
   .score .getal{font-family:var(--cond);font-size:64px;font-weight:700;
     line-height:.85;color:var(--groen)}
   .strip{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
-  .sr{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 12px;
-    background:var(--paneel);border:1px solid var(--lijn);
-    border-left:3px solid var(--lijn);border-radius:10px}
+  /* Een uitslagregel. In een .strip is hij een regel van de groep; los (bij
+     een losse vraag als "wie wint") is hij zelf een kaartje. De teamkleur is
+     een streepje tussen de plek en de code, zoals op een timingscherm, en
+     geen gekleurde rand langs de hele regel: tien regels met elk een andere
+     kleur aan de rand is een regenboog. */
+  .sr{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 14px;
+    background:var(--paneel);border:1px solid var(--lijn);border-radius:12px}
+  .sr::before{content:"";order:1;width:3px;height:20px;border-radius:2px;flex:none;
+    background:var(--team,var(--lijn))}
+  .sr .pos{order:0} .sr .code{order:2} .sr .werd{order:3}
+  .sr .delta{order:4} .sr .pts{order:5}
+  .strip > .sr{background:transparent;border:0;border-radius:0}
   /* "Zo dichtbij": waar de punten bleven, in gewone zinnen. Bewust geen
      tabel — dit is bedoeld om voor te lezen in de groepsapp. */
-  .bijna{background:var(--paneel2);border:1px solid var(--lijn);border-radius:12px;
-    padding:16px;display:flex;flex-direction:column;gap:10px;flex:none}
+  .bijna{gap:10px}
   .bijnalijst{margin:0;padding:0 0 0 18px;display:flex;flex-direction:column;gap:6px}
   .bijnalijst li{font-size:14px;line-height:1.5;color:var(--ink2)}
-  .bijnalijst b{font-family:var(--cond);font-size:17px;letter-spacing:.02em;color:var(--ink)}
+  .bijnalijst b{font-weight:700;color:var(--ink)}
   .sr .pos{font-family:var(--mono);font-size:12px;color:var(--ink3);min-width:32px;flex:none}
-  .sr .code{font-family:var(--cond);font-size:22px;font-weight:700;min-width:52px;flex:none}
+  .sr .code{font-family:var(--cond);font-size:20px;font-weight:700;min-width:48px;flex:none}
   .sr .werd{font-family:var(--mono);font-size:11px;color:var(--ink2);flex:1;min-width:0}
   .sr .delta{font-family:var(--mono);font-size:10px;letter-spacing:.1em;
     text-transform:uppercase;flex:none}
-  .pts{font-family:var(--cond);font-size:24px;font-weight:700;min-width:26px;
+  .pts{font-family:var(--cond);font-size:22px;font-weight:700;min-width:26px;
     text-align:right;flex:none}
   /* Paars-groen-geel, zoals op een timingscherm: paars is raak, groen is bijna,
      geel is net niet, grijs is mis. Eerder waren "één plek ernaast" en "twee
@@ -739,18 +826,18 @@
      blijft ernaast staan — kleur alleen is voor wie groen en geel niet uit
      elkaar houdt geen informatie. */
   .v5{color:var(--paars)} .v3{color:var(--groen)} .v1{color:var(--amber)} .v0{color:var(--ink3)}
-  .rest{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;
-    background:var(--paneel);border-radius:8px}
+  .rest{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px 0 13px;
+    background:transparent;border-left:3px solid transparent}
   .rest .nm{font-size:15px;font-weight:600;letter-spacing:.01em;
     flex:1;min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
   .rest .t{font-family:var(--cond);font-size:22px;font-weight:700;color:var(--ink2)}
-  .rest.winnaar{border-left:4px solid var(--accent);padding-left:12px}
+  .rest.winnaar{border-left-color:var(--accent);background:var(--eigen)}
   /* Sinds je op een naam kunt tikken is dit een <button>, en die erft niets:
      geen breedte, geen letter, geen tekstkleur. */
-  button.rest{width:100%;border:0;color:inherit;text-align:left;cursor:pointer;
-    font:inherit;transition:background .12s}
-  button.rest:hover{background:var(--gedempt)}
+  button.rest{width:100%;border-top:0;border-right:0;border-bottom:0;color:inherit;
+    text-align:left;cursor:pointer;font:inherit;transition:background .15s}
+  button.rest:hover{background:var(--zweef)}
   .rest.inkijk .zacht{font-family:var(--mono);font-size:10px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--ink3);flex:none}
   .rest.inkijk .t{min-width:26px;text-align:right}
@@ -764,9 +851,8 @@
     text-transform:uppercase;flex:1;min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
   .inkijkkop .t{font-family:var(--cond);font-size:26px;font-weight:700;flex:none}
-  .duel{padding-left:12px;border-left:4px solid var(--lijn)}
-  .duel.voor{border-left-color:var(--groen)}
-  .duel.gelijkop{border-left-color:var(--ink3)}
+  .rest.duel.voor{border-left-color:var(--groen)}
+  .rest.duel.gelijkop{border-left-color:var(--ink3)}
   .gelijkop-tel{font-family:var(--mono);font-size:10px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--ink3);flex:none}
   .duelscore{font-family:var(--cond);font-size:24px;font-weight:700;flex:none;
@@ -782,26 +868,32 @@
   /* ---- stand ---------------------------------------------- */
   .podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end}
   .trede{display:flex;flex-direction:column;gap:8px;align-items:center;min-width:0}
-  .trede .nm{font-family:var(--cond);font-size:24px;font-weight:700;
-    text-transform:uppercase;max-width:100%;overflow:hidden;
-    text-overflow:ellipsis;white-space:nowrap}
-  .trede.eerste .nm{font-size:30px}
-  .trede .balk{width:100%;border-radius:10px 10px 0 0;display:grid;place-items:center;
-    font-family:var(--cond);font-size:28px;font-weight:700;
-    background:var(--paneel2);color:var(--ink2)}
-  .trede.eerste .balk{background:var(--accent);color:var(--accent-ink);font-size:40px}
-  .strij{display:flex;align-items:center;gap:14px;min-height:56px;padding:0 16px;
-    background:var(--paneel);border:1px solid var(--lijn);
-    border-left:3px solid transparent;border-radius:12px}
-  .strij.zelf{border-left-color:var(--accent)}
-  .strij .p{font-family:var(--cond);font-size:24px;font-weight:700;
-    color:var(--ink3);min-width:28px}
+  /* Het podium was het luidste op het scherm: namen in condensed kapitalen
+     van 30 pixels en een massief rood blok. Nu dezelfde taal als de rest --
+     namen in gewone letter, panelen met een dunne rand -- en de winnaar
+     herkenbaar aan een accentrand en een zachte gloed. */
+  .trede .nm{font-size:15px;font-weight:600;max-width:100%;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;color:var(--ink2)}
+  .trede.eerste .nm{font-size:16px;font-weight:700;color:var(--ink)}
+  .trede .balk{width:100%;border-radius:12px 12px 0 0;display:grid;place-items:center;
+    font-family:var(--cond);font-size:26px;font-weight:700;
+    background:var(--paneel);border:1px solid var(--lijn);border-bottom:0;color:var(--ink2)}
+  .trede.eerste .balk{background:linear-gradient(var(--accent-vlak),transparent),var(--paneel);
+    border-color:var(--accent-rand);border-top:2px solid var(--accent);
+    color:var(--ink);font-size:34px}
+  .strij{display:flex;align-items:center;gap:14px;min-height:56px;padding:0 16px 0 13px;
+    border-left:3px solid transparent}
+  .strij.zelf{border-left-color:var(--accent);background:var(--eigen)}
+  .strij .p{font-family:var(--cond);font-size:22px;font-weight:700;
+    color:var(--ink3);min-width:24px}
   .strij.zelf .p{color:var(--ink)}
   .strij .nm{font-size:15px;font-weight:600;letter-spacing:.01em;
     flex:1;min-width:0;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
-  .jij{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
-    text-transform:none;color:var(--accent)}
+  /* "jij" achter je naam. Stond in gespatieerde mono van 10 pixels en las
+     als "j i j"; nu gewoon een woordje in het accent. */
+  .jij{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.02em;
+    text-transform:none;color:var(--accent-tekst);margin-left:2px}
   .strij .voor{font-family:var(--mono);font-size:11px;color:var(--ink3)}
   /* Gestegen of gezakt sinds de vorige race. Groen en rood zijn hier
      onvermijdelijk, maar de pijl draagt de betekenis net zo goed als de
@@ -814,7 +906,7 @@
   .reeks{font-family:var(--mono);font-size:10px;letter-spacing:.06em;
     text-transform:none;color:var(--amber);border:1px solid var(--amber-rand);
     border-radius:20px;padding:1px 6px;vertical-align:middle}
-  .strij .t{font-family:var(--cond);font-size:28px;font-weight:700}
+  .strij .t{font-family:var(--cond);font-size:24px;font-weight:700}
   /* De seizoenslijn. Vaste hoogte en een viewBox die meerekt: de lijn hoeft
      niet op de pixel te kloppen, hij moet de vórm laten zien. */
   .grafiek{display:flex;flex-direction:column;gap:12px}
@@ -824,9 +916,6 @@
   .grafiekvoet b{font-family:var(--cond);font-size:22px;font-weight:700;line-height:1}
   .grafiekvoet i{font-style:normal;font-size:11px;letter-spacing:.06em;
     text-transform:uppercase;color:var(--ink3)}
-  .uitleg{background:var(--paneel);border:1px solid var(--lijn);border-radius:12px;
-    padding:14px;color:var(--ink2);font-size:14px}
-  .uitleg b{color:var(--ink)}
 
   /* ---- alleen voor schermlezers ---------------------------- */
   /* Niet display:none en niet visibility:hidden -- allebei halen het uit de
@@ -836,8 +925,9 @@
     border:0}
 
   /* ---- rode vlag ------------------------------------------ */
-  .rodevlag{display:flex;flex-direction:column;gap:14px;background:var(--paneel);
-    border:1px solid var(--lijn);border-radius:14px;padding:20px}
+  /* Staat altijd al op een kaart. Er stond nog een tweede kader omheen, en
+     een kader in een kader is een rand die niets scheidt. */
+  .rodevlag{display:flex;flex-direction:column;gap:14px}
   .rodevlag .label{color:var(--accent)}
 
   /* ---- vangnet onder het tekenen --------------------------- */
@@ -853,12 +943,34 @@
     display:flex;gap:12px;align-items:center;justify-content:space-between;
     background:var(--paneel);border:1px solid var(--accent);border-radius:12px;
     padding:12px 14px;color:var(--ink2);font-size:13px;
-    box-shadow:0 8px 28px rgba(0,0,0,.35)}
+    box-shadow:0 8px 28px rgba(0,0,0,.35);animation:schuif .25s var(--soepel) both}
   .stillefout button{background:none;border:0;padding:0;font:inherit;flex:none;
     color:var(--accent);text-decoration:underline;cursor:pointer}
   @media (min-width:960px){
     .stillefout{left:auto;right:20px;bottom:20px;max-width:420px}
   }
+
+  /* ---- groepen ------------------------------------------- */
+  /* Een lijst is één kaart met regels erin, gescheiden door een haarlijn --
+     niet een stapel losse kaartjes met elk een eigen rand, een eigen hoek en
+     achttien pixels lucht ertussen. Dat laatste maakte van de stand, de
+     kalender en de uitslag drie torens van blokken, en dan ziet niemand meer
+     wat bij elkaar hoort. Zo doet een grid-ranglijst of een instellingenlijst
+     het ook: de kop erboven, de regels in één vak.
+     De regels zelf (.race, .strij, .rest, .speler, ...) hebben daarom geen
+     achtergrond en geen rand; die komen van hier. Deze regels staan onderaan
+     omdat de haarlijn anders verliest van de border:0 van een regel. */
+  :is(.groep,.kalender,.strip,.kiesregels,.vragenlijst){
+    display:flex;flex-direction:column;gap:0;margin:0;padding:0;list-style:none;
+    background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;
+    overflow:hidden;flex:none}
+  :is(.groep,.kalender,.strip,.kiesregels,.vragenlijst) > :not(:first-child){
+    border-top:1px solid var(--lijn)}
+  /* Een lege lijst of een melding ín de kaart heeft de kaart al om zich heen. */
+  :is(.groep,.kalender) > :is(.leeg,p){border-radius:0;border-left:0;border-right:0;
+    border-bottom:0;margin:0}
+  .groep > p{padding:14px 16px}
+  .kalender > .leeg:first-child{border:0}
 
   /* ---- iPad en desktop ------------------------------------ */
   @media (min-width:960px){
@@ -931,7 +1043,6 @@
     .pil .mono{color:var(--groen)}
     .kop .knop{width:auto;min-height:44px;font-size:15px;flex:none}
     .meldingbalk{padding:18px 28px 0}
-    .tabs button{font-size:17px;padding:0 8px;min-width:0}
     .kolommen{display:grid;grid-template-columns:1.1fr .9fr;overflow:hidden}
     .kolommen.enkel{grid-template-columns:1fr}
     .kol{padding:24px 28px 40px;overflow-y:auto}
@@ -950,7 +1061,6 @@
     .kop{padding:20px 32px}
     .meldingbalk{padding:20px 32px 0}
     .kop .ptitel{font-size:36px}
-    .tabs button{font-size:19px}
     .kol{padding:26px 32px 40px}
     .coureurs{grid-template-columns:1fr 1fr}
   }
@@ -3966,7 +4076,7 @@ function uitleg(error) {
 // er overblijft — en dan mag het tenminste uitleggen wat er aan de hand is.
 function geenVerbinding() {
   app.innerHTML = `
-    <div class="toegang"><div class="kaart"><div class="baan"></div>
+    <div class="toegang"><div class="kaart" data-intro="kaart|geen-verbinding"><div class="baan"></div>
       <div class="kaart-in">
         <div class="rodevlag">
           <span class="label">${T('geen verbinding')}</span>
@@ -3983,7 +4093,7 @@ function geenVerbinding() {
 
 function toonFout(bericht) {
   app.innerHTML = `
-    <div class="toegang"><div class="kaart"><div class="baan"></div>
+    <div class="toegang"><div class="kaart" data-intro="kaart|fout"><div class="baan"></div>
       <div class="kaart-in">
         <div class="rodevlag">
           <span class="label">${T('rode vlag')}</span>
@@ -4050,7 +4160,7 @@ function toonKapot(fout) {
   kapot = true;
   const bericht = (fout && fout.message) ? fout.message : String(fout ?? '');
   app.innerHTML = `
-    <div class="toegang"><div class="kaart"><div class="baan"></div>
+    <div class="toegang"><div class="kaart" data-intro="kaart|vastgelopen"><div class="baan"></div>
       <div class="kaart-in">
         <div class="rodevlag">
           <span class="label">${T('vastgelopen')}</span>
@@ -4275,7 +4385,70 @@ window.addEventListener('resize', () => {
 // Let op: deze waarnemer kijkt niet naar attributen, dus het zetten van een
 // title hieronder roept hem niet opnieuw aan. Zou hij dat wel doen, dan was
 // dit een oneindige lus.
+// ---- overgangen -------------------------------------------
+// De app tekent een scherm in één klap opnieuw (app.innerHTML), en dat
+// gebeurt vaak: na elke keuze, elke klik op een tabblad, elke keer dat er
+// gegevens binnenkomen. Een CSS-animatie op een vaste klasse speelt daardoor
+// bij elke keer tekenen opnieuw af -- zo reed de hele startgrid na elke
+// gekozen coureur opnieuw binnen. Beweging hoort bij iets nieuws, niet bij
+// opnieuw tekenen.
+//
+// Vandaar data-intro="plek|sleutel". De plek zegt wélk vak het is ("links",
+// "melding", "plek3"), de sleutel wat erin staat ("stand", de tekst van de
+// melding, de coureur). Alleen als de sleutel van een plek anders is dan de
+// vorige keer krijgt het element de klasse .intro en komt het op. Een plek
+// die van het scherm verdwijnt wordt vergeten, zodat dezelfde melding die
+// later terugkomt ook weer opkomt.
+//
+// Twee randgevallen. Wordt er binnen de animatie opnieuw getekend met
+// dezelfde sleutel (de gegevens komen net binnen na een schermwissel), dan
+// loopt de animatie door waar hij was in plaats van halverwege stil te vallen
+// of opnieuw te beginnen. En iets nieuws binnen iets dat zelf al opkomt
+// beweegt niet nog eens apart: een race openen laat de kolom opkomen, niet
+// daarbovenop ook nog elke gevulde plek.
+const INTRODUUR = 320;
+const introStand = new Map();   // plek -> { sleutel, sinds }
+
+function startIntro(el, alBezig) {
+  if (alBezig) el.style.animationDelay = `-${Math.round(alBezig)}ms`;
+  el.classList.add('intro');
+  el.addEventListener('animationend', function klaar(e) {
+    if (e.target !== el) return;
+    el.classList.remove('intro');
+    el.removeEventListener('animationend', klaar);
+  });
+}
+
+function markeerNieuw() {
+  const gezien = new Set();
+  const nu = performance.now();
+  for (const el of app.querySelectorAll('[data-intro]')) {
+    const tekst = el.dataset.intro;
+    const knip = tekst.indexOf('|');
+    const plek = knip < 0 ? tekst : tekst.slice(0, knip);
+    const sleutel = knip < 0 ? '' : tekst.slice(knip + 1);
+    gezien.add(plek);
+    // Hetzelfde element komt hier vaker langs (de afteller tikt elke seconde
+    // en ook dat is een wijziging); het telt alleen de eerste keer.
+    if (el.dataset.introGedaan) continue;
+    el.dataset.introGedaan = '1';
+    const vorige = introStand.get(plek);
+    const binnenIetsNieuws = !!el.parentElement?.closest('.intro');
+    if (!vorige || vorige.sleutel !== sleutel) {
+      // Kwam het mee met iets groters dat al opkomt, dan telt het als gezien
+      // maar niet als "net begonnen": anders zou het bij de volgende keer
+      // tekenen alsnog een stukje animatie inhalen.
+      introStand.set(plek, { sleutel, sinds: binnenIetsNieuws ? -Infinity : nu });
+      if (!binnenIetsNieuws) startIntro(el, 0);
+    } else if (nu - vorige.sinds < INTRODUUR && !binnenIetsNieuws) {
+      startIntro(el, nu - vorige.sinds);
+    }
+  }
+  for (const plek of [...introStand.keys()]) if (!gezien.has(plek)) introStand.delete(plek);
+}
+
 new MutationObserver(() => {
+  markeerNieuw();
   kijkOfErIetsTeMeldenIs();
   herstelFocus();
   titelsBijAfkappen();
@@ -5187,15 +5360,17 @@ function toonApp() {
             esc(volgend.race.id)}">${T('Top 10 invullen')}</button>` : ''}
         </div>
 
-        ${S.melding ? `<div class="meldingbalk"><div class="melding">${esc(S.melding)}</div></div>` : ''}
+        ${S.melding ? `<div class="meldingbalk"><div class="melding" data-intro="melding|${
+          esc(S.melding)}">${esc(S.melding)}</div></div>` : ''}
 
         <div class="kolommen${enkel ? ' enkel' : ''}">
-          <section class="kol links">${
+          <section class="kol links" data-intro="links|${esc(S.weergave)}">${
             S.weergave === 'stand' ? standPagina(rijen)
             : S.weergave === 'poule' ? poulePagina(rijen)
             : S.weergave === 'profiel' ? profielPagina()
             : racesPagina(volgend)}</section>
-          <section class="kol rechts">${
+          <section class="kol rechts" data-intro="rechts|${
+            detail ? `race:${esc(S.race.id)}` : 'neven'}">${
             detail ? raceDetailKop() : nevenPaneel(rijen)}</section>
         </div>
       </main>
@@ -5381,7 +5556,7 @@ function hero(volgend) {
     .map(w => sessieStatus(r, w))
     .find(x => x.staat !== 'klaar');
   return `
-    <div class="hero">
+    <div class="hero" data-ronde="${esc(String(r.round).padStart(2, '0'))}">
       <div class="hero-kop">
         <span class="label">${T('nu open · ronde {n}', {
           n: String(r.round).padStart(2, '0') })}</span>
@@ -5461,7 +5636,8 @@ function nevenPaneel(rijen) {
   const laatste = laatsteMetUitslag();
   return `
     <span class="label">${T('stand')}</span>
-    ${rijen.length ? rijen.slice(0, 5).map((r, i) => standRij(r, i, rijen)).join('')
+    ${rijen.length ? `<div class="groep">${
+        rijen.slice(0, 5).map((r, i) => standRij(r, i, rijen)).join('')}</div>`
       : `<p class="zacht" style="margin:0">${T('Nog niemand meegedaan.')}</p>`}
     ${laatste ? `<span class="label" style="margin-top:12px">${
       T('laatste uitslag · {race}', { race: esc(laatste.name) })}</span>
@@ -5479,7 +5655,7 @@ function korteUitslag(r) {
   const { regels } = scoreLijst(lijst, werkelijk);
   return `<ul class="strip">${regels.map(x => {
     const d = drv(r, x.nr);
-    return `<li class="sr" style="border-left-color:${esc(d.kleur)}">
+    return `<li class="sr" style="--team:${esc(d.kleur)}">
       <span class="pos">P${x.voorspeld}</span>
       <span class="code">${esc(d.code)}</span>
       <span class="werd">${x.werkelijk
@@ -5535,7 +5711,8 @@ function standPagina(rijen) {
       </div>`).join('')}</div>
       <div class="scheiding"></div>` : ''}
     ${rijen.length ? (() => { const w = positieWissels();
-        return rijen.map((r, i) => standRij(r, i, rijen, w)).join(''); })()
+        return `<div class="groep">${
+          rijen.map((r, i) => standRij(r, i, rijen, w)).join('')}</div>`; })()
       : `<p class="zacht" style="margin:0">${T('Nog niemand meegedaan.')}</p>`}
     ${seizoenslaagBlok()}
     ${weekendRanglijst()}
@@ -5705,10 +5882,10 @@ function weekendRanglijst() {
   const winsten = weekendOverwinningen();
   if (!winsten.length) return '';
   return `<span class="label">${T('weekendoverwinningen')}</span>
-    ${winsten.map(w => `<div class="rest ${w.mij ? 'winnaar' : ''}">
+    <div class="groep">${winsten.map(w => `<div class="rest ${w.mij ? 'winnaar' : ''}">
       <span class="nm">${esc(w.naam)}${w.mij ? ` <span class="jij">${T('jij')}</span>` : ''}</span>
       <span class="t">${w.aantal}×</span>
-    </div>`).join('')}`;
+    </div>`).join('')}</div>`;
 }
 
 // "Hoe ver sta ik echt achter?" Eén gemiste race kost je vijftig tot honderd
@@ -5801,7 +5978,7 @@ function seizoenslaagBlok() {
     <div class="scheiding"></div>
     <div class="seizoenslaag">
       <span class="label">${T('seizoensvragen')} · ${esc(kop)}</span>
-      ${vragen.map(regel).join('')}
+      <div class="groep">${vragen.map(regel).join('')}</div>
       ${vast.length ? `<p class="zacht" style="margin:0;color:var(--amber)">${
         T('{races} heeft geen uitslag en is niet afgelast. Zolang dat zo blijft '
           + 'kan het seizoen niet afgerond worden en blijven deze vragen ongescoord.',
@@ -5904,10 +6081,10 @@ function streepBlok() {
   return `<span class="label">${aantalWeg === 1
       ? T('zonder je slechtste weekend')
       : T('zonder je slechtste {n} weekenden', { n: aantalWeg })}</span>
-    ${rijen.map(r => `<div class="rest ${r.mij ? 'winnaar' : ''}">
+    <div class="groep">${rijen.map(r => `<div class="rest ${r.mij ? 'winnaar' : ''}">
       <span class="nm">${esc(r.naam)}${r.mij ? ` <span class="jij">${T('jij')}</span>` : ''}</span>
       <span class="t">${r.totaal}</span>
-    </div>`).join('')}
+    </div>`).join('')}</div>
     <p class="zacht" style="margin:6px 0 0">${zin}
       ${T('Per twaalf gereden races valt je slechtste weekend hier weg, dus bij een '
         + 'heel seizoen zijn dat er twee. De stand hierboven telt gewoon alles mee.')}</p>`;
@@ -5920,7 +6097,7 @@ function duelLijst() {
   const rijen = duels();
   if (!rijen.length) return '';
   return `<span class="label">${T('onderlinge duels · jij tegen')}</span>
-    ${rijen.map(d => {
+    <div class="groep">${rijen.map(d => {
       const stand = d.ik > d.ander ? 'voor' : d.ik < d.ander ? 'achter' : 'gelijkop';
       // De rij heet naar de tegenstander ("Joe"), en dan lijkt het eerste
       // getal van "1 – 0" bij die naam te horen — terwijl het juist jouw
@@ -5932,7 +6109,7 @@ function duelLijst() {
         <span class="duelscore"><b class="mijn">${d.ik}</b><span class="jij">${
           T('jij')}</span><i class="streep">–</i><b class="hun">${d.ander}</b></span>
       </div>`;
-    }).join('')}`;
+    }).join('')}</div>`;
 }
 
 // ---- poule --------------------------------------------------
@@ -5956,8 +6133,8 @@ function poulePagina(rijen) {
         aria-label="${T('Uitnodiging om zelf te kopiëren')}"></textarea>
     </div>
     <span class="label">${T('spelers')}</span>
-    ${rijen.map((r, i) => spelerRij(r, i)).join('')
-      || `<p class="zacht" style="margin:0">${T('Nog niemand meegedaan.')}</p>`}
+    ${rijen.length ? `<div class="groep">${rijen.map((r, i) => spelerRij(r, i)).join('')}</div>`
+      : `<p class="zacht" style="margin:0">${T('Nog niemand meegedaan.')}</p>`}
     <div class="uitleg">${T('Punten per plek: <b>5</b> exact, <b>3</b> één plek '
       + 'ernaast, <b>1</b> twee plekken ernaast.')}</div>
     ${agendaBlok()}
@@ -6456,7 +6633,7 @@ async function ververSnapshot() {
 // zelf gepubliceerd heeft, en het komt uit één functie die niets anders kan
 // teruggeven.
 async function toonProfiel(code) {
-  app.innerHTML = `<div class="toegang"><div class="kaart"><div class="kaart-in">
+  app.innerHTML = `<div class="toegang"><div class="kaart" data-intro="kaart|profiel"><div class="kaart-in">
     <p class="zacht" style="margin:0">${T('Even kijken…')}</p></div></div></div>`;
   let p = null, stuk = false;
   try {
@@ -6465,7 +6642,7 @@ async function toonProfiel(code) {
   } catch { stuk = true; }
 
   const omheen = (binnen) => `
-    <div class="toegang"><div class="kaart"><div class="baan"></div>
+    <div class="toegang"><div class="kaart" data-intro="kaart|profiel"><div class="baan"></div>
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
@@ -7345,7 +7522,7 @@ function raceDetailKop() {
       ${weekendSessies(r).map(w => `<button data-tab="${w}"
         aria-selected="${S.tab === w}">${esc(T(SESSIES[w].tablabel ?? SESSIES[w].naam))}</button>`).join('')}
     </div>
-    <div id="paneel"></div>`;
+    <div id="paneel" data-intro="paneel|${esc(S.tab)}"></div>`;
 }
 
 // Mag er op dit weekend nog een joker bij of af? Twee voorwaarden, en ze
@@ -7531,6 +7708,7 @@ function invulWeergave(paneel, r, dicht) {
           const kant = i % 2 === 0 ? 'links' : 'rechts';
           return `<li class="slotrij ${kant}">
             <button class="slot ${d ? 'vol' : 'leegplek'}" data-plek="${i}"
+              ${d ? `data-intro="plek${i}|${esc(S.tab)}:${esc(d.nr)}"` : ''}
               style="border-left-color:${d ? esc(d.kleur) : 'var(--stippel)'}"
               aria-label="P${i+1}${d
                 ? T(', nu {wie}', { wie: esc(d.naam) }) : T(', nog leeg')}">
@@ -7680,7 +7858,7 @@ function coureurKiezer(r, id) {
   const d = gekozen ? drv(r, gekozen) : null;
   return `
     <button class="kiesregel ${d ? 'vol' : ''}" data-vraagplek="${esc(id)}"
-      style="border-left-color:${d ? esc(d.kleur) : 'var(--lijn)'}">
+      style="--team:${d ? esc(d.kleur) : 'var(--lijn)'}">
       <span class="nm">${esc(T(v.label))}</span>
       ${d ? `<span class="code">${esc(d.code)}</span>`
           : `<span class="nogleeg">${T('kies')}</span>`}
@@ -7843,7 +8021,7 @@ function uitslagWeergave(r, werkelijk) {
         const verschil = x.werkelijk === null ? 'dnf'
           : raak ? 'exact'
           : `${x.werkelijk > x.voorspeld ? '↓' : '↑'} ${Math.abs(x.werkelijk - x.voorspeld)}`;
-        return `<li class="sr" style="border-left-color:${esc(d.kleur)}">
+        return `<li class="sr" style="--team:${esc(d.kleur)}">
           <span class="pos">P${x.voorspeld}</span>
           <span class="code">${esc(d.code)}</span>
           <span class="werd">${x.werkelijk
@@ -7904,11 +8082,11 @@ function weekendVoet(r) {
   const ik = winnaars.some(w => w.mij);
   return `
     ${winnaars.length ? `<span class="label">${T('weekendwinnaar · kwalificatie + race')}</span>
-      <div class="rest winnaar">
+      <div class="groep"><div class="rest winnaar">
         <span class="nm">${esc(opsomming(winnaars.map(w => w.naam)))}${
           ik ? ` <span class="jij">${T('jij')}</span>` : ''}</span>
         <span class="t">${winnaars[0].punten}</span>
-      </div>` : ''}
+      </div></div>` : ''}
     <button class="knop klein" data-kopieer="${esc(r.id)}">${T('Kopieer voor de groepsapp')}</button>
     <textarea class="veld tekstblok hide" readonly rows="9"
       aria-label="${T('Uitslag om zelf te kopiëren')}"></textarea>`;
@@ -7961,7 +8139,7 @@ function coureurUitslag(r, mijn, id) {
     <span class="label">${T('{wat} · {n} punten', { wat: esc(T(v.label)), n: punten })}${
       esc(contrairNoot(r, id, gekozen))}${
       r[v.vlag] ? ` · ${T('handmatig ingevuld')}` : ''}</span>
-    <div class="sr" style="border-left-color:${esc(d.kleur)}">
+    <div class="sr" style="--team:${esc(d.kleur)}">
       <span class="pos">${v.letter}</span>
       <span class="code">${esc(d.code)}</span>
       <span class="werd">${gescoord ? esc(T(v.goed)) : mis}</span>
@@ -8034,7 +8212,7 @@ function duelUitslag(r, mijn, werkelijk) {
         const won = plek(p.a.nr) < plek(p.b.nr) ? p.a : p.b;
         const mijnD = drv(r, keuze);
         const raak = zelfde(keuze, won.nr);
-        return `<li class="sr" style="border-left-color:${esc(p.a.kleur)}">
+        return `<li class="sr" style="--team:${esc(p.a.kleur)}">
           <span class="pos">${esc(stal(p.team)).slice(0, 3)}</span>
           <span class="code">${esc(mijnD.code)}</span>
           <span class="werd">${raak ? T('won het duel')
@@ -8065,12 +8243,12 @@ function andermans(r) {
   // getekend, en vulPaneel() controleert het nog een keer.
   return `<span class="label">${
       T('de rest · tik op een naam om hun voorspelling te zien')}</span>
-    ${rijen.map(x => `<button class="rest inkijk" data-bekijk="${esc(x.id)}">
+    <div class="groep">${rijen.map(x => `<button class="rest inkijk" data-bekijk="${esc(x.id)}">
       <span class="nm">${esc(x.naam)}</span>
       <span class="zacht">${x.deed ? T('bekijken')
         : x.auto ? T('automatisch ingevuld') : T('niets ingevuld')}</span>
       <span class="t">${x.punten ?? '—'}</span>
-    </button>`).join('')}`;
+    </button>`).join('')}</div>`;
 }
 
 function knoopBekijk(paneel) {
@@ -8145,7 +8323,7 @@ function keuzeOverzicht(r, pred, welk) {
     <ul class="strip">
       ${regels.filter(x => x.nr).map(x => {
         const d = drv(r, x.nr);
-        return `<li class="sr" style="border-left-color:${esc(d.kleur)}">
+        return `<li class="sr" style="--team:${esc(d.kleur)}">
           <span class="pos">P${x.voorspeld}</span>
           <span class="code">${esc(d.code)}</span>
           <span class="werd">${werkelijk
@@ -8171,7 +8349,7 @@ function keuzeOverzicht(r, pred, welk) {
     const gescoord = uit.length ? scoreEerste(gekozen, uit, puntenVoor(id)) : null;
     return `
       <span class="label">${esc(T(v.label))}</span>
-      <div class="sr" style="border-left-color:${esc(d.kleur)}">
+      <div class="sr" style="--team:${esc(d.kleur)}">
         <span class="pos">${v.letter}</span>
         <span class="code">${esc(d.code)}</span>
         <span class="werd">${gescoord === null ? esc(d.naam)
@@ -8227,7 +8405,7 @@ function keuzeOverzicht(r, pred, welk) {
           const beslist = !!werkelijk && !(plek(p.a.nr) === Infinity && plek(p.b.nr) === Infinity);
           const won = beslist ? (plek(p.a.nr) < plek(p.b.nr) ? p.a : p.b) : null;
           const raak = !!won && zelfde(keuze, won.nr);
-          return `<li class="sr" style="border-left-color:${esc(p.a.kleur)}">
+          return `<li class="sr" style="--team:${esc(p.a.kleur)}">
             <span class="pos">${esc(stal(p.team)).slice(0, 3)}</span>
             <span class="code">${esc(d.code)}</span>
             <span class="werd">${!beslist
@@ -8286,7 +8464,7 @@ function isNuVanMij(memberId) {
 function koppelVraagScherm() {
   schrijf(KOPPELGEVRAAGD, '1');
   app.innerHTML = `
-    <div class="toegang"><div class="kaart"><div class="baan"></div>
+    <div class="toegang"><div class="kaart" data-intro="kaart|koppelen"><div class="baan"></div>
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
@@ -8298,7 +8476,8 @@ function koppelVraagScherm() {
           <p class="zacht" style="margin:12px 0 0">${T('Je speelt al mee — dit is '
             + 'de enige keer dat we dit vragen.')}</p>
         </div>
-        ${S.melding ? `<div class="meldingbalk"><div class="melding">${esc(S.melding)}</div></div>` : ''}
+        ${S.melding ? `<div class="meldingbalk"><div class="melding" data-intro="melding|${
+          esc(S.melding)}">${esc(S.melding)}</div></div>` : ''}
         ${mailBlok()}
         <div class="scheiding"></div>
         <button class="knop spook" id="koppelnunniet" style="min-height:56px">
@@ -8325,7 +8504,7 @@ function puntenVan(memberId) {
 
 function kiesSpeler() {
   app.innerHTML = `
-    <div class="toegang"><div class="kaart"><div class="baan"></div>
+    <div class="toegang"><div class="kaart" data-intro="kaart|wie-ben-jij"><div class="baan"></div>
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
@@ -8337,7 +8516,7 @@ function kiesSpeler() {
           <p class="zacht" style="margin:8px 0 0">${T('Tik op je naam. '
             + 'De app onthoudt je op dit toestel.')}</p>
         </div>
-        <div class="veldblok" id="lijst"></div>
+        <div class="groep" id="lijst"></div>
         <div class="scheiding"></div>
         <div class="veldblok">
           <span class="label">${T('nieuwe speler')}</span>
@@ -8467,7 +8646,7 @@ function maakPagina() {
   const m = S.maak;
   const preset = welkPreset(m.vragen);
   app.innerHTML = `
-    <div class="toegang"><div class="kaart"><div class="baan"></div>
+    <div class="toegang"><div class="kaart" data-intro="kaart|maak"><div class="baan"></div>
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
@@ -8477,8 +8656,10 @@ function maakPagina() {
         <div class="stappen">
           ${MAAKSTAPPEN.map((_, i) => `<span class="stap ${i + 1 <= m.stap ? 'aan' : ''}"></span>`).join('')}
         </div>
-        <h1 class="groot">${esc(T(MAAKSTAPPEN[m.stap - 1]))}</h1>
-        ${maakStap(m, preset)}
+        <div class="stapinhoud" data-intro="maakstap|${m.stap}">
+          <h1 class="groot">${esc(T(MAAKSTAPPEN[m.stap - 1]))}</h1>
+          ${maakStap(m, preset)}
+        </div>
         <p class="err" id="f">${esc(m.fout)}</p>
       </div>
     </div></div>`;
@@ -8876,7 +9057,7 @@ function toonStart() {
   // opnieuw in te tikken, en wie in meer dan één poule zit kiest hier welke.
   const bekend = mijnPoules();
   app.innerHTML = `
-    <div class="toegang"><div class="kaart"><div class="baan"></div>
+    <div class="toegang"><div class="kaart" data-intro="kaart|start"><div class="baan"></div>
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
@@ -8901,7 +9082,7 @@ function toonStart() {
           <input class="veld code" id="code" maxlength="6" placeholder="ABC123"
             value="${esc(S.linkCode)}"
             autocomplete="off" autocapitalize="characters" spellcheck="false">
-          <button class="knop primair" id="mee" style="min-height:64px;font-size:24px">${
+          <button class="knop primair" id="mee" style="min-height:56px;font-size:17px">${
             T('Naar de poule')}</button>
         </div>
         ${inlogBlok()}

@@ -5876,3 +5876,125 @@ een `waitForSelector('#code')` voor.
 
 Dezelfde soort fout als die in `vangnet.test.mjs`: een test die van iets
 uitgaat in plaats van erop te wachten.
+
+## Derde ronde: de banners, de lijsten en de beweging
+
+Danny: *"bekijk nog een keer het design. Alles moet clean zijn. mooie
+overgangen en duidelijke tekst. nu is bijvoorbeeld overal de tekst aangepast
+maar niet de banners."*
+
+Opnieuw de drie mockups naast elk scherm gelegd, licht en donker, op 1280 en
+op 390 pixels breed. Wat er nog anders was, zat niet meer in de letter maar in
+de vlakken.
+
+### Banners: vijf jassen werden één
+
+Er stonden vijf soorten meldingen in de app, en elk had een eigen jasje:
+
+| | was | is |
+|---|---|---|
+| `.melding` (na opslaan) | groen vlak over de volle breedte, groene tekst | paneel, ✓ in een groen rondje, zo breed als de zin |
+| `.waarschuwing` (gele vlag) | geel vlak, gele tekst | paneel, ! in een geel rondje, gewone tekstkleur |
+| `.leeg` (gesloten, afgelast, niets ingevuld) | stippelrand | paneel, i in een grijs rondje |
+| `.uitleg` (punten per plek) | wit blok | paneel, i in een grijs rondje |
+| `.bijna` (zo dichtbij, terugblik) | grijs blok | paneel, ↗ in een rood rondje |
+
+Op de standpagina stonden er vier verschillende onder elkaar, en dan ziet een
+scherm eruit als een prikbord. Nu is het overal hetzelfde paneel met een
+dunne rand en 14 pixels hoek, en zegt alleen het rondje wat voor melding het
+is. Het tekentje is versiering (`content: "✓" / ""`, met een lege
+voorleestekst) — de zin ernaast zegt het al.
+
+De rode vlag (geen verbinding, er ging iets mis, vastgelopen) had nog een
+tweede kader binnen de kaart; een kader in een kader scheidt niets, dus dat
+is weg. De jokerregel is effen in plaats van gestippeld.
+
+Een valkuil onderweg: `.uitleg` en `.melding` zijn één doorlopende zin met
+`<b>` erin. Als flexkolom werd elk stukje tekst tussen twee vetgedrukte
+woorden een eigen regel ("Punten per plek: / 5 / exact, / 3 / …"). Alleen de
+banners met losse alinea's (`.waarschuwing`, `.leeg`, `.bijna`) zijn nog een
+flexkolom.
+
+### Lijsten: één kaart in plaats van een toren van kaartjes
+
+Elke regel in de stand, de kalender, de uitslag, de weekendwinnaars, de
+duels, de spelers en de vragenlijst was een eigen kaartje: eigen rand, eigen
+hoek, en de gap van de kolom (18 pixels) ertussen. Zo zag "die banen zijn nog
+groot" er in de tweede ronde nog steeds uit. In de mockup is een lijst één
+kaart met haarlijnen ertussen, zoals een instellingenlijst.
+
+Dat is nu `.groep` (plus `.kalender`, `.strip`, `.kiesregels` en
+`.vragenlijst`, die al een eigen omhulsel hadden). De regels zelf hebben geen
+achtergrond en geen rand meer; die komen van de groep. De regels voor de
+groep staan onderaan de stylesheet, vlak voor de breedschermregels, omdat de
+haarlijn anders verliest van `border:0` op de regel zelf.
+
+Waar een lijst los in een kolom stond, heeft hij een `<div class="groep">`
+om zich heen gekregen. Eén test liep van het kopje naar de regels via
+`nextElementSibling`, en die loopt nu de groep in
+(`test/streep-weergave.test.mjs`).
+
+Je eigen regel krijgt de accentstreep links en een zachte gloed die ervandaan
+wegloopt (`--eigen`), zoals "Danny · YOU" in de mockup. De teamkleur in de
+uitslag is geen gekleurde rand langs de hele regel meer, maar een streepje van
+drie pixels tussen de plek en de code — tien regels met elk een andere kleur
+aan de rand was een regenboog. De kleur komt via `style="--team:…"`.
+
+### Overig stiller
+
+- **Tabs** (kwalificatie/race) zijn een schakelaar in gewone letter, geen
+  tweede rij condensed kapitalen van 19 pixels.
+- **Het podium** heeft namen in gewone letter en panelen met een dunne rand;
+  de winnaar een accentrand en een gloed in plaats van een massief rood blok.
+- **"jij"** stond in gespatieerde mono en las als "j i j".
+- **De seizoensvragen** zijn regels in één kaart, met keuzelijsten in dezelfde
+  letter als de rest.
+- **Lege plekken in de grid** hebben een streepjesrand van één pixel in plaats
+  van een gestippelde balk van vijf pixels links.
+- **De startknop** stond op 24 pixels; nu 17.
+- **De weekendkaart** heeft een gloed linksboven en het rondenummer groot en
+  bijna onzichtbaar op de achtergrond (`data-ronde` en `::after`).
+
+### Beweging: alleen bij iets nieuws
+
+Hier zat een echte fout. De app tekent een scherm in één klap opnieuw, en dat
+gebeurt vaak. Animaties hingen aan vaste klassen (`.slot.vol`, `.speler`),
+dus die speelden bij elke keer tekenen opnieuw af: na elke gekozen coureur
+reed de hele startgrid opnieuw binnen. En aanwijzen met de muis schoof rijen
+vier pixels opzij en liet knoppen omhoogspringen.
+
+Nu staat er `data-intro="plek|sleutel"` op wat mag opkomen: de kolommen
+(sleutel = het scherm), het paneel van een race (sleutel = het tabblad), de
+melding (sleutel = de tekst), elke gevulde plek in de grid (sleutel = de
+coureur) en de toegangskaarten. `markeerNieuw()` draait mee in de bestaande
+MutationObserver en geeft alleen een element waarvan de sleutel veranderd is
+de klasse `.intro`. Wordt er binnen de animatie opnieuw getekend met dezelfde
+sleutel, dan loopt hij door waar hij was (een negatieve `animation-delay`) in
+plaats van halverwege stil te vallen. Iets nieuws ín iets dat zelf al opkomt
+beweegt niet nog eens apart.
+
+Aanwijzen verandert nu alleen de achtergrond. Daarvoor is er een eigen kleur,
+`--zweef`: op `--paneel2` zakte de kleinste grijze tekst naar 4,19 — de
+contrasttest ving dat, doordat de muis na het meedoen toevallig boven een
+kalenderregel stond. In het donker is `--zweef` iets díeper dan het paneel,
+want alles lichter haalt `--ink3` niet. Om dezelfde reden is er
+`--accent-tekst` voor "jij": het gewone accent haalt 4,52 op wit en zakt op de
+gloed eronder.
+
+Met "liever minder beweging" staat alles uit, zoals al het geval was.
+
+### Wat er getest wordt
+
+- `test/ontwerp.test.mjs` (nieuw, 17 controles): alle banners dezelfde hoek,
+  hetzelfde vlak, een effen rand en een tekentje; uitslag en stand als één
+  kaart zonder gaten tussen de regels; een ander scherm en een nieuwe melding
+  komen op, opnieuw tekenen op hetzelfde scherm niet; bij de tweede keuze in
+  de grid beweegt alleen de nieuwe plek; met minder beweging beweegt niets.
+  Gemeten met `getAnimations()`, dus wat de browser echt afspeelt. Elke
+  controle is nagelopen met een mutant die precies die verbetering terugdraait
+  (negen stuks), en zakte telkens op de juiste plek.
+- `test/toegankelijkheid.test.mjs` keurt het contrast nu op zes schermen in
+  plaats van alleen het overzicht (open race, gesloten race, stand, poule,
+  profiel), en telt een doorzichtig vlak op bij wat eronder ligt. Eerst werd
+  `rgba(…, .12)` gelezen alsof het massief was. Een knop die uitgeschakeld is
+  telt niet mee (WCAG 1.4.3 zondert die uit).

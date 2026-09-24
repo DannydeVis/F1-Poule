@@ -101,8 +101,13 @@ check('de stand bovenaan telt nog steeds alles mee', officieel.includes('=1100')
 const gestreept = await page.evaluate(() => {
   const kop = [...document.querySelectorAll('.label')]
     .find((x) => x.textContent.includes('zonder je slechtste'));
+  // De regels staan sinds het nieuwe ontwerp in één groep vlak onder het
+  // kopje, niet meer los ernaast.
+  const groep = kop?.nextElementSibling;
   const uit = [];
-  for (let n = kop?.nextElementSibling; n && n.classList.contains('rest'); n = n.nextElementSibling) {
+  if (!groep?.classList.contains('groep')) return `(geen groep onder het kopje: ${groep?.className})`;
+  for (const n of groep.children) {
+    if (!n.classList.contains('rest')) continue;
     uit.push(`${n.querySelector('.nm')?.textContent.trim().split(' ')[0]}`
       + `=${n.querySelector('.t')?.textContent.trim()}`);
   }
