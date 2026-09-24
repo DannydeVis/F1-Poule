@@ -95,7 +95,12 @@ check('de momentopname bevat geen poulenaam, code of medespelers',
 // --- 3. de pagina zelf ----------------------------------------------------
 const code = rij.profiel_code;
 await page.goto(`${url}?profiel=${code}`);
-await page.waitForFunction(() => document.body.textContent.includes('punten'));
+// Wachten op #app en niet op de hele body: het script van de app staat zelf in
+// de body, en daarin staat "punten" al tientallen keren. Dan is de voorwaarde
+// meteen waar, en leest de test de pagina terwijl er nog "Even kijken…" staat.
+// Op een snelle machine ging dat goed, in GitHub Actions niet.
+const inApp = (woord) => document.querySelector('#app')?.textContent.includes(woord);
+await page.waitForFunction(inApp, 'Zelf een poule beginnen');
 const pagina = (await page.textContent('#app')).replace(/\s+/g, ' ');
 check('de pagina noemt de speler', pagina.includes('Danny'), pagina.slice(0, 140));
 check('en zijn punten', pagina.includes('100'), pagina.slice(0, 200));
@@ -111,8 +116,8 @@ check('wel een uitnodiging om zelf te beginnen',
 
 // --- 4. een verzonnen code ------------------------------------------------
 await page.goto(`${url}?profiel=bestaatniet`);
-await page.waitForFunction(() => document.body.textContent.includes('bestaat niet')
-  || document.body.textContent.includes('Naar Predict the Race'));
+await page.waitForFunction(() => ['bestaat niet', 'Naar Predict the Race']
+  .some((w) => document.querySelector('#app')?.textContent.includes(w)));
 const leeg = (await page.textContent('#app')).replace(/\s+/g, ' ');
 check('een code die niet bestaat geeft een nette pagina',
   leeg.includes('bestaat niet'), leeg.slice(0, 140));
@@ -139,7 +144,7 @@ check('weghalen wist de code en de momentopname',
   })));
 
 await page.goto(`${url}?profiel=${code}`);
-await page.waitForFunction(() => document.body.textContent.includes('bestaat niet'));
+await page.waitForFunction(inApp, 'bestaat niet');
 check('en de pagina bestaat daarna echt niet meer',
   (await page.textContent('#app')).includes('bestaat niet'));
 

@@ -63,7 +63,9 @@ const METSLEUTEL = (bron) => bron.replace(
   });
   await meedoen(page);
   await page.click('[data-weergave="profiel"]');
-  await page.waitForFunction(() => document.body.textContent.includes('herinneringen'));
+  // Op #app wachten, niet op de body: daar staat ook het script van de app in,
+  // met het woord "herinneringen" erin, en dan wacht dit nergens op.
+  await page.waitForFunction(() => document.querySelector('#app')?.textContent.includes('herinneringen'));
   const tekst = (await page.textContent('#app')).replace(/\s+/g, ' ');
   check('een geweigerde toestemming wordt uitgelegd',
     tekst.includes('geblokkeerd'), tekst.match(/herinneringen[^.]*\./)?.[0] ?? tekst.slice(0, 120));

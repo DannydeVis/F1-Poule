@@ -6683,3 +6683,18 @@ Wat er niet mee weg is, en waarom:
   regel in `jsonLd()` en `llms()`.
 - **De naam op de privacypagina.** Een privacyverklaring hoort te zeggen wie
   verantwoordelijk is voor de gegevens; die blijft staan.
+
+### En een test die op GitHub zakte
+
+Bij deze PR zakte `test/publiek-profiel.test.mjs` in GitHub Actions, terwijl
+hij lokaal drie keer op rij slaagde. De oorzaak zat in de test zelf: hij
+wachtte tot `document.body` het woord "punten" bevatte, maar het script van de
+app staat ín de body, en daarin staat "punten" tientallen keren. De voorwaarde
+was dus meteen waar, en de test las de pagina terwijl er nog "Even kijken…"
+stond. Op een snelle machine was de app net op tijd, op GitHub niet.
+
+Nagespeeld door de app kunstmatig 800 ms te laten wachten: de oude test zakte
+op precies dezelfde controles als op GitHub, de nieuwe slaagt. Nu wacht hij op
+de tekst in `#app`. `test/meldingen.test.mjs` had dezelfde loze wacht (op
+"herinneringen"); die is ook rechtgezet. Wie een nieuwe test schrijft: wacht op
+`#app`, nooit op `document.body`.
