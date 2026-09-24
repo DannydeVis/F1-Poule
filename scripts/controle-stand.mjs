@@ -56,7 +56,8 @@ const [leden, poulevragen, vragen, races, antwoorden] = await Promise.all([
   sb(`pool_members?pool_id=eq.${poule.id}&select=*`),
   sb(`pool_questions?pool_id=eq.${poule.id}&select=question_id`),
   sb(`questions?select=*`),
-  sb(`races?season=eq.2026&select=*&order=round`),
+  // Het seizoen van deze poule, zoals de app het ook doet. Stond op 2026.
+  sb(`races?season=eq.${poule.season}&select=*&order=round`),
   sb(`answers?pool_id=eq.${poule.id}&select=*`),
 ]);
 

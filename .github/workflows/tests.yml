@@ -161,6 +161,17 @@ jobs:
           psql -d controle -v ON_ERROR_STOP=1 -f schema.sql
           psql -d controle -v ON_ERROR_STOP=1 -f test/controle.test.sql
 
+      # De jaarwisseling: de controletabel schuift door naar het volgende
+      # seizoen zodra het huidige erop zit, en een nieuwe poule begint in het
+      # seizoen van de eerstvolgende race -- niet in het laatste jaar dat in de
+      # tabel staat. Allebei stonden vast op 2026 of op max(season).
+      - name: de jaarwisseling in de database
+        run: |
+          createdb wissel
+          psql -d wissel -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d wissel -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d wissel -v ON_ERROR_STOP=1 -f test/seizoenswissel.test.sql
+
       # Jokers zijn de tweede regel die hard in de database staat, naast de
       # deadline. Een joker die je achteraf mag verzetten is geen keuze maar
       # een knop om de uitslag mee te herschrijven, dus dat moet hier bewezen

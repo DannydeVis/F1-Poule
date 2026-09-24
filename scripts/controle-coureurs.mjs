@@ -23,9 +23,9 @@
 
 import { readFileSync } from 'node:fs';
 import { weekendBron } from './uitslagen.mjs';
+import { huidigSeizoen } from './seizoenen.mjs';
 
 const API = 'https://api.openf1.org/v1';
-const SEIZOEN = Number(process.env.SEIZOEN ?? 2026);
 const ALLEEN = process.env.RACE ?? '';
 
 const bron = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
@@ -85,6 +85,10 @@ function verschil(a, b, watA, watB) {
   }
   return regels;
 }
+
+// Zonder SEIZOEN het seizoen waar het nu om draait, en niet vast 2026.
+const SEIZOEN = process.env.SEIZOEN ? Number(process.env.SEIZOEN)
+  : huidigSeizoen(await sb('races?select=season,deadline_race,race_result,afgelast'));
 
 // Eén verzoek voor alle sessies van het seizoen; daarmee is per race terug te
 // vinden welke sessies bij zijn weekend horen.

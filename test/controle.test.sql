@@ -170,9 +170,12 @@ begin
   -- Zonder kalender is er niets om rond te zijn. "ok" zou hier gelden omdat
   -- er geen race is die het tegenspreekt, en dat is precies het soort ok waar
   -- je niets aan hebt.
+  -- Zonder races gaat de tabel over het jaar van vandaag (controle_seizoen()),
+  -- dus hier niet op 2026 zoeken: dan zou deze controle vanaf januari 2027
+  -- niets meer vinden, en null <> 'geen kalender' laat hem stilletjes slagen.
   select uitkomst into gevonden from public.poule_controle
-   where controle = 'seizoen 2026 rond';
-  if gevonden <> 'geen kalender' then
+   where controle like 'seizoen % rond';
+  if gevonden is distinct from 'geen kalender' then
     raise exception 'gezakt: een lege kalender heet % in plaats van "geen kalender"', gevonden;
   end if;
   raise notice 'ok: en een lege kalender zegt dat er geen kalender is';

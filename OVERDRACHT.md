@@ -5998,3 +5998,107 @@ Met "liever minder beweging" staat alles uit, zoals al het geval was.
   profiel), en telt een doorzichtig vlak op bij wat eronder ligt. Eerst werd
   `rgba(…, .12)` gelezen alsof het massief was. Een knop die uitgeschakeld is
   telt niet mee (WCAG 1.4.3 zondert die uit).
+
+## De jaarwisseling: geen jaartal meer om bij te werken
+
+Danny vroeg wat de volgende fase was. De routekaart was af, dus eerst gekeken
+wat er vanzelf mis zou gaan als niemand iets deed. Dat bleek de jaarwisseling:
+
+- `.github/workflows/sync.yml` gaf `SEIZOEN: '2026'` mee, en `scripts/sync.mjs`
+  viel zonder die regel ook terug op 2026. De kalender van 2027 was dus nooit
+  opgehaald.
+- De app had al een knop **Begin aan 2027**, maar wie daarop drukte kwam in een
+  lege kalender — zonder foutmelding, want er ging niets mis. Er kwam alleen
+  niets.
+- `poule_aanmaken()` nam `max(races.season)`. Zodra de kalender van 2027 er wél
+  zou staan, begon een poule uit november in 2027, met de laatste races van
+  2026 nog voor de deur.
+- De controletabel telde overal `season = 2026`, en had in januari
+  "seizoen 2026 rond: ok" gezegd over een jaar dat niemand meer speelt.
+- `controle-kalender.mjs`, `controle-coureurs.mjs`, `controle-stand.mjs` en
+  `verkennen.mjs` stonden ook op 2026.
+
+### Hoe de sync nu kiest
+
+`scripts/seizoenen.mjs` beslist per ronde, zonder netwerk en dus te testen:
+
+- **Uitslagen** van elk seizoen waar nog iets te halen valt: een race die nog
+  komt, een race die op zijn uitslag wacht, of een race die minder dan tien
+  dagen geleden gereden is (de herkeuringen lopen tot 32 uur, afgelast volgt
+  na zeven dagen). Rond de jaarwisseling zijn dat er twee.
+- **Kalender** van het volgende seizoen zodra de finale minder dan zestig dagen
+  weg is. Zolang OpenF1 er niets van heeft kost dat één licht verzoek per
+  ronde: `kalender()` stopt na een lege lijst races en vraagt de kwalificaties
+  en sprints er niet achteraan. Voor 2026 (finale 6 december) begint dat rond
+  7 oktober.
+- Een lege database begint bij het jaar van vandaag. `SEIZOEN` meegeven kan nog
+  steeds, en doet dan wat het altijd deed: alleen dat seizoen.
+
+Drie dingen die erbij moesten:
+
+- **Een dagelijkse kalenderronde** (tweede cron in `sync.yml`, 04:23 UTC, met
+  `KALENDER=true`). De kalender van volgend jaar komt nu maanden voor de eerste
+  race binnen, en tot die tijd kan er nog van alles schuiven. Eerst werd de
+  kalender alleen opgehaald als hij leeg was of als iemand op de knop drukte;
+  een verschoven race midden in het seizoen bleef dus ook staan zoals hij
+  stond. Dezelfde route als de knop, dus niets nieuws: rondenummers blijven
+  vast, nep-records worden doorgestreept, dubbelen opgeruimd.
+- **Een rem op deelnemerslijsten van ver vooruit** (`lijstKanWachten`). Een race
+  zonder lijst werd elke ronde opnieuw gevraagd, hoe ver weg ook. Binnen een
+  seizoen maakte dat niet uit — OpenF1 zet de inschrijflijst van het seizoen bij
+  elke sessie — maar vierentwintig races van volgend jaar zonder lijst waren
+  vierentwintig verzoeken per ronde geweest, maandenlang, voor niets. Zo'n
+  race wacht nu op de dagelijkse ronde, tot hij binnen het verversvenster van
+  veertien dagen komt.
+- **Nooit een lege agenda.** `schrijfAgenda()` schrijft niets als er geen races
+  zijn, en de agenda heet voortaan "Predict the Race" in plaats van
+  "F1 Poule 2026": rond de jaarwisseling staan er twee seizoenen in.
+
+### In de database
+
+- `poule_aanmaken()` kiest het seizoen van de eerstvolgende race (niet
+  afgelast), anders het laatste seizoen dat er is, anders het jaar van vandaag.
+- De controletabel gaat over `controle_seizoen()`: het eerste seizoen met een
+  race die nog niets heeft, anders het laatste. Een race die blijft hangen
+  houdt de tabel dus bij het oude jaar — die hoort in beeld te blijven, ook als
+  de nieuwe kalender er al is. De labels schuiven mee ("races in 2027",
+  "seizoen 2027 rond").
+- De standaard van `pools.season` is het jaar van vandaag in plaats van 2026.
+  Niets leunt erop, maar een vast jaartal als standaard is een val.
+
+**Dit moet in Supabase gedraaid worden** (`schema.sql` in de SQL Editor, zoals
+altijd), en wel vóór 7 oktober. Daarna kan de sync de kalender van 2027 al
+binnenhalen, en met het oude `poule_aanmaken()` zou een nieuwe poule dan in
+2027 beginnen. De sync zelf hoeft niets: die draait vanaf de merge op de
+nieuwe manier.
+
+### In de app
+
+Het racesoverzicht zegt het nu als het seizoen erop zit. De poulebaas krijgt
+daar de knop om door te schuiven (hij stond alleen onder Poule → beheer, en in
+januari opent niemand dat); de rest leest "Zodra de poulebaas doorschuift naar
+2027 staat hier de nieuwe kalender". Wie terugbladert naar een afgelopen jaar
+krijgt het aanbod niet.
+
+### Hoe het getest is
+
+- `test/sync-seizoenen.test.mjs` (27): de regel zelf, van midden in het seizoen tot
+  januari, met de randen (de dag voor de zestig, een race zonder tijd, een lege
+  uitslag).
+- `test/jaarwisseling.test.mjs` (25): de échte `sync.mjs` als los proces tegen
+  een nagebootste OpenF1 en PostgREST (`OPENF1_URL` is daarvoor de enige
+  nieuwe knop). Zeven fases: midden in het seizoen, vijf weken voor de finale
+  zonder 2027, OpenF1 publiceert 2027, de finale, januari, de dagelijkse ronde,
+  een lege database. De scripts worden naar een tijdelijke map gekopieerd
+  zodat de echte `kalender.ics` niet overschreven wordt. Vijf mutanten (vast op
+  2026, geen stop bij een lege kalender, een lege agenda, geen rem op de
+  lijsten, geen dagelijkse ronde) zakken elk op de juiste controle.
+- `test/seizoenswissel.test.sql` (10): de controletabel en `poule_aanmaken()`
+  over de jaarwisseling. Tegen het oude schema zakt hij op de poule uit
+  november; met de view terug op 2026 op "na de finale".
+- `test/seizoenseinde.test.mjs` (17): het racesoverzicht voor de poulebaas en
+  voor een gewone speler, doorschuiven met en zonder kalender van volgend jaar.
+- In `test/controle.test.sql` zocht de controle op een lege kalender naar het
+  label "seizoen 2026 rond". Vanaf 2027 had hij niets gevonden, en
+  `null <> 'geen kalender'` laat een `if` stilletjes slagen. Nu `like` en
+  `is distinct from`.
