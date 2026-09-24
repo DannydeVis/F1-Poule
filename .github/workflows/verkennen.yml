@@ -12,8 +12,8 @@ on:
   workflow_dispatch:
     inputs:
       jaar:
-        description: 'Welk seizoen'
-        default: '2026'
+        description: 'Welk seizoen (leeg = dit jaar)'
+        default: ''
       sessie:
         description: 'Eén session_key (leeg = de laatste gereden race)'
         default: ''
@@ -46,7 +46,7 @@ jobs:
           node-version: '24'
       - name: Kijken wat OpenF1 heeft
         env:
-          JAAR: ${{ inputs.jaar || '2026' }}
+          JAAR: ${{ inputs.jaar }}
           SESSIE: ${{ inputs.sessie }}
           LOCATIE: ${{ inputs.locatie }}
           COUREURS: ${{ inputs.coureurs }}
@@ -60,7 +60,7 @@ jobs:
       - name: Het woordenboek over alle races
         if: github.event_name == 'pull_request' || inputs.alle == true
         env:
-          JAAR: ${{ inputs.jaar || '2026' }}
+          JAAR: ${{ inputs.jaar }}
           ALLE: '1'
         run: node scripts/verkennen.mjs
 
@@ -71,7 +71,7 @@ jobs:
       - name: Droogloop over alle races
         if: github.event_name == 'pull_request' || inputs.alle == true
         env:
-          JAAR: ${{ inputs.jaar || '2026' }}
+          JAAR: ${{ inputs.jaar }}
           DROOG: '1'
         run: node scripts/verkennen.mjs
 

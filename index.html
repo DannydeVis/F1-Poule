@@ -1703,6 +1703,15 @@ const ENGELS = Object.fromEntries([
   ['Alle races zijn gereden. Hieronder '
    + 'staat hoe ze gegaan zijn.',
    'Every race has been run. Below is how they went.'],
+  ['Alle races van {jaar} zijn gereden. Schuif door naar {volgend}, dan staat '
+   + 'hier de nieuwe kalender. {jaar} blijft te bekijken, met de stand en alles '
+   + 'wat erbij hoort.',
+   'Every race of {jaar} has been run. Move on to {volgend} and the new calendar '
+   + 'appears here. {jaar} stays viewable, with the standings and everything else.'],
+  ['Alle races van {jaar} zijn gereden. Zodra de poulebaas doorschuift naar '
+   + '{volgend} staat hier de nieuwe kalender.',
+   'Every race of {jaar} has been run. As soon as the pool owner moves on to '
+   + '{volgend}, the new calendar appears here.'],
   ['nog geen races',
    'no races yet'],
   ['De kalender wordt automatisch opgehaald.',
@@ -5450,9 +5459,7 @@ function racesPagina(volgend) {
   // wacht, en een seizoen dat erop zit. Hetzelfde zinnetje voor allebei zou in
   // december beweren dat de races nog opgehaald moeten worden.
   const leeg = S.races.length
-    ? `<div class="leeg"><span class="label">${T('seizoen rond')}</span>
-         <p class="zacht" style="margin:0">${T('Alle races zijn gereden. Hieronder '
-           + 'staat hoe ze gegaan zijn.')}</p></div>`
+    ? seizoenRondBlok()
     : `<div class="leeg"><span class="label">${T('nog geen races')}</span>
          <p class="zacht" style="margin:0">${
            T('De kalender wordt automatisch opgehaald.')}</p></div>`;
@@ -7134,9 +7141,9 @@ function knoopSeizoen() {
     S.race = null; S.bekijk = null;
     render();
   };
-  const nieuw = app.querySelector('#nieuwSeizoenKnop');
-  if (!nieuw) return;
-  nieuw.onclick = async () => {
+  // Twee knoppen, dezelfde handeling: onder Poule bij het beheer, en sinds de
+  // jaarwisseling ook op het racesoverzicht zodra het seizoen erop zit.
+  app.querySelectorAll('#nieuwSeizoenKnop, #doorschuiven').forEach(nieuw => nieuw.onclick = async () => {
     nieuw.disabled = true;
     const volgend = pouleSeizoen() + 1;
     try {
@@ -7155,7 +7162,39 @@ function knoopSeizoen() {
         + 'via de keuzelijst boven de kalender.', { jaar: volgend, vorig: volgend - 1 });
     } catch (e) { S.melding = e.message; }
     render();
-  };
+  });
+}
+
+// Zit het seizoen van deze poule erop? Elke race een uitslag of afgelast.
+function seizoenAfgerond() {
+  const vanDitJaar = S.alleRaces.filter(r => zelfde(r.season, pouleSeizoen()));
+  return vanDitJaar.length > 0 && vanDitJaar.every(r => heeftUitslag(r) || r.afgelast);
+}
+
+// Het racesoverzicht als alles gereden is. Doorschuiven kon al, maar alleen
+// onder Poule, helemaal onderaan bij het beheer -- en in januari opent
+// niemand dat. Wie de app opent zag "seizoen rond" en verder niets, ook als de
+// kalender van volgend jaar allang klaarstond. Nu staat het hier, op de plek
+// waar je naar de volgende race zoekt: de poulebaas krijgt de knop, de rest
+// leest waar het op wacht.
+//
+// Alleen bij het seizoen dat de poule speelt. Wie terugbladert naar een
+// afgelopen jaar hoeft daar niet te horen dat hij door kan schuiven.
+function seizoenRondBlok() {
+  const nu = seizoen() === pouleSeizoen() && seizoenAfgerond();
+  const vars = { jaar: pouleSeizoen(), volgend: pouleSeizoen() + 1 };
+  return `<div class="leeg"><span class="label">${T('seizoen rond')}</span>
+    <p class="zacht" style="margin:0">${!nu
+      ? T('Alle races zijn gereden. Hieronder staat hoe ze gegaan zijn.')
+      : magBeheren()
+        ? T('Alle races van {jaar} zijn gereden. Schuif door naar {volgend}, dan staat '
+          + 'hier de nieuwe kalender. {jaar} blijft te bekijken, met de stand en alles '
+          + 'wat erbij hoort.', vars)
+        : T('Alle races van {jaar} zijn gereden. Zodra de poulebaas doorschuift naar '
+          + '{volgend} staat hier de nieuwe kalender.', vars)}</p>
+    ${nu && magBeheren() ? `<button class="knop primair" id="doorschuiven">${
+      T('Begin aan {jaar}', { jaar: vars.volgend })}</button>` : ''}
+  </div>`;
 }
 
 // De poulebaas schuift het seizoen door. Alleen als dit seizoen echt klaar is:
@@ -7163,8 +7202,7 @@ function knoopSeizoen() {
 // nergens meer te zien is.
 function nieuwSeizoenBlok() {
   if (!magBeheren()) return '';
-  const vanDitJaar = S.alleRaces.filter(r => zelfde(r.season, pouleSeizoen()));
-  const klaar = vanDitJaar.length > 0 && vanDitJaar.every(r => heeftUitslag(r) || r.afgelast);
+  const klaar = seizoenAfgerond();
   return `
     <div class="scheiding"></div>
     <span class="label">${T('seizoen {jaar}', { jaar: pouleSeizoen() })}</span>

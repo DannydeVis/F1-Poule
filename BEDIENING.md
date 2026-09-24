@@ -399,9 +399,25 @@ Vijf dingen die daarbij vastliggen:
 ### 6c. Een nieuw seizoen, en terug naar het vorige
 
 Een poule hoort bij een seizoen. Zodra alle races van dat seizoen gereden zijn
-verschijnt onder Poule → beheer de knop **Begin aan 2027** (of welk jaar er
-volgt). Zolang er nog iets te rijden valt staat hij uit — doorschuiven zou die
-race dan uit beeld halen.
+verschijnt de knop **Begin aan 2027** (of welk jaar er volgt) op twee plekken:
+op het racesoverzicht, op de plek waar anders de volgende race staat, en onder
+Poule → beheer. Zolang er nog iets te rijden valt is hij er niet — doorschuiven
+zou die race dan uit beeld halen.
+
+Op het racesoverzicht ziet alleen de poulebaas de knop. De rest leest daar
+"Zodra de poulebaas doorschuift naar 2027 staat hier de nieuwe kalender", zodat
+een scherm met alleen gereden races niet lijkt op een app die stilstaat.
+
+**De kalender van het volgende jaar komt vanzelf.** De sync gaat hem vanaf twee
+maanden voor de finale zoeken bij OpenF1 en zet hem erin zodra hij er is; tot
+de eerste race wordt hij elke dag opnieuw nagekeken. Er hoeft niemand iets
+voor te doen, en er staat nergens meer een jaartal dat met de hand bijgewerkt
+moet worden. Schuif je door vóórdat OpenF1 hem heeft, dan staat er "nog geen
+races — de kalender wordt automatisch opgehaald", en dat klopt dan ook.
+
+Een poule die in november begint, speelt de laatste races van dit jaar mee; een
+poule die na de finale begint, begint in het nieuwe jaar (als die kalender er
+al is).
 
 Doorschuiven gooit niets weg. Boven de kalender en boven de stand komt een
 keuzelijst te staan waarmee je terug kunt naar het vorige seizoen: dezelfde
@@ -842,7 +858,10 @@ als élke race een uitslag heeft of afgelast is. Blijft er één race hangen —
 gereden volgens de kalender, niets binnengekomen, niet afgelast — dan leveren
 die 150 punten nooit iets op en blijft "Begin aan het volgende seizoen" grijs.
 
-Onderaan `schema.sql` staan daarom drie regels die dat nu al laten zien:
+Onderaan `schema.sql` staan daarom drie regels die dat nu al laten zien. Ze
+gaan over het seizoen dat nu speelt: tot de finale dit jaar, daarna het
+volgende. Een race die blijft hangen houdt de tabel bij het oude jaar, zodat
+hij niet uit beeld verdwijnt zodra de nieuwe kalender er is.
 
 ```
 afgelaste races                                        | 2

@@ -837,6 +837,18 @@ Drie dingen om te weten als je hier verder bouwt:
 
 ---
 
+## ~~De jaarwisseling~~ — gebouwd
+
+Geen fase uit het plan, maar het eerste dat vanzelf mis was gegaan: de sync
+stond vast op 2026, en na de finale was de kalender van 2027 nooit opgehaald.
+Nu kiest de sync zelf welke seizoenen er lopen en haalt hij de kalender van
+volgend jaar op vanaf twee maanden voor de finale; het racesoverzicht zegt het
+als het seizoen erop zit. Er staat nergens meer een jaartal dat met de hand
+bijgewerkt moet worden. Zie `OVERDRACHT.md`, "De jaarwisseling".
+
+Wat er aan jouw kant bij hoort: `schema.sql` draaien in Supabase, vóór
+7 oktober (zie daar waarom).
+
 ## De volgorde in één blik
 
 | fase | wat | waarom daar |

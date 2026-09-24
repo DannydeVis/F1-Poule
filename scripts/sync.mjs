@@ -8,13 +8,17 @@
  * Verwachte omgevingsvariabelen (staan als repository secrets in GitHub):
  *   SUPABASE_URL   https://xxxx.supabase.co
  *   SUPABASE_KEY   de service_role key
- *   SEIZOEN        optioneel, standaard 2026
+ *   SEIZOEN        optioneel: alleen dit seizoen. Zonder kiest de sync zelf,
+ *                  zie scripts/seizoenen.mjs
  *   KALENDER       'true' om de kalender opnieuw op te halen
+ *   OPENF1_URL     alleen voor de test die de jaarwisseling naspeelt
  */
 
 const SUPABASE_URL = process.env.SUPABASE_URL?.replace(/\/+$/, '');
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
-const SEIZOEN      = Number(process.env.SEIZOEN || 2026);
+// Stond op `|| 2026`, en de workflow gaf 2026 mee. Nu alleen nog als iemand met
+// de hand één seizoen wil draaien; anders beslist seizoenPlan() per ronde.
+const VAST_SEIZOEN = process.env.SEIZOEN ? Number(process.env.SEIZOEN) : null;
 const FORCE_KALENDER = process.env.KALENDER === 'true';
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -30,8 +34,9 @@ import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast
 import { maakAgenda } from './agenda.mjs';
 import { wieKrijgtEenSeintje } from './herinneringen.mjs';
 import { stuur as stuurPush } from './push.mjs';
+import { seizoenPlan, agendaSeizoenen, lijstKanWachten } from './seizoenen.mjs';
 
-const API = 'https://api.openf1.org/v1';
+const API = process.env.OPENF1_URL?.replace(/\/+$/, '') ?? 'https://api.openf1.org/v1';
 const REST = `${SUPABASE_URL}/rest/v1`;
 const kop = {
   apikey: SUPABASE_KEY,
@@ -83,7 +88,10 @@ async function sb(pad, opties = {}) {
   return tekst ? JSON.parse(tekst) : null;
 }
 
-const haalRaces = () => sb(`races?season=eq.${SEIZOEN}&order=round`);
+const haalRaces = (jaar) => sb(`races?season=eq.${jaar}&order=round`);
+// Alle seizoenen in één keer. Het zijn er vierentwintig per jaar; één verzoek
+// is goedkoper dan eerst vragen welke jaren er zijn.
+const haalAlleRaces = () => sb('races?order=season,round');
 
 const upsertRaces = (rijen) =>
   sb('races?on_conflict=season,round', {
@@ -105,11 +113,20 @@ const heeftAntwoorden = async (raceId) =>
 //  Kalender
 // ------------------------------------------------------------
 
-async function kalender() {
-  console.log(`Kalender ${SEIZOEN} ophalen`);
-  const races  = await openf1(`sessions?year=${SEIZOEN}&session_name=Race`);
+async function kalender(jaar) {
+  console.log(`Kalender ${jaar} ophalen`);
+  const races  = await openf1(`sessions?year=${jaar}&session_name=Race`);
+  // Het volgende seizoen zoeken we al twee maanden voor de finale, en al die
+  // tijd heeft OpenF1 er nog niets van. Dan ook niet de kwalificaties en
+  // sprints erachteraan vragen: één verzoek per ronde, en verder niets
+  // aanraken. Een lege lijst wegschrijven zou niets doen, maar de agenda en
+  // de herinneringen verderop horen niet te denken dat er een seizoen is.
+  if (!races?.length) {
+    console.log(`  OpenF1 heeft nog geen races voor ${jaar}`);
+    return 0;
+  }
   await wacht(700);
-  const qualis = await openf1(`sessions?year=${SEIZOEN}&session_name=Qualifying`);
+  const qualis = await openf1(`sessions?year=${jaar}&session_name=Qualifying`);
   const perMeeting = new Map(qualis.map((q) => [q.meeting_key, q]));
 
   // Sprintweekenden: zes keer per seizoen, met een eigen sessie en een eigen
@@ -117,7 +134,7 @@ async function kalender() {
   // Race werden opgehaald. Een weekend zonder sprint houdt deze kolommen leeg,
   // en dáár hangt de app aan: een sessie "bestaat" zodra er een deadline staat.
   await wacht(700);
-  const sprints = await openf1(`sessions?year=${SEIZOEN}&session_name=Sprint`);
+  const sprints = await openf1(`sessions?year=${jaar}&session_name=Sprint`);
   const sprintPerMeeting = new Map(sprints.map((s) => [s.meeting_key, s]));
   if (sprints.length) console.log(`  ${sprints.length} sprintsessies gevonden`);
 
@@ -140,7 +157,11 @@ async function kalender() {
   // Doorgeteld over de overgebleven races schuift alles ná een weggevallen
   // race een plaats op, en dan komt een voorspelling bij de verkeerde race te
   // staan. Een race die we al kennen houdt daarom zijn nummer.
-  const bestaand = await haalRaces();
+  if (!opDatum.length) {
+    console.log(`  geen echte races voor ${jaar} over`);
+    return 0;
+  }
+  const bestaand = await haalRaces(jaar);
   const ronde = rondeToewijzing(opDatum, bestaand);
   for (const race of opDatum) {
     const key = String(race.session_key);
@@ -156,7 +177,7 @@ async function kalender() {
       const quali = perMeeting.get(race.meeting_key);
       const sprint = sprintPerMeeting.get(race.meeting_key);
       return {
-        season: SEIZOEN,
+        season: jaar,
         round: ronde.get(String(race.session_key)),
         name: race.location ?? race.circuit_short_name,
         country: race.country_name,
@@ -179,9 +200,10 @@ async function kalender() {
   // het juiste, en niet verwijderen: er kunnen voorspellingen aan hangen, en
   // 'afgelast' vertelt in de app precies het goede verhaal — hij telt voor
   // niemand mee.
-  if (nep.length) await streepDoor(nep);
+  if (nep.length) await streepDoor(nep, jaar);
 
-  await ruimDubbelenOp();
+  await ruimDubbelenOp(jaar);
+  return rijen.length;
 }
 
 /**
@@ -195,8 +217,8 @@ async function kalender() {
  * Hangt er wel iets aan, dan strepen we hem door en zeggen het hardop; dan
  * kan een mens beslissen wat er met die voorspellingen moet gebeuren.
  */
-async function ruimDubbelenOp() {
-  const groepen = dubbeleRaces(await haalRaces());
+async function ruimDubbelenOp(jaar) {
+  const groepen = dubbeleRaces(await haalRaces(jaar));
   if (!groepen.length) return;
   for (const { houden, weg } of groepen) {
     for (const rij of weg) {
@@ -214,8 +236,8 @@ async function ruimDubbelenOp() {
   }
 }
 
-async function streepDoor(nep) {
-  const bestaand = await haalRaces();
+async function streepDoor(nep, jaar) {
+  const bestaand = await haalRaces(jaar);
   for (const r of nep) {
     const staat = bestaand.find((b) => b.race_key === r.session_key && !b.afgelast);
     if (!staat) continue;
@@ -323,10 +345,10 @@ async function probeer(patch, veld, ophalen, gemist) {
  * terug op wat het altijd al deed. Een sync zonder deelnemerslijst is erger
  * dan een sync met een oude.
  */
-async function weekendSessies() {
+async function weekendSessies(jaar) {
   let alles;
   try {
-    alles = await openf1(`sessions?year=${SEIZOEN}`);
+    alles = await openf1(`sessions?year=${jaar}`);
     await wacht(700);
   } catch (e) {
     console.log(`  sessies van het seizoen niet op kunnen halen: ${e.message}`);
@@ -362,7 +384,7 @@ function sessiesVanRace(race, weekenden) {
 const UITSLAGVELDEN = ['quali_result', 'race_result', 'fastest_lap',
                        'fastest_pitstop', 'safety_cars', 'rode_vlag'];
 
-async function uitslagen(races) {
+async function uitslagen(races, jaar) {
   // Wanneer mogen we een sessie gaan opvragen? Deze regel telt 45 minuten
   // vanaf de START van de sessie, niet vanaf het einde — deadline_quali en
   // deadline_race zijn allebei het begintijdstip. Er stond hier "OpenF1 rekent
@@ -389,9 +411,13 @@ async function uitslagen(races) {
   // en sinds de sync elk kwartier draait is één verzoek per ronde er 96 per
   // dag. deelnemersUit() met een lege sessielijst geeft precies het oude
   // antwoord, dus dit is een goedkope voorcontrole en geen tweede regel.
-  const iemandWil = races.some((r) => deelnemersUit(r, Date.now(), []) !== null);
+  // Een race zonder lijst die nog maanden weg is telt buiten de dagelijkse
+  // ronde niet mee (zie lijstKanWachten), anders haalt de kalender van
+  // volgend jaar hier elke ronde de sessies op.
+  const wilLijst = (r) => !(lijstKanWachten(r, Date.now()) && !FORCE_KALENDER);
+  const iemandWil = races.some((r) => wilLijst(r) && deelnemersUit(r, Date.now(), []) !== null);
   const weekenden = iemandWil
-    ? await weekendSessies()
+    ? await weekendSessies(jaar)
     : { perMeeting: new Map(), perSessieKey: new Map() };
   if (!iemandWil) console.log('  geen race in het verversvenster, sessies niet opgehaald');
 
@@ -405,7 +431,7 @@ async function uitslagen(races) {
     // uit, een reserve stapt in, iemand wisselt van team. Dat stond hier
     // eerder als `if (!race.drivers ...)`, en dan bevriest de lijst voorgoed
     // op wat er de allereerste keer in stond.
-    const bron = deelnemersUit(race, Date.now(), sessiesVanRace(race, weekenden));
+    const bron = wilLijst(race) && deelnemersUit(race, Date.now(), sessiesVanRace(race, weekenden));
     if (bron) await probeer(patch, 'drivers', () => deelnemers(bron), gemist);
     // Vlak na de race en een dag erna kijken we alles nog een keer na, ook wat
     // we al hebben. Zie opnieuwNakijken(): een tijdstraf of een geschrapte
@@ -610,7 +636,14 @@ const AGENDA_PAD = new URL('../kalender.ics', import.meta.url);
 const APP_URL = process.env.APP_URL ?? 'https://dannydevis.github.io/F1-Poule/';
 
 function schrijfAgenda(races) {
-  const nieuw = maakAgenda(races, { url: APP_URL, naam: `F1 Poule ${SEIZOEN}` });
+  // Nooit een lege agenda wegschrijven. Die zou bij elke abonnee alle
+  // deadlines weghalen, en dat voor een database die toevallig leeg was.
+  if (!races.length) {
+    console.log('Agenda niet bijgewerkt: geen races');
+    return false;
+  }
+  // Zonder jaartal: rond de jaarwisseling staan er twee seizoenen in.
+  const nieuw = maakAgenda(races, { url: APP_URL, naam: 'Predict the Race' });
   let oud = '';
   try { oud = readFileSync(AGENDA_PAD, 'utf8'); } catch { /* bestaat nog niet */ }
   if (oud === nieuw) {
@@ -635,7 +668,7 @@ const VAPID_PRIVE  = process.env.VAPID_PRIVE;
 const PUSH_CONTACT = process.env.PUSH_CONTACT ?? 'mailto:poule@voorbeeld.nl';
 
 async function herinneringen(races) {
-  if (!VAPID_PRIVE) return;
+  if (!VAPID_PRIVE || !races.length) return;
   const abonnementen = await sb('push_abonnementen?select=*');
   if (!abonnementen?.length) return;
 
@@ -682,24 +715,39 @@ async function herinneringen(races) {
 // ------------------------------------------------------------
 
 try {
-  let races = await haalRaces();
+  let alle = await haalAlleRaces() ?? [];
+  let plan = seizoenPlan(alle, Date.now(), { vast: VAST_SEIZOEN });
 
-  // Kalender alleen ophalen als hij nog leeg is, of als je er expliciet
-  // om vraagt. Zo overschrijft een dagelijkse run nooit per ongeluk iets.
-  if (FORCE_KALENDER || !races?.length) {
-    await kalender();
-    races = await haalRaces();
+  // Welke kalenders. Normaal alleen een seizoen dat er nog niet is (het
+  // volgende, vanaf twee maanden voor de finale). Met KALENDER=true -- de knop
+  // in Actions, of de dagelijkse ronde in sync.yml -- ook de seizoenen die
+  // lopen, zodat een verschoven race of een kalender die OpenF1 in stukjes
+  // publiceerde vanzelf rechtgetrokken wordt.
+  const kalenders = FORCE_KALENDER
+    ? [...new Set([...plan.uitslagen, ...plan.kalender])]
+    : plan.kalender;
+  let nieuw = 0;
+  for (const jaar of kalenders) nieuw += await kalender(jaar);
+  if (nieuw) {
+    alle = await haalAlleRaces() ?? [];
+    plan = seizoenPlan(alle, Date.now(), { vast: VAST_SEIZOEN });
   }
 
-  console.log(`Uitslagen controleren voor ${races.length} races`);
-  await uitslagen(races);
+  if (!plan.uitslagen.length) console.log('Geen seizoen waar nog iets na te kijken valt');
+  for (const jaar of plan.uitslagen) {
+    const races = alle.filter((r) => r.season === jaar);
+    console.log(`Uitslagen ${jaar} controleren voor ${races.length} races`);
+    await uitslagen(races, jaar);
+  }
 
   // Opnieuw ophalen: uitslagen() heeft er net uitslagen bij gezet, en die
   // bepalen welke poules op slot gaan.
-  const nu = await haalRaces();
-  await vragensetOpSlot(nu);
-  schrijfAgenda(nu);
-  await herinneringen(nu);
+  alle = await haalAlleRaces() ?? [];
+  const lopend = alle.filter((r) => plan.uitslagen.includes(r.season));
+  await vragensetOpSlot(lopend);
+  const inAgenda = agendaSeizoenen(alle, plan);
+  schrijfAgenda(alle.filter((r) => inAgenda.includes(r.season)));
+  await herinneringen(lopend);
 } catch (e) {
   console.error('Mislukt:', e.message);
   process.exit(1);

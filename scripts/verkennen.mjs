@@ -21,7 +21,8 @@ import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop }
   from './uitslagen.mjs';
 
 const API = 'https://api.openf1.org/v1';
-const JAAR = Number(process.env.JAAR ?? 2026);
+// Zonder JAAR het jaar van vandaag; stond op 2026.
+const JAAR = Number(process.env.JAAR || new Date().getUTCFullYear());
 const SESSIE = process.env.SESSIE ? Number(process.env.SESSIE) : null;
 const ALLE = !!process.env.ALLE;
 

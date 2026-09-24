@@ -60,6 +60,15 @@ on:
   # mist die allebei, en dat is precies het weekend waarin het misgaat.
   schedule:
     - cron: '*/15 * * * *'
+    # Eén keer per dag ook de kalender opnieuw ophalen, zoals de knop
+    # hieronder. Rond de jaarwisseling haalt de sync de kalender van het
+    # volgende seizoen al op zodra OpenF1 hem heeft (scripts/seizoenen.mjs),
+    # en tot de eerste race kan daar nog van alles aan schuiven: een tijd, een
+    # datum, een race die er later bij komt. Midden in het seizoen vangt dit
+    # een verschoven of geschrapte race, waar eerst iemand voor op de knop
+    # moest drukken. Valt deze run een dag weg (zie hierboven), dan is de
+    # volgende dag er weer een.
+    - cron: '23 4 * * *'
 
   # Knop in het Actions-tabblad om hem handmatig te starten.
   workflow_dispatch:
@@ -87,8 +96,12 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          SEIZOEN: '2026'
-          KALENDER: ${{ inputs.kalender }}
+          # Geen SEIZOEN meer: de sync kiest zelf welke seizoenen er lopen en
+          # wanneer de kalender van volgend jaar opgehaald wordt. Stond hier
+          # op '2026', en dan was 2027 nooit opgehaald. Zie
+          # scripts/seizoenen.mjs. Wie met de hand één seizoen wil draaien
+          # kan SEIZOEN nog steeds meegeven.
+          KALENDER: ${{ inputs.kalender || github.event.schedule == '23 4 * * *' }}
           # Deadlineherinneringen. Niet ingesteld = geen meldingen, en de rest
           # van de sync merkt er niets van. Zie BEDIENING.md §11c voor hoe je
           # deze twee maakt.

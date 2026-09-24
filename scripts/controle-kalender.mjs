@@ -9,8 +9,8 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { huidigSeizoen } from './seizoenen.mjs';
 
-const SEIZOEN = Number(process.env.SEIZOEN ?? 2026);
 const bron = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const SUPABASE_URL = bron.match(/const SUPABASE_URL = '([^']+)'/)?.[1];
 const SUPABASE_ANON_KEY = bron.match(/const SUPABASE_ANON_KEY = '([^']+)'/)?.[1];
@@ -23,6 +23,9 @@ async function sb(pad) {
   return res.json();
 }
 
+// Zonder SEIZOEN het seizoen waar het nu om draait, en niet vast 2026.
+const SEIZOEN = process.env.SEIZOEN ? Number(process.env.SEIZOEN)
+  : huidigSeizoen(await sb('races?select=season,deadline_race,race_result,afgelast'));
 const races = await sb(`races?season=eq.${SEIZOEN}&select=*&order=round`);
 const antwoorden = await sb(`answers?select=race_id`);
 const perRace = new Map();

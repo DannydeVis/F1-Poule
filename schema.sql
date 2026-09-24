@@ -163,6 +163,10 @@ create table if not exists public.push_abonnementen (
 
 alter table public.pools        add column if not exists beschrijving text;
 alter table public.pools        add column if not exists season     int not null default 2026;
+-- De standaard stond vast op 2026. Niets in de app leunt erop (poule_aanmaken
+-- geeft het seizoen altijd mee), maar een vast jaartal als standaard is een
+-- val die pas in een ander jaar dichtklapt.
+alter table public.pools        alter column season set default extract(year from now())::int;
 alter table public.pools        add column if not exists join_code  text;
 alter table public.pools        add column if not exists created_at timestamptz not null default now();
 -- Wie de poule heeft aangemaakt. Zonder login kan de database dit niet
@@ -1082,9 +1086,20 @@ begin
     raise exception 'je hebt zelf ook een naam nodig';
   end if;
 
+  -- Het seizoen van de eerstvolgende race, en niet het laatste seizoen in de
+  -- tabel. Dat was max(season), en dat ging goed zolang er maar één seizoen
+  -- in stond. Maar de sync haalt de kalender van volgend jaar nu al twee
+  -- maanden voor de finale op (scripts/seizoenen.mjs), en dan was een poule
+  -- die in november begonnen werd een poule voor 2027 -- met de laatste races
+  -- van 2026 nog voor de deur. Zit het seizoen erop en is het volgende er nog
+  -- niet, dan het laatste dat er is; de poulebaas schuift door zodra het kan.
   insert into public.pools (name, beschrijving, season)
   values (btrim(p_naam), nullif(btrim(coalesce(p_beschrijving, '')), ''),
-          (select coalesce(max(season), extract(year from now())::int) from public.races))
+          coalesce(
+            (select min(season) from public.races
+              where not afgelast and deadline_race > now()),
+            (select max(season) from public.races),
+            extract(year from now())::int))
   returning * into nieuwe;
 
   insert into public.pool_members (pool_id, display_name, user_id)
@@ -1438,6 +1453,28 @@ grant usage on all sequences in schema public to anon, authenticated;
 --  handmatig-vlaggen toen er zeven waren). Zie test/controle.test.sql.
 -- ------------------------------------------------------------
 
+-- Het seizoen waar de controletabel over gaat. Stond overal vast op 2026, en
+-- in januari 2027 had de tabel dan vrolijk "seizoen 2026 rond: ok" gezegd over
+-- een seizoen dat niemand meer speelt, terwijl de kalender van 2027 ontbrak.
+--
+-- Het eerste seizoen met een race die nog niets heeft: nog te rijden, of
+-- blijven hangen. Dat tweede telt mee met opzet -- een race die in december
+-- blijft hangen hoort in de tabel te blijven staan, ook als de kalender van
+-- volgend jaar er al is. Is alles gereden, dan het laatste seizoen dat er is.
+create or replace function public.controle_seizoen()
+returns int
+language sql
+stable
+set search_path = public
+as $$
+  select coalesce(
+    (select min(season) from public.races
+      where not afgelast
+        and race_result is null and quali_result is null and sprint_result is null),
+    (select max(season) from public.races),
+    extract(year from now())::int)
+$$;
+
 drop view if exists public.poule_controle;
 create view public.poule_controle as
 -- Niet alleen "bestaat hij", maar ook "vuurt hij op alle drie". Deze trigger
@@ -1496,20 +1533,20 @@ union all
 select 'spelers zonder account',
        (select count(*)::text from public.pool_members where user_id is null)
 union all
-select 'races in 2026',        (select count(*)::text from public.races where season = 2026)
+select 'races in ' || public.controle_seizoen(),        (select count(*)::text from public.races where season = public.controle_seizoen())
 union all
 select 'races met deelnemerslijst',
-       (select count(*)::text from public.races where season = 2026 and drivers is not null)
+       (select count(*)::text from public.races where season = public.controle_seizoen() and drivers is not null)
 union all
 -- Het getal waaraan je ziet of de sync zijn werk doet. Zonder deze regel stond
 -- er wel hoeveel races er in de kalender staan, maar niet hoeveel er gereden
 -- zijn -- en dat tweede is wat je wilt weten als je je afvraagt of de
 -- uitslagen binnenkomen.
 select 'races met uitslag',
-       (select count(*)::text from public.races where season = 2026 and race_result is not null)
+       (select count(*)::text from public.races where season = public.controle_seizoen() and race_result is not null)
 union all
 select 'afgelaste races',
-       (select count(*)::text from public.races where season = 2026 and afgelast)
+       (select count(*)::text from public.races where season = public.controle_seizoen() and afgelast)
 union all
 -- Rondt dit seizoen ooit af?
 --
@@ -1518,22 +1555,22 @@ union all
 -- rekent. Blijft er één race hangen, dan levert die honderdvijftig punten
 -- nooit iets op en blijft "Begin aan het volgende seizoen" grijs. Zonder deze
 -- regel merk je dat pas in december.
-select 'seizoen 2026 rond',
+select 'seizoen ' || public.controle_seizoen() || ' rond',
        case
          -- Zonder kalender is er niets om rond te zijn. "ok" zou hier gelden
          -- omdat er geen race is die tegenspreekt, en dat is precies het soort
          -- ok waar je niets aan hebt.
-         when not exists (select 1 from public.races where season = 2026)
+         when not exists (select 1 from public.races where season = public.controle_seizoen())
            then 'geen kalender'
          when not exists (
               select 1 from public.races r
-              where r.season = 2026 and not r.afgelast
+              where r.season = public.controle_seizoen() and not r.afgelast
                 and r.race_result is null
                 and r.quali_result is null
                 and r.sprint_result is null)
            then 'ok'
          else 'nog ' || (select count(*)::text from public.races r
-              where r.season = 2026 and not r.afgelast
+              where r.season = public.controle_seizoen() and not r.afgelast
                 and r.race_result is null
                 and r.quali_result is null
                 and r.sprint_result is null) || ' te gaan' end
@@ -1552,7 +1589,7 @@ select 'blijven hangen (deadline > week geleden, niets binnen)',
          select count(*)::text || ': ' || string_agg(r.name || ' (ronde ' || r.round || ')',
                                                      ', ' order by r.round)
          from public.races r
-         where r.season = 2026 and not r.afgelast
+         where r.season = public.controle_seizoen() and not r.afgelast
            and r.race_result is null and r.quali_result is null and r.sprint_result is null
            and r.deadline_race is not null
            and r.deadline_race < now() - interval '7 days'
@@ -1563,7 +1600,7 @@ union all
 -- nul -- terwijl dit juist de regel is die zegt "hier heeft iemand ingegrepen".
 select 'handmatig ingevulde uitslagen',
        (select count(*)::text from public.races
-        where season = 2026
+        where season = public.controle_seizoen()
           and (quali_handmatig or race_handmatig or sprint_handmatig
                or fastest_lap_handmatig or fastest_pitstop_handmatig
                or safety_cars_handmatig or rode_vlag_handmatig))
