@@ -249,11 +249,13 @@ const CSS = `
   .beelden img{display:block;width:100%;height:auto}
   .beelden figcaption{color:var(--ink2);font-size:15px;max-width:22em}
 
-  .duo{display:grid;gap:18px}
-  .duo article{background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:26px}
-  .duo h2{font-size:clamp(26px,3.4vw,32px);margin:0 0 10px}
-  .duo p{margin:0;color:var(--ink2)}
-  .duo a{color:var(--accent-tekst)}
+  /* Eén kaart over privacy. Hier stond er een tweede naast ("Wie zit
+     erachter?"); die is op verzoek weg. Smal gehouden, zodat de regels niet
+     over de hele breedte lopen. */
+  .los article{background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:26px;max-width:760px}
+  .los h2{font-size:clamp(26px,3.4vw,32px);margin:0 0 10px}
+  .los p{margin:0;color:var(--ink2)}
+  .los a{color:var(--accent-tekst)}
 
   .faq{display:grid;gap:10px;max-width:880px}
   .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px}
@@ -291,7 +293,6 @@ const CSS = `
     .stappen{grid-template-columns:repeat(2,1fr)}
     .functies{grid-template-columns:repeat(2,1fr)}
     .beelden{grid-template-columns:repeat(3,1fr)}
-    .duo{grid-template-columns:1fr 1fr}
     .tabellen{grid-template-columns:1fr 1fr}
     .aanbod{left:auto;right:20px;bottom:20px;max-width:460px}
   }
@@ -572,9 +573,8 @@ ${jsonLd(code)}
 </section>
 
 <section class="blok">
-  <div class="binnen duo">
+  <div class="binnen los">
     <article><h2>${esc(t.privacy.kop)}</h2><p>${esc(t.privacy.tekst)} <a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.privacy.meer)}</a></p></article>
-    <article><h2>${esc(t.maker.kop)}</h2><p>${esc(vul(t.maker.tekst, vars))} <a href="${BRON}" rel="noopener">github.com/DannydeVis/F1-Poule</a></p></article>
   </div>
 </section>
 

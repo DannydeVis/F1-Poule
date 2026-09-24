@@ -6662,3 +6662,24 @@ Wie een weekend mist heeft nog steeds automatisch invullen (als de poulebaas
 dat aanzet) en de jokers. Komt het vangnet ooit terug, dan staat het oude
 hoofdstuk hierboven, en de code in de geschiedenis van de repo (commit vóór
 deze).
+
+## "Wie zit erachter?" van de voorpagina
+
+Naast het privacyblok op de voorpagina stond een tweede kaart: wie de app
+maakte, dat er geen investeerders of geld achter zitten, en een link naar de
+broncode. Danny wilde hem weg; hij is weg, in alle zeven talen (`maker` uit
+`site/teksten.mjs`, de kaart uit `scripts/maak-site.mjs`). Het privacyblok
+staat er nu alleen, op 760 pixels breed zodat de regels niet over de hele
+pagina lopen.
+
+Wat er niet mee weg is, en waarom:
+
+- **"Speel je om geld?"** staat nog als vraag in de FAQ; daar hoort het
+  antwoord ook.
+- **De link naar de broncode** in de voet van elke pagina.
+- **De naam van de maker** in de gestructureerde gegevens voor zoekmachines
+  (`founder` en `author` in de JSON-LD) en in `llms.txt`. Die ziet een
+  bezoeker niet, maar zoekmachines en taalmodellen wel. Weghalen is één
+  regel in `jsonLd()` en `llms()`.
+- **De naam op de privacypagina.** Een privacyverklaring hoort te zeggen wie
+  verantwoordelijk is voor de gegevens; die blijft staan.

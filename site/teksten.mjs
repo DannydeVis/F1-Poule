@@ -101,10 +101,6 @@ export const teksten = {
       tekst: 'Predict the Race heeft geen advertenties, geen analytics en geen trackers, en verkoopt niets door. Je doet mee met een poulecode en een naam; een mailadres is alleen nodig als je je account zelf wilt meenemen naar een ander toestel. Deze pagina laadt niets van andere websites.',
       meer: 'Lees de hele privacyverklaring',
     },
-    maker: {
-      kop: 'Wie zit erachter?',
-      tekst: 'Predict the Race is gemaakt door {maker} en begon als poule voor een vriendengroep. Er zitten geen investeerders of adverteerders achter, en er zit geen geld in het spel: geen inleg, geen pot, geen prijzen. Je speelt om de eer. De broncode staat openbaar op GitHub.',
-    },
     faq: {
       kop: 'Veelgestelde vragen',
       items: [
@@ -204,10 +200,6 @@ export const teksten = {
       kop: 'No ads, no trackers',
       tekst: 'Predict the Race has no ads, no analytics and no trackers, and sells nothing on. You join with a league code and a name; an email address is only needed if you want to take your account to another device. This page loads nothing from other websites.',
       meer: 'Read the full privacy statement',
-    },
-    maker: {
-      kop: 'Who is behind it?',
-      tekst: 'Predict the Race is made by {maker} and started as a league for a group of friends. There are no investors or advertisers behind it, and no money is involved: no entry fee, no pot, no prizes. You play for bragging rights. The source code is public on GitHub.',
     },
     faq: {
       kop: 'Frequently asked questions',
@@ -309,10 +301,6 @@ export const teksten = {
       tekst: 'Predict the Race hat keine Werbung, keine Analytics und keine Tracker und verkauft nichts weiter. Du machst mit einem Code und einem Namen mit; eine E-Mail-Adresse brauchst du nur, wenn du dein Konto auf ein anderes Gerät mitnehmen willst. Diese Seite lädt nichts von anderen Websites.',
       meer: 'Die ganze Datenschutzerklärung lesen (auf Englisch)',
     },
-    maker: {
-      kop: 'Wer steckt dahinter?',
-      tekst: 'Predict the Race wird von {maker} gemacht und begann als Tipprunde für einen Freundeskreis. Es stehen keine Investoren oder Werbekunden dahinter, und es geht um kein Geld: kein Einsatz, kein Topf, keine Preise. Du spielst um die Ehre. Der Quellcode ist öffentlich auf GitHub.',
-    },
     faq: {
       kop: 'Häufige Fragen',
       items: [
@@ -412,10 +400,6 @@ export const teksten = {
       kop: 'Sans publicité, sans traceurs',
       tekst: 'Predict the Race n\'a ni publicité, ni outil d\'analyse, ni traceur, et ne revend rien. Vous jouez avec un code et un nom ; une adresse e-mail n\'est utile que si vous voulez emporter votre compte sur un autre appareil. Cette page ne charge rien depuis d\'autres sites.',
       meer: 'Lire toute la politique de confidentialité (en anglais)',
-    },
-    maker: {
-      kop: 'Qui est derrière ?',
-      tekst: 'Predict the Race est créé par {maker} et a commencé comme ligue pour un groupe d\'amis. Il n\'y a ni investisseurs ni annonceurs, et pas d\'argent en jeu : pas de mise, pas de cagnotte, pas de prix. On joue pour la gloire. Le code source est public sur GitHub.',
     },
     faq: {
       kop: 'Questions fréquentes',
@@ -517,10 +501,6 @@ export const teksten = {
       tekst: 'Predict the Race no tiene anuncios, ni analítica, ni rastreadores, y no vende nada a terceros. Juegas con un código y un nombre; solo necesitas un correo si quieres llevar tu cuenta a otro dispositivo. Esta página no carga nada de otros sitios web.',
       meer: 'Leer la política de privacidad completa (en inglés)',
     },
-    maker: {
-      kop: '¿Quién está detrás?',
-      tekst: 'Predict the Race lo hace {maker} y empezó como la porra de un grupo de amigos. No hay inversores ni anunciantes detrás, y no hay dinero en juego: ni entrada, ni bote, ni premios. Se juega por el orgullo. El código fuente es público en GitHub.',
-    },
     faq: {
       kop: 'Preguntas frecuentes',
       items: [
@@ -621,10 +601,6 @@ export const teksten = {
       tekst: 'Predict the Race non ha pubblicità, né analytics, né tracker, e non rivende nulla. Si gioca con un codice e un nome; un indirizzo email serve solo se vuoi portare il tuo account su un altro dispositivo. Questa pagina non carica nulla da altri siti.',
       meer: 'Leggi l’informativa completa sulla privacy (in inglese)',
     },
-    maker: {
-      kop: 'Chi c\'è dietro?',
-      tekst: 'Predict the Race è realizzato da {maker} ed è nato come lega per un gruppo di amici. Non ci sono investitori né inserzionisti, e non ci sono soldi in gioco: niente quota, niente montepremi, niente premi. Si gioca per la gloria. Il codice sorgente è pubblico su GitHub.',
-    },
     faq: {
       kop: 'Domande frequenti',
       items: [
@@ -724,10 +700,6 @@ export const teksten = {
       kop: 'Sem anúncios, sem rastreadores',
       tekst: 'O Predict the Race não tem anúncios, nem analytics, nem rastreadores, e não vende nada a ninguém. Você joga com um código e um nome; um e-mail só é necessário se quiser levar sua conta para outro aparelho. Esta página não carrega nada de outros sites.',
       meer: 'Ler a política de privacidade completa (em inglês)',
-    },
-    maker: {
-      kop: 'Quem está por trás?',
-      tekst: 'O Predict the Race é feito por {maker} e começou como o bolão de um grupo de amigos. Não há investidores nem anunciantes, e não há dinheiro envolvido: sem inscrição, sem prêmio acumulado, sem prêmios. Joga-se pela glória. O código-fonte é público no GitHub.',
     },
     faq: {
       kop: 'Perguntas frequentes',
