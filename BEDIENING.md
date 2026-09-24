@@ -142,7 +142,7 @@ te worden.
 Toont de poulecode groot, plus een deelknop met de uitnodiglink erin:
 
 ```
-https://dannydevis.github.io/F1-Poule/?code=10D4FD
+https://predicttherace.com/app/?code=10D4FD
 ```
 
 Wie die link opent slaat het codescherm over en komt direct bij "hoe heet jij".
@@ -620,8 +620,8 @@ gebruiken.
 vergeet je zeker één keer:
 
 1. **Redirect-url toestaan.** Authentication → URL Configuration → *Redirect
-   URLs*: zet daar de url van de app in (bijvoorbeeld
-   `https://dannydevis.github.io/F1-Poule/`). Staat hij er niet, dan negeert
+   URLs*: zet daar de url van de app in (nu
+   `https://predicttherace.com/**`, zie §15). Staat hij er niet, dan negeert
    Supabase de terugkeerlink en komt iedereen op de Site URL uit.
 2. **Eigen SMTP instellen** — of niet, nu Google er is. De ingebouwde
    mailservice van Supabase stuurt maar een paar mails per uur en is
@@ -1325,3 +1325,162 @@ Gaat er iets mis búíten het tekenen om, dan verschijnt er alleen een balkje
 onderaan. Een losse mislukte handeling is geen reden om je uit de app te
 gooien; het balkje zegt alleen dat het scherm misschien niet meer klopt, en is
 weg te klikken.
+
+---
+
+## 15. Het eigen domein: predicttherace.com
+
+De repo is er klaar voor: de landingspagina, de sitemap en `robots.txt` wijzen
+al naar `https://predicttherace.com`, de agenda en de meldingen ook
+(`APP_URL` in `scripts/sync.mjs`), en de app zelf noemt geen adres — die leest
+het uit de adresbalk. `test/domein.test.mjs` houdt dat zo.
+
+Wat overblijft gebeurt buiten de repo, en **de volgorde telt**: eerst de DNS,
+dan GitHub. Zodra je het domein in GitHub opslaat stuurt GitHub elke bezoeker
+van `dannydevis.github.io/F1-Poule/` door naar het domein. Wijst de DNS dan nog
+nergens heen, dan is de site plat.
+
+### Stap 0: wie straks opnieuw moet inloggen
+
+Voor de browser is een nieuw adres een nieuw toestel. Alles wat de app onthoudt
+— welke poule, wie je bent, het anonieme account — staat per adres. Op
+`predicttherace.com` begint dus iedereen één keer opnieuw:
+
+- **Wie Google of een mailadres gekoppeld heeft** logt in met dezelfde knop en
+  is meteen weer zichzelf.
+- **Wie dat niet heeft** kiest zijn naam, maar die hangt nog aan zijn oude,
+  anonieme account. Dan moet de poulebaas hem **losmaken** (§7, "Als een
+  speler aan het verkeerde account hangt").
+- **De poulebaas zelf** moet zeker gekoppeld zijn. Die kan zichzelf niet
+  losmaken.
+
+Wie het betreft, in de SQL Editor van Supabase:
+
+```sql
+select p.name as poule, m.display_name as speler
+from public.pool_members m
+join public.pools p on p.id = m.pool_id
+join auth.users u on u.id = m.user_id
+where u.is_anonymous
+order by 1, 2;
+```
+
+Vraag die mensen vóór de overstap hun account te koppelen (Profiel → "je
+account meenemen"), of spreek af dat de poulebaas ze erna losmaakt.
+
+### Stap 1: de DNS, bij de partij waar je het domein gekocht hebt
+
+Haal eerst weg wat er voor `@` (het kale domein) en `www` al staat aan A-,
+AAAA- en CNAME-records: meestal is dat een parkeerpagina van de registrar.
+MX- en TXT-records laat je staan. Zet er dan dit neer:
+
+| Type  | Naam  | Waarde                 |
+|-------|-------|------------------------|
+| A     | `@`   | `185.199.108.153`      |
+| A     | `@`   | `185.199.109.153`      |
+| A     | `@`   | `185.199.110.153`      |
+| A     | `@`   | `185.199.111.153`      |
+| AAAA  | `@`   | `2606:50c0:8000::153`  |
+| AAAA  | `@`   | `2606:50c0:8001::153`  |
+| AAAA  | `@`   | `2606:50c0:8002::153`  |
+| AAAA  | `@`   | `2606:50c0:8003::153`  |
+| CNAME | `www` | `dannydevis.github.io` |
+
+De vier AAAA-regels (IPv6) mogen ook weg als je registrar moeilijk doet; de A-
+regels zijn wat telt. De CNAME is zonder `/F1-Poule` erachter. Zit je domein
+bij **Cloudflare**, zet de oranje wolk dan op grijs ("DNS only"), anders kan
+GitHub geen certificaat aanvragen.
+
+Of het doorgekomen is zie je op dnschecker.org (zoek `predicttherace.com`, type
+A): overal `185.199.108–111.153`. Meestal binnen een uur, soms langer.
+
+### Stap 2: het domein op je naam zetten bij GitHub (aanrader)
+
+github.com → je profielfoto → **Settings** → **Pages** (onder "Code, planning,
+and automation") → **Add a domain** → `predicttherace.com`. GitHub geeft je een
+TXT-record (naam `_github-pages-challenge-…`, met een code als waarde). Zet dat
+bij je registrar neer en klik **Verify**.
+
+Het hoeft niet, maar zonder dit kan iemand anders jouw domein aan zijn eigen
+GitHub-site hangen op een moment dat het bij jou even niet gekoppeld is.
+
+### Stap 3: het domein aan de repo koppelen
+
+De repo → **Settings** → **Pages** → **Custom domain**: `predicttherace.com` →
+**Save**. Daarna gebeuren er drie dingen:
+
+1. GitHub controleert de DNS. Wacht op het groene "DNS check successful".
+2. GitHub zet zelf een bestand `CNAME` in `main`, met het domein erin. Dat is
+   het bestand dat `test/domein.test.mjs` naloopt.
+3. Vanaf nu gaat `dannydevis.github.io/F1-Poule/…` door naar
+   `predicttherace.com/…`, met alles wat erachter stond. Oude uitnodigingen,
+   inloglinks en agenda-abonnementen blijven dus werken.
+
+Vink daarna **Enforce HTTPS** aan. Dat vakje blijft grijs tot het certificaat
+er is: een paar minuten, uiterlijk een dag.
+
+Komt die `CNAME` niet in `main` (GitHub meldt een fout, of er verschijnt geen
+commit), zet hem er dan zelf in via een PR: één regel, `predicttherace.com`.
+
+### Stap 4: Supabase
+
+Authentication → **URL Configuration**:
+
+- **Site URL**: `https://predicttherace.com/app/`
+- **Redirect URLs** → Add URL: `https://predicttherace.com/**`
+
+De regels met `dannydevis.github.io` mogen blijven staan tot niemand ze nog
+gebruikt; weghalen kan over een paar weken. Zonder de nieuwe regel negeert
+Supabase de terugkeerlink die de app meestuurt, en komt iedereen die inlogt
+met Google of de mail op de Site URL uit in plaats van in de app.
+
+### Stap 5: Google Cloud
+
+console.cloud.google.com → **Google Auth Platform** → **Clients** → je
+webclient:
+
+- **Authorized JavaScript origins**: voeg `https://predicttherace.com` toe.
+- **Authorized redirect URIs**: niets aan veranderen. Daar staat
+  `https://etifamdwqxjfaeaordlr.supabase.co/auth/v1/callback`, en dat is het
+  adres van Supabase, niet van de app.
+
+Onder **Branding**: staat daar een "App home page", zet die op
+`https://predicttherace.com` en voeg `predicttherace.com` toe bij
+**Authorized domains**.
+
+### Stap 6: nalopen
+
+- `https://predicttherace.com` → de landingspagina, met een slotje.
+- `https://www.predicttherace.com` en `http://predicttherace.com` → gaan door
+  naar `https://predicttherace.com`.
+- `https://dannydevis.github.io/F1-Poule/?code=<poulecode>` → komt uit op
+  `https://predicttherace.com/app/?code=<poulecode>` en vraagt wie je bent.
+- In de app inloggen met Google → je komt terug in de app, op het nieuwe adres.
+- Een inlogmail aanvragen → de link in de mail opent de app op het nieuwe adres.
+
+### Stap 7: de spelers
+
+Eén bericht in de groep is genoeg: de poule staat op predicttherace.com, oude
+links werken nog, log één keer opnieuw in met Google of je mail. **Wie de app
+op zijn beginscherm heeft** haalt dat pictogram weg en zet hem opnieuw vanaf
+`predicttherace.com/app/`: het oude pictogram hoort bij het oude adres en
+opent de app voortaan in een browservenster.
+
+### Stap 8: zoekmachines
+
+- **Google Search Console** → Add property → **Domain** → `predicttherace.com`
+  → het TXT-record dat Google geeft bij je registrar zetten → Verify. Dan onder
+  **Sitemaps**: `https://predicttherace.com/sitemap.xml`.
+- **Bing Webmaster Tools** → "Import from Google Search Console" is één klik
+  en neemt de sitemap mee. Op Bing leunen ook Copilot en voor een deel de
+  zoekfunctie van ChatGPT.
+- Klein, maar handig: de repo → het tandwieltje bij **About** → Website:
+  `https://predicttherace.com`.
+
+### Wat vanzelf gaat
+
+- **De agenda.** `kalender.ics` noemt nog het oude adres in elk item. De sync
+  schrijft hem opnieuw bij de dagelijkse run (04:23 UTC), met het nieuwe adres.
+  Wie er al op geabonneerd is hoeft niets te doen.
+- **Meldingen** staan nog niet aan (§11c). Als ze aangaan is dat op het nieuwe
+  adres, en daar wijzen ze ook heen.

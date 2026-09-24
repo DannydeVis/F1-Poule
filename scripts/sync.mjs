@@ -633,7 +633,10 @@ async function vragensetOpSlot(races) {
 // ------------------------------------------------------------
 
 const AGENDA_PAD = new URL('../kalender.ics', import.meta.url);
-const APP_URL = process.env.APP_URL ?? 'https://dannydevis.github.io/F1-Poule/';
+// De app zelf, niet de landingspagina: wie op een deadline in zijn agenda of op
+// een melding tikt wil invullen, niet de folder lezen. Het domein komt uit
+// site/teksten.mjs (BASIS); test/domein.test.mjs houdt die twee gelijk.
+const APP_URL = process.env.APP_URL ?? 'https://predicttherace.com/app/';
 
 function schrijfAgenda(races) {
   // Nooit een lege agenda wegschrijven. Die zou bij elke abonnee alle

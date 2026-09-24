@@ -7,7 +7,7 @@ sinds 24 september 2026 de landingspagina, in zeven talen; zie het hoofdstuk
 "Een landingspagina in zeven talen" onderaan. **Waar in de oudere hoofdstukken
 `index.html` staat, is de app bedoeld — die heet nu `app/index.html`.**
 
-Live op: https://dannydevis.github.io/F1-Poule/ (de app: …/F1-Poule/app/)
+Live op: https://predicttherace.com (de app: https://predicttherace.com/app/)
 Repo: https://github.com/DannydeVis/F1-Poule
 
 ## Stand van zaken
@@ -329,7 +329,7 @@ uit `index.html` zodat de test de echte code controleert.
 
 ## Uitnodigingslink
 
-Punt 7 van `ROUTEKAART.md`. `https://dannydevis.github.io/F1-Poule/?code=RTM026`
+Punt 7 van `ROUTEKAART.md`. `https://predicttherace.com/app/?code=RTM026`
 brengt je meteen in die poule, zonder het codescherm. Op de Poule-pagina
 zet één knop die link plus de poulenaam op het klembord, met dezelfde
 terugval als de kopieerknop voor de groepsapp.
@@ -6210,7 +6210,8 @@ Canonical, hreflang, sitemap en deelplaatjes wijzen naar
 `dannydevis.github.io/F1-Poule/` staat, doet dat weinig: `robots.txt` en de
 sitemap worden alleen gelezen in de hoofdmap van een domein, en die is daar
 van GitHub. De pagina's werken wel gewoon (alle links zijn relatief), maar
-voor zoekmachines telt het pas vanaf de koppeling. Zie `ROUTEKAART.md`.
+voor zoekmachines telt het pas vanaf de koppeling. Zie het hoofdstuk
+hieronder en `BEDIENING.md` §15.
 
 ### Hoe het getest is
 
@@ -6230,3 +6231,72 @@ voor zoekmachines telt het pas vanaf de koppeling. Zie `ROUTEKAART.md`.
   `test/hulp.mjs`, met de nabootsing in plaats van Supabase.
 - De contrasttest ving de kolomkoppen van de puntentabel (4,19 in licht) en
   witte tekst op de rode knop in donker; allebei rechtgezet.
+
+## Het eigen domein: predicttherace.com
+
+Op 24 september 2026 is de repo omgezet naar `predicttherace.com`. Dat was
+weinig werk, omdat bijna alles al zo gebouwd was dat het domein er niet toe
+doet: de app leest zijn eigen adres uit de adresbalk (`linkBasis()`), de links
+op de landingspagina zijn relatief, en canonical, hreflang, sitemap en
+deelplaatjes wezen al naar het domein. Wat de gebruiker nog moet doen (DNS,
+GitHub Pages, Supabase, Google Cloud, zoekmachines) staat stap voor stap in
+`BEDIENING.md` §15.
+
+### Wat er veranderd is
+
+- **`APP_URL` in `scripts/sync.mjs`** wijst nu naar
+  `https://predicttherace.com/app/`. Dat adres komt in elk agenda-item en in
+  elke melding. Bewust de app en niet de landingspagina: wie op een deadline
+  tikt wil invullen. `kalender.ics` noemt tot de eerstvolgende dagelijkse run
+  nog het oude adres; de sync schrijft hem dan zelf opnieuw, want hij vergelijkt
+  het hele bestand en niet alleen de races.
+- **De documentatie**: de "Live op"-regels, de voorbeeldlinks en de
+  Redirect URL in `BEDIENING.md`. In de oude hoofdstukken hierboven staat het
+  oude adres nog waar het over toen gaat.
+- **Een opmerking in de app** die het oude adres noemde. Onschuldig, maar hij
+  zat in wat de browser binnenkrijgt, en de nieuwe test kijkt daarnaar.
+
+### Wat er met opzet níét in zit: het `CNAME`-bestand
+
+GitHub Pages leest het domein uit een bestand `CNAME` in de hoofdmap. Zet je
+dat erin voordat de DNS klaarstaat, dan stuurt GitHub `dannydevis.github.io`
+al door naar een domein dat nog nergens heen wijst, en is de site plat. En een
+PR die automatisch samenvoegt wacht niet op de DNS.
+
+Maar het hoeft ook niet: wie het domein onder Settings → Pages opslaat, krijgt
+van GitHub zelf een commit met dat bestand in `main`. Dan valt het moment
+vanzelf goed, want je slaat het pas op als de DNS-controle groen is.
+`test/domein.test.mjs` loopt het na zodra het er staat.
+
+### Wat er gebeurt met alles wat al rondging
+
+GitHub stuurt `dannydevis.github.io/F1-Poule/<pad>?<rest>` door naar
+`predicttherace.com/<pad>?<rest>`. Een oude uitnodiging (`…/F1-Poule/?code=`)
+komt dus op de landingspagina uit, en die stuurt hem door naar `app/` — het
+doorsturen uit het vorige hoofdstuk. Oude inloglinks idem. Agenda-abonnementen
+op `…/F1-Poule/kalender.ics` volgen de doorverwijzing.
+
+`404.html` rekent zijn weg naar huis nog steeds uit voor beide adressen. Op het
+domein is de tak voor `/F1-Poule/` dode code, maar tot de koppeling is hij
+precies wat de site bij elkaar houdt.
+
+Wat níét meegaat is wat de browser per adres bewaart: welke poule, wie je
+bent, het anonieme account. Op het nieuwe domein begint iedereen één keer
+opnieuw. Met Google of een gekoppeld mailadres is dat één tik; zonder moet de
+poulebaas de speler losmaken. `BEDIENING.md` §15, stap 0, heeft de query om te
+zien wie het betreft. Er is geen manier om dat vanuit de code over te zetten:
+zodra het domein gekoppeld is draait er op het oude adres geen regel
+javascript meer, want GitHub verwijst door voordat er een pagina is. De
+service worker verandert daar niets aan; die onderschept niets.
+
+### Hoe het getest is
+
+`test/domein.test.mjs` (6 controles, 7 met een `CNAME`): `BASIS` is een kaal
+https-adres, `APP_URL` is `<BASIS>/app/`, de workflow overschrijft hem niet
+met iets anders, `CNAME` noemt precies het domein, geen geserveerd bestand
+noemt nog `dannydevis.github.io`, en de app, de service worker en het manifest
+noemen geen vast domein. Acht mutanten, elk op de juiste controle gezakt:
+`APP_URL` terug naar het oude adres en naar de landingspagina, een andere
+`APP_URL` in de workflow, `CNAME` met `https://` en met `www.`, het oude adres
+terug in een opmerking in de app, het domein in de service worker, en `BASIS`
+met een slash erachter. Een goede `CNAME`, met en zonder regeleinde, slaagt.

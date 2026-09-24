@@ -5108,8 +5108,8 @@ const eigenLinkTekst = () =>
 
 // De agenda met alle deadlines. Die staat in de hoofdmap van de site, één map
 // boven de app (die sinds de landingspagina in app/ staat). Via new URL en niet
-// door te plakken: dan komt er geen "app/../" in de link, en werkt het zowel op
-// dannydevis.github.io/F1-Poule/app/ als op een eigen domein.
+// door te plakken: dan komt er geen "app/../" in de link, en werkt het op elk
+// adres waar de site staat, ook als dat een map diep is.
 const agendaLink = () => new URL('../kalender.ics', linkBasis()).href;
 // webcal:// laat een telefoon of laptop meteen de abonneer-vraag stellen in
 // plaats van het bestand te downloaden. Het is dezelfde url, ander protocol.
