@@ -493,12 +493,12 @@ zet.
 | **Race Recap** | persoonlijke pagina na iedere race | grotendeels al gebouwd, verspreid: "zo dichtbij", de weekendwinnaar, je score en de inkijk bij anderen. Dit is vooral samenbrengen |
 | **Profielstatistieken** | race wins, accuracy, beste circuit | rekenwerk over bestaande data, maar kijk eerst naar de drempels in de terugblik: onder een handvol races zegt zo'n percentage niets |
 
-**Share cards als afbeelding zou ik overslaan.** Het advies stelt een plaatje
-voor WhatsApp voor, maar er zit al een knop "Kopieer voor de groepsapp" die
-tekst op je klembord zet, en tekst is in een groepsapp beter dan een plaatje:
-je kunt erop zoeken, hem quoten, en hij leest ook voor wie op 4G zit. Een
-afbeelding maken betekent canvas-rendering, lettertypen inladen en twee thema's
-onderhouden, voor iets wat al werkt. Niet doen tenzij iemand er zelf om vraagt.
+**Share cards als afbeelding: gedaan, want er werd om gevraagd.** Hier stond
+eerst dat ik ze zou overslaan, omdat tekst in een groepsapp doorzoekbaar is en
+er al een kopieerknop was. Danny vond die knop lelijk en vroeg om een plaatje;
+dat is er nu (zie OVERDRACHT.md, "De uitslag als plaatje"). Het bezwaar van
+twee thema's is omzeild door het plaatje altijd donker te maken, en de tekst
+blijft een knop in hetzelfde venster.
 
 **Kampioenschapsvoorspelling en favoriete coureur**: puur profiel en branding,
 geen punten. Leuk, maar het laagste op deze lijst.

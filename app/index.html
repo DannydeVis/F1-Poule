@@ -712,6 +712,24 @@
   @media (min-width:960px){ .kiesblad{align-items:center}
     .kiesblad-in{border-radius:16px;padding:20px} }
 
+  /* Het deelvenster: het plaatje zoals het de groepsapp in gaat, met de
+     knoppen eronder. Hangt los van #app aan de body, zodat een render()
+     eronder (een nieuwe uitslag, een ander tabblad) het niet weghaalt. */
+  .deelvenster{position:fixed;inset:0;z-index:70;display:flex;align-items:center;
+    justify-content:center;background:rgba(0,0,0,.72);animation:invagen .18s both;
+    padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+  .deelvenster-in{width:100%;max-width:420px;max-height:100%;overflow-y:auto;
+    display:flex;flex-direction:column;gap:12px;background:var(--bg);
+    border:1px solid var(--lijn);border-radius:16px;padding:16px;
+    animation:omhoog .22s var(--soepel) both}
+  /* Nooit hoger dan het scherm toelaat, zodat Delen altijd in beeld blijft.
+     De achtergrond is die van het plaatje zelf: valt er aan de zijkant iets
+     over, dan ziet dat eruit als plaatje en niet als een gat. */
+  .deelbeeld{display:block;width:100%;height:auto;max-height:60vh;object-fit:contain;
+    border-radius:10px;background:#0b0b0c}
+  .deelrij{display:flex;gap:8px}
+  .deelrij .knop{flex:1}
+
   /* ---- startgrid ------------------------------------------ */
   .grid10{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
   .slotrij{display:flex}
@@ -1084,10 +1102,19 @@
     .kol{padding:24px 28px 40px;overflow-y:auto}
     .kol.links{border-right:1px solid var(--lijn)}
     .kol.rechts{display:flex}
-    .shell.detail .kol.links{display:flex}
     .kolommen.enkel .kol.rechts{display:none}
     .kolommen.enkel .kol.links{border-right:0;max-width:760px;width:100%;margin:0 auto}
     .terug,.smalkop{display:none}
+    /* Een race open je over de hele breedte, net als op de telefoon, met de
+       pijl terug bovenin. Hij stond eerst in de rechterkolom naast de lijst,
+       en dan werd een uitslag van tien coureurs, losse vragen en de stand van
+       het weekend een smal venstertje aan de zijkant. Smal gehouden op 880
+       pixels, anders lopen de regels van scherm tot scherm. De lijst zelf
+       verdwijnt door de regel voor smalle schermen hierboven; die werd hier
+       eerst weer aangezet. */
+    .shell.detail .kolommen{grid-template-columns:1fr}
+    .shell.detail .kol.rechts{width:100%;max-width:880px;margin:0 auto}
+    .shell.detail .terug{display:inline-block}
     .coureurs{grid-template-columns:1fr 1fr 1fr}
     .drv .tm,.wknop .tm{display:none}
     .opslaanbalk{background:linear-gradient(transparent,var(--bg) 40%)}
@@ -2748,8 +2775,25 @@ const ENGELS = Object.fromEntries([
    'season {jaar} · {punten} points'],
   ['ingevuld · wordt gescoord als het seizoen erop zit',
    'filled in · scored once the season is over'],
-  ['Kopieer voor de groepsapp',
-   'Copy for the group chat'],
+  // Het deelplaatje van een weekend, en het venster eromheen.
+  ['Deel de uitslag', 'Share the result'],
+  ['ronde {n}', 'round {n}'],
+  ['uitslag poule', 'pool result'],
+  ['tussenstand · na de kwalificatie', 'so far · after qualifying'],
+  ['weekendwinnaar', 'weekend winner'],
+  ['weekend · kwalificatie + race', 'weekend · qualifying + race'],
+  ['ptn', 'pts'],
+  ['en nog {n}', 'and {n} more'],
+  ['stand na ronde {n}', 'standings after round {n}'],
+  ['en', 'and'],
+  ['Plaatje maken…', 'Making the image…'],
+  ['Uitslag van {race} in {poule}', 'Result of {race} in {poule}'],
+  ['Het plaatje lukte niet. De uitslag als tekst kan wel.',
+   'The image did not work. You can still copy the result as text.'],
+  ['Delen', 'Share'],
+  ['Kopieer plaatje', 'Copy image'],
+  ['Kopieer als tekst', 'Copy as text'],
+  ['Kopiëren lukt niet', 'Could not copy'],
   ['Uitslag om zelf te kopiëren',
    'Result to copy yourself'],
   ['Deze poule bestaat niet meer.',
@@ -4305,6 +4349,10 @@ function herstelFocus() {
   // anders sleept dit iemand weg uit het veld waar hij in staat te typen.
   const nu = document.activeElement;
   if (nu && nu !== document.body && app.contains(nu)) return;
+  // Hetzelfde voor een venster dat los van de app op het scherm ligt, zoals
+  // het deelplaatje: daar hoort de focus te blijven, ook als de app eronder
+  // opnieuw tekent.
+  if (nu?.closest?.('[role="dialog"]')) return;
   if (!focusHandvat) return;
 
   const terug = zoekTerug(focusHandvat);
@@ -5398,6 +5446,13 @@ function toonApp() {
   app.querySelectorAll('[data-naar-race]').forEach(b => b.onclick = () => openRace(b.dataset.naarRace));
   const terug = app.querySelector('#terug');
   if (terug) terug.onclick = () => { S.race = null; render(); };
+  // Escape sluit een open race, zoals een venster. Niet als je in een veld
+  // typt, en niet als er een ander venster (het deelplaatje) bovenop ligt.
+  document.onkeydown = (ev) => {
+    if (ev.key !== 'Escape' || !S.race || document.querySelector('.deelvenster')) return;
+    if (ev.target.closest?.('input, textarea, select')) return;
+    app.querySelector('#terug')?.click();
+  };
   app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
     S.tab = b.dataset.tab;
     render();
@@ -7636,7 +7691,7 @@ function vulPaneel() {
   if (S.bekijk) { bekijkWeergave(paneel, r); return; }
   if (lijstKlaar) {
     paneel.innerHTML = uitslagWeergave(r, lijstKlaar);
-    knoopKopieer(paneel);
+    knoopUitslagDelen(paneel);
     knoopBekijk(paneel);
   }
   // Een afgelaste race is dicht, wat de klok ook zegt. Een race kan afgelast
@@ -8083,15 +8138,19 @@ function bijnaGoedBlok(r, regels) {
 }
 
 // Onder de uitslag: wie pakte dit weekend de meeste punten, en een knop die
-// het geheel als tekst klaarzet voor de groepsapp.
+// het geheel als plaatje klaarzet voor de groepsapp.
 // "Casper & Danny & Davy" is geen Nederlands. Bij twee namen hoort "en", bij
 // meer een opsomming met komma's en "en" voor de laatste. Staat hier apart
 // omdat weekendWinstTekst() hierboven vanaf drie namen juist géén namen meer
 // noemt -- daar past het niet op één regel, hier wel.
 function opsomming(namen) {
   if (namen.length <= 1) return namen[0] ?? '';
-  return `${namen.slice(0, -1).join(', ')} en ${namen[namen.length - 1]}`;
+  return `${namen.slice(0, -1).join(', ')} ${T('en')} ${namen[namen.length - 1]}`;
 }
+
+const DEELICOON = `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none"
+  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>`;
 
 function weekendVoet(r) {
   const winnaars = S.leden.length > 1 ? weekendWinnaars(r) : [];
@@ -8103,29 +8162,388 @@ function weekendVoet(r) {
           ik ? ` <span class="jij">${T('jij')}</span>` : ''}</span>
         <span class="t">${winnaars[0].punten}</span>
       </div></div>` : ''}
-    <button class="knop klein" data-kopieer="${esc(r.id)}">${T('Kopieer voor de groepsapp')}</button>
-    <textarea class="veld tekstblok hide" readonly rows="9"
-      aria-label="${T('Uitslag om zelf te kopiëren')}"></textarea>`;
+    <button class="knop spook" data-deel="${esc(r.id)}">${DEELICOON}${T('Deel de uitslag')}</button>`;
 }
 
-// Lukt het klembord niet — een oude browser, of een pagina die niet over
-// https loopt — dan komt de tekst gewoon in beeld om zelf te selecteren.
-function knoopKopieer(paneel) {
-  paneel.querySelectorAll('[data-kopieer]').forEach(knop => knop.onclick = async () => {
-    const race = S.races.find(x => zelfde(x.id, knop.dataset.kopieer));
-    const tekst = race ? groepsappTekst(race) : '';
-    if (!tekst) return;
-    const veld = paneel.querySelector('.tekstblok');
-    const gelukt = await naarKlembord(tekst);
-    if (gelukt) {
-      knop.textContent = T('Gekopieerd');
-      setTimeout(() => { knop.textContent = T('Kopieer voor de groepsapp'); }, 2400);
-    } else {
-      knop.textContent = T('Kopiëren lukt niet, selecteer hem zelf');
-      veld.value = tekst;
-      veld.classList.remove('hide');
-      veld.select();
+// ---- de uitslag als plaatje ---------------------------------
+// Een lijstje tekst tussen de berichten in de groepsapp leest niemand. Een
+// plaatje in de kleuren van de app wel, en het zegt meteen waar het vandaan
+// komt.
+//
+// Getekend op een canvas, in de app zelf: geen server, geen bibliotheek, en
+// dezelfde letters als op het scherm. Altijd donker, wat je toestel ook doet,
+// zodat het plaatje er bij iedereen in de groep hetzelfde uitziet. 1080 bij
+// 1350 (4:5) is wat WhatsApp en Instagram laten zien zonder bij te snijden.
+//
+// Wat erop staat is wat groepsappTekst() al als tekst gaf: de weekenduitslag
+// van de hele poule, met de stand van het seizoen eronder.
+const DEELMAAT = { b: 1080, h: 1350, rand: 72 };
+const DEELKLEUR = { bg: '#0b0b0c', paneel: '#15161a', lijn: '#2b2e35', ink: '#f2f3f5',
+  ink2: '#9aa0a8', ink3: '#7b818a', accent: '#ee4d33', groen: '#34b264',
+  eigen: 'rgba(238,77,51,.16)' };
+const DEELLETTER = {
+  cond: '"Barlow Condensed", "Arial Narrow", sans-serif',
+  mono: '"Space Mono", ui-monospace, Menlo, monospace',
+};
+
+// Gelijke punten, gelijke plek: 1, 2, 2, 4. De rijen zijn al gesorteerd.
+const gedeeldePlekken = (rijen) =>
+  rijen.map(r => rijen.findIndex(x => x.punten === r.punten) + 1);
+
+// De stand zoals hij na dit weekend was, met wie er geklommen of gezakt is.
+// Voor het laatste weekend is dat de stand van nu; voor een ouder weekend de
+// stand van toen, en niet die van vandaag onder de kop "na ronde 3". Leeg als
+// er vóór dit weekend nog niets gereden was: dan valt er niets te vergelijken
+// en is het dezelfde lijst als het weekend zelf.
+function standNaWeekend(race) {
+  if (!S.races.some(r => heeftUitslag(r) && r.round < race.round)) return [];
+  const voor = standRijen(race.round);
+  const na = standRijen(race.round + 1);
+  const plek = (rijen, id) => rijen.findIndex(r => zelfde(r.id, id)) + 1;
+  const plekken = gedeeldePlekken(na);
+  return na.map((r, i) => ({ ...r, plek: plekken[i], wissel: plek(voor, r.id) - plek(na, r.id) }));
+}
+
+// Een tekst die niet past wordt ingekort met een beletselteken, in plaats van
+// over de rand te lopen of een ander stuk tekst te raken.
+function pasIn(x, tekst, breed) {
+  tekst = String(tekst);
+  if (x.measureText(tekst).width <= breed) return tekst;
+  while (tekst.length > 1 && x.measureText(`${tekst}…`).width > breed) tekst = tekst.slice(0, -1);
+  return `${tekst.trimEnd()}…`;
+}
+
+// De racenaam zo groot als hij in twee regels past. "Grand Prix" alleen past
+// op 104 pixels; "Pirelli Gran Premio dell'Emilia-Romagna" gaat terug naar 72.
+function raceRegels(x, naam, breed) {
+  const woorden = String(naam).toUpperCase().split(/\s+/).filter(Boolean);
+  let regels = [];
+  for (let maat = 104; maat >= 72; maat -= 8) {
+    x.font = `700 ${maat}px ${DEELLETTER.cond}`;
+    regels = [];
+    let regel = '';
+    for (const w of woorden) {
+      const proef = regel ? `${regel} ${w}` : w;
+      if (!regel || x.measureText(proef).width <= breed) regel = proef;
+      else { regels.push(regel); regel = w; }
     }
+    if (regel) regels.push(regel);
+    if (regels.length <= 2 && regels.every(r => x.measureText(r).width <= breed)) return { maat, regels };
+  }
+  // Ook op 72 niet in twee regels: de tweede regel krijgt de rest, ingekort.
+  const tweede = pasIn(x, regels.slice(1).join(' '), breed);
+  return { maat: 72, regels: [pasIn(x, regels[0] ?? '', breed), tweede].filter(Boolean) };
+}
+
+const laadBeeld = (src) => new Promise((klaar) => {
+  const img = new Image();
+  img.onload = () => klaar(img);
+  img.onerror = () => klaar(null);
+  img.src = src;
+});
+
+// De letters staan op de site zelf, maar een browser haalt ze pas op als er
+// iets in staat. Een canvas telt daarvoor niet mee: zonder deze stap tekent
+// hij de eerste keer in een reserveletter. Nooit langer dan twee seconden
+// wachten -- dan liever een plaatje in Arial dan een knop die niets doet.
+async function laadDeelletters(tekst) {
+  if (!document.fonts?.load) return;
+  const soorten = [`700 100px ${DEELLETTER.cond}`, `600 40px ${DEELLETTER.cond}`,
+    `400 26px ${DEELLETTER.mono}`, `700 30px ${DEELLETTER.mono}`];
+  await Promise.race([
+    Promise.all(soorten.map(f => document.fonts.load(f, tekst).catch(() => null))),
+    new Promise(r => setTimeout(r, 2000)),
+  ]);
+}
+
+// Tekent het plaatje en geeft het canvas terug, of null als er (nog) geen
+// uitslag is om te delen.
+async function tekenDeelplaatje(race) {
+  const rijen = weekendUitslag(race);
+  if (!rijen?.length) return null;
+  const { b, h, rand } = DEELMAAT;
+  const K = DEELKLEUR, L = DEELLETTER;
+  const breed = b - 2 * rand;
+  const alleenKwali = !race[SESSIES.race.uitslag];
+  const winnaars = S.leden.length > 1 ? weekendWinnaars(race) : [];
+  const seizoen = standNaWeekend(race);
+
+  await laadDeelletters(`${race.name}${S.poule?.name ?? ''}${rijen.map(r => r.naam).join('')}`
+    + 'PREDICTTHERACE0123456789·…▲▼');
+  const logo = await laadBeeld(new URL('../pictogrammen/predicttherace-logo.png', location.href).href);
+
+  const doek = document.createElement('canvas');
+  doek.width = b; doek.height = h;
+  const x = doek.getContext('2d');
+  const schrijf = (tekst, px, py, { font, kleur = K.ink, uitlijnen = 'left', spatie = 0 } = {}) => {
+    x.font = font; x.fillStyle = kleur; x.textAlign = uitlijnen; x.textBaseline = 'alphabetic';
+    if ('letterSpacing' in x) x.letterSpacing = `${spatie}px`;
+    x.fillText(tekst, px, py);
+    if ('letterSpacing' in x) x.letterSpacing = '0px';
+  };
+  const label = (tekst, px, py, kleur = K.ink3, uitlijnen = 'left') =>
+    schrijf(tekst.toUpperCase(), px, py, { font: `400 24px ${L.mono}`, kleur, uitlijnen, spatie: 2 });
+
+  // Achtergrond, met een schuine streep in het accent rechtsboven: de
+  // livrei van de app, zoals op de deelplaatjes van de voorpagina.
+  x.fillStyle = K.bg; x.fillRect(0, 0, b, h);
+  x.save();
+  x.globalAlpha = 0.9; x.fillStyle = K.accent;
+  x.beginPath(); x.moveTo(b - 250, 0); x.lineTo(b - 170, 0); x.lineTo(b, 170); x.lineTo(b, 250); x.closePath(); x.fill();
+  x.globalAlpha = 0.35;
+  x.beginPath(); x.moveTo(b - 140, 0); x.lineTo(b - 110, 0); x.lineTo(b, 110); x.lineTo(b, 140); x.closePath(); x.fill();
+  x.restore();
+
+  // Kop: het logo met de naam, en welke ronde van welk jaar.
+  let y = 56;
+  if (logo) x.drawImage(logo, rand, y, 52, 52);
+  else { x.fillStyle = K.accent; x.fillRect(rand, y + 6, 40, 40); }
+  schrijf('PREDICT THE RACE', rand + 68, y + 38, { font: `700 34px ${L.cond}`, spatie: 2 });
+  y = 176;
+  label([T('ronde {n}', { n: race.round }), race.season ?? seizoen()].filter(Boolean).join(' · '), rand, y);
+
+  // De race zelf, zo groot als hij past.
+  const { maat, regels } = raceRegels(x, race.name, breed - 40);
+  y += 16;
+  for (const regel of regels) {
+    y += Math.round(maat * 0.88);
+    schrijf(regel, rand, y, { font: `700 ${maat}px ${L.cond}` });
+  }
+  y += 22;
+  x.fillStyle = K.accent; x.fillRect(rand, y, 96, 8);
+  y += 50;
+  x.font = `400 24px ${L.mono}`;
+  label(pasIn(x, (alleenKwali ? T('tussenstand · na de kwalificatie') : T('uitslag poule'))
+    + (S.poule?.name ? ` · ${S.poule.name}` : ''), breed), rand, y, K.accent);
+
+  // De weekendwinnaar, in een eigen vlak.
+  if (winnaars.length) {
+    y += 26;
+    const kaart = 136;
+    x.fillStyle = K.paneel;
+    x.beginPath();
+    if (x.roundRect) x.roundRect(rand, y, breed, kaart, 18); else x.rect(rand, y, breed, kaart);
+    x.fill();
+    x.fillStyle = K.accent; x.fillRect(rand, y, 8, kaart);
+    label(T('weekendwinnaar'), rand + 40, y + 46);
+    const getal = String(winnaars[0].punten);
+    x.font = `700 96px ${L.cond}`;
+    const getalBreed = x.measureText(getal).width;
+    x.font = `700 60px ${L.cond}`;
+    schrijf(pasIn(x, opsomming(winnaars.map(w => w.naam)), breed - getalBreed - 120),
+      rand + 40, y + 108, { font: `700 60px ${L.cond}` });
+    schrijf(getal, b - rand - 36, y + 108, { font: `700 96px ${L.cond}`, kleur: K.accent, uitlijnen: 'right' });
+    y += kaart;
+  }
+
+  // De weekenduitslag van de hele poule. Zoveel rijen als er passen; past
+  // niet iedereen, dan komt jouw eigen rij er onderaan bij.
+  const voet = h - 56;
+  const seizoenHoog = seizoen.length ? 148 : 0;
+  const lijstOnder = voet - 58 - seizoenHoog;
+  y += 58;
+  label(T('weekend · kwalificatie + race'), rand, y);
+  label(T('ptn'), b - rand, y, K.ink3, 'right');
+  y += 18;
+  const plekken = gedeeldePlekken(rijen);
+  const ruimte = lijstOnder - y;
+  const past = Math.max(3, Math.floor(ruimte / 48));
+  let toon = rijen.map((r, i) => ({ ...r, plek: plekken[i] }));
+  let meer = 0;
+  if (toon.length > past) {
+    const mijnRij = toon.find(r => r.mij);
+    const mijnIndex = toon.indexOf(mijnRij);
+    const boven = mijnRij && mijnIndex >= past - 1 ? past - 2 : past - 1;
+    meer = toon.length - boven - (mijnRij && mijnIndex >= past - 1 ? 1 : 0);
+    toon = [...toon.slice(0, boven), null, ...(mijnRij && mijnIndex >= boven ? [mijnRij] : [])];
+  }
+  const rijHoog = Math.min(76, Math.floor(ruimte / toon.length));
+  const naamMaat = Math.round(Math.min(44, rijHoog * 0.62));
+  for (const r of toon) {
+    const midden = y + rijHoog / 2;
+    if (!r) {
+      label(T('en nog {n}', { n: meer }), rand + 72, midden + 8);
+      y += rijHoog;
+      continue;
+    }
+    if (r.mij) {
+      const gloed = x.createLinearGradient(rand, 0, rand + breed, 0);
+      gloed.addColorStop(0, K.eigen); gloed.addColorStop(0.7, 'rgba(238,77,51,0)');
+      x.fillStyle = gloed; x.fillRect(rand, y + 3, breed, rijHoog - 6);
+      x.fillStyle = K.accent; x.fillRect(rand, y + 3, 5, rijHoog - 6);
+    }
+    schrijf(String(r.plek), rand + 22, midden + 10,
+      { font: `700 28px ${L.mono}`, kleur: r.plek === 1 ? K.accent : K.ink3 });
+    x.font = `600 ${naamMaat}px ${L.cond}`;
+    const naam = pasIn(x, r.naam, breed - 72 - 190);
+    schrijf(naam, rand + 72, midden + naamMaat * 0.36,
+      { font: `600 ${naamMaat}px ${L.cond}`, kleur: r.zelfgedaan ? K.ink : K.ink2 });
+    if (r.mij) {
+      const na = rand + 72 + x.measureText(naam).width + 16;
+      label(T('jij'), na, midden + 8, K.accent);
+    }
+    schrijf(String(r.punten), b - rand, midden + 11, { font: `700 32px ${L.mono}`, uitlijnen: 'right' });
+    y += rijHoog;
+    x.fillStyle = K.lijn; x.fillRect(rand, y - 1, breed, 2);
+  }
+
+  // Het seizoen: de eerste drie, met wie er geklommen of gezakt is.
+  if (seizoen.length) {
+    label(T('stand na ronde {n}', { n: race.round }), rand, lijstOnder + 40);
+    const sy = lijstOnder + 56;
+    const kolom = breed / 3;
+    seizoen.slice(0, 3).forEach((r, i) => {
+      const kx = rand + i * kolom;
+      x.fillStyle = r.mij ? K.accent : K.lijn; x.fillRect(kx, sy, kolom - 24, 3);
+      schrijf(String(r.plek), kx, sy + 42, { font: `700 26px ${L.mono}`, kleur: K.ink3 });
+      x.font = `600 36px ${L.cond}`;
+      schrijf(pasIn(x, r.naam, kolom - 24 - 44), kx + 40, sy + 44, { font: `600 36px ${L.cond}` });
+      const { wissel } = r;
+      schrijf(`${r.punten}`, kx + 40, sy + 80, { font: `400 24px ${L.mono}`, kleur: K.ink2 });
+      if (wissel) {
+        x.font = `400 24px ${L.mono}`;
+        const na = kx + 40 + x.measureText(`${r.punten}`).width + 14;
+        schrijf(`${wissel > 0 ? '▲' : '▼'}${Math.abs(wissel)}`, na, sy + 80,
+          { font: `700 22px ${L.mono}`, kleur: wissel > 0 ? K.groen : K.accent });
+      }
+    });
+  }
+
+  // Voet: waar dit vandaan komt, en een geblokte vlag. Het adres staat nergens
+  // vast in de app (zie test/domein.test.mjs): het komt uit de adresbalk.
+  x.fillStyle = K.lijn; x.fillRect(rand, voet - 38, breed, 2);
+  label(location.host || 'Predict the Race', rand, voet, K.ink2);
+  const vak = 12;
+  for (let rij = 0; rij < 2; rij++) {
+    for (let k = 0; k < 6; k++) {
+      x.fillStyle = (rij + k) % 2 ? K.ink : K.bg;
+      x.fillRect(b - rand - 6 * vak + k * vak, voet - 2 * vak + 2 + rij * vak, vak, vak);
+    }
+  }
+  x.strokeStyle = K.ink; x.lineWidth = 1;
+  x.strokeRect(b - rand - 6 * vak + 0.5, voet - 2 * vak + 2.5, 6 * vak - 1, 2 * vak - 1);
+  return doek;
+}
+
+// "Grand Prix van Singapore" wordt predict-the-race-grand-prix-van-singapore.png.
+const deelBestandsnaam = (race) => `predict-the-race-${String(race.name ?? 'uitslag')
+  .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'uitslag'}.png`;
+
+const naarBlob = (doek) => new Promise((klaar) => doek.toBlob(klaar, 'image/png'));
+
+// Het venster met het plaatje. Twee stappen in plaats van meteen het
+// deelmenu: een telefoon laat navigator.share() alleen toe direct na een tik,
+// en het tekenen duurt net te lang om daar nog onder te vallen. Nu tik je
+// op Delen als het plaatje er al staat -- en je ziet eerst wat je deelt.
+//
+// Delen gaat met de deelknop van het toestel (WhatsApp, Instagram, Berichten).
+// Kan de browser geen bestanden delen, zoals de meeste computers, dan wordt
+// het Opslaan, en kun je het plaatje ook naar het klembord kopiëren om het in
+// WhatsApp Web te plakken. De tekst van vroeger blijft er als laatste optie.
+async function openDeelvenster(race, knop) {
+  if (document.querySelector('.deelvenster')) return;
+  const was = knop?.innerHTML;
+  if (knop) { knop.disabled = true; knop.textContent = T('Plaatje maken…'); }
+  let blob = null;
+  try { blob = await naarBlob(await tekenDeelplaatje(race)); } catch { blob = null; }
+  if (knop) { knop.disabled = false; knop.innerHTML = was; }
+
+  const naam = deelBestandsnaam(race);
+  const bestand = blob ? new File([blob], naam, { type: 'image/png' }) : null;
+  const url = blob ? URL.createObjectURL(blob) : '';
+  let kanDelen = false;
+  try { kanDelen = !!(bestand && navigator.canShare?.({ files: [bestand] })); } catch { kanDelen = false; }
+  const kanKopieren = !!(blob && window.ClipboardItem && navigator.clipboard?.write);
+
+  const venster = document.createElement('div');
+  venster.className = 'deelvenster';
+  venster.setAttribute('role', 'dialog');
+  venster.setAttribute('aria-modal', 'true');
+  venster.setAttribute('aria-label', T('Deel de uitslag'));
+  venster.innerHTML = `
+    <div class="deelvenster-in">
+      <div class="kiesblad-kop">
+        <span class="label">${T('Deel de uitslag')}</span>
+        <button class="x" data-sluit aria-label="${T('Sluiten')}">×</button>
+      </div>
+      ${blob ? `<img class="deelbeeld" src="${url}" width="${DEELMAAT.b}" height="${DEELMAAT.h}"
+        alt="${esc(T('Uitslag van {race} in {poule}', { race: race.name, poule: S.poule?.name ?? '' }))}">`
+        : `<p class="zacht" style="margin:0">${T('Het plaatje lukte niet. De uitslag als tekst kan wel.')}</p>`}
+      ${kanDelen ? `<button class="knop primair" data-delen>${DEELICOON}${T('Delen')}</button>`
+        : blob ? `<a class="knop primair" data-opslaan href="${url}" download="${esc(naam)}">${T('Opslaan')}</a>` : ''}
+      <div class="deelrij">
+        ${kanKopieren ? `<button class="knop klein" data-kopieer-plaatje>${T('Kopieer plaatje')}</button>` : ''}
+        <button class="knop klein" data-kopieer-tekst>${T('Kopieer als tekst')}</button>
+      </div>
+      <textarea class="veld tekstblok hide" readonly rows="9"
+        aria-label="${T('Uitslag om zelf te kopiëren')}"></textarea>
+    </div>`;
+  document.body.appendChild(venster);
+
+  const sluit = () => {
+    window.removeEventListener('keydown', toets, true);
+    venster.remove();
+    if (url) URL.revokeObjectURL(url);
+    if (knop?.isConnected) knop.focus();
+  };
+  // Escape sluit dit venster, en alleen dit venster: niet ook de race eronder.
+  const toets = (ev) => {
+    if (ev.key !== 'Escape') return;
+    ev.stopImmediatePropagation();
+    ev.preventDefault();
+    sluit();
+  };
+  window.addEventListener('keydown', toets, true);
+  venster.onclick = (ev) => { if (ev.target === venster) sluit(); };
+  venster.querySelector('[data-sluit]').onclick = sluit;
+
+  const tijdelijk = (el, tekst) => {
+    const oud = el.innerHTML;
+    el.textContent = tekst;
+    setTimeout(() => { if (el.isConnected) el.innerHTML = oud; }, 2400);
+  };
+  const delen = venster.querySelector('[data-delen]');
+  if (delen) delen.onclick = async () => {
+    try {
+      await navigator.share({ files: [bestand], title: race.name });
+    } catch (e) {
+      // Wegtikken van het deelmenu is geen fout. Al het andere wel: dan wordt
+      // de knop alsnog een gewone download.
+      if (e?.name === 'AbortError') return;
+      const a = document.createElement('a');
+      a.className = 'knop primair'; a.href = url; a.download = naam; a.dataset.opslaan = '';
+      a.textContent = T('Opslaan');
+      delen.replaceWith(a);
+    }
+  };
+  const plaatje = venster.querySelector('[data-kopieer-plaatje]');
+  if (plaatje) plaatje.onclick = async () => {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      tijdelijk(plaatje, T('Gekopieerd'));
+    } catch { tijdelijk(plaatje, T('Kopiëren lukt niet')); }
+  };
+  const tekstKnop = venster.querySelector('[data-kopieer-tekst]');
+  tekstKnop.onclick = async () => {
+    const tekst = groepsappTekst(race);
+    if (!tekst) return;
+    if (await naarKlembord(tekst)) { tijdelijk(tekstKnop, T('Gekopieerd')); return; }
+    // Lukt het klembord niet -- een oude browser, of een pagina die niet over
+    // https loopt -- dan komt de tekst in beeld om zelf te selecteren.
+    const veld = venster.querySelector('.tekstblok');
+    tekstKnop.textContent = T('Kopiëren lukt niet, selecteer hem zelf');
+    veld.value = tekst;
+    veld.classList.remove('hide');
+    veld.select();
+  };
+  (venster.querySelector('[data-delen], [data-opslaan]') ?? tekstKnop).focus();
+}
+
+function knoopUitslagDelen(paneel) {
+  paneel.querySelectorAll('[data-deel]').forEach(knop => knop.onclick = () => {
+    const race = S.races.find(x => zelfde(x.id, knop.dataset.deel));
+    if (race) openDeelvenster(race, knop);
   });
 }
 

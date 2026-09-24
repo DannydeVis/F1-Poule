@@ -122,8 +122,8 @@ await page.evaluate(() => {
   sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
 });
 await page.reload();
-await page.waitForSelector('.strip, [data-race]');
-if (!(await page.$('.strip'))) { await openRace(page, 'Melbourne'); await page.click('[data-tab="quali"]'); }
+await openRace(page, 'Melbourne');
+await page.click('[data-tab="quali"]');
 await page.waitForSelector('.strip');
 check('bij een foutloze voorspelling staat er niets',
   (await page.$('.bijna')) === null);

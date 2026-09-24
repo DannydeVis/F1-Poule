@@ -10,7 +10,7 @@
 //      alleen-lezen lijst zonder werkende knoppen is dan het hele punt: de
 //      races moeten onderling vergelijkbaar blijven.
 
-import { maakControle, startPagina, meedoen } from './hulp.mjs';
+import { maakControle, startPagina, meedoen, naarLijst } from './hulp.mjs';
 
 const { check, afronden } = maakControle('vragenset beheren');
 const { page, jsFouten, stoppen } = await startPagina();
@@ -80,7 +80,7 @@ await page.evaluate(() => {
   sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
 });
 await page.reload();
-await page.waitForSelector('[data-race]');
+await naarLijst(page);
 await naarPoule();
 
 const uitleg = (await page.textContent('.kol, #paneel')).replace(/\s+/g, ' ');

@@ -80,7 +80,7 @@ await page.click('[data-tab="race"]');
 await page.waitForSelector('#paneel');
 
 await page.reload();
-await page.waitForSelector('[data-race], #paneel');
+await page.waitForSelector('#paneel', { timeout: 5000 }).catch(() => {});
 check('een refresh midden in een racescherm blijft daar staan',
   (await page.$('#paneel')) !== null && (await page.textContent('.dtitel')) === 'Melbourne',
   await page.$('.dtitel') ? await page.textContent('.dtitel') : 'racescherm niet gevonden');
@@ -88,8 +88,8 @@ check('en het juiste tabblad staat nog aan',
   (await page.getAttribute('[data-tab="race"]', 'aria-selected')) === 'true');
 
 // Terug naar het overzicht, en dat blijft ook staan na een refresh.
-// (#terug is het mobiele pijltje en staat op deze breedte op display:none;
-// de navigatieknop werkt op elke schermgrootte.)
+// Via de navigatie, niet via de pijl terug: dat is een tweede weg die ook op
+// elke schermgrootte moet werken.
 await page.click('[data-weergave="races"]');
 await page.waitForSelector('[data-race]');
 await page.reload();
