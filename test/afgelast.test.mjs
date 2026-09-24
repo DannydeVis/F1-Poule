@@ -12,7 +12,7 @@
 //   4. Wat er al ingevuld was blijft staan.
 //   5. Een uitslag wint van de vlag: staat er tóch een uitslag, dan telt hij.
 
-import { maakControle, startPagina, meedoen, openRace } from './hulp.mjs';
+import { maakControle, startPagina, meedoen, openRace, naarLijst } from './hulp.mjs';
 
 const { check, afronden } = maakControle('een afgelaste race');
 const { page, jsFouten, stoppen } = await startPagina();
@@ -89,7 +89,7 @@ await page.evaluate(() => {
   sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
 });
 await page.reload();
-await page.waitForSelector('[data-race]');
+await naarLijst(page);
 check('staat er tóch een uitslag, dan telt hij weer gewoon mee',
   !(await tekst(rij('Melbourne'))).includes('niet doorgegaan')
   && (await tekst(rij('Melbourne'))).includes('ptn'), await tekst(rij('Melbourne')));

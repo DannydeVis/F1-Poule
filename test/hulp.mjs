@@ -124,8 +124,17 @@ export async function meedoen(page) {
   await naDeClaim(page);
 }
 
-export async function openRace(page, naam) {
+// Een open race staat over het hele scherm, ook op een computer: de racelijst
+// is dan weg. Na herladen staat de laatst geopende race ook weer open. Eerst
+// dus terug naar de lijst, met de pijl linksboven, als die er staat.
+export async function naarLijst(page) {
+  await page.locator('[data-race]:visible, #terug:visible').first().waitFor();
+  if (await page.isVisible('#terug')) await page.click('#terug');
   await page.waitForSelector('[data-race]');
+}
+
+export async function openRace(page, naam) {
+  await naarLijst(page);
   await page.click(`[data-race]:has(.nm:text-is("${naam}"))`);
   await page.waitForSelector('#paneel');
 }

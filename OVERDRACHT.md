@@ -6698,3 +6698,99 @@ op precies dezelfde controles als op GitHub, de nieuwe slaagt. Nu wacht hij op
 de tekst in `#app`. `test/meldingen.test.mjs` had dezelfde loze wacht (op
 "herinneringen"); die is ook rechtgezet. Wie een nieuwe test schrijft: wacht op
 `#app`, nooit op `document.body`.
+
+## Een race op het hele scherm, en de uitslag als plaatje
+
+Danny: *"Als ik nu op de vorige race druk met de uitslag, dan krijg ik een
+klein venster aan de zijkant. Het is natuurlijk mooier als die groot opent,
+bovenin dan een terug knop. Daarnaast is de deel knop lelijk, het kopiëren en
+plakken. Kunnen we daar niet een mooie afbeelding van maken?"*
+
+### Een race op het hele scherm
+
+Vanaf 960 pixels stond een open race in de rechterkolom, naast de racelijst.
+Dat was bedoeld om snel van race naar race te springen, maar een uitslag met
+tien coureurs, losse vragen, duels en de weekendwinnaar werd daardoor een smal
+venstertje. Nu werkt het net als op de telefoon: de lijst gaat weg, de race
+staat in het midden (hooguit 880 pixels, anders lopen de regels van rand tot
+rand), en de pijl terug staat linksboven. Escape doet hetzelfde, behalve als
+je in een veld typt.
+
+Het zat in één regel: in de media query werd `.shell.detail .kol.links` weer
+op `display:flex` gezet. Die is weg; de regel voor smalle schermen verbergt de
+lijst nu ook op brede. Daarbij één kolom in het raster en de pijl terug
+zichtbaar.
+
+Dat raakte twaalf tests. De testbrowser is 1280 pixels breed, en die tests
+klikten van race naar race, of herlaadden met een race open en zochten dan de
+lijst (een open race blijft na herladen open). Beide kan niet meer zonder eerst
+terug te gaan. Daarvoor is er nu `naarLijst(page)` in `test/hulp.mjs`: die
+tikt op de pijl terug als die er staat. `openRace()` doet dat vanzelf; waar een
+test na herladen op de lijst wachtte, staat nu `naarLijst()`.
+
+### De uitslag als plaatje
+
+"Kopieer voor de groepsapp" is vervangen door **Deel de uitslag**. Die tekent
+een plaatje van 1080 bij 1350 (4:5, wat WhatsApp en Instagram zonder
+bijsnijden tonen) op een canvas, in de app zelf:
+
+- geen server en geen bibliotheek; `tekenDeelplaatje(race)` in `app/index.html`;
+- dezelfde letters als de app (Barlow Condensed, Space Mono), die eerst met
+  `document.fonts.load()` worden opgehaald. Een canvas telt voor de browser
+  niet als "deze letter wordt gebruikt", dus zonder die stap tekent hij de
+  eerste keer in Arial. Na twee seconden gaat hij toch door;
+- altijd donker, wat het toestel ook doet, zodat iedereen in de groep
+  hetzelfde plaatje ziet. De kleuren staan in `DEELKLEUR`, als kopie van het
+  donkere thema;
+- erop: de ronde, de race (zo groot als hij in twee regels past), de poule,
+  de weekendwinnaar, de weekenduitslag van iedereen, en de top 3 van het
+  seizoen met wie er geklommen of gezakt is. Na één race valt dat laatste weg,
+  want dan is het dezelfde lijst nog eens. Na alleen de kwalificatie heet het
+  een tussenstand;
+- de stand is die ná dit weekend (`standNaWeekend()`): voor het laatste
+  weekend de stand van nu, voor een ouder weekend de stand van toen, met de
+  pijltjes ten opzichte van het weekend ervoor;
+- gelijke punten krijgen dezelfde plek (1, 1, 3). Past niet iedereen, dan
+  staat er "en nog 4" en kom jij er toch op, onderaan;
+- namen die te lang zijn worden ingekort met een beletselteken (`pasIn()`),
+  ook de winnaars als het er zes zijn;
+- het adres onderaan is `location.host`: de app noemt nergens een vast domein
+  (zie test/domein.test.mjs).
+
+Het venster (`openDeelvenster()`) hangt los van `#app` aan de body, zodat een
+nieuwe render het niet weghaalt. Het is een aparte stap in plaats van meteen
+het deelmenu, en dat is met opzet: `navigator.share()` mag alleen vlak na een
+tik, en het tekenen duurt net te lang om daar nog onder te vallen. Nu tik je
+op Delen terwijl het plaatje er al ligt, en zie je eerst wat je deelt.
+
+- **Delen** als `navigator.canShare({ files })` ja zegt (telefoons): het
+  deelmenu van het toestel, met het plaatje als bestand. Wegtikken
+  (`AbortError`) is geen fout. Elke andere fout maakt er alsnog Opslaan van.
+- **Opslaan** als het toestel geen bestanden kan delen (de meeste computers):
+  een download, `predict-the-race-<race>.png`.
+- **Kopieer plaatje** als de browser `ClipboardItem` kent, voor WhatsApp Web.
+- **Kopieer als tekst**: de oude `groepsappTekst()`, met hetzelfde vangnet als
+  vroeger als het klembord niet mag.
+
+Sluiten met het kruisje, naast het venster tikken of Escape. Escape sluit
+alleen het venster, niet de race eronder: de toets wordt op `window` in de
+capture-fase afgevangen. Daarna wordt het plaatje uit het geheugen gehaald
+(`URL.revokeObjectURL`) en gaat de focus terug naar de knop.
+
+Eén ding moest daarvoor anders in `herstelFocus()`: die zet na elke render de
+focus terug in de app als hij "kwijt" is, en een venster buiten `#app` telde
+als kwijt. Hij laat de focus nu staan als die in een `[role="dialog"]` zit.
+
+### Getest
+
+`test/uitslag-delen.test.mjs` (47 controles). Wat er op het plaatje staat wordt
+niet uit de pixels gelezen: de test vangt elke `fillText()` op, met plek,
+lettertype en of dat lettertype al geladen was. Zo test hij de tekst en de
+volgorde en niet hoe Chromium een letter rondt. Delen en het klembord worden
+nagebootst.
+
+Elke controle is teruggezet tegen een mutant die de fix weghaalt (de lijst
+weer tonen, geen één-kolomsraster, geen Escape, geen letters laden, plekken
+als 1-2-3, de stand van nu onder een ouder weekend, jouw rij niet onderaan,
+AbortError als fout, geen revoke, Escape die doorlekt naar de race, focus die
+wegspringt, winnaars niet ingekort, de oude knop terug). Ze zakken allemaal.

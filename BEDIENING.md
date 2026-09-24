@@ -64,6 +64,24 @@ Daaronder de kalender, in twee lijsten: eerst wat er nog komt, daarna wat er
 gereden is (nieuwste eerst), met per gereden race je punten en wie dat weekend
 won.
 
+Een race opent over het hele scherm, ook op een computer: de lijst gaat
+opzij, de race staat in het midden (hooguit 880 pixels breed) en linksboven
+staat de pijl terug. Escape doet hetzelfde.
+
+Onder een uitslag staat **Deel de uitslag**. Dat maakt een plaatje van 1080
+bij 1350 met de weekenduitslag van de hele poule, de weekendwinnaar en de top
+3 van het seizoen, in de letters en kleuren van de app en altijd donker. Je
+ziet het eerst in een venster, met daaronder:
+
+- **Delen** op een telefoon: het deelmenu van het toestel, dus rechtstreeks
+  naar WhatsApp, Instagram of Berichten. Op een computer die geen bestanden
+  kan delen heet die knop **Opslaan** en wordt het een download.
+- **Kopieer plaatje**, om het in WhatsApp Web te plakken.
+- **Kopieer als tekst**: de oude tekstversie, voor wie die liever heeft.
+
+Past niet iedereen op het plaatje, dan staat er "en nog 4", en sta jij er
+toch op, onderaan. Het adres onderaan komt uit de adresbalk, niet uit de code.
+
 ### Stand
 Op één scherm, gescheiden door koppen:
 - **Seizoensstand.** Per speler de plek, de punten, en het verschil met de
@@ -78,7 +96,7 @@ Op één scherm, gescheiden door koppen:
 - **Weekendoverwinningen** (wie won de meeste losse weekenden)
 - **Onderlinge duels** (jij tegen elke andere speler)
 
-Bovenaan de knop **Kopieer voor WhatsApp**.
+Delen doe je onder de uitslag van een race (zie hierboven), niet hier.
 
 ### Poule
 Leden, poulecode, uitnodiglink met deelknop, en de instellingen. Voor de

@@ -15,7 +15,7 @@
 //   6. Vijf is vijf.
 //   7. Een weekend dat al liep toen de jokers aangingen krijgt er geen.
 
-import { maakControle, startPagina, meedoen } from './hulp.mjs';
+import { maakControle, startPagina, meedoen, naarLijst } from './hulp.mjs';
 
 const { check, afronden } = maakControle('jokers');
 const { page, jsFouten, stoppen } = await startPagina();
@@ -25,7 +25,7 @@ const rij = (naam) => `[data-race]:has(.nm:text-is("${naam}"))`;
 const punten = async (naam) =>
   Number((await tekst(`${rij(naam)} .st`)).match(/(\d+) ptn/)?.[1] ?? -1);
 const openRace = async (naam) => {
-  await page.waitForSelector('[data-race]');
+  await naarLijst(page);
   await page.click(rij(naam));
   await page.waitForSelector('#paneel');
 };
@@ -272,7 +272,7 @@ await page.evaluate(() => {
   sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
 });
 await page.reload();
-await page.waitForSelector('[data-race]');
+await naarLijst(page);
 
 await openRace('Suzuka');
 check('met vijf jokers gezet is er niets meer te vergeven',

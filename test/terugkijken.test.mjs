@@ -15,7 +15,7 @@
 //      als de uitslag binnen is.
 //   4. Zolang de tab nog openstaat kan dat niet — dan is het geheim.
 
-import { maakControle, startPagina, meedoen, openRace, kiesTien, kiesVoor }
+import { maakControle, startPagina, meedoen, openRace, kiesTien, kiesVoor, naarLijst }
   from './hulp.mjs';
 
 const { check, afronden } = maakControle('terugkijken: je eigen en andermans inzending');
@@ -56,7 +56,6 @@ await page.evaluate(() => {
   sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
 });
 await page.reload();
-await page.waitForSelector('[data-race]');
 await openRace(page, 'Melbourne');
 // Een race openen springt naar de tab die nog openstaat, dus na de deadline
 // naar de race. Wij willen juist de gesloten kwalificatie zien.
@@ -121,7 +120,7 @@ await page.evaluate(() => {
   sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
 });
 await page.reload();
-await page.waitForSelector('[data-race]');
+await naarLijst(page);
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="quali"]');
 await page.waitForSelector('[data-bekijk]');
@@ -187,7 +186,6 @@ await page.evaluate(() => {
   sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
 });
 await page.reload();
-await page.waitForSelector('[data-race]');
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
 await page.waitForSelector('[data-bekijk]');
@@ -230,7 +228,6 @@ await page.evaluate(() => {
   sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
 });
 await page.reload();
-await page.waitForSelector('[data-race]');
 await openRace(page, 'Melbourne');
 await page.click('[data-tab="race"]');
 await page.waitForSelector('[data-bekijk]');
