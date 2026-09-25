@@ -6977,3 +6977,36 @@ commit 5574718, voor als het lichte ontwerp ooit terug moet.
 `test/beelden.test.mjs` controleert nu per taal dat het plaatje donker is,
 met de kop in het accent. Het lichte plaatje terugzetten laat die controle
 zakken.
+
+## Een race op een groot scherm
+
+Danny, met een schermafdruk van een monitor van zo'n 2700 pixels breed: *"Op
+een groot scherm is het geen gezicht."* De race stond daar als één kolom van
+880 pixels in het midden, met links en rechts een lege vlakte.
+
+Vanaf 1280 pixels breed staat een race nu in twee kolommen, en mag hij daarvoor
+breder worden, tot 1240 pixels:
+
+- **een uitslag**: links je punten, de top 10 en "zo dichtbij"; rechts de
+  losse vragen (pole, winnaar, …), de rest en de weekendwinnaar met de knoppen
+  om af te spelen en te delen;
+- **het invulscherm**: links de top 10, rechts de losse vragen, de extra
+  vragen, de duels en Opslaan. Zijn er naast de top 10 geen vragen, dan
+  blijft het één kolom van 880: een rechterkolom met alleen een knop is geen
+  verbetering;
+- **een gesloten race**: links je inzending, rechts de rest. In je eentje
+  één kolom.
+
+Gebouwd met `tweeKolommen({ noot, boven, hoofd, zij })` in `app/index.html`.
+Onder 1280 pixels (en op een telefoon) krijgen de kolommen `display:contents`,
+zodat alles weer onder elkaar staat in de volgorde van altijd. Wat op een
+breed scherm bovenaan een kolom staat maar op een telefoon vooraan hoort (de
+noot over een handmatige of automatische lijst, en de losse vragen), krijgt
+daar een `order` die het weer vooraan zet. De race wordt alleen breder als er
+ook echt twee kolommen zijn (`.kol.rechts:has(.kolom2)`).
+
+Getest in `test/breed-scherm.test.mjs` op 2560, 1366, 1100 en 390 pixels, met
+vijf mutanten (geen raster, niet breder, de telefoonvolgorde kwijt, altijd twee
+kolommen bij het invullen, het raster ook op smalle schermen). Ze zakken alle
+vijf. `test/uitslag-delen.test.mjs` verwachtte op 1366 precies 880 pixels; dat
+is nu de volle breedte naast de navigatie.

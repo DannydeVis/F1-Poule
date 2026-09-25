@@ -925,6 +925,14 @@
   .opslaanbalk .wisknop{min-height:48px}
   .wisknop.zeker{color:var(--accent);border-color:var(--accent)}
   #paneel{display:flex;flex-direction:column;gap:14px;min-width:0}
+  /* Twee kolommen voor een race op een breed scherm (zie de media query voor
+     1280 pixels). Smaller dan dat vallen de kolommen weg en staat alles onder
+     elkaar, in dezelfde volgorde als altijd: de noot en de losse vragen die op
+     een breed scherm bovenaan een kolom staan, komen dan weer vooraan. */
+  .kolom2,.k2-hoofd,.k2-zij{display:contents}
+  .k2-noot,.k2-boven{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .k2-noot{order:-2}
+  .k2-boven{order:-1}
 
   /* ---- uitslag -------------------------------------------- */
   .score{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;
@@ -1213,6 +1221,14 @@
     .kop .ptitel{font-size:36px}
     .kol{padding:26px 32px 40px}
     .coureurs{grid-template-columns:1fr 1fr}
+    /* Een race naast elkaar in plaats van onder elkaar: links je punten en de
+       top 10, rechts de losse vragen, de rest en de weekendwinnaar. Eén kolom
+       van 880 pixels liet op een groot scherm twee derde leeg. Alleen waar er
+       ook echt twee kolommen zijn, wordt de race breder. */
+    .shell.detail .kol.rechts:has(.kolom2){max-width:1240px}
+    .kolom2{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px;align-items:start}
+    .k2-hoofd,.k2-zij{display:flex;flex-direction:column;gap:14px;min-width:0}
+    .k2-noot,.k2-boven{order:0}
   }
 </style>
 </head>
@@ -7853,18 +7869,17 @@ function geslotenWeergave(paneel, r) {
     <span class="label">${T('jouw inzending · alleen om terug te kijken')}</span>
     ${keuzeOverzicht(r, vindPred(r.id, S.ik.id), S.tab)}`;
 
-  paneel.innerHTML = afgelastEnLeeg(r) ? `
+  const kop = afgelastEnLeeg(r) ? `
     <div class="leeg"><span class="label">${T('afgelast')}</span>
       <p class="zacht" style="margin:0">${T('Deze race is niet doorgegaan, dus hij telt voor '
         + 'niemand mee. Wat je had ingevuld blijft staan.')}</p></div>
-    ${mijnBlok}
-    ${andermans(r)}
   ` : `
     <div class="leeg"><span class="label">${T('gesloten')}</span>
       <p class="zacht" style="margin:0">${T('Inzendingen zijn gesloten. De uitslag volgt zodra '
-        + 'de sync hem bij OpenF1 heeft opgehaald; die draait elk uur.')}</p></div>
-    ${mijnBlok}
-    ${andermans(r)}`;
+        + 'de sync hem bij OpenF1 heeft opgehaald; die draait elk uur.')}</p></div>`;
+  // De rest ernaast op een breed scherm, als er een rest is.
+  const rest = andermans(r);
+  paneel.innerHTML = rest ? tweeKolommen({ hoofd: kop + mijnBlok, zij: rest }) : kop + mijnBlok;
 
   knoopBekijk(paneel);
 }
@@ -7900,7 +7915,7 @@ function invulWeergave(paneel, r, dicht) {
   // Alles op één scherm. Dat kan doordat er nergens meer een lijst van twaalf
   // coureurs openstaat: je tikt de plek of de vraag aan die je bedoelt, en
   // pas dan gaat het keuzeblad open. Zie OVERDRACHT.md.
-  paneel.innerHTML = `
+  const hoofd = `
     ${kanKopieren ? `<button class="knop klein" id="kopieer">${
       T('Neem de kwalificatie over')}</button>` : ''}
     ${top10Actief(S.tab) ? `
@@ -7924,11 +7939,13 @@ function invulWeergave(paneel, r, dicht) {
                 : `<span class="who">${T('tik om te kiezen')}</span>`}
             </button></li>`;
         }).join('')}
-      </ol>` : ''}
+      </ol>` : ''}`;
+  const vragen = `
     ${coureurVragen(S.tab).length ? `<span class="label">${T('losse vragen')}</span>
       <div class="kiesregels">${coureurVragen(S.tab).map(id => coureurKiezer(r, id)).join('')}</div>` : ''}
     ${extraVragen(S.tab).map(id => extraKiezer(r, id)).join('')}
-    ${S.tab === 'race' ? duelKiezer(r) : ''}
+    ${S.tab === 'race' ? duelKiezer(r) : ''}`;
+  const afsluiting = `
     <p class="label" style="margin:0">${T('sluit {wanneer}', {
       wanneer: esc(sluitTekst(deadline)) })}</p>
     <div class="opslaanbalk">
@@ -7940,8 +7957,12 @@ function invulWeergave(paneel, r, dicht) {
       ${klaar || losGekozen
         ? `<button class="knop klein wisknop" id="wisalles">${T('Wis alles')}</button>` : ''}
       <p class="err">${esc(S.fout)}</p>
-    </div>
-    ${kiesblad(r)}`;
+    </div>`;
+  // Op een breed scherm de top 10 links en de vragen met de opslaanknop
+  // rechts, als er naast de top 10 ook vragen zijn. Anders één kolom.
+  paneel.innerHTML = (top10Actief(S.tab) && vragen.trim()
+    ? tweeKolommen({ hoofd, zij: vragen + afsluiting })
+    : hoofd + vragen + afsluiting) + kiesblad(r);
 
   const sluitBlad = () => { S.kiesplek = null; invulWeergave(paneel, r, dicht); };
   paneel.querySelectorAll('[data-plek]').forEach(b => b.onclick = () => {
@@ -8183,6 +8204,16 @@ function duelKiezer(r) {
     </div>`;
 }
 
+// Twee kolommen op een breed scherm, onder elkaar op een telefoon (de CSS bij
+// .kolom2). `noot` staat bovenaan de linkerkolom, `boven` bovenaan de rechter;
+// op een telefoon komen ze allebei vooraan, zoals voorheen.
+function tweeKolommen({ noot = '', boven = '', hoofd, zij }) {
+  return `<div class="kolom2">
+    <div class="k2-hoofd">${noot.trim() ? `<div class="k2-noot">${noot}</div>` : ''}${hoofd}</div>
+    <div class="k2-zij">${boven.trim() ? `<div class="k2-boven">${boven}</div>` : ''}${zij}</div>
+  </div>`;
+}
+
 function uitslagWeergave(r, werkelijk) {
   const mijn = vindPred(r.id, S.ik.id);
   const lijst = mijn?.[SESSIES[S.tab].vraag];
@@ -8201,16 +8232,13 @@ function uitslagWeergave(r, werkelijk) {
   const losIngevuld = coureurVragen(S.tab).some(id => !!antwoordVan(mijn, id))
     || extraVragen(S.tab).some(id => !leegAntwoord(mijn?.[id]))
     || (S.tab === 'race' && !!mijn?.teamgenoot_duels?.length);
-  if (!lijst?.length && !losIngevuld) return `
-    ${noot}
-    <div class="leeg"><span class="label">${T('niets ingevuld')}</span>
-      <p class="zacht" style="margin:0">${T('Je hebt hier niks ingevuld.')}</p></div>
-    ${andermans(r)}${weekendVoet(r)}`;
+  if (!lijst?.length && !losIngevuld) return tweeKolommen({ noot,
+    hoofd: `<div class="leeg"><span class="label">${T('niets ingevuld')}</span>
+      <p class="zacht" style="margin:0">${T('Je hebt hier niks ingevuld.')}</p></div>`,
+    zij: `${andermans(r)}${weekendVoet(r)}` });
   const { regels } = scoreLijst(lijst ?? [], werkelijk);
   const exact = regels.filter(x => x.punten === 5).length;
-  return `
-    ${noot}
-    ${losse}
+  return tweeKolommen({ noot, boven: losse, hoofd: `
     <div class="score">
       <span style="display:flex;flex-direction:column;gap:4px">
         <span class="label">${T('jouw punten')}</span>
@@ -8237,9 +8265,8 @@ function uitslagWeergave(r, werkelijk) {
         </li>`;
       }).join('')}
     </ul>
-    ${bijnaGoedBlok(r, regels)}
-    ${andermans(r)}
-    ${weekendVoet(r)}`;
+    ${bijnaGoedBlok(r, regels)}`,
+    zij: `${andermans(r)}${weekendVoet(r)}` });
 }
 
 // Waar zat het 'm in. Dit is de vraag die na afloop in de groepsapp gesteld

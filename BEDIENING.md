@@ -66,7 +66,10 @@ won.
 
 Een race opent over het hele scherm, ook op een computer: de lijst gaat
 opzij, de race staat in het midden (hooguit 880 pixels breed) en linksboven
-staat de pijl terug. Escape doet hetzelfde.
+staat de pijl terug. Escape doet hetzelfde. Vanaf 1280 pixels breed staat
+een race in twee kolommen, tot 1240 pixels: bij een uitslag links je punten
+en de top 10, rechts de losse vragen, de rest en de weekendwinnaar; bij het
+invullen links de top 10, rechts de vragen en Opslaan.
 
 Onder een uitslag staat **Deel de uitslag**. Dat maakt een plaatje van 1080
 bij 1350 met de weekenduitslag van de hele poule, de weekendwinnaar en de top

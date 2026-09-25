@@ -139,9 +139,15 @@ check('de duels krijgen een eigen kopje met hun punten',
   /teamgenoot-duels · \d+ van 15 punten/.test(raceScherm),
   raceScherm.slice(0, 90) + '...');
 
-const duelRegels = await page.$$eval('.strip', (n) => n.map((u) => u.children.length));
+// De duels staan in dezelfde opmaak als de top 10 (.strip). Herkennen aan de
+// rijen zelf, niet aan de volgorde: op een breed scherm staan ze in een
+// andere kolom dan de top 10. Een top-10-rij begint met P1..P10, een duel met
+// de ploeg. (Hier is de top 10 van de race leeg: een lege lijst telt niet.)
+const duelRegels = await page.$$eval('.strip', (n) => n
+  .filter((u) => u.children.length && !/^P\d+$/.test(u.querySelector('.pos')?.textContent.trim() ?? ''))
+  .map((u) => u.children.length));
 check('alleen de twee ingevulde duels staan in de uitslag',
-  duelRegels[0] === 2, duelRegels.join(' / '));
+  duelRegels.length === 1 && duelRegels[0] === 2, duelRegels.join(' / '));
 
 // Zonder race-top-10 maar mét duels hoort hier geen "je hebt hier niks
 // ingevuld" te staan: er ligt wel degelijk iets ingeleverd.
