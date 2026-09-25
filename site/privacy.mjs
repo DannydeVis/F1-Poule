@@ -26,7 +26,7 @@ export const PRIVACY = {
   nl: {
     pad: 'privacy', locale: 'nl_NL',
     titel: 'Privacy en je gegevens – Predict the Race',
-    omschrijving: 'Wat Predict the Race van je bewaart, waar het staat, wie het ziet en hoe je het weer weg krijgt. Geen advertenties, geen trackers.',
+    omschrijving: 'Wat Predict the Race van je bewaart, waar het staat, wie het ziet en hoe je het weer weg krijgt. Geen advertenties, statistieken alleen met je ja.',
     kop: 'Wat Predict the Race van je weet',
     intro: 'Predict the Race is een gratis F1-voorspelspel voor vriendengroepen. Het bewaart zo weinig mogelijk, en wat het bewaart staat hieronder, in gewone taal.',
     bijgewerkt: 'Bijgewerkt op 25 september 2026',
@@ -52,10 +52,14 @@ export const PRIVACY = {
         'De app onthoudt in je browser in welke poule je zit, wie je bent en welke taal je kiest, zodat je niet elke keer opnieuw hoeft te beginnen. Dat is geen trackingcookie: het blijft op je toestel en niemand anders leest het.',
       ]],
       ['Wat er niet gebeurt', [
-        'Geen advertenties, geen trackers van anderen, en er wordt niets doorverkocht of gedeeld. De lettertypen staan op de site zelf, dus daar gaat niets naartoe. Eén ding komt nog van buiten: de code waarmee de app met de database praat, van esm.sh. Die ziet daarbij je IP-adres.',
+        'Geen advertenties, en er wordt niets doorverkocht of gedeeld. Google Analytics alleen als je daar ja op zegt (zie hieronder). De lettertypen staan op de site zelf, dus daar gaat niets naartoe. Eén ding komt nog van buiten: de code waarmee de app met de database praat, van esm.sh. Die ziet daarbij je IP-adres.',
       ]],
       ['Tellen', [
         'Per dag telt de app hoe vaak hij geopend wordt, en welke accounts dat deden. Dat laatste alleen om te kunnen zien hoeveel mensen er meespelen, en het verdwijnt na vijf weken. Er komt geen cookie aan te pas en er wordt geen IP-adres bewaard.',
+      ]],
+      ['Google Analytics', [
+        'Alleen als je daar ja op zegt, meten we met Google Analytics hoe de site en de app gebruikt worden: welke pagina\'s je opent, hoe lang, met wat voor toestel en ongeveer vanuit welk land. Google zet daarvoor cookies, ziet je IP-adres en kan die gegevens buiten de EU verwerken. We gebruiken het alleen om te zien wat er gebeurt, niet voor advertenties.',
+        'Zeg je nee, of kies je niets, dan wordt er niets van Google geladen. Je keuze aanpassen kan altijd: onderaan elke pagina bij "Statistieken en cookies", of in de app onder Profiel.',
       ]],
       ['Hoe lang', [
         'Zolang de poule bestaat. Je kunt er zelf een eind aan maken in de app, onder Profiel, bij "wat de app van je weet". Daar staan twee knoppen. "Mijn account verwijderen" haalt je account en je mailadres weg; je spelers blijven met naam en punten in de poule staan, zodat de stand van de anderen blijft kloppen. "Alles verwijderen" haalt ook je spelers en al je voorspellingen weg, in elke poule. Dat is niet terug te draaien.',
@@ -76,7 +80,7 @@ export const PRIVACY = {
   en: {
     pad: 'en/privacy', locale: 'en_GB',
     titel: 'Privacy and your data – Predict the Race',
-    omschrijving: 'What Predict the Race keeps about you, where it lives, who sees it and how to get it removed. No ads, no trackers.',
+    omschrijving: 'What Predict the Race keeps about you, where it lives, who sees it and how to get it removed. No ads, statistics only with your yes.',
     kop: 'What Predict the Race knows about you',
     intro: 'Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.',
     bijgewerkt: 'Updated on 25 September 2026',
@@ -102,10 +106,14 @@ export const PRIVACY = {
         'The app remembers in your browser which pool you are in, who you are and which language you chose, so you do not have to start over every time. That is not a tracking cookie: it stays on your device and nobody else reads it.',
       ]],
       ['What does not happen', [
-        'No ads, no trackers from others, and nothing is sold on or shared. The fonts are on the site itself, so nothing goes there. One thing still comes from outside: the code the app uses to talk to the database, from esm.sh. That sees your IP address.',
+        'No ads, and nothing is sold on or shared. Google Analytics only if you say yes to it (see below). The fonts are on the site itself, so nothing goes there. One thing still comes from outside: the code the app uses to talk to the database, from esm.sh. That sees your IP address.',
       ]],
       ['Counting', [
         'Each day the app counts how often it is opened, and which accounts did so. The latter only to see how many people are playing, and it disappears after five weeks. No cookie is involved and no IP address is stored.',
+      ]],
+      ['Google Analytics', [
+        'Only if you say yes to it, we measure with Google Analytics how the site and the app are used: which pages you open, for how long, on what kind of device and roughly from which country. Google sets cookies for this, sees your IP address and may process that data outside the EU. We only use it to see what happens, not for ads.',
+        'If you say no, or choose nothing, nothing from Google is loaded. You can always change your choice: at the bottom of every page under "Statistics and cookies", or in the app under Profile.',
       ]],
       ['How long', [
         'As long as the pool exists. You can put an end to it yourself in the app, under Profile, at "what the app knows about you". There are two buttons there. "Delete my account" removes your account and your email address; your players stay in the pool with their name and points, so the standings of the others stay right. "Delete everything" also removes your players and all your predictions, in every pool. That cannot be undone.',

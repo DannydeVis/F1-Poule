@@ -604,11 +604,13 @@ ${jsonLd(code)}
       <li><a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.voet.privacy)}</a></li>
       <li><a href="${BRON}" rel="noopener">${esc(t.voet.bron)}</a></li>
       <li><a href="https://openf1.org" rel="noopener">${esc(t.voet.data)}</a></li>
+      <li><a href="#" data-toestemming hidden>${esc(t.voet.cookies)}</a></li>
     </ul>
     <small>${esc(t.voet.disclaimer)}</small>
   </div>
 </footer>
 <script>${taalScript(code)}</script>
+<script src="${p}toestemming.js" defer></script>
 </body>
 </html>
 `;
@@ -693,10 +695,12 @@ ${alineas.map((a) => `      <p>${alinea(a)}</p>`).join('\n')}
       <li><a href="${app}">${esc(t.app)}</a></li>
       <li><a href="${p}${PRIVACY[ander].pad}/" hreflang="${ander}" lang="${ander}">${esc(t.ander)}</a></li>
       <li><a href="${BRON}" rel="noopener">${esc(teksten[taal].voet.bron)}</a></li>
+      <li><a href="#" data-toestemming hidden>${esc(teksten[taal].voet.cookies)}</a></li>
     </ul>
     <small>${esc(teksten[taal].voet.disclaimer)}</small>
   </div>
 </footer>
+<script src="${p}toestemming.js" defer></script>
 </body>
 </html>
 `;

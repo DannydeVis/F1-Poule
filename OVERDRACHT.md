@@ -7207,3 +7207,39 @@ van met die regel zelf.
 zijn beheeradres is ingelogd (Google, of zijn mailadres gekoppeld in de app).
 Tot die tijd laat het beheer hem er niet in, en schrijft de sync zijn logboek
 nergens heen (dat merkt verder niemand).
+
+## Google Analytics, met toestemming
+
+Het tweede deel van *"wellicht moeten we weer google analytics inbouwen"*:
+Danny koos voor eigen statistieken (in het beheer) én Google Analytics.
+
+**Eén bestand:** `toestemming.js` in de hoofdmap, geladen door de voorpagina
+(alle talen, via `scripts/maak-site.mjs`), de privacypagina's en de app. De
+meet-ID staat alleen daar (`GA_ID`); leeg = uit, en zo staat hij in de repo tot
+Danny een meet-ID heeft. Zie BEDIENING.md §17 voor het aanzetten.
+
+**Hoe:** zonder keuze laadt er niets van Google. De vraag heeft ja en nee even
+groot (nee zeggen hoort net zo makkelijk te zijn als ja), in de taal van de
+pagina (Frans met "vous", zoals de rest van de Franse pagina; de talen zonder
+eigen privacyverklaring linken naar de Engelse). Na ja laadt gtag.js met de
+meet-ID; na nee, of nee na ja, gaat `ga-disable-<ID>` aan en gaan de
+`_ga`-cookies weg. De knop om van gedachten te veranderen (`[data-toestemming]`)
+staat er met `hidden` en komt pas tevoorschijn als er een meet-ID is.
+
+**Teksten:** de privacyverklaring (site NL/EN en in de app) heeft een alinea
+"Google Analytics": wat er gemeten wordt, dat Google cookies zet, je IP-adres
+ziet en de gegevens buiten de EU kan verwerken, en dat het alleen gebeurt na ja.
+"Wat er niet gebeurt" zegt nu "geen advertenties … Google Analytics alleen als
+je daar ja op zegt". Op de voorpagina heette het blok "Geen advertenties, geen
+trackers"; dat is in alle zeven talen "Geen advertenties" geworden, met de zin
+dat bezoekstatistieken er alleen bij komen als je ja zegt. Onderaan elke pagina
+staat (zodra er een meet-ID is) "Statistieken en cookies".
+
+**Tests:** `test/toestemming.test.mjs` (24 controles), met de meet-ID in de
+test ingevuld via een onderschepte `toestemming.js`. `privacypagina` en
+`privacy` controleren de nieuwe zinnen; `privacypagina` telt Google Analytics
+mee bij de diensten die de app en de pagina allebei moeten noemen. Negen
+mutanten (laden zonder keuze, nee laadt ook, cookies blijven staan, de knop
+blijft verborgen, altijd Nederlands, nee kleiner dan ja, de privacylink altijd
+Nederlands, de keuze niet onthouden, de app bindt de knop niet); ze zakken
+allemaal.

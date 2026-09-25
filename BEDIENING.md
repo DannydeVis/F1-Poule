@@ -1690,3 +1690,42 @@ erbij ("Tellen"). Dit is wat de grafieken bezoeken en actieve spelers vult.
 Dan staat de melding uit de database bovenaan. Meestal is `schema.sql` na
 deze wijziging nog niet opnieuw gedraaid: dan bestaan de beheerfuncties nog
 niet.
+
+---
+
+## 17. Google Analytics, alleen met toestemming
+
+Naast de eigen statistieken in het beheer (§16) kan de site Google Analytics
+gebruiken, zoals padel-bracket. In Nederland mag dat alleen als de bezoeker
+daar eerst ja op zegt, en dat regelt `toestemming.js` in de hoofdmap. Dat
+bestand staat op de voorpagina (alle zeven talen), op de privacypagina's en in
+de app.
+
+**Aanzetten:** maak in Google Analytics een property met een webgegevensstroom
+voor `predicttherace.com` (Beheer → Gegevensstromen), en zet de meet-ID
+(`G-…`) bovenin `toestemming.js`:
+
+```js
+const GA_ID = 'G-AB12CD34EF';
+```
+
+Meer hoeft niet: geen generator draaien, geen tweede plek. Stel in Google
+Analytics de bewaartermijn in op twee maanden (Beheer → Gegevensverzameling
+en -bewaring → Gegevensbewaring); dat is wat de privacyverklaring impliciet
+belooft, en korter is beter.
+
+**Wat een bezoeker ziet:** één keer een vraag onderin, in de taal van de
+pagina: *"Mogen we meetellen?"* met **Ja, prima** en **Nee** even groot naast
+elkaar, en een link naar de privacyverklaring. Zolang er niets gekozen is laadt
+er niets van Google. De keuze geldt voor de site en de app samen (dezelfde
+herkomst, `localStorage` onder `ptr:analytics`). Van gedachten veranderen kan
+onderaan elke pagina (**Statistieken en cookies**) en in de app onder Profiel,
+bij de privacyverklaring. Nee na ja zet Google Analytics op die pagina stil en
+haalt zijn cookies (`_ga…`) weg.
+
+**Zolang `GA_ID` leeg is** gebeurt er niets: geen vraag, geen knop, en niets
+van Google. De privacyverklaring zegt al wel dat Google Analytics er alleen met
+toestemming bij komt; dat klopt ook zolang het uit staat.
+
+**Uitzetten:** `GA_ID` weer leeg maken. Wie ooit ja zei krijgt dan niets meer
+van Google, want zonder meet-ID laadt er niets.

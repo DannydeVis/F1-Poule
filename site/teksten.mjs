@@ -96,8 +96,8 @@ export const teksten = {
       stand: ['De stand, met je eigen regel gemarkeerd en de onderlinge duels eronder.', 'De stand van een poule met het podium en de ranglijst'],
     },
     privacy: {
-      kop: 'Geen advertenties, geen trackers',
-      tekst: 'Predict the Race heeft geen advertenties, geen analytics en geen trackers, en verkoopt niets door. Je doet mee met een poulecode en een naam; een mailadres is alleen nodig als je je account zelf wilt meenemen naar een ander toestel. Deze pagina laadt niets van andere websites.',
+      kop: 'Geen advertenties',
+      tekst: 'Predict the Race heeft geen advertenties en verkoopt niets door. Je doet mee met een poulecode en een naam; een mailadres is alleen nodig als je je account zelf wilt meenemen naar een ander toestel. Bezoekstatistieken met Google Analytics komen er alleen bij als je daar zelf ja op zegt.',
       meer: 'Lees de hele privacyverklaring',
     },
     faq: {
@@ -120,7 +120,7 @@ export const teksten = {
     slot: { kop: 'Klaar voor de volgende race?', tekst: 'Maak in een minuut je poule en deel de code met je vrienden.', knop: 'Maak je poule' },
     voet: {
       disclaimer: 'Predict the Race is een onafhankelijk fanproject en is niet verbonden aan Formula 1, de FIA of een F1-team. F1 en Formula 1 zijn handelsmerken van Formula One Licensing B.V.',
-      app: 'Open de app', bron: 'Broncode op GitHub', data: 'Uitslagen via OpenF1', privacy: 'Privacy', talen: 'Deze pagina in het',
+      app: 'Open de app', bron: 'Broncode op GitHub', data: 'Uitslagen via OpenF1', cookies: 'Statistieken en cookies', privacy: 'Privacy', talen: 'Deze pagina in het',
     },
     howto: { naam: 'Een F1-poule maken met Predict the Race', omschrijving: 'In vier stappen een Formule 1-voorspelpoule met je vrienden.' },
     sluiten: 'Sluiten',
@@ -195,8 +195,8 @@ export const teksten = {
       stand: ['The standings, with your own row highlighted and head-to-head results below.', 'League standings with a podium and the table'],
     },
     privacy: {
-      kop: 'No ads, no trackers',
-      tekst: 'Predict the Race has no ads, no analytics and no trackers, and sells nothing on. You join with a league code and a name; an email address is only needed if you want to take your account to another device. This page loads nothing from other websites.',
+      kop: 'No ads',
+      tekst: 'Predict the Race has no ads and sells nothing on. You join with a league code and a name; an email address is only needed if you want to take your account to another device. Visitor statistics with Google Analytics are only added if you say yes to them yourself.',
       meer: 'Read the full privacy statement',
     },
     faq: {
@@ -219,7 +219,7 @@ export const teksten = {
     slot: { kop: 'Ready for the next race?', tekst: 'Set up your league in a minute and share the code with your friends.', knop: 'Start your league' },
     voet: {
       disclaimer: 'Predict the Race is an independent fan project and is not affiliated with Formula 1, the FIA or any F1 team. F1 and Formula 1 are trademarks of Formula One Licensing B.V.',
-      app: 'Open the app', bron: 'Source code on GitHub', data: 'Results via OpenF1', privacy: 'Privacy', talen: 'This page in',
+      app: 'Open the app', bron: 'Source code on GitHub', data: 'Results via OpenF1', cookies: 'Statistics and cookies', privacy: 'Privacy', talen: 'This page in',
     },
     howto: { naam: 'How to start an F1 prediction league with Predict the Race', omschrijving: 'A Formula 1 prediction league with your friends in four steps.' },
     sluiten: 'Close',
@@ -294,8 +294,8 @@ export const teksten = {
       stand: ['Die Tabelle, mit deiner eigenen Zeile hervorgehoben und den Duellen darunter.', 'Die Tabelle einer Tipprunde mit Podium und Rangliste'],
     },
     privacy: {
-      kop: 'Keine Werbung, keine Tracker',
-      tekst: 'Predict the Race hat keine Werbung, keine Analytics und keine Tracker und verkauft nichts weiter. Du machst mit einem Code und einem Namen mit; eine E-Mail-Adresse brauchst du nur, wenn du dein Konto auf ein anderes Gerät mitnehmen willst. Diese Seite lädt nichts von anderen Websites.',
+      kop: 'Keine Werbung',
+      tekst: 'Predict the Race hat keine Werbung und verkauft nichts weiter. Du machst mit einem Code und einem Namen mit; eine E-Mail-Adresse brauchst du nur, wenn du dein Konto auf ein anderes Gerät mitnehmen willst. Besucherstatistiken mit Google Analytics kommen nur dazu, wenn du selbst zustimmst.',
       meer: 'Die ganze Datenschutzerklärung lesen (auf Englisch)',
     },
     faq: {
@@ -318,7 +318,7 @@ export const teksten = {
     slot: { kop: 'Bereit für das nächste Rennen?', tekst: 'Erstelle deine Tipprunde in einer Minute und teile den Code mit deinen Freunden.', knop: 'Tipprunde erstellen' },
     voet: {
       disclaimer: 'Predict the Race ist ein unabhängiges Fanprojekt und steht in keiner Verbindung zur Formel 1, zur FIA oder zu einem F1-Team. F1 und Formula 1 sind Marken der Formula One Licensing B.V.',
-      app: 'App öffnen', bron: 'Quellcode auf GitHub', data: 'Ergebnisse über OpenF1', privacy: 'Datenschutz', talen: 'Diese Seite auf',
+      app: 'App öffnen', bron: 'Quellcode auf GitHub', data: 'Ergebnisse über OpenF1', cookies: 'Statistik und Cookies', privacy: 'Datenschutz', talen: 'Diese Seite auf',
     },
     howto: { naam: 'Ein F1-Tippspiel mit Predict the Race erstellen', omschrijving: 'In vier Schritten zu deiner Formel-1-Tipprunde mit Freunden.' },
     sluiten: 'Schließen',
@@ -393,8 +393,8 @@ export const teksten = {
       stand: ['Le classement, avec votre ligne mise en avant et les face-à-face en dessous.', 'Le classement d\'une ligue avec le podium et le tableau'],
     },
     privacy: {
-      kop: 'Sans publicité, sans traceurs',
-      tekst: 'Predict the Race n\'a ni publicité, ni outil d\'analyse, ni traceur, et ne revend rien. Vous jouez avec un code et un nom ; une adresse e-mail n\'est utile que si vous voulez emporter votre compte sur un autre appareil. Cette page ne charge rien depuis d\'autres sites.',
+      kop: 'Sans publicité',
+      tekst: 'Predict the Race n\'a pas de publicité et ne revend rien. Vous jouez avec un code et un nom ; une adresse e-mail n\'est utile que si vous voulez emporter votre compte sur un autre appareil. Les statistiques de visite avec Google Analytics ne s\'ajoutent que si vous l\'acceptez vous-même.',
       meer: 'Lire toute la politique de confidentialité (en anglais)',
     },
     faq: {
@@ -417,7 +417,7 @@ export const teksten = {
     slot: { kop: 'Prêt pour la prochaine course ?', tekst: 'Créez votre ligue en une minute et partagez le code avec vos amis.', knop: 'Créer une ligue' },
     voet: {
       disclaimer: 'Predict the Race est un projet de fan indépendant, sans lien avec la Formule 1, la FIA ou une écurie de F1. F1 et Formula 1 sont des marques de Formula One Licensing B.V.',
-      app: 'Ouvrir l\'appli', bron: 'Code source sur GitHub', data: 'Résultats via OpenF1', privacy: 'Confidentialité', talen: 'Cette page en',
+      app: 'Ouvrir l\'appli', bron: 'Code source sur GitHub', data: 'Résultats via OpenF1', cookies: 'Statistiques et cookies', privacy: 'Confidentialité', talen: 'Cette page en',
     },
     howto: { naam: 'Créer une ligue de pronostics F1 avec Predict the Race', omschrijving: 'Une ligue de pronostics de Formule 1 entre amis en quatre étapes.' },
     sluiten: 'Fermer',
@@ -492,8 +492,8 @@ export const teksten = {
       stand: ['La clasificación, con tu fila resaltada y los cara a cara debajo.', 'La clasificación de una liga con el podio y la tabla'],
     },
     privacy: {
-      kop: 'Sin anuncios, sin rastreadores',
-      tekst: 'Predict the Race no tiene anuncios, ni analítica, ni rastreadores, y no vende nada a terceros. Juegas con un código y un nombre; solo necesitas un correo si quieres llevar tu cuenta a otro dispositivo. Esta página no carga nada de otros sitios web.',
+      kop: 'Sin anuncios',
+      tekst: 'Predict the Race no tiene anuncios y no vende nada a terceros. Juegas con un código y un nombre; solo necesitas un correo si quieres llevar tu cuenta a otro dispositivo. Las estadísticas de visitas con Google Analytics solo se añaden si tú dices que sí.',
       meer: 'Leer la política de privacidad completa (en inglés)',
     },
     faq: {
@@ -516,7 +516,7 @@ export const teksten = {
     slot: { kop: '¿Listo para la próxima carrera?', tekst: 'Crea tu liga en un minuto y comparte el código con tus amigos.', knop: 'Crea tu liga' },
     voet: {
       disclaimer: 'Predict the Race es un proyecto independiente de aficionados y no está vinculado a la Fórmula 1, la FIA ni a ningún equipo de F1. F1 y Formula 1 son marcas de Formula One Licensing B.V.',
-      app: 'Abrir la app', bron: 'Código fuente en GitHub', data: 'Resultados vía OpenF1', privacy: 'Privacidad', talen: 'Esta página en',
+      app: 'Abrir la app', bron: 'Código fuente en GitHub', data: 'Resultados vía OpenF1', cookies: 'Estadísticas y cookies', privacy: 'Privacidad', talen: 'Esta página en',
     },
     howto: { naam: 'Cómo crear una porra de F1 con Predict the Race', omschrijving: 'Una liga de predicciones de Fórmula 1 con tus amigos en cuatro pasos.' },
     sluiten: 'Cerrar',
@@ -591,8 +591,8 @@ export const teksten = {
       stand: ['La classifica, con la tua riga evidenziata e i testa a testa sotto.', 'La classifica di una lega con il podio e la tabella'],
     },
     privacy: {
-      kop: 'Niente pubblicità, niente tracker',
-      tekst: 'Predict the Race non ha pubblicità, né analytics, né tracker, e non rivende nulla. Si gioca con un codice e un nome; un indirizzo email serve solo se vuoi portare il tuo account su un altro dispositivo. Questa pagina non carica nulla da altri siti.',
+      kop: 'Niente pubblicità',
+      tekst: 'Predict the Race non ha pubblicità e non rivende nulla. Si gioca con un codice e un nome; un indirizzo email serve solo se vuoi portare il tuo account su un altro dispositivo. Le statistiche delle visite con Google Analytics si aggiungono solo se dici di sì.',
       meer: 'Leggi l’informativa completa sulla privacy (in inglese)',
     },
     faq: {
@@ -615,7 +615,7 @@ export const teksten = {
     slot: { kop: 'Pronto per la prossima gara?', tekst: 'Crea la tua lega in un minuto e condividi il codice con i tuoi amici.', knop: 'Crea la tua lega' },
     voet: {
       disclaimer: 'Predict the Race è un progetto indipendente di appassionati e non è collegato alla Formula 1, alla FIA o ad alcuna squadra di F1. F1 e Formula 1 sono marchi di Formula One Licensing B.V.',
-      app: 'Apri l\'app', bron: 'Codice sorgente su GitHub', data: 'Risultati tramite OpenF1', privacy: 'Privacy', talen: 'Questa pagina in',
+      app: 'Apri l\'app', bron: 'Codice sorgente su GitHub', data: 'Risultati tramite OpenF1', cookies: 'Statistiche e cookie', privacy: 'Privacy', talen: 'Questa pagina in',
     },
     howto: { naam: 'Come creare una lega di pronostici F1 con Predict the Race', omschrijving: 'Una lega di pronostici di Formula 1 con i tuoi amici in quattro passi.' },
     sluiten: 'Chiudi',
@@ -690,8 +690,8 @@ export const teksten = {
       stand: ['A classificação, com a sua linha destacada e os confrontos diretos logo abaixo.', 'A classificação de um bolão com pódio e tabela'],
     },
     privacy: {
-      kop: 'Sem anúncios, sem rastreadores',
-      tekst: 'O Predict the Race não tem anúncios, nem analytics, nem rastreadores, e não vende nada a ninguém. Você joga com um código e um nome; um e-mail só é necessário se quiser levar sua conta para outro aparelho. Esta página não carrega nada de outros sites.',
+      kop: 'Sem anúncios',
+      tekst: 'O Predict the Race não tem anúncios e não vende nada a ninguém. Você joga com um código e um nome; um e-mail só é necessário se quiser levar sua conta para outro aparelho. As estatísticas de visitas com o Google Analytics só entram se você disser que sim.',
       meer: 'Ler a política de privacidade completa (em inglês)',
     },
     faq: {
@@ -714,7 +714,7 @@ export const teksten = {
     slot: { kop: 'Pronto para a próxima corrida?', tekst: 'Crie seu bolão em um minuto e compartilhe o código com seus amigos.', knop: 'Crie seu bolão' },
     voet: {
       disclaimer: 'O Predict the Race é um projeto independente de fãs e não tem ligação com a Fórmula 1, a FIA ou qualquer equipe de F1. F1 e Formula 1 são marcas da Formula One Licensing B.V.',
-      app: 'Abrir o app', bron: 'Código-fonte no GitHub', data: 'Resultados via OpenF1', privacy: 'Privacidade', talen: 'Esta página em',
+      app: 'Abrir o app', bron: 'Código-fonte no GitHub', data: 'Resultados via OpenF1', cookies: 'Estatísticas e cookies', privacy: 'Privacidade', talen: 'Esta página em',
     },
     howto: { naam: 'Como criar um bolão de F1 com o Predict the Race', omschrijving: 'Um bolão de Fórmula 1 com seus amigos em quatro passos.' },
     sluiten: 'Fechar',
