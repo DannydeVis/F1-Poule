@@ -1743,13 +1743,16 @@ daar eerst ja op zegt, en dat regelt `toestemming.js` in de hoofdmap. Dat
 bestand staat op de voorpagina (alle zeven talen), op de privacypagina's en in
 de app.
 
-**Aanzetten:** maak in Google Analytics een property met een webgegevensstroom
-voor `predicttherace.com` (Beheer → Gegevensstromen), en zet de meet-ID
-(`G-…`) bovenin `toestemming.js`:
+**Staat aan** sinds september 2026, met de property **Predict the Race** en
+meet-ID `G-2ZVT5NSX3Y` (Beheer → Gegevensstromen → Predict the Race). Die staat
+bovenin `toestemming.js`:
 
 ```js
-const GA_ID = 'G-AB12CD34EF';
+const GA_ID = 'G-2ZVT5NSX3Y';
 ```
+
+Een andere property: maak in Google Analytics een webgegevensstroom voor
+`predicttherace.com` en zet de nieuwe meet-ID daar.
 
 Meer hoeft niet: geen generator draaien, geen tweede plek. Stel in Google
 Analytics de bewaartermijn in op twee maanden (Beheer → Gegevensverzameling

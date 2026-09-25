@@ -7,7 +7,7 @@
 //
 // Wat hier vastligt:
 //   1. Zonder meet-ID gebeurt er niets: geen vraag, geen knop, niets van
-//      Google. Zo staat het in de repo tot er een meet-ID is.
+//      Google. Zo zet je het uit (GA_ID leeg).
 //   2. Met een meet-ID komt er één keer een vraag, in de taal van de pagina,
 //      met "ja" en "nee" even groot. Zolang je niets kiest laadt er niets.
 //   3. Nee: er laadt niets, en de vraag komt niet terug. Ja: Google Analytics
@@ -23,12 +23,19 @@ import { maakControle, startSite, wortel } from './hulp.mjs';
 
 const { check, afronden } = maakControle('google analytics met toestemming');
 const bron = readFileSync(join(wortel, 'toestemming.js'), 'utf8');
-const GTAG = /googletagmanager\.com\/gtag\/js\?id=G-TEST/;
+const GA_ID = bron.match(/const GA_ID = '([^']*)';/)?.[1];
+const GTAG = new RegExp(`googletagmanager\\.com/gtag/js\\?id=${GA_ID}`);
 
 // ---- 1. zonder meet-ID ---------------------------------------------------------
-check('in de repo staat nog geen meet-ID', /const GA_ID = '';/.test(bron));
+check('in de repo staat de meet-ID van Predict the Race', GA_ID === 'G-2ZVT5NSX3Y', String(GA_ID));
 {
-  const { page, url, extern, jsFouten, stoppen } = await startSite();
+  // Dezelfde toestemming.js met een lege meet-ID: zo zet je het uit.
+  const zonderId = bron.replace(/const GA_ID = '[^']*';/, "const GA_ID = '';");
+  const { page, url, extern, jsFouten, stoppen } = await startSite({
+    toestemming: true,
+    voorafAan: async (_p, ctx) => ctx.route('**/toestemming.js', (route) =>
+      route.fulfill({ status: 200, contentType: 'text/javascript', body: zonderId })),
+  });
   await page.goto(url);
   await page.waitForLoadState('load');
   check('zonder meet-ID: geen vraag op de voorpagina', (await page.$('#toestemming')) === null);
@@ -39,13 +46,10 @@ check('in de repo staat nog geen meet-ID', /const GA_ID = '';/.test(bron));
   await stoppen();
 }
 
-// ---- 2 t/m 5. met een meet-ID -----------------------------------------------------
-// Dezelfde toestemming.js, met een meet-ID erin, alsof hij in de repo staat.
-const metId = bron.replace("const GA_ID = '';", "const GA_ID = 'G-TEST';");
+// ---- 2 t/m 5. met de meet-ID uit de repo ------------------------------------------
 const { page, context, url, extern, jsFouten, stoppen } = await startSite({
   taal: 'nl',  // de app praat anders Engels in een testbrowser, en vraagt het dan in het Engels
-  voorafAan: async (_p, ctx) => ctx.route('**/toestemming.js', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/javascript', body: metId })),
+  toestemming: true,
 });
 const gtag = () => extern.filter((u) => GTAG.test(u));
 const naar = async (pad) => { await page.goto(url + pad); await page.waitForLoadState('load'); };
@@ -89,14 +93,14 @@ check('bij een volgend bezoek laadt hij weer, zonder opnieuw te vragen',
 // ---- 4. van gedachten veranderen --------------------------------------------------
 check('onderaan de pagina staat nu "Statistieken en cookies"',
   await page.$eval('[data-toestemming]', (a) => !a.hidden && a.textContent === 'Statistieken en cookies'));
-await context.addCookies([{ name: '_ga', value: 'GA1.1.123', url }, { name: '_ga_TEST', value: 'GS1', url }]);
+await context.addCookies([{ name: '_ga', value: 'GA1.1.123', url }, { name: '_ga_2ZVT5NSX3Y', value: 'GS1', url }]);
 await page.click('[data-toestemming]');
 await page.waitForSelector('#toestemming');
 await page.click('#toestemming [data-keuze="nee"]');
 {
   const koekjes = (await context.cookies()).map((c) => c.name);
   check('nee na ja: Google Analytics staat stil en zijn cookies zijn weg',
-    await page.evaluate(() => window['ga-disable-G-TEST'] === true) && !koekjes.some((n) => n.startsWith('_ga')),
+    await page.evaluate((id) => window[`ga-disable-${id}`] === true, GA_ID) && !koekjes.some((n) => n.startsWith('_ga')),
     koekjes.join(','));
   check('en de keuze is nee', (await page.evaluate(() => localStorage.getItem('ptr:analytics'))) === 'nee');
 }

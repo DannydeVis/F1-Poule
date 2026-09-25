@@ -12,9 +12,9 @@
 // site en de app zijn dezelfde herkomst, dus één keuze geldt voor allebei.
 // Zie BEDIENING.md §17.
 (() => {
-  // De meet-ID uit Google Analytics (Beheer → Gegevensstromen), bijvoorbeeld
-  // 'G-AB12CD34EF'. Leeg = uit.
-  const GA_ID = '';
+  // De meet-ID uit Google Analytics (Beheer → Gegevensstromen → Predict the
+  // Race). Leeg = uit.
+  const GA_ID = 'G-2ZVT5NSX3Y';
   const SLEUTEL = 'ptr:analytics';
 
   const TEKST = {
