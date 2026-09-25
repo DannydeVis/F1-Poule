@@ -21,8 +21,9 @@ await meedoen(page);
 // Twee medespelers, en twee gereden races die de volgorde omgooien.
 //
 //   Melbourne  Danny had het mis, Michael goed   -> Michael staat voor
-//   Shanghai   andersom                          -> Danny klimt eroverheen
+//   Shanghai   Danny goed, Michael deed niet mee -> Danny klimt eroverheen
 const stand = async () => page.$$eval('.strij', (n) => n.map((e) => ({
+  plek: Number(e.querySelector('.p').textContent.trim()),
   naam: e.querySelector('.nm').textContent.trim().split(/\s+/)[0],
   punten: Number(e.querySelector('.t').textContent.trim()),
   wissel: e.querySelector('.wissel')?.textContent.trim() ?? null,
@@ -65,7 +66,7 @@ check('na één race staat er nog geen pijltje, want er is niets om mee te verge
 check('en Michael staat voor', rijen[0].naam === 'Michael', JSON.stringify(rijen));
 
 // --- tweede race draait het om ---------------------------------------
-await zetKlaar([{ 'lid-1': false, 'lid-2': true }, { 'lid-1': true, 'lid-2': false }]);
+await zetKlaar([{ 'lid-1': false, 'lid-2': true }, { 'lid-1': true }]);
 await page.reload();
 await page.click('[data-weergave="stand"]');
 await page.waitForSelector('.strij');
@@ -77,6 +78,42 @@ check('en wie ingehaald wordt een pijl omlaag',
   rijen.find((r) => r.naam === 'Michael')?.wissel === '↓1', JSON.stringify(rijen));
 check('het pijltje staat bij de goede speler, niet zomaar bovenaan',
   rijen[0].naam === 'Danny' && rijen[0].wissel === '↑1', JSON.stringify(rijen));
+
+// --- gelijk: allebei eerste --------------------------------------------
+// Shanghai andersom: dan hebben ze evenveel punten. Michael heet hier even
+// Bram, zodat hij op alfabet bóven Danny staat: dat hij daar staat is dan
+// geen plek, ze delen de eerste. Danny is dus geklommen, Bram niet gezakt.
+await zetKlaar([{ 'lid-1': false, 'lid-2': true }, { 'lid-1': true, 'lid-2': false }]);
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  db.pool_members.find((m) => m.member_id === 'lid-2').display_name = 'Bram';
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await page.click('[data-weergave="stand"]');
+await page.waitForSelector('.strij');
+rijen = await stand();
+// (De eerste twee rijen: verderop op het scherm staan de onderlinge duels in
+// dezelfde opmaak.)
+check('gelijke punten, gelijke plek: allebei eerste',
+  rijen[0].punten === rijen[1].punten && rijen[0].plek === 1 && rijen[1].plek === 1,
+  JSON.stringify(rijen.slice(0, 2)));
+check('wie erbij komt klimt', rijen.find((r) => r.naam === 'Danny')?.wissel === '↑1', JSON.stringify(rijen));
+check('en wie zijn plek deelt, zakt niet', rijen.find((r) => r.naam === 'Bram')?.wissel === null,
+  JSON.stringify(rijen));
+{
+  const kaart = await page.evaluate(async () => {
+    document.querySelector('[data-weergave="races"]').click();
+    await new Promise((r) => setTimeout(r, 300));
+    return document.querySelector('.kaartvoet span')?.textContent.replace(/\s+/g, ' ').trim();
+  });
+  check('ook op de weekendkaart: 1e van 2, al staat Bram erboven', kaart?.replace(/\s/g, '') === '1evan2', kaart);
+}
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  db.pool_members.find((m) => m.member_id === 'lid-2').display_name = 'Michael';
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
 
 // --- geen beweging, geen pijltje --------------------------------------
 // Drie races waarin niemand van plek wisselt. Een streepje of een "0" erbij

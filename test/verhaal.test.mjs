@@ -132,6 +132,10 @@ await page.keyboard.press('ArrowRight');
   check('dan de stand na dit weekend', d?.soort === 'stand' && d.tekst.includes('stand na ronde 2'), d?.tekst);
   check('van vierde naar eerste: "Je klimt naar 1e"', d?.tekst.includes('Je klimt naar 1e'), d?.tekst);
   check('met het pijltje erbij', rijen.some((r) => r.startsWith('1 Danny ▲3')), rijen.join(' | '));
+  // Joey, Kimberly en Michael stonden gedeeld eerste en staan dat nog steeds,
+  // nu samen met Danny. Dat is geen plek gezakt.
+  check('wie zijn gedeelde plek houdt krijgt geen pijltje',
+    rijen.filter((r) => !r.includes('Danny')).every((r) => !/[▲▼]/.test(r)), rijen.join(' | '));
 }
 await page.keyboard.press('ArrowRight');
 {

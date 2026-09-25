@@ -208,6 +208,8 @@ await page.waitForFunction(() => window.__klembord.length >= 2);
     klembord[0]?.soort === 'plaatje' && klembord[0].types.includes('image/png'), JSON.stringify(klembord[0]));
   check('en de tekst van vroeger kan nog steeds',
     klembord[1]?.soort === 'tekst' && klembord[1].t.startsWith('🏁 Shanghai, uitslag poule'), klembord[1]?.t.split('\n')[0]);
+  check('ook daarin gelijke punten, gelijke plek', /\n1\. Fatima/.test(klembord[1]?.t ?? '')
+    && /\n7\. Anouk/.test(klembord[1]?.t ?? ''), klembord[1]?.t.split('\n').slice(2, 4).join(' / '));
 }
 
 // ---- 6. sluiten -----------------------------------------------------------------------
@@ -266,12 +268,18 @@ check('en het kruisje', true);
 
 // ---- de stand van het seizoen ------------------------------------------------------------------
 // Op het scherm Stand staat een eigen deelknop, voor de hele stand. Eerst
-// iets om te laten zien: Tim had Shanghai helemaal goed, en klimt daarmee van
-// elfde naar zevende. Anouk, Joey, Lotte en Sanne zakken elk een plek.
+// iets om te laten zien: Tim had Shanghai helemaal goed en Bram zat er overal
+// naast. Na Melbourne deelde Tim de zevende plek en Bram de eerste; nu is Tim
+// alleen zesde (▲1) en zakt Bram naar twaalf (▼11).
 await page.evaluate((uit) => {
   const db = globalThis.__db;
-  const tim = db.pool_members.find((m) => m.display_name === 'Tim').member_id;
-  for (const a of db.answers) if (a.member_id === tim && String(a.race_id) === '2') a.waarde = uit;
+  const lid = (naam) => db.pool_members.find((m) => m.display_name === naam).member_id;
+  const ernaast = [...uit.slice(5), ...uit.slice(0, 5)];
+  for (const a of db.answers) {
+    if (String(a.race_id) !== '2') continue;
+    if (a.member_id === lid('Tim')) a.waarde = uit;
+    if (a.member_id === lid('Bram')) a.waarde = ernaast;
+  }
   sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
 }, UIT);
 await page.reload();
@@ -300,14 +308,14 @@ await page.waitForSelector('.deelvenster img');
   check('bovenaan het seizoen, de poule groot, en na hoeveel races',
     t.includes('STAND · SEIZOEN 2026') && t.includes('VRIJDAGMIDDAGPOULE') && t.includes('NA 2 VAN DE 3 RACES'),
     t.slice(0, 5).join(' | '));
-  const kop = g.find((x) => x.t.startsWith('Bram, Fatima'));
-  check('met de koplopers, ingekort als het er zes zijn', t.includes('KOPLOPER') && kop?.t.endsWith('…'), kop?.t);
+  const kop = g.find((x) => x.t.startsWith('Fatima, Kimberly'));
+  check('met de koplopers, ingekort als het er vijf zijn', t.includes('KOPLOPER') && kop?.t.endsWith('…'), kop?.t);
   const punten = g.filter((x) => x.x === 1008 && x.uitlijnen === 'right' && /^\d+$/.test(x.t)).map((x) => Number(x.t));
-  check('de lijst is de stand van het seizoen, Tim als zevende',
-    punten.slice(0, 7).join() === '200,200,200,200,200,200,192', punten.join(','));
+  check('de lijst is de stand van het seizoen, Tim als zesde',
+    punten.slice(0, 7).join() === '200,200,200,200,200,192,184', punten.join(','));
   const pijlen = t.filter((x) => /^[▲▼]\d+$/.test(x));
-  check('met wie er sinds de vorige race geklommen of gezakt is',
-    pijlen.includes('▲4') && pijlen.filter((x) => x === '▼1').length >= 2, pijlen.join(' '));
+  check('met wie er sinds de vorige race geklommen of gezakt is, in gedeelde plekken',
+    pijlen.includes('▲1') && pijlen.includes('▼11') && pijlen.length === 2, pijlen.join(' '));
   const danny = t.indexOf('Danny');
   check('en jij staat erop, ook onderaan', danny > -1 && t[danny + 1] === 'JIJ', t.slice(-12).join(' | '));
 }
@@ -316,7 +324,8 @@ await page.waitForFunction(() => window.__klembord.length >= 1);
 {
   const tekst = (await page.evaluate(() => window.__klembord[0]?.t)) ?? '';
   check('de stand kan ook als tekst', tekst.startsWith('🏆 Vrijdagmiddagpoule, na 2 van de 3 races')
-    && /\n7\. Tim\s+192/.test(tekst), tekst.split('\n').slice(0, 3).join(' / '));
+    && /\n6\. Tim\s+192/.test(tekst) && /\n7\. Anouk\s+184\n7\. Joey/.test(tekst),
+    tekst.split('\n').slice(0, 3).join(' / '));
 }
 await page.keyboard.press('Escape');
 await page.waitForFunction(() => !document.querySelector('.deelvenster'));
