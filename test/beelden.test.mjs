@@ -16,7 +16,8 @@
 //   5. favicon.ico is een echte ICO met 16, 32 en 48.
 //   6. De deelplaatjes: één per taal, allemaal anders, 1200×630 zoals de
 //      pagina belooft, en onder de 300 kB, want daarboven laat WhatsApp het
-//      plaatje weg.
+//      plaatje weg. Het donkere ontwerp met de kop in het accent, niet het
+//      lichte met de racebaan dat er even stond.
 //   7. Elke pagina wijst naar het favicon en het iPhone-pictogram, en die
 //      bestaan.
 
@@ -156,13 +157,35 @@ for (const [pad, maat] of Object.entries(PICTOGRAMMEN)) {
     check(`${code}: en kleiner dan 300 kB, anders toont WhatsApp het niet`, buf.length > 20000 && buf.length < 300 * 1024,
       `${Math.round(buf.length / 1024)} kB`);
     vingerafdruk.add(createHash('sha1').update(buf).digest('hex'));
-    check(`${code}: er staat een eigen regel voor op`, typeof teksten[code].ogRegel === 'string'
-      && teksten[code].ogRegel.length >= 8 && teksten[code].ogRegel.length <= 30, teksten[code].ogRegel ?? '');
   }
   check('elke taal heeft zijn eigen plaatje (geen zeven keer hetzelfde)', vingerafdruk.size === TALEN.length,
     `${vingerafdruk.size} verschillend`);
-  const regels = new Set(TALEN.map((c) => teksten[c].ogRegel));
-  check('en zijn eigen regel', regels.size === TALEN.length, [...regels].join(' | '));
+
+  // Het donkere ontwerp met de telefoon, niet het lichte met de racebaan dat
+  // er even stond: overwegend donker, met links het accent van de kop en
+  // rechts de telefoon. Nagemeten in de browser, op de pixels zelf.
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  for (const code of TALEN) {
+    const data = bestand(`site/og/og-${code}.jpg`).toString('base64');
+    const m = await page.evaluate(async (data) => {
+      const img = new Image(); img.src = `data:image/jpeg;base64,${data}`; await img.decode();
+      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+      const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+      const d = x.getImageData(0, 0, c.width, c.height).data;
+      let som = 0, accentLinks = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const [r, g, b] = [d[i], d[i + 1], d[i + 2]];
+        som += (r + g + b) / 3;
+        const px = (i / 4) % c.width;
+        if (px < 760 && r > 200 && g < 110 && b < 90) accentLinks++;
+      }
+      return { helderheid: som / (d.length / 4), accentLinks };
+    }, data);
+    check(`${code}: donker, met de kop in het accent`, m.helderheid < 50 && m.accentLinks > 8000,
+      `helderheid ${Math.round(m.helderheid)}, ${m.accentLinks} accentpixels links`);
+  }
+  await browser.close();
 }
 
 // ---- 7. elke pagina wijst ernaar ------------------------------------------------------
