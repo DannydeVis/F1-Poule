@@ -38,8 +38,20 @@ export function maakControle(titel) {
 // navigatie. Daar hoort alles wat de app al bij het opstarten leest:
 // test/talen.test.mjs zet er bijvoorbeeld navigator.languages mee om, en dat
 // moet gebeurd zijn voordat de app zijn taal kiest.
+// De vraag "Mogen we meetellen?" (toestemming.js) ligt onderin over het scherm
+// tot je iets kiest, net over de navigatiebalk. Een echte bezoeker kiest één
+// keer; een testbrowser begint elke keer leeg en zou er in elke test over
+// struikelen. Dus kiest de test hier "nee", zoals een bezoeker dat doet, behalve
+// in test/toestemming.test.mjs (toestemming: true), die de vraag zelf test.
+// Alleen als er nog niets gekozen is, zodat een test het zelf anders kan zetten.
+function zegNeeTegenMeten() {
+  try {
+    if (localStorage.getItem('ptr:analytics') === null) localStorage.setItem('ptr:analytics', 'nee');
+  } catch { /* niets */ }
+}
+
 export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
-                                   taal = 'nl', verhaal = false, voorafAan } = {}) {
+                                   taal = 'nl', verhaal = false, toestemming = false, voorafAan } = {}) {
   const map = mkdtempSync(join(tmpdir(), 'poule-test-'));
 
   const nabootsen = (bron, waar) => {
@@ -107,6 +119,7 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
       if (localStorage.getItem('poule:verhaal') === null) localStorage.setItem('poule:verhaal', 'uit');
     } catch { /* niets */ }
   });
+  if (!toestemming) await page.addInitScript(zegNeeTegenMeten);
   if (voorafAan) await voorafAan(page);
   const jsFouten = [];
   page.on('pageerror', (e) => jsFouten.push(String(e)));
@@ -197,7 +210,7 @@ export const opPlek = (page, kies) =>
 // De app krijgt ook hier de nabootsing in plaats van Supabase. Alles wat naar
 // een andere host wil, wordt geweigerd en onthouden in `extern`: de pagina's
 // horen niets van buiten te laden.
-export async function startSite({ voorafAan, taal = null } = {}) {
+export async function startSite({ voorafAan, taal = null, toestemming = false } = {}) {
   const types = { '.html': 'text/html', '.mjs': 'text/javascript', '.js': 'text/javascript',
                   '.woff2': 'font/woff2', '.png': 'image/png', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg',
                   '.xml': 'application/xml', '.txt': 'text/plain', '.ics': 'text/calendar',
@@ -233,6 +246,7 @@ export async function startSite({ voorafAan, taal = null } = {}) {
   if (taal) await context.addInitScript((t) => {
     try { localStorage.setItem('poule:taal', t); } catch { /* niets */ }
   }, taal);
+  if (!toestemming) await context.addInitScript(zegNeeTegenMeten);
   const page = await context.newPage();
   if (voorafAan) await voorafAan(page, context);
   const jsFouten = [];

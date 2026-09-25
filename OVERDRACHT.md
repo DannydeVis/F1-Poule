@@ -7320,3 +7320,17 @@ uit de eerste beheer-PR zette het account van het beheeradres zelf in
 alleen accounts met een ander adres. De rij zelf blijft staan (hij doet geen
 kwaad, en een schema dat data weggooit is erger); `test/beheer.test.sql`
 controleert beide gevallen.
+
+## Google Analytics staat aan
+
+Danny maakte in Google Analytics de property Predict the Race aan, met meet-ID
+`G-2ZVT5NSX3Y`; die staat nu in `toestemming.js`. Daarmee krijgt elke nieuwe
+bezoeker één keer de vraag "Mogen we meetellen?".
+
+**De tests:** een testbrowser begint elke keer leeg, en de vraag ligt onderin
+over het scherm tot je iets kiest. Daarom kiezen `startPagina()` en
+`startSite()` in `test/hulp.mjs` nu vooraf "nee" (`ptr:analytics`), zoals ze
+al het verhaal na een uitslag uitzetten; `toestemming: true` laat dat achterwege.
+`test/toestemming.test.mjs` gebruikt dat, en test nu de echte `toestemming.js`
+met de echte meet-ID; alleen voor "zonder meet-ID gebeurt er niets" (zo zet je
+het uit) krijgt hij een kopie met een lege ID.
