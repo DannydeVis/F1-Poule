@@ -90,6 +90,12 @@ store.otp ??= [];
 store.jokers ??= [];
 store.push_abonnementen ??= [];
 store.google_als ??= 'danny@gmail.voorbeeld';
+// Het beheer: wie beheerder is (een lijst account-id's, in het echt de tabel
+// site_beheerders), het logboek van de sync en de bezoekersteller.
+store.site_beheerders ??= [];
+store.sync_runs ??= [];
+store.bezoeken ??= {};
+store.actief ??= [];
 const bewaren = () => { try { sessionStorage.setItem(BEWAAR, JSON.stringify(store)); } catch { /* niets */ } };
 
 // Wordt door ontbrekende-sleutel.test.mjs leeggemaakt om een database zonder
@@ -707,6 +713,195 @@ const functies = {
     return { data: weg, error: null };
   },
 };
+
+// ------------------------------------------------------------
+//  Het beheer
+//  Dezelfde functies als in schema.sql ("Beheer"), met dezelfde deur ervoor:
+//  wie geen beheerder is krijgt 42501. test/beheer.test.sql legt de echte vast;
+//  deze zijn er zodat test/beheer.test.mjs de beheerpagina kan nalopen.
+// ------------------------------------------------------------
+const dag = (d = new Date()) => d.toISOString().slice(0, 10);
+const ikBenBeheerder = () => !!wieBenIk() && store.site_beheerders.some((id) => gelijk(id, wieBenIk()));
+const geenBeheerder = { data: null, error: { code: '42501', message: 'Alleen voor beheerders' } };
+function accountsoort(userId) {
+  if (!userId) return 'geen';
+  const u = store.auth_users.find((x) => gelijk(x.id, userId));
+  if (!u) return 'weg';
+  if (u.is_anonymous) return 'anoniem';
+  if ((u.identities ?? []).some((i) => i.provider === 'google')) return 'google';
+  return u.email ? 'mail' : 'anoniem';
+}
+const beheer = (werk) => (args) => (ikBenBeheerder() ? werk(args ?? {}) : geenBeheerder);
+const antwoordenVan = (f) => (store.answers ?? []).filter(f);
+const laatste = (rijen) => rijen.map((a) => a.updated_at).filter(Boolean).sort().at(-1) ?? null;
+
+Object.assign(functies, {
+  ik_ben_beheerder() { return { data: ikBenBeheerder(), error: null }; },
+
+  tel_bezoek({ p_pad } = {}) {
+    if (!/^[a-z0-9/_-]{1,40}$/.test(String(p_pad ?? ''))) return { data: null, error: null };
+    const sleutel = `${dag()}|${p_pad}`;
+    store.bezoeken[sleutel] = (store.bezoeken[sleutel] ?? 0) + 1;
+    const ik = wieBenIk();
+    if (ik && !store.actief.some((a) => a.dag === dag() && gelijk(a.user_id, ik))) {
+      store.actief.push({ dag: dag(), user_id: ik });
+    }
+    bewaren();
+    return { data: null, error: null };
+  },
+
+  beheer_overzicht: beheer(() => {
+    const week = Date.now() - 7 * 864e5;
+    const accounts = [...new Set(store.pool_members.map((m) => m.user_id).filter(Boolean))];
+    const bezoeken = Object.entries(store.bezoeken);
+    const sinds = (dagen) => dag(new Date(Date.now() - dagen * 864e5));
+    return { data: {
+      poules: store.pools.length,
+      poules_openbaar: store.pools.filter((p) => p.is_public).length,
+      spelers: store.pool_members.length,
+      accounts: accounts.length,
+      gekoppeld: accounts.filter((a) => ['mail', 'google'].includes(accountsoort(a))).length,
+      inzendingen: (store.answers ?? []).length,
+      inzendingen_7d: antwoordenVan((a) => !a.updated_at || Date.parse(a.updated_at) > week).length,
+      nieuwe_spelers_7d: store.pool_members.filter((m) => !m.created_at || Date.parse(m.created_at) > week).length,
+      actief_vandaag: store.actief.filter((a) => a.dag === dag()).length,
+      actief_7d: new Set(store.actief.filter((a) => a.dag > sinds(7)).map((a) => a.user_id)).size,
+      bezoeken_vandaag: bezoeken.filter(([k]) => k.startsWith(dag())).reduce((t, [, n]) => t + n, 0),
+      bezoeken_7d: bezoeken.filter(([k]) => k.slice(0, 10) > sinds(7)).reduce((t, [, n]) => t + n, 0),
+      meldingen: (store.push_abonnementen ?? []).length,
+      profielen: store.pool_members.filter((m) => m.profiel_code).length,
+      seizoen: 2026,
+      laatste_sync: kopie(store.sync_runs.at(-1) ?? null),
+    }, error: null };
+  }),
+
+  beheer_poules: beheer(() => ({ data: kopie(store.pools.map((p) => {
+    const leden = store.pool_members.filter((m) => gelijk(m.pool_id, p.id));
+    const antw = antwoordenVan((a) => gelijk(a.pool_id, p.id));
+    return { ...p, spelers: leden.length, accounts: leden.filter((m) => m.user_id).length,
+             eigenaar: leden.find((m) => gelijk(m.member_id, p.owner_member_id))?.display_name ?? null,
+             inzendingen: antw.length, laatste_inzending: laatste(antw),
+             vragen: (store.pool_questions ?? []).filter((q) => gelijk(q.pool_id, p.id)).length };
+  })), error: null })),
+
+  beheer_spelers: beheer(({ p_pool = null }) => ({ data: kopie(store.pool_members
+    .filter((m) => !p_pool || gelijk(m.pool_id, p_pool))
+    .map((m) => {
+      const p = store.pools.find((x) => gelijk(x.id, m.pool_id));
+      const u = store.auth_users.find((x) => gelijk(x.id, m.user_id));
+      const antw = antwoordenVan((a) => gelijk(a.member_id, m.member_id));
+      return { member_id: m.member_id, pool_id: m.pool_id, poule: p?.name ?? '', naam: m.display_name,
+               aangemaakt: m.created_at ?? null, user_id: m.user_id ?? null, account: accountsoort(m.user_id),
+               email: u?.email ?? null, laatst_ingelogd: null,
+               poulebaas: !!p && gelijk(p.owner_member_id, m.member_id),
+               inzendingen: antw.length, laatste_inzending: laatste(antw),
+               profiel: !!m.profiel_code,
+               meldingen: (store.push_abonnementen ?? []).filter((x) => gelijk(x.member_id, m.member_id)).length };
+    })), error: null })),
+
+  beheer_poule_bijwerken: beheer(({ p_pool, p_wijziging = {} }) => {
+    const p = store.pools.find((x) => gelijk(x.id, p_pool));
+    if (!p) return { data: null, error: { message: 'Die poule bestaat niet' } };
+    if ('name' in p_wijziging && !String(p_wijziging.name ?? '').trim()) {
+      return { data: null, error: { message: 'Een poule heeft een naam nodig' } };
+    }
+    const baas = p_wijziging.owner_member_id || null;
+    if ('owner_member_id' in p_wijziging && baas
+        && !store.pool_members.some((m) => gelijk(m.member_id, baas) && gelijk(m.pool_id, p.id))) {
+      return { data: null, error: { message: 'Die speler zit niet in deze poule' } };
+    }
+    if ('name' in p_wijziging) p.name = String(p_wijziging.name).trim();
+    if ('beschrijving' in p_wijziging) p.beschrijving = String(p_wijziging.beschrijving ?? '').trim() || null;
+    if ('is_public' in p_wijziging) p.is_public = !!p_wijziging.is_public;
+    if ('owner_member_id' in p_wijziging) p.owner_member_id = baas;
+    bewaren();
+    return { data: kopie(p), error: null };
+  }),
+
+  beheer_poule_verwijderen: beheer(({ p_pool }) => {
+    if (!store.pools.some((x) => gelijk(x.id, p_pool))) return { data: null, error: { message: 'Die poule bestaat niet' } };
+    store.pools = store.pools.filter((x) => !gelijk(x.id, p_pool));
+    for (const t of ['pool_members', 'answers', 'jokers', 'push_abonnementen', 'pool_questions']) {
+      store[t] = (store[t] ?? []).filter((r) => !gelijk(r.pool_id, p_pool));
+    }
+    bewaren();
+    return { data: null, error: null };
+  }),
+
+  beheer_speler_bijwerken: beheer(({ p_member, p_naam }) => {
+    const m = store.pool_members.find((x) => gelijk(x.member_id, p_member));
+    if (!String(p_naam ?? '').trim()) return { data: null, error: { message: 'Een speler heeft een naam nodig' } };
+    if (!m) return { data: null, error: { message: 'Die speler bestaat niet' } };
+    m.display_name = String(p_naam).trim();
+    bewaren();
+    return { data: null, error: null };
+  }),
+
+  beheer_speler_losmaken: beheer(({ p_member }) => {
+    const m = store.pool_members.find((x) => gelijk(x.member_id, p_member));
+    if (!m) return { data: null, error: { message: 'Die speler bestaat niet' } };
+    m.user_id = null;
+    bewaren();
+    return { data: null, error: null };
+  }),
+
+  beheer_speler_verwijderen: beheer(({ p_member }) => {
+    if (!store.pool_members.some((x) => gelijk(x.member_id, p_member))) {
+      return { data: null, error: { message: 'Die speler bestaat niet' } };
+    }
+    for (const p of store.pools) if (gelijk(p.owner_member_id, p_member)) p.owner_member_id = null;
+    store.pool_members = store.pool_members.filter((x) => !gelijk(x.member_id, p_member));
+    for (const t of ['answers', 'jokers', 'push_abonnementen']) {
+      store[t] = (store[t] ?? []).filter((r) => !gelijk(r.member_id, p_member));
+    }
+    bewaren();
+    return { data: null, error: null };
+  }),
+
+  beheer_race_bijwerken: beheer(({ p_race, p_wijziging = {} }) => {
+    const r = store.races.find((x) => gelijk(x.id, p_race));
+    if (!r) return { data: null, error: { message: 'Die race bestaat niet' } };
+    if ('afgelast' in p_wijziging) r.afgelast = !!p_wijziging.afgelast;
+    for (const s of ['quali', 'race', 'sprint']) {
+      const veld = `${s}_result`;
+      if (!(veld in p_wijziging)) continue;
+      const lijst = p_wijziging[veld];
+      if (Array.isArray(lijst) && lijst.length > 30) {
+        return { data: null, error: { message: 'Een uitslag heeft hooguit dertig plekken' } };
+      }
+      r[veld] = Array.isArray(lijst) && lijst.length ? lijst.map(String) : null;
+      r[`${s}_handmatig`] = !!p_wijziging.handmatig && !!r[veld];
+    }
+    bewaren();
+    return { data: kopie(r), error: null };
+  }),
+
+  beheer_sync: beheer(() => ({ data: kopie([...store.sync_runs].reverse().slice(0, 50)), error: null })),
+
+  beheer_statistieken: beheer(() => {
+    const dagen = Array.from({ length: 30 }, (_, i) => dag(new Date(Date.now() - (29 - i) * 864e5)));
+    const perSoort = {};
+    for (const m of store.pool_members) perSoort[accountsoort(m.user_id)] = (perSoort[accountsoort(m.user_id)] ?? 0) + 1;
+    const seizoensvragen = new Set(store.questions.filter((q) => q.sessie === 'seizoen').map((q) => q.id));
+    return { data: {
+      seizoen: 2026,
+      spelers_per_week: [],
+      poules_per_week: [],
+      bezoeken_per_dag: dagen.map((d) => ({
+        dag: d,
+        bezoeken: Object.entries(store.bezoeken).filter(([k]) => k.startsWith(d)).reduce((t, [, n]) => t + n, 0),
+        actief: store.actief.filter((a) => a.dag === d).length,
+      })),
+      inzendingen_per_race: store.races.filter((r) => r.season === 2026
+          && Date.parse(r.deadline_quali ?? r.deadline_race ?? 0) < Date.now() + 7 * 864e5)
+        .map((r) => ({ race_id: r.id, ronde: r.round, naam: r.name,
+          inzenders: new Set(antwoordenVan((a) => gelijk(a.race_id, r.id) && !seizoensvragen.has(a.question_id))
+            .map((a) => String(a.member_id))).size,
+          spelers: store.pool_members.length })),
+      accounts: perSoort,
+    }, error: null };
+  }),
+});
 
 // Een test kan de volgende schrijfactie laten mislukken met een fout naar
 // keuze, om te zien wat een speler dan te lezen krijgt

@@ -1607,3 +1607,86 @@ opent de app voortaan in een browservenster.
   geabonneerd is hoeft niets te doen.
 - **Meldingen** staan nog niet aan (§11c). Als ze aangaan is dat op het nieuwe
   adres, en daar wijzen ze ook heen.
+
+---
+
+## 16. Het beheer
+
+Op **predicttherace.com/beheer/** staat een beheerpagina voor wie de hele site
+onderhoudt. Hij is los te installeren, net als de app: in Chrome of Edge via het
+installeerpictogram in de adresbalk, op een iPhone via Deel → Zet op beginscherm.
+Hij heeft een eigen pictogram (de P op licht in plaats van op zwart) en staat dus
+niet als tweede app-tegel naast de speler-app.
+
+### Binnenkomen
+
+Je logt in met hetzelfde account als in de app. Op een toestel waar je in de app
+al met je beheeradres bent ingelogd, ben je in het beheer meteen binnen: het is
+dezelfde site, dus dezelfde sessie. Op een nieuw toestel log je in met Google of
+met een inloglink naar je mailadres (het beheer maakt zelf geen accounts aan).
+
+Speel je op een toestel anoniem in de app (nog niets gekoppeld), dan laat het
+beheer je daar niet inloggen: dat zou de sessie vervangen die de app gebruikt,
+en dan hangt je speler op dat toestel nergens meer aan. Koppel eerst je
+beheeradres in de app (Profiel → je account meenemen).
+
+**Beheerder word je zo:** `schema.sql` maakt het account met het contactadres
+uit de privacyverklaring (`devisser.danny@gmail.com`) beheerder, zodra dat adres
+bevestigd is — een Google-account met dat adres, of een mailadres waarvan de
+inloglink is aangeklikt. Dus: log één keer in met dat adres (in de app of hier),
+en draai daarna `schema.sql` opnieuw in de SQL editor. De controletabel onderaan
+zegt bij **beheerders** hoeveel het er zijn; nul betekent dat het adres nog niet
+bevestigd is. Iemand anders toevoegen:
+
+```sql
+insert into public.site_beheerders (user_id)
+select id from auth.users where email = 'iemand@voorbeeld.nl';
+```
+
+### Wat erop staat
+
+- **Overzicht** — spelers, poules, wie er vandaag en deze week actief was,
+  bezoeken, inzendingen, hoeveel accounts gekoppeld zijn; de status van de sync
+  (draait / lang niet gedraaid / mislukt, met de fout); en wat aandacht nodig
+  heeft: een sessie die al zes uur voorbij is zonder uitslag, of een race die
+  binnen vier dagen begint zonder coureurs.
+- **Poules** — zoeken op naam, code of poulebaas; de naam, omschrijving,
+  openbaar en de poulebaas aanpassen; een poule verwijderen (je tikt eerst de
+  naam over; spelers, inzendingen en jokers gaan mee).
+- **Spelers** — alle spelers met hun poule, het soort account (Google,
+  mailadres, alleen dit toestel, geen) en het mailadres als dat er is. Hernoemen,
+  losmaken van het account (voor iemand op een nieuw toestel die niet had
+  gekoppeld) en verwijderen, die laatste twee met twee tikken.
+- **Data** — het logboek van de sync (elke run: wanneer, gelukt of niet, wat er
+  veranderde) en per race welke uitslagen er zijn. **Controleer bij OpenF1**
+  vraagt OpenF1 zelf om de uitslag en zet hem naast wat er in de database staat:
+  gelijk, of de plekken die verschillen. Dan kun je **de uitslag van OpenF1
+  overnemen** (de sync mag hem daarna nog verbeteren) of **leegmaken** (de sync
+  haalt hem de volgende ronde opnieuw op), en een race **afgelast** zetten.
+  **Sync nu draaien** brengt je naar de knop in GitHub Actions.
+- **Statistieken** — bezoeken en actieve spelers per dag (dertig dagen), nieuwe
+  spelers per week, hoeveel procent van de spelers per race iets inleverde, en
+  wat voor accounts er achter de spelers zitten. Elke grafiek heeft een tabel
+  eronder.
+
+### Hoe het veilig blijft
+
+De beheerpagina gebruikt dezelfde publieke anon key als de app. Alles gaat via
+functies in `schema.sql` (`beheer_*`) die eerst vragen of je beheerder bent;
+wie dat niet is krijgt een fout, ook als hij die functies zelf aanroept. De
+tabellen erachter (`site_beheerders`, `sync_runs`, `bezoeken`, `actief`) zijn
+voor de app dicht. De `service_role` key blijft een geheim in GitHub, voor de
+sync, en komt nergens in de beheerpagina. `test/beheer.test.sql` bewijst dat.
+
+### De eigen bezoekersteller
+
+De app telt per dag hoe vaak hij geopend wordt (het beginscherm en een poule
+apart), en welke accounts dat deden (`tel_bezoek()`). Zonder cookies en zonder
+IP-adres; wie actief was blijft vijf weken staan. De privacyverklaring zegt het
+erbij ("Tellen"). Dit is wat de grafieken bezoeken en actieve spelers vult.
+
+### Als opslaan in het beheer een fout geeft
+
+Dan staat de melding uit de database bovenaan. Meestal is `schema.sql` na
+deze wijziging nog niet opnieuw gedraaid: dan bestaan de beheerfuncties nog
+niet.

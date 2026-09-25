@@ -35,6 +35,7 @@ const wereld = {
   sessies: [],        // wat OpenF1 aan sessies kent
   uitslagen: {},      // session_key -> klassering
   verzoeken: [],      // alles wat er bij OpenF1 is gevraagd
+  sync_runs: [],      // het logboek dat de sync bijhoudt voor het beheer
 };
 let volgendId = 1;
 
@@ -103,6 +104,10 @@ function postgrest(req, res, tabel, zoek, body) {
     }
     if (zoek.get('limit')) uit = uit.slice(0, Number(zoek.get('limit')));
     return stuur(uit);
+  }
+  if (req.method === 'POST' && tabel === 'sync_runs') {
+    rijen.push(JSON.parse(body));
+    return stuur(null);
   }
   if (req.method === 'POST') {
     // Alleen de upsert op (season, round) die sync.mjs doet.
@@ -316,6 +321,40 @@ for (const s of wereld.sessies) {
     wereld.verzoeken.join(' ') || log.slice(-300));
   check('en schrijft geen lege agenda over een bestaande heen',
     readFileSync(agenda, 'utf8') === 'BESTAAND', log.slice(-300));
+}
+
+// ---- 8. het logboek ------------------------------------------------------------------------
+// Elke run laat een regel achter voor de beheerpagina: wanneer, of het goed
+// ging, en wat er veranderde.
+{
+  const regels = wereld.sync_runs;
+  check('elke run schreef een regel in het logboek', regels.length >= 8, `${regels.length} regels`);
+  const kalender = regels.find((r) => /Kalender 2027: 4 races/.test(r.samenvatting ?? ''));
+  check('met wat er veranderde: de kalender van 2027',
+    !!kalender && kalender.ok === true && !!kalender.gestart && !!kalender.klaar
+      && Date.parse(kalender.klaar) >= Date.parse(kalender.gestart), JSON.stringify(kalender));
+  check('en een run zonder nieuws zegt dat ook',
+    regels.some((r) => r.ok === true && r.samenvatting === 'Niks nieuws' && r.bijgewerkt === 0),
+    JSON.stringify(regels.map((r) => r.samenvatting)));
+
+  // Een run die misgaat: de tabel races is even weg.
+  const races = wereld.races;
+  delete wereld.races;
+  const { code } = await sync();
+  wereld.races = races;
+  const laatste = wereld.sync_runs.at(-1);
+  check('een run die misgaat schrijft dat ook op, met de fout erbij',
+    code === 1 && laatste?.ok === false && /Supabase gaf 404/.test(laatste?.fouten ?? ''),
+    JSON.stringify(laatste));
+
+  // En een database zonder logboek (schema.sql nog niet opnieuw gedraaid):
+  // de sync gaat gewoon door.
+  const bewaard = wereld.sync_runs;
+  delete wereld.sync_runs;
+  const { code: zonder, log } = await sync();
+  wereld.sync_runs = bewaard;
+  check('zonder tabel voor het logboek draait de sync gewoon door',
+    zonder === 0 && /Logboek niet weggeschreven/.test(log), log.slice(-300));
 }
 
 server.close();

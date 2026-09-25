@@ -2669,15 +2669,24 @@ const ENGELS = Object.fromEntries([
    + 'like any web server, sees your IP address when you open it. The calendar, '
    + 'the drivers and the results come from OpenF1; nothing of yours is in there.'],
   ['<b>Wat er niet gebeurt</b><br>'
-   + 'Geen advertenties, geen analytics, geen trackers, en er wordt niets '
+   + 'Geen advertenties, geen trackers van anderen, en er wordt niets '
    + 'doorverkocht of gedeeld. De lettertypen staan in de app zelf, dus daar '
    + 'gaat niets naartoe. Eén ding komt nog van buiten: de code waarmee de app '
    + 'met de database praat, van esm.sh. Die ziet daarbij je IP-adres.',
    '<b>What does not happen</b><br>'
-   + 'No ads, no analytics, no trackers, and nothing is sold on or shared. The '
+   + 'No ads, no trackers from others, and nothing is sold on or shared. The '
    + 'fonts are in the app itself, so nothing goes there. One thing still comes '
    + 'from outside: the code the app uses to talk to the database, from esm.sh. '
    + 'That sees your IP address.'],
+  ['<b>Tellen</b><br>'
+   + 'Per dag telt de app hoe vaak hij geopend wordt, en welke accounts dat '
+   + 'deden. Dat laatste alleen om te kunnen zien hoeveel mensen er meespelen, '
+   + 'en het verdwijnt na vijf weken. Er komt geen cookie aan te pas en er wordt '
+   + 'geen IP-adres bewaard.',
+   '<b>Counting</b><br>'
+   + 'Each day the app counts how often it is opened, and which accounts did '
+   + 'so. The latter only to see how many people are playing, and it disappears '
+   + 'after five weeks. No cookie is involved and no IP address is stored.'],
   ['<b>Als je met Google inlogt</b><br>'
    + 'Dan weet Google dat je deze app gebruikt, en krijgt de app je naam en '
    + 'mailadres van Google. Dat gebeurt alleen als je er zelf voor kiest — '
@@ -5589,6 +5598,17 @@ const laatsteMetUitslag = () =>
 //  De app: zijbalk, kalender, detail
 // ============================================================
 
+// Hoe vaak de app geopend wordt, voor de beheerpagina: één keer per bezoek per
+// scherm (het beginscherm of een poule). Zonder cookies en zonder IP-adres; zie
+// tel_bezoek() in schema.sql en "Tellen" in de privacyverklaring. Lukt het
+// niet, dan merkt niemand dat.
+const GETELD = new Set();
+function telBezoek(pad) {
+  if (DEMO || !db || GETELD.has(pad)) return;
+  GETELD.add(pad);
+  Promise.resolve(db.rpc('tel_bezoek', { p_pad: pad })).catch(() => {});
+}
+
 function render() {
   // Eenmaal vastgelopen blijft het vangnet staan. Zonder dit zou de eerste de
   // beste achtergebleven handler het scherm overtekenen met precies dezelfde
@@ -5598,6 +5618,7 @@ function render() {
     if (S.maak)   { maakPagina(); return; }
     if (!S.poule) { toonStart(); return; }
     if (!S.ik)    { kiesSpeler(); return; }
+    telBezoek('app');
     toonApp();
   } catch (fout) {
     // De fout blijft een fout. Hij hoort in de console en daarmee in de
@@ -7156,10 +7177,15 @@ function privacyBlok() {
         + 'als elke webserver je IP-adres ziet als je hem opent. De kalender, de '
         + 'coureurs en de uitslagen komen van OpenF1; daar staat niets van jou in.')}</p>
       <p style="margin:0 0 10px">${T('<b>Wat er niet gebeurt</b><br>'
-        + 'Geen advertenties, geen analytics, geen trackers, en er wordt niets '
+        + 'Geen advertenties, geen trackers van anderen, en er wordt niets '
         + 'doorverkocht of gedeeld. De lettertypen staan in de app zelf, dus daar '
         + 'gaat niets naartoe. Eén ding komt nog van buiten: de code waarmee de app '
         + 'met de database praat, van esm.sh. Die ziet daarbij je IP-adres.')}</p>
+      <p style="margin:0 0 10px">${T('<b>Tellen</b><br>'
+        + 'Per dag telt de app hoe vaak hij geopend wordt, en welke accounts dat '
+        + 'deden. Dat laatste alleen om te kunnen zien hoeveel mensen er meespelen, '
+        + 'en het verdwijnt na vijf weken. Er komt geen cookie aan te pas en er wordt '
+        + 'geen IP-adres bewaard.')}</p>
       <p style="margin:0 0 10px">${T('<b>Als je met Google inlogt</b><br>'
         + 'Dan weet Google dat je deze app gebruikt, en krijgt de app je naam en '
         + 'mailadres van Google. Dat gebeurt alleen als je er zelf voor kiest — '
@@ -10328,6 +10354,7 @@ function knoopInlog() {
 }
 
 function toonStart() {
+  telBezoek('start');
   // Je poules van dit toestel bovenaan: wie er al bij hoort hoeft de code niet
   // opnieuw in te tikken, en wie in meer dan één poule zit kiest hier welke.
   const bekend = mijnPoules();

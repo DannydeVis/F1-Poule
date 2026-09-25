@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beheer · Predict the Race</title>
+<meta name="color-scheme" content="dark light">
+<!-- Het beheer hoort nergens in een zoekmachine. Er staat niets op zonder
+     inloggen, maar een lege inlogpagina in de zoekresultaten is ook niets. -->
+<meta name="robots" content="noindex, nofollow">
+<!-- Installeerbaar als eigen app, los van de speler-app: een eigen manifest,
+     een eigen scope (alleen beheer/) en een eigen pictogram, zodat hij op
+     een beginscherm niet met de app te verwarren is. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="pictogrammen/beheer-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="pictogrammen/beheer-apple-180.png">
+<meta name="theme-color" content="#f2f1ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="PTR Beheer">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+  /* Dezelfde lettertypen als de app, uit dezelfde map. Alleen de gewichten die
+     hier gebruikt worden. */
+  @font-face{font-family:'Barlow';font-style:normal;font-weight:400;font-display:swap;
+    src:url(../lettertypen/barlow-400-latin.woff2) format('woff2')}
+  @font-face{font-family:'Barlow';font-style:normal;font-weight:600;font-display:swap;
+    src:url(../lettertypen/barlow-600-latin.woff2) format('woff2')}
+  @font-face{font-family:'Barlow Condensed';font-style:normal;font-weight:700;font-display:swap;
+    src:url(../lettertypen/barlow-condensed-700-latin.woff2) format('woff2')}
+  @font-face{font-family:'Space Mono';font-style:normal;font-weight:400;font-display:swap;
+    src:url(../lettertypen/space-mono-400-latin.woff2) format('woff2')}
+
+  /* De kleuren van de app (app/index.html, :root), zodat het beheer er familie
+     van is. Licht en donker volgen het toestel. */
+  :root{
+    --bg:#f2f1ee; --paneel:#ffffff; --paneel2:#e9e8e4; --gedempt:#e0dedb;
+    --lijn:#dcdad5; --zweef:#f5f4f1;
+    --ink:#14151a; --ink2:#61656d; --ink3:#696e75;
+    --accent:#d93d24; --accent-ink:#ffffff; --accent-vlak:rgba(217,61,36,.08);
+    --groen:#117c3e; --groen-vlak:rgba(31,138,76,.12);
+    --amber:#986300; --amber-vlak:rgba(176,123,22,.10);
+    --rood:#b42318; --rood-vlak:rgba(180,35,24,.08);
+    --sans:Barlow,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+    --cond:"Barlow Condensed","Roboto Condensed","Arial Narrow",var(--sans);
+    --mono:"Space Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0b0b0c; --paneel:#15161a; --paneel2:#1d1f24; --gedempt:#2b2e35;
+      --lijn:#2b2e35; --zweef:#111216;
+      --ink:#f2f3f5; --ink2:#9aa0a8; --ink3:#7b818a;
+      --accent:#ee4d33; --accent-ink:#0b0b0c; --accent-vlak:rgba(238,77,51,.12);
+      --groen:#34b264; --groen-vlak:rgba(52,178,100,.16);
+      --amber:#e0a53a; --amber-vlak:rgba(224,165,58,.10);
+      --rood:#f26a52; --rood-vlak:rgba(242,106,82,.12);
+    }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45}
+  button,input,select{font:inherit;color:inherit}
+  button{cursor:pointer;border:0;background:none}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  a{color:inherit}
+  .label{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+  .mono{font-family:var(--mono);font-size:12px}
+  .zacht{color:var(--ink2)}
+  .klein{font-size:13px}
+  .groen{color:var(--groen)} .amber{color:var(--amber)} .rood{color:var(--rood)}
+
+  .knop{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;
+    padding:0 16px;border-radius:10px;border:1px solid var(--lijn);background:var(--paneel);
+    font-weight:600;font-size:14px;text-decoration:none;white-space:nowrap}
+  .knop:hover:not(:disabled){border-color:var(--ink3)}
+  .knop.primair{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .knop.primair:hover:not(:disabled){filter:brightness(1.08)}
+  .knop.gevaar{color:var(--rood);border-color:var(--rood)}
+  .knop.gevaar.zeker{background:var(--rood);color:#fff}
+  .knop:disabled{opacity:.5;cursor:default}
+  .knop.google svg{width:20px;height:20px}
+  .veld{width:100%;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--lijn);
+    background:var(--paneel);color:var(--ink)}
+  .veld::placeholder{color:var(--ink3)}
+  select.veld{padding-right:8px}
+
+  /* ---- kop en tabbladen ------------------------------------------------ */
+  .kop{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--lijn);
+    padding:calc(10px + env(safe-area-inset-top)) 0 0}
+  .kop-in{max-width:1200px;margin:0 auto;padding:0 16px}
+  .merk{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .merk img{width:26px;height:26px}
+  .merk .titel{font-family:var(--cond);font-weight:700;font-size:22px;text-transform:uppercase;
+    letter-spacing:.02em}
+  .merk .wie{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .tabs{display:flex;gap:4px;overflow-x:auto;margin-top:10px;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{min-height:44px;padding:0 14px;border-bottom:3px solid transparent;font-weight:600;
+    color:var(--ink2);white-space:nowrap}
+  .tab[aria-current="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+  .tab:hover{color:var(--ink)}
+  /* Op een telefoon passen de vijf tabbladen net naast elkaar, en is er voor
+     het mailadres in de kop geen plek. Minder belangrijke kolommen (.breed)
+     vallen weg, zodat een tabel niet opzij hoeft te schuiven. */
+  @media (max-width:600px){
+    .tab{padding:0 8px;font-size:14px}
+    .merk .wie .zacht{display:none}
+    .breed{display:none}
+  }
+
+  main{max-width:1200px;margin:0 auto;padding:18px 16px calc(40px + env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;gap:18px}
+  h1,h2,h3{margin:0;font-family:var(--cond);font-weight:700;line-height:1.1}
+  h1{font-size:28px;text-transform:uppercase}
+  h2{font-size:22px}
+  h3{font-size:18px}
+  .melding{padding:12px 14px;border-radius:10px;background:var(--groen-vlak);border:1px solid var(--groen)}
+  .melding.fout{background:var(--rood-vlak);border-color:var(--rood)}
+
+  .kaart{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;padding:16px;
+    display:flex;flex-direction:column;gap:12px;min-width:0;scroll-margin-top:120px}
+  .kaartkop{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .raster{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+  .twee{display:grid;gap:18px;grid-template-columns:1fr}
+  @media (min-width:900px){ .twee{grid-template-columns:1fr 1fr} }
+
+  /* Een getal met een label: de tegels van het overzicht. */
+  .tegel{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;padding:14px 16px;
+    display:flex;flex-direction:column;gap:4px}
+  .tegel .getal{font-size:34px;font-weight:600;line-height:1.05}
+  .tegel .sub{font-size:13px;color:var(--ink2)}
+
+  /* Status: altijd een teken en een woord, nooit alleen een kleur. */
+  .status{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:13px;
+    padding:2px 10px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+  .status.goed{color:var(--groen)} .status.let{color:var(--amber)} .status.mis{color:var(--rood)}
+
+  .lijst{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+  .lijst > li + li{border-top:1px solid var(--lijn)}
+  .regel{display:flex;align-items:center;gap:12px;padding:10px 4px;min-height:48px;width:100%;
+    text-align:left}
+  button.regel:hover{background:var(--zweef)}
+  .regel .nm{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .regel .rest{margin-left:auto;display:flex;align-items:center;gap:10px;flex:none}
+  .badge{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    padding:2px 7px;border-radius:6px;background:var(--paneel2);color:var(--ink2);white-space:nowrap}
+  .badge.google{color:var(--groen)} .badge.mail{color:var(--groen)}
+  .badge.anoniem{color:var(--amber)} .badge.geen,.badge.weg{color:var(--ink3)}
+
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink3);font-weight:400;padding:6px 8px;
+    border-bottom:1px solid var(--lijn);white-space:nowrap}
+  td{padding:8px;border-bottom:1px solid var(--lijn);vertical-align:top}
+  td.getal,th.getal{text-align:right;font-variant-numeric:tabular-nums}
+  .tabelvak{overflow-x:auto}
+  tr.klikbaar{cursor:pointer} tr.klikbaar:hover td{background:var(--zweef)}
+  tr[aria-selected="true"] td{background:var(--accent-vlak)}
+
+  .formulier{display:grid;gap:10px}
+  .formulier label{display:flex;flex-direction:column;gap:4px}
+  .schakel,.formulier label.schakel{display:flex;flex-direction:row;align-items:center;gap:10px;min-height:44px}
+  .schakel input{width:20px;height:20px;accent-color:var(--accent)}
+  .knoppen{display:flex;gap:8px;flex-wrap:wrap}
+  .zoek{display:flex;gap:8px;flex-wrap:wrap}
+  .zoek .veld{flex:1;min-width:200px}
+  pre.log{margin:0;white-space:pre-wrap;font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .code{font-family:var(--mono);letter-spacing:.12em}
+
+  /* De vergelijking met OpenF1: per plek bij ons en bij hen. */
+  .verschil td.anders{color:var(--rood);font-weight:600}
+
+  /* ---- grafieken -------------------------------------------------------
+     Eén reeks per grafiek, in het accent; dunne kolommen met een ronde kop op
+     een rechte basis, een haarlijn als raster, en een tooltip die niets
+     verbergt: alle getallen staan ook in de tabel eronder. */
+  .grafiek{position:relative}
+  .grafiek svg{display:block;width:100%;height:auto;overflow:visible}
+  .grafiek .kolom{fill:var(--accent)}
+  .grafiek .raak{fill:transparent}
+  .grafiek .raak:hover + .kolom,.grafiek .raak:focus + .kolom{filter:brightness(1.15)}
+  .grafiek .raster-lijn{stroke:var(--lijn);stroke-width:1}
+  .grafiek .as{font-family:var(--mono);font-size:10px;fill:var(--ink3)}
+  .grafiek .waarde{font-size:12px;font-weight:600;fill:var(--ink)}
+  .tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:8px;
+    padding:6px 10px;font-size:12px;transform:translate(-50%,-110%);white-space:nowrap;z-index:2}
+  .tip strong{display:block;font-size:14px}
+  .balken{display:flex;flex-direction:column;gap:8px}
+  .balk{display:grid;grid-template-columns:110px 1fr auto;align-items:center;gap:10px;font-size:14px}
+  .balk .spoor{height:14px;border-radius:0 4px 4px 0;background:var(--accent);min-width:2px}
+  .balk .getal{font-variant-numeric:tabular-nums;font-weight:600}
+  details.tabelweergave summary{cursor:pointer;color:var(--ink2);font-size:13px;min-height:32px;
+    display:flex;align-items:center}
+
+  /* ---- inloggen ---------------------------------------------------------- */
+  .toegang{max-width:440px;margin:8vh auto 0;padding:0 16px}
+  .toegang .kaart{padding:22px;gap:14px}
+  .toegang h1{display:flex;align-items:center;gap:10px}
+  .toegang h1 img{width:30px;height:30px}
+</style>
+</head>
+<body>
+<div id="beheer" aria-live="polite"></div>
+<script type="module">
+// ============================================================
+//  Beheer
+//
+//  Voor wie de hele site onderhoudt: alle poules, alle spelers, de data die
+//  de sync bij OpenF1 ophaalt, of de sync draait, en de statistieken.
+//
+//  Alles loopt via de beheerfuncties in schema.sql ("Beheer"). Die vragen elk
+//  eerst of je beheerder bent; deze pagina kan dus niets wat de database niet
+//  toestaat, ook niet als iemand hem namaakt. De sleutel hieronder is dezelfde
+//  publieke anon key als in de app. De service_role key komt hier niet, nooit.
+//
+//  Inloggen gaat met hetzelfde account als in de app. Op hetzelfde toestel
+//  deelt het beheer de sessie met de app (dezelfde site), dus wie daar al met
+//  zijn beheeradres is ingelogd, is hier meteen binnen.
+// ============================================================
+
+const SUPABASE_URL = 'https://etifamdwqxjfaeaordlr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0aWZhbWR3cXhqZmFlYW9yZGxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzMzNTUsImV4cCI6MjEwMzE0OTM1NX0.dI0HMZsO0JcmhF9ibD81ivVl96UCYInoUz94r8cAqio';
+const OPENF1 = 'https://api.openf1.org/v1';
+// Waar je de sync met de hand start. De knop "Run workflow" staat daar.
+const SYNC_KNOP = 'https://github.com/DannydeVis/F1-Poule/actions/workflows/sync.yml';
+
+const vak = document.getElementById('beheer');
+const esc = (s) => String(s ?? '').replace(/[<>&"]/g, (c) =>
+  ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+const getal = (n) => Number(n ?? 0).toLocaleString('nl-NL');
+const datum = (iso) => iso ? new Date(iso).toLocaleString('nl-NL',
+  { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+const dagKort = (iso) => new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+// "12 minuten geleden", "3 uur geleden", "2 dagen geleden".
+function geleden(iso) {
+  if (!iso) return '—';
+  const min = Math.round((Date.now() - Date.parse(iso)) / 6e4);
+  if (min < 1) return 'net';
+  if (min < 60) return `${min} min geleden`;
+  const uur = Math.round(min / 60);
+  if (uur < 48) return `${uur} uur geleden`;
+  return `${Math.round(uur / 24)} dagen geleden`;
+}
+
+let db = null;
+try {
+  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+  db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch { /* geen verbinding: toonFout() hieronder zegt het */ }
+
+// Alles wat het scherm nodig heeft.
+const B = {
+  tab: 'overzicht',
+  sessie: null,
+  overzicht: null, poules: [], spelers: [], races: [], sync: [], stats: null,
+  poule: null,          // de poule die open staat
+  speler: null,         // de speler die open staat
+  race: null,           // de race die open staat
+  seizoen: null,        // welk seizoen de races laten zien
+  zoekPoule: '', zoekSpeler: '', filterPoule: '',
+  controle: {},         // race-id -> wat OpenF1 zegt
+  melding: '', fout: '',
+};
+
+// Een beheerfunctie aanroepen. Een fout wordt een Error met de melding uit de
+// database, zodat een knop hem kan tonen.
+async function rpc(naam, args) {
+  const { data, error } = await db.rpc(naam, args);
+  if (error) throw new Error(error.message || 'Er ging iets mis');
+  return data;
+}
+
+// ---- binnenkomen ------------------------------------------------------------
+
+const terug = () => location.origin + location.pathname;
+
+async function start() {
+  if (!db) return toonFout('Geen verbinding met de database. Probeer het zo nog eens.');
+  const { data } = await db.auth.getSession();
+  B.sessie = data?.session ?? null;
+  if (!B.sessie) return toonInloggen();
+  const { data: ok, error } = await db.rpc('ik_ben_beheerder');
+  if (error) return toonFout(error.message);
+  if (!ok) return toonGeenToegang();
+  await laadAlles();
+}
+
+function toegang(inhoud) {
+  vak.innerHTML = `<div class="toegang"><div class="kaart">
+    <h1><img src="../pictogrammen/predicttherace-logo.png" alt="">Beheer</h1>${inhoud}</div></div>`;
+}
+
+const GOOGLE_G = `<svg viewBox="0 0 48 48" aria-hidden="true">
+  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+</svg>`;
+
+function toonInloggen(bericht = '') {
+  toegang(`
+    <p class="zacht" style="margin:0">Log in met het beheeradres: hetzelfde account als in de app.</p>
+    <button class="knop google" id="google" type="button">${GOOGLE_G}Inloggen met Google</button>
+    <form id="mailform" class="formulier">
+      <label><span class="label">of met een inloglink</span>
+        <input class="veld" id="mail" type="email" autocomplete="email" placeholder="je mailadres" required></label>
+      <button class="knop" type="submit">Stuur me een inloglink</button>
+    </form>
+    <p class="zacht klein" id="inlogbericht" style="margin:0">${esc(bericht)}</p>`);
+  vak.querySelector('#google').onclick = async () => {
+    const { error } = await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: terug() } });
+    if (error) vak.querySelector('#inlogbericht').textContent = error.message;
+  };
+  vak.querySelector('#mailform').onsubmit = async (ev) => {
+    ev.preventDefault();
+    const mail = vak.querySelector('#mail').value.trim();
+    // Alleen een bestaand account: het beheer maakt geen nieuwe accounts aan.
+    const { error } = await db.auth.signInWithOtp({ email: mail,
+      options: { shouldCreateUser: false, emailRedirectTo: terug() } });
+    vak.querySelector('#inlogbericht').textContent = error
+      ? 'Bij dat adres hoort geen account.'
+      : `We hebben een inloglink gestuurd naar ${mail}.`;
+  };
+}
+
+// Ingelogd, maar geen beheerder. Twee gevallen die iets anders vragen.
+function toonGeenToegang() {
+  const u = B.sessie.user;
+  if (u?.is_anonymous) {
+    // Een anoniem account van de app op dit toestel. Hier met Google inloggen
+    // zou de sessie vervangen die de app ook gebruikt, en dan is de speler op
+    // dit toestel zijn account kwijt. Dus niet hier inloggen, maar eerst
+    // koppelen in de app.
+    return toegang(`
+      <p style="margin:0">Op dit toestel speel je in de app zonder gekoppeld account.</p>
+      <p class="zacht" style="margin:0">Koppel eerst je beheeradres in de app (Profiel → je account
+        meenemen). Daarna ben je hier meteen binnen. Hier inloggen zou je speler op dit toestel
+        loskoppelen.</p>
+      <a class="knop primair" href="../app/">Naar de app</a>`);
+  }
+  toegang(`
+    <p style="margin:0">Dit account (${esc(u?.email ?? 'zonder mailadres')}) is geen beheerder.</p>
+    <p class="zacht" style="margin:0">Beheerder word je met het beheeradres in schema.sql. Zie
+      BEDIENING.md, "Het beheer".</p>
+    <div class="knoppen"><a class="knop" href="../app/">Naar de app</a>
+      <button class="knop" id="uit" type="button">Uitloggen</button></div>
+    <p class="zacht klein" style="margin:0">Uitloggen geldt op dit toestel ook voor de app.</p>`);
+  vak.querySelector('#uit').onclick = async () => { await db.auth.signOut(); location.reload(); };
+}
+
+function toonFout(tekst) {
+  toegang(`<p class="melding fout" style="margin:0">${esc(tekst)}</p>
+    <button class="knop" type="button" onclick="location.reload()">Opnieuw proberen</button>`);
+}
+
+// ---- laden -----------------------------------------------------------------
+
+async function laadAlles() {
+  try {
+    const [overzicht, poules, spelers, sync, stats, races] = await Promise.all([
+      rpc('beheer_overzicht'), rpc('beheer_poules'), rpc('beheer_spelers', { p_pool: null }),
+      rpc('beheer_sync'), rpc('beheer_statistieken'),
+      db.from('races').select('*').order('season').order('round'),
+    ]);
+    if (races.error) throw new Error(races.error.message);
+    races.data?.sort((a, b) => a.season - b.season || a.round - b.round);
+    Object.assign(B, { overzicht, poules: poules ?? [], spelers: spelers ?? [], sync: sync ?? [],
+                       stats, races: races.data ?? [] });
+    B.seizoen ??= overzicht?.seizoen ?? B.races.at(-1)?.season ?? new Date().getFullYear();
+    B.fout = '';
+  } catch (e) {
+    B.fout = e.message;
+  }
+  render();
+}
+
+// Na een wijziging: melding tonen en opnieuw laden, zodat alles klopt.
+async function doe(werk, melding) {
+  try {
+    await werk();
+    B.melding = melding; B.fout = '';
+  } catch (e) {
+    B.melding = ''; B.fout = e.message;
+  }
+  await laadAlles();
+}
+
+// ---- tekenen ---------------------------------------------------------------
+
+const TABS = { overzicht: 'Overzicht', poules: 'Poules', spelers: 'Spelers',
+               data: 'Data', statistieken: 'Statistieken' };
+
+function render() {
+  const email = B.sessie?.user?.email ?? '';
+  vak.innerHTML = `
+    <header class="kop"><div class="kop-in">
+      <div class="merk">
+        <img src="../pictogrammen/predicttherace-logo.png" alt="">
+        <span class="titel">Beheer</span>
+        <span class="wie"><span class="zacht klein">${esc(email)}</span>
+          <button class="knop" id="vernieuw" type="button">Vernieuwen</button></span>
+      </div>
+      <nav class="tabs" aria-label="Onderdelen">${Object.entries(TABS).map(([k, naam]) =>
+        `<button class="tab" type="button" data-tab="${k}" aria-current="${B.tab === k}">${naam}</button>`).join('')}</nav>
+    </div></header>
+    <main>
+      ${B.melding ? `<p class="melding" role="status" style="margin:0">${esc(B.melding)}</p>` : ''}
+      ${B.fout ? `<p class="melding fout" role="alert" style="margin:0">${esc(B.fout)}</p>` : ''}
+      ${({ overzicht: overzichtTab, poules: poulesTab, spelers: spelersTab,
+           data: dataTab, statistieken: statistiekenTab })[B.tab]()}
+    </main>`;
+  vak.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => {
+    B.tab = b.dataset.tab; B.melding = ''; render();
+  });
+  vak.querySelector('#vernieuw').onclick = () => { B.melding = ''; laadAlles(); };
+  knopen[B.tab]?.();
+}
+
+// ---- overzicht -------------------------------------------------------------
+
+// Hoe het met de sync staat, als een status met teken en woord.
+function syncStatus(run) {
+  if (!run) return { soort: 'mis', teken: '✕', tekst: 'Nog nooit gedraaid' };
+  if (run.ok === false) return { soort: 'mis', teken: '✕', tekst: 'Mislukt' };
+  const uur = (Date.now() - Date.parse(run.gestart)) / 36e5;
+  if (uur > 6) return { soort: 'let', teken: '!', tekst: 'Lang niet gedraaid' };
+  return { soort: 'goed', teken: '✓', tekst: 'Draait' };
+}
+
+// Wat aandacht nodig heeft, uit de races zelf: een sessie die al uren voorbij
+// is zonder uitslag, een race die binnenkort begint zonder coureurs.
+const SESSIES = [
+  ['sprint', 'deadline_sprint', 'sprint_result', 'Sprint', 1],
+  ['quali', 'deadline_quali', 'quali_result', 'Kwalificatie', 1],
+  ['race', 'deadline_race', 'race_result', 'Race', 2],
+];
+function aandachtspunten() {
+  const uit = [];
+  const nu = Date.now();
+  for (const r of B.races.filter((x) => x.season === B.overzicht?.seizoen)) {
+    if (r.afgelast) continue;
+    for (const [, deadline, uitslag, naam, duur] of SESSIES) {
+      if (!r[deadline]) continue;
+      const uren = (nu - Date.parse(r[deadline])) / 36e5 - duur;
+      if (uren > 6 && !r[uitslag]?.length) {
+        uit.push({ race: r, tekst: `${naam} van ronde ${r.round} ${r.name} heeft na ${Math.round(uren)} uur nog geen uitslag` });
+      }
+    }
+    const eerste = Math.min(...['deadline_sprint', 'deadline_quali', 'deadline_race']
+      .map((k) => Date.parse(r[k] ?? '')).filter(Number.isFinite));
+    const dagen = (eerste - nu) / 864e5;
+    if (dagen > 0 && dagen < 4 && !(r.drivers ?? []).length) {
+      uit.push({ race: r, tekst: `Ronde ${r.round} ${r.name} begint over ${Math.max(1, Math.round(dagen))} dag(en) en heeft nog geen coureurs` });
+    }
+  }
+  return uit;
+}
+
+function overzichtTab() {
+  const o = B.overzicht ?? {};
+  const run = o.laatste_sync;
+  const s = syncStatus(run);
+  const punten = aandachtspunten();
+  const tegel = (label, waarde, sub = '') => `<div class="tegel">
+    <span class="label">${label}</span><span class="getal">${waarde}</span>
+    ${sub ? `<span class="sub">${sub}</span>` : ''}</div>`;
+  return `
+    <h1>Overzicht</h1>
+    <div class="raster">
+      ${tegel('Spelers', getal(o.spelers), `${getal(o.nieuwe_spelers_7d)} nieuw deze week`)}
+      ${tegel('Poules', getal(o.poules), `${getal(o.poules_openbaar)} openbaar`)}
+      ${tegel('Actief vandaag', getal(o.actief_vandaag), `${getal(o.actief_7d)} in 7 dagen`)}
+      ${tegel('Bezoeken vandaag', getal(o.bezoeken_vandaag), `${getal(o.bezoeken_7d)} in 7 dagen`)}
+      ${tegel('Inzendingen', getal(o.inzendingen_7d), 'in 7 dagen')}
+      ${tegel('Gekoppelde accounts', getal(o.gekoppeld), `van ${getal(o.accounts)} accounts`)}
+    </div>
+    <section class="kaart" id="synckaart">
+      <div class="kaartkop"><h2>Sync</h2>
+        <span class="status ${s.soort}"><span aria-hidden="true">${s.teken}</span>${s.tekst}</span></div>
+      <p style="margin:0">${run ? `Laatst gedraaid ${esc(geleden(run.gestart))} (${esc(datum(run.gestart))}),
+        ${getal(run.bijgewerkt)} race(s) bijgewerkt.` : 'Er staat nog geen run in het logboek.'}</p>
+      ${run?.fouten ? `<pre class="log rood">${esc(run.fouten)}</pre>` : ''}
+      <div class="knoppen"><a class="knop" href="${SYNC_KNOP}" target="_blank" rel="noopener">Sync nu draaien</a>
+        <button class="knop" type="button" data-naar="data">Logboek en races</button></div>
+    </section>
+    <section class="kaart" id="aandacht">
+      <div class="kaartkop"><h2>Aandacht nodig</h2>
+        <span class="status ${punten.length ? 'let' : 'goed'}"><span aria-hidden="true">${punten.length ? '!' : '✓'}</span>${
+          punten.length ? `${punten.length} punt(en)` : 'Niets'}</span></div>
+      ${punten.length ? `<ul class="lijst">${punten.map((p) => `<li><button class="regel" type="button"
+          data-race="${esc(p.race.id)}"><span>${esc(p.tekst)}</span><span class="rest zacht">bekijken →</span></button></li>`).join('')}</ul>`
+        : '<p class="zacht" style="margin:0">Alle gereden sessies hebben een uitslag, en de volgende race heeft coureurs.</p>'}
+    </section>`;
+}
+
+// ---- poules ----------------------------------------------------------------
+
+function poulesTab() {
+  const zoek = B.zoekPoule.toLowerCase();
+  const lijst = B.poules.filter((p) => !zoek
+    || `${p.name} ${p.join_code} ${p.eigenaar ?? ''}`.toLowerCase().includes(zoek));
+  const open = B.poules.find((p) => p.id === B.poule);
+  return `
+    <h1>Poules</h1>
+    <div class="zoek"><input class="veld" id="zoekpoule" type="search" placeholder="Zoek op naam, code of poulebaas"
+      value="${esc(B.zoekPoule)}" aria-label="Zoek een poule"></div>
+    <div class="${open ? 'twee' : ''}">
+      <section class="kaart"><div class="tabelvak"><table>
+        <thead><tr><th>Poule</th><th>Code</th><th class="getal">Spelers</th><th class="breed">Poulebaas</th><th class="breed">Laatste inzending</th></tr></thead>
+        <tbody>${lijst.map((p) => `<tr class="klikbaar" data-poule="${esc(p.id)}" aria-selected="${p.id === B.poule}" tabindex="0">
+          <td><strong>${esc(p.name)}</strong>${p.is_public ? ' <span class="badge">openbaar</span>' : ''}
+            <div class="zacht klein">seizoen ${esc(p.season)}</div></td>
+          <td class="code">${esc(p.join_code)}</td>
+          <td class="getal">${getal(p.spelers)}</td>
+          <td class="breed">${esc(p.eigenaar ?? '—')}</td>
+          <td class="zacht breed">${esc(geleden(p.laatste_inzending))}</td></tr>`).join('')
+          || '<tr><td colspan="5" class="zacht">Geen poules gevonden.</td></tr>'}</tbody>
+      </table></div></section>
+      ${open ? pouleDetail(open) : ''}
+    </div>`;
+}
+
+function pouleDetail(p) {
+  const leden = B.spelers.filter((s) => s.pool_id === p.id);
+  return `
+    <section class="kaart" id="pouledetail">
+      <div class="kaartkop"><h2>${esc(p.name)}</h2><span class="code">${esc(p.join_code)}</span></div>
+      <p class="zacht klein" style="margin:0">${getal(p.spelers)} spelers, ${getal(p.accounts)} met een account,
+        ${getal(p.inzendingen)} inzendingen, ${getal(p.vragen)} vragen. Aangemaakt ${esc(datum(p.created_at))}.</p>
+      <form class="formulier" id="pouleform">
+        <label><span class="label">Naam</span><input class="veld" name="name" value="${esc(p.name)}" required></label>
+        <label><span class="label">Omschrijving</span><input class="veld" name="beschrijving" value="${esc(p.beschrijving ?? '')}"></label>
+        <label><span class="label">Poulebaas</span><select class="veld" name="owner_member_id">
+          <option value="">Niemand</option>
+          ${leden.map((s) => `<option value="${esc(s.member_id)}" ${s.member_id === p.owner_member_id ? 'selected' : ''}>${esc(s.naam)}</option>`).join('')}
+        </select></label>
+        <label class="schakel"><input type="checkbox" name="is_public" ${p.is_public ? 'checked' : ''}>Openbaar: vindbaar zonder code</label>
+        <div class="knoppen"><button class="knop primair" type="submit">Opslaan</button>
+          <button class="knop" type="button" data-spelers-van="${esc(p.id)}">Spelers bekijken</button></div>
+      </form>
+      <details><summary class="zacht klein">Poule verwijderen</summary>
+        <div class="formulier" style="margin-top:10px">
+          <p class="zacht klein" style="margin:0">Alle spelers, inzendingen en jokers van deze poule gaan mee. Dit is niet
+            terug te draaien. Tik de naam van de poule over om het te bevestigen.</p>
+          <input class="veld" id="bevestignaam" autocomplete="off" aria-label="Naam van de poule ter bevestiging">
+          <button class="knop gevaar" type="button" id="pouleweg" disabled>Poule verwijderen</button>
+        </div></details>
+    </section>`;
+}
+
+// ---- spelers ---------------------------------------------------------------
+
+const ACCOUNT = { google: 'Google', mail: 'mailadres', anoniem: 'alleen dit toestel',
+                  geen: 'geen account', weg: 'account weg' };
+
+function spelersTab() {
+  const zoek = B.zoekSpeler.toLowerCase();
+  const lijst = B.spelers.filter((s) => (!B.filterPoule || s.pool_id === B.filterPoule)
+    && (!zoek || `${s.naam} ${s.poule} ${s.email ?? ''}`.toLowerCase().includes(zoek)));
+  const open = B.spelers.find((s) => s.member_id === B.speler);
+  return `
+    <h1>Spelers</h1>
+    <div class="zoek">
+      <input class="veld" id="zoekspeler" type="search" placeholder="Zoek op naam, poule of mailadres"
+        value="${esc(B.zoekSpeler)}" aria-label="Zoek een speler">
+      <select class="veld" id="filterpoule" style="flex:0 1 240px" aria-label="Alleen spelers van deze poule">
+        <option value="">Alle poules</option>
+        ${B.poules.map((p) => `<option value="${esc(p.id)}" ${p.id === B.filterPoule ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}
+      </select>
+    </div>
+    <p class="zacht klein" style="margin:0">${getal(lijst.length)} van ${getal(B.spelers.length)} spelers</p>
+    <div class="${open ? 'twee' : ''}">
+      <section class="kaart"><div class="tabelvak"><table>
+        <thead><tr><th>Speler</th><th>Poule</th><th>Account</th><th class="getal breed">Inzendingen</th><th class="breed">Laatst</th></tr></thead>
+        <tbody>${lijst.map((s) => `<tr class="klikbaar" data-speler="${esc(s.member_id)}" aria-selected="${s.member_id === B.speler}" tabindex="0">
+          <td><strong>${esc(s.naam)}</strong>${s.poulebaas ? ' <span class="badge">poulebaas</span>' : ''}
+            ${s.email ? `<div class="zacht klein">${esc(s.email)}</div>` : ''}</td>
+          <td>${esc(s.poule)}</td>
+          <td><span class="badge ${esc(s.account)}">${esc(ACCOUNT[s.account] ?? s.account)}</span></td>
+          <td class="getal breed">${getal(s.inzendingen)}</td>
+          <td class="zacht breed">${esc(geleden(s.laatste_inzending))}</td></tr>`).join('')
+          || '<tr><td colspan="5" class="zacht">Geen spelers gevonden.</td></tr>'}</tbody>
+      </table></div></section>
+      ${open ? spelerDetail(open) : ''}
+    </div>`;
+}
+
+function spelerDetail(s) {
+  return `
+    <section class="kaart" id="spelerdetail">
+      <div class="kaartkop"><h2>${esc(s.naam)}</h2><span class="badge ${esc(s.account)}">${esc(ACCOUNT[s.account] ?? s.account)}</span></div>
+      <table><tbody>
+        <tr><td class="zacht">Poule</td><td>${esc(s.poule)}${s.poulebaas ? ' (poulebaas)' : ''}</td></tr>
+        <tr><td class="zacht">Mailadres</td><td>${esc(s.email ?? '—')}</td></tr>
+        <tr><td class="zacht">Laatst ingelogd</td><td>${esc(datum(s.laatst_ingelogd))}</td></tr>
+        <tr><td class="zacht">Inzendingen</td><td>${getal(s.inzendingen)}, laatste ${esc(geleden(s.laatste_inzending))}</td></tr>
+        <tr><td class="zacht">Meldingen</td><td>${s.meldingen ? `aan op ${getal(s.meldingen)} toestel(len)` : 'uit'}</td></tr>
+        <tr><td class="zacht">Gedeelde pagina</td><td>${s.profiel ? 'ja' : 'nee'}</td></tr>
+        <tr><td class="zacht">Speler sinds</td><td>${esc(datum(s.aangemaakt))}</td></tr>
+      </tbody></table>
+      <form class="formulier" id="spelerform">
+        <label><span class="label">Naam</span><input class="veld" name="naam" value="${esc(s.naam)}" required></label>
+        <div class="knoppen"><button class="knop primair" type="submit">Naam opslaan</button></div>
+      </form>
+      <div class="knoppen">
+        ${s.user_id ? `<button class="knop" type="button" id="losmaken">Losmaken van het account</button>` : ''}
+        <button class="knop gevaar" type="button" id="spelerweg">Speler verwijderen</button>
+      </div>
+      <p class="zacht klein" style="margin:0">Losmaken: wie zich daarna als ${esc(s.naam)} aanmeldt, is ${esc(s.naam)}.
+        Voor iemand op een nieuw toestel die zijn account niet had gekoppeld. Verwijderen neemt de inzendingen mee.</p>
+    </section>`;
+}
+
+// ---- data: de sync en de races ---------------------------------------------
+
+const code = (r, nr) => (r.drivers ?? []).find((d) => String(d.nr) === String(nr))?.code ?? `#${nr}`;
+
+function uitslagCel(r, veld, hand, deadline) {
+  if (!r[deadline]) return '<td class="zacht">—</td>';
+  const lijst = r[veld];
+  if (lijst?.length) return `<td><span class="status goed"><span aria-hidden="true">✓</span>${lijst.length}</span>${
+    r[hand] ? ' <span class="badge">met de hand</span>' : ''}</td>`;
+  const voorbij = Date.now() > Date.parse(r[deadline]);
+  return `<td>${voorbij ? '<span class="status let"><span aria-hidden="true">!</span>wacht</span>'
+                        : '<span class="zacht">nog niet</span>'}</td>`;
+}
+
+function dataTab() {
+  const seizoenen = [...new Set(B.races.map((r) => r.season))];
+  const races = B.races.filter((r) => r.season === B.seizoen);
+  const open = B.races.find((r) => String(r.id) === String(B.race));
+  return `
+    <h1>Data</h1>
+    <section class="kaart" id="logboek">
+      <div class="kaartkop"><h2>Logboek van de sync</h2>
+        <a class="knop" href="${SYNC_KNOP}" target="_blank" rel="noopener">Sync nu draaien</a></div>
+      <p class="zacht klein" style="margin:0">Elke run van de sync schrijft hier wat hij deed. De laatste vijftig,
+        een maand terug.</p>
+      ${B.sync.length ? `<div class="tabelvak"><table>
+        <thead><tr><th>Wanneer</th><th>Status</th><th class="getal breed">Bijgewerkt</th><th>Wat</th></tr></thead>
+        <tbody>${B.sync.slice(0, 15).map((run) => `<tr>
+          <td>${esc(datum(run.gestart))}<div class="zacht klein">${esc(geleden(run.gestart))}</div></td>
+          <td>${run.ok === false ? '<span class="status mis"><span aria-hidden="true">✕</span>mislukt</span>'
+                                 : '<span class="status goed"><span aria-hidden="true">✓</span>ok</span>'}</td>
+          <td class="getal breed">${getal(run.bijgewerkt)}</td>
+          <td><pre class="log">${esc(run.samenvatting ?? '')}</pre>${run.fouten ? `<pre class="log rood">${esc(run.fouten)}</pre>` : ''}</td>
+        </tr>`).join('')}</tbody></table></div>`
+        : '<p class="zacht" style="margin:0">Nog niets in het logboek. Draai schema.sql opnieuw als dat nog niet gebeurd is; daarna schrijft elke run een regel.</p>'}
+    </section>
+    <section class="kaart" id="races">
+      <div class="kaartkop"><h2>Races</h2>
+        <select class="veld" id="seizoen" style="width:auto" aria-label="Seizoen">${seizoenen.map((j) =>
+          `<option ${j === B.seizoen ? 'selected' : ''}>${j}</option>`).join('')}</select></div>
+      <div class="tabelvak"><table>
+        <thead><tr><th class="breed">Ronde</th><th>Race</th><th class="getal breed">Coureurs</th><th>Sprint</th><th>Kwali</th><th>Race</th></tr></thead>
+        <tbody>${races.map((r) => `<tr class="klikbaar" data-race="${esc(r.id)}" aria-selected="${String(r.id) === String(B.race)}" tabindex="0">
+          <td class="mono breed">${esc(r.round)}</td>
+          <td><strong>${esc(r.name)}</strong>${r.afgelast ? ' <span class="badge">afgelast</span>' : ''}
+            <div class="zacht klein">${esc(r.country ?? '')} · ${esc(datum(r.deadline_race))}</div></td>
+          <td class="getal breed">${(r.drivers ?? []).length || '<span class="amber">0</span>'}</td>
+          ${uitslagCel(r, 'sprint_result', 'sprint_handmatig', 'deadline_sprint')}
+          ${uitslagCel(r, 'quali_result', 'quali_handmatig', 'deadline_quali')}
+          ${uitslagCel(r, 'race_result', 'race_handmatig', 'deadline_race')}
+        </tr>`).join('') || '<tr><td colspan="6" class="zacht">Geen races in dit seizoen.</td></tr>'}</tbody>
+      </table></div>
+    </section>
+    ${open ? raceDetail(open) : ''}`;
+}
+
+// Welke sessies een race heeft, met de sleutel waaronder OpenF1 hem kent.
+const SESSIE_VELDEN = [
+  { naam: 'Sprint', sleutel: 'sprint_key', veld: 'sprint_result', hand: 'sprint_handmatig', deadline: 'deadline_sprint' },
+  { naam: 'Kwalificatie', sleutel: 'quali_key', veld: 'quali_result', hand: 'quali_handmatig', deadline: 'deadline_quali' },
+  { naam: 'Race', sleutel: 'race_key', veld: 'race_result', hand: 'race_handmatig', deadline: 'deadline_race' },
+];
+
+function raceDetail(r) {
+  const controle = B.controle[r.id];
+  return `
+    <section class="kaart" id="racedetail">
+      <div class="kaartkop"><h2>Ronde ${esc(r.round)} · ${esc(r.name)}</h2>
+        <label class="schakel"><input type="checkbox" id="afgelast" ${r.afgelast ? 'checked' : ''}>Afgelast</label></div>
+      <p class="zacht klein" style="margin:0">${(r.drivers ?? []).length} coureurs:
+        ${(r.drivers ?? []).map((d) => esc(d.code)).join(' ') || 'nog geen'}</p>
+      ${SESSIE_VELDEN.filter((s) => r[s.deadline]).map((s) => {
+        const eigen = r[s.veld] ?? [];
+        const hun = controle?.[s.veld];
+        const gelijk = hun && hun.length === eigen.length && hun.every((nr, i) => String(nr) === String(eigen[i]));
+        return `<div class="kaart" style="padding:12px" data-sessie="${s.veld}">
+          <div class="kaartkop"><h3>${s.naam}</h3>
+            <span class="zacht klein">${esc(datum(r[s.deadline]))}${r[s.hand] ? ' · met de hand' : ''}</span></div>
+          <p class="mono" style="margin:0">${eigen.length ? eigen.map((nr, i) => `P${i + 1} ${esc(code(r, nr))}`).join(' · ') : 'Nog geen uitslag'}</p>
+          ${hun === null ? '<p class="zacht klein" style="margin:0">OpenF1 heeft hier (nog) niets voor.</p>'
+            : hun ? (gelijk ? '<p style="margin:0"><span class="status goed"><span aria-hidden="true">✓</span>Gelijk aan OpenF1</span></p>'
+              : `<p style="margin:0"><span class="status mis"><span aria-hidden="true">✕</span>Anders dan OpenF1</span></p>
+                 ${verschilTabel(r, eigen, hun)}
+                 <div class="knoppen"><button class="knop primair" type="button" data-overnemen="${s.veld}">Neem de uitslag van OpenF1 over</button></div>`)
+            : ''}
+          ${eigen.length ? `<div class="knoppen"><button class="knop gevaar" type="button" data-leeg="${s.veld}">Uitslag leegmaken</button></div>` : ''}
+        </div>`;
+      }).join('')}
+      <div class="knoppen"><button class="knop" type="button" id="controleer" ${r.race_key || r.quali_key ? '' : 'disabled'}>Controleer bij OpenF1</button></div>
+      <p class="zacht klein" style="margin:0">Leegmaken laat de sync de uitslag de volgende ronde opnieuw ophalen.
+        Overnemen zet de uitslag van OpenF1 erin; de sync mag hem daarna nog verbeteren (een straf achteraf).</p>
+    </section>`;
+}
+
+function verschilTabel(r, eigen, hun) {
+  const n = Math.max(eigen.length, hun.length);
+  return `<div class="tabelvak"><table class="verschil"><thead><tr><th>Plek</th><th>Bij ons</th><th>Bij OpenF1</th></tr></thead><tbody>${
+    Array.from({ length: n }, (_, i) => {
+      const anders = String(eigen[i] ?? '') !== String(hun[i] ?? '');
+      return anders ? `<tr><td class="mono">P${i + 1}</td><td class="anders">${eigen[i] ? esc(code(r, eigen[i])) : '—'}</td>
+        <td class="anders">${hun[i] ? esc(code(r, hun[i])) : '—'}</td></tr>` : '';
+    }).join('')}</tbody></table></div>`;
+}
+
+// OpenF1 zelf vragen wat de uitslag is, rechtstreeks vanuit de browser: de
+// API is openbaar. Per sessie de klassering op volgorde, net zoals de sync
+// hem ophaalt (session_result). null = OpenF1 heeft er niets voor.
+async function vraagOpenF1(r) {
+  const uit = {};
+  for (const s of SESSIE_VELDEN) {
+    if (!r[s.sleutel] || !r[s.deadline]) continue;
+    try {
+      const res = await fetch(`${OPENF1}/session_result?session_key=${encodeURIComponent(r[s.sleutel])}`);
+      if (!res.ok) { uit[s.veld] = null; continue; }
+      const rijen = await res.json();
+      const lijst = (Array.isArray(rijen) ? rijen : [])
+        .filter((x) => Number.isFinite(Number(x.position)) && x.position !== null)
+        .sort((a, b) => a.position - b.position)
+        .map((x) => String(x.driver_number));
+      uit[s.veld] = lijst.length ? lijst : null;
+    } catch {
+      throw new Error('OpenF1 is niet bereikbaar. Probeer het zo nog eens.');
+    }
+  }
+  return uit;
+}
+
+// ---- statistieken ----------------------------------------------------------
+
+function statistiekenTab() {
+  const st = B.stats ?? {};
+  const races = st.inzendingen_per_race ?? [];
+  const accounts = st.accounts ?? {};
+  const totaalAcc = Object.values(accounts).reduce((a, b) => a + b, 0) || 1;
+  return `
+    <h1>Statistieken</h1>
+    <div class="twee">
+      <section class="kaart">
+        <div class="kaartkop"><h2>Bezoeken per dag</h2><span class="zacht klein">keren dat de app geopend werd, 30 dagen</span></div>
+        ${kolommen({ id: 'bezoeken', reeks: st.bezoeken_per_dag ?? [], waarde: (d) => d.bezoeken,
+                     label: (d) => dagKort(d.dag), eenheid: 'bezoeken' })}
+      </section>
+      <section class="kaart">
+        <div class="kaartkop"><h2>Actieve spelers per dag</h2><span class="zacht klein">accounts die de app openden, 30 dagen</span></div>
+        ${kolommen({ id: 'actief', reeks: st.bezoeken_per_dag ?? [], waarde: (d) => d.actief,
+                     label: (d) => dagKort(d.dag), eenheid: 'spelers' })}
+      </section>
+      <section class="kaart">
+        <div class="kaartkop"><h2>Nieuwe spelers per week</h2><span class="zacht klein">het afgelopen halfjaar</span></div>
+        ${kolommen({ id: 'nieuw', reeks: st.spelers_per_week ?? [], waarde: (d) => d.aantal,
+                     label: (d) => `week van ${dagKort(d.week)}`, eenheid: 'nieuwe spelers' })}
+      </section>
+      <section class="kaart">
+        <div class="kaartkop"><h2>Ingeleverd per race</h2><span class="zacht klein">% van de spelers, seizoen ${esc(st.seizoen ?? '')}</span></div>
+        ${kolommen({ id: 'races', reeks: races, waarde: (d) => d.spelers ? Math.round(100 * d.inzenders / d.spelers) : 0,
+                     label: (d) => `ronde ${d.ronde} ${d.naam}`, eenheid: '%', max: 100,
+                     extra: (d) => `${d.inzenders} van ${d.spelers} spelers` })}
+      </section>
+    </div>
+    <section class="kaart">
+      <div class="kaartkop"><h2>Accounts achter de spelers</h2><span class="zacht klein">wie zijn browser leegmaakt zonder koppeling is zijn speler kwijt</span></div>
+      <div class="balken">${['google', 'mail', 'anoniem', 'geen', 'weg'].filter((k) => accounts[k]).map((k) => `
+        <div class="balk"><span>${esc(ACCOUNT[k])}</span>
+          <span class="spoor" style="width:${(100 * accounts[k] / totaalAcc).toFixed(1)}%"></span>
+          <span class="getal">${getal(accounts[k])}</span></div>`).join('') || '<p class="zacht">Nog geen spelers.</p>'}</div>
+    </section>`;
+}
+
+// Een kolomgrafiek met één reeks. Dunne kolommen (hooguit 24 pixels) met een
+// ronde kop en een rechte voet, een haarlijn op nul, de middenwaarde en het
+// maximum, en de laatste kolom met zijn getal erbij. Elke kolom heeft een
+// tooltip op muis en toetsenbord; de tabel eronder heeft alles.
+function kolommen({ id, reeks, waarde, label, eenheid, extra = null, max: vast = null }) {
+  if (!reeks.length) return '<p class="zacht" style="margin:0">Nog niets om te laten zien.</p>';
+  const W = 600, H = 170, onder = 22, boven = 16;
+  const waarden = reeks.map(waarde);
+  const max = vast ?? Math.max(1, ...waarden);
+  // Twee rasterlijnen boven nul, op ronde getallen (een percentage: 50 en 100).
+  const stap = (() => { const ruw = max / 2; const macht = 10 ** Math.floor(Math.log10(ruw));
+    return Math.ceil(ruw / macht) * macht; })();
+  const top = stap * 2;
+  const slot = W / reeks.length;
+  const breed = Math.min(24, slot - 2);
+  const y = (v) => boven + (H - onder - boven) * (1 - v / top);
+  const kop = (x, h) => {
+    const r = Math.min(4, h, breed / 2);
+    const x0 = x - breed / 2, y0 = H - onder - h;
+    return `M${x0},${H - onder} V${y0 + r} Q${x0},${y0} ${x0 + r},${y0} H${x0 + breed - r} Q${x0 + breed},${y0} ${x0 + breed},${y0 + r} V${H - onder} Z`;
+  };
+  const labels = new Set([0, Math.floor((reeks.length - 1) / 2), reeks.length - 1]);
+  return `<div class="grafiek" data-grafiek="${id}">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(eenheid)}, ${reeks.length} waarden">
+      ${[0, stap, top].map((t) => `<line class="raster-lijn" x1="0" x2="${W}" y1="${y(t)}" y2="${y(t)}"/>
+        <text class="as" x="0" y="${y(t) - 3}">${getal(t)}</text>`).join('')}
+      ${reeks.map((d, i) => {
+        const x = slot * i + slot / 2;
+        const v = waarden[i];
+        const h = Math.max(0, (H - onder - boven) * v / top);
+        return `<rect class="raak" x="${slot * i}" y="0" width="${slot}" height="${H - onder}" tabindex="0"
+            data-i="${i}" aria-label="${esc(label(d))}: ${getal(v)} ${esc(eenheid)}"></rect>
+          ${h > 0 ? `<path class="kolom" d="${kop(x, h)}"></path>` : ''}
+          ${labels.has(i) ? `<text class="as" x="${x}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === reeks.length - 1 ? 'end' : 'middle'}">${esc(label(d).replace(/^week van /, ''))}</text>` : ''}
+          ${i === reeks.length - 1 ? `<text class="waarde" x="${x}" y="${y(v) - 5}" text-anchor="end">${getal(v)}</text>` : ''}`;
+      }).join('')}
+    </svg>
+    <div class="tip" hidden></div>
+    <details class="tabelweergave"><summary>Als tabel</summary><div class="tabelvak"><table>
+      <thead><tr><th></th><th class="getal">${esc(eenheid)}</th>${extra ? '<th></th>' : ''}</tr></thead>
+      <tbody>${reeks.map((d, i) => `<tr><td>${esc(label(d))}</td><td class="getal">${getal(waarden[i])}</td>${
+        extra ? `<td class="zacht">${esc(extra(d))}</td>` : ''}</tr>`).join('')}</tbody></table></div></details>
+  </div>`;
+}
+
+// De tooltips van de grafieken: dezelfde bij muis en toetsenbord. Tekst via
+// textContent, want namen van races komen uit de database.
+function knoopGrafieken() {
+  vak.querySelectorAll('.grafiek').forEach((g) => {
+    const tip = g.querySelector('.tip');
+    const toon = (el) => {
+      const [wat, hoeveel] = el.getAttribute('aria-label').split(/: (?=[^:]*$)/);
+      tip.replaceChildren();
+      const sterk = document.createElement('strong');
+      sterk.textContent = hoeveel;
+      tip.append(sterk, document.createTextNode(wat));
+      const kader = g.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
+      tip.style.left = `${rect.left - kader.left + rect.width / 2}px`;
+      tip.style.top = `${rect.top - kader.top + 30}px`;
+      tip.hidden = false;
+    };
+    g.querySelectorAll('.raak').forEach((el) => {
+      el.addEventListener('pointerenter', () => toon(el));
+      el.addEventListener('focus', () => toon(el));
+      el.addEventListener('pointerleave', () => { tip.hidden = true; });
+      el.addEventListener('blur', () => { tip.hidden = true; });
+    });
+  });
+}
+
+// ---- knoppen per tabblad ---------------------------------------------------
+
+// Twee keer tikken voor alles wat niet terug kan, zoals in de app.
+// Na vijf seconden vergeet de knop de vraag weer, zodat een losse misklik
+// later nooit meer gevaarlijk is.
+function tweeKeer(knop, tekst, werk) {
+  const oud = knop.textContent;
+  knop.onclick = () => {
+    if (knop.dataset.zeker !== 'ja') {
+      knop.dataset.zeker = 'ja';
+      knop.textContent = tekst;
+      knop.classList.add('zeker');
+      setTimeout(() => {
+        if (!knop.isConnected) return;
+        knop.dataset.zeker = '';
+        knop.textContent = oud;
+        knop.classList.remove('zeker');
+      }, 5000);
+      return;
+    }
+    werk();
+  };
+}
+
+const knopen = {
+  overzicht() {
+    vak.querySelectorAll('[data-naar]').forEach((b) => b.onclick = () => { B.tab = b.dataset.naar; render(); });
+    vak.querySelectorAll('[data-race]').forEach((b) => b.onclick = () => {
+      const r = B.races.find((x) => String(x.id) === b.dataset.race);
+      B.tab = 'data'; B.race = r?.id ?? null; B.seizoen = r?.season ?? B.seizoen; render();
+    });
+  },
+  poules() {
+    const zoek = vak.querySelector('#zoekpoule');
+    zoek.oninput = () => { B.zoekPoule = zoek.value; render(); vak.querySelector('#zoekpoule').focus();
+      const z = vak.querySelector('#zoekpoule'); z.setSelectionRange(z.value.length, z.value.length); };
+    kiesRij('[data-poule]', (id) => { B.poule = B.poule === id ? null : id; render(); });
+    const form = vak.querySelector('#pouleform');
+    if (!form) return;
+    const p = B.poules.find((x) => x.id === B.poule);
+    form.onsubmit = (ev) => {
+      ev.preventDefault();
+      const f = new FormData(form);
+      doe(() => rpc('beheer_poule_bijwerken', { p_pool: p.id, p_wijziging: {
+        name: f.get('name'), beschrijving: f.get('beschrijving'),
+        owner_member_id: f.get('owner_member_id') || null, is_public: f.get('is_public') === 'on' } }),
+      `${f.get('name')} is bijgewerkt.`);
+    };
+    vak.querySelector('[data-spelers-van]').onclick = () => {
+      B.tab = 'spelers'; B.filterPoule = p.id; B.speler = null; render();
+    };
+    const naam = vak.querySelector('#bevestignaam');
+    const weg = vak.querySelector('#pouleweg');
+    naam.oninput = () => { weg.disabled = naam.value.trim() !== p.name; };
+    weg.onclick = () => doe(async () => {
+      await rpc('beheer_poule_verwijderen', { p_pool: p.id });
+      B.poule = null;
+    }, `${p.name} is verwijderd.`);
+  },
+  spelers() {
+    const zoek = vak.querySelector('#zoekspeler');
+    zoek.oninput = () => { B.zoekSpeler = zoek.value; render(); const z = vak.querySelector('#zoekspeler');
+      z.focus(); z.setSelectionRange(z.value.length, z.value.length); };
+    vak.querySelector('#filterpoule').onchange = (ev) => { B.filterPoule = ev.target.value; render(); };
+    kiesRij('[data-speler]', (id) => { B.speler = B.speler === id ? null : id; render(); });
+    const s = B.spelers.find((x) => x.member_id === B.speler);
+    if (!s) return;
+    vak.querySelector('#spelerform').onsubmit = (ev) => {
+      ev.preventDefault();
+      const naam = new FormData(ev.target).get('naam');
+      doe(() => rpc('beheer_speler_bijwerken', { p_member: s.member_id, p_naam: naam }), `${s.naam} heet nu ${naam}.`);
+    };
+    const los = vak.querySelector('#losmaken');
+    if (los) tweeKeer(los, 'Losmaken? Tik nog een keer', () =>
+      doe(() => rpc('beheer_speler_losmaken', { p_member: s.member_id }), `${s.naam} is losgemaakt.`));
+    tweeKeer(vak.querySelector('#spelerweg'), 'Verwijderen? Tik nog een keer', () =>
+      doe(async () => { await rpc('beheer_speler_verwijderen', { p_member: s.member_id }); B.speler = null; },
+        `${s.naam} is verwijderd.`));
+  },
+  data() {
+    vak.querySelector('#seizoen').onchange = (ev) => { B.seizoen = Number(ev.target.value); B.race = null; render(); };
+    kiesRij('[data-race]', (id) => { B.race = String(B.race) === id ? null : id; render(); });
+    const r = B.races.find((x) => String(x.id) === String(B.race));
+    if (!r) return;
+    vak.querySelector('#afgelast').onchange = (ev) => doe(() =>
+      rpc('beheer_race_bijwerken', { p_race: r.id, p_wijziging: { afgelast: ev.target.checked } }),
+      `${r.name} is ${ev.target.checked ? 'afgelast' : 'niet meer afgelast'}.`);
+    const controleer = vak.querySelector('#controleer');
+    controleer.onclick = async () => {
+      controleer.disabled = true;
+      controleer.textContent = 'Bezig bij OpenF1…';
+      try {
+        B.controle[r.id] = await vraagOpenF1(r);
+        B.fout = '';
+      } catch (e) { B.fout = e.message; }
+      render();
+    };
+    vak.querySelectorAll('[data-overnemen]').forEach((b) => b.onclick = () => {
+      const veld = b.dataset.overnemen;
+      doe(() => rpc('beheer_race_bijwerken', { p_race: r.id,
+        p_wijziging: { [veld]: B.controle[r.id][veld], handmatig: false } }),
+        `De uitslag van OpenF1 staat erin bij ${r.name}.`);
+    });
+    vak.querySelectorAll('[data-leeg]').forEach((b) => tweeKeer(b, 'Leegmaken? Tik nog een keer', () =>
+      doe(async () => {
+        await rpc('beheer_race_bijwerken', { p_race: r.id, p_wijziging: { [b.dataset.leeg]: null } });
+        delete B.controle[r.id];
+      }, `De uitslag is leeg; de sync haalt hem opnieuw op.`)));
+  },
+  statistieken() { knoopGrafieken(); },
+};
+
+// Een rij in een tabel aanklikken, met de muis of met Enter. Staat het detail
+// daarna onder de tabel (op een telefoon), dan schuift het in beeld.
+function kiesRij(kies, doen) {
+  vak.querySelectorAll(kies).forEach((rij) => {
+    const id = Object.values(rij.dataset)[0];
+    const kiezen = () => {
+      doen(id);
+      const detail = vak.querySelector('#pouledetail, #spelerdetail, #racedetail');
+      if (detail && detail.getBoundingClientRect().top > innerHeight * 0.6) {
+        detail.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      }
+    };
+    rij.onclick = kiezen;
+    rij.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); kiezen(); } };
+  });
+}
+
+start();
+</script>
+</body>
+</html>

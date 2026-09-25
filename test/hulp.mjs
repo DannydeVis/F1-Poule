@@ -3,7 +3,7 @@
 
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
-import { readFileSync, writeFileSync, mkdtempSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,15 +42,24 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
                                    taal = 'nl', verhaal = false, voorafAan } = {}) {
   const map = mkdtempSync(join(tmpdir(), 'poule-test-'));
 
-  const bron = readFileSync(indexPad ?? join(wortel, 'app', 'index.html'), 'utf8');
-  const html = bron.replace(
-    /await import\(\s*'https:\/\/esm\.sh\/@supabase\/supabase-js@2'\s*\)/,
-    "await import('./nabootsing-supabase.mjs')");
-  if (html === bron) throw new Error('de import-regel van supabase-js is niet gevonden in index.html');
-
-  writeFileSync(join(map, 'index.html'), html);
-  writeFileSync(join(map, 'nabootsing-supabase.mjs'),
-    aanpassen(readFileSync(join(hier, 'nabootsing-supabase.mjs'), 'utf8')));
+  const nabootsen = (bron, waar) => {
+    const html = bron.replace(
+      /await import\(\s*'https:\/\/esm\.sh\/@supabase\/supabase-js@2'\s*\)/,
+      "await import('./nabootsing-supabase.mjs')");
+    if (html === bron) throw new Error(`de import-regel van supabase-js is niet gevonden in ${waar}`);
+    return html;
+  };
+  const nabootsing = aanpassen(readFileSync(join(hier, 'nabootsing-supabase.mjs'), 'utf8'));
+  writeFileSync(join(map, 'index.html'),
+    nabootsen(readFileSync(indexPad ?? join(wortel, 'app', 'index.html'), 'utf8'), 'index.html'));
+  writeFileSync(join(map, 'nabootsing-supabase.mjs'), nabootsing);
+  // De beheerpagina staat er ook, op /beheer/, met dezelfde nabootsing: dezelfde
+  // herkomst als de app, dus dezelfde sessie en dezelfde "database", net als op
+  // de echte site. Een test gaat erheen met page.goto(url + 'beheer/').
+  mkdirSync(join(map, 'beheer'));
+  writeFileSync(join(map, 'beheer', 'index.html'),
+    nabootsen(readFileSync(join(wortel, 'beheer', 'index.html'), 'utf8'), 'beheer/index.html'));
+  writeFileSync(join(map, 'beheer', 'nabootsing-supabase.mjs'), nabootsing);
 
   const types = { '.html': 'text/html', '.mjs': 'text/javascript',
                   // sw.js hoort als javascript geserveerd te worden, anders
@@ -62,7 +71,7 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
     // Eerst de querystring eraf: de app leest ?code= uit de link, dus '/'
     // komt hier ook binnen als '/?code=RTM026'.
     const pad = req.url.split('?')[0];
-    const naam = pad === '/' ? '/index.html' : pad;
+    const naam = pad.endsWith('/') ? pad + 'index.html' : pad;
     try {
       // Eerst de tijdelijke map (daar staan index.html en de nabootsing), dan
       // de repo zelf. Dat tweede is er voor de lettertypen: die staan sinds

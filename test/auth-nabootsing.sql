@@ -26,6 +26,13 @@ create table if not exists auth.users (
   id    uuid primary key default gen_random_uuid(),
   email text
 );
+-- Wat het beheer leest: of een adres bevestigd is, wat voor account het is,
+-- en wanneer iemand voor het laatst inlogde.
+alter table auth.users add column if not exists email_confirmed_at timestamptz;
+alter table auth.users add column if not exists is_anonymous boolean not null default false;
+alter table auth.users add column if not exists raw_app_meta_data jsonb not null default '{}'::jsonb;
+alter table auth.users add column if not exists created_at timestamptz not null default now();
+alter table auth.users add column if not exists last_sign_in_at timestamptz;
 
 create or replace function auth.uid()
 returns uuid

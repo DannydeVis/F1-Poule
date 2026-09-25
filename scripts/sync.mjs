@@ -105,6 +105,34 @@ const updateRace = (id, patch) =>
 
 const verwijderRace = (id) => sb(`races?id=eq.${id}`, { method: 'DELETE' });
 
+// ------------------------------------------------------------
+//  Het logboek
+//  Eén regel per run in sync_runs, voor de beheerpagina: wanneer draaide hij,
+//  ging het goed, en wat veranderde er. GitHub laat geplande runs soms uren
+//  liggen (zie sync.yml), en dit is waar je dat ziet zonder de Actions-log in
+//  te duiken. Lukt het wegschrijven niet -- een database waar schema.sql nog
+//  niet opnieuw gedraaid is -- dan gaat de sync gewoon door.
+// ------------------------------------------------------------
+
+const logboek = { gestart: new Date().toISOString(), bijgewerkt: 0, regels: [] };
+const noteer = (regel) => { logboek.regels.push(regel); };
+
+async function schrijfLogboek(ok, fout = null) {
+  try {
+    await sb('sync_runs', {
+      method: 'POST',
+      body: JSON.stringify({
+        gestart: logboek.gestart, klaar: new Date().toISOString(), ok,
+        bijgewerkt: logboek.bijgewerkt,
+        samenvatting: (logboek.regels.join('\n') || 'Niks nieuws').slice(0, 4000),
+        fouten: fout ? String(fout).slice(0, 2000) : null,
+      }),
+    });
+  } catch (e) {
+    console.log(`Logboek niet weggeschreven (${e.message})`);
+  }
+}
+
 /** Hangt er ook maar één voorspelling aan deze race? */
 const heeftAntwoorden = async (raceId) =>
   ((await sb(`answers?race_id=eq.${raceId}&select=race_id&limit=1`)) ?? []).length > 0;
@@ -195,6 +223,7 @@ async function kalender(jaar) {
 
   await upsertRaces(rijen);
   console.log(`  ${rijen.length} races weggeschreven`);
+  noteer(`Kalender ${jaar}: ${rijen.length} races`);
 
   // Stond zo'n record er al in, dan blijft de rij staan. Doorstrepen is hier
   // het juiste, en niet verwijderen: er kunnen voorspellingen aan hangen, en
@@ -578,12 +607,15 @@ async function uitslagen(races, jaar) {
     try {
       await updateRace(race.id, patch);
       console.log(`  ronde ${race.round} ${race.name}: ${Object.keys(patch).join(', ')}`);
+      noteer(`Ronde ${race.round} ${race.name}: ${Object.keys(patch).join(', ')}`);
       veranderd++;
     } catch (e) {
       console.log(`  ronde ${race.round} ${race.name}: wegschrijven mislukt (${e.message})`);
+      noteer(`Ronde ${race.round} ${race.name}: wegschrijven mislukt (${e.message})`);
     }
   }
 
+  logboek.bijgewerkt += veranderd;
   console.log(veranderd ? `${veranderd} races bijgewerkt` : 'Niks nieuws');
 }
 
@@ -616,6 +648,7 @@ async function vragensetOpSlot(races) {
 
   if (gewijzigd?.length) {
     console.log(`Vragenset op slot voor ${gewijzigd.length} poule(s)`);
+    noteer(`Vragenset op slot voor ${gewijzigd.length} poule(s)`);
   }
 }
 
@@ -713,6 +746,7 @@ async function herinneringen(races) {
   }
   console.log(`Herinneringen: ${gelukt} verstuurd`
     + (opgeruimd ? `, ${opgeruimd} verlopen abonnement(en) opgeruimd` : ''));
+  if (gelukt) noteer(`${gelukt} herinnering(en) verstuurd`);
 }
 
 // ------------------------------------------------------------
@@ -751,7 +785,9 @@ try {
   const inAgenda = agendaSeizoenen(alle, plan);
   schrijfAgenda(alle.filter((r) => inAgenda.includes(r.season)));
   await herinneringen(lopend);
+  await schrijfLogboek(true);
 } catch (e) {
   console.error('Mislukt:', e.message);
+  await schrijfLogboek(false, e.message);
   process.exit(1);
 }
