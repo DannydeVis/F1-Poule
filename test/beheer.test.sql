@@ -80,6 +80,7 @@ values (now() - interval '10 minutes', now() - interval '9 minutes', true, 2, 'M
 do $$
 declare
   uit   jsonb;
+  uit_tekst text;
   n     int;
   gelukt boolean;
 begin
@@ -112,8 +113,22 @@ begin
   insert into site_beheerders (user_id) values ('bbbbbbbb-0000-0000-0000-000000000004');
   perform set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000004"}', true);
   if not public.ik_ben_beheerder() then raise exception 'gezakt: een extra beheerder komt er niet in'; end if;
-  delete from site_beheerders where user_id = 'bbbbbbbb-0000-0000-0000-000000000004';
   raise notice 'ok: ook als je pas na schema.sql inlogt, en een extra beheerder via site_beheerders';
+
+  -- De controletabel: het beheeradres zelf in site_beheerders (dat deed een
+  -- eerdere versie van schema.sql) is geen extra beheerder; een ander account wel.
+  insert into site_beheerders (user_id) values ('dddddddd-0000-0000-0000-000000000001');
+  select uitkomst into uit_tekst from public.poule_controle where controle = 'beheerders';
+  if uit_tekst is distinct from 'devisser.danny@gmail.com (ingelogd) + 1 extra' then
+    raise exception 'gezakt: de controletabel telt de beheerders verkeerd: %', uit_tekst;
+  end if;
+  delete from site_beheerders where user_id = 'bbbbbbbb-0000-0000-0000-000000000004';
+  select uitkomst into uit_tekst from public.poule_controle where controle = 'beheerders';
+  if uit_tekst is distinct from 'devisser.danny@gmail.com (ingelogd)' then
+    raise exception 'gezakt: het beheeradres zelf telt in de controletabel als extra beheerder: %', uit_tekst;
+  end if;
+  delete from site_beheerders where user_id = 'dddddddd-0000-0000-0000-000000000001';
+  raise notice 'ok: de controletabel telt als extra beheerder alleen andere accounts dan het beheeradres';
 
   -- ---- 2. de rest komt er niet in -----------------------------------------
   -- zonder sessie

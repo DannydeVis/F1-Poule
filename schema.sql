@@ -2174,15 +2174,20 @@ union all
 -- Wie de beheerpagina binnenlaat: het beheeradres, en wie er verder in
 -- site_beheerders staat. Of het beheeradres al een bevestigd account heeft
 -- staat erbij; zo niet, log dan één keer in op /beheer/ met Google.
+-- Extra telt alleen andere accounts: een eerdere versie van dit bestand zette
+-- het account van het beheeradres zelf ook in site_beheerders, en dat is
+-- geen tweede beheerder.
 select 'beheerders',
        public.beheer_adres()
        || case when exists (select 1 from auth.users
                             where lower(email) = public.beheer_adres()
                               and email_confirmed_at is not null)
                then ' (ingelogd)' else ' (nog nooit ingelogd)' end
-       || case when (select count(*) from public.site_beheerders) > 0
-               then ' + ' || (select count(*)::text from public.site_beheerders) || ' extra'
-               else '' end
+       || coalesce((select ' + ' || count(*) || ' extra'
+                    from public.site_beheerders b
+                    left join auth.users u on u.id = b.user_id
+                    where lower(coalesce(u.email, '')) <> public.beheer_adres()
+                    having count(*) > 0), '')
 union all
 select 'winnaar ingevuld',
        (select count(*)::text from public.answers where question_id = 'winnaar')
