@@ -81,6 +81,10 @@
   .knop.gevaar{color:var(--rood);border-color:var(--rood)}
   .knop.gevaar.zeker{background:var(--rood);color:#fff}
   .knop:disabled{opacity:.5;cursor:default}
+  /* Wit met het logo van Google, zoals in de app: herkenbaar, en de enige
+     knop die de huisstijl niet volgt. */
+  .knop.google{background:var(--paneel);color:var(--ink);border-color:var(--lijn);min-height:50px;
+    font-size:15px;width:100%;gap:12px}
   .knop.google svg{width:20px;height:20px}
   .veld{width:100%;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--lijn);
     background:var(--paneel);color:var(--ink)}
@@ -269,21 +273,52 @@ const B = {
 // database, zodat een knop hem kan tonen.
 async function rpc(naam, args) {
   const { data, error } = await db.rpc(naam, args);
-  if (error) throw new Error(error.message || 'Er ging iets mis');
+  if (error) throw Object.assign(new Error(error.message || 'Er ging iets mis'), { code: error.code });
   return data;
 }
 
 // ---- binnenkomen ------------------------------------------------------------
+//
+// Op elk toestel hetzelfde: "Inloggen met Google" en je Google-account kiezen.
+// Beheerder ben je met het beheeradres (schema.sql, beheer_adres()); dat hangt
+// niet af van wanneer schema.sql gedraaid is.
+//
+// Eén geval vraagt iets anders: speel je op dit toestel anoniem in de app, dan
+// deelt het beheer die sessie (dezelfde site). Inloggen zou dat account
+// vervangen, en dan hangt je speler op dit toestel aan niemand meer. Dus
+// hangt het beheer Google dan aan dát account (linkIdentity), net als
+// "je account meenemen" in de app: je speler blijft van jou. Hangt je Google-
+// account al aan een ander account (van een ander toestel), dan komt Google
+// terug met identity_already_exists, en dan log je daarmee in.
 
 const terug = () => location.origin + location.pathname;
+const GOOGLE = () => ({ provider: 'google',
+  options: { redirectTo: terug(), queryParams: { prompt: 'select_account' } } });
+
+// Wat Google in de adresbalk terugstuurt als het koppelen niet lukte. Daarna
+// gaat het uit de adresbalk, zodat verversen het niet opnieuw toont.
+const TERUG_FOUT = (() => {
+  try {
+    const zoek = new URLSearchParams(location.search);
+    const hash = new URLSearchParams(String(location.hash).replace(/^#/, ''));
+    const code = hash.get('error_code') || zoek.get('error_code') || hash.get('error') || zoek.get('error');
+    if (code) history.replaceState(null, '', location.pathname);
+    return code || null;
+  } catch { return null; }
+})();
+
+// Een functie die er (nog) niet is: schema.sql is na deze versie niet gedraaid.
+const nietIngericht = (e) => e?.code === 'PGRST202' || e?.code === '42883'
+  || /could not find the function|function .* does not exist/i.test(String(e?.message ?? ''));
 
 async function start() {
   if (!db) return toonFout('Geen verbinding met de database. Probeer het zo nog eens.');
   const { data } = await db.auth.getSession();
   B.sessie = data?.session ?? null;
+  if (TERUG_FOUT === 'identity_already_exists') return toonAlGekoppeld();
   if (!B.sessie) return toonInloggen();
   const { data: ok, error } = await db.rpc('ik_ben_beheerder');
-  if (error) return toonFout(error.message);
+  if (error) return nietIngericht(error) ? toonNietIngericht() : toonFout(error.message);
   if (!ok) return toonGeenToegang();
   await laadAlles();
 }
@@ -299,21 +334,38 @@ const GOOGLE_G = `<svg viewBox="0 0 48 48" aria-hidden="true">
   <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
   <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
 </svg>`;
+const googleKnop = (tekst = 'Inloggen met Google') =>
+  `<button class="knop google" id="google" type="button">${GOOGLE_G}${tekst}</button>`;
 
-function toonInloggen(bericht = '') {
-  toegang(`
-    <p class="zacht" style="margin:0">Log in met het beheeradres: hetzelfde account als in de app.</p>
-    <button class="knop google" id="google" type="button">${GOOGLE_G}Inloggen met Google</button>
-    <form id="mailform" class="formulier">
-      <label><span class="label">of met een inloglink</span>
-        <input class="veld" id="mail" type="email" autocomplete="email" placeholder="je mailadres" required></label>
-      <button class="knop" type="submit">Stuur me een inloglink</button>
-    </form>
-    <p class="zacht klein" id="inlogbericht" style="margin:0">${esc(bericht)}</p>`);
+// De Google-knop: koppelen als je hier anoniem speelt, anders inloggen.
+function knoopGoogle({ koppelen = false } = {}) {
   vak.querySelector('#google').onclick = async () => {
-    const { error } = await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: terug() } });
-    if (error) vak.querySelector('#inlogbericht').textContent = error.message;
+    const { error } = koppelen
+      ? await db.auth.linkIdentity(GOOGLE())
+      : await db.auth.signInWithOAuth(GOOGLE());
+    if (error) {
+      const bericht = vak.querySelector('#inlogbericht');
+      if (bericht) bericht.textContent = /manual linking|provider is not enabled/i.test(error.message ?? '')
+        ? 'Inloggen met Google staat nog niet aan in Supabase. Zie BEDIENING.md §15, stap 5.'
+        : error.message;
+    }
   };
+}
+
+function toonInloggen() {
+  toegang(`
+    <p style="margin:0">Log in met Google en kies het account met je beheeradres.</p>
+    ${googleKnop()}
+    <details><summary class="zacht klein">Liever met een inloglink per mail</summary>
+      <form id="mailform" class="formulier" style="margin-top:10px">
+        <input class="veld" id="mail" type="email" autocomplete="email" placeholder="je mailadres"
+          aria-label="Je mailadres" required>
+        <button class="knop" type="submit">Stuur me een inloglink</button>
+        <p class="zacht klein" style="margin:0">Op een iPhone of iPad werkt dit niet in het beheer op je
+          beginscherm (de link opent in Safari); gebruik daar Google.</p>
+      </form></details>
+    <p class="zacht klein" id="inlogbericht" style="margin:0"></p>`);
+  knoopGoogle();
   vak.querySelector('#mailform').onsubmit = async (ev) => {
     ev.preventDefault();
     const mail = vak.querySelector('#mail').value.trim();
@@ -321,34 +373,58 @@ function toonInloggen(bericht = '') {
     const { error } = await db.auth.signInWithOtp({ email: mail,
       options: { shouldCreateUser: false, emailRedirectTo: terug() } });
     vak.querySelector('#inlogbericht').textContent = error
-      ? 'Bij dat adres hoort geen account.'
+      ? 'Bij dat adres hoort geen account. Log in met Google.'
       : `We hebben een inloglink gestuurd naar ${mail}.`;
   };
 }
 
-// Ingelogd, maar geen beheerder. Twee gevallen die iets anders vragen.
+// Ingelogd, maar (nog) geen beheerder.
 function toonGeenToegang() {
   const u = B.sessie.user;
   if (u?.is_anonymous) {
-    // Een anoniem account van de app op dit toestel. Hier met Google inloggen
-    // zou de sessie vervangen die de app ook gebruikt, en dan is de speler op
-    // dit toestel zijn account kwijt. Dus niet hier inloggen, maar eerst
-    // koppelen in de app.
-    return toegang(`
-      <p style="margin:0">Op dit toestel speel je in de app zonder gekoppeld account.</p>
-      <p class="zacht" style="margin:0">Koppel eerst je beheeradres in de app (Profiel → je account
-        meenemen). Daarna ben je hier meteen binnen. Hier inloggen zou je speler op dit toestel
-        loskoppelen.</p>
-      <a class="knop primair" href="../app/">Naar de app</a>`);
+    toegang(`
+      <p style="margin:0">Op dit toestel gebruik je de app zonder gekoppeld account.</p>
+      <p class="zacht" style="margin:0">Log in met Google en kies het account met je beheeradres. Je
+        Google-account hangt daarna aan dit toestel: je speler in de app blijft van jou, en je bent hier
+        binnen.</p>
+      ${googleKnop()}
+      <p class="zacht klein" id="inlogbericht" style="margin:0"></p>`);
+    return knoopGoogle({ koppelen: true });
   }
   toegang(`
-    <p style="margin:0">Dit account (${esc(u?.email ?? 'zonder mailadres')}) is geen beheerder.</p>
-    <p class="zacht" style="margin:0">Beheerder word je met het beheeradres in schema.sql. Zie
-      BEDIENING.md, "Het beheer".</p>
-    <div class="knoppen"><a class="knop" href="../app/">Naar de app</a>
-      <button class="knop" id="uit" type="button">Uitloggen</button></div>
-    <p class="zacht klein" style="margin:0">Uitloggen geldt op dit toestel ook voor de app.</p>`);
-  vak.querySelector('#uit').onclick = async () => { await db.auth.signOut(); location.reload(); };
+    <p style="margin:0">Je bent ingelogd als ${esc(u?.email ?? 'een account zonder mailadres')}, en dat
+      is geen beheeradres.</p>
+    ${googleKnop('Inloggen met een ander Google-account')}
+    <p class="zacht klein" style="margin:0">Dit toestel gebruikt daarna ook in de app dat account.</p>
+    <p class="zacht klein" id="inlogbericht" style="margin:0"></p>
+    <a class="knop" href="../app/">Naar de app</a>`);
+  knoopGoogle();
+}
+
+// Terug van Google: dit Google-account hangt al aan een ander account.
+function toonAlGekoppeld() {
+  toegang(`
+    <p style="margin:0">Je Google-account hoort al bij een account, waarschijnlijk van een ander toestel.</p>
+    <p class="zacht" style="margin:0">Log daarmee in. Dit toestel gebruikt dat account daarna ook in de app,
+      met dezelfde poules als op je andere toestel.</p>
+    ${googleKnop()}
+    <p class="zacht klein" id="inlogbericht" style="margin:0"></p>`);
+  knoopGoogle();
+}
+
+// De beheerfuncties bestaan nog niet: schema.sql moet (opnieuw) gedraaid
+// worden. Dat hoeft één keer, na elke versie die het schema verandert.
+const SQL_EDITOR = `https://supabase.com/dashboard/project/${new URL(SUPABASE_URL).hostname.split('.')[0]}/sql/new`;
+const SCHEMA = 'https://raw.githubusercontent.com/DannydeVis/F1-Poule/main/schema.sql';
+function toonNietIngericht() {
+  toegang(`
+    <p style="margin:0">Het beheer is nog niet ingericht in de database. Dat is één keer nodig:</p>
+    <ol class="stappen" style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
+      <li><a href="${SCHEMA}" target="_blank" rel="noopener">Open schema.sql</a>, selecteer alles en kopieer het.</li>
+      <li><a href="${SQL_EDITOR}" target="_blank" rel="noopener">Open de SQL Editor van Supabase</a>, plak het en klik op <b>Run</b>.</li>
+      <li>Kom hier terug en tik op Opnieuw proberen.</li>
+    </ol>
+    <button class="knop primair" type="button" onclick="location.reload()">Opnieuw proberen</button>`);
 }
 
 function toonFout(tekst) {
@@ -372,6 +448,7 @@ async function laadAlles() {
     B.seizoen ??= overzicht?.seizoen ?? B.races.at(-1)?.season ?? new Date().getFullYear();
     B.fout = '';
   } catch (e) {
+    if (nietIngericht(e)) return toonNietIngericht();
     B.fout = e.message;
   }
   render();
