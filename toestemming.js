@@ -86,11 +86,16 @@
       color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}
     #toestemming button:focus-visible{outline:2px solid #d93d24;outline-offset:2px}
     @media (prefers-color-scheme:dark){
-      #toestemming{background:#15161a;color:#f2f3f5;border-color:#2b2e35}
-      #toestemming p{color:#9aa0a8}
-      #toestemming button{background:#f2f3f5;border-color:#f2f3f5;color:#0b0b0c}
-    }`;
+      :root:not([data-thema="licht"]) #toestemming{background:#15161a;color:#f2f3f5;border-color:#2b2e35}
+      :root:not([data-thema="licht"]) #toestemming p{color:#9aa0a8}
+      :root:not([data-thema="licht"]) #toestemming button{background:#f2f3f5;border-color:#f2f3f5;color:#0b0b0c}
+    }
+    :root[data-thema="donker"] #toestemming{background:#15161a;color:#f2f3f5;border-color:#2b2e35}
+    :root[data-thema="donker"] #toestemming p{color:#9aa0a8}
+    :root[data-thema="donker"] #toestemming button{background:#f2f3f5;border-color:#f2f3f5;color:#0b0b0c}`;
 
+  // In de app kun je zelf licht of donker kiezen (data-thema op <html>); de
+  // vraag kleurt daarin mee, en volgt anders het toestel.
   // De vraag. "Ja" en "Nee" zijn bewust dezelfde knop in dezelfde maat: nee
   // zeggen hoort net zo makkelijk te zijn als ja.
   function vraag() {
