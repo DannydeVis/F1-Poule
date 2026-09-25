@@ -7130,3 +7130,80 @@ dat niet weg kan. Bijgewerkt: `ontbrekende-sleutel`, `terugkijken`,
 `voorspelling-bewaren`, `vangnet`, `seizoenseinde`. Dertien mutanten (van
 "P0001 ook wegpoetsen" tot "jargon terug in één Engelse vertaling"); ze
 zakken allemaal.
+
+## Het beheer
+
+Danny: *"wat ik nu wil is een back end. waar ik de poules kan beheren, de
+openF1 data kan zien of het geladen is en dat ik het kan controleren, spelers
+kan beheren, statistieken kan zien, wellicht moeten we weer google analytics
+inbouwen … en hij moet instaleerbaar zijn net zoals de app"*. Op de vraag hoe
+hij wil zien wat er gebeurt koos hij voor eigen statistieken én Google
+Analytics. Dit is het eerste deel; Google Analytics (met toestemming) komt in
+een aparte stap, zie hieronder.
+
+**Waar:** `beheer/index.html`, op `/beheer/`, een eigen pagina los van de app,
+met een eigen manifest (`beheer/manifest.webmanifest`, scope `beheer/`) en eigen
+pictogrammen (`beheer/pictogrammen/`, gemaakt door
+`scripts/maak-beheerpictogrammen.mjs`: de P op de lichte achtergrond). Zie
+BEDIENING.md §16 voor wat erop staat.
+
+**Hoe het veilig is.** Een statische pagina met de publieke anon key kan niet
+zelf bepalen wie wat mag. Dus doet de database dat: `site_beheerders` (dicht,
+geen policies) en `ik_ben_beheerder()`, en elke beheerfunctie
+(`beheer_overzicht`, `beheer_poules`, `beheer_spelers`, `beheer_poule_*`,
+`beheer_speler_*`, `beheer_race_bijwerken`, `beheer_sync`,
+`beheer_statistieken`) is security definer en begint met `beheer_poort()`,
+die 42501 gooit voor iedereen die geen beheerder is. Beheerder word je doordat
+`schema.sql` het account met het privacyadres toevoegt, alleen als dat adres
+bevestigd is (`email_confirmed_at`): iemand die voor dat adres een inloglink
+aanvraagt komt er niet in, want die link komt in Danny's mailbox. De
+service_role key blijft waar hij was: een geheim in GitHub voor de sync.
+
+**Binnenkomen zonder de app te breken.** Het beheer deelt de sessie met de app
+(dezelfde herkomst). Een anoniem app-account wordt daarom níét vervangen door
+hier met Google in te loggen: dan zou de speler op dat toestel aan niets meer
+hangen. Het beheer zegt dan: koppel eerst in de app.
+
+**De sync schrijft een logboek** (`sync_runs`): elke run één regel met
+wanneer, gelukt of niet, hoeveel races er veranderden en wat. Mislukt het
+wegschrijven (een database waar schema.sql nog niet opnieuw gedraaid is), dan
+gaat de sync gewoon door. Een trigger ruimt regels ouder dan een maand op.
+
+**Controleren bij OpenF1** gebeurt in de browser: het beheer vraagt
+`session_result` op met de sleutels die de sync bewaarde (`quali_key`,
+`race_key`, `sprint_key`) en zet de volgorde naast die in de database. De
+uitslag van OpenF1 overnemen schrijft hem met `handmatig = false`, zodat de
+herkeuring van de sync hem later nog mag verbeteren; leegmaken laat de sync hem
+opnieuw ophalen.
+
+**De eigen bezoekersteller** (`tel_bezoek()`, tabellen `bezoeken` en `actief`):
+per dag per pagina een optelling, en per dag welke accounts de app openden (vijf
+weken bewaard). Geen cookies, geen IP-adres. De app roept hem één keer per
+bezoek per scherm aan (`telBezoek()`), niet bij elke keer tekenen. De
+privacyverklaring (app en site, NL en EN) heeft er een alinea "Tellen" bij, en
+"geen analytics" is "geen trackers van anderen" geworden.
+
+**Grafieken** volgens de datavisualisatieregels: één reeks per grafiek in het
+accent (gevalideerd op contrast en lichtheid tegen beide oppervlakken), dunne
+kolommen met een ronde kop, haarlijnen, geen tweede as (bezoeken en actieve
+spelers zijn twee grafieken), een tooltip op muis en toetsenbord, en elke
+grafiek met een tabel eronder.
+
+**Tests.** `test/beheer.test.sql` (15 controles tegen een echte PostgreSQL:
+wie erin komt, wie niet, dat de tabellen dicht zijn, en wat elke functie doet)
+en `test/beheer.test.mjs` (56 controles in de browser). De nabootsing kent de
+beheerfuncties nu ook, en de testserver zet de beheerpagina op `/beheer/`
+naast de app, zodat ze net als in het echt één sessie delen.
+`test/jaarwisseling.test.mjs` kijkt ook naar het logboek van de sync. De
+auth-nabootsing kreeg de kolommen die het beheer leest (`email_confirmed_at`,
+`is_anonymous`, `raw_app_meta_data`, `created_at`, `last_sign_in_at`).
+Dertig mutanten (tien in de SQL, veertien op de pagina, twee in de app, vier in
+de sync), van "iedereen met een sessie is beheerder" tot "het logboek stopt de
+sync"; ze zakken allemaal. Eén overleefde eerst: de SQL-test controleerde het
+onbevestigde adres met een eigen kopie van de regel uit schema.sql in plaats
+van met die regel zelf.
+
+**Wat Danny moet doen:** `schema.sql` opnieuw draaien, nadat hij één keer met
+zijn beheeradres is ingelogd (Google, of zijn mailadres gekoppeld in de app).
+Tot die tijd laat het beheer hem er niet in, en schrijft de sync zijn logboek
+nergens heen (dat merkt verder niemand).

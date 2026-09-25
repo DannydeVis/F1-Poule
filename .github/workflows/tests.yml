@@ -183,6 +183,17 @@ jobs:
           psql -d jokers -v ON_ERROR_STOP=1 -f schema.sql
           psql -d jokers -v ON_ERROR_STOP=1 -f test/jokers.test.sql
 
+      # Het beheer ziet alles en mag poules en spelers weggooien. Dat mag
+      # alleen de beheerder, en die word je alleen met het bevestigde
+      # beheeradres. Deze test draait schema.sql zelf nog een keer, nadat dat
+      # adres bestaat -- zo gaat het in het echt ook.
+      - name: het beheer — alleen de beheerder komt erin
+        run: |
+          createdb beheer
+          psql -d beheer -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d beheer -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d beheer -v ON_ERROR_STOP=1 -f test/beheer.test.sql
+
       # De afscherming uit fase 0: met de publieke anon key mag je alleen zien
       # wat bij een poule hoort waar je zelf in zit. Deze test zet een tweede
       # poule neer waar de speler niets mee te maken heeft, en controleert

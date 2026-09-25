@@ -1,0 +1,18 @@
+{
+  "name": "Predict the Race · Beheer",
+  "short_name": "PTR Beheer",
+  "description": "Het beheer van Predict the Race: poules, spelers, de data van de sync en de statistieken.",
+  "lang": "nl",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f1ee",
+  "theme_color": "#f2f1ee",
+  "icons": [
+    { "src": "pictogrammen/beheer-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "pictogrammen/beheer-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "pictogrammen/beheer-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "pictogrammen/beheer-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
