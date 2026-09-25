@@ -7005,8 +7005,69 @@ noot over een handmatige of automatische lijst, en de losse vragen), krijgt
 daar een `order` die het weer vooraan zet. De race wordt alleen breder als er
 ook echt twee kolommen zijn (`.kol.rechts:has(.kolom2)`).
 
+(Sinds de tegels hieronder is dat `tweeKolommen({ hoofd, zij })`: de noot en
+je punten staan boven de twee kolommen, de losse vragen in de kaart van je
+voorspelling, en er hoeft niets meer met `order` naar voren.)
+
 Getest in `test/breed-scherm.test.mjs` op 2560, 1366, 1100 en 390 pixels, met
 vijf mutanten (geen raster, niet breder, de telefoonvolgorde kwijt, altijd twee
 kolommen bij het invullen, het raster ook op smalle schermen). Ze zakken alle
 vijf. `test/uitslag-delen.test.mjs` verwachtte op 1366 precies 880 pixels; dat
 is nu de volle breedte naast de navigatie.
+
+## Het racescherm in tegels
+
+Danny stuurde een voorbeeld van hoe de uitslag eruit zou kunnen zien, met de
+vraag: *"ik denk ook toepassen bij het voorspel scherm?"* Allebei gedaan, en
+de zijbalk uit het voorbeeld ook.
+
+**De kop van een race** heeft nu de vlag van het land (`vlagVan()`, via
+`VLAGGEN`: de landnaam zoals OpenF1 hem levert, naar een tweeletterige code)
+en daaronder wat je er ziet: *jouw uitslag*, *voorspellen*, *gesloten* of
+*afgelast*. De vlaggen staan in `vlaggen/` en komen uit
+[flag-icons](https://github.com/lipis/flag-icons) 7.5.0 (MIT, de licentie
+staat erbij). Spanje en Mexico zijn als SVG zo'n 80 kB door hun wapen; die
+twee zijn omgezet naar een PNG van 96×72 (`VLAGBESTAND`). Een land dat er niet
+in staat krijgt geen vlag, geen kapot plaatje.
+
+**De uitslag** (`uitslagWeergave()`):
+
+- je punten groot over de volle breedte, met *N van 10 exact voorspeld*;
+- links **Jouw voorspelling** als tabel: voorspeld, coureur (achternaam, via
+  `achternaam()`, met het teamstreepje), uitslag en punten. Exact goed krijgt
+  een paars vlakje en een pilletje *✓ exact*. Paars en niet groen zoals in het
+  voorbeeld: paars is in de hele app al de kleur van "raak" (5 punten), groen
+  van één plek ernaast. De losse vragen (pole, …) staan onderin dezelfde kaart;
+- rechts **De poule** (`pouleKaart()`): iedereen op punten met een rondje met
+  zijn eerste letter, jij gemarkeerd met *(jij)* en zonder knop (jouw
+  inzending staat er al), de anderen als knop naar hun inzending, en een knop
+  **Bekijk poulestand →**. In je eentje geen kaart;
+- daaronder **Zo dichtbij** als één zin in plaats van een lijstje (*"Antonelli,
+  Norris en Hamilton zaten er maar één plek naast. Daar liet je samen 6 punten
+  liggen."*), en de weekendwinnaar met de knoppen om af te spelen en te delen.
+
+**Het voorspelscherm** (`invulWeergave()`) in dezelfde tegels: **Jouw top 10**
+met de teller en een dun balkje dat volloopt (amber, groen als hij af is),
+**Losse vragen** met *N van M ingevuld* (de duels tellen als één), en **De
+poule** met wie er voor dít tabblad al iets heeft ingeleverd
+(`pouleKaart(r, { open: true })` en `ingeleverdVoor()`). Wát ze kozen blijft
+geheim tot de deadline, dus daar zijn de namen geen knop. Opslaan staat buiten
+de tegels, omdat een tegel `overflow:hidden` heeft en de balk dan niet meer
+onderaan blijft plakken. Op een breed scherm staan de vragen, de poule en
+Opslaan rechts van de top 10; is er naast de top 10 niets (geen vragen, geen
+poule), dan blijft het één kolom. De zigzag van het startgrid is gebleven.
+
+**De zijbalk** (vanaf 960 pixels): een pictogram per onderdeel (niet in de
+balk onderin op een telefoon, daar is het te krap), een kopieerknop naast de
+poulecode (lukt het klembord niet, dan wordt de code geselecteerd om zelf te
+kopiëren), en je eigen naam onderin als knop naar Profiel, met een pijltje.
+
+De koppen van de tegels zijn `h2`: onder de `h1` van de race mag geen niveau
+overgeslagen worden (`test/toegankelijk.test.mjs`). De kopieerknop is 44
+pixels, zoals elke knop (`test/toegankelijkheid.test.mjs`).
+
+Getest in `test/racescherm.test.mjs` (43 controles). Bijgewerkt:
+`breed-scherm` (de nieuwe indeling), `bijna-goed` (de zin in plaats van het
+lijstje, plus enkelvoud), `terugkijken` (de kop van je eigen inzending).
+36 mutanten, van de vlag tot de selectie bij een mislukte kopie; ze zakken
+allemaal.

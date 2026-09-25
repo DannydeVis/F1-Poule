@@ -56,7 +56,7 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
                   // sw.js hoort als javascript geserveerd te worden, anders
                   // weigert de browser hem als service worker.
                   '.js': 'text/javascript', '.woff2': 'font/woff2',
-                  '.png': 'image/png', '.webmanifest': 'application/manifest+json',
+                  '.png': 'image/png', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json',
                   '.ics': 'text/calendar' };
   const server = createServer((req, res) => {
     // Eerst de querystring eraf: de app leest ?code= uit de link, dus '/'
@@ -190,7 +190,7 @@ export const opPlek = (page, kies) =>
 // horen niets van buiten te laden.
 export async function startSite({ voorafAan, taal = null } = {}) {
   const types = { '.html': 'text/html', '.mjs': 'text/javascript', '.js': 'text/javascript',
-                  '.woff2': 'font/woff2', '.png': 'image/png', '.jpg': 'image/jpeg',
+                  '.woff2': 'font/woff2', '.png': 'image/png', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg',
                   '.xml': 'application/xml', '.txt': 'text/plain', '.ics': 'text/calendar',
                   '.webmanifest': 'application/manifest+json' };
   const appBron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8').replace(
