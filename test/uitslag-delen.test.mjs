@@ -6,8 +6,9 @@
 // kopiëren en plakken. Kunnen we daar niet een mooie afbeelding van maken?"
 //
 // Wat hier vastligt:
-//   1. Op een breed scherm opent een race over de hele breedte (tot 880
-//      pixels), met de pijl terug bovenin, en Escape brengt je terug.
+//   1. Op een breed scherm opent een race over de hele breedte (een
+//      uitslag in twee kolommen tot 1240 pixels, zie breed-scherm.test.mjs),
+//      met de pijl terug bovenin, en Escape brengt je terug.
 //   2. Onder de uitslag staat "Deel de uitslag" in plaats van de kopieerknop.
 //   3. Die knop maakt een plaatje van 1080 bij 1350 met de uitslag van de
 //      hele poule, in de letters van de app, en het adres uit de adresbalk.
@@ -86,11 +87,13 @@ const breed = await page.evaluate(() => {
 });
 check('op een breed scherm verdwijnt de racelijst als een race open staat',
   !breed.links, JSON.stringify(breed));
-check('en krijgt de race de volle breedte, tot 880 pixels',
-  Math.round(breed.rechts.width) === 880, `${Math.round(breed.rechts.width)}px`);
-// In het midden van wat er naast de navigatie overblijft.
+// Een uitslag staat op 1366 in twee kolommen, en die mogen tot 1240 breed:
+// hier is dat alles wat er naast de navigatie over is.
+check('en krijgt de race de volle breedte naast de navigatie',
+  Math.round(breed.rechts.width) === Math.min(1240, Math.round(breed.vlak.width)),
+  `${Math.round(breed.rechts.width)}px van ${Math.round(breed.vlak.width)}px`);
 const [links, rechts] = [breed.rechts.left - breed.vlak.left, breed.vlak.right - breed.rechts.right];
-check('in het midden van het scherm naast de navigatie', links > 40 && Math.abs(links - rechts) < 2,
+check('in het midden van het scherm naast de navigatie', Math.abs(links - rechts) < 2,
   `${Math.round(links)} links, ${Math.round(rechts)} rechts`);
 check('met de pijl terug bovenin', breed.terug);
 
