@@ -7312,3 +7312,11 @@ in de SQL, zeven op de pagina, twee in de app, één in de nabootsing), van
 plaats van koppelen" en "geen accountkeuze"; ze zakken allemaal. Twee
 overleefden eerst (hoofdletters, en `prompt=select_account`), daarom de
 hoofdletters in de SQL-test en `naar_google` in de nabootsing.
+
+**De controletabel telde Danny dubbel.** Na het draaien stond er
+"devisser.danny@gmail.com (ingelogd) + 1 extra": de versie van `schema.sql`
+uit de eerste beheer-PR zette het account van het beheeradres zelf in
+`site_beheerders`, en de regel telde elke rij in die tabel. Nu telt "extra"
+alleen accounts met een ander adres. De rij zelf blijft staan (hij doet geen
+kwaad, en een schema dat data weggooit is erger); `test/beheer.test.sql`
+controleert beide gevallen.
