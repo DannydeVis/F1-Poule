@@ -101,7 +101,8 @@ check('ook in andermans scherm valt er niets te wijzigen',
 await page.click('#inkijkterug');
 await page.waitForSelector('[data-bekijk]');
 check('en je komt weer terug bij je eigen scherm',
-  (await page.textContent('#paneel')).includes('jouw inzending'));
+  (await page.textContent('#paneel')).includes('Jouw voorspelling')
+    && (await page.textContent('#paneel')).includes('alleen om terug te kijken'));
 
 // ------------------------------------------------------------------
 // 4. Zolang het openstaat is het geheim.

@@ -104,13 +104,31 @@ await page.waitForSelector('.strip');
 
 check('het blok staat onder de uitslag', (await page.$('.bijna')) !== null);
 const blok = (await page.textContent('.bijna')).replace(/\s+/g, ' ').trim();
-check('en noemt de coureur, jouw plek en waar hij werd',
-  blok.includes('RUS stond bij jou op P2 en werd P3'), blok);
-check('met wat het scheelde, in gewone woorden',
-  blok.includes('één plek, en dat scheelde 2 punten'), blok);
-check('en de optelsom eronder', blok.includes('8 punten'), blok);
+// Eén zin in plaats van een lijstje: wie er net naast zat, bij achternaam,
+// en daaronder wat dat samen kostte.
+check('en noemt de coureurs die er net naast zaten, in één zin',
+  blok.includes('Russell, Antonelli, Hamilton en Leclerc zaten er maar één plek naast.'), blok);
+const som = (await page.textContent('.bijna .bijnasom')).replace(/\s+/g, ' ').trim();
+check('met de optelsom eronder, in gewone woorden',
+  som === 'Daar liet je samen 8 punten liggen.', som);
 check('de exact voorspelde coureur wordt niet genoemd',
-  !blok.includes('VER'), blok);
+  !blok.includes('Verstappen'), blok);
+
+// Eén coureur die er net naast zat is geen "zaten" en geen "samen".
+await page.evaluate(() => {
+  globalThis.__db.answers = globalThis.__db.answers.filter((a) => a.question_id !== 'quali_top10');
+  // Alleen de laatste twee staan omgedraaid, en de laatste reed niet mee.
+  globalThis.__db.answers.push({ pool_id:'pool-1', race_id:1, member_id:'lid-1',
+    question_id:'quali_top10', waarde:['1','12','63','16','44','4','81','10','18','43'] });
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(globalThis.__db));
+});
+await page.reload();
+await openRace(page, 'Melbourne');
+await page.click('[data-tab="quali"]');
+await page.waitForSelector('.bijna');
+const enkel = (await page.textContent('.bijna')).replace(/\s+/g, ' ').trim();
+check('bij één coureur: "zat er", en zonder "samen"',
+  enkel.includes(' zat er maar één plek naast.') && enkel.includes('Daar liet je 2 punten liggen.'), enkel);
 
 // Wie alles goed had heeft niets "zo dichtbij" gehad, en dan hoort er ook
 // niets te staan — anders leest het als spot.

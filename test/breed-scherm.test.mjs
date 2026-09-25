@@ -6,14 +6,16 @@
 // midden.
 //
 // Wat hier vastligt:
-//   1. Vanaf 1280 pixels staat een uitslag in twee kolommen: links je punten
-//      en de top 10, rechts de losse vragen, de rest en de weekendwinnaar met
-//      de knoppen. De race wordt daarvoor breder, tot 1240 pixels.
-//   2. Het invulscherm ook: de top 10 links, de vragen en Opslaan rechts.
-//      Zonder losse vragen blijft het één kolom; een lege rechterkolom naast
-//      de top 10 is geen verbetering.
-//   3. Daaronder, en op een telefoon, verandert er niets: één kolom, in de
-//      volgorde van altijd (de losse vragen boven je punten).
+//   1. Vanaf 1280 pixels staat een uitslag in twee kolommen, onder je punten
+//      over de volle breedte: links je voorspelling als tabel (met de losse
+//      vragen onderin dezelfde kaart), rechts de poule, "zo dichtbij" en de
+//      weekendwinnaar met de knoppen. De race wordt daarvoor breder, tot 1240
+//      pixels.
+//   2. Het invulscherm ook: de top 10 links, de vragen, de poule en Opslaan
+//      rechts. Is er naast de top 10 niets (geen vragen, geen poule), dan
+//      blijft het één kolom; een lege rechterkolom is geen verbetering.
+//   3. Daaronder, en op een telefoon, één kolom: je punten, je voorspelling,
+//      de poule, de knoppen.
 
 import { maakControle, startPagina, meedoen, openRace } from './hulp.mjs';
 
@@ -48,13 +50,15 @@ const vakken = () => page.evaluate(() => {
   const pole = [...document.querySelectorAll('#paneel .sr')].find((e) => !e.closest('.strip'));
   return {
     kolom: vak('.kol.rechts'), vlak: vak('.kolommen'),
-    pole: maat(pole), score: vak('.score'), strip: vak('.strip'),
-    rest: vak('[data-bekijk]'), deel: vak('[data-deel]'),
+    pole: maat(pole), score: vak('.score'), strip: vak('.strip'), kaart: vak('.voorspelkaart'),
+    poule: vak('.poulekaart'), rest: vak('[data-bekijk]'), deel: vak('[data-deel]'),
     grid: vak('.grid10'), opslaan: vak('#opslaan'), kolom2: !!document.querySelector('.kolom2'),
   };
 });
 const naast = (links, rechts) => !!links && !!rechts && links.r <= rechts.l;
 const onder = (boven, beneden) => !!boven && !!beneden && boven.b <= beneden.t;
+const binnen = (klein, groot) => !!klein && !!groot && klein.l >= groot.l && klein.r <= groot.r
+  && klein.t >= groot.t && klein.b <= groot.b;
 
 const uitslag = async (breed, hoog = 1000) => {
   await page.setViewportSize({ width: breed, height: hoog });
@@ -69,12 +73,18 @@ const uitslag = async (breed, hoog = 1000) => {
 // ---- 1. de uitslag op een groot scherm -----------------------------------------------
 for (const breed of [2560, 1366]) {
   const v = await uitslag(breed);
-  check(`${breed}: je punten en de top 10 staan links, onder elkaar`, onder(v.score, v.strip) && Math.abs(v.score.l - v.strip.l) < 2,
-    JSON.stringify({ score: v.score, strip: v.strip }));
-  check(`${breed}: de rest en de knoppen staan ernaast, rechts`, naast(v.strip, v.rest) && naast(v.strip, v.deel),
-    JSON.stringify({ strip: v.strip, rest: v.rest, deel: v.deel }));
-  check(`${breed}: en de pole bovenaan die rechterkolom, op de hoogte van je punten`,
-    naast(v.strip, v.pole) && Math.abs(v.pole.t - v.score.t) < 40, JSON.stringify({ pole: v.pole, score: v.score }));
+  check(`${breed}: je punten staan bovenaan, over de volle breedte van de twee kolommen`,
+    onder(v.score, v.kaart) && onder(v.score, v.poule)
+      && Math.abs(v.score.l - v.kaart.l) < 2 && Math.abs(v.score.r - v.poule.r) < 2,
+    JSON.stringify({ score: v.score, kaart: v.kaart, poule: v.poule }));
+  check(`${breed}: je voorspelling links, met de pole onderin dezelfde kaart`,
+    binnen(v.strip, v.kaart) && binnen(v.pole, v.kaart) && onder(v.strip, v.pole),
+    JSON.stringify({ kaart: v.kaart, strip: v.strip, pole: v.pole }));
+  check(`${breed}: de poule en de knoppen staan ernaast, rechts`,
+    naast(v.kaart, v.poule) && naast(v.kaart, v.rest) && naast(v.kaart, v.deel),
+    JSON.stringify({ kaart: v.kaart, poule: v.poule, deel: v.deel }));
+  check(`${breed}: en de poule bovenaan die rechterkolom, op de hoogte van je voorspelling`,
+    Math.abs(v.poule.t - v.kaart.t) < 2, JSON.stringify({ poule: v.poule, kaart: v.kaart }));
 }
 {
   const v = await uitslag(2560);
@@ -99,9 +109,12 @@ const invullen = async (breed) => {
   const v = await invullen(2560);
   check('invullen op een groot scherm: de top 10 links, Opslaan rechts ernaast',
     naast(v.grid, v.opslaan) && v.opslaan.t < v.grid.b, JSON.stringify({ grid: v.grid, opslaan: v.opslaan }));
+  check('en de poule ook rechts, boven Opslaan',
+    naast(v.grid, v.poule) && onder(v.poule, v.opslaan), JSON.stringify({ grid: v.grid, poule: v.poule, opslaan: v.opslaan }));
 }
 {
-  // Zonder losse vragen staat er naast de top 10 niets om in te vullen.
+  // Zonder losse vragen staat er naast de top 10 niets om in te vullen, maar
+  // wel wie van de poule al klaar is.
   await page.evaluate(() => {
     const db = globalThis.__db;
     db.pool_questions = db.pool_questions.filter((q) => q.pool_id !== 'pool-1' || /top10/.test(q.question_id));
@@ -110,28 +123,42 @@ const invullen = async (breed) => {
     sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
   });
   const v = await invullen(2560);
-  check('zonder losse vragen blijft het één kolom, met Opslaan onder de top 10',
-    !v.kolom2 && onder(v.grid, v.opslaan), JSON.stringify({ kolom2: v.kolom2, grid: v.grid, opslaan: v.opslaan }));
-  check('en dan ook niet breder dan 880', v.kolom.r - v.kolom.l <= 880, `${v.kolom.r - v.kolom.l}px`);
-  await page.evaluate(() => {
+  check('zonder losse vragen staan de poule en Opslaan naast de top 10',
+    v.kolom2 && naast(v.grid, v.poule) && naast(v.grid, v.opslaan),
+    JSON.stringify({ kolom2: v.kolom2, grid: v.grid, poule: v.poule, opslaan: v.opslaan }));
+  // En in je eentje ook geen poule: dan staat er rechts niets meer.
+  const leden = await page.evaluate(() => {
+    const db = globalThis.__db;
+    const weg = db.pool_members.filter((l) => l.pool_id === 'pool-1' && l.member_id !== 'lid-1');
+    db.pool_members = db.pool_members.filter((l) => !weg.includes(l));
+    sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+    return weg;
+  });
+  const w = await invullen(2560);
+  check('zonder vragen en zonder poule blijft het één kolom, met Opslaan onder de top 10',
+    !w.kolom2 && !w.poule && onder(w.grid, w.opslaan), JSON.stringify({ kolom2: w.kolom2, grid: w.grid, opslaan: w.opslaan }));
+  check('en dan ook niet breder dan 880', w.kolom.r - w.kolom.l <= 880, `${w.kolom.r - w.kolom.l}px`);
+  await page.evaluate((leden) => {
     const db = globalThis.__db;
     db.pool_questions.push({ pool_id: 'pool-1', question_id: 'pole' });
+    db.pool_members.push(...leden);
     sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
-  });
+  }, leden);
 }
 
 // ---- 3. kleiner dan 1280, en op een telefoon: zoals altijd ------------------------------
 {
   const v = await uitslag(1100);
   check('op 1100 staat alles onder elkaar, in één kolom',
-    onder(v.strip, v.rest) && onder(v.rest, v.deel) && Math.abs(v.strip.l - v.deel.l) < 2,
-    JSON.stringify({ strip: v.strip, rest: v.rest, deel: v.deel }));
+    onder(v.kaart, v.poule) && onder(v.poule, v.deel)
+      && Math.abs(v.kaart.l - v.poule.l) < 2 && Math.abs(v.kaart.r - v.poule.r) < 2,
+    JSON.stringify({ kaart: v.kaart, poule: v.poule, deel: v.deel }));
 }
 {
   const v = await uitslag(390, 844);
-  check('op een telefoon in de volgorde van altijd: pole, je punten, de top 10, de rest, de knoppen',
-    onder(v.pole, v.score) && onder(v.score, v.strip) && onder(v.strip, v.rest) && onder(v.rest, v.deel),
-    JSON.stringify({ pole: v.pole?.t, score: v.score?.t, strip: v.strip?.t, rest: v.rest?.t, deel: v.deel?.t }));
+  check('op een telefoon onder elkaar: je punten, je top 10 met de pole eronder, de poule, de knoppen',
+    onder(v.score, v.strip) && onder(v.strip, v.pole) && onder(v.pole, v.rest) && onder(v.rest, v.deel),
+    JSON.stringify({ score: v.score?.t, strip: v.strip?.t, pole: v.pole?.t, rest: v.rest?.t, deel: v.deel?.t }));
 }
 
 check('geen JavaScript-fouten', jsFouten.length === 0, jsFouten.join(' | '));

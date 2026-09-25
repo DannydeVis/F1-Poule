@@ -66,10 +66,25 @@ won.
 
 Een race opent over het hele scherm, ook op een computer: de lijst gaat
 opzij, de race staat in het midden (hooguit 880 pixels breed) en linksboven
-staat de pijl terug. Escape doet hetzelfde. Vanaf 1280 pixels breed staat
-een race in twee kolommen, tot 1240 pixels: bij een uitslag links je punten
-en de top 10, rechts de losse vragen, de rest en de weekendwinnaar; bij het
-invullen links de top 10, rechts de vragen en Opslaan.
+staat de pijl terug. Escape doet hetzelfde. In de kop de vlag van het land
+en wat je er ziet (jouw uitslag, voorspellen, gesloten).
+
+Een race bestaat uit tegels. Bij een uitslag: je punten groot bovenaan (met
+hoeveel je er exact had), je voorspelling als tabel met achternamen, waar
+iedereen werd en wat het opleverde (exact goed met een pilletje), en de losse
+vragen onderin die kaart. Daarnaast de poule op punten, met jou gemarkeerd;
+tik op een ander om zijn inzending te zien, of op **Bekijk poulestand**.
+Daaronder "zo dichtbij" in één zin en de weekendwinnaar. Bij het invullen:
+je top 10 met een teller en een balkje dat volloopt, de losse vragen met
+hoeveel je er al hebt, en wie van de poule al iets heeft ingeleverd voor dat
+tabblad (niet wát: dat blijft geheim tot de deadline).
+
+Vanaf 1280 pixels breed staan de tegels in twee kolommen, tot 1240 pixels:
+bij een uitslag je voorspelling links en de poule rechts; bij het invullen de
+top 10 links en de vragen, de poule en Opslaan rechts.
+
+In de zijbalk (vanaf 960 pixels) staat naast de poulecode een knop om hem te
+kopiëren, en je eigen naam onderin brengt je naar Profiel.
 
 Onder een uitslag staat **Deel de uitslag**. Dat maakt een plaatje van 1080
 bij 1350 met de weekenduitslag van de hele poule, de weekendwinnaar en de top

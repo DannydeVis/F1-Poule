@@ -152,7 +152,7 @@
     --amber:#986300; --amber-vlak:rgba(176,123,22,.10); --amber-rand:rgba(176,123,22,.40);
     /* De paars-groen-geel van een F1-timingscherm. Paars is de beste van de
        drie en hoort schaars te zijn — daarom alleen voor een exacte treffer. */
-    --paars:#8b2fc9;
+    --paars:#8b2fc9; --paars-vlak:rgba(139,47,201,.07);
     --omkeer:#14151a; --omkeer-ink:#f2f1ee;
     --vlag-a:#14151a;
     --sans:Barlow,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
@@ -176,7 +176,7 @@
       --groen:#34b264; --groen-vlak:rgba(52,178,100,.16); --groen-rand:rgba(52,178,100,.50);
       --groen-sterk:rgba(52,178,100,.70); --groen-ink:#0b0b0c;
       --amber:#e0a53a; --amber-vlak:rgba(224,165,58,.08); --amber-rand:rgba(224,165,58,.40);
-      --paars:#c084f5;
+      --paars:#c084f5; --paars-vlak:rgba(192,132,245,.10);
       --omkeer:#f2f3f5; --omkeer-ink:#0b0b0c;
       --vlag-a:#f2f3f5;
     }
@@ -308,7 +308,7 @@
   .waarschuwing::before{content:"!";content:"!" / "";
     background:var(--amber-vlak);color:var(--amber)}
   .leeg::before,.uitleg::before{content:"i";content:"i" / "";font-size:13px}
-  .bijna::before{content:"↗";content:"↗" / "";
+  .bijna::before{content:"◎";content:"◎" / "";
     background:var(--accent-vlak);color:var(--accent)}
   /* De bevestiging na opslaan is één korte zin. Die hoeft niet de hele
      breedte te beslaan; zo oogt hij als een seintje en niet als een balk. */
@@ -449,6 +449,7 @@
      linksboven is daar de weg terug. */
   .shell.detail .nav{display:none}
   .zijvoet{display:none}
+  .navicoon{display:none}
 
   .hoofd{flex:1;display:flex;flex-direction:column;min-width:0}
   /* Dit is een opvangpunt voor de focus na een schermwissel, geen knop. Een
@@ -930,9 +931,115 @@
      elkaar, in dezelfde volgorde als altijd: de noot en de losse vragen die op
      een breed scherm bovenaan een kolom staan, komen dan weer vooraan. */
   .kolom2,.k2-hoofd,.k2-zij{display:contents}
-  .k2-noot,.k2-boven{display:flex;flex-direction:column;gap:14px;min-width:0}
-  .k2-noot{order:-2}
-  .k2-boven{order:-1}
+
+  /* ---- tegels op het racescherm -------------------------- */
+  /* Een tegel: een paneel met een kop erboven en de inhoud eronder. Zelfde
+     hoek en rand als een .groep, zodat het één familie blijft. */
+  .tegel{display:flex;flex-direction:column;background:var(--paneel);border:1px solid var(--lijn);
+    border-radius:14px;overflow:hidden;flex:none;min-width:0}
+  .tegelkop{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;
+    gap:4px 12px;padding:16px 18px 12px}
+  .tegelkop h2,.tegeltitel{margin:0;font-family:var(--cond);font-size:24px;font-weight:700;
+    line-height:1.05;color:var(--ink)}
+  .tegelsub{font-size:13px;color:var(--ink2)}
+  .tegelinhoud{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px}
+  .tegelleeg{margin:0;padding:0 18px 16px}
+  .tegelknoppen{display:flex;flex-direction:column;gap:10px;padding:14px 16px 16px}
+  .tegel > .strip{border:0;border-radius:0;background:transparent}
+  /* Wat onderaan een kaart hangt: de losse vragen onder je top 10. */
+  .tegelvoet{display:flex;flex-direction:column;gap:10px;padding:14px 16px 16px;
+    border-top:1px solid var(--lijn);background:var(--zweef)}
+
+  /* Het invulscherm in dezelfde tegels. Je top 10 met een dun balkje dat
+     volloopt, amber tot hij af is. De losse vragen in één tegel onder elkaar,
+     zonder elk een eigen kader: de tegel is het kader al. */
+  .toptegel .topkop .mono{font-size:15px}
+  .voortgang{height:3px;margin:0 18px 14px;border-radius:2px;overflow:hidden;
+    background:var(--gedempt)}
+  .voortgang i{display:block;height:100%;background:var(--amber);transition:width .3s}
+  .voortgang.af i{background:var(--groen)}
+  .vragentegel > .kiesregels{border:0;border-top:1px solid var(--lijn);border-radius:0;
+    background:transparent}
+  .vragentegel .kiesregel{padding:0 18px}
+  .vragentegel > .winnaarblok{border:0;border-top:1px solid var(--lijn);border-radius:0;
+    background:transparent;padding:14px 18px 16px}
+  .pouleregel .klaarteken{width:22px;display:grid;place-items:center;flex:none;color:var(--groen)}
+  .pouleregel.klaar .zacht{color:var(--groen)}
+
+  /* Je punten, groot, over de hele breedte. De geblokte vlag rechts is
+     versiering, net als op de weekendkaart. */
+  .scorekaart{position:relative;overflow:hidden;align-items:center;justify-content:flex-start;
+    gap:20px;padding:20px 22px}
+  .scorekaart .getal{font-size:72px}
+  .scoretekst{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .scorekaart .zacht{font-size:16px;color:var(--ink)}
+  .ruit{margin-left:auto;width:120px;height:68px;flex:none;opacity:.12;transform:skewX(-14deg);
+    background-image:
+      linear-gradient(45deg,var(--ink) 25%,transparent 25%,transparent 75%,var(--ink) 75%),
+      linear-gradient(45deg,var(--ink) 25%,transparent 25%,transparent 75%,var(--ink) 75%);
+    background-size:34px 34px;background-position:0 0,17px 17px}
+
+  /* Je voorspelling als tabel: plek, coureur, uitslag, punten. Exact goed
+     krijgt een vlakje en een pilletje in het paars van "raak". De code van de
+     coureur blijft in de regel (verborgen): daar herkent de rest van de app
+     een coureur aan. */
+  .tabelkop,.voorspelkaart > .strip > .sr{display:grid;align-items:center;column-gap:10px;
+    grid-template-columns:40px minmax(0,1fr) 40px 76px 34px;padding:0 14px}
+  .tabelkop{min-height:30px;border-top:1px solid var(--lijn);font-family:var(--mono);
+    font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+  .tabelkop span:last-child{grid-column:-2;text-align:right}
+  /* Op een telefoon past "voorspeld" niet boven de smalle eerste kolom. */
+  .tabelkop span:first-child{font-size:0}
+  .tabelkop span:first-child::after{content:"#";font-size:10px}
+  @media (min-width:600px){
+    .tabelkop,.voorspelkaart > .strip > .sr{grid-template-columns:84px minmax(0,1fr) 64px 92px 44px;
+      padding:0 18px}
+    .tabelkop span:first-child{font-size:inherit}
+    .tabelkop span:first-child::after{content:none}
+  }
+  .voorspelkaart > .strip{border-top:1px solid var(--lijn)}
+  .voorspelkaart > .strip > .sr::before{display:none}
+  .voorspelkaart > .strip > .sr .code{display:none}
+  .voorspelkaart > .strip > .sr.raak{background:var(--paars-vlak)}
+  .drnaam{font-family:var(--cond);font-size:19px;font-weight:700;line-height:22px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    border-left:3px solid var(--team,var(--lijn));padding-left:10px}
+  .voorspelkaart > .strip > .sr .werd{font-size:12px}
+  .voorspelkaart > .strip > .sr .delta{font:inherit;letter-spacing:0;text-transform:none;justify-self:end}
+  .exactpil{display:inline-flex;align-items:center;gap:4px;font-style:normal;font-size:12px;
+    font-weight:600;color:var(--paars);border:1px solid currentColor;border-radius:999px;
+    padding:2px 9px 2px 6px;white-space:nowrap}
+  .voorspelkaart .pts:not(.v0)::before{content:"+ ";font-size:.72em;vertical-align:.12em}
+
+  /* De poule: iedereen met een rondje met zijn eerste letter, jij gemarkeerd. */
+  .poulelijst{display:flex;flex-direction:column;border-top:1px solid var(--lijn)}
+  .poulelijst > * + *{border-top:1px solid var(--lijn)}
+  .pouleregel{min-height:56px}
+  .pouleregel .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+    flex:none;background:var(--gedempt);color:var(--ink2);font-family:var(--cond);
+    font-size:16px;font-weight:700}
+  .pouleregel.mij{background:var(--eigen);border-left-color:var(--accent)}
+  .pouleregel.mij .avatar{background:var(--accent);color:var(--accent-ink)}
+  .pouleregel .zacht{font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink3);flex:none}
+  .pouleregel .t{min-width:26px;text-align:right}
+  .pouleregel.mij .t{color:var(--ink)}
+  .pouleregel .eenheid{font-family:var(--cond);font-size:15px;font-weight:700;color:var(--ink2);
+    margin-left:-8px}
+  .weekendkaart .rest.winnaar{border-top:1px solid var(--lijn)}
+
+  /* "Zo dichtbij" als korte samenvatting in plaats van een lijstje. */
+  .bijna .tegeltitel{font-size:22px}
+  .bijna p{margin:0;font-size:15px;line-height:1.5;color:var(--ink2)}
+  .bijna p b{color:var(--ink)}
+  .bijna .bijnasom{color:var(--ink);font-weight:700}
+
+  /* De kop van een race: vlag, naam, en wat je hier kunt. */
+  .landvlag{width:28px;height:21px;border-radius:3px;flex:none;object-fit:cover;
+    box-shadow:0 0 0 1px var(--lijn)}
+  .dkop{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .dkop .dtitel{flex:none}
+  .dsub{font-size:10px}
 
   /* ---- uitslag -------------------------------------------- */
   .score{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;
@@ -1164,8 +1271,20 @@
     .navknop[aria-current="true"]{background:var(--paneel2);color:var(--ink);
       border-left-color:var(--accent)}
     .zijvoet{margin-top:auto;display:flex;flex-direction:column;gap:14px}
-    .zijspeler{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 14px;
-      background:var(--paneel2);border-radius:10px}
+    .navknop{display:flex;align-items:center;gap:12px}
+    .navicoon{display:grid;place-items:center;color:var(--ink3);transition:color .18s}
+    .navknop:hover .navicoon,.navknop[aria-current="true"] .navicoon{color:var(--accent)}
+    .zijspeler{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 10px 0 14px;
+      width:100%;text-align:left;background:var(--paneel2);border:0;border-radius:10px;
+      transition:background .15s}
+    .zijspeler:hover{background:var(--zweef)}
+    .zijspeler .pijltje{display:grid;place-items:center;color:var(--ink3)}
+    .coderegel{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .kopieercode{display:grid;place-items:center;width:44px;height:44px;flex:none;
+      border:1px solid var(--lijn);border-radius:8px;background:transparent;color:var(--ink2);
+      transition:background .15s,color .15s,border-color .15s}
+    .kopieercode:hover{background:var(--paneel2);color:var(--ink)}
+    .kopieercode.klaar{color:var(--groen);border-color:var(--groen)}
     .zijspeler .nm{font-size:15px;font-weight:600;letter-spacing:.01em;
       flex:1;min-width:0;overflow:hidden;
       text-overflow:ellipsis;white-space:nowrap}
@@ -1228,7 +1347,6 @@
     .shell.detail .kol.rechts:has(.kolom2){max-width:1240px}
     .kolom2{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px;align-items:start}
     .k2-hoofd,.k2-zij{display:flex;flex-direction:column;gap:14px;min-width:0}
-    .k2-noot,.k2-boven{order:0}
   }
 </style>
 </head>
@@ -2117,16 +2235,24 @@ const ENGELS = Object.fromEntries([
    + 'automatically as soon as OpenF1 publishes it; the sync runs every hour.'],
   ['Neem de kwalificatie over',
    'Copy your qualifying list'],
-  ['jouw top 10',
-   'your top 10'],
+  ['Jouw top 10',
+   'Your top 10'],
   [', nu {wie}',
    ', currently {wie}'],
   [', nog leeg',
    ', still empty'],
   ['tik om te kiezen',
    'tap to pick'],
-  ['losse vragen',
-   'extra questions'],
+  ['Losse vragen',
+   'Extra questions'],
+  ['{n} van {totaal} ingevuld',
+   '{n} of {totaal} answered'],
+  ['ingeleverd',
+   'submitted'],
+  ['nog niet',
+   'not yet'],
+  ['{n} van {totaal} ingeleverd',
+   '{n} of {totaal} submitted'],
   ['Opslaan',
    'Save'],
   ['Maak de top 10 af · nog {n}',
@@ -2389,8 +2515,6 @@ const ENGELS = Object.fromEntries([
    '{n} of {totaal} spot on'],
   ['geen top 10 ingevuld',
    'no top 10 filled in'],
-  ['de rest · tik op een naam om hun voorspelling te zien',
-   'the others · tap a name to see their picks'],
   ['bekijken',
    'view'],
   ['automatisch ingevuld',
@@ -2878,6 +3002,25 @@ const ENGELS = Object.fromEntries([
    'season {jaar} · {punten} points'],
   ['ingevuld · wordt gescoord als het seizoen erop zit',
    'filled in · scored once the season is over'],
+  // Het racescherm als kaarten (uitslag, poule, zo dichtbij).
+  ['Jouw voorspelling', 'Your prediction'],
+  ['voorspeld', 'predicted'],
+  ['coureur', 'driver'],
+  ['uitslag', 'result'],
+  ['werd', 'finished'],
+  ['De poule', 'The pool'],
+  ['Bekijk poulestand', 'See the pool standings'],
+  ['pt', 'pts'],
+  ['Zo dichtbij', 'So close'],
+  ['{wie} zat er maar {afstand} naast.', '{wie} was only {afstand} off.'],
+  ['{wie} zaten er maar {afstand} naast.', '{wie} were only {afstand} off.'],
+  ['Daar liet je {punten} liggen.', 'That cost you {punten}.'],
+  ['Daar liet je samen {punten} liggen.', 'Together that cost you {punten}.'],
+  ['Weekendwinnaar', 'Weekend winner'],
+  ['kwalificatie + race', 'qualifying + race'],
+  ['alleen om terug te kijken', 'just to look back on'],
+  ['jouw uitslag', 'your result'],
+  ['voorspellen', 'predict'],
   // Het deelplaatje van een weekend, en het venster eromheen.
   ['Deel de uitslag', 'Share the result'],
   ['ronde {n}', 'round {n}'],
@@ -2937,6 +3080,10 @@ const ENGELS = Object.fromEntries([
    'Enter your own name'],
   ['Vul je mailadres in',
    'Enter your email address'],
+  ['Kopieer de poulecode',
+   'Copy the pool code'],
+  ['{naam}, {punten} punten · naar je profiel',
+   '{naam}, {punten} points · to your profile'],
   ['Gekopieerd',
    'Copied'],
 
@@ -2969,8 +3116,6 @@ const ENGELS = Object.fromEntries([
    'That did not work. Maybe you were just too late and someone else already claimed it.'],
   ['Deze race staat niet meer in de lijst.',
    'This race is no longer in the list.'],
-  ['jouw inzending · alleen om terug te kijken',
-   'your entry · just to look back at'],
   ['Alles wissen? Tik nog een keer',
    'Clear everything? Tap once more'],
   ['Bezig met opslaan...',
@@ -2979,8 +3124,6 @@ const ENGELS = Object.fromEntries([
    'one place'],
   ['{n} plekken',
    '{n} places'],
-  ['zo dichtbij',
-   'so close'],
   ['De code {code} uit die link bestaat niet. '
    + 'Herlaad de pagina om terug te gaan naar je eigen poule.',
    'The code {code} from that link does not exist. '
@@ -3035,14 +3178,6 @@ const ENGELS = Object.fromEntries([
    + 'de sync hem bij OpenF1 heeft opgehaald; die draait elk uur.',
    'Entries are closed. The result follows as soon as the sync has fetched '
    + 'it from OpenF1; that runs every hour.'],
-  ['<b>{code}</b> stond bij jou op P{voorspeld} en werd P{werkelijk} '
-   + '— {afstand}, en dat scheelde {scheelde}.',
-   '<b>{code}</b> was at P{voorspeld} on your list and finished P{werkelijk} '
-   + '— {afstand}, which cost you {scheelde}.'],
-  ['Bij elkaar scheelden die net-niets {scheelde}.',
-   'Together those near misses cost you {scheelde}.'],
-  ['weekendwinnaar · kwalificatie + race',
-   'weekend winner · qualifying + race'],
   ['geen duels gekozen · {n} punten laten liggen',
    'no head-to-heads picked · {n} points left on the table'],
   ['teamgenoot-duels · {behaald} van {punten} punten',
@@ -5505,6 +5640,23 @@ function render() {
 const navNamen = () => ({ races: T('Races'), stand: T('Stand'),
                           poule: T('Poule'), profiel: T('Profiel') });
 
+// Een pictogram per onderdeel, alleen in de zijbalk op een breed scherm. Op
+// een telefoon is de balk onderin daar te krap voor, en daar staat het woord
+// al groot genoeg. Lijnen in currentColor, zodat ze meekleuren met de knop.
+const lijnicoon = (pad, maat = 18) => `<svg viewBox="0 0 24 24" width="${maat}" height="${maat}"
+  aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round">${pad}</svg>`;
+const NAVICONEN = {
+  races:   lijnicoon('<path d="M5 21V4"/><path d="M5 4h12l-2.5 4.5L17 13H5"/>'),
+  stand:   lijnicoon('<path d="M6 20v-8M12 20V5M18 20v-5"/>'),
+  poule:   lijnicoon('<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/>'
+                   + '<path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.8.6 3 2.4 3 5.2"/>'),
+  profiel: lijnicoon('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>'),
+};
+const KOPIEERICOON = lijnicoon('<rect x="9" y="9" width="11" height="11" rx="2"/>'
+  + '<path d="M5 15V6a2 2 0 0 1 2-2h9"/>', 16);
+const PIJLTJE = lijnicoon('<path d="M9 6l6 6-6 6"/>', 16);
+
 function toonApp() {
   onthoudScherm();
   const detail = S.weergave === 'races' && !!S.race;
@@ -5526,18 +5678,24 @@ function toonApp() {
         </div>
         <nav class="nav">
           ${Object.entries(navNamen()).map(([w, naam]) => `<button class="navknop"
-            data-weergave="${w}" aria-current="${S.weergave === w}">${naam}</button>`).join('')}
+            data-weergave="${w}" aria-current="${S.weergave === w}"><span class="navicoon">${
+            NAVICONEN[w]}</span>${naam}</button>`).join('')}
         </nav>
         <div class="zijvoet">
           <div class="zijcode">
             <span class="label">${T('poulecode')}</span>
-            <span class="waarde">${esc(S.poule.join_code ?? '—')}</span>
+            <span class="coderegel"><span class="waarde">${esc(S.poule.join_code ?? '—')}</span>
+              ${S.poule.join_code ? `<button class="kopieercode" id="kopieerCode" type="button"
+                aria-label="${T('Kopieer de poulecode')}" title="${T('Kopieer de poulecode')}">${
+                KOPIEERICOON}</button>` : ''}</span>
           </div>
-          <div class="zijspeler">
+          <button class="zijspeler" data-naar-profiel type="button" aria-label="${
+            T('{naam}, {punten} punten · naar je profiel', { naam: esc(S.ik.naam), punten: ik ? ik.punten : 0 })}">
             <span class="stip"></span>
             <span class="nm">${esc(S.ik.naam)}</span>
             <span class="t">${ik ? ik.punten : 0}</span>
-          </div>
+            <span class="pijltje">${PIJLTJE}</span>
+          </button>
         </div>
       </aside>
 
@@ -5583,6 +5741,34 @@ function toonApp() {
     S.omschrijving = null; S.omschrijvingFout = '';
     render();
   });
+  // Je eigen naam onderin de zijbalk is de weg naar je profiel, zoals in
+  // zowat elke app met een zijbalk.
+  app.querySelectorAll('[data-naar-profiel]').forEach(b => b.onclick = () =>
+    app.querySelector('[data-weergave="profiel"]')?.click());
+  // De poulecode staat er om door te geven, dus hij moet ook te kopiëren
+  // zijn. Lukt het klembord niet, dan wordt de code geselecteerd om zelf te
+  // kopiëren; dat is altijd nog beter dan een knop die niets lijkt te doen.
+  const codeKnop = app.querySelector('#kopieerCode');
+  if (codeKnop) codeKnop.onclick = async () => {
+    const gelukt = await naarKlembord(S.poule.join_code);
+    if (!codeKnop.isConnected) return;
+    if (!gelukt) {
+      const bereik = document.createRange();
+      bereik.selectNodeContents(app.querySelector('.zijcode .waarde'));
+      getSelection().removeAllRanges(); getSelection().addRange(bereik);
+    }
+    const tekst = gelukt ? T('Gekopieerd') : T('Kopiëren lukt niet, selecteer hem zelf');
+    codeKnop.classList.toggle('klaar', gelukt);
+    codeKnop.innerHTML = gelukt ? VINKJE : KOPIEERICOON;
+    codeKnop.setAttribute('aria-label', tekst); codeKnop.title = tekst;
+    setTimeout(() => {
+      if (!codeKnop.isConnected) return;
+      codeKnop.classList.remove('klaar');
+      codeKnop.innerHTML = KOPIEERICOON;
+      codeKnop.setAttribute('aria-label', T('Kopieer de poulecode'));
+      codeKnop.title = T('Kopieer de poulecode');
+    }, 2400);
+  };
   app.querySelectorAll('[data-naar-poule]').forEach(b => b.onclick = () => {
     b.disabled = true;
     naarPoule(b.dataset.naarPoule);
@@ -7723,16 +7909,41 @@ function openRace(id, startTab = null) {
   render();
 }
 
+// De vlag van het land van een race, uit vlaggen/ (flag-icons, MIT; zie
+// vlaggen/LICENSE). OpenF1 geeft het land als naam ("Spain"). Staat het land
+// hier niet in, dan is er gewoon geen vlag.
+const VLAGGEN = {
+  'Australia': 'au', 'China': 'cn', 'Japan': 'jp', 'Bahrain': 'bh', 'Saudi Arabia': 'sa',
+  'United States': 'us', 'USA': 'us', 'Canada': 'ca', 'Monaco': 'mc', 'Spain': 'es',
+  'Austria': 'at', 'United Kingdom': 'gb', 'Great Britain': 'gb', 'UK': 'gb', 'Belgium': 'be',
+  'Hungary': 'hu', 'Netherlands': 'nl', 'Italy': 'it', 'Azerbaijan': 'az', 'Singapore': 'sg',
+  'Mexico': 'mx', 'Brazil': 'br', 'Qatar': 'qa', 'United Arab Emirates': 'ae', 'UAE': 'ae',
+};
+// Spanje en Mexico zijn als SVG 80 kB door hun wapen; op 24 pixels zie je
+// dat niet, dus die twee zijn een klein PNG'tje.
+const VLAGBESTAND = { es: 'es.png', mx: 'mx.png' };
+function vlagVan(race) {
+  const code = VLAGGEN[race?.country];
+  if (!code) return '';
+  return `<img class="landvlag" src="../vlaggen/${VLAGBESTAND[code] ?? `${code}.svg`}" alt="" width="28" height="21">`;
+}
+
 function raceDetailKop() {
   const r = S.race;
   // De teller hoort bij het tabblad dat je open hebt. Anders staat er een
   // groene tijd naast een kwalificatie die allang gereden is.
   const iso = r[SESSIES[S.tab].deadline];
   const nogOpen = Date.now() < new Date(iso).getTime();
+  // Wat je hier kunt: je uitslag bekijken, voorspellen, of niets meer.
+  const wat = r[SESSIES[S.tab].uitslag]?.length ? T('jouw uitslag')
+    : afgelastEnLeeg(r) ? T('afgelast')
+    : dichteSessies(r, Date.now())[S.tab] ? T('gesloten') : T('voorspellen');
   return `
     <div class="detailkop">
       <button class="terug" id="terug" aria-label="${T('Terug naar het overzicht')}">←</button>
-      <span class="dtitel">${esc(r.name)}</span>
+      ${vlagVan(r)}
+      <span class="dkop"><span class="dtitel">${esc(r.name)}</span>
+        <span class="label dsub">${wat}</span></span>
       ${nogOpen
         ? `<span class="mono groen" data-tot="${esc(iso)}" data-kort="1">${klokTekst(iso, true)}</span>`
         : `<span class="vlag"></span>`}
@@ -7866,8 +8077,11 @@ function geslotenWeergave(paneel, r) {
   // nergens meer nakijken wat je gekozen had — terwijl dat juist het moment
   // is waarop je het wilt weten.
   const mijnBlok = `
-    <span class="label">${T('jouw inzending · alleen om terug te kijken')}</span>
-    ${keuzeOverzicht(r, vindPred(r.id, S.ik.id), S.tab)}`;
+    <section class="tegel">
+      <div class="tegelkop"><h2>${T('Jouw voorspelling')}</h2>
+        <span class="tegelsub">${T('alleen om terug te kijken')}</span></div>
+      <div class="tegelinhoud">${keuzeOverzicht(r, vindPred(r.id, S.ik.id), S.tab)}</div>
+    </section>`;
 
   const kop = afgelastEnLeeg(r) ? `
     <div class="leeg"><span class="label">${T('afgelast')}</span>
@@ -7877,8 +8091,8 @@ function geslotenWeergave(paneel, r) {
     <div class="leeg"><span class="label">${T('gesloten')}</span>
       <p class="zacht" style="margin:0">${T('Inzendingen zijn gesloten. De uitslag volgt zodra '
         + 'de sync hem bij OpenF1 heeft opgehaald; die draait elk uur.')}</p></div>`;
-  // De rest ernaast op een breed scherm, als er een rest is.
-  const rest = andermans(r);
+  // De poule ernaast op een breed scherm, als er een poule is.
+  const rest = pouleKaart(r);
   paneel.innerHTML = rest ? tweeKolommen({ hoofd: kop + mijnBlok, zij: rest }) : kop + mijnBlok;
 
   knoopBekijk(paneel);
@@ -7915,36 +8129,55 @@ function invulWeergave(paneel, r, dicht) {
   // Alles op één scherm. Dat kan doordat er nergens meer een lijst van twaalf
   // coureurs openstaat: je tikt de plek of de vraag aan die je bedoelt, en
   // pas dan gaat het keuzeblad open. Zie OVERDRACHT.md.
-  const hoofd = `
-    ${kanKopieren ? `<button class="knop klein" id="kopieer">${
-      T('Neem de kwalificatie over')}</button>` : ''}
-    ${top10Actief(S.tab) ? `
-      <div class="topkop">
-        <span class="label">${T('jouw top 10')}</span>
-        <span class="mono ${compleet(lijst) ? 'groen' : 'amber'}">${klaar}/10</span>
+  //
+  // In tegels, zoals de uitslag: je top 10 in de ene, de losse vragen in de
+  // andere, en wie van de poule al klaar is in een derde. Opslaan staat er
+  // los onder, want in een tegel (overflow:hidden) blijft hij niet plakken.
+  const hoofd = top10Actief(S.tab) ? `
+    <section class="tegel toptegel">
+      <div class="tegelkop topkop"><h2>${T('Jouw top 10')}</h2>
+        <span class="mono ${compleet(lijst) ? 'groen' : 'amber'}">${klaar}/10</span></div>
+      <div class="voortgang ${compleet(lijst) ? 'af' : ''}" aria-hidden="true"><i style="width:${klaar * 10}%"></i></div>
+      <div class="tegelinhoud">
+        ${kanKopieren ? `<button class="knop klein" id="kopieer">${
+          T('Neem de kwalificatie over')}</button>` : ''}
+        <ol class="grid10">
+          ${lijst.map((nr, i) => {
+            const d = nr ? drv(r, nr) : null;
+            const kant = i % 2 === 0 ? 'links' : 'rechts';
+            return `<li class="slotrij ${kant}">
+              <button class="slot ${d ? 'vol' : 'leegplek'}" data-plek="${i}"
+                ${d ? `data-intro="plek${i}|${esc(S.tab)}:${esc(d.nr)}"` : ''}
+                style="border-left-color:${d ? esc(d.kleur) : 'var(--stippel)'}"
+                aria-label="P${i+1}${d
+                  ? T(', nu {wie}', { wie: esc(d.naam) }) : T(', nog leeg')}">
+                <span class="pos">P${i+1}</span>
+                ${d
+                  ? `<span class="who"><b class="code">${esc(d.code)}</b><small>${esc(d.naam)}</small></span>`
+                  : `<span class="who">${T('tik om te kiezen')}</span>`}
+              </button></li>`;
+          }).join('')}
+        </ol>
       </div>
-      <ol class="grid10">
-        ${lijst.map((nr, i) => {
-          const d = nr ? drv(r, nr) : null;
-          const kant = i % 2 === 0 ? 'links' : 'rechts';
-          return `<li class="slotrij ${kant}">
-            <button class="slot ${d ? 'vol' : 'leegplek'}" data-plek="${i}"
-              ${d ? `data-intro="plek${i}|${esc(S.tab)}:${esc(d.nr)}"` : ''}
-              style="border-left-color:${d ? esc(d.kleur) : 'var(--stippel)'}"
-              aria-label="P${i+1}${d
-                ? T(', nu {wie}', { wie: esc(d.naam) }) : T(', nog leeg')}">
-              <span class="pos">P${i+1}</span>
-              ${d
-                ? `<span class="who"><b class="code">${esc(d.code)}</b><small>${esc(d.naam)}</small></span>`
-                : `<span class="who">${T('tik om te kiezen')}</span>`}
-            </button></li>`;
-        }).join('')}
-      </ol>` : ''}`;
-  const vragen = `
-    ${coureurVragen(S.tab).length ? `<span class="label">${T('losse vragen')}</span>
-      <div class="kiesregels">${coureurVragen(S.tab).map(id => coureurKiezer(r, id)).join('')}</div>` : ''}
-    ${extraVragen(S.tab).map(id => extraKiezer(r, id)).join('')}
-    ${S.tab === 'race' ? duelKiezer(r) : ''}`;
+    </section>` : '';
+  // Hoeveel van de losse vragen je al hebt: de duels tellen als één, want
+  // die hoef je niet allemaal te doen.
+  const losse = [
+    ...coureurVragen(S.tab).map(id => !!S.keuze[id]),
+    ...extraVragen(S.tab).map(id => !leegAntwoord(S.keuze[id])),
+    ...(S.tab === 'race' && duelKiezer(r) ? [S.keuze.duels.length > 0] : []),
+  ];
+  const vragen = losse.length ? `
+    <section class="tegel vragentegel">
+      <div class="tegelkop"><h2>${T('Losse vragen')}</h2>
+        <span class="tegelsub">${T('{n} van {totaal} ingevuld', {
+          n: losse.filter(Boolean).length, totaal: losse.length })}</span></div>
+      ${coureurVragen(S.tab).length ? `<div class="kiesregels">${
+        coureurVragen(S.tab).map(id => coureurKiezer(r, id)).join('')}</div>` : ''}
+      ${extraVragen(S.tab).map(id => extraKiezer(r, id)).join('')}
+      ${S.tab === 'race' ? duelKiezer(r) : ''}
+    </section>` : '';
+  const poule = pouleKaart(r, { open: true });
   const afsluiting = `
     <p class="label" style="margin:0">${T('sluit {wanneer}', {
       wanneer: esc(sluitTekst(deadline)) })}</p>
@@ -7958,11 +8191,12 @@ function invulWeergave(paneel, r, dicht) {
         ? `<button class="knop klein wisknop" id="wisalles">${T('Wis alles')}</button>` : ''}
       <p class="err">${esc(S.fout)}</p>
     </div>`;
-  // Op een breed scherm de top 10 links en de vragen met de opslaanknop
-  // rechts, als er naast de top 10 ook vragen zijn. Anders één kolom.
-  paneel.innerHTML = (top10Actief(S.tab) && vragen.trim()
-    ? tweeKolommen({ hoofd, zij: vragen + afsluiting })
-    : hoofd + vragen + afsluiting) + kiesblad(r);
+  // Op een breed scherm de top 10 links en de rest met de opslaanknop
+  // rechts, als er naast de top 10 iets te zien is. Anders één kolom.
+  paneel.innerHTML = (hoofd && (vragen || poule)
+    ? tweeKolommen({ hoofd, zij: vragen + poule + afsluiting })
+    : hoofd + vragen + poule + afsluiting) + kiesblad(r);
+  knoopBekijk(paneel);
 
   const sluitBlad = () => { S.kiesplek = null; invulWeergave(paneel, r, dicht); };
   paneel.querySelectorAll('[data-plek]').forEach(b => b.onclick = () => {
@@ -8205,12 +8439,11 @@ function duelKiezer(r) {
 }
 
 // Twee kolommen op een breed scherm, onder elkaar op een telefoon (de CSS bij
-// .kolom2). `noot` staat bovenaan de linkerkolom, `boven` bovenaan de rechter;
-// op een telefoon komen ze allebei vooraan, zoals voorheen.
-function tweeKolommen({ noot = '', boven = '', hoofd, zij }) {
+// .kolom2): eerst de linkerkolom, dan de rechter.
+function tweeKolommen({ hoofd, zij }) {
   return `<div class="kolom2">
-    <div class="k2-hoofd">${noot.trim() ? `<div class="k2-noot">${noot}</div>` : ''}${hoofd}</div>
-    <div class="k2-zij">${boven.trim() ? `<div class="k2-boven">${boven}</div>` : ''}${zij}</div>
+    <div class="k2-hoofd">${hoofd}</div>
+    <div class="k2-zij">${zij}</div>
   </div>`;
 }
 
@@ -8232,41 +8465,132 @@ function uitslagWeergave(r, werkelijk) {
   const losIngevuld = coureurVragen(S.tab).some(id => !!antwoordVan(mijn, id))
     || extraVragen(S.tab).some(id => !leegAntwoord(mijn?.[id]))
     || (S.tab === 'race' && !!mijn?.teamgenoot_duels?.length);
-  if (!lijst?.length && !losIngevuld) return tweeKolommen({ noot,
+  if (!lijst?.length && !losIngevuld) return `${noot}${tweeKolommen({
     hoofd: `<div class="leeg"><span class="label">${T('niets ingevuld')}</span>
       <p class="zacht" style="margin:0">${T('Je hebt hier niks ingevuld.')}</p></div>`,
-    zij: `${andermans(r)}${weekendVoet(r)}` });
+    zij: `${pouleKaart(r)}${weekendVoet(r)}` })}`;
   const { regels } = scoreLijst(lijst ?? [], werkelijk);
   const exact = regels.filter(x => x.punten === 5).length;
-  return tweeKolommen({ noot, boven: losse, hoofd: `
-    <div class="score">
-      <span style="display:flex;flex-direction:column;gap:4px">
+  // Bovenaan over de hele breedte je punten, daaronder in twee kolommen:
+  // links je voorspelling als tabel met de losse vragen eronder, rechts de
+  // poule, "zo dichtbij" en de weekendwinnaar.
+  const score = `
+    <div class="score scorekaart">
+      <b class="getal">${scoreTab(mijn, r, S.tab)}</b>
+      <span class="scoretekst">
         <span class="label">${T('jouw punten')}</span>
         <span class="zacht">${regels.length
           ? T('{n} van {totaal} exact voorspeld', { n: exact, totaal: regels.length })
           : T('geen top 10 ingevuld')}</span>
       </span>
-      <b class="getal">${scoreTab(mijn, r, S.tab)}</b>
-    </div>
-    <ul class="strip">
-      ${regels.map(x => {
-        const d = drv(r, x.nr);
-        const raak = x.werkelijk === x.voorspeld;
-        const verschil = x.werkelijk === null ? 'dnf'
-          : raak ? 'exact'
-          : `${x.werkelijk > x.voorspeld ? '↓' : '↑'} ${Math.abs(x.werkelijk - x.voorspeld)}`;
-        return `<li class="sr" style="--team:${esc(d.kleur)}">
-          <span class="pos">P${x.voorspeld}</span>
-          <span class="code">${esc(d.code)}</span>
-          <span class="werd">${x.werkelijk
-            ? T('werd P{n}', { n: x.werkelijk }) : 'DNF'}</span>
-          <span class="delta ${puntKlasse(x.punten)}">${verschil}</span>
-          <span class="pts ${puntKlasse(x.punten)}">${x.punten}</span>
-        </li>`;
-      }).join('')}
-    </ul>
-    ${bijnaGoedBlok(r, regels)}`,
-    zij: `${andermans(r)}${weekendVoet(r)}` });
+      <span class="ruit" aria-hidden="true"></span>
+    </div>`;
+  const voorspelling = `
+    <section class="tegel voorspelkaart">
+      <div class="tegelkop"><h2>${T('Jouw voorspelling')}</h2></div>
+      ${regels.length ? `
+      <div class="tabelkop" aria-hidden="true">
+        <span>${T('voorspeld')}</span><span>${T('coureur')}</span>
+        <span>${T('uitslag')}</span><span>${T('punten')}</span>
+      </div>
+      <ul class="strip">
+        ${regels.map(x => {
+          const d = drv(r, x.nr);
+          const raak = x.werkelijk === x.voorspeld;
+          // De code blijft in de regel staan (verborgen): hij is de sleutel
+          // waaraan de rest van de app en de tests een coureur herkennen.
+          return `<li class="sr${raak ? ' raak' : ''}" style="--team:${esc(d.kleur)}">
+            <span class="pos">P${x.voorspeld}</span>
+            <span class="code">${esc(d.code)}</span>
+            <span class="drnaam">${esc(achternaam(d))}</span>
+            <span class="werd"><span class="alleenlezer">${T('werd')} </span>${
+              x.werkelijk ? `P${x.werkelijk}` : 'DNF'}</span>
+            <span class="delta">${raak ? `<i class="exactpil">${VINKJE}exact</i>` : ''}</span>
+            <span class="pts ${puntKlasse(x.punten)}">${x.punten}</span>
+          </li>`;
+        }).join('')}
+      </ul>` : `<p class="zacht tegelleeg">${T('geen top 10 ingevuld')}</p>`}
+      ${losse.trim() ? `<div class="tegelvoet">${losse}</div>` : ''}
+    </section>`;
+  return `${noot}${score}${tweeKolommen({
+    hoofd: voorspelling, zij: `${pouleKaart(r)}${bijnaGoedBlok(r, regels)}${weekendVoet(r)}` })}`;
+}
+
+// "Max VERSTAPPEN" (zo levert OpenF1 het) of "Max Verstappen" wordt
+// "Verstappen", "Andrea Kimi ANTONELLI" wordt "Antonelli", "Nyck DE VRIES"
+// "De Vries". Een coureur die niet meer in de lijst staat heet "#6".
+function achternaam(d) {
+  const delen = String(d?.naam ?? '').trim().split(/\s+/).filter(Boolean);
+  const i = delen.findIndex(w => w.length > 1 && w === w.toUpperCase() && /\p{L}/u.test(w));
+  const naam = i >= 0 ? delen.slice(i) : delen.slice(-1);
+  return naam.map(w => w.startsWith('#') ? w
+    : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') || d?.code || '';
+}
+
+const VINKJE = `<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none"
+  stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+
+// De poule bij deze sessie: iedereen met zijn punten, jij ertussen. Op een
+// naam tikken laat na de deadline zijn inzending zien. Zolang het tabblad
+// openstaat (`open`) alleen wie er al iets heeft ingeleverd: wat ze kozen
+// blijft geheim tot de deadline, dus dan zijn de regels ook geen knop. In je
+// eentje valt er niets te vergelijken en is er geen kaart.
+function pouleKaart(r, { open = false } = {}) {
+  if (S.leden.length < 2) return '';
+  const werkelijk = r[SESSIES[S.tab].uitslag];
+  const rijen = S.leden.map(l => {
+    const p = vindPred(r.id, l.member_id);
+    // Wie alleen de pole of een paar duels invulde heeft ook gewoon punten;
+    // wie niets inleverde maar wel automatisch is aangevuld ook.
+    const deed = open ? ingeleverdVoor(r, l.member_id, S.tab) : heeftVoorspeld(r, l.member_id);
+    const auto = !open && isAuto(p, S.tab);
+    return { id: l.member_id, naam: l.display_name, deed, auto,
+             mij: zelfde(l.member_id, S.ik.id),
+             punten: werkelijk && (deed || auto) ? scoreTab(p, r, S.tab) : null };
+  });
+  if (open) rijen.sort((a, b) => b.deed - a.deed);
+  else rijen.sort((a, b) => (b.punten ?? -1) - (a.punten ?? -1));
+  const status = (x) => open ? (x.deed ? T('ingeleverd') : T('nog niet'))
+    : x.deed ? (x.mij ? '' : T('bekijken'))
+    : x.auto ? T('automatisch ingevuld') : T('niets ingevuld');
+  const regel = (x) => {
+    const inhoud = `<span class="avatar">${esc(String(x.naam).trim().charAt(0).toUpperCase() || '?')}</span>
+      <span class="nm">${esc(x.naam)}${x.mij ? ` <span class="jij">(${T('jij')})</span>` : ''}</span>
+      <span class="zacht">${status(x)}</span>
+      ${open ? `<span class="klaarteken">${x.deed ? VINKJE : ''}</span>`
+        : `<span class="t">${x.punten ?? '—'}</span>${x.punten === null ? '' : `<span class="eenheid">${T('pt')}</span>`}`}`;
+    // Je eigen regel is geen knop: je eigen inzending staat al op het scherm.
+    return x.mij || open ? `<div class="rest pouleregel${x.mij ? ' mij' : ''}${open && x.deed ? ' klaar' : ''}">${inhoud}</div>`
+      : `<button class="rest inkijk pouleregel" data-bekijk="${esc(x.id)}">${inhoud}</button>`;
+  };
+  const sub = open
+    ? T('{n} van {totaal} ingeleverd', { n: rijen.filter(x => x.deed).length, totaal: rijen.length })
+    : `${esc(T(SESSIES[S.tab].tablabel))} · ${esc(r.name)}`;
+  return `
+    <section class="tegel poulekaart">
+      <div class="tegelkop"><h2>${T('De poule')}</h2>
+        <span class="tegelsub">${sub}</span></div>
+      <div class="poulelijst">${rijen.map(regel).join('')}</div>
+      <div class="tegelknoppen"><button class="knop spook" data-naar-stand>${
+        T('Bekijk poulestand')} <span aria-hidden="true">→</span></button></div>
+    </section>`;
+}
+
+// Heeft deze speler voor dit ene tabblad zelf al iets ingeleverd? De top 10
+// of een van de losse vragen die erbij horen; een automatisch aangevulde
+// lijst telt niet, net als bij heeftVoorspeld() voor het hele weekend.
+function ingeleverdVoor(r, id, welk) {
+  const p = vindPred(r.id, id);
+  if (!p) return false;
+  const vragen = [SESSIES[welk].vraag, ...coureurVragen(welk), ...extraVragen(welk),
+    ...(welk === 'race' && vraagActief('teamgenoot_duels') ? ['teamgenoot_duels'] : [])];
+  return vragen.some(v => {
+    const kolom = VRAAG_VELD[v] ?? v;
+    if (p.auto?.includes(kolom)) return false;
+    const w = p[kolom];
+    return Array.isArray(w) ? w.length > 0 : !leegAntwoord(w);
+  });
 }
 
 // Waar zat het 'm in. Dit is de vraag die na afloop in de groepsapp gesteld
@@ -8280,22 +8604,19 @@ function uitslagWeergave(r, werkelijk) {
 function bijnaGoedBlok(r, regels) {
   const { dichtst, scheelde } = bijnaGoed(regels);
   if (!dichtst.length) return '';
-  const plekken = (n) => n === 1 ? T('één plek') : T('{n} plekken', { n });
+  // Eén zin per afstand, met de namen erin, en dan wat het samen kostte.
+  const zin = (afstand) => {
+    const namen = dichtst.filter(x => x.afstand === afstand).map(x => achternaam(drv(r, x.nr)));
+    if (!namen.length) return '';
+    return T(namen.length === 1 ? '{wie} zat er maar {afstand} naast.' : '{wie} zaten er maar {afstand} naast.',
+      { wie: `<b>${esc(opsomming(namen))}</b>`, afstand: afstand === 1 ? T('één plek') : T('{n} plekken', { n: afstand }) });
+  };
   return `
     <div class="bijna">
-      <span class="label">${T('zo dichtbij')}</span>
-      <ul class="bijnalijst">
-        ${dichtst.slice(0, 3).map(x => {
-          const d = drv(r, x.nr);
-          return `<li>${T('<b>{code}</b> stond bij jou op P{voorspeld} en werd P{werkelijk} '
-            + '— {afstand}, en dat scheelde {scheelde}.',
-            { code: esc(d.code), voorspeld: x.voorspeld, werkelijk: x.werkelijk,
-              afstand: plekken(x.afstand), scheelde: puntenTekst(x.scheelde) })}</li>`;
-        }).join('')}
-      </ul>
-      ${dichtst.length > 1 ? `<p class="zacht" style="margin:0;font-size:13px">${
-        T('Bij elkaar scheelden die net-niets {scheelde}.',
-          { scheelde: puntenTekst(scheelde) })}</p>` : ''}
+      <h2 class="tegeltitel">${T('Zo dichtbij')}</h2>
+      <p>${[zin(1), zin(2)].filter(Boolean).join(' ')}</p>
+      <p class="bijnasom">${T(dichtst.length === 1 ? 'Daar liet je {punten} liggen.' : 'Daar liet je samen {punten} liggen.',
+        { punten: puntenTekst(scheelde) })}</p>
     </div>`;
 }
 
@@ -8320,15 +8641,20 @@ function weekendVoet(r) {
   const winnaars = S.leden.length > 1 ? weekendWinnaars(r) : [];
   const ik = winnaars.some(w => w.mij);
   return `
-    ${winnaars.length ? `<span class="label">${T('weekendwinnaar · kwalificatie + race')}</span>
-      <div class="groep"><div class="rest winnaar">
-        <span class="nm">${esc(opsomming(winnaars.map(w => w.naam)))}${
-          ik ? ` <span class="jij">${T('jij')}</span>` : ''}</span>
-        <span class="t">${winnaars[0].punten}</span>
-      </div></div>` : ''}
-    ${r.race_result?.length && heeftVoorspeld(r, S.ik.id) ? `<button class="knop spook" data-verhaal="${
-      esc(r.id)}">${SPEELICOON}${T('Speel het weekend af')}</button>` : ''}
-    <button class="knop spook" data-deel="${esc(r.id)}">${DEELICOON}${T('Deel de uitslag')}</button>`;
+    <section class="tegel weekendkaart">
+      ${winnaars.length ? `<div class="tegelkop"><h2>${T('Weekendwinnaar')}</h2>
+        <span class="tegelsub">${T('kwalificatie + race')}</span></div>
+        <div class="rest winnaar">
+          <span class="nm">${esc(opsomming(winnaars.map(w => w.naam)))}${
+            ik ? ` <span class="jij">${T('jij')}</span>` : ''}</span>
+          <span class="t">${winnaars[0].punten}</span>
+        </div>` : ''}
+      <div class="tegelknoppen">
+        ${r.race_result?.length && heeftVoorspeld(r, S.ik.id) ? `<button class="knop spook" data-verhaal="${
+          esc(r.id)}">${SPEELICOON}${T('Speel het weekend af')}</button>` : ''}
+        <button class="knop spook" data-deel="${esc(r.id)}">${DEELICOON}${T('Deel de uitslag')}</button>
+      </div>
+    </section>`;
 }
 
 // ---- de uitslag als plaatje ---------------------------------
@@ -9198,38 +9524,14 @@ function duelUitslag(r, mijn, werkelijk) {
     </ul>`;
 }
 
-function andermans(r) {
-  const anderen = S.leden.filter(l => !zelfde(l.member_id, S.ik.id));
-  if (!anderen.length) return '';
-  const werkelijk = r[SESSIES[S.tab].uitslag];
-  const rijen = anderen.map(l => {
-    const p = vindPred(r.id, l.member_id);
-    // Eerder hing dit aan een ingevulde top 10. Wie alleen de pole of een
-    // paar duels invulde stond dan op "—" terwijl hij gewoon punten had.
-    const deed = heeftVoorspeld(r, l.member_id);
-    // En wie niets inleverde maar wel automatisch is aangevuld heeft ook
-    // punten; die horen hier te staan, met erbij hoe ze eraan komen.
-    const auto = isAuto(p, S.tab);
-    return { id: l.member_id, naam: l.display_name, deed, auto,
-             punten: werkelijk && (deed || auto) ? scoreTab(p, r, S.tab) : null };
-  }).sort((a,b) => (b.punten ?? -1) - (a.punten ?? -1));
-  // De rijen zijn knoppen: hierachter zit de hele inzending van die speler.
-  // Dat kan pas nu — deze functie wordt alleen op een gesloten scherm
-  // getekend, en vulPaneel() controleert het nog een keer.
-  return `<span class="label">${
-      T('de rest · tik op een naam om hun voorspelling te zien')}</span>
-    <div class="groep">${rijen.map(x => `<button class="rest inkijk" data-bekijk="${esc(x.id)}">
-      <span class="nm">${esc(x.naam)}</span>
-      <span class="zacht">${x.deed ? T('bekijken')
-        : x.auto ? T('automatisch ingevuld') : T('niets ingevuld')}</span>
-      <span class="t">${x.punten ?? '—'}</span>
-    </button>`).join('')}</div>`;
-}
-
 function knoopBekijk(paneel) {
   paneel.querySelectorAll('[data-bekijk]').forEach(b => b.onclick = () => {
     S.bekijk = b.dataset.bekijk;
     vulPaneel();
+  });
+  paneel.querySelectorAll('[data-naar-stand]').forEach(b => b.onclick = () => {
+    S.race = null; S.bekijk = null; S.weergave = 'stand';
+    render();
   });
 }
 
