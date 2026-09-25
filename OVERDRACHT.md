@@ -7071,3 +7071,62 @@ Getest in `test/racescherm.test.mjs` (43 controles). Bijgewerkt:
 lijstje, plus enkelvoud), `terugkijken` (de kop van je eigen inzending).
 36 mutanten, van de vlag tot de selectie bij een mislukte kopie; ze zakken
 allemaal.
+
+## Teksten in gewone taal
+
+Danny, bij een schermafdruk van *"Inzendingen zijn gesloten. De uitslag volgt
+zodra de sync hem bij OpenF1 heeft opgehaald; die draait elk uur."*: *"dit
+soort teksten is niet nodig. Een gebruiker boeit dat niet en wil alleen weten
+wanneer de uitslag bekend is."*
+
+Alle 572 teksten in `ENGELS` nagelopen. Wat er veranderd is:
+
+- **Een gesloten tabblad** zegt nu wanneer de uitslag er is
+  (`wanneerUitslag()`): tijdens de sessie *"De kwalificatie is begonnen en je
+  voorspelling ligt vast. Rond za 15:00 is het afgelopen, en een paar uur
+  later staat de uitslag hier."*, daarna *"… binnen een paar uur"*, en na acht
+  uur *"De uitslag laat langer op zich wachten dan normaal. Hij komt vanzelf;
+  je hoeft niets te doen."* De eindtijd is de start plus `SESSIES[w].duur`
+  (kwalificatie en sprint een uur, race twee). Een precieze tijd voor de
+  uitslag beloven kan niet: GitHub pakt de ophaalronde soms uren later op
+  (zie `.github/workflows/sync.yml`). Het label is *uitslag volgt nog* in plaats
+  van *gesloten*; dat staat al in de kop.
+- **Een race zonder coureurs**: *"De coureurs volgen nog. Wie er meerijdt is
+  nog niet bekend. Zodra dat zo is, kun je hier je voorspelling invullen."* In
+  de kalender *coureurs volgen* in plaats van *deelnemers volgen*.
+- **Foutmeldingen bij opslaan** (`uitleg()`): geen `schema.sql`, RLS of
+  tabelnamen meer, maar *"Dat lukte niet door een storing aan onze kant …"* met
+  de foutcode erachter. Wat een code betekent staat nu in BEDIENING.md, "Als
+  opslaan een foutcode geeft", en de Engelse melding in de console. Geen
+  verbinding zegt dat gewoon. Meldingen die `schema.sql` zelf voor spelers
+  schrijft (code `P0001`) blijven staan. Onbekende codes gaven eerst de
+  Engelse melding uit de database; nu ook de storingszin.
+- **Account verwijderen dat niet lukt**: het privacyadres in plaats van
+  "BEDIENING.md §12" of "draai schema.sql".
+- Kleiner: *handmatig ingevuld* zonder "niet van openf1", *"De kalender
+  verschijnt hier vanzelf"*, *"Losmaken lukte niet. Alleen de poulebaas mag
+  dat."*, het vangnet zegt *"is gewoon bewaard"* in plaats van *"staat veilig
+  in de database"*, en een voorspelling die misschien niet is opgeslagen zegt
+  wat je moet doen in plaats van dat een RLS-policy het blokkeert.
+- Op de voorpagina (alle zeven talen): *"De officiële uitslag komt vanzelf
+  binnen"* zonder "via OpenF1".
+
+Bewust gebleven:
+
+- **De privacyverklaring** noemt Supabase, GitHub Pages, OpenF1 en esm.sh.
+  Die hoort te zeggen waar je gegevens staan en wie ze ziet.
+- **De vraag "Waar komen de uitslagen vandaan?"** op de voorpagina, en
+  "Uitslagen via OpenF1" onderaan: daar is de bron het antwoord, en de
+  vermelding is netjes tegenover een gratis project.
+- **De kleine technische regel** in het foutbalkje en op het vangnetscherm:
+  klein, en bedoeld om door te geven als er iets stuk is.
+
+`test/gewone-taal.test.mjs` (21 controles) leest alle teksten uit `ENGELS` en
+zakt zodra er weer een OpenF1, Supabase, sync, database, `schema.sql`, RLS of
+tabelnaam in staat (behalve in de privacyverklaring). Daarnaast de drie
+momenten van `wanneerUitslag()`, een race zonder coureurs, vijf soorten
+fouten bij het opslaan (via `__volgendeFout` in de nabootsing) en een account
+dat niet weg kan. Bijgewerkt: `ontbrekende-sleutel`, `terugkijken`,
+`voorspelling-bewaren`, `vangnet`, `seizoenseinde`. Dertien mutanten (van
+"P0001 ook wegpoetsen" tot "jargon terug in één Engelse vertaling"); ze
+zakken allemaal.

@@ -62,8 +62,8 @@ await openRace(page, 'Melbourne');
 await page.click('[data-tab="quali"]');
 await page.waitForSelector('#paneel');
 
-check('de kwalificatie staat op gesloten',
-  (await page.textContent('#paneel')).includes('Inzendingen zijn gesloten'));
+check('de kwalificatie staat op gesloten, en zegt dat de uitslag nog komt',
+  (await page.textContent('#paneel')).includes('uitslag volgt nog'));
 
 // ------------------------------------------------------------------
 // 2. Je eigen inzending is nog te zien, en niet meer te wijzigen.
