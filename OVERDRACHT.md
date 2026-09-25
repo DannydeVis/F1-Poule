@@ -6950,3 +6950,30 @@ Getest in `test/klimmen-en-reeksen.test.mjs` (allebei eerste, wie erbij komt
 klimt, wie zijn plek deelt zakt niet, "1e van 2" op de weekendkaart),
 `test/verhaal.test.mjs` en `test/uitslag-delen.test.mjs`. Vijf mutanten, één
 per plek waar het vroeger doornummerde; ze zakken alle vijf.
+
+## Het donkere deelplaatje terug
+
+Het deelplaatje van de site (wat WhatsApp en de rest laten zien bij een link
+naar predicttherace.com) was even het lichte ontwerp: een racebaan met
+"PREDICT THE RACE" en "Voorspel. Speel. Win.". Danny wilde toch het vorige
+terug: donker, met de kop van de voorpagina ("Voorspel de grid. Versla je
+vrienden.") en een telefoon met de app ernaast. Dat zegt meteen wat de app
+doet, en Joey vond het "overzichtelijk".
+
+Het is terug in `scripts/maak-beelden.mjs`, met twee verschillen met toen:
+
+- het P-logo in plaats van het rode blokje voor "Predict the Race";
+- een nieuwe schermafdruk van de app op de telefoon, met het logo in de kop.
+
+Daardoor zijn ook de schermafdrukken op de voorpagina (`site/beeld/`) nieuw:
+ze laten de app van nu zien, met het logo, gedeelde plekken en "Deel de
+stand". Het script stopt nu als de kop in een taal onder de telefoon zou
+doorlopen; het Duits ("Tippe die Startaufstellung.") past.
+
+Weg: `ogRegel` in `site/teksten.mjs` (de korte regel op het lichte plaatje) en
+`site/bron/baan.webp` (de racebaan). Allebei staan ze nog in de geschiedenis,
+commit 5574718, voor als het lichte ontwerp ooit terug moet.
+
+`test/beelden.test.mjs` controleert nu per taal dat het plaatje donker is,
+met de kop in het accent. Het lichte plaatje terugzetten laat die controle
+zakken.

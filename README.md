@@ -60,7 +60,7 @@ bewerkt. Pas `site/teksten.mjs` aan en draai:
 ```bash
 node scripts/maak-site.mjs          # de pagina's, sitemap.xml, robots.txt, llms.txt, 404.html
 node scripts/maak-beelden.mjs       # alleen als de app er anders uitziet: schermafdrukken en deelplaatjes
-node scripts/maak-beelden.mjs og    # alleen de deelplaatjes (na een nieuwe ogRegel)
+node scripts/maak-beelden.mjs og    # alleen de deelplaatjes (na een nieuwe kop op de voorpagina)
 node scripts/maak-pictogrammen.mjs  # alleen als het logo verandert: pictogrammen en favicon.ico
 ```
 
