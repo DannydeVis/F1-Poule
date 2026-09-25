@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Predict the Race</title>
 <meta name="color-scheme" content="dark light">
+<!-- Licht of donker zelf gekozen (de zon/maan naast "Wissel")? Dan staat dat
+     hier al vóór de eerste verf, anders flitst het scherm eerst in de kleur
+     van het toestel. Zie zetThema() verderop. -->
+<script>try{var t=localStorage.getItem('poule:thema');if(t==='licht'||t==='donker'){document.documentElement.dataset.thema=t;document.documentElement.style.colorScheme=t==='donker'?'dark':'light'}}catch(e){}</script>
 <meta name="description" content="Het F1-voorspelspel voor jou en je vrienden. Voorspel de grid, versla je maten en win het weekend. Gratis, zonder wachtwoord.">
 <!-- "Zet op beginscherm" geeft hiermee een echte app-tegel in plaats van een
      browsersnelkoppeling. Een poule-app leeft op een telefoon, dus dat is
@@ -163,8 +167,12 @@
     --mono:"Space Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
     --soepel:cubic-bezier(.2,.7,.2,1);
   }
+  /* Licht en donker volgen het toestel, tenzij je met de zon/maan in de kop
+     zelf kiest (data-thema op <html>, zie zetThema()). Dezelfde waarden staan
+     daarom twee keer: in de mediaquery voor wie niets koos, en los voor wie
+     donker koos. */
   @media (prefers-color-scheme:dark){
-    :root{
+    :root:not([data-thema="licht"]){
       --bg:#0b0b0c; --paneel:#15161a; --paneel2:#1d1f24; --gedempt:#2b2e35;
       --lijn:#2b2e35; --stippel:#2b2e35;
       /* Zelfde verhaal in het donker: #656b74 haalde 3.36. Nu 4.61/5.01. */
@@ -183,6 +191,25 @@
       --omkeer:#f2f3f5; --omkeer-ink:#0b0b0c;
       --vlag-a:#f2f3f5;
     }
+  }
+  :root[data-thema="donker"]{
+    --bg:#0b0b0c; --paneel:#15161a; --paneel2:#1d1f24; --gedempt:#2b2e35;
+    --lijn:#2b2e35; --stippel:#2b2e35;
+    /* Zelfde verhaal in het donker: #656b74 haalde 3.36. Nu 4.61/5.01. */
+    --ink:#f2f3f5; --ink2:#9aa0a8; --ink3:#7b818a;
+    --accent:#ee4d33; --accent-ink:#0b0b0c;
+    --accent-vlak:rgba(238,77,51,.12); --accent-rand:rgba(238,77,51,.45);
+    --eigen:linear-gradient(90deg,rgba(238,77,51,.14),transparent 70%);
+    --accent-tekst:#f26a52;
+    /* In het donker iets diéper dan het paneel in plaats van lichter:
+       alles lichter dan #15161a haalt --ink3 niet meer. */
+    --zweef:#111216;
+    --groen:#34b264; --groen-vlak:rgba(52,178,100,.16); --groen-rand:rgba(52,178,100,.50);
+    --groen-sterk:rgba(52,178,100,.70); --groen-ink:#0b0b0c;
+    --amber:#e0a53a; --amber-vlak:rgba(224,165,58,.08); --amber-rand:rgba(224,165,58,.40);
+    --paars:#c084f5; --paars-vlak:rgba(192,132,245,.10);
+    --omkeer:#f2f3f5; --omkeer-ink:#0b0b0c;
+    --vlag-a:#f2f3f5;
   }
 
   @keyframes pols{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.82)}}
@@ -367,6 +394,20 @@
     font-family:var(--mono);font-size:10px;letter-spacing:.06em;
     color:var(--ink3);cursor:pointer;transition:color .18s,border-color .18s}
   .merk .wisselknop:hover{color:var(--ink);border-color:var(--ink3)}
+  /* De zon/maan naast "Wissel": een klein pictogram zonder kader, met wel een
+     aanraakvlak van 44 bij 44. De poulenaam ervoor mag een paar pixel onder
+     dat (lege) vlak doorlopen (de negatieve marge), want hij heeft elke pixel
+     nodig: "Vrijdagmiddagpoule" is 202 pixel breed. */
+  .merk .themaknop{margin-left:auto;flex:none;width:44px;min-height:44px;
+    display:grid;place-items:center;border-radius:6px;color:var(--ink3);
+    transition:color .18s}
+  .merk .themaknop:hover{color:var(--ink)}
+  .merk .merkpoule{margin-right:-8px}
+  .merk .themaknop + .wisselknop{margin-left:0}
+  /* Op de smalste telefoons (een iPhone SE en kleiner) past zo'n naam er naast
+     de twee knoppen net niet meer op 24 pixel. */
+  @media (max-width:389px){ .merk .merkpoule{font-size:22px} }
+  @media (max-width:369px){ .merk .merkpoule{font-size:21px} }
   .groot{font-family:var(--cond);font-size:44px;font-weight:700;line-height:.98;
     text-transform:uppercase;margin:0}
   .middel{font-family:var(--cond);font-size:34px;font-weight:700;line-height:1;
@@ -1275,6 +1316,10 @@
     /* Een eigen regel over de volle breedte. Naast de wisselknop bleef er
        121 pixel over en daar past hij niet in; dan zou hij afgekapt worden
        en dat is erger dan geen ondertitel. */
+    /* De zon/maan staat op een breed scherm op de tweede regel, naast de
+       ondertitel: naast "Predict the Race" en Wissel is geen plek meer. */
+    .zijbalk .themaknop{order:3;margin-left:0}
+    .zijbalk .merkregel{order:2;flex:1 1 calc(100% - 56px);width:auto}
     .merkregel{display:block;width:100%;font-family:var(--mono);font-size:9px;
       letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2729,6 +2774,10 @@ const ENGELS = Object.fromEntries([
    'Statistics and cookies'],
   ['beheer van de site',
    'site admin'],
+  ['Lichte modus',
+   'Light mode'],
+  ['Donkere modus',
+   'Dark mode'],
   ['Naar het beheer',
    'To the admin page'],
   ['<b>Als je met Google inlogt</b><br>'
@@ -5708,6 +5757,58 @@ const KOPIEERICOON = lijnicoon('<rect x="9" y="9" width="11" height="11" rx="2"/
   + '<path d="M5 15V6a2 2 0 0 1 2-2h9"/>', 16);
 const PIJLTJE = lijnicoon('<path d="M9 6l6 6-6 6"/>', 16);
 
+// ---- licht of donker ------------------------------------------
+// De app volgt het toestel. Met de knop in de kop kies je zelf: de zon zet hem
+// licht, de maan donker. Die keuze staat in localStorage (poule:thema) en
+// wordt in <head> al vóór de eerste verf toegepast. Kies je wat het toestel
+// toch al doet, dan vergeet de app de keuze weer en volgt hij het toestel.
+const THEMA = 'poule:thema';
+const DONKER_TOESTEL = matchMedia('(prefers-color-scheme: dark)');
+const toestelThema = () => (DONKER_TOESTEL.matches ? 'donker' : 'licht');
+const huidigThema = () => document.documentElement.dataset.thema || toestelThema();
+function pasThemaToe(thema) {
+  const html = document.documentElement;
+  if (thema) {
+    html.dataset.thema = thema;
+    html.style.colorScheme = thema === 'donker' ? 'dark' : 'light';
+  } else {
+    delete html.dataset.thema;
+    html.style.colorScheme = '';
+  }
+}
+function zetThema(thema) {
+  const volgToestel = thema === toestelThema();
+  try {
+    if (volgToestel) localStorage.removeItem(THEMA); else localStorage.setItem(THEMA, thema);
+  } catch { /* dan geldt het alleen voor dit bezoek */ }
+  pasThemaToe(volgToestel ? null : thema);
+  werkThemaknopBij();
+}
+const ZON = lijnicoon('<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4'
+  + 'M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>', 18);
+const MAAN = lijnicoon('<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>', 18);
+// In het donker een zon (naar licht), in het licht een maan (naar donker).
+function themaknop() {
+  const donker = huidigThema() === 'donker';
+  const wat = donker ? T('Lichte modus') : T('Donkere modus');
+  return `<button class="themaknop" id="themaknop" type="button" aria-label="${wat}"
+    title="${wat}">${donker ? ZON : MAAN}</button>`;
+}
+function werkThemaknopBij() {
+  const oud = document.querySelector('#themaknop');
+  if (!oud) return;
+  oud.outerHTML = themaknop();
+  knoopThema();
+}
+function knoopThema() {
+  const knop = document.querySelector('#themaknop');
+  if (knop) knop.onclick = () => zetThema(huidigThema() === 'donker' ? 'licht' : 'donker');
+}
+// Wisselt het toestel zelf (de avond valt), dan hoort het pictogram mee te gaan.
+DONKER_TOESTEL.addEventListener?.('change', () => {
+  if (!document.documentElement.dataset.thema) werkThemaknopBij();
+});
+
 function toonApp() {
   onthoudScherm();
   const detail = S.weergave === 'races' && !!S.race;
@@ -5723,6 +5824,7 @@ function toonApp() {
           <span class="blok"></span>
           <span class="naam merknaam">Predict the Race</span>
           <span class="naam merkpoule">${esc(S.poule.name)}</span>
+          ${themaknop()}
           <button class="wisselknop" id="anderePoule" type="button"
             title="${T('Wissel van poule')}">${T('Wissel')}</button>
           <span class="merkregel">${T('voor jou en je vrienden')}</span>
@@ -5868,6 +5970,7 @@ function toonApp() {
   knoopPrivacy();
   knoopLosmaken();
   knoopUitloggen();
+  knoopThema();
   const anders = app.querySelector('#anderePoule');
   if (anders) anders.onclick = () => {
     // Alleen "welke poule sta je nu in" vergeten. Het lijstje met al je

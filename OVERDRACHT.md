@@ -7369,3 +7369,42 @@ poule en bij een inzending, "dit weekend" op de weekendkaart; met de race erbij
 (en Monza, afgelast na de kwalificatie) gaat het naar de gereden races. Twaalf
 mutanten; ze zakken allemaal.
 
+## Licht of donker, zelf te kiezen
+
+Danny, met een rondje naast Wissel: *"Zet hier een klein zonnetje dat mensen
+kunnen schakelen tussen dark en lichte modus"*.
+
+**Hoe:** de kleuren waren al variabelen, met één blok voor donker in
+`@media (prefers-color-scheme:dark)`. Dat blok geldt nu voor
+`:root:not([data-thema="licht"])`, en staat nog een keer los voor
+`:root[data-thema="donker"]`. Zo volgt de app het toestel zolang er niets
+gekozen is, en wint een eigen keuze in beide richtingen. `zetThema()` zet
+`data-thema` en `color-scheme` op `<html>` (dan gaan formulieren en
+schuifbalken mee) en bewaart de keuze onder `poule:thema`; een scriptje in
+`<head>` zet hem terug vóór de eerste verf, zodat het scherm niet eerst in de
+andere kleur flitst. Kies je wat het toestel doet, dan gaat de keuze weg en
+volgt de app het toestel weer. Wisselt het toestel terwijl er niets gekozen
+is, dan gaat het pictogram mee (`matchMedia` change).
+
+**De knop:** een zon in het donker, een maan in het licht, zonder kader maar
+met een aanraakvlak van 44 bij 44, en met een naam ("Lichte modus" / "Donkere
+modus"). Met een kader en zijn eigen ruimte duwde hij "Vrijdagmiddagpoule" van
+de telefoon af (202 pixel nodig, 185 over op een 375 breed scherm) en op een
+breed scherm "Predict the Race". Nu mag de poulenaam acht pixel onder het lege
+aanraakvlak doorlopen, krijgt de naam op de smalste telefoons 22 of 21 pixel,
+en staat de knop op een breed scherm op de tweede regel naast de ondertitel.
+Overal past het nu minstens zo goed als vóór de knop.
+
+**`toestemming.js`** kleurt mee: zijn donkere stijl hangt nu ook aan
+`data-thema`.
+
+**Tests:** `test/thema.test.mjs` (23 controles): de knop naast Wissel, zon in
+het donker en maan in het licht, meteen wisselen zonder herladen, onthouden en
+al vóór de eerste verf toegepast, `color-scheme`, terug naar het toestel, het
+pictogram dat meegaat met het toestel, een eigen keuze die blijft als het
+toestel wisselt, de vraag over Google Analytics, het Engels, en dat de
+poulenaam en "Predict the Race" er op 430 tot 360 en 1280 pixel nog helemaal
+naast passen. Dertien mutanten: elf zakken. "De knop zonder negatieve marge"
+overleefde, dus die marge was overbodig en is eruit; "de knop met een kader"
+overleeft, want dat is vormgeving en geen gedrag.
+

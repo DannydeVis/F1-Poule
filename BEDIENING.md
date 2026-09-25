@@ -43,6 +43,15 @@ Vier tabs, vast onderin beeld:
 └─────────────────────────────────────┘
 ```
 
+**Licht of donker.** De app volgt het toestel. Bovenin, naast **Wissel**, staat
+een klein zonnetje (in het donker) of maantje (in het licht): daarmee kies je
+zelf. De app onthoudt dat op dat toestel (`poule:thema` in localStorage) en
+zet het bij de volgende keer al vóór de eerste verf. Kies je wat het toestel
+toch al doet, dan vergeet hij de keuze en volgt hij het toestel weer. Op een
+breed scherm staat het knopje op de tweede regel, naast "voor jou en je
+vrienden". De vraag over Google Analytics kleurt mee; het deelplaatje blijft
+altijd donker.
+
 ### Races
 
 **Bovenaan: de weekendkaart.** Die beantwoordt in deze volgorde de drie vragen
