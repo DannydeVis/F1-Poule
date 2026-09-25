@@ -117,6 +117,16 @@ ziet het eerst in een venster, met daaronder:
 Past niet iedereen op het plaatje, dan staat er "en nog 4", en sta jij er
 toch op, onderaan. Het adres onderaan komt uit de adresbalk, niet uit de code.
 
+Bovenin dat venster kies je **Bericht** (het plaatje hierboven, voor de
+groepsapp) of **Story**: een staand plaatje van 1080 bij 1920 voor je
+WhatsApp-status of Instagram-story. Dat gaat over jou: je punten van het
+weekend heel groot (met de joker erbij), "jij wint het weekend" als dat zo is,
+je plek in de poule, hoeveel je precies goed had, je plek in het seizoen, en
+een podium met de eerste drie. Speel je alleen, dan staan er in plaats van het
+podium de coureurs die je precies goed had. Alle tekst blijft uit de randen
+waar WhatsApp je naam en het antwoordveld overheen legt. De app onthoudt wat
+je de vorige keer koos; de story heet `…-story.png`.
+
 **Het weekend als verhaal.** Is de uitslag van de race binnen, dan speelt de
 app het weekend één keer af, zoals een story op Instagram: de startlichten en
 de race, je punten per sessie (je top 10 als tijdenbord: paars exact, groen
@@ -156,7 +166,9 @@ Op één scherm, gescheiden door koppen:
 Onder de stand staat **Deel de stand**: hetzelfde venster als bij een
 uitslag, met een plaatje van de hele seizoensstand. Daarop staan de naam van
 de poule, na hoeveel races, de koploper, en iedereen met zijn punten en wie er
-sinds de vorige race geklommen of gezakt is. Ook hier kan de stand als tekst.
+sinds de vorige race geklommen of gezakt is. Ook hier kan de stand als tekst,
+en ook hier is er een **Story**: jouw plek groot, hoeveel plekken je steeg, je
+punten, en het podium van het seizoen.
 
 ### Poule
 Leden, poulecode, uitnodiglink met deelknop, en de instellingen. Voor de

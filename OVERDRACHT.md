@@ -7408,3 +7408,43 @@ naast passen. Dertien mutanten: elf zakken. "De knop zonder negatieve marge"
 overleefde, dus die marge was overbodig en is eruit; "de knop met een kader"
 overleeft, want dat is vormgeving en geen gedrag.
 
+## Een deelplaatje voor een story
+
+Danny: *"Maak een leuk deelplaatje voor whatsapp story"*.
+
+**Waarom een apart formaat.** Het bestaande plaatje (1080 bij 1350, 4:5) is
+voor de groepsapp: de hele poule in een lijst. Een story zien al je contacten
+een paar tellen, schermvullend en staand. Dus 1080 bij 1920 (9:16), en over
+jou in plaats van over de poule.
+
+**Waar:** in hetzelfde deelvenster, met bovenin **Bericht** of **Story**
+(`openDeelvenster()`, de keuze onthouden onder `poule:deelvorm`). Wisselen
+tekent opnieuw en werkt het plaatje, de bestandsnaam (`…-story.png`) en de
+opslaanlink bij; Delen en Kopieer plaatje pakken daarna vanzelf het nieuwe.
+Een delen-object heeft daarvoor `story()` en `storyAlt()` naast `teken()`.
+
+**Tekenen:** `deelDoek()` neemt nu een maat (`STORYMAAT`), zodat de kop, de
+livrei en de letters dezelfde blijven. `tekenStoryWeekend()` en
+`tekenStoryStand()` bouwen het plaatje uit `storyKop()` (tot twee regels, van
+150 terug naar 96 pixel), `storyGetal()` (het grote getal, met een pil voor de
+joker of het stijgen), `storyCijfers()`, `storyPodium()` (winnaar in het
+midden en het hoogst) en `storyRaak()` (wie alleen speelt: de coureurs die je
+precies goed had, in de kleur van hun team). Het rondenummer (of je plek) staat
+heel groot en vaag op de achtergrond, en de livrei nog een keer linksonder.
+
+**De veilige zone.** WhatsApp en Instagram leggen bovenin je naam en de
+balkjes over een story en onderin het antwoordveld. Alle tekst blijft tussen
+250 en 1680 pixel (`STORYVEILIG`). Het plaatje wordt van onder naar boven
+ingedeeld: waar het podium begint is de grens, en het grote getal krimpt als
+er boven minder ruimte is (een racenaam over twee regels, de winnaarsbalk).
+
+**Tests:** `test/story.test.mjs` (34 controles): de keuze en dat hij onthouden
+wordt, 1080 bij 1920, de naam, Delen en Opslaan, terug naar Bericht, wat er op
+het weekend en de stand staat, het podium op de goede plek, een lange racenaam,
+alleen spelen, halverwege het weekend, en voor elke story dat alle tekst binnen
+de veilige zone staat en geen tekst een andere raakt (de vakken van alle
+`fillText`-aanroepen tegen elkaar). Die laatste controle ving in de eerste
+versie "podium van het weekend" dat over "van 4" heen stond; die kop is eruit.
+Eenentwintig mutanten; twintig zakken, en "een podium van vier" verandert
+niets (het podium tekent er altijd drie).
+

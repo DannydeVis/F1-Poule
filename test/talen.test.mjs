@@ -82,6 +82,9 @@ const MAG_GELIJK = new Set([
   // De kop van het jokerpaneel. Een joker heet in het Engels ook een joker;
   // "Joker: actief" en "Joker: op" verschillen wél en staan er dus niet bij.
   'Joker',
+  // Het staande deelformaat heet in beide talen een story, en de pil op dat
+  // plaatje zegt in beide talen "2× joker".
+  'Story', '2× joker',
 ]);
 const zelfde = paren.filter(([nl, en]) => nl === en).map(([nl]) => nl);
 check('alleen woorden die in beide talen hetzelfde zijn, staan er gelijk in',
