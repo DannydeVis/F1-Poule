@@ -5078,6 +5078,18 @@ function standRijen(tot = Infinity) {
   }).sort((a,b) => b.punten - a.punten || String(a.naam).localeCompare(String(b.naam)));
 }
 
+// Gelijke punten, gelijke plek: 1, 2, 2, 4. Twee spelers met evenveel punten
+// staan allebei tweede; dat een van hen boven de ander staat komt alleen door
+// het alfabet, en daar hoort geen plek bij. Zo telt de stand, de weekendkaart,
+// de grafiek, het deelplaatje en het verhaal. `rijen` is al gesorteerd.
+const gedeeldePlekken = (rijen) =>
+  rijen.map(r => rijen.findIndex(x => x.punten === r.punten) + 1);
+// De plek van één speler in zo'n lijst, of 0 als hij er niet in staat.
+const plekVan = (rijen, id) => {
+  const i = rijen.findIndex(r => zelfde(r.id, id));
+  return i < 0 ? 0 : rijen.findIndex(r => r.punten === rijen[i].punten) + 1;
+};
+
 // ---- wie is er geklommen of gezakt? -------------------------
 // De stand zegt wie er wint, niet wat er is gebeurd. Twee plekken stijgen in
 // Monza is het soort ding waar mensen elkaar op aanspreken, en het kost niets:
@@ -5092,9 +5104,8 @@ function positieWissels() {
   const laatste = gescoord[gescoord.length - 1];
   const eerder = standRijen(laatste.round);
   const nu = standRijen();
-  const plek = (rijen, id) => rijen.findIndex(r => zelfde(r.id, id)) + 1;
   return new Map(nu.map(r => {
-    const van = plek(eerder, r.id), naar = plek(nu, r.id);
+    const van = plekVan(eerder, r.id), naar = plekVan(nu, r.id);
     return [String(r.id), van && naar ? van - naar : 0];
   }));
 }
@@ -5419,8 +5430,9 @@ function groepsappTekst(race) {
   if (!rijen?.length) return '';
   const breed = Math.max(...rijen.map(r => String(r.naam).length));
   const seizoen = standRijen();
+  const plekken = gedeeldePlekken(rijen);
   return `🏁 ${race.name}, uitslag poule\n\n`
-    + rijen.map((r, i) => `${i + 1}. ${String(r.naam).padEnd(breed + 2)}${r.punten}`).join('\n')
+    + rijen.map((r, i) => `${plekken[i]}. ${String(r.naam).padEnd(breed + 2)}${r.punten}`).join('\n')
     + `\n\nSeizoen: ${seizoen.map(r => `${r.naam} ${r.punten}`).join(', ')}`;
 }
 
@@ -5682,7 +5694,7 @@ function mijnPositie() {
   if (i === -1) return null;
   const laatste = [...S.races].reverse().find(heeftUitslag);
   return {
-    plek: i + 1,
+    plek: plekVan(rijen, S.ik.id),
     totaal: rijen.length,
     punten: rijen[i].punten,
     weekend: laatste ? scoreWeekend(vindPred(laatste.id, S.ik.id), laatste) : null,
@@ -5860,7 +5872,7 @@ function standRij(r, i, alle, wissels) {
          >${wissel > 0 ? '↑' : '↓'}${Math.abs(wissel)}</span>`;
   const reeks = reeksVan(r.id);
   return `<div class="strij ${r.mij ? 'zelf' : ''}">
-    <span class="p">${i + 1}</span>
+    <span class="p">${plekVan(alle, r.id)}</span>
     <span class="nm">${esc(r.naam)}${r.mij ? ` <span class="jij">${T('jij')}</span>` : ''}
       ${reeks >= 3 ? `<span class="reeks" title="${
         T('{n} weekenden op rij ingeleverd', { n: reeks })}"
@@ -5965,8 +5977,7 @@ function seizoensGrafiek() {
   const totaal = S.leden.length;
   const punten = gescoord.map(r => {
     const rijen = standRijen(r.round + 1);
-    return { ronde: r.round, naam: r.name,
-             plek: rijen.findIndex(x => zelfde(x.id, S.ik.id)) + 1 };
+    return { ronde: r.round, naam: r.name, plek: plekVan(rijen, S.ik.id) };
   }).filter(p => p.plek > 0);
   if (punten.length < 3) return '';
 
@@ -6644,7 +6655,7 @@ function maakSnapshot() {
     naam: S.ik.naam,
     seizoen: seizoen(),
     punten: rijen[i].punten,
-    plek: i + 1,
+    plek: plekVan(rijen, S.ik.id),
     spelers: rijen.length,
     gereden: gescoord.length,
     races: S.races.length,
@@ -8314,10 +8325,6 @@ const DEELLETTER = {
   mono: '"Space Mono", ui-monospace, Menlo, monospace',
 };
 
-// Gelijke punten, gelijke plek: 1, 2, 2, 4. De rijen zijn al gesorteerd.
-const gedeeldePlekken = (rijen) =>
-  rijen.map(r => rijen.findIndex(x => x.punten === r.punten) + 1);
-
 // De stand zoals hij na dit weekend was, met wie er geklommen of gezakt is.
 // Voor het laatste weekend is dat de stand van nu; voor een ouder weekend de
 // stand van toen, en niet die van vandaag onder de kop "na ronde 3". Leeg als
@@ -8327,9 +8334,8 @@ function standNaWeekend(race) {
   if (!S.races.some(r => heeftUitslag(r) && r.round < race.round)) return [];
   const voor = standRijen(race.round);
   const na = standRijen(race.round + 1);
-  const plek = (rijen, id) => rijen.findIndex(r => zelfde(r.id, id)) + 1;
   const plekken = gedeeldePlekken(na);
-  return na.map((r, i) => ({ ...r, plek: plekken[i], wissel: plek(voor, r.id) - plek(na, r.id) }));
+  return na.map((r, i) => ({ ...r, plek: plekken[i], wissel: plekVan(voor, r.id) - plekken[i] }));
 }
 
 // Een tekst die niet past wordt ingekort met een beletselteken, in plaats van

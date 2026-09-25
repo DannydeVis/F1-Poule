@@ -105,8 +105,10 @@ Profiel zet je het vanzelf afspelen uit.
 ### Stand
 Op één scherm, gescheiden door koppen:
 - **Seizoensstand.** Per speler de plek, de punten, en het verschil met de
-  volgende. Daarbij `↑1` / `↓2` sinds de vorige race — geen pijltje als er
-  niets veranderde, en geen pijltjes na één race, want dan is iedereen nieuw.
+  volgende. Bij gelijke punten gelijke plek (1, 1, 3): wie op alfabet boven
+  de ander staat, staat daarmee niet hoger. Daarbij `↑1` / `↓2` sinds de
+  vorige race, ook in gedeelde plekken — geen pijltje als er niets
+  veranderde, en geen pijltjes na één race, want dan is iedereen nieuw.
   En een reeks (`5×`) vanaf drie weekenden op rij ingeleverd; automatisch
   aangevulde weekenden tellen daar niet voor mee.
 - **Jouw seizoen.** Je positie per race als lijn, met eronder waar je begon,

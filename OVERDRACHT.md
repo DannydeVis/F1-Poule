@@ -6919,3 +6919,34 @@ tekstversie.
 Getest in `test/uitslag-delen.test.mjs` (nu 56 controles), met vier mutanten
 erbij (geen knop, geen pijltjes, maar één koploper, de verkeerde tekst). Ze
 zakken alle vier.
+
+## Gelijke punten, gelijke plek
+
+Het deelplaatje en het verhaal gaven bij gelijke punten dezelfde plek (1, 1,
+3); de stand in de app nummerde gewoon door (1, 2, 3). Wie op alfabet boven de
+ander stond, stond daarmee "hoger". Danny wilde de app gelijk aan het plaatje.
+
+Nu telt alles zo, via `gedeeldePlekken(rijen)` en `plekVan(rijen, id)` (naast
+`standRijen()` in `app/index.html`):
+
+- de nummers in de stand (`standRij()`);
+- je plek op de weekendkaart (`mijnPositie()`): "1e van 2" als je gelijk
+  staat, ook als de ander op alfabet boven je staat;
+- de pijltjes (`positieWissels()`, en `standNaWeekend()` voor het plaatje en
+  het verhaal). Twee spelers die gedeeld eerste stonden en dat nog steeds
+  doen, krijgen geen pijltje; wie erbij komt wel. Vroeger kreeg de een ↑1 en
+  de ander ↓1 omdat het alfabet ze van plek liet wisselen;
+- je positie in de seizoensgrafiek, en daarmee je beste en slechtste plek;
+- de plek op je publieke pagina (`maakSnapshot()`);
+- de tekstversie van een weekenduitslag (`groepsappTekst()`).
+
+De volgorde zelf verandert niet: bij gelijke punten staat de een nog steeds
+op alfabet boven de ander. Alleen het nummer ervoor is nu eerlijk.
+
+Wat blijft doornummeren, omdat het geen stand is: de spelerslijst onder
+Poule (01, 02, …) en de lijst "wie ben jij?" bij het kiezen van je speler.
+
+Getest in `test/klimmen-en-reeksen.test.mjs` (allebei eerste, wie erbij komt
+klimt, wie zijn plek deelt zakt niet, "1e van 2" op de weekendkaart),
+`test/verhaal.test.mjs` en `test/uitslag-delen.test.mjs`. Vijf mutanten, één
+per plek waar het vroeger doornummerde; ze zakken alle vijf.
