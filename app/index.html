@@ -1963,8 +1963,8 @@ const ENGELS = Object.fromEntries([
    'did not go ahead'],
   ['wacht op uitslag',
    'waiting for the result'],
-  ['deelnemers volgen',
-   'entry list to follow'],
+  ['coureurs volgen',
+   'drivers to follow'],
   ['open · nog {n} te kiezen',
    'open · {n} still to pick'],
   ['open · ingevuld',
@@ -1999,8 +1999,8 @@ const ENGELS = Object.fromEntries([
    + '{volgend}, the new calendar appears here.'],
   ['nog geen races',
    'no races yet'],
-  ['De kalender wordt automatisch opgehaald.',
-   'The calendar is fetched automatically.'],
+  ['De kalender verschijnt hier vanzelf.',
+   'The calendar will show up here by itself.'],
   ['Demomodus met verzonnen data.',
    'Demo mode with made-up data.'],
   ['gele vlag',
@@ -2150,31 +2150,15 @@ const ENGELS = Object.fromEntries([
   ['niet gefinisht',
    'did not finish'],
 
-  // ---- foutmeldingen uit de database ---------------------------
-  ['De tabel answers mist de unieke sleutel op '
-   + '(pool_id, race_id, member_id, question_id). '
-   + 'Draai schema.sql opnieuw in de Supabase SQL editor.',
-   'The answers table is missing the unique key on '
-   + '(pool_id, race_id, member_id, question_id). '
-   + 'Run schema.sql again in the Supabase SQL editor.'],
-  ['Er staan dubbele voorspellingen in de database. '
-   + 'Draai schema.sql opnieuw, die ruimt ze op en zet de unieke sleutel goed.',
-   'There are duplicate predictions in the database. Run schema.sql again; it '
-   + 'clears them up and sets the unique key correctly.'],
-  ['Deze race of speler bestaat niet (meer) in de database.',
-   'This race or player no longer exists in the database.'],
-  ['De database weigert het schrijven (RLS-policy). Draai schema.sql opnieuw.',
-   'The database is refusing the write (RLS policy). Run schema.sql again.'],
-  ['Een tabel ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.',
-   'A table is missing from the database. Run schema.sql in the Supabase SQL editor.'],
-  ['Een kolom ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.',
-   'A column is missing from the database. Run schema.sql in the Supabase SQL editor.'],
-  ['Een kolom ontbreekt in de database. Draai schema.sql in de Supabase SQL '
-   + 'editor; staat hij er al, dan moet PostgREST zijn schema nog verversen '
-   + '(Settings → API → Reload schema, of even een minuutje wachten).',
-   'A column is missing from the database. Run schema.sql in the Supabase SQL '
-   + 'editor; if it is already there, PostgREST still needs to refresh its schema '
-   + '(Settings → API → Reload schema, or just wait a minute).'],
+  // ---- foutmeldingen ---------------------------------------------
+  ['Dat lukte niet door een storing aan onze kant. Probeer het later nog eens; '
+   + 'blijft het misgaan, laat het de beheerder weten.',
+   'That did not work because of a problem on our side. Try again later; '
+   + 'if it keeps happening, let the owner know.'],
+  ['Deze race of speler bestaat niet meer. Herlaad de app en probeer het opnieuw.',
+   'This race or player no longer exists. Reload the app and try again.'],
+  ['Geen verbinding. Probeer het zo nog eens.',
+   'No connection. Try again in a moment.'],
   ['{wie} hoort bij een ander toestel, dus hier kun je niets voor hem '
    + 'opslaan. Log in met je mailadres om hier ook {wie} te zijn, of vraag de '
    + 'poulebaas om {wie} los te maken.',
@@ -2185,8 +2169,6 @@ const ENGELS = Object.fromEntries([
    + 'Eén account kan niet twee keer in dezelfde stand staan.',
    'This device already plays in this pool as a different player. One account '
    + 'cannot appear twice in the same table.'],
-  ['Onbekende fout',
-   'Unknown error'],
 
   // ---- geen verbinding en rode vlag ----------------------------
   ['geen verbinding',
@@ -2226,13 +2208,12 @@ const ENGELS = Object.fromEntries([
   // ---- het invulscherm -----------------------------------------
   ['nog niets te kiezen',
    'nothing to pick yet'],
-  ['Deelnemerslijst<br>volgt nog',
-   'Entry list<br>still to come'],
-  ['De deelnemerslijst voor deze race staat '
-   + 'nog niet in de database. Hij wordt automatisch opgehaald zodra OpenF1 hem '
-   + 'publiceert; de sync draait elk uur.',
-   'The entry list for this race is not in the database yet. It is fetched '
-   + 'automatically as soon as OpenF1 publishes it; the sync runs every hour.'],
+  ['De coureurs<br>volgen nog',
+   'The drivers<br>are still to come'],
+  ['Wie er meerijdt is nog niet bekend. Zodra dat zo is, kun je hier je '
+   + 'voorspelling invullen.',
+   'Who is racing is not known yet. As soon as it is, you can fill in your '
+   + 'prediction here.'],
   ['Neem de kwalificatie over',
    'Copy your qualifying list'],
   ['Jouw top 10',
@@ -2505,8 +2486,6 @@ const ENGELS = Object.fromEntries([
    '{n} of {totaal} head-to-heads picked · only what you pick counts'],
 
   // ---- het uitslagscherm ---------------------------------------
-  ['handmatig ingevuld · niet van openf1',
-   'entered by hand · not from openf1'],
   ['je had hier zelf niets ingeleverd',
    'you submitted nothing here yourself'],
   ['jouw punten',
@@ -2776,14 +2755,10 @@ const ENGELS = Object.fromEntries([
    'Delete everything? Tap again'],
 
   // ---- verwijderen ---------------------------------------------
-  ['De database mag dit account niet verwijderen. Dat is iets om aan '
-   + 'de beheerder te melden — zie BEDIENING.md §12.',
-   'The database is not allowed to delete this account. That is something to '
-   + 'report to the owner — see BEDIENING.md §12.'],
-  ['Deze database kent het verwijderen nog niet. Draai schema.sql '
-   + 'opnieuw in de Supabase SQL editor.',
-   'This database does not know about deletion yet. Run schema.sql again in the '
-   + 'Supabase SQL editor.'],
+  ['Verwijderen lukt nu niet. Mail naar {adres}, dan halen we het voor je weg.',
+   'Deleting does not work right now. Email {adres} and we will remove it for you.'],
+  ['Verwijderen lukt nu niet. Laat het de beheerder weten, dan halen we het voor je weg.',
+   'Deleting does not work right now. Let the owner know and we will remove it for you.'],
   ['Het verwijderen is niet gelukt.',
    'Deleting did not work.'],
 
@@ -2904,12 +2879,10 @@ const ENGELS = Object.fromEntries([
    '{naam} belongs to another device, so you cannot save their '
    + 'predictions here. Log in with your email address to be {naam} here too, '
    + 'or ask the pool host to unlink {naam}.'],
-  ['De database nam de voorspelling aan maar gaf geen rij terug. '
-   + 'Waarschijnlijk blokkeert een RLS-policy het schrijven of het teruglezen. '
-   + 'Draai schema.sql opnieuw in de Supabase SQL editor.',
-   'The database accepted the prediction but returned no row. '
-   + 'An RLS policy is probably blocking the write or the read-back. '
-   + 'Run schema.sql again in the Supabase SQL editor.'],
+  ['Je voorspelling is misschien niet opgeslagen. Open de race opnieuw om te '
+   + 'kijken of hij er staat, en sla hem anders nog een keer op.',
+   'Your prediction may not have been saved. Open the race again to check '
+   + 'whether it is there, and otherwise save it once more.'],
   ['Misschien is de pagina '
    + 'weggehaald, of klopt de link niet helemaal.',
    'Maybe the page was '
@@ -2984,10 +2957,8 @@ const ENGELS = Object.fromEntries([
    'There is no calendar for this season yet.'],
   ['Het seizoen is al begonnen, de seizoensvragen liggen vast.',
    'The season has already started, the season questions are locked.'],
-  ['Losmaken lukte niet. Alleen de poulebaas mag dat, en de database '
-   + 'controleert dat zelf ook.',
-   'Unlinking failed. Only the pool host may do that, and the database '
-   + 'checks that itself too.'],
+  ['Losmaken lukte niet. Alleen de poulebaas mag dat.',
+   'Unlinking failed. Only the pool host may do that.'],
   ['Die speler',
    'That player'],
 
@@ -3174,10 +3145,16 @@ const ENGELS = Object.fromEntries([
    + 'stays as it is.'],
   ['gesloten',
    'closed'],
-  ['Inzendingen zijn gesloten. De uitslag volgt zodra '
-   + 'de sync hem bij OpenF1 heeft opgehaald; die draait elk uur.',
-   'Entries are closed. The result follows as soon as the sync has fetched '
-   + 'it from OpenF1; that runs every hour.'],
+  ['{sessie} is begonnen en je voorspelling ligt vast. Rond {tijd} is het '
+   + 'afgelopen, en een paar uur later staat de uitslag hier.',
+   '{sessie} has started and your prediction is locked in. It finishes around '
+   + '{tijd}, and a few hours later the result will be here.'],
+  ['{sessie} is afgelopen. De uitslag staat hier binnen een paar uur.',
+   '{sessie} has finished. The result will be here within a few hours.'],
+  ['De uitslag laat langer op zich wachten dan normaal. Hij komt vanzelf; je '
+   + 'hoeft niets te doen.',
+   'The result is taking longer than usual. It will come by itself; you do not '
+   + 'have to do anything.'],
   ['geen duels gekozen · {n} punten laten liggen',
    'no head-to-heads picked · {n} points left on the table'],
   ['teamgenoot-duels · {behaald} van {punten} punten',
@@ -3253,10 +3230,10 @@ const ENGELS = Object.fromEntries([
    'stalled'],
   ['Dit scherm liep vast',
    'This screen got stuck'],
-  ['Er ging iets mis bij het tekenen van dit scherm. Wat je hebt ingevuld '
-   + 'staat veilig in de database -- dit gaat alleen over wat je hier ziet.',
-   'Something went wrong while drawing this screen. What you filled in is safe '
-   + 'in the database -- this is only about what you see here.'],
+  ['Er ging iets mis bij het tekenen van dit scherm. Wat je hebt ingevuld is '
+   + 'gewoon bewaard; het gaat alleen om wat je hier ziet.',
+   'Something went wrong while drawing this screen. What you filled in is '
+   + 'saved; this is only about what you see here.'],
   ['Blijft het misgaan?',
    'Does it keep going wrong?'],
   ['Begin op dit toestel opnieuw',
@@ -3784,17 +3761,19 @@ const leegAntwoord = (w) => w === null || w === undefined || w === '';
 // tabel plus de kolommen in schema.sql; de rest van het bestand hoeft er
 // niets van te weten.
 const SESSIES = {
-  quali: { naam:'kwalificatie', wat:'de kwalificatie', tablabel:'Kwalificatie',
+  // `duur` is hoe lang de sessie ongeveer duurt, in minuten: om te kunnen
+  // zeggen wanneer de uitslag er ongeveer is.
+  quali: { naam:'kwalificatie', wat:'de kwalificatie', tablabel:'Kwalificatie', duur:60,
            letter:'Q', vraag:'quali_top10',
            uitslag:'quali_result', deadline:'deadline_quali', hand:'quali_handmatig' },
-  race:  { naam:'race',         wat:'de race',         tablabel:'Race',
+  race:  { naam:'race',         wat:'de race',         tablabel:'Race', duur:120,
            letter:'R', vraag:'race_top10',
            uitslag:'race_result',  deadline:'deadline_race',  hand:'race_handmatig' },
   // Zes keer per seizoen. `weging` is wat een sprint anders maakt dan de
   // andere twee: dezelfde top 10, dezelfde 5/3/1 per plek, maar halve punten.
   // Een sprint is een derde van een race lang en hoort niet net zo zwaar te
   // wegen als het weekend zelf.
-  sprint:{ naam:'sprint',       wat:'de sprint',       tablabel:'Sprint',
+  sprint:{ naam:'sprint',       wat:'de sprint',       tablabel:'Sprint', duur:60,
            letter:'S', vraag:'sprint_top10',
            uitslag:'sprint_result', deadline:'deadline_sprint',
            hand:'sprint_handmatig', weging:0.5 },
@@ -4342,33 +4321,23 @@ const datumKort = (iso) => new Date(iso)
 
 // ============================================================
 //  Foutmeldingen
-//  De poule draait op een werk-pc zonder devtools. Een fout uit Postgres
-//  moet daarom op het scherm zelf uitleggen wat er te doen staat.
+//  Een speler wil weten of het gelukt is en wat hij nu moet doen, niet welke
+//  tabel of policy er in de database mist. Dus op het scherm gewone woorden
+//  met de foutcode erachter, en de technische melding in de console. Welke
+//  code wat betekent en hoe je het oplost staat in BEDIENING.md, "Als opslaan
+//  een foutcode geeft".
 // ============================================================
+
+// De bekendste: een ontbrekende sleutel (42P10), dubbele rijen (23505), een
+// weigerende policy (42501), een ontbrekende tabel of kolom (42P01, 42703,
+// PGRST204). De oplossing is steeds schema.sql opnieuw draaien, en dat kan
+// alleen de beheerder. Voor de speler zijn ze dus allemaal hetzelfde.
+const GEEN_NET = /failed to fetch|networkerror|load failed|network request failed/i;
 
 function uitleg(error) {
   const code = error?.code ?? '';
-  const bekend = {
-    '42P10': T('De tabel answers mist de unieke sleutel op '
-           + '(pool_id, race_id, member_id, question_id). '
-           + 'Draai schema.sql opnieuw in de Supabase SQL editor.'),
-    // 23505 kan ook over de spelerssleutel gaan; die krijgt onder dit
-    // lijstje een eigen antwoord.
-    '23505': T('Er staan dubbele voorspellingen in de database. '
-           + 'Draai schema.sql opnieuw, die ruimt ze op en zet de unieke sleutel goed.'),
-    '23503': T('Deze race of speler bestaat niet (meer) in de database.'),
-    // 42501 wordt hieronder overschreven als de oorzaak te herleiden is tot
-    // een speler die bij een ander account hoort; zie onder dit lijstje.
-    '42501': T('De database weigert het schrijven (RLS-policy). Draai schema.sql opnieuw.'),
-    '42P01': T('Een tabel ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.'),
-    '42703': T('Een kolom ontbreekt in de database. Draai schema.sql in de Supabase SQL editor.'),
-    // PostgREST valideert kolommen tegen zijn eigen, gecachte schema, dus dit
-    // is dezelfde ontbrekende-kolom-situatie als 42703 — alleen ontdekt vóórdat
-    // de vraag ooit bij Postgres komt.
-    'PGRST204': T('Een kolom ontbreekt in de database. Draai schema.sql in de Supabase SQL '
-              + 'editor; staat hij er al, dan moet PostgREST zijn schema nog verversen '
-              + '(Settings → API → Reload schema, of even een minuutje wachten).'),
-  };
+  const storing = () => `${T('Dat lukte niet door een storing aan onze kant. Probeer het later nog eens; '
+    + 'blijft het misgaan, laat het de beheerder weten.')} (${code})`;
   // De database weigert het schrijven, en sinds spelers aan een account hangen
   // is daar meestal een concrete, uitlegbare reden voor.
   if (code === '42501' && nietVanMij()) {
@@ -4381,9 +4350,17 @@ function uitleg(error) {
     return T('Dit toestel speelt in deze poule al mee als een andere speler. '
          + 'Eén account kan niet twee keer in dezelfde stand staan.');
   }
-  if (bekend[code]) return bekend[code];
-  const bericht = error?.message ?? T('Onbekende fout');
-  return code ? `${bericht} (${code})` : bericht;
+  if (code === '23503') return T('Deze race of speler bestaat niet meer. Herlaad de app en probeer het opnieuw.');
+  const bericht = String(error?.message ?? '');
+  if (GEEN_NET.test(bericht)) return T('Geen verbinding. Probeer het zo nog eens.');
+  // Een eigen melding uit schema.sql ("De race is gesloten") is voor de speler
+  // geschreven en mag gewoon op het scherm; die heeft code P0001. Alles wat
+  // verder uit de database komt is Engels en technisch.
+  if (code && code !== 'P0001') {
+    console.error('database:', code, bericht, error?.details ?? '', error?.hint ?? '');
+    return storing();
+  }
+  return bericht || T('Er ging iets mis.');
 }
 
 // Geen verbinding, of de bibliotheek kwam niet binnen. Nadrukkelijk een ander
@@ -4482,9 +4459,8 @@ function toonKapot(fout) {
         <div class="rodevlag">
           <span class="label">${T('vastgelopen')}</span>
           <h1 class="middel">${T('Dit scherm liep vast')}</h1>
-          <p class="zacht" style="margin:0">${T('Er ging iets mis bij het tekenen '
-            + 'van dit scherm. Wat je hebt ingevuld staat veilig in de database '
-            + '-- dit gaat alleen over wat je hier ziet.')}</p>
+          <p class="zacht" style="margin:0">${T('Er ging iets mis bij het tekenen van dit scherm. Wat je hebt ingevuld is '
+            + 'gewoon bewaard; het gaat alleen om wat je hier ziet.')}</p>
           ${bericht ? `<p class="foutregel" id="kapotreden">${esc(bericht)}</p>` : ''}
           <button class="knop wit" id="opnieuw">${T('Opnieuw proberen')}</button>
           <p class="zacht" style="margin:0;font-size:13px">
@@ -5143,9 +5119,8 @@ async function bewaar() {
         + 'voorspelling niet opslaan. Log in met je mailadres om hier ook '
         + '{naam} te zijn, of vraag de poulebaas om {naam} los te maken.',
         { naam: S.ik.naam })
-      : T('De database nam de voorspelling aan maar gaf geen rij terug. '
-        + 'Waarschijnlijk blokkeert een RLS-policy het schrijven of het teruglezen. '
-        + 'Draai schema.sql opnieuw in de Supabase SQL editor.'));
+      : T('Je voorspelling is misschien niet opgeslagen. Open de race opnieuw om te '
+        + 'kijken of hij er staat, en sla hem anders nog een keer op.'));
   }
 
   for (const [id] of wissen) {
@@ -5201,7 +5176,7 @@ function raceStand(r, nu = Date.now()) {
   if (afgelastEnLeeg(r)) return { soort:'afgelast', tekst: T('niet doorgegaan') };
   const welk = openLijst(r, nu);
   if (!welk) return { soort:'wacht', tekst: T('wacht op uitslag') };
-  if (!(r.drivers ?? []).length) return { soort:'komt', tekst: T('deelnemers volgen') };
+  if (!(r.drivers ?? []).length) return { soort:'komt', tekst: T('coureurs volgen') };
   const nog = 10 - (mijn?.[SESSIES[welk].vraag]?.length ?? 0);
   return { soort:'open', tekst: nog > 0
     ? T('open · nog {n} te kiezen', { n: nog }) : T('open · ingevuld') };
@@ -5848,7 +5823,7 @@ function racesPagina(volgend) {
     ? seizoenRondBlok()
     : `<div class="leeg"><span class="label">${T('nog geen races')}</span>
          <p class="zacht" style="margin:0">${
-           T('De kalender wordt automatisch opgehaald.')}</p></div>`;
+           T('De kalender verschijnt hier vanzelf.')}</p></div>`;
   return `
     ${DEMO ? `<div class="waarschuwing"><span class="label">${T('demo')}</span>
       ${T('Demomodus met verzonnen data.')}</div>` : ''}
@@ -6779,8 +6754,7 @@ function knoopLosmaken() {
       .update({ user_id: null }).eq('member_id', id).select('member_id');
     if (error || !data?.length) {
       S.melding = error ? uitleg(error)
-        : T('Losmaken lukte niet. Alleen de poulebaas mag dat, en de database '
-          + 'controleert dat zelf ook.');
+        : T('Losmaken lukte niet. Alleen de poulebaas mag dat.');
     } else {
       const naam = S.leden.find(l => zelfde(l.member_id, id))?.display_name ?? T('Die speler');
       S.melding = T('{naam} is losgemaakt. Wie zich nu als {naam} aanmeldt, is '
@@ -7289,16 +7263,18 @@ function vergeetMijOpDitToestel() {
 
 // De functie draait als `security definer`; komt hij niet aan auth.users, dan
 // is dat geen fout van de speler en heeft "probeer opnieuw" geen zin.
+// Voor de beheerder: "permission denied" betekent dat de functie niet als
+// security definer draait (BEDIENING.md §12), PGRST202 dat schema.sql nog niet
+// gedraaid is. De speler kan daar niets mee; die krijgt het adres waar hij
+// het kan vragen, en de echte melding staat in de console.
 function uitlegVerwijderen(error) {
   const bericht = String(error?.message ?? '');
-  if (/permission denied|must be owner|insufficient/i.test(bericht)) {
-    return T('De database mag dit account niet verwijderen. Dat is iets om aan '
-         + 'de beheerder te melden — zie BEDIENING.md §12.');
-  }
-  if (/function .*verwijder_mijn_account.* does not exist|PGRST202/i.test(bericht)
+  if (/permission denied|must be owner|insufficient|verwijder_mijn_account|PGRST202/i.test(bericht)
       || error?.code === 'PGRST202') {
-    return T('Deze database kent het verwijderen nog niet. Draai schema.sql '
-         + 'opnieuw in de Supabase SQL editor.');
+    console.error('verwijderen:', error?.code ?? '', bericht);
+    return PRIVACY_CONTACT
+      ? T('Verwijderen lukt nu niet. Mail naar {adres}, dan halen we het voor je weg.', { adres: PRIVACY_CONTACT })
+      : T('Verwijderen lukt nu niet. Laat het de beheerder weten, dan halen we het voor je weg.');
   }
   return bericht || T('Het verwijderen is niet gelukt.');
 }
@@ -8063,6 +8039,30 @@ function vulPaneel() {
   else invulWeergave(paneel, r, dicht);
 }
 
+// Wanneer is de uitslag er? Dat is het enige wat je op een gesloten tabblad
+// wilt weten. Hoe hij binnenkomt doet er voor een speler niet toe. Precies
+// beloven kan niet (de uitslag wordt een paar keer per uur opgehaald, en
+// soms laat die ophaalronde uren op zich wachten), dus: wanneer de sessie
+// ongeveer afgelopen is, en dat de uitslag een paar uur later volgt.
+const WACHT_LANG = 8 * 36e5;
+function wanneerUitslag(r, welk, nu = Date.now()) {
+  const sessie = SESSIES[welk];
+  const einde = Date.parse(r[sessie.deadline]) + sessie.duur * 6e4;
+  const wie = T(sessie.wat);
+  const Wie = esc(wie.charAt(0).toUpperCase() + wie.slice(1));
+  if (nu < einde) {
+    return T('{sessie} is begonnen en je voorspelling ligt vast. Rond {tijd} is het '
+      + 'afgelopen, en een paar uur later staat de uitslag hier.',
+      { sessie: Wie, tijd: esc(sluitTekst(new Date(einde).toISOString())) });
+  }
+  if (nu - einde > WACHT_LANG) {
+    return T('De uitslag laat langer op zich wachten dan normaal. Hij komt vanzelf; je '
+      + 'hoeft niets te doen.');
+  }
+  // Ook als de tijd onbekend is (NaN): dan is dit de zin die nooit liegt.
+  return T('{sessie} is afgelopen. De uitslag staat hier binnen een paar uur.', { sessie: Wie });
+}
+
 // Afgelast én zonder uitslag. Die tweede voorwaarde staat er zodat een
 // uitslag altijd wint van de vlag: is hij tóch verreden en ingevuld, dan
 // telt hij gewoon mee.
@@ -8088,9 +8088,8 @@ function geslotenWeergave(paneel, r) {
       <p class="zacht" style="margin:0">${T('Deze race is niet doorgegaan, dus hij telt voor '
         + 'niemand mee. Wat je had ingevuld blijft staan.')}</p></div>
   ` : `
-    <div class="leeg"><span class="label">${T('gesloten')}</span>
-      <p class="zacht" style="margin:0">${T('Inzendingen zijn gesloten. De uitslag volgt zodra '
-        + 'de sync hem bij OpenF1 heeft opgehaald; die draait elk uur.')}</p></div>`;
+    <div class="leeg"><span class="label">${T('uitslag volgt nog')}</span>
+      <p class="zacht" style="margin:0">${wanneerUitslag(r, S.tab)}</p></div>`;
   // De poule ernaast op een breed scherm, als er een poule is.
   const rest = pouleKaart(r);
   paneel.innerHTML = rest ? tweeKolommen({ hoofd: kop + mijnBlok, zij: rest }) : kop + mijnBlok;
@@ -8105,10 +8104,9 @@ function invulWeergave(paneel, r, dicht) {
     paneel.innerHTML = `
       <div class="leeg">
         <span class="label">${T('nog niets te kiezen')}</span>
-        <h2 class="middel">${T('Deelnemerslijst<br>volgt nog')}</h2>
-        <p class="zacht" style="margin:0">${T('De deelnemerslijst voor deze race staat '
-          + 'nog niet in de database. Hij wordt automatisch opgehaald zodra OpenF1 hem '
-          + 'publiceert; de sync draait elk uur.')}</p>
+        <h2 class="middel">${T('De coureurs<br>volgen nog')}</h2>
+        <p class="zacht" style="margin:0">${T('Wie er meerijdt is nog niet bekend. Zodra dat zo is, '
+          + 'kun je hier je voorspelling invullen.')}</p>
       </div>`;
     return;
   }
@@ -8454,7 +8452,7 @@ function uitslagWeergave(r, werkelijk) {
   // bijgewerkt, dus dat hoort er gewoon bij te staan.
   const noot = (r[HANDVLAG[S.tab]]
     ? `<p class="label amber" style="margin:0">${
-        T('handmatig ingevuld · niet van openf1')}</p>` : '')
+        T('handmatig ingevuld')}</p>` : '')
     + autoNoot(mijn, S.tab, T('je had hier zelf niets ingeleverd'));
   // De losse vragen hangen aan dezelfde deadline als de top 10 van deze tab.
   const losse = coureurVragen(S.tab).map(id => coureurUitslag(r, mijn, id)).join('')

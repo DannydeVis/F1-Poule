@@ -277,6 +277,8 @@ function uitvoeren(tabel, q) {
   }
 
   if (q._upsert) {
+    const fout = volgendeFout();
+    if (fout) return fout;
     const sleutel = UNIEK[tabel];
     const doel = (q._opties?.onConflict ?? '').split(',').filter(Boolean);
     // Postgres geeft 42P10 als het opgegeven conflictdoel geen unieke sleutel is.
@@ -706,7 +708,19 @@ const functies = {
   },
 };
 
+// Een test kan de volgende schrijfactie laten mislukken met een fout naar
+// keuze, om te zien wat een speler dan te lezen krijgt
+// (test/gewone-taal.test.mjs). Eén keer: daarna werkt alles weer.
+function volgendeFout() {
+  const fout = globalThis.__volgendeFout;
+  if (!fout) return null;
+  globalThis.__volgendeFout = null;
+  return { data: null, error: fout };
+}
+
 async function rpc(naam, argumenten) {
+  const fout = volgendeFout();
+  if (fout) return fout;
   const fn = functies[naam];
   if (!fn) {
     return { data: null, error: { code: 'PGRST202',

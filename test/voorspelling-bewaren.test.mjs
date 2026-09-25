@@ -87,8 +87,8 @@ await openRace(page, 'Suzuka');
 // witruimte platslaan: textContent houdt de regelafbrekingen uit de HTML,
 // dus een zin die over twee regels loopt matcht anders nooit
 const uitleg = (await page.textContent('#paneel')).replace(/\s+/g, ' ').trim();
-check('race zonder deelnemerslijst legt uit dat de lijst nog komt',
-  uitleg.includes('automatisch opgehaald'), uitleg.slice(0, 70) + '...');
+check('race zonder deelnemerslijst legt uit dat de coureurs nog komen',
+  uitleg.includes('Wie er meerijdt is nog niet bekend'), uitleg.slice(0, 70) + '...');
 
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 

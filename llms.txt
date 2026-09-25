@@ -60,7 +60,7 @@ The league admin chooses what counts: Simple (just the two top 10s, 100 points p
 
 ## Features
 
-- Automatic results: The official classification comes in via OpenF1, and post-race penalties are checked again afterwards.
+- Automatic results: The official result comes in by itself, and post-race penalties are checked again afterwards.
 - Jokers: Play a joker on a weekend and your points count double. Five per season by default, set by the league admin.
 - Head-to-head: Next to the standings you see, friend by friend, who won more often. That is what the group chat is really about.
 - Weekend winner: Whoever scores the most points in a weekend wins that weekend, even if they are behind in the season.

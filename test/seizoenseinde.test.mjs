@@ -92,7 +92,7 @@ async function seizoenVoorbij(page, { eigenaar = 'lid-1', volgendJaar = false, e
   check('en zet de poule echt op 2027', poule === 2027, String(poule));
   const leeg = await tekst(page, '.kalender .leeg');
   check('zonder kalender van 2027 zegt het overzicht eerlijk dat die nog komt',
-    leeg.includes('nog geen races') && leeg.includes('automatisch opgehaald'), leeg);
+    leeg.includes('nog geen races') && leeg.includes('De kalender verschijnt hier vanzelf'), leeg);
   check('en biedt het niet nog een keer doorschuiven aan', (await page.$('#doorschuiven')) === null);
   check('geen javascriptfouten (2)', jsFouten.length === 0, jsFouten.join(' | '));
   await stoppen();

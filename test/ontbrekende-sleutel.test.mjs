@@ -3,7 +3,11 @@
 //
 // Zonder die sleutel maakt elke "wijziging" een nieuwe rij aan en lijkt
 // bewaren willekeurig wel en niet te werken. Dat moet een leesbare melding
-// geven die naar schema.sql wijst, en de ingevulde top 10 mag niet weg zijn.
+// geven, en de ingevulde top 10 mag niet weg zijn.
+//
+// Leesbaar voor een speler: die kan niets met "draai schema.sql" of een
+// tabelnaam. Hij krijgt te horen dat het aan ons ligt, met de foutcode erbij;
+// wat die code betekent staat voor de beheerder in BEDIENING.md.
 
 import { maakControle, startPagina, meedoen, openRace, kiesTien } from './hulp.mjs';
 
@@ -20,7 +24,10 @@ await page.click('#opslaan');
 
 await page.waitForSelector('.err:not(:empty)', { timeout: 10000 });
 const melding = (await page.textContent('.err')).trim();
-check('de melding wijst naar schema.sql', melding.includes('schema.sql'), melding);
+check('de melding zegt in gewone woorden dat het aan ons ligt, met de foutcode erbij',
+  melding.includes('storing aan onze kant') && melding.includes('(42P10)'), melding);
+check('zonder tabelnamen of "schema.sql"',
+  !/schema\.sql|answers|pool_id|supabase|database/i.test(melding), melding);
 
 const rijen = await page.evaluate(() => globalThis.__db.answers.length);
 check('er wordt niets stilzwijgend weggeschreven', rijen === 0, `${rijen} rijen`);

@@ -78,7 +78,7 @@ export const teksten = {
     functies: {
       kop: 'Alles voor een poule die het hele seizoen leeft',
       items: [
-        ['Uitslagen automatisch', 'De officiële klassering komt binnen via OpenF1, en straffen achteraf worden nog nagekeken.'],
+        ['Uitslagen automatisch', 'De officiële uitslag komt vanzelf binnen, en straffen achteraf worden nog nagekeken.'],
         ['Jokers', 'Zet een joker op een weekend en je punten tellen dubbel. Standaard vijf per seizoen, in te stellen door de poulebaas.'],
         ['Onderlinge duels', 'Naast de stand zie je per vriend wie er vaker won. Daar gaat het in de groepsapp meestal over.'],
         ['Weekendwinnaar', 'Wie een weekend de meeste punten pakt, wint dat weekend. Ook als je in het seizoen achter staat.'],
@@ -177,7 +177,7 @@ export const teksten = {
     functies: {
       kop: 'Everything a league needs to last the whole season',
       items: [
-        ['Automatic results', 'The official classification comes in via OpenF1, and post-race penalties are checked again afterwards.'],
+        ['Automatic results', 'The official result comes in by itself, and post-race penalties are checked again afterwards.'],
         ['Jokers', 'Play a joker on a weekend and your points count double. Five per season by default, set by the league admin.'],
         ['Head-to-head', 'Next to the standings you see, friend by friend, who won more often. That is what the group chat is really about.'],
         ['Weekend winner', 'Whoever scores the most points in a weekend wins that weekend, even if they are behind in the season.'],
@@ -276,7 +276,7 @@ export const teksten = {
     functies: {
       kop: 'Alles für eine Tipprunde, die die ganze Saison lebt',
       items: [
-        ['Automatische Ergebnisse', 'Die offizielle Wertung kommt über OpenF1, und nachträgliche Strafen werden noch einmal geprüft.'],
+        ['Automatische Ergebnisse', 'Das offizielle Ergebnis kommt von selbst, und nachträgliche Strafen werden noch einmal geprüft.'],
         ['Joker', 'Setz einen Joker auf ein Wochenende und deine Punkte zählen doppelt. Standardmäßig fünf pro Saison, einstellbar durch den Admin.'],
         ['Direkte Duelle', 'Neben der Tabelle siehst du für jeden Freund, wer öfter gewonnen hat. Darum geht es in der Gruppe meistens.'],
         ['Wochenendsieger', 'Wer an einem Wochenende die meisten Punkte holt, gewinnt das Wochenende, auch wenn er in der Saison hinten liegt.'],
@@ -375,7 +375,7 @@ export const teksten = {
     functies: {
       kop: 'Tout pour une ligue qui vit toute la saison',
       items: [
-        ['Résultats automatiques', 'Le classement officiel arrive via OpenF1, et les pénalités d\'après-course sont revérifiées.'],
+        ['Résultats automatiques', 'Le classement officiel arrive tout seul, et les pénalités d\'après-course sont revérifiées.'],
         ['Jokers', 'Jouez un joker sur un week-end et vos points comptent double. Cinq par saison par défaut, réglable par l\'administrateur.'],
         ['Face-à-face', 'À côté du classement, vous voyez pour chaque ami qui a gagné le plus souvent. C\'est souvent de ça qu\'on parle dans le groupe.'],
         ['Vainqueur du week-end', 'Celui qui marque le plus de points sur un week-end gagne ce week-end, même s\'il est derrière au championnat.'],
@@ -474,7 +474,7 @@ export const teksten = {
     functies: {
       kop: 'Todo para una liga que dure toda la temporada',
       items: [
-        ['Resultados automáticos', 'La clasificación oficial llega a través de OpenF1, y las sanciones posteriores a la carrera se revisan de nuevo.'],
+        ['Resultados automáticos', 'La clasificación oficial llega sola, y las sanciones posteriores a la carrera se revisan de nuevo.'],
         ['Comodines', 'Juega un comodín en un fin de semana y tus puntos cuentan doble. Cinco por temporada por defecto, ajustable por el administrador.'],
         ['Cara a cara', 'Junto a la clasificación ves, amigo por amigo, quién ganó más veces. De eso se habla de verdad en el grupo.'],
         ['Ganador del fin de semana', 'Quien suma más puntos en un fin de semana gana ese fin de semana, aunque vaya por detrás en la temporada.'],
@@ -573,7 +573,7 @@ export const teksten = {
     functies: {
       kop: 'Tutto per una lega che dura tutta la stagione',
       items: [
-        ['Risultati automatici', 'La classifica ufficiale arriva tramite OpenF1, e le penalità dopo la gara vengono ricontrollate.'],
+        ['Risultati automatici', 'La classifica ufficiale arriva da sola, e le penalità dopo la gara vengono ricontrollate.'],
         ['Jolly', 'Gioca un jolly su un weekend e i tuoi punti valgono doppio. Cinque a stagione di default, regolabili dall\'amministratore.'],
         ['Testa a testa', 'Accanto alla classifica vedi, amico per amico, chi ha vinto più spesso. È di questo che si parla davvero nel gruppo.'],
         ['Vincitore del weekend', 'Chi fa più punti in un weekend vince quel weekend, anche se è indietro in stagione.'],
@@ -672,7 +672,7 @@ export const teksten = {
     functies: {
       kop: 'Tudo para um bolão que dura a temporada inteira',
       items: [
-        ['Resultados automáticos', 'A classificação oficial chega via OpenF1, e as punições aplicadas depois da corrida são conferidas de novo.'],
+        ['Resultados automáticos', 'A classificação oficial chega sozinha, e as punições aplicadas depois da corrida são conferidas de novo.'],
         ['Coringas', 'Use um coringa em um fim de semana e seus pontos valem em dobro. Cinco por temporada por padrão, ajustável pelo administrador.'],
         ['Confronto direto', 'Ao lado da classificação você vê, amigo por amigo, quem venceu mais vezes. É disso que o grupo realmente fala.'],
         ['Vencedor do fim de semana', 'Quem faz mais pontos em um fim de semana vence aquele fim de semana, mesmo estando atrás na temporada.'],

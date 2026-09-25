@@ -1278,10 +1278,35 @@ een verschillende dienst noemen.
 ### Als het verwijderen niet werkt
 
 `verwijder_mijn_account()` draait met de rechten van wie hem heeft aangemaakt —
-de `postgres`-rol in de SQL editor. Krijgt een speler "de database mag dit
-account niet verwijderen", dan komt die rol niet aan `auth.users` in jouw
+de `postgres`-rol in de SQL editor. De speler krijgt dan "Verwijderen lukt nu
+niet. Mail naar …" met het privacyadres; de echte melding staat in de console.
+Zegt die "permission denied", dan komt die rol niet aan `auth.users` in jouw
 project. De uitweg is dan een Supabase Edge Function met de `service_role` key,
-en die sleutel blijft daar — nooit in `index.html`.
+en die sleutel blijft daar — nooit in `index.html`. Zegt hij `PGRST202`, dan
+is `schema.sql` nog niet gedraaid.
+
+### Als opslaan een foutcode geeft
+
+Een speler ziet bij een fout in de database alleen: *"Dat lukte niet door een
+storing aan onze kant. Probeer het later nog eens; blijft het misgaan, laat het
+de beheerder weten. (42703)"*. Geen tabelnamen, geen `schema.sql`: daar kan
+een speler niets mee. De code tussen haakjes is voor jou, en de volledige
+Engelse melding staat in de console (`database: …`).
+
+| Code | Wat er mis is | Wat je doet |
+| --- | --- | --- |
+| `42P10` | `answers` mist de unieke sleutel op (pool_id, race_id, member_id, question_id) | `schema.sql` opnieuw draaien |
+| `23505` | dubbele voorspellingen | `schema.sql` opnieuw draaien; die ruimt ze op en zet de sleutel goed |
+| `42501` | een policy (RLS) weigert het schrijven | `schema.sql` opnieuw draaien. Hoort de speler bij een ander toestel, dan zegt de app dat zelf, in gewone woorden |
+| `42P01` | een tabel ontbreekt | `schema.sql` draaien |
+| `42703` | een kolom ontbreekt | `schema.sql` draaien |
+| `PGRST204` | een kolom ontbreekt volgens PostgREST | `schema.sql` draaien; staat hij er al, dan Settings → API → Reload schema, of een minuut wachten |
+| andere | iets anders uit de database | de melding in de console lezen |
+
+Twee soorten meldingen komen wél gewoon op het scherm: een melding die
+`schema.sql` zelf voor spelers schrijft (`raise exception 'De race is
+gesloten'`, code `P0001`), en geen verbinding ("Geen verbinding. Probeer het
+zo nog eens.").
 
 ---
 

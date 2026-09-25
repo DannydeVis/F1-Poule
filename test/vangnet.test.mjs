@@ -97,7 +97,7 @@ check('na de klap staat er een scherm en geen wit vlak',
   (await tekst('#app')).includes('Dit scherm liep vast'), await tekst('h1'));
 
 check('het zegt erbij dat je inzendingen veilig staan',
-  (await tekst('#app')).includes('staat veilig in de database'));
+  (await tekst('#app')).includes('Wat je hebt ingevuld is gewoon bewaard'));
 
 check('de technische reden staat erbij om door te geven',
   (await tekst('#kapotreden')) === 'proefklap', await tekst('#kapotreden'));
