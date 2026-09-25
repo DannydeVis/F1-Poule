@@ -84,17 +84,36 @@ declare
   gelukt boolean;
 begin
   -- ---- 1. wie is beheerder -------------------------------------------------
-  select count(*) into n from site_beheerders;
-  if n <> 1 then raise exception 'gezakt: % beheerders na het draaien van schema.sql, verwacht 1', n; end if;
-  if not exists (select 1 from site_beheerders where user_id = 'dddddddd-0000-0000-0000-000000000001') then
+  perform set_config('request.jwt.claims', '{"sub":"dddddddd-0000-0000-0000-000000000001"}', true);
+  if not public.ik_ben_beheerder() then
     raise exception 'gezakt: het bevestigde beheeradres is geen beheerder';
   end if;
-  raise notice 'ok: het bevestigde beheeradres is beheerder, en verder niemand';
+  raise notice 'ok: het bevestigde beheeradres is beheerder, zonder dat het ergens in een tabel staat';
 
-  if exists (select 1 from site_beheerders where user_id = 'eeeeeeee-0000-0000-0000-000000000002') then
-    raise exception 'gezakt: een onbevestigd adres werd beheerder';
+  perform set_config('request.jwt.claims', '{"sub":"eeeeeeee-0000-0000-0000-000000000002"}', true);
+  if public.ik_ben_beheerder() then
+    raise exception 'gezakt: een onbevestigd adres is beheerder';
   end if;
-  raise notice 'ok: een onbevestigd adres wordt het niet, ook niet met hetzelfde adres';
+  raise notice 'ok: een onbevestigd adres niet, ook niet met hetzelfde adres';
+
+  -- Wie pas na het draaien van schema.sql voor het eerst inlogt, is het ook
+  -- meteen: het hangt niet af van een tabel die schema.sql vult. Met andere
+  -- hoofdletters ook: een mailadres is hetzelfde adres in welke letters ook.
+  insert into auth.users (id, email, email_confirmed_at)
+  values ('ffffffff-0000-0000-0000-000000000009', 'DeVisser.Danny@Gmail.com', now());
+  perform set_config('request.jwt.claims', '{"sub":"ffffffff-0000-0000-0000-000000000009"}', true);
+  if not public.ik_ben_beheerder() then
+    raise exception 'gezakt: wie na schema.sql voor het eerst inlogt met het beheeradres (andere hoofdletters), is geen beheerder';
+  end if;
+  raise notice 'ok: wie pas na schema.sql inlogt met het beheeradres is ook beheerder, ook met andere hoofdletters';
+  delete from auth.users where id = 'ffffffff-0000-0000-0000-000000000009';
+
+  -- Een extra beheerder via site_beheerders.
+  insert into site_beheerders (user_id) values ('bbbbbbbb-0000-0000-0000-000000000004');
+  perform set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000004"}', true);
+  if not public.ik_ben_beheerder() then raise exception 'gezakt: een extra beheerder komt er niet in'; end if;
+  delete from site_beheerders where user_id = 'bbbbbbbb-0000-0000-0000-000000000004';
+  raise notice 'ok: ook als je pas na schema.sql inlogt, en een extra beheerder via site_beheerders';
 
   -- ---- 2. de rest komt er niet in -----------------------------------------
   -- zonder sessie

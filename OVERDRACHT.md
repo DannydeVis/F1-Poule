@@ -7153,16 +7153,20 @@ geen policies) en `ik_ben_beheerder()`, en elke beheerfunctie
 (`beheer_overzicht`, `beheer_poules`, `beheer_spelers`, `beheer_poule_*`,
 `beheer_speler_*`, `beheer_race_bijwerken`, `beheer_sync`,
 `beheer_statistieken`) is security definer en begint met `beheer_poort()`,
-die 42501 gooit voor iedereen die geen beheerder is. Beheerder word je doordat
-`schema.sql` het account met het privacyadres toevoegt, alleen als dat adres
-bevestigd is (`email_confirmed_at`): iemand die voor dat adres een inloglink
-aanvraagt komt er niet in, want die link komt in Danny's mailbox. De
-service_role key blijft waar hij was: een geheim in GitHub voor de sync.
+die 42501 gooit voor iedereen die geen beheerder is. Beheerder is het account
+met het privacyadres, alleen als dat adres bevestigd is (`email_confirmed_at`):
+iemand die voor dat adres een inloglink aanvraagt komt er niet in, want die
+link komt in Danny's mailbox. (Eerst voegde `schema.sql` dat account toe aan
+`site_beheerders`, wat betekende: eerst inloggen, dan schema.sql nog eens
+draaien. Dat is vervangen, zie "Inloggen in het beheer, op elk toestel"
+hieronder.) De service_role key blijft waar hij was: een geheim in GitHub voor
+de sync.
 
 **Binnenkomen zonder de app te breken.** Het beheer deelt de sessie met de app
 (dezelfde herkomst). Een anoniem app-account wordt daarom níét vervangen door
 hier met Google in te loggen: dan zou de speler op dat toestel aan niets meer
-hangen. Het beheer zegt dan: koppel eerst in de app.
+hangen. (Eerst zei het beheer dan "koppel eerst in de app"; nu koppelt het zelf,
+zie hieronder.)
 
 **De sync schrijft een logboek** (`sync_runs`): elke run één regel met
 wanneer, gelukt of niet, hoeveel races er veranderden en wat. Mislukt het
@@ -7203,10 +7207,9 @@ sync"; ze zakken allemaal. Eén overleefde eerst: de SQL-test controleerde het
 onbevestigde adres met een eigen kopie van de regel uit schema.sql in plaats
 van met die regel zelf.
 
-**Wat Danny moet doen:** `schema.sql` opnieuw draaien, nadat hij één keer met
-zijn beheeradres is ingelogd (Google, of zijn mailadres gekoppeld in de app).
-Tot die tijd laat het beheer hem er niet in, en schrijft de sync zijn logboek
-nergens heen (dat merkt verder niemand).
+**Wat Danny moet doen:** `schema.sql` één keer opnieuw draaien. Tot die tijd
+zegt het beheer "nog niet ingericht", en schrijft de sync zijn logboek nergens
+heen (dat merkt verder niemand).
 
 ## Google Analytics, met toestemming
 
@@ -7243,3 +7246,69 @@ mutanten (laden zonder keuze, nee laadt ook, cookies blijven staan, de knop
 blijft verborgen, altijd Nederlands, nee kleiner dan ja, de privacylink altijd
 Nederlands, de keuze niet onthouden, de app bindt de knop niet); ze zakken
 allemaal.
+
+## Inloggen in het beheer, op elk toestel
+
+Danny opende `/beheer/` en kreeg *"Could not find the function
+public.ik_ben_beheerder without parameters in the schema cache"*, met: *"ik zou
+niet weten hoe ik moet inloggen met een beheerder adres. en ik wil op m'n pc
+maar ook op m'n telefoon of ipad kunnen gebruiken als het nodig is"*.
+
+Twee dingen tegelijk: de melding kwam doordat `schema.sql` na het beheer nog
+niet gedraaid was, en inloggen vroeg om een volgorde (eerst in de app je
+adres koppelen, dan schema.sql nog eens draaien) die nergens op het scherm
+stond.
+
+**Nog niet ingericht.** Ontbreekt een beheerfunctie (PostgREST geeft PGRST202,
+PostgreSQL 42883), dan toont het beheer geen Engelse foutmelding meer maar
+"Het beheer is nog niet ingericht in de database", met drie stappen: een link
+naar `schema.sql` in de repo, een link naar de SQL Editor van precies dit
+Supabase-project (het project-id komt uit de Supabase-URL die al in de pagina
+staat), Run, en een knop Opnieuw proberen.
+
+**Beheerder zonder tweede keer draaien.** `ik_ben_beheerder()` kijkt nu bij
+elke aanroep of het ingelogde account het beheeradres heeft (`beheer_adres()`,
+hoofdletters maken niet uit) en of dat bevestigd is. `site_beheerders` blijft
+voor extra beheerders. Dus: schema.sql één keer draaien, en daarna maakt het
+niet uit wanneer Danny voor het eerst inlogt, of op hoeveel toestellen.
+
+**Eén knop: Inloggen met Google.** Met `prompt=select_account`, zodat Google
+altijd vraagt welk account, ook op een toestel waar een ander Google-account
+ingelogd is. Wat er daarna gebeurt hangt af van het toestel:
+
+- anoniem in de app: `linkIdentity`, dus Google komt aan het bestaande
+  app-account te hangen en de speler blijft van Danny;
+- Google hangt al aan een ander account (een tweede toestel): Supabase komt
+  terug met `identity_already_exists`; het beheer zegt dat in gewone woorden,
+  haalt de foutcode uit de adresbalk en logt gewoon in met Google (dit toestel
+  gebruikt daarna in de app ook dat account);
+- ingelogd met een ander account: "dat is geen beheeradres", met een knop om
+  met een ander Google-account in te loggen.
+
+De inloglink per mail staat er nog, ingeklapt als tweede keus, met de
+waarschuwing dat hij op een iPhone of iPad niet werkt in het beheer op het
+beginscherm (de link opent in Safari, en iOS geeft een beginschermapp een eigen
+opslag).
+
+**In de app** staat voor de beheerder onderaan Profiel een knop "Naar het
+beheer". De app vraagt `ik_ben_beheerder()` één keer per bezoek, en voor
+iedereen anders staat er niets. BEDIENING.md §16 heeft de stappen per toestel
+(pc, Android, iPhone/iPad).
+
+**Tests.** `test/beheer.test.sql` controleert `ik_ben_beheerder()` zelf: het
+bevestigde beheeradres wel, dezelfde letters met andere hoofdletters maar
+onbevestigd niet, een account dat pas ná het draaien van schema.sql is gemaakt
+wel, en een extra beheerder uit `site_beheerders` ook. `test/beheer.test.mjs`
+speelt het na: een gewone speler ziet geen knop naar het beheer, zonder
+schema.sql het scherm "nog niet ingericht" met beide links, een anoniem
+app-toestel dat met Google binnenkomt en zijn speler houdt, de knop in
+Profiel, een tweede toestel met `identity_already_exists`, een verkeerd
+Google-account, en dat elke Google-knop om een accountkeuze vraagt en naar het
+beheer terugstuurt. De nabootsing herkent het beheeradres nu ook, onthoudt wat
+er naar Google ging (`naar_google`), en kan een fout over een herlaad heen
+bewaren (`nabootsing:volgendeFout` in sessionStorage). Dertien mutanten (drie
+in de SQL, zeven op de pagina, twee in de app, één in de nabootsing), van
+"onbevestigd telt ook" en "hoofdlettergevoelig" tot "anoniem vervangen in
+plaats van koppelen" en "geen accountkeuze"; ze zakken allemaal. Twee
+overleefden eerst (hoofdletters, en `prompt=select_account`), daarom de
+hoofdletters in de SQL-test en `naar_google` in de nabootsing.

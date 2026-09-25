@@ -90,6 +90,9 @@ store.otp ??= [];
 store.jokers ??= [];
 store.push_abonnementen ??= [];
 store.google_als ??= 'danny@gmail.voorbeeld';
+// Elke keer dat er naar Google gestuurd werd: waarheen terug, en met welke
+// prompt. Blijft staan als de link al gebruikt is (otp ruimt zichzelf op).
+store.naar_google ??= [];
 // Het beheer: wie beheerder is (een lijst account-id's, in het echt de tabel
 // site_beheerders), het logboek van de sync en de bezoekersteller.
 store.site_beheerders ??= [];
@@ -474,7 +477,8 @@ const auth = {
   // sleutel klaar, zodat een test de terugkomst kan naspelen.
   //
   // De nabootsing kent één Google-account per test: welk adres dat is stelt de
-  // test in met __mail.googleAls().
+  // test in met __mail.googleAls(). store.naar_google onthoudt queryParams.prompt,
+  // zodat een test kan zien of Google gevraagd werd een account te laten kiezen.
   async linkIdentity({ provider, options = {} }) {
     if (provider !== 'google') return { data: null, error: { message: 'onbekende provider' } };
     const sessie = huidigeSessie();
@@ -487,6 +491,7 @@ const auth = {
     store.otp.push({ code: nieuweSleutel(), user_id: sessie.user.id,
                      email: store.google_als, google: true,
                      terug: options.redirectTo ?? '' });
+    store.naar_google.push({ soort: 'koppelen', terug: options.redirectTo ?? '', vraag: options.queryParams?.prompt ?? null });
     bewaren();
     return { data: {}, error: null };
   },
@@ -507,6 +512,7 @@ const auth = {
     }
     store.otp.push({ code: nieuweSleutel(), user_id: user.id, email: store.google_als,
                      google: true, terug: options.redirectTo ?? '' });
+    store.naar_google.push({ soort: 'inloggen', terug: options.redirectTo ?? '', vraag: options.queryParams?.prompt ?? null });
     bewaren();
     return { data: {}, error: null };
   },
@@ -721,7 +727,16 @@ const functies = {
 //  deze zijn er zodat test/beheer.test.mjs de beheerpagina kan nalopen.
 // ------------------------------------------------------------
 const dag = (d = new Date()) => d.toISOString().slice(0, 10);
-const ikBenBeheerder = () => !!wieBenIk() && store.site_beheerders.some((id) => gelijk(id, wieBenIk()));
+// Net als in schema.sql: wie in site_beheerders staat, of wie het beheeradres
+// heeft (en dat is bevestigd: in de nabootsing staat een adres pas in `email`
+// na de bevestiging, of komt het van Google).
+const BEHEERADRES = 'devisser.danny@gmail.com';
+const ikBenBeheerder = () => {
+  const ik = wieBenIk();
+  if (!ik) return false;
+  const u = store.auth_users.find((x) => gelijk(x.id, ik));
+  return store.site_beheerders.some((id) => gelijk(id, ik)) || gelijk(String(u?.email ?? '').toLowerCase(), BEHEERADRES);
+};
 const geenBeheerder = { data: null, error: { code: '42501', message: 'Alleen voor beheerders' } };
 function accountsoort(userId) {
   if (!userId) return 'geen';
@@ -906,11 +921,19 @@ Object.assign(functies, {
 // Een test kan de volgende schrijfactie laten mislukken met een fout naar
 // keuze, om te zien wat een speler dan te lezen krijgt
 // (test/gewone-taal.test.mjs). Eén keer: daarna werkt alles weer.
+//
+// Moet de fout een paginawissel overleven (de eerste aanroep ná het laden),
+// dan zet de test hem in sessionStorage onder `nabootsing:volgendeFout`.
 function volgendeFout() {
-  const fout = globalThis.__volgendeFout;
-  if (!fout) return null;
-  globalThis.__volgendeFout = null;
-  return { data: null, error: fout };
+  let fout = globalThis.__volgendeFout;
+  if (fout) globalThis.__volgendeFout = null;
+  else {
+    try {
+      const bewaard = sessionStorage.getItem('nabootsing:volgendeFout');
+      if (bewaard) { sessionStorage.removeItem('nabootsing:volgendeFout'); fout = JSON.parse(bewaard); }
+    } catch { /* niets */ }
+  }
+  return fout ? { data: null, error: fout } : null;
 }
 
 async function rpc(naam, argumenten) {

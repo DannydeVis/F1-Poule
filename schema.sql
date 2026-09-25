@@ -1464,16 +1464,18 @@ create table if not exists public.site_beheerders (
 alter table public.site_beheerders enable row level security;
 revoke all on public.site_beheerders from anon, authenticated;
 
--- De eerste beheerder: het account met het contactadres uit de
--- privacyverklaring, zodra dat adres bevestigd is -- een Google-account, of
--- een mailadres waarvan de inloglink is aangeklikt. Wie dat adres niet in
--- handen heeft komt er dus niet in, ook niet door het in te tikken. Nog niet
--- ingelogd met dat adres? Dan doet dit niets: log één keer in en draai dit
--- bestand opnieuw. De controle onderaan zegt hoeveel beheerders er zijn.
-insert into public.site_beheerders (user_id)
-select id from auth.users
-where lower(email) = 'devisser.danny@gmail.com' and email_confirmed_at is not null
-on conflict do nothing;
+-- Het beheeradres: het contactadres uit de privacyverklaring. Elk account met
+-- dit adres is beheerder, zodra het adres bevestigd is -- een Google-account
+-- met dit adres, of een mailadres waarvan de inloglink is aangeklikt. Wie het
+-- adres niet in handen heeft komt er dus niet in, ook niet door het ergens in
+-- te tikken. En het hangt niet af van wanneer dit bestand gedraaid is: log in,
+-- op welk toestel ook, en je bent binnen. Meer beheerders gaan in
+-- site_beheerders (zie BEDIENING.md §16).
+create or replace function public.beheer_adres()
+returns text
+language sql
+immutable
+as $$ select 'devisser.danny@gmail.com'::text $$;
 
 create or replace function public.ik_ben_beheerder()
 returns boolean
@@ -1482,8 +1484,12 @@ stable
 security definer
 set search_path = public
 as $$
-  select auth.uid() is not null
-     and exists (select 1 from public.site_beheerders where user_id = auth.uid());
+  select auth.uid() is not null and (
+    exists (select 1 from public.site_beheerders where user_id = auth.uid())
+    or exists (select 1 from auth.users u
+               where u.id = auth.uid()
+                 and lower(u.email) = public.beheer_adres()
+                 and u.email_confirmed_at is not null));
 $$;
 revoke all on function public.ik_ben_beheerder() from public;
 grant execute on function public.ik_ben_beheerder() to anon, authenticated;
@@ -2165,9 +2171,18 @@ select 'daarbovenop: sprint / seizoen',
           (select coalesce(sum(punten), 0)::text from public.questions
            where sessie = 'seizoen'))
 union all
--- Of de beheerpagina iemand binnenlaat. Nul betekent: log één keer in met het
--- beheeradres (zie bovenaan "Beheer") en draai dit bestand opnieuw.
-select 'beheerders', (select count(*)::text from public.site_beheerders)
+-- Wie de beheerpagina binnenlaat: het beheeradres, en wie er verder in
+-- site_beheerders staat. Of het beheeradres al een bevestigd account heeft
+-- staat erbij; zo niet, log dan één keer in op /beheer/ met Google.
+select 'beheerders',
+       public.beheer_adres()
+       || case when exists (select 1 from auth.users
+                            where lower(email) = public.beheer_adres()
+                              and email_confirmed_at is not null)
+               then ' (ingelogd)' else ' (nog nooit ingelogd)' end
+       || case when (select count(*) from public.site_beheerders) > 0
+               then ' + ' || (select count(*)::text from public.site_beheerders) || ' extra'
+               else '' end
 union all
 select 'winnaar ingevuld',
        (select count(*)::text from public.answers where question_id = 'winnaar')

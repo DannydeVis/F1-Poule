@@ -1618,25 +1618,66 @@ installeerpictogram in de adresbalk, op een iPhone via Deel → Zet op beginsche
 Hij heeft een eigen pictogram (de P op licht in plaats van op zwart) en staat dus
 niet als tweede app-tegel naast de speler-app.
 
-### Binnenkomen
+### Eén keer: het beheer inrichten in de database
 
-Je logt in met hetzelfde account als in de app. Op een toestel waar je in de app
-al met je beheeradres bent ingelogd, ben je in het beheer meteen binnen: het is
-dezelfde site, dus dezelfde sessie. Op een nieuw toestel log je in met Google of
-met een inloglink naar je mailadres (het beheer maakt zelf geen accounts aan).
+Het beheer bestaat pas als `schema.sql` na deze wijziging gedraaid is. Zolang
+dat niet zo is, zegt de beheerpagina "Het beheer is nog niet ingericht in de
+database" met deze drie stappen erbij (en links):
 
-Speel je op een toestel anoniem in de app (nog niets gekoppeld), dan laat het
-beheer je daar niet inloggen: dat zou de sessie vervangen die de app gebruikt,
-en dan hangt je speler op dat toestel nergens meer aan. Koppel eerst je
-beheeradres in de app (Profiel → je account meenemen).
+1. Open `schema.sql` (in de repo, of via de link op die pagina), selecteer
+   alles en kopieer het.
+2. Open in Supabase de **SQL Editor** (links in het menu, of de link op die
+   pagina), plak het en klik op **Run**.
+3. Ga terug naar het beheer en tik op **Opnieuw proberen**.
 
-**Beheerder word je zo:** `schema.sql` maakt het account met het contactadres
-uit de privacyverklaring (`devisser.danny@gmail.com`) beheerder, zodra dat adres
-bevestigd is — een Google-account met dat adres, of een mailadres waarvan de
-inloglink is aangeklikt. Dus: log één keer in met dat adres (in de app of hier),
-en draai daarna `schema.sql` opnieuw in de SQL editor. De controletabel onderaan
-zegt bij **beheerders** hoeveel het er zijn; nul betekent dat het adres nog niet
-bevestigd is. Iemand anders toevoegen:
+Daarna hoeft dat niet meer, ook niet als je later pas voor het eerst inlogt:
+het beheer kijkt bij elke keer inloggen of het account het beheeradres heeft.
+
+### Binnenkomen, op elk toestel
+
+Het beheeradres is `devisser.danny@gmail.com` (het contactadres uit de
+privacyverklaring, in `schema.sql` in `beheer_adres()`). Daarmee inloggen is op
+elk toestel hetzelfde:
+
+1. Ga naar **predicttherace.com/beheer/**.
+2. Tik op **Inloggen met Google** en kies het Google-account met dat adres.
+   (Google vraagt altijd welk account, ook als je op dat toestel met een ander
+   account bent ingelogd.)
+3. Je bent binnen.
+
+Wat er op de achtergrond gebeurt, en waarom je daar niets voor hoeft te doen:
+
+- **Speel je op dat toestel al in de app**, dan hangt het beheer je
+  Google-account aan het account van de app. Je speler blijft van jou, en in de
+  app staat daarna onder **Profiel** een knop **Naar het beheer**.
+- **Hangt je Google-account al aan een ander toestel** (bijvoorbeeld je
+  telefoon, en nu log je in op je pc), dan zegt het beheer dat en log je
+  opnieuw met Google in. Dit toestel gebruikt daarna ook in de app dat account,
+  met dezelfde poules als op je andere toestel.
+- **Log je in met een ander Google-account**, dan zegt het beheer "dat is geen
+  beheeradres" met een knop om een ander account te kiezen.
+- Onder **Liever met een inloglink per mail** kan het ook met een link naar je
+  mail, maar alleen voor een adres dat al een account heeft (het beheer maakt
+  zelf geen accounts aan). Op een iPhone of iPad werkt dat niet in het
+  geïnstalleerde beheer (de link opent in Safari, en dat is voor iOS een andere
+  plek); gebruik daar Google.
+
+**Op je pc of laptop:** open de pagina in Chrome of Edge, log in, en klik
+eventueel op het installeerpictogram rechts in de adresbalk. Dan staat het
+beheer als eigen venster in je startmenu of dock.
+
+**Op een Android-telefoon of -tablet:** open de pagina in Chrome, log in, en
+kies in het menu (⋮) **App installeren** of **Toevoegen aan startscherm**.
+
+**Op een iPhone of iPad:** open de pagina in Safari, tik op Deel (het vierkantje
+met het pijltje) → **Zet op beginscherm**, open het beheer vanaf het
+beginscherm en log daar in met Google. Log je eerst in Safari in en installeer
+je daarna, dan vraagt het geïnstalleerde beheer nog één keer om in te loggen:
+iOS geeft een app op het beginscherm een eigen opslag.
+
+De controletabel onderaan `schema.sql` zegt bij **beheerders** of het
+beheeradres al een keer is ingelogd, en hoeveel beheerders er verder zijn.
+Iemand anders beheerder maken (die moet wel eerst een keer ingelogd zijn):
 
 ```sql
 insert into public.site_beheerders (user_id)
@@ -1687,9 +1728,10 @@ erbij ("Tellen"). Dit is wat de grafieken bezoeken en actieve spelers vult.
 
 ### Als opslaan in het beheer een fout geeft
 
-Dan staat de melding uit de database bovenaan. Meestal is `schema.sql` na
-deze wijziging nog niet opnieuw gedraaid: dan bestaan de beheerfuncties nog
-niet.
+Dan staat de melding uit de database bovenaan. Ontbreekt een beheerfunctie
+helemaal, dan toont het beheer in plaats daarvan het scherm "nog niet
+ingericht" met de stappen hierboven: `schema.sql` is dan na een wijziging nog
+niet opnieuw gedraaid.
 
 ---
 

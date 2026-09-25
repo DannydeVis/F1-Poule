@@ -56,26 +56,89 @@ const vandaag = new Date().toISOString().slice(0, 10);
 }
 
 // ---- 1. binnenkomen ------------------------------------------------------------
-// Een anoniem account van de app op dit toestel.
+// Een gewone speler ziet in Profiel geen knop naar het beheer.
+await page.click('[data-weergave="profiel"]');
+await page.waitForTimeout(300);
+check('een gewone speler ziet in Profiel geen knop naar het beheer', (await page.$('#naarbeheer')) === null);
+
+// schema.sql is nog niet gedraaid: de beheerfuncties bestaan niet.
+await page.evaluate(() => sessionStorage.setItem('nabootsing:volgendeFout', JSON.stringify({ code: 'PGRST202',
+  message: 'Could not find the function public.ik_ben_beheerder without parameters in the schema cache' })));
 await naarBeheer();
 {
   const t = await tekst('.toegang');
-  check('met een anoniem account uit de app: eerst koppelen in de app', t.includes('zonder gekoppeld account'), t);
-  check('en geen knop om hier in te loggen (dat zou de speler loskoppelen)',
-    (await page.$('#google')) === null && (await page.$('a[href="../app/"]')) !== null);
-  check('en geen gegevens', (await page.$('.tabs')) === null);
+  const links = await page.$$eval('.toegang a', (as) => as.map((a) => a.href));
+  check('zonder schema.sql: "nog niet ingericht", in gewone woorden en niet de Engelse melding',
+    t.includes('nog niet ingericht') && !t.includes('schema cache'), t);
+  check('met de stappen: schema.sql openen, in de SQL Editor van Supabase plakken, Run',
+    links.some((h) => h.endsWith('/schema.sql')) && links.some((h) => h.includes('supabase.com/dashboard/project/etifamdwqxjfaeaordlr/sql'))
+      && t.includes('Run'), links.join(' '));
 }
 
-// Een ander toestel, zonder sessie: inloggen.
+// Een toestel waar je de app anoniem gebruikt: inloggen met Google koppelt
+// Google aan dát account, zodat je speler van jou blijft.
+await naarBeheer();
+{
+  const t = await tekst('.toegang');
+  check('met een anoniem account uit de app: inloggen met Google kan gewoon', t.includes('zonder gekoppeld account')
+    && (await page.$('#google')) !== null && (await page.$('.tabs')) === null, t);
+}
+const spelerVoor = (await db()).pool_members.find((m) => m.member_id === 'lid-1').user_id;
+await page.evaluate(() => globalThis.__mail.googleAls('devisser.danny@gmail.com'));
+await page.click('#google');
+await page.goto(await page.evaluate(() => globalThis.__mail.laatsteLink()));
+await page.waitForSelector('.tabs, .toegang');
+check('met het beheeradres ben je meteen binnen, zonder dat ergens iets aangezet hoeft te worden',
+  (await page.$('.tabs')) !== null && (await db()).site_beheerders.length === 0);
+{
+  const d = await db();
+  const u = d.auth_users.find((x) => x.id === spelerVoor);
+  check('en je speler in de app hangt nog aan hetzelfde account, nu met Google',
+    d.pool_members.find((m) => m.member_id === 'lid-1').user_id === spelerVoor && u?.is_anonymous === false
+      && (u?.identities ?? []).some((i) => i.provider === 'google'), JSON.stringify(u));
+}
+await page.goto(url);
+await page.waitForSelector('[data-race]');
+await page.click('[data-weergave="profiel"]');
+await page.waitForSelector('#naarbeheer', { timeout: 3000 }).catch(() => {});
+check('en in de app staat in Profiel nu een knop naar het beheer',
+  (await page.$eval('#naarbeheer', (a) => a.getAttribute('href')).catch(() => null)) === '../beheer/');
+
+// Een tweede toestel waar je de app ook anoniem gebruikt: je Google-account hangt
+// al aan het account van het eerste toestel. Dan log je daarmee in.
+await page.evaluate(() => {
+  const d = globalThis.__db;
+  d.auth_users.push({ id: 'tweede-toestel', is_anonymous: true, email: null, identities: [{ provider: 'anonymous' }] });
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(d));
+  localStorage.setItem('nabootsing:sessie', JSON.stringify({ user: { id: 'tweede-toestel' }, access_token: 'nep' }));
+});
+await naarBeheer();
+await page.click('#google');
+await page.goto(await page.evaluate(() => globalThis.__mail.laatsteLink()));
+await page.waitForSelector('.toegang');
+{
+  const t = await tekst('.toegang');
+  check('hangt je Google-account al aan een ander toestel, dan zegt het beheer dat, en log je daarmee in',
+    t.includes('hoort al bij een account') && (await page.$('#google')) !== null, t);
+  check('en de foutcode is weg uit de adresbalk', !page.url().includes('error'), page.url());
+}
+await page.click('#google');
+await page.goto(await page.evaluate(() => globalThis.__mail.laatsteLink()));
+await page.waitForSelector('.tabs');
+check('daarna ben je ook op dit toestel binnen, met hetzelfde account',
+  (await page.evaluate(() => JSON.parse(localStorage.getItem('nabootsing:sessie')).user.id)) === spelerVoor);
+
+// Een derde toestel, zonder sessie: inloggen met Google, of met een inloglink.
 await page.evaluate(() => localStorage.removeItem('nabootsing:sessie'));
 await naarBeheer();
-check('zonder sessie: inloggen met Google of met een inloglink',
+check('zonder sessie: inloggen met Google, en een inloglink als tweede keus',
   (await page.$('#google')) !== null && (await page.$('#mailform')) !== null);
+await page.click('.toegang details summary');
 await page.fill('#mail', 'onbekend@voorbeeld.nl');
 await page.click('#mailform button');
 await page.waitForFunction(() => document.querySelector('#inlogbericht').textContent.trim());
 check('een onbekend adres krijgt geen account (het beheer maakt er geen aan)',
-  (await tekst('#inlogbericht')) === 'Bij dat adres hoort geen account.', await tekst('#inlogbericht'));
+  (await tekst('#inlogbericht')).startsWith('Bij dat adres hoort geen account.'), await tekst('#inlogbericht'));
 
 // Met Google, als iemand die geen beheerder is.
 await page.evaluate(() => globalThis.__mail.googleAls('iemand@voorbeeld.nl'));
@@ -84,17 +147,24 @@ await page.goto(await page.evaluate(() => globalThis.__mail.laatsteLink()));
 await page.waitForSelector('.toegang');
 {
   const t = await tekst('.toegang');
-  check('een gewoon account is geen beheerder, en ziet niets', t.includes('is geen beheerder')
+  check('een gewoon account is geen beheerder, en ziet niets', t.includes('geen beheeradres')
     && t.includes('iemand@voorbeeld.nl') && (await page.$('.tabs')) === null, t);
+  check('met een knop om met een ander Google-account in te loggen',
+    (await page.$eval('#google', (k) => k.textContent.trim()).catch(() => null)) === 'Inloggen met een ander Google-account');
 }
-await page.click('#uit');
-await page.waitForSelector('#google');
+{
+  // Elke Google-knop in het beheer laat Google vragen welk account, ook als er
+  // op dit toestel al iemand bij Google is ingelogd; en komt terug in het beheer.
+  const google = (await db()).naar_google;
+  check('Google vraagt altijd welk account (koppelen en inloggen), en stuurt terug naar het beheer',
+    google.some((g) => g.soort === 'koppelen') && google.some((g) => g.soort === 'inloggen')
+      && google.every((g) => g.vraag === 'select_account' && g.terug.endsWith('/beheer/')), JSON.stringify(google));
+}
 
-// Met Google als de beheerder.
+// Met een ander Google-account: een extra beheerder (site_beheerders).
 await page.evaluate(() => globalThis.__mail.googleAls('beheer@voorbeeld.nl'));
 await page.click('#google');
 const link = await page.evaluate(() => globalThis.__mail.laatsteLink());
-// Wie beheerder is staat in de database (in het echt: site_beheerders).
 await page.evaluate(() => {
   const d = globalThis.__db;
   d.site_beheerders = [d.auth_users.find((u) => u.email === 'beheer@voorbeeld.nl').id];
@@ -108,6 +178,7 @@ await page.evaluate(() => {
   d.auth_users.push({ id: 'mailaccount', is_anonymous: false, email: 'sanne@voorbeeld.nl', identities: [{ provider: 'email' }] });
   d.pools.push({ id: 'pool-2', name: 'Kantoorpoule', join_code: 'KNT123', season: 2026, is_public: false, owner_member_id: null });
   d.pool_members.push(
+    { member_id: 'lid-10', pool_id: 'pool-1', display_name: 'Pieter', user_id: 'tweede-toestel' },
     { member_id: 'lid-7', pool_id: 'pool-2', display_name: 'Sanne', user_id: 'mailaccount' },
     { member_id: 'lid-8', pool_id: 'pool-2', display_name: 'Kees', user_id: null },
     { member_id: 'lid-9', pool_id: 'pool-2', display_name: 'Beheerder', user_id: beheerder });
@@ -193,8 +264,8 @@ await page.click('[data-tab="spelers"]');
   const soort = (id) => tekst(`[data-speler="${id}"] td:nth-child(3) .badge`);
   check('het soort account: Google, mailadres, alleen dit toestel, geen',
     (await soort('lid-9')) === 'Google' && (await soort('lid-7')) === 'mailadres'
-      && (await soort('lid-1')) === 'alleen dit toestel' && (await soort('lid-8')) === 'geen account',
-    [await soort('lid-9'), await soort('lid-7'), await soort('lid-1'), await soort('lid-8')].join(', '));
+      && (await soort('lid-10')) === 'alleen dit toestel' && (await soort('lid-8')) === 'geen account',
+    [await soort('lid-9'), await soort('lid-7'), await soort('lid-10'), await soort('lid-8')].join(', '));
 }
 await page.selectOption('#filterpoule', 'pool-2');
 check('filteren op poule', (await page.$$eval('[data-speler]', (r) => r.length)) === 3);
