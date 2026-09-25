@@ -58,10 +58,10 @@ const platteTekst = (html) => html.replace(/<(script|style)[\s\S]*?<\/\1>/g, ' '
     `${app.nl.length} / ${app.en.length}`);
   // Wie er iets van je te zien krijgt. Een nieuwe dienst in de app hoort hier
   // bij te komen; dan zakt deze test tot hij ook op de pagina staat.
-  const DIENSTEN = ['Supabase', 'OpenF1', 'esm.sh', 'GitHub Pages', 'Google', 'Apple', 'Mozilla'];
+  const DIENSTEN = ['Supabase', 'OpenF1', 'esm.sh', 'GitHub Pages', 'Google', 'Apple', 'Mozilla', 'Google Analytics'];
   const ZINNEN = {
-    nl: ['IP-adres', 'alleen als je het zelf koppelt', 'geen trackers', 'niet terug te draaien'],
-    en: ['IP address', 'only if you link it yourself', 'no trackers', 'cannot be undone'],
+    nl: ['IP-adres', 'alleen als je het zelf koppelt', 'Google Analytics alleen als je daar ja op zegt', 'niet terug te draaien'],
+    en: ['IP address', 'only if you link it yourself', 'Google Analytics only if you say yes to it', 'cannot be undone'],
   };
   for (const taal of PAGINAS) {
     const pagina = platteTekst(leesPagina(taal));

@@ -38,8 +38,8 @@ const verklaring = await tekst('#app');
 check('hij zegt dat een mailadres alleen bewaard wordt als je het koppelt',
   verklaring.includes('alleen als je het zelf koppelt'));
 check('en waar de gegevens staan', verklaring.includes('Supabase'));
-check('en dat er geen trackers in zitten',
-  verklaring.includes('geen trackers') || verklaring.includes('geen analytics'));
+check('en dat er geen advertenties in zitten, en Google Analytics alleen met toestemming',
+  verklaring.includes('Geen advertenties') && verklaring.includes('Google Analytics alleen als je daar ja op zegt'));
 check('en dat de lettertypen in de app zelf zitten',
   verklaring.includes('lettertypen staan in de app zelf'));
 check('en het is eerlijk over het enige dat nog van buiten komt',
