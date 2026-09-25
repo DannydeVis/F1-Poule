@@ -2406,20 +2406,19 @@ const ENGELS = Object.fromEntries([
   // ---- beheer: de vier strepen in het seizoen ------------------
   ['automatisch invullen bij vergeten',
    'auto-fill when someone forgets'],
-  ['Wie een lijst vergeet krijgt sinds {datum} de WK-stand van dat moment '
-   + 'als top 10, gemarkeerd als automatisch. Races van vóór die datum blijven '
-   + 'zoals ze waren. Een weekend win je er niet mee.',
-   'Since {datum}, anyone who forgets a list gets the championship standings of '
-   + 'that moment as their top 10, marked as automatic. Races from before that '
-   + 'date stay as they were. It never wins you a weekend.'],
+  ['Wie een lijst vergeet krijgt sinds {datum} een willekeurige top 10, '
+   + 'gemarkeerd als automatisch. Races van vóór die datum blijven zoals ze '
+   + 'waren. Een weekend win je er niet mee.',
+   'Since {datum}, anyone who forgets a list gets a random top 10, marked as '
+   + 'automatic. Races from before that date stay as they were. It never wins '
+   + 'you a weekend.'],
   ['Nu levert een gemiste race nul punten op, en twee gemiste races is '
    + 'meestal het einde van iemands seizoen. Aanzetten geeft wie niets inlevert '
-   + 'voortaan de WK-stand als top 10. Alleen vanaf nu — de races die al gereden '
+   + 'voortaan een willekeurige top 10. Alleen vanaf nu — de races die al gereden '
    + 'zijn veranderen niet.',
    'Right now a missed race is worth zero points, and two missed races usually '
    + 'ends someone\'s season. Switching this on gives anyone who submits nothing '
-   + 'the championship standings as their top 10. From now on only — races '
-   + 'already run do not change.'],
+   + 'a random top 10. From now on only — races already run do not change.'],
   ['Zet weer uit',
    'Switch off again'],
   ['Zet aan',
@@ -4950,10 +4949,20 @@ const GEBOUWD = ['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole',
 // vullen" de laatste die nog niet aangepakt was. Wie een weekend mist staat
 // op nul, en twee gemiste weekenden is meestal het einde van je seizoen.
 //
-// Daarom: wie niets inlevert krijgt de WK-stand van dat moment als top 10.
-// Dat is de saaiste voorspelling die er is en levert ongeveer de helft op van
-// wat een goede lijst doet — genoeg om aangehaakt te blijven, te weinig om
-// niet invullen lonend te maken.
+// Daarom: wie niets inlevert krijgt een willekeurige top 10 uit de coureurs
+// van dat weekend. Eerst was dat de WK-stand, maar dat zette elke keer de
+// beste coureurs bovenaan, en dat leverde meer op dan de bedoeling was: "het
+// is beter om het totaal random neer te zetten". Een willekeurige lijst houdt
+// je met een paar punten aangehaakt, zonder dat vergeten ooit loont.
+//
+// Willekeurig, maar wel vast: dezelfde speler, race en sessie geven altijd
+// dezelfde lijst, op elk toestel en bij elke keer laden (zie dobbelsteen()).
+// Anders zouden de punten veranderen zodra je de app opnieuw opent, en zag
+// iedereen iets anders. Elke speler en elke sessie krijgt wel een eigen lijst.
+//
+// Races met een deadline van vóór WILLEKEURIG_VANAF houden de WK-stand die ze
+// toen kregen: anders zouden punten die al in de stand stonden achteraf
+// verschuiven.
 //
 // Drie dingen die bewust zo zijn:
 //
@@ -4973,6 +4982,48 @@ const GEBOUWD = ['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole',
 // Het WK-puntenschema, alleen om een standaardlijst mee te maken. Het heeft
 // niets te maken met wat een speler in de poule scoort.
 const WK_PUNTEN = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+
+// Tot dit moment was een automatische lijst de WK-stand, daarna willekeurig.
+const WILLEKEURIG_VANAF = Date.parse('2026-09-25T20:00:00Z');
+
+// Een vaste dobbelsteen. zaadVan() maakt van een stuk tekst een getal (een
+// eenvoudige hash), dobbelsteen() maakt daar een reeks getallen tussen 0 en 1
+// van (mulberry32). Dezelfde tekst geeft altijd dezelfde reeks.
+function zaadVan(tekst) {
+  let h = 1779033703 ^ tekst.length;
+  for (let i = 0; i < tekst.length; i++) {
+    h = Math.imul(h ^ tekst.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return h >>> 0;
+}
+function dobbelsteen(zaad) {
+  return () => {
+    zaad = (zaad + 0x6D2B79F5) >>> 0;
+    let t = zaad;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Een willekeurige top 10 uit de coureurs van dit weekend, voor één speler en
+// één sessie. De coureurs eerst op nummer, zodat de volgorde waarin ze in de
+// database staan niet uitmaakt; dan geschud (Fisher-Yates) met de dobbelsteen
+// van deze poule, race, speler en sessie.
+function willekeurigeLijst(race, memberId, welk) {
+  const nrs = [...new Set((race.drivers ?? []).map(d => String(d.nr)))]
+    .sort((a, b) => Number(a) - Number(b) || a.localeCompare(b));
+  if (nrs.length < 10) return null;
+  const rol = dobbelsteen(zaadVan(`${S.poule?.id}|${race.id}|${memberId}|${welk}`));
+  for (let i = nrs.length - 1; i > 0; i--) {
+    const j = Math.floor(rol() * (i + 1));
+    [nrs[i], nrs[j]] = [nrs[j], nrs[i]];
+  }
+  return nrs.slice(0, 10);
+}
+const oudeAutoLijst = (race, welk) =>
+  Date.parse(race[SESSIES[welk].deadline]) <= WILLEKEURIG_VANAF;
 
 // Staat automatisch invullen aan voor deze lijst? De deadline moet voorbij
 // zijn (anders valt er nog niets te vergeten) en erná liggen (anders zou het
@@ -4996,8 +5047,9 @@ const autoNoot = (pred, welk, waarom) => isAuto(pred, welk)
       T('automatisch ingevuld · {waarom}', { waarom })}</p>` : '';
 
 /**
- * De standaardlijst voor één race: de WK-stand zoals hij vóór dit weekend
- * was, teruggebracht tot de coureurs die dit weekend meedoen.
+ * De oude standaardlijst (voor deadlines tot WILLEKEURIG_VANAF): de WK-stand
+ * zoals hij vóór dit weekend was, teruggebracht tot de coureurs die dit
+ * weekend meedoen.
  *
  * Nadrukkelijk de stand van tóén en niet die van nu, want anders zou de score
  * van een race in mei nog veranderen zodra er in september wordt gereden.
@@ -5043,19 +5095,20 @@ function vulAutoAan() {
     // voegt punten toe zonder dat probleem op te lossen.
     const welken = ['quali', 'race'].filter(w => autoGeldt(r, w));
     if (!welken.length) continue;
-    const lijst = autoLijst(r);
-    if (!lijst) continue;
+    const wk = welken.some(w => oudeAutoLijst(r, w)) ? autoLijst(r) : null;
     for (const l of S.leden) {
-      let p = vindPred(r.id, l.member_id);
-      if (!p) {
-        p = { pool_id:S.poule.id, race_id:r.id, member_id:l.member_id,
-              quali_top10:null, race_top10:null, sprint_top10:null,
-              race_winnaar:null, pole:null, teamgenoot_duels:null,
-              snelste_ronde:null, snelste_pitstop:null,
-              safety_cars:null, rode_vlag:null };
-        S.preds.push(p);
-      }
       for (const w of welken) {
+        const lijst = oudeAutoLijst(r, w) ? wk : willekeurigeLijst(r, String(l.member_id), w);
+        if (!lijst) continue;
+        let p = vindPred(r.id, l.member_id);
+        if (!p) {
+          p = { pool_id:S.poule.id, race_id:r.id, member_id:l.member_id,
+                quali_top10:null, race_top10:null, sprint_top10:null,
+                race_winnaar:null, pole:null, teamgenoot_duels:null,
+                snelste_ronde:null, snelste_pitstop:null,
+                safety_cars:null, rode_vlag:null };
+          S.preds.push(p);
+        }
         const kolom = TOP10VRAAG[w];
         if (p[kolom]?.length) continue;
         p[kolom] = lijst;
@@ -7673,13 +7726,13 @@ function autofillBlok() {
     <div class="scheiding"></div>
     <span class="label">${T('automatisch invullen bij vergeten')}</span>
     <p class="zacht" style="margin:0">${vanaf
-      ? T('Wie een lijst vergeet krijgt sinds {datum} de WK-stand van dat moment '
-        + 'als top 10, gemarkeerd als automatisch. Races van vóór die datum blijven '
-        + 'zoals ze waren. Een weekend win je er niet mee.',
+      ? T('Wie een lijst vergeet krijgt sinds {datum} een willekeurige top 10, '
+        + 'gemarkeerd als automatisch. Races van vóór die datum blijven zoals ze '
+        + 'waren. Een weekend win je er niet mee.',
         { datum: esc(datumKort(vanaf)) })
       : T('Nu levert een gemiste race nul punten op, en twee gemiste races is '
         + 'meestal het einde van iemands seizoen. Aanzetten geeft wie niets inlevert '
-        + 'voortaan de WK-stand als top 10. Alleen vanaf nu — de races die al gereden '
+        + 'voortaan een willekeurige top 10. Alleen vanaf nu — de races die al gereden '
         + 'zijn veranderen niet.')}</p>
     <button class="knop klein" id="autofillKnop">${
       vanaf ? T('Zet weer uit') : T('Zet aan')}</button>`;

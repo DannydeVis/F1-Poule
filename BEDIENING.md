@@ -425,10 +425,19 @@ zodra de eerste race een uitslag krijgt.
 ### 6a. Automatisch invullen bij vergeten
 
 Staat uit. De poulebaas zet hem aan in Poule → beheer, en vanaf dat moment
-krijgt wie een top 10 vergeet de WK-stand van dat moment als lijst, zichtbaar
-gemarkeerd als automatisch. Dat levert ongeveer de helft op van wat een goede
-lijst doet: genoeg om aangehaakt te blijven, te weinig om vergeten lonend te
-maken.
+krijgt wie een top 10 vergeet een **willekeurige top 10** uit de coureurs van
+dat weekend, zichtbaar gemarkeerd als automatisch. Dat levert een paar punten
+op: genoeg om niet op nul te staan, nooit genoeg om vergeten lonend te maken.
+
+Willekeurig, maar vast: dezelfde speler, race en sessie geven altijd dezelfde
+lijst, op elk toestel en bij elke keer laden, ook als de sync de coureurs in
+een andere volgorde wegschrijft. Elke speler die vergat krijgt een eigen
+lijst, en de kwalificatie en de race elk een eigen.
+
+Tot 25 september 2026 was dit de WK-stand van dat moment. Dat zette de beste
+coureurs bovenaan en leverde meer op dan de bedoeling was. Races met een
+deadline van vóór die overstap (`WILLEKEURIG_VANAF` in de app) houden de
+WK-stand die ze toen kregen, zodat er geen punten achteraf verschuiven.
 
 Vier dingen die daarbij vastliggen:
 
@@ -448,10 +457,9 @@ Vier dingen die daarbij vastliggen:
 - **Per lijst, niet per weekend.** Wie de kwalificatie invulde en de race vergat
   krijgt alleen die tweede aangevuld.
 
-Voor de eerste race van een seizoen gebeurt er niets: er is dan nog geen
-uitslag om een WK-stand uit te maken. De stand wordt trouwens berekend uit de
-races *vóór* dat weekend, niet uit de huidige — anders zou de score van een
-race in mei nog veranderen door wat er in september gebeurt.
+Een willekeurige lijst heeft geen eerdere uitslag nodig, dus ook de eerste race
+van een seizoen wordt aangevuld. (Bij de oude WK-stand kon dat niet; die werd
+berekend uit de races *vóór* dat weekend.)
 
 ### 6b. Jokers
 

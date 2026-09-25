@@ -285,8 +285,9 @@ weekend af. Zou je meteen vanaf race één twee weekenden wegstrepen, dan telt e
 na drie races nog één mee en is de stand onzin.
 
 ### ~~Automatisch invullen bij vergeten~~ — gebouwd
-Wie niks inlevert krijgt de WK-stand als top 10, gemarkeerd als "automatisch".
-Houdt iemand die twee races mist in de race.
+Wie niks inlevert krijgt een willekeurige top 10, gemarkeerd als "automatisch"
+(tot 25 september 2026 was dat de WK-stand). Houdt iemand die twee races mist
+in de race, zonder dat vergeten loont.
 
 Staat uit tot de poulebaas hem aanzet, en dan alleen vanaf dat moment — zie
 `OVERDRACHT.md` voor waarom dat een datum is en geen vinkje. Je wint er geen
