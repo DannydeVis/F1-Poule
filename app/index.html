@@ -629,6 +629,20 @@
   .jokervlag{font-family:var(--mono);font-size:11px;font-weight:700;
     color:var(--groen-ink);border-radius:4px;padding:0 5px;
     background:var(--groen)}
+  /* Onder je punten op het racescherm: hoe de joker het getal verdubbelde. */
+  .jokersom{font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--groen)}
+  /* Halverwege het weekend, onder de rij van die race: wat je al pakte. Hangt
+     aan de rij erboven (dezelfde rand links) en springt in tot onder de naam. */
+  .tussenstand{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    width:100%;min-height:44px;padding:8px 16px 8px 65px;background:transparent;border:0;
+    border-left:3px solid transparent;text-align:left;font-family:var(--mono);
+    font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);
+    transition:background .15s}
+  .tussenstand:hover{background:var(--zweef)}
+  .kalender > .tussenstand:not(:first-child){border-top:1px dashed var(--lijn)}
+  .tussenstand.open{border-left-color:var(--groen)}
+  .tussennaar{flex:none;color:var(--ink2)}
 
   /* De seizoenskiezer. Alleen te zien zodra een poule meer dan één seizoen
      gespeeld heeft, want daarvoor valt er niets te kiezen. */
@@ -1940,6 +1954,8 @@ const ENGELS = Object.fromEntries([
    'points'],
   ['vorig weekend',
    'last weekend'],
+  ['dit weekend',
+   'this weekend'],
   ['kwalificatie',
    'qualifying'],
   ['race',
@@ -1982,6 +1998,12 @@ const ENGELS = Object.fromEntries([
    '{n} players shared it'],
   ['Je joker ligt hier: dit weekend telt dubbel',
    'Your joker is on this one: the weekend counts double'],
+  ['{sessie}: {n} ptn',
+   '{sessie}: {n} pts'],
+  ['{n} × 2 met je joker',
+   '{n} × 2 with your joker'],
+  ['joker: dit weekend telt dubbel',
+   'joker: this weekend counts double'],
   ['{letter} = {sessie} ingevuld',
    '{letter} = {sessie} filled in'],
 
@@ -4100,6 +4122,11 @@ const scoreWeekend = (p, race) => {
   const som = weekendSessies(race).reduce((n, w) => n + scoreTab(p, race, w), 0);
   return p && heeftJoker(race.id, p.member_id) ? som * 2 : som;
 };
+// Wat één sessie oplevert mét de joker erbij, voor de plekken die per sessie
+// punten tonen (je punten op het racescherm, de poule ernaast, iemands
+// inzending). Zonder dit stond daar 11 terwijl de lijst 22 zei.
+const scoreTabMetJoker = (p, race, welk) =>
+  scoreTab(p, race, welk) * (p && heeftJoker(race.id, p.member_id) ? 2 : 1);
 
 // </knip vragen>
 
@@ -5194,12 +5221,18 @@ function eerstvolgende(nu = Date.now()) {
   return open.find(o => (o.race.drivers ?? []).length) ?? open[0] ?? null;
 }
 
+// Is het hele weekend voorbij? Pas als de race een uitslag heeft, of als het
+// weekend na een eerdere sessie is afgelast. Een kwalificatie alleen is nog
+// geen gereden weekend: toen Baku na de kwalificatie naar "gereden" schoof,
+// stond de race daar nog open om in te vullen.
+const weekendVoorbij = (r) => !!r?.[SESSIES.race.uitslag] || (!!r?.afgelast && heeftUitslag(r));
+
 function raceStand(r, nu = Date.now()) {
   const mijn = vindPred(r.id, S.ik.id);
   // Geen "uitslag ·" ervoor: deze rij staat onder de kop "gereden", met een
   // finishvlag ernaast. Die twee zeggen het al, en de regel moet ruimte
   // houden voor wie het weekend won.
-  if (heeftUitslag(r)) {
+  if (weekendVoorbij(r)) {
     return { soort:'klaar', tekst: T('{n} ptn', { n: scoreWeekend(mijn, r) }) };
   }
   // Een uitslag wint van de vlag: staat er toch een uitslag (met de hand
@@ -5794,7 +5827,7 @@ function toonApp() {
     b.disabled = true;
     naarPoule(b.dataset.naarPoule);
   });
-  app.querySelectorAll('[data-race]').forEach(b => b.onclick = () => openRace(b.dataset.race));
+  app.querySelectorAll('[data-race]').forEach(b => b.onclick = () => openRace(b.dataset.race, b.dataset.sessie ?? null));
   app.querySelectorAll('[data-naar-race]').forEach(b => b.onclick = () => openRace(b.dataset.naarRace));
   const terug = app.querySelector('#terug');
   if (terug) terug.onclick = () => { S.race = null; render(); };
@@ -5921,6 +5954,8 @@ function mijnPositie() {
     totaal: rijen.length,
     punten: rijen[i].punten,
     weekend: laatste ? scoreWeekend(vindPred(laatste.id, S.ik.id), laatste) : null,
+    // Na de kwalificatie en vóór de race is dat weekend nog bezig.
+    bezig: !!laatste && !weekendVoorbij(laatste),
   };
 }
 
@@ -5949,7 +5984,7 @@ function positieRegel() {
         T('van {n}', { n: p.totaal })}</i></span>
       <span><b class="groot">${p.punten}</b><i>${T('punten')}</i></span>
       ${p.weekend === null ? '' :
-        `<span><b class="groot">+${p.weekend}</b><i>${T('vorig weekend')}</i></span>`}
+        `<span><b class="groot">+${p.weekend}</b><i>${T(p.bezig ? 'dit weekend' : 'vorig weekend')}</i></span>`}
     </div>`;
 }
 
@@ -6041,6 +6076,22 @@ function kalenderRij(r, st = raceStand(r)) {
       ${weekendSessies(r).map(w =>
         `<i class="${vink(w)}">${SESSIES[w].letter}</i>`).join('')}</span>
     ${merk}
+  </button>${tussenstand(r, st)}`;
+}
+
+// Halverwege het weekend: de kwalificatie (of de sprint) is gereden, de race
+// nog niet. De rij blijft dan bij wat er nog komt, en hieronder staat wat je
+// tot nu toe pakte, met een knop die meteen naar die uitslag gaat. Met de
+// joker erbij, net als in de lijst van gereden weekenden.
+function tussenstand(r, st) {
+  if (st.soort === 'klaar' || !heeftUitslag(r)) return '';
+  const mijn = vindPred(r.id, S.ik.id);
+  const gereden = weekendSessies(r).filter(w => r[SESSIES[w].uitslag]);
+  const laatste = gereden[gereden.length - 1];
+  return `<button class="tussenstand ${esc(st.soort)}" data-race="${esc(r.id)}" data-sessie="${esc(laatste)}">
+    <span class="tussenwat">${gereden.map(w => T('{sessie}: {n} ptn', {
+      sessie: esc(T(SESSIES[w].tablabel)), n: scoreTabMetJoker(mijn, r, w) })).join(' · ')}</span>
+    <span class="tussennaar">${T('bekijken')} <span aria-hidden="true">→</span></span>
   </button>`;
 }
 
@@ -8551,14 +8602,18 @@ function uitslagWeergave(r, werkelijk) {
   // Bovenaan over de hele breedte je punten, daaronder in twee kolommen:
   // links je voorspelling als tabel met de losse vragen eronder, rechts de
   // poule, "zo dichtbij" en de weekendwinnaar.
+  // Met de joker telt dit weekend dubbel. Het grote getal is dan wat je
+  // echt krijgt, en de regel eronder zegt hoe het zo komt.
+  const joker = heeftJoker(r.id, S.ik.id);
   const score = `
     <div class="score scorekaart">
-      <b class="getal">${scoreTab(mijn, r, S.tab)}</b>
+      <b class="getal">${scoreTabMetJoker(mijn, r, S.tab)}</b>
       <span class="scoretekst">
         <span class="label">${T('jouw punten')}</span>
         <span class="zacht">${regels.length
           ? T('{n} van {totaal} exact voorspeld', { n: exact, totaal: regels.length })
           : T('geen top 10 ingevuld')}</span>
+        ${joker ? `<span class="jokersom">${T('{n} × 2 met je joker', { n: scoreTab(mijn, r, S.tab) })}</span>` : ''}
       </span>
       <span class="ruit" aria-hidden="true"></span>
     </div>`;
@@ -8623,8 +8678,8 @@ function pouleKaart(r, { open = false } = {}) {
     const deed = open ? ingeleverdVoor(r, l.member_id, S.tab) : heeftVoorspeld(r, l.member_id);
     const auto = !open && isAuto(p, S.tab);
     return { id: l.member_id, naam: l.display_name, deed, auto,
-             mij: zelfde(l.member_id, S.ik.id),
-             punten: werkelijk && (deed || auto) ? scoreTab(p, r, S.tab) : null };
+             mij: zelfde(l.member_id, S.ik.id), joker: !open && heeftJoker(r.id, l.member_id),
+             punten: werkelijk && (deed || auto) ? scoreTabMetJoker(p, r, S.tab) : null };
   });
   if (open) rijen.sort((a, b) => b.deed - a.deed);
   else rijen.sort((a, b) => (b.punten ?? -1) - (a.punten ?? -1));
@@ -8633,7 +8688,8 @@ function pouleKaart(r, { open = false } = {}) {
     : x.auto ? T('automatisch ingevuld') : T('niets ingevuld');
   const regel = (x) => {
     const inhoud = `<span class="avatar">${esc(String(x.naam).trim().charAt(0).toUpperCase() || '?')}</span>
-      <span class="nm">${esc(x.naam)}${x.mij ? ` <span class="jij">(${T('jij')})</span>` : ''}</span>
+      <span class="nm">${esc(x.naam)}${x.mij ? ` <span class="jij">(${T('jij')})</span>` : ''}${
+        x.joker ? ` <span class="jokervlag" title="${T('joker: dit weekend telt dubbel')}">2×</span>` : ''}</span>
       <span class="zacht">${status(x)}</span>
       ${open ? `<span class="klaarteken">${x.deed ? VINKJE : ''}</span>`
         : `<span class="t">${x.punten ?? '—'}</span>${x.punten === null ? '' : `<span class="eenheid">${T('pt')}</span>`}`}`;
@@ -9624,7 +9680,7 @@ function bekijkWeergave(paneel, r) {
     <div class="inkijkkop">
       <button class="knop klein" id="inkijkterug">← ${T('terug')}</button>
       <span class="nm">${esc(lid.display_name)}</span>
-      ${werkelijk ? `<span class="t">${scoreTab(pred, r, S.tab)}</span>` : ''}
+      ${werkelijk ? `<span class="t">${scoreTabMetJoker(pred, r, S.tab)}</span>` : ''}
     </div>
     ${keuzeOverzicht(r, pred, S.tab)}`;
   paneel.querySelector('#inkijkterug').onclick = () => { S.bekijk = null; vulPaneel(); };

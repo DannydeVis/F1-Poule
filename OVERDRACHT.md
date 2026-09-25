@@ -7334,3 +7334,38 @@ al het verhaal na een uitslag uitzetten; `toestemming: true` laat dat achterwege
 `test/toestemming.test.mjs` gebruikt dat, en test nu de echte `toestemming.js`
 met de echte meet-ID; alleen voor "zonder meet-ID gebeurt er niets" (zo zet je
 het uit) krijgt hij een kopie met een lege ID.
+
+## Halverwege het weekend, en de joker in de punten
+
+Danny, na de kwalificatie in Baku: *"Dit weekend had ik een joker ingezet om
+te testen maar ik zie die er niet bij staan. En als de kwalificatie geweest is
+gaat de hele race naar beneden. Dat moet in mijn ogen pas na het weekend zijn.
+Ik denk dat er een melding moet komen in de balk van de race met punten
+zichtbaar of bekijk hier je punten van de kwali."*
+
+**De race schoof naar "gereden".** `raceStand()` zei "klaar" zodra er één
+sessie een uitslag had (`heeftUitslag`). Nu is dat `weekendVoorbij()`: de race
+heeft een uitslag, of het weekend is na een eerdere sessie afgelast. Tot dan
+blijft de rij bij wat er nog komt, met de race gewoon open. `heeftUitslag`
+zelf is niet veranderd: de stand telt de kwalificatiepunten nog steeds meteen.
+
+**De strook eronder** (`tussenstand()`): per gereden sessie je punten, met de
+joker erbij ("Kwalificatie: 22 ptn"), en "bekijken →" opent de race op die
+sessie (`data-sessie`, doorgegeven aan `openRace()`). Het is een eigen knop onder
+de rij en niet in de rij, want een knop in een knop mag niet. Op de weekendkaart
+heet het getal van dat weekend nu "dit weekend" zolang het nog bezig is.
+
+**De joker stond wel in de lijst (22), maar niet op het racescherm (11).** Het
+racescherm, de poule ernaast en iemands inzending toonden `scoreTab()`, per
+sessie zonder joker; de lijst en de stand `scoreWeekend()`, met. Nu gebruiken
+die drie `scoreTabMetJoker()`. Op het racescherm staat het verdubbelde getal
+groot met "11 × 2 met je joker" eronder, en in de poule staat `2×` bij wie er een
+joker op heeft.
+
+**Tests:** `test/gereden-races.test.mjs` speelt het weekend na: na de
+kwalificatie blijft Baku bij wat er nog komt, met de race open, de strook met
+50 × 2 = 100, de knop naar de kwalificatie, de joker op het racescherm, in de
+poule en bij een inzending, "dit weekend" op de weekendkaart; met de race erbij
+(en Monza, afgelast na de kwalificatie) gaat het naar de gereden races. Twaalf
+mutanten; ze zakken allemaal.
+
