@@ -66,7 +66,7 @@ The league admin chooses what counts: Simple (just the two top 10s, 100 points p
 - Weekend winner: Whoever scores the most points in a weekend wins that weekend, even if they are behind in the season.
 - Share in your group chat: One tap prepares the weekend result as text for WhatsApp.
 - Deadlines in your calendar: Subscribe to the calendar and every deadline shows up in your own calendar, with your own reminder.
-- Forgot to predict?: With auto-fill switched on, anyone who submits nothing gets the championship order as their top 10 instead of zero.
+- Forgot to predict?: With auto-fill switched on, anyone who submits nothing gets a random top 10 instead of zero.
 - Season questions: World champion, constructors' title and more: predict once before the first race, scored at the end of the year.
 - Private or public: Keep your league private with a code, or make it findable so anyone can join.
 
@@ -98,7 +98,7 @@ The start of the session. The qualifying top 10 closes when qualifying starts, t
 
 ### What if I forget a race?
 
-Then you score nothing that weekend, unless the league admin has switched on auto-fill: then you get the championship order as your top 10.
+Then you score nothing that weekend, unless the league admin has switched on auto-fill: then you get a random top 10.
 
 ### What is a joker?
 

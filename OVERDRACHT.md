@@ -7448,3 +7448,40 @@ versie "podium van het weekend" dat over "van 4" heen stond; die kop is eruit.
 Eenentwintig mutanten; twintig zakken, en "een podium van vier" verandert
 niets (het podium tekent er altijd drie).
 
+## Automatisch invullen: willekeurig in plaats van de WK-stand
+
+Danny: *"Ik zie dat als mensen hun voorspelling niet hebben ingevuld dat er
+best wel wat goede coureurs bovenaan worden gezet. Het is beter om het totaal
+random neer te zetten."*
+
+**Wat er was:** `autoLijst()` gaf wie vergat de WK-stand van vóór dat weekend.
+Dat is de voorspelling die het vaakst ongeveer klopt, dus leverde vergeten
+redelijk wat op.
+
+**Wat het nu is:** `willekeurigeLijst()`: de coureurs van dat weekend op nummer
+gesorteerd, dan geschud (Fisher-Yates) met een vaste dobbelsteen
+(`zaadVan()` + `dobbelsteen()`, een hash en mulberry32) op poule, race, speler
+en sessie. Vast is nodig omdat de lijst nergens wordt opgeslagen: hij wordt bij
+elke keer laden opnieuw uitgerekend, en met `Math.random` zouden de punten dan
+elke keer anders zijn, en op elk toestel ook. Op nummer sorteren maakt de lijst
+onafhankelijk van de volgorde waarin de sync de coureurs wegschrijft.
+
+**Geen terugwerkende kracht:** `WILLEKEURIG_VANAF` (25 september 2026, 20:00
+UTC). Een automatische lijst voor een deadline tot dat moment blijft de
+WK-stand (`autoLijst()` bestaat daarvoor nog); alles daarna is willekeurig. Zo
+verschuift er geen punt dat al in een stand stond, precies zoals
+`autofill_vanaf` dat voor het aanzetten zelf doet. Ronde 1 van een seizoen wordt
+nu ook aangevuld, want een willekeurige lijst heeft geen stand nodig.
+
+**Teksten:** het blok in Poule → beheer (NL/EN) en de veelgestelde vragen op de
+voorpagina in alle zeven talen (`site/teksten.mjs`, opnieuw gegenereerd).
+
+**Tests:** `test/automatisch-invullen.test.mjs` draait nu met een vaste datum in
+de testbrowser (`page.clock.setFixedTime`, 15 oktober 2026), zodat hij niet
+afhangt van de dag waarop hij draait. Hij controleert: tien verschillende
+coureurs van dat weekend, niet de WK-stand, een eigen lijst per sessie en per
+speler, dezelfde lijst na herladen en met de coureurs in een andere volgorde,
+dezelfde punten als wie precies die lijst zelf invulde, geen weekendwinst,
+ronde 1 ook, en een race van vóór de overstap die de WK-stand houdt. Tien
+mutanten; ze zakken allemaal.
+
