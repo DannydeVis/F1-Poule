@@ -64,6 +64,14 @@ Daaronder de kalender, in twee lijsten: eerst wat er nog komt, daarna wat er
 gereden is (nieuwste eerst), met per gereden race je punten en wie dat weekend
 won.
 
+Een weekend is pas gereden als de race er is geweest (of als het weekend na
+de kwalificatie is afgelast). Is alleen de kwalificatie (of de sprint) al
+geweest, dan blijft de race bij wat er nog komt, want die kun je dan meestal
+nog invullen. Onder die rij staat dan wat je al pakte, bijvoorbeeld
+"Kwalificatie: 22 ptn", met de joker erbij, en **bekijken →** opent meteen die
+uitslag. In de weekendkaart heet dat getal dan "dit weekend" in plaats van
+"vorig weekend".
+
 Een race opent over het hele scherm, ook op een computer: de lijst gaat
 opzij, de race staat in het midden (hooguit 880 pixels breed) en linksboven
 staat de pijl terug. Escape doet hetzelfde. In de kop de vlag van het land
@@ -433,6 +441,10 @@ vragen erbij.
 
 De joker staat op het racescherm, boven de tabbladen — hij geldt voor het hele
 weekend en niet voor één sessie. In de kalender zie je er een `2×` bij staan.
+Ook de punten per sessie tellen hem mee: op het racescherm staat het
+verdubbelde getal groot, met eronder hoe het zo komt ("11 × 2 met je joker"),
+en in de poule ernaast en bij iemands inzending staan de punten ook
+verdubbeld, met een `2×` bij wie er een joker op heeft.
 
 Het paneel zegt in één oogopslag waar je aan toe bent: een gevulde groene
 schijf met een ster op een groen vlak als er een joker ligt, een lege grijze
