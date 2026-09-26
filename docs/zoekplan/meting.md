@@ -9,30 +9,29 @@ Dit bestand staat niet op het domein: `_config.yml` sluit `docs/` en elk
 
 ## Nulmeting
 
-Vul in op de dag dat SEO fase 0 live staat.
+Op de dag dat SEO fase 0 live kwam, twee dagen nadat het domein live ging
+(24 september 2026). Search Console had toen nog nergens gegevens van: dat is
+het beginpunt, geen fout.
 
 | | waarde | waar vandaan |
 |---|---|---|
-| datum | | |
-| URL's geïndexeerd (Google) | van 9 | Search Console, Pagina's |
-| URL's geïndexeerd (Bing) | | Bing Webmaster Tools |
-| vertoningen, laatste 28 dagen | | Search Console, Prestaties |
-| klikken, laatste 28 dagen | | Search Console, Prestaties |
-| waarvan zonder "predict the race" (niet-merk) | | filter: zoekopdracht bevat niet |
+| datum | 26 september 2026 | |
+| URL's geïndexeerd (Google) | nog geen gegevens (van 9) | Search Console, Pagina's |
+| URL's geïndexeerd (Bing) | nog niet nagekeken | Bing Webmaster Tools |
+| vertoningen, laatste 28 dagen | 0 (nog leeg) | Search Console, Prestaties |
+| klikken, laatste 28 dagen | 0 (nog leeg) | Search Console, Prestaties |
+| waarvan zonder "predict the race" (niet-merk) | 0 | filter: zoekopdracht bevat niet |
 | nieuwe poules, laatste 4 weken | | beheer |
 
-Top 10 zoekopdrachten (vertoningen):
+Top 10 zoekopdrachten (vertoningen): nog geen.
 
-1.
-2.
-3.
-4.
-5.
-6.
-7.
-8.
-9.
-10.
+Nagelopen op dezelfde dag:
+
+- de interne documenten (`/ROUTEKAART.html`, `/OVERDRACHT.html`, `/schema.sql`)
+  geven de 404-pagina; de voorpagina en de app werken
+- `dannydevis.github.io/F1-Poule/`, `www.predicttherace.com` en
+  `http://predicttherace.com` komen uit op `https://predicttherace.com/`
+- in Search Console indexering aangevraagd voor `/` en `/en/`
 
 ## SEO
 
