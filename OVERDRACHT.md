@@ -7704,3 +7704,86 @@ op het scherm, met de goede tekst; en ook in het `kalender.ics` dat in de repo
 staat. `test/eerste-indruk.test.mjs`: de uitleg staat onder de knop. Vijf
 mutanten (twee uur, oude tekst, geluid in plaats van scherm, repo-bestand niet
 bijgewerkt, uitleg verborgen): allemaal gedood.
+
+## Zoekplan fase 0: hygiëne
+
+Danny deelde een zoekplan in drie delen (SEO, AEO, GEO), opgesteld in een
+ander gesprek. Dit is SEO fase 0, de kleine opruimronde die eerst moet. De
+plannen zelf staan (nog) niet in de repo: zie het eind van deze sectie.
+
+**0.1 Redirects.** Niet na te lopen vanaf hier: de netwerkinstellingen van de
+omgeving van Claude Code weigeren `predicttherace.com` en `github.io` (403 van
+de proxy). Staat als handmatige stap in `BEDIENING.md` §18.
+
+**0.2 De documenten stonden als pagina op het domein.** Nagekeken in het
+bouwlog van "pages build and deployment" (Actions, stap "Build with Jekyll"):
+GitHub Pages haalt de repo door Jekyll 3.10, en de plug-ins daarvan
+(`jekyll-optional-front-matter` en verder) maken van elk `.md`-bestand een
+pagina. Online stonden `ROUTEKAART.html`, `OVERDRACHT.html`, `BEDIENING.html`
+en `test/LEESMIJ.html`, plus de `.md`-bestanden zelf, alle tests, scripts,
+de SQL en `site/*.mjs`.
+
+Nu sluit `_config.yml` ze uit. Valkuilen:
+
+- Een eigen `exclude` vervangt in Jekyll 3 de standaardlijst; hij vult hem
+  niet aan. Daarom staan `node_modules` en `CNAME` er zelf in (die laatste sloot
+  Jekyll al uit; zo blijft het zo).
+- Jekyll 3 leest een patroon met `File.fnmatch?` zónder vlaggen: `*` pakt ook
+  een `/` mee. Dus `"*.md"` geldt voor elk `.md`-bestand in elke map, ook een
+  document dat er later bijkomt. Een mapnaam zonder slash (`test`, niet
+  `test/`) sluit de map in één keer uit.
+- Niet `site` in zijn geheel: `site/og/` en `site/beeld/` zijn de plaatjes van
+  de voorpagina. Wel `site/*.mjs`, `site/*.json` en `site/bron`.
+- `.nojekyll` was het alternatief, maar dan komen de `.md`-bestanden als platte
+  tekst online in plaats van niet.
+
+De tests zien nu wat Pages publiceert: `gepubliceerd()` in `test/hulp.mjs` leest
+de exclude-lijst en past hem toe zoals Jekyll 3 dat doet, en beide testservers
+geven voor een uitgesloten bestand een 404. Een te ruim patroon (een lettertype,
+een plaatje) laat daardoor de browsertests zakken, en `test/site.test.mjs`
+vergelijkt per bestand in de repo de uitsluiting met een eigen lijst van wat
+intern is.
+
+Na de merge nalopen of het online ook zo is: het bouwlog noemt dan geen
+`Rendering: *.md` meer, en de lijst onder "Upload artifact" heeft geen `.md`,
+`.sql`, `test/` of `scripts/`. Daarna mogen de plannen in `docs/zoekplan/`.
+
+**0.3 Titels: de zoekterm eerst, het merk achteraan.** "Gratis F1-poule met je
+vrienden | Predict the Race" in plaats van "Predict the Race – gratis
+F1-poule…". Google zet de sitenaam al apart boven het resultaat, en een merk
+dat nog niemand kent trekt minder klikken dan de zoekterm. Alle zeven talen
+tussen 50 en 56 tekens. De og-titels houden het merk vooraan, met een dubbele
+punt in plaats van het streepje (ook die van de app zelf); de 404 en de
+privacypagina's kregen ook " | ". Afspraak uit het plan: geen en-dash of
+em-dash in nieuwe teksten.
+
+**0.4 Sitenaam.** `alternateName: ['PredictTheRace', 'predicttherace.com']` op
+WebSite en Organization. Het domein komt uit `BASIS`, niet overgetypt.
+
+**0.5 Een datum per pagina.** Elke url had dezelfde datum (`BIJGEWERKT`, nu
+weg). Nu houdt `site/lastmod.json` per url een hash en een datum bij; verandert
+de hash, dan wordt de datum vandaag. Die datum staat in de sitemap en als
+`dateModified` in de JSON-LD van de voorpagina.
+
+De hash gaat over de inhoud en niet over de vorm: zichtbare tekst, `content`-,
+`alt`- en `href`-waarden en de JSON-LD, met de datum zelf als 0000-00-00. Een
+nieuwe animatie of kleur geeft dus geen nieuwe datum, een andere zin wel. De
+eerste keer kregen alle negen pagina's 26 september, en terecht: de titels
+veranderden. `--controle` schrijft niets en zakt als een hash niet meer klopt.
+De privacypagina's houden hun zichtbare datum (`PRIVACY_BIJGEWERKT`): dat is de
+datum van de verklaring, niet van de pagina.
+
+**Onderweg: llms.txt beloofde "no trackers".** Terwijl de pagina's Google
+Analytics laden zodra iemand ja zegt. Nu staat er dat er statistieken zijn,
+alleen na een ja. Het kopcommentaar van `scripts/maak-site.mjs` zei ook nog
+"geen analytics".
+
+**0.6** `docs/zoekplan/meting.md` staat klaar als leeg sjabloon, met een
+nulmeting en een blok voor SEO, AEO en GEO. De stappen in Search Console en
+Bing staan in `BEDIENING.md` §18.
+
+**Tests:** `test/site.test.mjs` (publicatie, titels, sitenaam, llms.txt, en de
+testserver die de documenten weigert) en het nieuwe `test/lastmod.test.mjs`
+(op een kopie van de repo: een andere tekst geeft alleen die pagina een nieuwe
+datum, een andere vorm niemand, `--controle` zakt en schrijft niets). Dertien
+mutanten; ze zakken allemaal.

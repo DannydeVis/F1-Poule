@@ -11,6 +11,30 @@ import { fileURLToPath } from 'node:url';
 const hier = dirname(fileURLToPath(import.meta.url));
 export const wortel = join(hier, '..');
 
+// ---- wat GitHub Pages publiceert ----------------------------------------------
+// De exclude-lijst uit _config.yml, gelezen zoals Jekyll 3 (de versie van GitHub
+// Pages) hem toepast: een patroon sluit een pad uit als het er met fnmatch op
+// past, zonder vlaggen, dus `*` pakt ook een `/` mee, of als het pad ermee
+// begint. En net als Jekyll: wat met een punt of liggend streepje begint,
+// komt nooit online. De testservers hieronder serveren alleen wat hier door
+// komt, zodat een te ruim patroon de browsertests laat zakken in plaats van
+// pas op de echte site een plaatje of lettertype kwijt te raken.
+export const UITGESLOTEN = (() => {
+  const tekst = readFileSync(join(wortel, '_config.yml'), 'utf8');
+  const blok = tekst.match(/^exclude:\n((?:[ \t]+-[^\n]*\n?)+)/m);
+  if (!blok) throw new Error('_config.yml heeft geen exclude-lijst');
+  return blok[1].split('\n').map((r) => r.replace(/^\s*-\s*/, '').trim().replace(/^["']|["']$/g, ''))
+    .filter(Boolean);
+})();
+const alsPatroon = (p) => new RegExp('^' + p.replace(/\/$/, '').split('').map((c) =>
+  c === '*' ? '.*' : c === '?' ? '.' : c.replace(/[.+^${}()|[\]\\]/g, '\\$&')).join('') + '$');
+const PATRONEN = UITGESLOTEN.map((p) => ({ tekst: p.replace(/\/$/, ''), re: alsPatroon(p) }));
+export const gepubliceerd = (pad) => {
+  const rel = pad.replace(/^\/+/, '');
+  if (rel.split('/').some((deel) => /^[._#~]/.test(deel))) return false;
+  return !PATRONEN.some(({ tekst, re }) => re.test(rel) || rel.startsWith(tekst));
+};
+
 export function maakControle(titel) {
   const resultaten = [];
   console.log(`\n=== ${titel} ===`);
@@ -91,7 +115,11 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
       // rendert elke test met andere letters dan de echte app.
       let body;
       try { body = readFileSync(join(map, naam)); }
-      catch { body = readFileSync(join(wortel, naam.replace(/^\//, ''))); }
+      catch {
+        // Uit de repo alleen wat GitHub Pages ook echt publiceert.
+        if (!gepubliceerd(naam)) throw new Error('niet gepubliceerd');
+        body = readFileSync(join(wortel, naam.replace(/^\//, '')));
+      }
       res.writeHead(200, { 'Content-Type': types[naam.slice(naam.lastIndexOf('.'))] ?? 'text/plain' });
       res.end(body);
     } catch { res.writeHead(404); res.end('niet gevonden'); }
@@ -227,6 +255,8 @@ export async function startSite({ voorafAan, taal = null, toestemming = false } 
     }
     let vol = join(wortel, pad.replace(/^\//, ''));
     try {
+      // Alleen wat GitHub Pages ook echt publiceert (zie gepubliceerd()).
+      if (!gepubliceerd(pad)) throw new Error('niet gepubliceerd');
       if (statSync(vol).isDirectory()) vol = join(vol, 'index.html');
       stuur(readFileSync(vol), types[vol.slice(vol.lastIndexOf('.'))] ?? 'application/octet-stream');
     } catch {

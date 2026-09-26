@@ -25,7 +25,7 @@ export const PRIVACY_BIJGEWERKT = '2026-09-24';
 export const PRIVACY = {
   nl: {
     pad: 'privacy', locale: 'nl_NL',
-    titel: 'Privacy en je gegevens – Predict the Race',
+    titel: 'Privacy en je gegevens | Predict the Race',
     omschrijving: 'Wat Predict the Race van je bewaart, waar het staat, wie het ziet en hoe je het weer weg krijgt. Geen advertenties, statistieken alleen met je ja.',
     kop: 'Wat Predict the Race van je weet',
     intro: 'Predict the Race is een gratis F1-voorspelspel voor vriendengroepen. Het bewaart zo weinig mogelijk, en wat het bewaart staat hieronder, in gewone taal.',
@@ -79,7 +79,7 @@ export const PRIVACY = {
 
   en: {
     pad: 'en/privacy', locale: 'en_GB',
-    titel: 'Privacy and your data – Predict the Race',
+    titel: 'Privacy and your data | Predict the Race',
     omschrijving: 'What Predict the Race keeps about you, where it lives, who sees it and how to get it removed. No ads, statistics only with your yes.',
     kop: 'What Predict the Race knows about you',
     intro: 'Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.',

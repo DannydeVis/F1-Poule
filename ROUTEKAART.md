@@ -904,3 +904,21 @@ antwoordt is geen controle.
 Wat er aan jouw kant nog ligt: een naam en een domein kiezen en live zetten
 (de instellingen staan bovenaan dit bestand), en `leegmaken.sql` draaien
 wanneer je die schone start wilt.
+
+---
+
+## Gevonden worden: het zoekplan
+
+Een plan in drie delen, van buitenaf opgesteld op 26 september 2026: SEO (het
+fundament), AEO (de antwoordvorm) en GEO (entiteit, eigen cijfers,
+vermeldingen, meten). Doel: live en geïndexeerd ruim voor de zoekpiek rond de
+start van seizoen 2027 (februari en maart). Eén fase per branch.
+
+| fase | wat | status |
+|---|---|---|
+| SEO 0 | hygiëne: documenten van het domein, titels met de zoekterm eerst, sitenaam, datum per pagina, llms.txt eerlijk | **gebouwd**; de handmatige stappen staan in `BEDIENING.md` §18 |
+| SEO 1 | de generator klaar voor meer paginasoorten (gidsen, about, vergelijking) | nog niet |
+| SEO 2 | kernpagina's in NL en EN (organiseren, puntentelling, excel, over, vergelijking) | nog niet |
+| SEO 3 | IndexNow | nog niet |
+| SEO 4 | pilot met racepagina's, met stopcriterium | nog niet |
+| SEO 5 | meer talen, alleen waar Search Console het zegt | nog niet |

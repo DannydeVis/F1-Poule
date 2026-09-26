@@ -8,7 +8,8 @@ Predict the Race is a free web app for running a Formula 1 prediction league wit
 - App: https://predicttherace.com/app/
 - Languages of this page: Nederlands (https://predicttherace.com/), English (https://predicttherace.com/en/), Deutsch (https://predicttherace.com/de/), Français (https://predicttherace.com/fr/), Español (https://predicttherace.com/es/), Italiano (https://predicttherace.com/it/), Português (https://predicttherace.com/pt/)
 - App languages: English, Dutch
-- Price: free, no ads, no trackers, no money involved
+- Price: free, no ads, no money involved
+- Visitor statistics: Google Analytics, only after the visitor says yes; without that, nothing is measured
 - Privacy: https://predicttherace.com/en/privacy/ (Dutch: https://predicttherace.com/privacy/)
 - Made by: Danny de Visser (https://github.com/DannydeVis); source code: https://github.com/DannydeVis/F1-Poule
 - Data source for calendar and results: OpenF1 (https://openf1.org)

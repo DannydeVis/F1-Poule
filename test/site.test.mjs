@@ -23,7 +23,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { maakControle, startSite, wortel } from './hulp.mjs';
+import { maakControle, startSite, wortel, gepubliceerd, UITGESLOTEN } from './hulp.mjs';
 import { teksten, TALEN, STANDAARD, BASIS } from '../site/teksten.mjs';
 import { PRIVACY } from '../site/privacy.mjs';
 
@@ -36,6 +36,34 @@ const { check, afronden } = maakControle('de landingspagina in zeven talen');
     { encoding: 'utf8', stdio: 'pipe' }); }
   catch (e) { ok = false; uit = String(e.stderr || e.message); }
   check('wat in de repo staat is wat de generator nu maakt', ok, uit.trim());
+}
+
+// ---- 1b. wat GitHub Pages publiceert ---------------------------------------------
+// GitHub Pages haalt de repo door Jekyll, en die maakte van elk .md-bestand een
+// pagina op het domein: ROUTEKAART, OVERDRACHT, BEDIENING, test/LEESMIJ. Plus
+// de tests, scripts en SQL als losse bestanden. _config.yml sluit ze uit.
+//
+// Hier staat nog een keer, los van _config.yml, wat intern is. De twee moeten
+// precies overeenkomen: een nieuw document dat niet onder de uitsluiting valt,
+// zakt hier, en een patroon dat te veel pakt (een lettertype, een plaatje van
+// de voorpagina) ook. De testservers passen dezelfde uitsluiting toe.
+{
+  const INTERN = (p) => /\.(md|sql)$/.test(p) || /^(docs|test|scripts|site\/bron)\//.test(p)
+    || /^site\/[^/]+\.(mjs|json)$/.test(p) || /(^|\/)[._]/.test(p) || /^(CNAME|node_modules)(\/|$)/.test(p);
+  const bestanden = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'],
+    { cwd: wortel, encoding: 'utf8' }).split('\n').filter(Boolean);
+  const mis = bestanden.filter((p) => gepubliceerd(p) === INTERN(p));
+  check('GitHub Pages publiceert de site en niets van de interne bestanden',
+    bestanden.length > 100 && mis.length === 0,
+    mis.slice(0, 5).map((p) => `${p} ${gepubliceerd(p) ? 'staat online' : 'valt weg'}`).join(' | ')
+      || `${bestanden.filter(gepubliceerd).length} van ${bestanden.length} online`);
+  const md = bestanden.filter((p) => p.endsWith('.md'));
+  check('elk .md-bestand blijft van het domein af, ook een nieuw',
+    md.length >= 5 && md.every((p) => !gepubliceerd(p)) && !gepubliceerd('docs/zoekplan/nieuw.md')
+      && !gepubliceerd('iets-nieuws.md'),
+    md.join(' '));
+  check('en de plaatjes van de voorpagina blijven er wel',
+    ['site/og/og-nl.jpg', 'site/beeld/stand-nl-licht.jpg'].every(gepubliceerd), UITGESLOTEN.join(', '));
 }
 
 const urlVan = (c) => `${BASIS}/${teksten[c].pad ? teksten[c].pad + '/' : ''}`;
@@ -94,6 +122,7 @@ for (const code of TALEN) {
   const kop = await page.evaluate(() => ({
     lang: document.documentElement.lang,
     titel: document.title,
+    ogTitel: document.querySelector('meta[property="og:title"]')?.content ?? '',
     omschrijving: document.querySelector('meta[name="description"]')?.content ?? '',
     canonical: document.querySelector('link[rel="canonical"]')?.href ?? '',
     h1: document.querySelectorAll('h1').length,
@@ -125,6 +154,14 @@ for (const code of TALEN) {
   check(`${code}: de pagina zegt dat hij in het ${t.naam} is`, kop.lang === code, kop.lang);
   check(`${code}: titel van 30 tot 65 tekens`, kop.titel.length >= 30 && kop.titel.length <= 65,
     `${kop.titel.length}: ${kop.titel}`);
+  // Google zet de sitenaam al apart boven het resultaat, en een merk dat nog
+  // niemand kent trekt minder klikken dan de zoekterm zelf. Dus de zoekterm
+  // vooraan (F1-poule, Tippspiel, porra ...), het merk achteraan. Zonder
+  // streepjes: een dubbele punt of een verticale streep.
+  check(`${code}: de titel begint met de zoekterm en eindigt met het merk`,
+    kop.titel.endsWith(' | Predict the Race') && !kop.titel.startsWith('Predict')
+      && ![kop.titel, kop.ogTitel].some((x) => /[–—]/.test(x)) && kop.ogTitel.startsWith('Predict the Race'),
+    `${kop.titel} · ${kop.ogTitel}`);
   check(`${code}: omschrijving van 110 tot 165 tekens`, kop.omschrijving.length >= 110 && kop.omschrijving.length <= 165,
     `${kop.omschrijving.length}`);
   check(`${code}: precies één h1`, kop.h1 === 1, String(kop.h1));
@@ -150,6 +187,10 @@ for (const code of TALEN) {
     `${ldFaq.length} tegen ${kop.faq.length}`);
   check(`${code}: de HowTo-stappen zijn de stappen op het scherm`,
     JSON.stringify((soort('HowTo')?.step ?? []).map((s) => s.name)) === JSON.stringify(kop.stappen));
+  check(`${code}: de site heeft ook zijn andere namen, voor de sitenaam in de zoekresultaten`,
+    ['WebSite', 'Organization'].every((type) => JSON.stringify(soort(type)?.alternateName)
+      === JSON.stringify(['PredictTheRace', new URL(BASIS).host])),
+    JSON.stringify(soort('WebSite')?.alternateName));
   check(`${code}: de app heet gratis`, soort('WebApplication')?.offers?.price === '0'
     && soort('WebApplication')?.isAccessibleForFree === true);
 
@@ -225,6 +266,14 @@ check('elke pagina heeft precies dezelfde hreflang-set (wederkerig)', new Set(cl
   [...new Set(clusters.values())].length + ' verschillende');
 check('niets van een andere website geladen', extern.length === 0, extern.slice(0, 3).join(' '));
 check('geen 404 op een plaatje, lettertype of pagina', fouten404.length === 0, fouten404.slice(0, 3).join(' '));
+{
+  const status = await page.evaluate(async (paden) => Promise.all(paden.map(async (p) =>
+    `${p}:${(await fetch(p)).status}`)), ['/ROUTEKAART.md', '/ROUTEKAART.html', '/test/LEESMIJ.md', '/schema.sql',
+    '/site/teksten.mjs', '/kalender.ics', '/sw.js', '/site/og/og-nl.jpg']);
+  check('de testserver serveert wat GitHub Pages publiceert: de documenten niet, de site wel',
+    status.join(' ') === '/ROUTEKAART.md:404 /ROUTEKAART.html:404 /test/LEESMIJ.md:404 /schema.sql:404 '
+      + '/site/teksten.mjs:404 /kalender.ics:200 /sw.js:200 /site/og/og-nl.jpg:200', status.join(' '));
+}
 check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, jsFouten.join(' | '));
 
 // ---- beweging ------------------------------------------------------------------
@@ -445,6 +494,10 @@ await stoppen();
   check('llms.txt begint met de naam en een samenvatting', /^# Predict the Race\n\n> /.test(llms));
   check('en noemt elke taalpagina', TALEN.every((c) => llms.includes(urlVan(c))));
   check('en de punten', llms.includes(`| ${teksten.en.punten.vragen.winnaar} | ${puntenApp.winnaar} |`));
+  // Er stond "no trackers", terwijl de pagina's Google Analytics laden zodra
+  // iemand ja zegt. Een taalmodel dat dat overneemt, vertelt het verkeerd door.
+  check('en zegt eerlijk dat er statistieken zijn, alleen na een ja',
+    !/no trackers/i.test(llms) && /Google Analytics, only after the visitor says yes/.test(llms));
 
   const nf = readFileSync(join(wortel, '404.html'), 'utf8');
   check('404.html staat op noindex en laadt niets relatiefs',
