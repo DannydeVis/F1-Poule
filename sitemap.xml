@@ -143,4 +143,40 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://predicttherace.com/f1-poule-puntentelling/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-puntentelling/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-scoring-system/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-scoring-system/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://predicttherace.com/en/f1-prediction-scoring-system/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-puntentelling/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-scoring-system/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-scoring-system/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://predicttherace.com/f1-poule-excel/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-excel/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://predicttherace.com/en/f1-prediction-league-spreadsheet/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-excel/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

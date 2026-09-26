@@ -84,6 +84,8 @@ Or build your own league: switch each question on or off, with its points shown.
 ## Guides
 
 - [How to run an F1 prediction league](https://predicttherace.com/en/how-to-run-an-f1-prediction-league/): Set up an F1 prediction league with friends or colleagues in five minutes: the four steps, the choices that matter and the three things that kill a league. Also in Dutch (https://predicttherace.com/f1-poule-organiseren/).
+- [F1 prediction scoring systems](https://predicttherace.com/en/f1-prediction-scoring-system/): Four ways to score an F1 prediction league, what each gets right and wrong, a fully worked example, and the scoring Predict the Race uses. Also in Dutch (https://predicttherace.com/f1-poule-puntentelling/).
+- [Running an F1 prediction league in a spreadsheet](https://predicttherace.com/en/f1-prediction-league-spreadsheet/): Run an F1 prediction league in Excel or Google Sheets: the columns you need, the formula that scores each position, and where a spreadsheet lets you down. Also in Dutch (https://predicttherace.com/f1-poule-excel/).
 
 ## Frequently asked questions
 

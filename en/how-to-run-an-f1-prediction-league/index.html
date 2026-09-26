@@ -434,6 +434,9 @@
   .tabel tbody tr:hover{background:var(--accent-vlak)}
   .tabellen{display:grid;gap:18px;margin-top:18px;align-items:start}
   .tabellen .tabel td:last-child{font-size:22px}
+  /* De links naar de gidsen, onder het blok waar ze bij horen. */
+  .verder{margin:18px 0 0}
+  .verder a{color:var(--accent-tekst);font-weight:600}
   .voorbeeld{margin:18px 0 0;color:var(--ink2);font-size:16px}
   .presets{margin:22px 0 0;color:var(--ink2);font-size:16px;border-left:3px solid var(--accent);padding-left:14px}
 
@@ -609,8 +612,20 @@
   .artikel .slotblok h2{margin:0 0 6px}
   .artikel .slotblok p{color:var(--nacht-ink2)}
   .artikel .datum{margin:30px 0 0}
-  .verder{margin:18px 0 0}
-  .verder a{color:var(--accent-tekst);font-weight:600}
+  .artikel .tabel.getallen th:last-child{text-align:right}
+  .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
+  .artikel .tabellen{margin:4px 0 16px}
+  .artikel .tabellen .tabel{margin:0}
+  .artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 8px}
+  @media (min-width:480px){.artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 14px}}
+  .artikel .rekenvoorbeeld tbody th{font-weight:600}
+  .artikel .rekenvoorbeeld tfoot th,.artikel .rekenvoorbeeld tfoot td{border-top:2px solid var(--ink3)}
+  .artikel .rekenvoorbeeld tfoot td{color:var(--accent-tekst)}
+  .artikel .formules{margin:0 0 16px}
+  .artikel .formules dt{font-weight:600;margin:14px 0 6px}
+  .artikel .formules dd{margin:0}
+  .artikel .formules code{display:block;font-family:var(--mono);font-size:clamp(13px,3.6vw,15px);line-height:1.5;padding:12px 14px;
+    background:var(--paneel);border:1px solid var(--lijn);border-radius:10px;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -693,7 +708,7 @@
     </section>
     <section class="leesook">
       <h2>Read next</h2>
-      <ul><li><a href="../../en/#niveaus">Simple, Classic or Advanced: the three levels side by side</a></li><li><a href="../../en/#punten">The full scoring, with the extra questions and season questions</a></li><li><a href="../../en/#faq">Frequently asked questions about the app</a></li></ul>
+      <ul><li><a href="../../en/f1-prediction-scoring-system/">F1 prediction scoring systems</a></li><li><a href="../../en/f1-prediction-league-spreadsheet/">Running an F1 prediction league in a spreadsheet</a></li><li><a href="../../en/#niveaus">Simple, Classic or Advanced: the three levels side by side</a></li><li><a href="../../en/#punten">The full scoring, with the extra questions and season questions</a></li><li><a href="../../en/#faq">Frequently asked questions about the app</a></li></ul>
     </section>
     <div class="slotblok">
       <h2>Ready to start?</h2>

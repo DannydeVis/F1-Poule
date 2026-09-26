@@ -39,6 +39,7 @@ import { fileURLToPath } from 'node:url';
 import { teksten, TALEN, STANDAARD, BASIS, MAKER, BRON } from '../site/teksten.mjs';
 import { PRIVACY, CONTACT, PRIVACY_BIJGEWERKT, privacyTaal } from '../site/privacy.mjs';
 import { PAGINAS, PAGINA_UI } from '../site/paginas.mjs';
+import { knipUit } from './knipsel.mjs';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CONTROLE = process.argv.includes('--controle');
@@ -82,6 +83,11 @@ for (const id of [...LOSSE, ...SEIZOEN, 'quali_top10', 'race_top10']) {
 const formule = appBron.match(/Math\.max\(0, (\d+) - (\d+) \* Math\.abs\(i - echt\)\)/);
 if (!formule) throw new Error('de puntenformule van scoreLijst() niet gevonden in app/index.html');
 export const PLEKPUNTEN = [0, 1, 2, 3].map((d) => Math.max(0, Number(formule[1]) - Number(formule[2]) * d));
+// Een rekenvoorbeeld in een gids rekent de app zelf uit: scoreLijst() uit het
+// blok <knip primitieven>, dezelfde code die in de app de punten geeft. Een
+// voorbeeld dat met de hand is opgeteld, loopt uit de pas zodra de telling
+// verandert; dit niet.
+const { scoreLijst } = await import(`data:text/javascript,${encodeURIComponent(knipUit(appBron, 'primitieven'))}`);
 
 // Wat de gidsen over de app zeggen, ook uit de app zelf (en uit de twee
 // scripts die de meldingen sturen). Een gids die "vijf jokers" zegt terwijl de
@@ -98,6 +104,10 @@ const VENSTER = Number(uitBron(readFileSync(join(wortel, 'scripts', 'herinnering
   /export const VENSTER_UREN = (\d+);/, 'VENSTER_UREN in scripts/herinneringen.mjs')[1]);
 const AGENDA_UUR = Number(uitBron(readFileSync(join(wortel, 'scripts', 'agenda.mjs'), 'utf8'),
   /'TRIGGER:-PT(\d+)H'/, 'de melding in scripts/agenda.mjs')[1]);
+// Het puntenschema van het WK zelf. De app gebruikt het alleen voor een
+// standaardlijst, maar de gids over puntentellingen vergelijkt ermee.
+const WK_PUNTEN = uitBron(appBron, /const WK_PUNTEN = \[([\d, ]+)\];/, 'WK_PUNTEN in app/index.html')[1]
+  .split(',').map(Number);
 // De {namen} die in site/paginas.mjs kunnen staan.
 const feitenVoor = (code) => ({
   exact: PLEKPUNTEN[0], bijna: PLEKPUNTEN[1], twee: PLEKPUNTEN[2],
@@ -106,6 +116,9 @@ const feitenVoor = (code) => ({
   nSimpel: PRESET_VRAGEN.simpel.length, nKlassiek: PRESET_VRAGEN.klassiek.length, nGevorderd: PRESET_VRAGEN.gevorderd.length,
   jokers: JOKERS, jokersMax: JOKERS_MAX,
   venster: PAGINA_UI[code].uren(VENSTER), agendaUur: PAGINA_UI[code].uren(AGENDA_UUR),
+  winnaar: PUNTEN.winnaar.punten, pole: PUNTEN.pole.punten, nSeizoen: SEIZOEN.length,
+  formMax: formule[1], formStap: formule[2],
+  wkPunten: WK_PUNTEN.join(', '), wkEerste: WK_PUNTEN[0], wkLaatste: WK_PUNTEN.at(-1),
 });
 
 // ------------------------------------------------------------
@@ -425,6 +438,9 @@ const CSS = `
   .tabel tbody tr:hover{background:var(--accent-vlak)}
   .tabellen{display:grid;gap:18px;margin-top:18px;align-items:start}
   .tabellen .tabel td:last-child{font-size:22px}
+  /* De links naar de gidsen, onder het blok waar ze bij horen. */
+  .verder{margin:18px 0 0}
+  .verder a{color:var(--accent-tekst);font-weight:600}
   .voorbeeld{margin:18px 0 0;color:var(--ink2);font-size:16px}
   .presets{margin:22px 0 0;color:var(--ink2);font-size:16px;border-left:3px solid var(--accent);padding-left:14px}
 
@@ -755,6 +771,11 @@ function pagina(code, datum) {
     </picture>`;
   const MAX = Math.max(...[...LOSSE, ...SEIZOEN].map((id) => PUNTEN[id].punten));
   const rij = (id, i) => `<tr style="--w:${(PUNTEN[id].punten / MAX).toFixed(2)};--i:${i}"><td>${esc(t.punten.vragen[id])}</td><td>${PUNTEN[id].punten}</td></tr>`;
+  // De links naar de gidsen, elk onder het blok waar hij bij hoort
+  // (teaserPlek in site/paginas.mjs, standaard onder de stappen).
+  const teasers = (plek) => paginasIn(code).filter((pg) => pg.talen[code].teaser && (pg.teaserPlek ?? 'hoe') === plek)
+    .map((pg) => `
+    <p class="verder"><a href="${p}${pg.talen[code].pad}/">${esc(pg.talen[code].teaser)} <span aria-hidden="true">→</span></a></p>`).join('');
 
   return `<!DOCTYPE html>
 <html lang="${code}">
@@ -858,8 +879,7 @@ ${jsonLd(code, datum)}
     ${sectiekop('01', t.stappen.kop, esc(t.stappen.pakkend))}
     <ol class="stappen onthul">${t.stappen.items.map(([kop, tekst], i) =>
       `<li class="onthul" style="--i:${i + 1}"><h3>${esc(kop)}</h3><p>${esc(tekst)}</p></li>`).join('')}</ol>${
-      paginasIn(code).filter((pg) => pg.talen[code].teaser).map((pg) => `
-    <p class="verder"><a href="${p}${pg.talen[code].pad}/">${esc(pg.talen[code].teaser)} <span aria-hidden="true">→</span></a></p>`).join('')}
+      teasers('hoe')}
   </div>
 </section>
 
@@ -908,7 +928,7 @@ ${jsonLd(code, datum)}
         <tbody>${SEIZOEN.map(rij).join('')}</tbody>
       </table>
     </div>
-    <p class="presets onthul">${esc(vul(t.punten.presets, vars))}</p>
+    <p class="presets onthul">${esc(vul(t.punten.presets, vars))}</p>${teasers('punten')}
   </div>
 </section>
 
@@ -1128,18 +1148,52 @@ const ARTIKEL_CSS = `
   .artikel .slotblok h2{margin:0 0 6px}
   .artikel .slotblok p{color:var(--nacht-ink2)}
   .artikel .datum{margin:30px 0 0}
-  .verder{margin:18px 0 0}
-  .verder a{color:var(--accent-tekst);font-weight:600}
+  .artikel .tabel.getallen th:last-child{text-align:right}
+  .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
+  .artikel .tabellen{margin:4px 0 16px}
+  .artikel .tabellen .tabel{margin:0}
+  .artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 8px}
+  @media (min-width:480px){.artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 14px}}
+  .artikel .rekenvoorbeeld tbody th{font-weight:600}
+  .artikel .rekenvoorbeeld tfoot th,.artikel .rekenvoorbeeld tfoot td{border-top:2px solid var(--ink3)}
+  .artikel .rekenvoorbeeld tfoot td{color:var(--accent-tekst)}
+  .artikel .formules{margin:0 0 16px}
+  .artikel .formules dt{font-weight:600;margin:14px 0 6px}
+  .artikel .formules dd{margin:0}
+  .artikel .formules code{display:block;font-family:var(--mono);font-size:clamp(13px,3.6vw,15px);line-height:1.5;padding:12px 14px;
+    background:var(--paneel);border:1px solid var(--lijn);border-radius:10px;overflow-wrap:anywhere}
 `;
 
+// Het rekenvoorbeeld van een pagina (pg.rekenvoorbeeld): een voorspelde top 10
+// en een uitslag, uitgerekend door scoreLijst() uit de app.
+function rekenvoorbeeld(pg) {
+  if (!pg.rekenvoorbeeld) return null;
+  const { voorspeld, uitslag } = pg.rekenvoorbeeld;
+  const dubbel = (l) => new Set(l).size !== l.length;
+  if (voorspeld.length !== 10 || dubbel(voorspeld) || dubbel(uitslag)) {
+    throw new Error(`site/paginas.mjs: het rekenvoorbeeld van ${pg.id} moet tien verschillende coureurs voorspellen`);
+  }
+  return scoreLijst(voorspeld, uitslag);
+}
+// De {namen} die uit dat voorbeeld komen: het totaal, wat alleen exacte
+// plekken hadden opgeleverd, en hoeveel coureurs hooguit één plek naast zaten.
+const voorbeeldFeiten = (pg) => {
+  const r = rekenvoorbeeld(pg);
+  return r ? {
+    voorbeeldTotaal: r.totaal,
+    voorbeeldExact: r.regels.filter((x) => x.werkelijk === x.voorspeld).length * PLEKPUNTEN[0],
+    voorbeeldDichtbij: r.regels.filter((x) => x.werkelijk !== null && Math.abs(x.werkelijk - x.voorspeld) <= 1).length,
+  } : {};
+};
+
 // De tekst van een pagina met de getallen uit de app erin.
-const vulPagina = (code, tekst) => vul(tekst, feitenVoor(code));
+const vulPagina = (pg, code, tekst) => vul(tekst, { ...feitenVoor(code), ...voorbeeldFeiten(pg) });
 
 function artikelJsonLd(pg, code, datum, sinds) {
   const t = pg.talen[code];
   const url = paginaUrl(pg, code);
   const thuis = urlVan(code);
-  const f = (s) => vulPagina(code, s);
+  const f = (s) => vulPagina(pg, code, s);
   const graaf = [
     { '@type': 'WebPage', '@id': `${url}#pagina`, url, name: t.titel, description: t.omschrijving,
       inLanguage: code, isPartOf: { '@id': `${BASIS}/#website` }, about: { '@id': `${BASIS}/#app` },
@@ -1168,7 +1222,7 @@ function artikelPagina(pg, code, datum, sinds) {
   const p = terugNaar(t.pad);
   const thuis = `${p}${teksten[code].pad ? teksten[code].pad + '/' : ''}`;
   const app = `${p}app/`;
-  const f = (s) => esc(vulPagina(code, s));
+  const f = (s) => esc(vulPagina(pg, code, s));
   const cluster = clusterVan(pg);
   const hreflang = [...cluster.map((c) => `<link rel="alternate" hreflang="${c}" href="${paginaUrl(pg, c)}">`),
     `<link rel="alternate" hreflang="x-default" href="${paginaUrl(pg, xDefaultVan(pg))}">`].join('\n');
@@ -1178,6 +1232,19 @@ function artikelPagina(pg, code, datum, sinds) {
   const leesOok = [
     ...verwant.map((x) => `<li><a href="${p}${x.talen[code].pad}/">${esc(x.talen[code].kop)}</a></li>`),
     ...(t.leesOok ?? []).map(([anker, tekst]) => `<li><a href="${thuis}#${anker}">${esc(tekst)}</a></li>`)];
+  // De teksten van de voorpagina in deze taal: de namen van de vragen.
+  const t2 = teksten[code];
+  const rekenTabel = (r) => {
+    const uit = rekenvoorbeeld(pg);
+    if (!uit) throw new Error(`site/paginas.mjs: ${pg.id} heeft een rekenvoorbeeld-tabel maar geen rekenvoorbeeld`);
+    return `
+      <table class="tabel getallen rekenvoorbeeld">
+        <thead><tr>${r.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
+        <tbody>${uit.regels.map((x) => `<tr><th scope="row">${esc(x.nr)}</th><td>P${x.voorspeld}</td><td>${
+          x.werkelijk === null ? f(r.geenPlek) : `P${x.werkelijk}`}</td><td>${x.punten}</td></tr>`).join('')}</tbody>
+        <tfoot><tr><th scope="row" colspan="3">${f(r.totaal)}</th><td>${uit.totaal}</td></tr></tfoot>
+      </table>`;
+  };
   const sectie = (s) => `
     <section id="${s.id}">
       <h2>${f(s.vraag)}</h2>
@@ -1186,8 +1253,15 @@ function artikelPagina(pg, code, datum, sinds) {
       <table class="tabel">
         <thead><tr>${s.tabel.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
         <tbody>${s.tabel.rijen.map((r) => `<tr>${r.map((c, i) => i === 0 ? `<th scope="row">${f(c)}</th>` : `<td>${f(c)}</td>`).join('')}</tr>`).join('')}</tbody>
-      </table>` : ''}${s.voorbeeld ? `
-      <p class="voorbeeld">${f(s.voorbeeld)}</p>` : ''}${s.punten ? `
+      </table>` : ''}${s.rekenvoorbeeld ? rekenTabel(s.rekenvoorbeeld) : ''}${s.voorbeeld ? `
+      <p class="voorbeeld">${f(s.voorbeeld)}</p>` : ''}${s.vragentabel ? `
+      <div class="tabellen">${[[t2.punten.lossKop, LOSSE], [t2.punten.seizoenKop, SEIZOEN]].map(([kop, ids]) => `
+        <table class="tabel getallen">
+          <thead><tr><th scope="col">${esc(kop)}</th><th scope="col">${esc(t2.punten.kolommenVraag[1])}</th></tr></thead>
+          <tbody>${ids.map((id) => `<tr><td>${esc(t2.punten.vragen[id])}</td><td>${PUNTEN[id].punten}</td></tr>`).join('')}</tbody>
+        </table>`).join('')}
+      </div>` : ''}${s.formules ? `
+      <dl class="formules">${s.formules.map(([wat, formule]) => `<dt>${f(wat)}</dt><dd><code>${f(formule)}</code></dd>`).join('')}</dl>` : ''}${s.punten ? `
       <ul>${s.punten.map(([kop, tekst]) => `<li><b>${f(kop)}.</b> ${f(tekst)}</li>`).join('')}</ul>` : ''}${s.lijst ? `
       <ul>${s.lijst.map((x) => `<li>${f(x)}</li>`).join('')}</ul>` : ''}${(s.tekst ?? []).map((x) => `
       <p>${f(x)}</p>`).join('')}
