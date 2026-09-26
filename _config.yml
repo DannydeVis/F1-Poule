@@ -1,0 +1,29 @@
+# Wat GitHub Pages van deze repo publiceert.
+#
+# De site komt rechtstreeks van main, en GitHub Pages haalt hem daarbij door
+# Jekyll (ook zonder dit bestand). Jekyll maakt van elk los .md-bestand een
+# pagina en kopieert al het andere mee. Zo stonden ROUTEKAART, OVERDRACHT,
+# BEDIENING en test/LEESMIJ als pagina op predicttherace.com, en de tests, de
+# scripts en de SQL als losse bestanden.
+#
+# De repo zelf is openbaar, daar gaat het niet om. Het gaat erom dat een
+# zoekmachine op het domein alleen de site vindt, niet de werkdocumenten.
+#
+# Een patroon werkt zoals Jekyll 3 het leest: `*` pakt ook mappen mee, dus
+# "*.md" geldt voor elk .md-bestand in de hele repo, en een mapnaam sluit
+# alles eronder uit. test/site.test.mjs controleert dat precies de interne
+# bestanden wegvallen, en de testservers in test/hulp.mjs serveren alleen wat
+# hier niet uitgesloten is. Een te ruim patroon laat dus tests zakken.
+#
+# Niet uitsluiten: site/og/ en site/beeld/ (de plaatjes van de voorpagina).
+exclude:
+  - "*.md"
+  - "*.sql"
+  - docs
+  - test
+  - scripts
+  - "site/*.mjs"
+  - "site/*.json"
+  - site/bron
+  - node_modules
+  - CNAME

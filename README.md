@@ -70,6 +70,11 @@ Het logo en de achtergrond van het deelplaatje staan in `site/bron/`.
 De punten in de puntentabel komen uit de app zelf; `test/site.test.mjs` zakt
 als de pagina's niet meer kloppen met wat de generator maakt.
 
+`site/lastmod.json` houdt per pagina bij wanneer de inhoud voor het laatst
+veranderde (voor de sitemap); de generator werkt het zelf bij. `_config.yml`
+bepaalt wat GitHub Pages publiceert: de site wel, de documenten, tests,
+scripts en SQL niet.
+
 ## De vier SQL-bestanden
 
 Van onschuldig naar onomkeerbaar:

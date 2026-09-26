@@ -27,14 +27,16 @@
  *     crawlt met een Engelse browser; wie hem van / naar /en/ stuurt, laat de
  *     Nederlandse pagina nooit zien. Hier staat in plaats daarvan een balkje
  *     "deze pagina bestaat ook in het Duits".
- *   - Anders: geen analytics en geen lettertypen van Google. De app belooft
- *     "geen trackers", en de pagina ervoor hoort dat ook te doen.
+ *   - Anders: geen lettertypen van Google, en statistieken (Google Analytics)
+ *     alleen als de bezoeker daar ja op zegt (toestemming.js). llms.txt zegt
+ *     dat ook zo, en niet "no trackers": dat klopte niet meer.
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { teksten, TALEN, STANDAARD, BASIS, BIJGEWERKT, MAKER, BRON } from '../site/teksten.mjs';
+import { teksten, TALEN, STANDAARD, BASIS, MAKER, BRON } from '../site/teksten.mjs';
 import { PRIVACY, CONTACT, PRIVACY_BIJGEWERKT, privacyTaal } from '../site/privacy.mjs';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -599,19 +601,26 @@ const BEWEGING = `(function(){try{
 const beeld = (code, scherm, thema) =>
   `${voor(code)}site/beeld/${scherm}-${teksten[code].schermen}-${thema}.jpg`;
 
-function jsonLd(code) {
+// De andere namen waaronder de site bekend kan zijn: aan elkaar, en het domein.
+const SITENAMEN = ['PredictTheRace', new URL(BASIS).host];
+
+function jsonLd(code, datum) {
   const t = teksten[code];
   const url = urlVan(code);
   const plat = (s) => vul(s, { maker: MAKER.naam, ...PRESET_PUNTEN });
   const graaf = [
-    { '@type': 'WebSite', '@id': `${BASIS}/#website`, name: 'Predict the Race', url: `${BASIS}/`,
-      inLanguage: TALEN, publisher: { '@id': `${BASIS}/#organisatie` } },
-    { '@type': 'Organization', '@id': `${BASIS}/#organisatie`, name: 'Predict the Race', url: `${BASIS}/`,
+    // alternateName: Google haalt de sitenaam in de zoekresultaten uit de
+    // WebSite op de voorpagina, en kiest uit deze namen als hij de hoofdnaam
+    // niet wil gebruiken.
+    { '@type': 'WebSite', '@id': `${BASIS}/#website`, name: 'Predict the Race', alternateName: SITENAMEN,
+      url: `${BASIS}/`, inLanguage: TALEN, publisher: { '@id': `${BASIS}/#organisatie` } },
+    { '@type': 'Organization', '@id': `${BASIS}/#organisatie`, name: 'Predict the Race', alternateName: SITENAMEN,
+      url: `${BASIS}/`,
       logo: `${BASIS}/pictogrammen/predicttherace-512.png`,
       founder: { '@type': 'Person', name: MAKER.naam, url: MAKER.url }, sameAs: [BRON] },
     { '@type': 'WebPage', '@id': `${url}#pagina`, url, name: t.titel, description: t.omschrijving,
       inLanguage: code, isPartOf: { '@id': `${BASIS}/#website` }, about: { '@id': `${BASIS}/#app` },
-      dateModified: BIJGEWERKT,
+      dateModified: datum,
       primaryImageOfPage: `${BASIS}/site/og/og-${code}.jpg`,
       speakable: { '@type': 'SpeakableSpecification', cssSelector: ['#wat p', '.faq p'] } },
     { '@type': 'WebApplication', '@id': `${BASIS}/#app`, name: 'Predict the Race',
@@ -697,7 +706,7 @@ const DOORSTUREN = `(function(){try{
     if(k.indexOf('poule:')===0&&k!=='poule:taal')return naar()}
 }catch(e){}})();`;
 
-function pagina(code) {
+function pagina(code, datum) {
   const t = teksten[code];
   const p = voor(code);
   const url = urlVan(code);
@@ -753,7 +762,7 @@ ${ogAlt}
 <meta name="twitter:description" content="${esc(t.omschrijving)}">
 <meta name="twitter:image" content="${BASIS}/site/og/og-${code}.jpg">
 <script type="application/ld+json">
-${jsonLd(code)}
+${jsonLd(code, datum)}
 </script>
 <style>${lettertypen(p)}${CSS}</style>
 </head>
@@ -1042,7 +1051,7 @@ function sitemap() {
 ${TALEN.map((c) => `  <url>
     <loc>${urlVan(c)}</loc>
 ${alt}
-    <lastmod>${BIJGEWERKT}</lastmod>
+    <lastmod>${DATUM.get(urlVan(c))}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>${c === 'nl' || c === STANDAARD ? '1.0' : '0.9'}</priority>
     <image:image><image:loc>${BASIS}/site/og/og-${c}.jpg</image:loc></image:image>
@@ -1051,7 +1060,7 @@ ${PRIVACY_TALEN.map((c) => `  <url>
     <loc>${privacyUrl(c)}</loc>
 ${[...PRIVACY_TALEN.map((a) => `    <xhtml:link rel="alternate" hreflang="${a}" href="${privacyUrl(a)}"/>`),
   `    <xhtml:link rel="alternate" hreflang="x-default" href="${privacyUrl(STANDAARD)}"/>`].join('\n')}
-    <lastmod>${PRIVACY_BIJGEWERKT}</lastmod>
+    <lastmod>${DATUM.get(privacyUrl(c))}</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>`).join('\n')}
@@ -1114,7 +1123,8 @@ ${en.antwoord.tekst}
 - App: ${BASIS}/app/
 - Languages of this page: ${TALEN.map((c) => `${teksten[c].naam} (${urlVan(c)})`).join(', ')}
 - App languages: English, Dutch
-- Price: free, no ads, no trackers, no money involved
+- Price: free, no ads, no money involved
+- Visitor statistics: Google Analytics, only after the visitor says yes; without that, nothing is measured
 - Privacy: ${privacyUrl('en')} (Dutch: ${privacyUrl('nl')})
 - Made by: ${MAKER.naam} (${MAKER.url}); source code: ${BRON}
 - Data source for calendar and results: OpenF1 (https://openf1.org)
@@ -1176,7 +1186,7 @@ const NIET_GEVONDEN = `<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Niet gevonden · Not found – Predict the Race</title>
+<title>Niet gevonden · Not found | Predict the Race</title>
 <style>
   body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0b0c;color:#f2f3f5;
     font-family:-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px}
@@ -1204,15 +1214,55 @@ const NIET_GEVONDEN = `<!DOCTYPE html>
 `;
 
 // ------------------------------------------------------------
+//  Wanneer een pagina voor het laatst veranderde
+// ------------------------------------------------------------
+//
+// Elke url had dezelfde datum (één constante), dus stond in de sitemap alles
+// tegelijk op "gewijzigd". Dat zegt een zoekmachine niets. Nu krijgt een
+// pagina pas een nieuwe datum als haar inhoud verandert.
+//
+// Inhoud, niet vorm: de zichtbare tekst, de titel en omschrijvingen (meta),
+// de alt-teksten, de links en de gestructureerde gegevens. Niet de css, de
+// klassen of het script: een nieuwe animatie is geen nieuwe pagina. De datum
+// zelf zit er als 0000-00-00 in, anders zou elke datum zijn eigen hash
+// veranderen.
+//
+// site/lastmod.json bewaart per url die hash en de datum. Verandert de hash,
+// dan wordt de datum vandaag (VANDAAG kan van buiten gezet worden, voor de
+// test). --controle schrijft niets en zakt dan gewoon, want lastmod.json en
+// de pagina kloppen niet meer met wat er staat.
+const LASTMOD = join('site', 'lastmod.json');
+const LASTMOD_OUD = existsSync(join(wortel, LASTMOD)) ? JSON.parse(readFileSync(join(wortel, LASTMOD), 'utf8')) : {};
+const LASTMOD_NIEUW = new Map();
+const DATUM = new Map();
+const VANDAAG = process.env.VANDAAG ?? new Date().toISOString().slice(0, 10);
+const inhoudVan = (html) => [
+  ...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => m[1])
+  .concat([...html.matchAll(/\s(?:content|alt|href)="([^"]*)"/g)].map((m) => m[1]))
+  .concat(html.replace(/<(style|script)\b[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim())
+  .join('\n');
+function metDatum(url, maak) {
+  const hash = createHash('sha256').update(inhoudVan(maak('0000-00-00'))).digest('hex').slice(0, 16);
+  const oud = LASTMOD_OUD[url];
+  const datum = oud?.hash === hash ? oud.datum : VANDAAG;
+  LASTMOD_NIEUW.set(url, { datum, hash });
+  DATUM.set(url, datum);
+  return maak(datum);
+}
+
+// ------------------------------------------------------------
 //  Wegschrijven of nakijken
 // ------------------------------------------------------------
 
 const bestanden = new Map();
 for (const code of TALEN) {
   const pad = teksten[code].pad ? join(teksten[code].pad, 'index.html') : 'index.html';
-  bestanden.set(pad, pagina(code));
+  bestanden.set(pad, metDatum(urlVan(code), (datum) => pagina(code, datum)));
 }
-for (const taal of PRIVACY_TALEN) bestanden.set(join(PRIVACY[taal].pad, 'index.html'), privacyPagina(taal));
+for (const taal of PRIVACY_TALEN) {
+  bestanden.set(join(PRIVACY[taal].pad, 'index.html'), metDatum(privacyUrl(taal), () => privacyPagina(taal)));
+}
+bestanden.set(LASTMOD, JSON.stringify(Object.fromEntries([...LASTMOD_NIEUW].sort()), null, 2) + '\n');
 bestanden.set('sitemap.xml', sitemap());
 bestanden.set('robots.txt', ROBOTS);
 bestanden.set('llms.txt', llms());

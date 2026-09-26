@@ -1,0 +1,38 @@
+{
+  "https://predicttherace.com/": {
+    "datum": "2026-09-26",
+    "hash": "55af44fee6f58b8f"
+  },
+  "https://predicttherace.com/de/": {
+    "datum": "2026-09-26",
+    "hash": "a73eb64430f11fcf"
+  },
+  "https://predicttherace.com/en/": {
+    "datum": "2026-09-26",
+    "hash": "84ba18f35e78e166"
+  },
+  "https://predicttherace.com/en/privacy/": {
+    "datum": "2026-09-26",
+    "hash": "6b064a3659d01fe1"
+  },
+  "https://predicttherace.com/es/": {
+    "datum": "2026-09-26",
+    "hash": "ff78c6296d7311f8"
+  },
+  "https://predicttherace.com/fr/": {
+    "datum": "2026-09-26",
+    "hash": "cb97a392887af69c"
+  },
+  "https://predicttherace.com/it/": {
+    "datum": "2026-09-26",
+    "hash": "65d996fd7ac8a4e2"
+  },
+  "https://predicttherace.com/privacy/": {
+    "datum": "2026-09-26",
+    "hash": "403bcba296b36c8c"
+  },
+  "https://predicttherace.com/pt/": {
+    "datum": "2026-09-26",
+    "hash": "3b205b4d4e4e2562"
+  }
+}

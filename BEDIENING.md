@@ -1818,3 +1818,46 @@ toestemming bij komt; dat klopt ook zolang het uit staat.
 
 **Uitzetten:** `GA_ID` weer leeg maken. Wie ooit ja zei krijgt dan niets meer
 van Google, want zonder meet-ID laadt er niets.
+
+---
+
+## 18. Gevonden worden: het zoekplan
+
+Het plan staat in drie delen (SEO, AEO, GEO) buiten de repo; ze gaan pas in
+`docs/zoekplan/` als vaststaat dat die map niet op het domein komt (zie
+hieronder). Wat er van SEO fase 0 in de repo zit, staat in `OVERDRACHT.md`
+("Zoekplan fase 0"). Wat jij zelf doet:
+
+**Na de eerste deploy met `_config.yml`: nalopen dat de documenten weg zijn.**
+In de browser (de omgeving van Claude Code mag het domein niet bereiken):
+
+- `https://predicttherace.com/ROUTEKAART.html`, `/OVERDRACHT.html`,
+  `/BEDIENING.html`, `/test/LEESMIJ.html` en `/schema.sql` geven de 404-pagina
+  ("Red flag").
+- De voorpagina, `/en/`, `/app/`, `/beheer/`, `/kalender.ics`,
+  `/sitemap.xml` en `/site/og/og-nl.jpg` werken zoals eerst.
+
+Het kan ook zonder browser: in het Actions-tabblad staat bij "pages build and
+deployment" in de stap "Build with Jekyll" welke pagina's Jekyll maakte, en
+onder "Upload artifact" de lijst met alles wat online kwam.
+
+**Redirects (0.1).** Ook in de browser:
+
+- `https://dannydevis.github.io/F1-Poule/` komt uit op `https://predicttherace.com/`
+- `http://predicttherace.com/` en `https://www.predicttherace.com/` ook
+
+**Search Console en Bing (0.6).**
+
+- Search Console → URL-inspectie op `https://predicttherace.com/` en
+  `https://predicttherace.com/en/` → "Indexering aanvragen". Daarna in het
+  rapport Pagina's noteren hoeveel URL's geïndexeerd zijn.
+- Bing Webmaster Tools: de status van de sitemap, en URL-inspectie op
+  dezelfde twee.
+- De nulmeting (geïndexeerd, vertoningen, klikken, top 10 zoekopdrachten)
+  gaat in `docs/zoekplan/meting.md`. Dat bestand staat er al, leeg; daarna
+  één regel per maand.
+
+**De datum per pagina.** De sitemap en de voorpagina's geven per pagina aan
+wanneer die voor het laatst veranderde. Dat houdt `site/lastmod.json` bij, en
+`node scripts/maak-site.mjs` zet de datum vanzelf op vandaag als de inhoud van
+een pagina verandert (een andere vorm telt niet). Niet met de hand aanpassen.

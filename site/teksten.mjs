@@ -17,7 +17,6 @@
 // opnieuw.
 
 export const BASIS = 'https://predicttherace.com';
-export const BIJGEWERKT = '2026-09-24';
 export const MAKER = { naam: 'Danny de Visser', url: 'https://github.com/DannydeVis' };
 export const BRON = 'https://github.com/DannydeVis/F1-Poule';
 
@@ -31,9 +30,9 @@ export const teksten = {
   nl: {
     pad: '', locale: 'nl_NL', naam: 'Nederlands', kort: 'NL', schermen: 'nl',
     aanbod: 'Deze pagina bestaat ook in het Nederlands.', aanbodKnop: 'Lees in het Nederlands',
-    titel: 'Predict the Race – gratis F1-poule met je vrienden',
+    titel: 'Gratis F1-poule met je vrienden | Predict the Race',
     omschrijving: 'Voorspel per Formule 1-race de top 10 van kwalificatie en race en speel tegen je vrienden in je eigen poule. Uitslagen komen vanzelf binnen. Gratis.',
-    ogTitel: 'Predict the Race – voorspel de grid, versla je vrienden',
+    ogTitel: 'Predict the Race: voorspel de grid, versla je vrienden',
     nav: { hoe: 'Zo werkt het', punten: 'Punten', faq: 'Vragen', app: 'Open de app', taal: 'Taal' },
     hero: {
       boven: 'Gratis F1-voorspelspel',
@@ -152,9 +151,9 @@ export const teksten = {
   en: {
     pad: 'en', locale: 'en_GB', naam: 'English', kort: 'EN', schermen: 'en',
     aanbod: 'This page is also available in English.', aanbodKnop: 'Read in English',
-    titel: 'Predict the Race – free F1 prediction game for friends',
+    titel: 'Free F1 prediction game for friends | Predict the Race',
     omschrijving: 'Predict the top 10 of every Formula 1 qualifying and race and play against your friends in your own league. Results come in automatically. Free.',
-    ogTitel: 'Predict the Race – predict the grid, beat your friends',
+    ogTitel: 'Predict the Race: predict the grid, beat your friends',
     nav: { hoe: 'How it works', punten: 'Scoring', faq: 'FAQ', app: 'Open the app', taal: 'Language' },
     hero: {
       boven: 'Free F1 prediction game',
@@ -273,9 +272,9 @@ export const teksten = {
   de: {
     pad: 'de', locale: 'de_DE', naam: 'Deutsch', kort: 'DE', schermen: 'en',
     aanbod: 'Diese Seite gibt es auch auf Deutsch.', aanbodKnop: 'Auf Deutsch lesen',
-    titel: 'Predict the Race – kostenloses F1-Tippspiel mit Freunden',
+    titel: 'Kostenloses F1-Tippspiel mit Freunden | Predict the Race',
     omschrijving: 'Tippe bei jedem Formel-1-Rennen die Top 10 von Qualifying und Rennen und spiele in deiner eigenen Tipprunde gegen Freunde. Ergebnisse kommen automatisch. Gratis.',
-    ogTitel: 'Predict the Race – tippe die Startaufstellung, schlag deine Freunde',
+    ogTitel: 'Predict the Race: tippe die Startaufstellung, schlag deine Freunde',
     nav: { hoe: 'So funktioniert es', punten: 'Punkte', faq: 'Fragen', app: 'App öffnen', taal: 'Sprache' },
     hero: {
       boven: 'Kostenloses F1-Tippspiel',
@@ -394,9 +393,9 @@ export const teksten = {
   fr: {
     pad: 'fr', locale: 'fr_FR', naam: 'Français', kort: 'FR', schermen: 'en',
     aanbod: 'Cette page existe aussi en français.', aanbodKnop: 'Lire en français',
-    titel: 'Predict the Race – pronostics F1 gratuits entre amis',
+    titel: 'Pronostics F1 gratuits entre amis | Predict the Race',
     omschrijving: 'Pronostiquez le top 10 des qualifications et de chaque Grand Prix de Formule 1 et affrontez vos amis dans votre propre ligue. Résultats automatiques. Gratuit.',
-    ogTitel: 'Predict the Race – pronostiquez la grille, battez vos amis',
+    ogTitel: 'Predict the Race : pronostiquez la grille, battez vos amis',
     nav: { hoe: 'Comment ça marche', punten: 'Points', faq: 'Questions', app: 'Ouvrir l\'appli', taal: 'Langue' },
     hero: {
       boven: 'Jeu de pronostics F1 gratuit',
@@ -515,9 +514,9 @@ export const teksten = {
   es: {
     pad: 'es', locale: 'es_ES', naam: 'Español', kort: 'ES', schermen: 'en',
     aanbod: 'Esta página también está en español.', aanbodKnop: 'Leer en español',
-    titel: 'Predict the Race – porra de F1 gratis con tus amigos',
+    titel: 'Porra de F1 gratis con tus amigos | Predict the Race',
     omschrijving: 'Predice el top 10 de la clasificación y de cada carrera de Fórmula 1 y compite con tus amigos en tu propia liga. Los resultados llegan solos. Gratis.',
-    ogTitel: 'Predict the Race – predice la parrilla, gana a tus amigos',
+    ogTitel: 'Predict the Race: predice la parrilla, gana a tus amigos',
     nav: { hoe: 'Cómo funciona', punten: 'Puntos', faq: 'Preguntas', app: 'Abrir la app', taal: 'Idioma' },
     hero: {
       boven: 'Juego de predicciones de F1 gratis',
@@ -636,9 +635,9 @@ export const teksten = {
   it: {
     pad: 'it', locale: 'it_IT', naam: 'Italiano', kort: 'IT', schermen: 'en',
     aanbod: 'Questa pagina è disponibile anche in italiano.', aanbodKnop: 'Leggi in italiano',
-    titel: 'Predict the Race – pronostici F1 gratis con gli amici',
+    titel: 'Pronostici F1 gratis con gli amici | Predict the Race',
     omschrijving: 'Pronostica la top 10 delle qualifiche e di ogni gara di Formula 1 e sfida i tuoi amici nella tua lega. I risultati arrivano da soli. Gratis.',
-    ogTitel: 'Predict the Race – pronostica la griglia, batti i tuoi amici',
+    ogTitel: 'Predict the Race: pronostica la griglia, batti i tuoi amici',
     nav: { hoe: 'Come funziona', punten: 'Punti', faq: 'Domande', app: 'Apri l\'app', taal: 'Lingua' },
     hero: {
       boven: 'Gioco di pronostici F1 gratis',
@@ -757,9 +756,9 @@ export const teksten = {
   pt: {
     pad: 'pt', locale: 'pt_BR', naam: 'Português', kort: 'PT', schermen: 'en',
     aanbod: 'Esta página também está em português.', aanbodKnop: 'Ler em português',
-    titel: 'Predict the Race – bolão de F1 grátis com seus amigos',
+    titel: 'Bolão de F1 grátis com seus amigos | Predict the Race',
     omschrijving: 'Dê seu palpite no top 10 da classificação e de cada corrida de Fórmula 1 e dispute com seus amigos no seu próprio bolão. Resultados automáticos. Grátis.',
-    ogTitel: 'Predict the Race – acerte o grid, vença seus amigos',
+    ogTitel: 'Predict the Race: acerte o grid, vença seus amigos',
     nav: { hoe: 'Como funciona', punten: 'Pontos', faq: 'Perguntas', app: 'Abrir o app', taal: 'Idioma' },
     hero: {
       boven: 'Jogo de palpites de F1 grátis',
