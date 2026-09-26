@@ -125,4 +125,22 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
+  <url>
+    <loc>https://predicttherace.com/f1-poule-organiseren/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-organiseren/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/how-to-run-an-f1-prediction-league/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/how-to-run-an-f1-prediction-league/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://predicttherace.com/en/how-to-run-an-f1-prediction-league/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-organiseren/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/how-to-run-an-f1-prediction-league/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/how-to-run-an-f1-prediction-league/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

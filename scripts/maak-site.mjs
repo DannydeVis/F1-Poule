@@ -38,6 +38,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { teksten, TALEN, STANDAARD, BASIS, MAKER, BRON } from '../site/teksten.mjs';
 import { PRIVACY, CONTACT, PRIVACY_BIJGEWERKT, privacyTaal } from '../site/privacy.mjs';
+import { PAGINAS, PAGINA_UI } from '../site/paginas.mjs';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CONTROLE = process.argv.includes('--controle');
@@ -81,6 +82,31 @@ for (const id of [...LOSSE, ...SEIZOEN, 'quali_top10', 'race_top10']) {
 const formule = appBron.match(/Math\.max\(0, (\d+) - (\d+) \* Math\.abs\(i - echt\)\)/);
 if (!formule) throw new Error('de puntenformule van scoreLijst() niet gevonden in app/index.html');
 export const PLEKPUNTEN = [0, 1, 2, 3].map((d) => Math.max(0, Number(formule[1]) - Number(formule[2]) * d));
+
+// Wat de gidsen over de app zeggen, ook uit de app zelf (en uit de twee
+// scripts die de meldingen sturen). Een gids die "vijf jokers" zegt terwijl de
+// app er drie geeft, is erger dan geen gids.
+const uitBron = (bron, re, wat) => {
+  const m = bron.match(re);
+  if (!m) throw new Error(`${wat} niet gevonden`);
+  return m;
+};
+const JOKERS = Number(uitBron(appBron, /const JOKERS_STANDAARD = (\d+);/, 'JOKERS_STANDAARD in app/index.html')[1]);
+const JOKERS_MAX = Math.max(...uitBron(appBron, /const JOKERKEUZES = \[([\d, ]+)\];/, 'JOKERKEUZES in app/index.html')[1]
+  .split(',').map(Number));
+const VENSTER = Number(uitBron(readFileSync(join(wortel, 'scripts', 'herinneringen.mjs'), 'utf8'),
+  /export const VENSTER_UREN = (\d+);/, 'VENSTER_UREN in scripts/herinneringen.mjs')[1]);
+const AGENDA_UUR = Number(uitBron(readFileSync(join(wortel, 'scripts', 'agenda.mjs'), 'utf8'),
+  /'TRIGGER:-PT(\d+)H'/, 'de melding in scripts/agenda.mjs')[1]);
+// De {namen} die in site/paginas.mjs kunnen staan.
+const feitenVoor = (code) => ({
+  exact: PLEKPUNTEN[0], bijna: PLEKPUNTEN[1], twee: PLEKPUNTEN[2],
+  top10: PUNTEN.race_top10.punten, sprint: PUNTEN.sprint_top10.punten,
+  simpel: PRESET_PUNTEN.simpel, klassiek: PRESET_PUNTEN.klassiek, gevorderd: PRESET_PUNTEN.gevorderd,
+  nSimpel: PRESET_VRAGEN.simpel.length, nKlassiek: PRESET_VRAGEN.klassiek.length, nGevorderd: PRESET_VRAGEN.gevorderd.length,
+  jokers: JOKERS, jokersMax: JOKERS_MAX,
+  venster: PAGINA_UI[code].uren(VENSTER), agendaUur: PAGINA_UI[code].uren(AGENDA_UUR),
+});
 
 // ------------------------------------------------------------
 //  Hulpjes
@@ -617,7 +643,10 @@ function jsonLd(code, datum) {
     { '@type': 'Organization', '@id': `${BASIS}/#organisatie`, name: 'Predict the Race', alternateName: SITENAMEN,
       url: `${BASIS}/`,
       logo: `${BASIS}/pictogrammen/predicttherace-512.png`,
-      founder: { '@type': 'Person', name: MAKER.naam, url: MAKER.url }, sameAs: [BRON] },
+      founder: { '@id': `${BASIS}/#maker` }, sameAs: [BRON] },
+    // De maker één keer, met een @id: de Organization, de WebApplication en de
+    // gidsen verwijzen ernaar, zodat de graaf aan elkaar vast zit.
+    { '@type': 'Person', '@id': `${BASIS}/#maker`, name: MAKER.naam, url: MAKER.url },
     { '@type': 'WebPage', '@id': `${url}#pagina`, url, name: t.titel, description: t.omschrijving,
       inLanguage: code, isPartOf: { '@id': `${BASIS}/#website` }, about: { '@id': `${BASIS}/#app` },
       dateModified: datum,
@@ -631,7 +660,7 @@ function jsonLd(code, datum) {
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
       featureList: t.functies.items.map(([kop]) => kop),
       screenshot: SCHERMEN.map((s) => `${BASIS}/site/beeld/${s}-${t.schermen}-donker.jpg`),
-      author: { '@type': 'Person', name: MAKER.naam, url: MAKER.url } },
+      author: { '@id': `${BASIS}/#maker` } },
     { '@type': 'FAQPage', '@id': `${url}#faq`, inLanguage: code,
       mainEntity: t.faq.items.map(([vraag, antwoord]) => ({ '@type': 'Question', name: vraag,
         acceptedAnswer: { '@type': 'Answer', text: plat(antwoord) } })) },
@@ -828,7 +857,9 @@ ${jsonLd(code, datum)}
   <div class="binnen">
     ${sectiekop('01', t.stappen.kop, esc(t.stappen.pakkend))}
     <ol class="stappen onthul">${t.stappen.items.map(([kop, tekst], i) =>
-      `<li class="onthul" style="--i:${i + 1}"><h3>${esc(kop)}</h3><p>${esc(tekst)}</p></li>`).join('')}</ol>
+      `<li class="onthul" style="--i:${i + 1}"><h3>${esc(kop)}</h3><p>${esc(tekst)}</p></li>`).join('')}</ol>${
+      paginasIn(code).filter((pg) => pg.talen[code].teaser).map((pg) => `
+    <p class="verder"><a href="${p}${pg.talen[code].pad}/">${esc(pg.talen[code].teaser)} <span aria-hidden="true">→</span></a></p>`).join('')}
   </div>
 </section>
 
@@ -928,7 +959,10 @@ ${jsonLd(code, datum)}
 <footer class="voet">
   <div class="binnen">
     <div><span class="label">${esc(t.nav.taal)}</span><ul>${TALEN.map((c) =>
-      `<li><a href="${naar(code, c)}" hreflang="${c}" lang="${c}" data-taal="${c}">${esc(teksten[c].naam)}</a></li>`).join('')}</ul></div>
+      `<li><a href="${naar(code, c)}" hreflang="${c}" lang="${c}" data-taal="${c}">${esc(teksten[c].naam)}</a></li>`).join('')}</ul></div>${
+      paginasIn(code).length ? `
+    <div><span class="label">${esc(PAGINA_UI[code].gidsen)}</span><ul>${paginasIn(code).map((pg) =>
+      `<li><a href="${p}${pg.talen[code].pad}/">${esc(pg.talen[code].kop)}</a></li>`).join('')}</ul></div>` : ''}
     <ul>
       <li><a href="${app}">${esc(t.voet.app)}</a></li>
       <li><a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.voet.privacy)}</a></li>
@@ -1038,6 +1072,212 @@ ${alineas.map((a) => `      <p>${alinea(a)}</p>`).join('\n')}
 }
 
 // ------------------------------------------------------------
+//  De losse pagina's: gidsen (site/paginas.mjs)
+// ------------------------------------------------------------
+//
+// Eén sjabloon voor alle artikelpagina's, met dezelfde kop, letters en kleuren
+// als de voorpagina. Vaste volgorde: kruimelpad, h1, het korte antwoord, de
+// secties (de vraag als h2, het korte antwoord eronder, dan de uitleg), de
+// FAQ, "lees ook", de knop naar de app en de datum.
+//
+// Paden zijn relatief, net als op de voorpagina, zodat het ook werkt op
+// dannydevis.github.io/F1-Poule/ waar alles een map dieper staat. Een pagina
+// op en/how-to-run-an-f1-prediction-league/ is twee mappen diep, dus alles
+// naar de hoofdmap begint met ../../ (terugNaar()).
+//
+// hreflang per cluster: alleen de talen waarin die pagina bestaat, en
+// x-default naar het Engels als dat er is, anders het Nederlands.
+
+const paginaUrl = (pg, code) => `${BASIS}/${pg.talen[code].pad}/`;
+const terugNaar = (pad) => '../'.repeat(pad.split('/').length);
+const clusterVan = (pg) => TALEN.filter((c) => pg.talen[c]);
+const xDefaultVan = (pg) => (pg.talen.en ? 'en' : pg.talen.nl ? 'nl' : clusterVan(pg)[0]);
+const paginasIn = (code) => PAGINAS.filter((pg) => pg.talen[code]);
+// De lege datum van de hash (0000-00-00, zie metDatum()) blijft gewoon staan.
+const datumTekst = (code, iso) => (/^0000/.test(iso) ? iso : new Intl.DateTimeFormat(code, {
+  day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00Z`)));
+for (const pg of PAGINAS) for (const code of clusterVan(pg)) {
+  if (!PAGINA_UI[code]) throw new Error(`site/paginas.mjs: geen PAGINA_UI voor ${code} (pagina ${pg.id})`);
+}
+
+const ARTIKEL_CSS = `
+  .artikel{padding:36px 0 64px}
+  .artikel .binnen{max-width:760px}
+  .artikel .kruimel ol{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0 0 20px;padding:0;font-size:14px;color:var(--ink2)}
+  .artikel .kruimel li{margin:0}
+  .kruimel li+li::before{content:"/";margin-right:6px;color:var(--ink3)}
+  .kruimel a{color:var(--accent-tekst)}
+  .artikel h1{font-family:var(--cond);font-weight:700;text-transform:uppercase;font-size:clamp(36px,7vw,58px);
+    line-height:.95;margin:0 0 18px;letter-spacing:.01em;overflow-wrap:break-word}
+  .artikel .inleiding{font-size:19px;line-height:1.6;margin:0 0 12px}
+  .artikel section{padding:26px 0 4px;border-top:1px solid var(--lijn);margin-top:26px;scroll-margin-top:84px}
+  .artikel h2{font-size:clamp(23px,3.6vw,29px);line-height:1.2;margin:0 0 10px}
+  .artikel p,.artikel li{line-height:1.65}
+  .artikel p{margin:0 0 12px}
+  .artikel .kernzin{font-weight:600}
+  .artikel ol,.artikel ul{margin:0 0 14px;padding-left:24px}
+  .artikel li{margin:0 0 8px}
+  .artikel .voorbeeld{background:var(--paneel);border:1px solid var(--lijn);border-left:3px solid var(--accent);
+    border-radius:10px;padding:12px 16px}
+  .artikel .tabel{margin:4px 0 16px}
+  .artikel .tabel td:last-child,.artikel .tabel th:last-child{text-align:left;width:auto}
+  .artikel .tabel td:last-child{font-family:inherit;font-weight:600;font-size:16px;line-height:1.5}
+  .artikel .faq{margin-top:6px}
+  .artikel .leesook a,.artikel .gidsen a{color:var(--accent-tekst)}
+  .artikel .slotblok{margin-top:34px;padding:26px;border-radius:16px;background:var(--nacht);color:var(--nacht-ink)}
+  .artikel .slotblok h2{margin:0 0 6px}
+  .artikel .slotblok p{color:var(--nacht-ink2)}
+  .artikel .datum{margin:30px 0 0}
+  .verder{margin:18px 0 0}
+  .verder a{color:var(--accent-tekst);font-weight:600}
+`;
+
+// De tekst van een pagina met de getallen uit de app erin.
+const vulPagina = (code, tekst) => vul(tekst, feitenVoor(code));
+
+function artikelJsonLd(pg, code, datum, sinds) {
+  const t = pg.talen[code];
+  const url = paginaUrl(pg, code);
+  const thuis = urlVan(code);
+  const f = (s) => vulPagina(code, s);
+  const graaf = [
+    { '@type': 'WebPage', '@id': `${url}#pagina`, url, name: t.titel, description: t.omschrijving,
+      inLanguage: code, isPartOf: { '@id': `${BASIS}/#website` }, about: { '@id': `${BASIS}/#app` },
+      breadcrumb: { '@id': `${url}#kruimel` }, datePublished: sinds, dateModified: datum },
+    { '@type': 'Article', '@id': `${url}#artikel`, headline: t.kop, description: t.omschrijving, inLanguage: code,
+      mainEntityOfPage: { '@id': `${url}#pagina` }, datePublished: sinds, dateModified: datum,
+      author: { '@id': `${BASIS}/#maker` }, publisher: { '@id': `${BASIS}/#organisatie` },
+      image: `${BASIS}/site/og/og-${code}.jpg` },
+    { '@type': 'BreadcrumbList', '@id': `${url}#kruimel`, itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Predict the Race', item: thuis },
+      { '@type': 'ListItem', position: 2, name: t.kop, item: url }] },
+    { '@type': 'Person', '@id': `${BASIS}/#maker`, name: MAKER.naam, url: MAKER.url },
+  ];
+  if (t.faq?.length) {
+    graaf.push({ '@type': 'FAQPage', '@id': `${url}#faq`, inLanguage: code,
+      mainEntity: t.faq.map(([vraag, antwoord]) => ({ '@type': 'Question', name: f(vraag),
+        acceptedAnswer: { '@type': 'Answer', text: f(antwoord) } })) });
+  }
+  return JSON.stringify({ '@context': 'https://schema.org', '@graph': graaf }, null, 1).replace(/<\//g, '<\\/');
+}
+
+function artikelPagina(pg, code, datum, sinds) {
+  const t = pg.talen[code];
+  const ui = PAGINA_UI[code];
+  const url = paginaUrl(pg, code);
+  const p = terugNaar(t.pad);
+  const thuis = `${p}${teksten[code].pad ? teksten[code].pad + '/' : ''}`;
+  const app = `${p}app/`;
+  const f = (s) => esc(vulPagina(code, s));
+  const cluster = clusterVan(pg);
+  const hreflang = [...cluster.map((c) => `<link rel="alternate" hreflang="${c}" href="${paginaUrl(pg, c)}">`),
+    `<link rel="alternate" hreflang="x-default" href="${paginaUrl(pg, xDefaultVan(pg))}">`].join('\n');
+  const taalLinks = cluster.map((c) => `<li><a href="${p}${pg.talen[c].pad}/" hreflang="${c}" lang="${c}"${
+    c === code ? ' aria-current="page"' : ''}>${esc(teksten[c].naam)} <span>${teksten[c].kort}</span></a></li>`).join('');
+  const verwant = pg.verwant.map((id) => PAGINAS.find((x) => x.id === id)).filter((x) => x?.talen[code]);
+  const leesOok = [
+    ...verwant.map((x) => `<li><a href="${p}${x.talen[code].pad}/">${esc(x.talen[code].kop)}</a></li>`),
+    ...(t.leesOok ?? []).map(([anker, tekst]) => `<li><a href="${thuis}#${anker}">${esc(tekst)}</a></li>`)];
+  const sectie = (s) => `
+    <section id="${s.id}">
+      <h2>${f(s.vraag)}</h2>
+      <p class="kernzin">${f(s.kort)}</p>${s.stappen ? `
+      <ol>${s.stappen.map((x) => `<li>${f(x)}</li>`).join('')}</ol>` : ''}${s.tabel ? `
+      <table class="tabel">
+        <thead><tr>${s.tabel.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
+        <tbody>${s.tabel.rijen.map((r) => `<tr>${r.map((c, i) => i === 0 ? `<th scope="row">${f(c)}</th>` : `<td>${f(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>` : ''}${s.voorbeeld ? `
+      <p class="voorbeeld">${f(s.voorbeeld)}</p>` : ''}${s.punten ? `
+      <ul>${s.punten.map(([kop, tekst]) => `<li><b>${f(kop)}.</b> ${f(tekst)}</li>`).join('')}</ul>` : ''}${s.lijst ? `
+      <ul>${s.lijst.map((x) => `<li>${f(x)}</li>`).join('')}</ul>` : ''}${(s.tekst ?? []).map((x) => `
+      <p>${f(x)}</p>`).join('')}
+    </section>`;
+
+  return `<!DOCTYPE html>
+<html lang="${code}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${esc(t.titel)}</title>
+<meta name="description" content="${esc(t.omschrijving)}">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<link rel="canonical" href="${url}">
+${hreflang}
+<meta name="theme-color" content="#0b0b0c">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="${p}favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="${p}pictogrammen/predicttherace-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="${p}pictogrammen/predicttherace-apple-180.png">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Predict the Race">
+<meta property="og:url" content="${url}">
+<meta property="og:title" content="${esc(t.titel)}">
+<meta property="og:description" content="${esc(t.omschrijving)}">
+<meta property="og:image" content="${BASIS}/site/og/og-${code}.jpg">
+<meta property="og:locale" content="${teksten[code].locale}">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+${artikelJsonLd(pg, code, datum, sinds)}
+</script>
+<style>${lettertypen(p)}${CSS}${ARTIKEL_CSS}</style>
+</head>
+<body>
+<header class="kop">
+  <div class="binnen">
+    <a class="merk" href="${thuis}" aria-label="Predict the Race"><img class="blok" src="${p}pictogrammen/predicttherace-logo.png" alt="" width="24" height="24"><b>Predict the Race</b></a>${cluster.length > 1 ? `
+    <details class="taalmenu">
+      <summary aria-label="${esc(ui.taal)}">${teksten[code].kort}</summary>
+      <ul>${taalLinks}</ul>
+    </details>` : ''}
+    <a class="knop klein" href="${app}">${esc(ui.app)}</a>
+  </div>
+</header>
+<main class="artikel">
+  <div class="binnen">
+    <nav class="kruimel" aria-label="${esc(ui.kruimel)}"><ol>
+      <li><a href="${thuis}">Predict the Race</a></li>
+      <li aria-current="page">${esc(t.kop)}</li>
+    </ol></nav>
+    <h1>${esc(t.kop)}</h1>
+    <p class="inleiding">${f(t.kort)}</p>
+${t.secties.map(sectie).join('\n')}${t.faq?.length ? `
+    <section id="faq">
+      <h2>${esc(ui.faq)}</h2>
+      <div class="faq">${t.faq.map(([vraag, antwoord]) => `
+        <details><summary><h3>${f(vraag)}</h3></summary><p>${f(antwoord)}</p></details>`).join('')}
+      </div>
+    </section>` : ''}
+${leesOok.length ? `    <section class="leesook">
+      <h2>${esc(ui.leesOok)}</h2>
+      <ul>${leesOok.join('')}</ul>
+    </section>` : ''}
+    <div class="slotblok">
+      <h2>${esc(ui.slot.kop)}</h2>
+      <p>${esc(ui.slot.tekst)}</p>
+      <a class="knop" href="${app}">${esc(ui.slot.knop)} <span aria-hidden="true">→</span></a>
+    </div>
+    <p class="label datum"><time datetime="${datum}">${esc(vul(ui.bijgewerkt, { datum: datumTekst(code, datum) }))}</time></p>
+  </div>
+</main>
+<footer class="voet">
+  <div class="binnen">
+    <ul>
+      <li><a href="${thuis}">${esc(ui.terug)}</a></li>
+      <li><a href="${app}">${esc(ui.app)}</a></li>
+      <li><a href="${p}${PRIVACY[privacyTaal(code)].pad}/">${esc(ui.privacy)}</a></li>
+      <li><a href="${BRON}" rel="noopener">${esc(teksten[code].voet.bron)}</a></li>
+      <li><a href="#" data-toestemming hidden>${esc(teksten[code].voet.cookies)}</a></li>
+    </ul>
+    <small>${esc(teksten[code].voet.disclaimer)}</small>
+  </div>
+</footer>
+<script src="${p}toestemming.js" defer></script>
+</body>
+</html>
+`;
+}
+
+// ------------------------------------------------------------
 //  Sitemap, robots, llms.txt, 404
 // ------------------------------------------------------------
 
@@ -1063,7 +1303,15 @@ ${[...PRIVACY_TALEN.map((a) => `    <xhtml:link rel="alternate" hreflang="${a}" 
     <lastmod>${DATUM.get(privacyUrl(c))}</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
-  </url>`).join('\n')}
+  </url>`).join('\n')}${PAGINAS.flatMap((pg) => clusterVan(pg).map((c) => `
+  <url>
+    <loc>${paginaUrl(pg, c)}</loc>
+${[...clusterVan(pg).map((a) => `    <xhtml:link rel="alternate" hreflang="${a}" href="${paginaUrl(pg, a)}"/>`),
+  `    <xhtml:link rel="alternate" hreflang="x-default" href="${paginaUrl(pg, xDefaultVan(pg))}"/>`].join('\n')}
+    <lastmod>${DATUM.get(paginaUrl(pg, c))}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>`)).join('')}
 </urlset>
 `;
 }
@@ -1169,7 +1417,16 @@ ${en.niveaus.zelf}
 ## Features
 
 ${en.functies.items.map(([kop, tekst]) => `- ${kop}: ${tekst}`).join('\n')}
+${PAGINAS.length ? `
+## Guides
 
+${PAGINAS.map((pg) => {
+  const hoofd = pg.talen.en ? 'en' : clusterVan(pg)[0];
+  const rest = clusterVan(pg).filter((c) => c !== hoofd);
+  return `- [${pg.talen[hoofd].kop}](${paginaUrl(pg, hoofd)}): ${pg.talen[hoofd].omschrijving}${
+    rest.length ? ` Also in ${rest.map((c) => `${new Intl.DisplayNames('en', { type: 'language' }).of(c)} (${paginaUrl(pg, c)})`).join(', ')}.` : ''}`;
+}).join('\n')}
+` : ''}
 ## Frequently asked questions
 
 ${en.faq.items.map(([vraag, antwoord]) => `### ${vraag}\n\n${vul(antwoord, vars)}`).join('\n\n')}
@@ -1241,13 +1498,17 @@ const inhoudVan = (html) => [
   .concat([...html.matchAll(/\s(?:content|alt|href)="([^"]*)"/g)].map((m) => m[1]))
   .concat(html.replace(/<(style|script)\b[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim())
   .join('\n');
+// Een pagina die er voor het eerst bij komt, krijgt ook `sinds`: de dag dat
+// hij verscheen (datePublished van een gids). De voorpagina's en de
+// privacypagina's waren er al voor dit bestand bestond en hebben hem niet.
 function metDatum(url, maak) {
-  const hash = createHash('sha256').update(inhoudVan(maak('0000-00-00'))).digest('hex').slice(0, 16);
+  const hash = createHash('sha256').update(inhoudVan(maak('0000-00-00', '0000-00-00'))).digest('hex').slice(0, 16);
   const oud = LASTMOD_OUD[url];
   const datum = oud?.hash === hash ? oud.datum : VANDAAG;
-  LASTMOD_NIEUW.set(url, { datum, hash });
+  const sinds = oud ? oud.sinds : VANDAAG;
+  LASTMOD_NIEUW.set(url, sinds ? { datum, hash, sinds } : { datum, hash });
   DATUM.set(url, datum);
-  return maak(datum);
+  return maak(datum, sinds);
 }
 
 // ------------------------------------------------------------
@@ -1261,6 +1522,10 @@ for (const code of TALEN) {
 }
 for (const taal of PRIVACY_TALEN) {
   bestanden.set(join(PRIVACY[taal].pad, 'index.html'), metDatum(privacyUrl(taal), () => privacyPagina(taal)));
+}
+for (const pg of PAGINAS) for (const code of clusterVan(pg)) {
+  bestanden.set(join(pg.talen[code].pad, 'index.html'),
+    metDatum(paginaUrl(pg, code), (datum, sinds) => artikelPagina(pg, code, datum, sinds)));
 }
 bestanden.set(LASTMOD, JSON.stringify(Object.fromEntries([...LASTMOD_NIEUW].sort()), null, 2) + '\n');
 bestanden.set('sitemap.xml', sitemap());

@@ -1861,3 +1861,16 @@ onder "Upload artifact" de lijst met alles wat online kwam.
 wanneer die voor het laatst veranderde. Dat houdt `site/lastmod.json` bij, en
 `node scripts/maak-site.mjs` zet de datum vanzelf op vandaag als de inhoud van
 een pagina verandert (een andere vorm telt niet). Niet met de hand aanpassen.
+
+**Een gids toevoegen of aanpassen.** De gidsen staan als data in
+`site/paginas.mjs`: per onderwerp een item, per taal een pad, titel,
+omschrijving, kort antwoord, secties en FAQ. Getallen over de app schrijf je
+als `{jokers}`, `{exact}` enzovoort; die komen bij het maken uit de app zelf.
+Daarna `node scripts/maak-site.mjs`. De sitemap, llms.txt, de links vanaf de
+voorpagina en de datum volgen vanzelf.
+
+**Nieuwe teksten eerst lezen.** Een pull request met nieuwe teksten voor de
+site opent Claude Code als *concept*: de automerge slaat een concept over, dus
+er gaat niets online voordat jij het gelezen hebt. Akkoord? Dan zet Claude
+Code (of jij, op GitHub met "Ready for review") hem op klaar; de tests draaien
+dan opnieuw en de automerge mergt hem.

@@ -26,6 +26,7 @@ import { join } from 'node:path';
 import { maakControle, startSite, wortel, gepubliceerd, UITGESLOTEN } from './hulp.mjs';
 import { teksten, TALEN, STANDAARD, BASIS } from '../site/teksten.mjs';
 import { PRIVACY } from '../site/privacy.mjs';
+import { PAGINAS } from '../site/paginas.mjs';
 
 const { check, afronden } = maakControle('de landingspagina in zeven talen');
 
@@ -276,6 +277,136 @@ check('geen 404 op een plaatje, lettertype of pagina', fouten404.length === 0, f
 }
 check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, jsFouten.join(' | '));
 
+// ---- de gidsen (site/paginas.mjs) ------------------------------------------------
+// Wat voor een voorpagina geldt, geldt voor elke gegenereerde pagina: de taal,
+// de lengte van titel en omschrijving, één h1, een canonical naar zichzelf,
+// hreflang (hier per cluster: alleen de talen waarin de gids bestaat), geldige
+// JSON-LD met de FAQ woord voor woord zoals op het scherm, bestaande links,
+// niets van buiten, contrast en 360 pixels. Daarbij: het kruimelpad klopt met
+// de gestructureerde gegevens, de zichtbare datum is dateModified, en er staat
+// geen {plekhouder} of streepje in de tekst.
+{
+  const lastmod = JSON.parse(readFileSync(join(wortel, 'site', 'lastmod.json'), 'utf8'));
+  const jokersApp = Number(appBron.match(/const JOKERS_STANDAARD = (\d+);/)[1]);
+  const sprintApp = Number(appBron.match(/\{ id:'sprint_top10',\s*naam:'[^']*',\s*punten:(\d+)/)[1]);
+  const vensterApp = Number(readFileSync(join(wortel, 'scripts', 'herinneringen.mjs'), 'utf8')
+    .match(/VENSTER_UREN = (\d+)/)[1]);
+  // Wat de gids over de app zegt, moet uit de app komen. Per taal een paar
+  // zinnen met de getallen erin.
+  const FEITEN = {
+    nl: [`standaard ${jokersApp} per seizoen`, `maximaal ${sprintApp}.`, `${vensterApp} uur voor een deadline`,
+      'een melding een uur voor elke deadline'],
+    en: [`${jokersApp} per season by default`, `adds up to ${sprintApp} more`, `${vensterApp} hours before a deadline`,
+      'a reminder an hour before every deadline'],
+  };
+  for (const pg of PAGINAS) {
+    const cluster = TALEN.filter((c) => pg.talen[c]);
+    const verwacht = [...cluster.map((c) => `${c}=${BASIS}/${pg.talen[c].pad}/`),
+      `x-default=${BASIS}/${pg.talen[pg.talen.en ? 'en' : 'nl'].pad}/`].sort();
+    for (const code of cluster) {
+      const t = pg.talen[code];
+      const naam = `${pg.id} (${code})`;
+      const eigen = `${BASIS}/${t.pad}/`;
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.emulateMedia({ colorScheme: 'light' });
+      await page.goto(`${url}${t.pad}/`);
+      await page.waitForLoadState('networkidle');
+      const kop = await page.evaluate(() => ({
+        lang: document.documentElement.lang,
+        titel: document.title,
+        omschrijving: document.querySelector('meta[name="description"]')?.content ?? '',
+        h1: document.querySelectorAll('h1').length,
+        canonical: document.querySelector('link[rel="canonical"]')?.href ?? '',
+        robots: document.querySelector('meta[name="robots"]')?.content ?? '',
+        hreflang: [...document.querySelectorAll('link[rel="alternate"][hreflang]')].map((l) => `${l.hreflang}=${l.href}`).sort(),
+        ld: [...document.querySelectorAll('script[type="application/ld+json"]')].map((x) => x.textContent),
+        faq: [...document.querySelectorAll('.faq details')].map((d) => ({
+          vraag: d.querySelector('summary').textContent.trim(), antwoord: d.querySelector('p').textContent.trim() })),
+        kruimel: [...document.querySelectorAll('.kruimel li')].map((li) => ({
+          naam: li.textContent.trim(), href: li.querySelector('a')?.href ?? null })),
+        datum: document.querySelector('time[datetime]')?.getAttribute('datetime') ?? '',
+        datumTekst: document.querySelector('time[datetime]')?.textContent.trim() ?? '',
+        tekst: document.body.innerText,
+        links: [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')),
+      }));
+      check(`${naam}: taal, titel en omschrijving van de goede lengte, één h1, canonical, indexeerbaar`,
+        kop.lang === code && kop.titel.length >= 30 && kop.titel.length <= 65
+          && kop.omschrijving.length >= 110 && kop.omschrijving.length <= 165 && kop.h1 === 1
+          && kop.canonical === eigen && /index/.test(kop.robots) && !/noindex/.test(kop.robots),
+        `${kop.lang} · ${kop.titel.length}: ${kop.titel} · ${kop.omschrijving.length} · h1=${kop.h1} · ${kop.canonical}`);
+      check(`${naam}: hreflang alleen naar de talen van deze gids, met x-default`,
+        JSON.stringify(kop.hreflang) === JSON.stringify(verwacht), kop.hreflang.join(' '));
+      let graaf = [];
+      try { graaf = kop.ld.flatMap((x) => JSON.parse(x)['@graph'] ?? []); } catch { /* telt als leeg */ }
+      const soort = (s) => graaf.find((x) => x['@type'] === s);
+      const ldFaq = (soort('FAQPage')?.mainEntity ?? []).map((q) => ({ vraag: q.name, antwoord: q.acceptedAnswer?.text }));
+      check(`${naam}: JSON-LD met WebPage, Article en BreadcrumbList, en de FAQ zoals op het scherm`,
+        soort('WebPage') && soort('Article')?.author?.['@id'] === `${BASIS}/#maker` && soort('BreadcrumbList')
+          && kop.faq.length === t.faq.length && JSON.stringify(ldFaq) === JSON.stringify(kop.faq),
+        graaf.map((x) => x['@type']).join(', '));
+      const ldKruimel = (soort('BreadcrumbList')?.itemListElement ?? []).map((i) => ({ naam: i.name, url: i.item }));
+      const zichtbaar = kop.kruimel.map((k) => ({ naam: k.naam, url: k.href ? new URL(k.href).pathname : null }));
+      check(`${naam}: het kruimelpad op het scherm is dat van de gestructureerde gegevens`,
+        ldKruimel.length === zichtbaar.length && ldKruimel.every((k, i) => k.naam === zichtbaar[i].naam
+          && (zichtbaar[i].url === null ? k.url === eigen : k.url === BASIS + zichtbaar[i].url.replace(/^\/$/, '/'))),
+        JSON.stringify(zichtbaar));
+      check(`${naam}: de datum op het scherm is dateModified en die van de sitemap`,
+        kop.datum === soort('Article')?.dateModified && kop.datum === lastmod[eigen]?.datum
+          && soort('Article')?.datePublished === lastmod[eigen]?.sinds && kop.datumTekst.length > 8,
+        `${kop.datum} · ${kop.datumTekst} · ${soort('Article')?.dateModified} · ${lastmod[eigen]?.datum}`);
+      check(`${naam}: geen {plekhouder} en geen streepje in de tekst`,
+        !/\{[a-zA-Z]+\}/.test(kop.tekst) && !/[–—]/.test(kop.tekst + kop.titel + kop.omschrijving),
+        (kop.tekst.match(/.{0,20}(\{[a-zA-Z]+\}|[–—]).{0,20}/) ?? [''])[0]);
+      if (FEITEN[code]) {
+        const mist = FEITEN[code].filter((z) => !kop.tekst.replace(/\s+/g, ' ').includes(z));
+        check(`${naam}: de getallen over de app komen uit de app`, mist.length === 0, mist.join(' | '));
+      }
+      const kapot = kop.links.filter((href) => !/^(https?:|mailto:|#)/.test(href)).filter((href) => {
+        const doel = new URL(href, `${url}${t.pad}/`);
+        return !existsSync(join(wortel, doel.pathname.replace(/^\//, ''), doel.pathname.endsWith('/') ? 'index.html' : ''));
+      });
+      check(`${naam}: elke link binnen de site bestaat`, kapot.length === 0, kapot.join(' '));
+      for (const schema of ['light', 'dark']) {
+        await page.emulateMedia({ colorScheme: schema });
+        await page.waitForTimeout(50);
+        const slecht = await page.evaluate(CONTRAST);
+        check(`${naam}: ${schema === 'light' ? 'licht' : 'donker'}: alle tekst haalt de contrastdrempel`,
+          slecht.length === 0, slecht.slice(0, 4).join(' | '));
+      }
+      await page.setViewportSize({ width: 360, height: 780 });
+      const smal = await page.evaluate(() => ({
+        breed: document.documentElement.scrollWidth,
+        teBreed: [...document.querySelectorAll('h1, h2, h3, table')].filter((h) => {
+          const r = h.getBoundingClientRect(); return r.width && (r.right > document.documentElement.clientWidth + 1);
+        }).map((h) => h.textContent.trim().slice(0, 30)),
+      }));
+      check(`${naam}: op 360 pixels geen horizontale scroll, en alles past`,
+        smal.breed <= 360 && smal.teBreed.length === 0, `${smal.breed} · ${smal.teBreed.join(' | ')}`);
+    }
+  }
+
+  // Geen weespagina's: elke url in de sitemap wordt vanaf minstens één andere
+  // gegenereerde pagina gelinkt. Een gids zonder links ernaartoe vindt een
+  // zoekmachine alleen via de sitemap, en een bezoeker nooit.
+  const sitemap = readFileSync(join(wortel, 'sitemap.xml'), 'utf8');
+  const alle = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  const bestandVan = (u) => join(wortel, u.replace(`${BASIS}/`, ''), 'index.html');
+  const gelinkt = new Map(alle.map((u) => [u, new Set()]));
+  for (const van of alle) {
+    const html = readFileSync(bestandVan(van), 'utf8');
+    for (const [, href] of html.matchAll(/<a [^>]*href="([^"#]+)(?:#[^"]*)?"/g)) {
+      if (/^(https?:|mailto:)/.test(href)) continue;
+      const doel = new URL(href, van).href;
+      if (gelinkt.has(doel) && doel !== van) gelinkt.get(doel).add(van);
+    }
+  }
+  const wezen = alle.filter((u) => gelinkt.get(u).size === 0);
+  check('geen weespagina: elke url in de sitemap krijgt een link van een andere pagina', wezen.length === 0, wezen.join(' '));
+  const gidsUrls = PAGINAS.flatMap((pg) => Object.entries(pg.talen).map(([c, t]) => [c, `${BASIS}/${t.pad}/`]));
+  check('en elke gids wordt gelinkt vanaf de voorpagina in zijn eigen taal',
+    gidsUrls.every(([c, u]) => gelinkt.get(u)?.has(urlVan(c))), gidsUrls.map(([c, u]) => `${c}:${gelinkt.get(u)?.size}`).join(' '));
+}
+
 // ---- beweging ------------------------------------------------------------------
 // Wat in beeld schuift, schuift pas als je erbij bent. Maar de inhoud mag er
 // nooit van afhangen: zonder JavaScript, met "minder beweging" aan, of als het
@@ -476,12 +607,18 @@ await stoppen();
   // Eerst de zeven landingspagina's, dan de privacyverklaring in zijn twee
   // talen (zie test/privacypagina.test.mjs voor die pagina's zelf).
   const privacy = Object.values(PRIVACY).map((p) => `${BASIS}/${p.pad}/`);
-  check('de sitemap noemt elke taal, en de privacyverklaring',
-    JSON.stringify(locs) === JSON.stringify([...TALEN.map(urlVan), ...privacy]), locs.join(' '));
+  // En dan de gidsen, elk in de talen waarin hij bestaat.
+  const gidsen = PAGINAS.flatMap((pg) => TALEN.filter((c) => pg.talen[c]).map((c) => `${BASIS}/${pg.talen[c].pad}/`));
+  check('de sitemap noemt elke taal, de privacyverklaring en de gidsen',
+    JSON.stringify(locs) === JSON.stringify([...TALEN.map(urlVan), ...privacy, ...gidsen]), locs.join(' '));
   const perUrl = sitemap.split('<url>').slice(1).map((u) => ({
     loc: u.match(/<loc>([^<]+)</)?.[1], n: (u.match(/hreflang="/g) ?? []).length }));
-  check('met bij elke url alle alternatieven', perUrl.every(({ loc, n }) =>
-    n === (privacy.includes(loc) ? privacy.length : TALEN.length) + 1), perUrl.map((u) => u.n).join());
+  const clusterGrootte = (loc) => {
+    const pg = PAGINAS.find((x) => Object.values(x.talen).some((t) => loc === `${BASIS}/${t.pad}/`));
+    return pg ? Object.keys(pg.talen).length : privacy.includes(loc) ? privacy.length : TALEN.length;
+  };
+  check('met bij elke url de alternatieven van zijn eigen cluster, plus x-default',
+    perUrl.every(({ loc, n }) => n === clusterGrootte(loc) + 1), perUrl.map((u) => u.n).join());
   check('en niet de app', !sitemap.includes('/app/'));
 
   const robots = readFileSync(join(wortel, 'robots.txt'), 'utf8');
