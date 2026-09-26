@@ -129,7 +129,7 @@ await openRace(page, 'Melbourne');
 
 const zonderPole = (await page.textContent('#paneel')).replace(/\s+/g, ' ');
 check('een niet ingevulde pole zegt wat je laat liggen',
-  zonderPole.includes('geen pole gekozen · 10 punten laten liggen'),
+  zonderPole.includes('pole · 0 van 10 punten · geen pole gekozen'),
   zonderPole.slice(0, 80) + '...');
 
 await page.click('[data-tab="race"]');

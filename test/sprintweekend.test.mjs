@@ -170,30 +170,32 @@ check('zonder sprint telt dezelfde uitslag gewoon voor 100',
 check('en de sprint-tab is weer verdwenen',
   (await page.$$eval(`${rij('Melbourne')} .mk i`, (n) => n.length)) === 2);
 
-// --- 6. automatisch aanvullen slaat de sprint over ------------------------
-// Automatisch invullen bestaat om een gemist weekend niet je seizoen te laten
-// kosten. Een sprint is daar geen onderdeel van: hij staat op zes weekenden
-// en is een halve bijvangst. Er ongevraagd een lijst voor neerzetten voegt
-// punten toe zonder dat probleem op te lossen — dus dat gebeurt niet.
+// --- 6. vóór 27 september slaat automatisch aanvullen de sprint over --------
+// Automatisch invullen bestond eerst alleen om een gemist weekend niet je
+// seizoen te laten kosten, en een sprint hoorde daar niet bij. Sinds 27
+// september (ALLES_VANAF in de app) vult hij alles aan, ook de sprint; dat
+// staat in test/automatisch-invullen.test.mjs. Weekenden van daarvoor houden
+// wat ze hadden. Daarom hier vaste data vóór die streep, en niet "zoveel uur
+// geleden": dat laatste zou over een paar dagen vanzelf na de streep vallen.
 await page.evaluate(() => {
   const db = globalThis.__db;
-  const u = (h) => new Date(Date.now() + h * 3600e3).toISOString();
   const uitslag = ['1', '4', '16', '63', '81', '44', '12', '14', '10', '18', '6', '43'];
   const anders  = ['4', '1', '63', '16', '44', '81', '14', '12', '18', '10', '43', '6'];
   const drivers = db.races[0].drivers;
-  // Twee gereden weekenden ervoor, zodat er een WK-stand is om een lijst uit
-  // te maken. Zonder eerdere uitslag vult de app namelijk niets in.
-  Object.assign(db.races[0], { deadline_quali: u(-200), deadline_race: u(-199),
+  // Twee gereden weekenden ervoor, met een uitslag.
+  Object.assign(db.races[0], { deadline_quali: '2026-09-05T12:00:00Z', deadline_race: '2026-09-06T12:00:00Z',
     deadline_sprint: null, sprint_result: null,
     quali_result: uitslag, race_result: uitslag });
-  Object.assign(db.races[1], { deadline_quali: u(-150), deadline_race: u(-149),
+  Object.assign(db.races[1], { deadline_quali: '2026-09-12T12:00:00Z', deadline_race: '2026-09-13T12:00:00Z',
     quali_result: uitslag, race_result: uitslag });
-  // En dan Suzuka als sprintweekend dat Danny helemaal gemist heeft.
+  // En dan Suzuka als sprintweekend dat Danny helemaal gemist heeft, op 26
+  // september: na de overstap naar willekeurig, vóór ALLES_VANAF.
   Object.assign(db.races[2], { drivers,
-    deadline_sprint: u(-52), deadline_quali: u(-50), deadline_race: u(-49),
+    deadline_sprint: '2026-09-26T02:00:00Z', deadline_quali: '2026-09-26T04:00:00Z',
+    deadline_race: '2026-09-26T06:00:00Z',
     sprint_result: anders, quali_result: anders, race_result: anders });
   db.answers = db.answers.filter((a) => String(a.race_id) !== '3');
-  db.pools[0].autofill_vanaf = u(-100);
+  db.pools[0].autofill_vanaf = '2026-09-01T00:00:00Z';
   sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
 });
 await page.reload();

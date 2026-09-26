@@ -103,7 +103,7 @@ await page.click('[data-tab="race"]');
 await page.waitForSelector('.score');
 const scherm = await tekst('#paneel');
 check('eentje ernaast levert de helft van de punten op',
-  /safety cars · 12 punten SC 2 het werd 3 safety cars 6/.test(scherm),
+  /safety cars · 6 van 12 punten SC 2 het werd 3 safety cars 6/.test(scherm),
   scherm.match(/safety cars .{0,70}/)?.[0] ?? 'die regel staat er niet');
 
 // --- de rode vlag, alles of niets -----------------------------------------
@@ -118,7 +118,7 @@ await page.click('[data-tab="race"]');
 await page.waitForSelector('.score');
 const vlagScherm = await tekst('#paneel');
 check('een fout ja-of-nee levert niets op, en zegt wat het wel werd',
-  /rode vlag · 20 punten RV nee het werd ja, rode vlag 0/.test(vlagScherm),
+  /rode vlag · 0 van 20 punten RV nee het werd ja, rode vlag 0/.test(vlagScherm),
   vlagScherm.match(/rode vlag .{0,60}/)?.[0] ?? 'die regel staat er niet');
 
 // --- ook wie niets voorspelde mag een ontbrekende uitslag aanvullen -------

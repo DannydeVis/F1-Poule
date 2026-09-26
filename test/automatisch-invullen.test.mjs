@@ -11,6 +11,10 @@
 // een willekeurige top 10: vast per speler, race en sessie, en voor races van
 // vóór die wijziging blijft het de WK-stand, zodat er niets achteraf verschuift.
 //
+// Sinds 27 september vult hij alles aan wat iemand liet liggen, niet alleen de
+// top 10: ook de sprint, de losse vragen en de duels (ALLES_VANAF in de app).
+// Weekenden van daarvoor houden wat ze hadden.
+//
 // Wat hier vastligt is vooral wat de regel NIET doet, want dat is het lastige
 // deel. Hij geldt niet met terugwerkende kracht, hij levert geen weekendwinst
 // op, en hij doet nergens alsof de lijst van de speler zelf komt.
@@ -36,7 +40,8 @@ const naarRaces = async () => {
   await page.waitForSelector('[data-race]');
 };
 // De top 10 zoals hij op het racescherm staat, als rugnummers: van jezelf, of
-// van een ander via de poule ernaast.
+// van een ander via de poule ernaast. Alleen de eerste lijst op het scherm:
+// daaronder staan sinds 27 september ook de automatisch gekozen duels.
 const lijstOpScherm = async (race, tab, wie = null) => {
   await naarRaces();
   await page.click(`[data-race]:has(.nm:text-is("${race}"))`);
@@ -47,7 +52,8 @@ const lijstOpScherm = async (race, tab, wie = null) => {
     await page.click(`[data-bekijk="${wie}"]`);
     await page.waitForSelector('#inkijkterug');
   }
-  const codes = await page.$$eval('#paneel .strip .sr .code', (n) => n.map((e) => e.textContent.trim()));
+  const codes = await page.$$eval('#paneel .strip', (lijsten) =>
+    [...(lijsten[0]?.querySelectorAll('.sr .code') ?? [])].map((e) => e.textContent.trim()));
   const nummers = await page.evaluate((cs) => {
     const drivers = globalThis.__db.races[0].drivers;
     return cs.map((c) => String(drivers.find((d) => d.code === c)?.nr ?? '?'));
@@ -109,8 +115,8 @@ await page.click('[data-weergave="poule"]');
 await page.waitForSelector('#autofillKnop');
 check('de knop biedt aan om het aan te zetten',
   (await tekst('#autofillKnop')) === 'Zet aan');
-check('en zegt dat het een willekeurige top 10 wordt',
-  (await tekst('.scheiding + .label + p, #app')).includes('willekeurige top 10'));
+check('en zegt dat het een willekeurig antwoord wordt, ook op de losse vragen',
+  (await tekst('.scheiding + .label + p, #app')).includes('willekeurig antwoord: een top 10, en ook de losse vragen en de duels'));
 
 await page.click('#autofillKnop');
 await page.waitForSelector('.melding');
@@ -181,11 +187,14 @@ check('ook als de coureurs in een andere volgorde in de database staan',
 // ---- wat het oplevert ----------------------------------------------
 // Michael levert nu precies Danny's automatische lijsten in. Dan hoort hij op
 // de punt evenveel te hebben: een automatische lijst telt als een gewone.
+// Daarvoor tellen hier even alleen de twee top 10's mee: de losse vragen die
+// ze allebei lieten liggen, krijgen elk een eigen willekeurig antwoord.
 await page.evaluate(({ q, r }) => {
   const db = globalThis.__db;
   db.answers = db.answers.filter((a) => !(a.member_id === 'lid-2' && a.race_id === 3));
   db.answers.push({ pool_id: 'pool-1', race_id: 3, member_id: 'lid-2', question_id: 'quali_top10', waarde: q });
   db.answers.push({ pool_id: 'pool-1', race_id: 3, member_id: 'lid-2', question_id: 'race_top10', waarde: r });
+  db.pool_questions = [{ pool_id: 'pool-1', question_id: 'quali_top10' }, { pool_id: 'pool-1', question_id: 'race_top10' }];
   sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
 }, { q: dannyQ, r: dannyR });
 await page.reload();
@@ -199,6 +208,13 @@ check('een automatische lijst verliest het van iemand die het weekend zelf goed 
   stand.Danny < stand.Casper, JSON.stringify(stand));
 check('en precies dezelfde lijst levert precies dezelfde punten op, of je hem '
   + 'nu zelf koos of niet', stand.Danny === stand.Michael, JSON.stringify(stand));
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  db.pool_questions = [];
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await page.waitForSelector('.shell');
 
 // ---- maar je wint er geen weekend mee -----------------------------
 await naarRaces();
@@ -218,13 +234,111 @@ check('je eigen scherm zegt dat deze lijst niet van jou is',
 check('en dat je zelf niets inleverde',
   paneel.includes('zelf niets ingeleverd'));
 
-// De inkijk bij een ander: Michael deed wel mee, dus bij hem hoort het
-// etiket er juist níét te staan.
+// De inkijk bij een ander: Michael vulde zijn top 10's zelf in, dus daar
+// hoort het etiket níét te staan. Wat hij liet liggen wel.
+await page.click('.tabs button[data-tab="race"]');
+await page.waitForSelector('[data-bekijk="lid-2"]');
 await page.click('[data-bekijk="lid-2"]');
 await page.waitForSelector('#inkijkterug');
-check('bij een speler die wél invulde staat het etiket er niet',
-  !(await tekst('#paneel')).includes('automatisch ingevuld'));
+{
+  const bij = await tekst('#paneel');
+  const kop = (await page.$$eval('#paneel .label', (n) => n.map((e) => e.textContent.replace(/\s+/g, ' ').trim())));
+  check('bij een speler die zijn lijst wél invulde staat niet dat hij zelf niets inleverde',
+    !bij.includes('zelf niets in') && kop.some((k) => /^top 10 · \d+ van 50 punten$/.test(k)), kop.join(' | '));
+  check('maar de losse vragen die hij liet liggen zijn aangevuld, en zeggen dat ook',
+    kop.some((k) => /^winnaar · \d+ (van 25 )?punten.* · automatisch ingevuld$/.test(k))
+      && kop.some((k) => /^teamgenoot-duels · \d+ van 15 punten · \d+ van \d+ goed · automatisch ingevuld$/.test(k)),
+    kop.join(' | '));
+}
 await page.click('#inkijkterug');
+
+// ---- sinds 27 september: alles wat je liet liggen -------------------
+// Danny: "Daarnaast wordt niet alles random ingevuld als iemand niet alles
+// zelf invult." Nu wel: ook de pole, de winnaar, de snelste ronde en
+// pitstop, het aantal safety cars, de rode vlag en de duels.
+const losseKoppen = async (w) => {
+  await page.click('[data-weergave="races"]');
+  if (await page.$('#terug')) await page.click('#terug');
+  await page.click('[data-race]:has(.nm:text-is("Suzuka"))');
+  await page.waitForSelector('#paneel');
+  await page.click(`.tabs button[data-tab="${w}"]`);
+  // Een tabblad zonder iets erin heeft geen scorekaart maar een lege melding.
+  await page.waitForSelector('#paneel .score, #paneel .leeg');
+  return page.$$eval('#paneel .label', (n) => n.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+};
+{
+  const race = await losseKoppen('race');
+  const vragen = ['winnaar', 'snelste ronde', 'snelste pitstop', 'safety cars', 'rode vlag', 'teamgenoot-duels'];
+  const zonder = vragen.filter((v) => !race.some((k) => k.startsWith(`${v} ·`) && k.endsWith('automatisch ingevuld')));
+  check('wie niets inleverde krijgt ook alle losse vragen van de race ingevuld, met het etiket erbij',
+    zonder.length === 0, zonder.join(', ') || race.join(' | '));
+  const quali = await losseKoppen('quali');
+  check('en de pole op de kwalificatie',
+    quali.some((k) => /^pole · \d+ van 10 punten · automatisch ingevuld$/.test(k)), quali.join(' | '));
+  const regels = await page.$$eval('#paneel .sr', (n) => n.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+  await page.reload();
+  await page.waitForSelector('.shell');
+  await losseKoppen('quali');
+  const opnieuw = await page.$$eval('#paneel .sr', (n) => n.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+  check('herladen geeft precies dezelfde antwoorden', JSON.stringify(opnieuw) === JSON.stringify(regels),
+    `${regels.length} tegen ${opnieuw.length}`);
+}
+
+// Een automatisch antwoord is van niemand, dus het maakt een keuze die je
+// zelf maakte niet minder zeldzaam, en krijgt zelf geen vermenigvuldiger.
+// Casper en Michael kozen elk een andere winnaar; Danny en Pipo kregen er
+// een van de app. Casper was dus de enige met de zijne: × 1,5, 38 punten.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  db.pools[0].contrair_vanaf = new Date(Date.now() - 1000 * 3600e3).toISOString();
+  db.answers.push({ pool_id: 'pool-1', race_id: 3, member_id: 'lid-3', question_id: 'winnaar', waarde: '4' });
+  db.answers.push({ pool_id: 'pool-1', race_id: 3, member_id: 'lid-2', question_id: 'winnaar', waarde: '1' });
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await page.waitForSelector('.shell');
+{
+  const eigen = await losseKoppen('race');
+  check('een automatisch gekozen winnaar krijgt geen vermenigvuldiger',
+    eigen.some((k) => /^winnaar · \d+ van 25 punten · automatisch ingevuld$/.test(k)), eigen.join(' | '));
+  await page.click('[data-bekijk="lid-3"]');
+  await page.waitForSelector('#inkijkterug');
+  const casper = await page.$$eval('#paneel .label', (n) => n.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+  check('en telt niet mee als iemand anders hetzelfde koos: alleen wat spelers zelf kozen',
+    casper.includes('winnaar · 38 punten · ×1,5 (je was de enige)'), casper.join(' | '));
+  await page.click('#inkijkterug');
+}
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  db.pools[0].contrair_vanaf = null;
+  db.answers = db.answers.filter((a) => !(a.race_id === 3 && a.question_id === 'winnaar'));
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+
+// En de sprint, die vóór 27 september bewust leeg bleef.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  const r = db.races[2];
+  r.deadline_sprint = new Date(Date.parse(r.deadline_quali) - 20 * 3600e3).toISOString();
+  r.sprint_result = r.quali_result;
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await page.waitForSelector('.shell');
+{
+  const sprint = await losseKoppen('sprint');
+  const lijst = await page.$$eval('#paneel .strip', (l) => l[0]?.querySelectorAll('.sr').length ?? 0);
+  check('een gemiste sprint krijgt nu ook een lijst',
+    lijst === 10 && (await tekst('#paneel')).includes('automatisch ingevuld'),
+    `${lijst} regels · ${sprint.join(' | ')}`);
+}
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  Object.assign(db.races[2], { deadline_sprint: null, sprint_result: null });
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await page.waitForSelector('.shell');
 
 // ---- de eerste race van het seizoen doet nu ook mee ---------------------
 // De WK-stand bestond pas na één race, dus ronde 1 bleef leeg. Een
@@ -260,6 +374,14 @@ await page.waitForSelector('.shell');
   const suzukaNu = await lijstOpScherm('Suzuka', 'quali');
   check('een race van vóór de overstap houdt de WK-stand van toen',
     shanghai.join() === WK.join(), shanghai.join(','));
+  const shanghaiRace = await (async () => {
+    await lijstOpScherm('Shanghai', 'race');
+    return page.$$eval('#paneel .label', (n) => n.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+  })();
+  check('en krijgt geen losse vragen erbij: die worden pas sinds 27 september aangevuld',
+    shanghaiRace.includes('winnaar · 0 van 25 punten · geen winnaar gekozen')
+      && !shanghaiRace.some((k) => k.startsWith('winnaar') && k.includes('automatisch')),
+    shanghaiRace.join(' | '));
   check('en een race van erna blijft willekeurig, en hetzelfde als eerder',
     suzukaNu.join() === dannyQ.join(), `${suzukaNu.join(',')} | ${dannyQ.join(',')}`);
 }
