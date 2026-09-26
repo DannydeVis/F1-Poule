@@ -7593,3 +7593,32 @@ van het scherm. De scroll-check zag dat niet, want de hero knipt af wat
 uitsteekt. Nu krimpt de Duitse kop mee met de schermbreedte (alleen als het
 moet), en de test controleert per taal dat op 360 pixels elk woord in zijn kop
 past. Ook daar een mutant voor.
+
+## De glans in de kop liet letters weg
+
+Danny, met twee schermafdrukken van zijn telefoon: *"Vrienden staat nu zo.
+Loopt niet helemaal lekker."* Vóór lights out stond er "VERSLA JE V", erna
+alleen "VRIENDEN.".
+
+**Waarom:** de rode regel van de kop heeft als vulling een verloop met een
+lichte streep erin (`background-clip:text`); waar het verloop niet komt zijn
+de letters doorzichtig. Het verloop was 2,6 keer zo breed als de regel en
+schoof van 130% naar -30%. Buiten 0% tot 100% dekt zo'n verloop de regel maar
+voor een deel: bij 130% alleen de linkerhelft, bij -30% alleen de rechterhelft.
+Omdat de animatie `both` had, bleef de regel na de glans op -30% staan. In
+Chromium zag ik het niet op mijn schermafdrukken omdat de regel daar in tweeën
+brak en beide stukken kort genoeg waren.
+
+**Nu:** het verloop is drie keer zo breed en schuift van 100% naar 0%;
+daartussen dekt het altijd de hele regel, en de streep loopt toch van buiten
+links tot buiten rechts. Het verloop zit op een eigen binnenste element
+(`.glans`), los van de opkomst-animatie: Safari tekent een tekstverloop op een
+element dat zelf beweegt niet altijd goed (waarschijnlijk het streepje onder de
+eerste regel op Danny's eerste schermafdruk). `box-decoration-break:clone` geeft
+een regel die afbreekt op elke regel zijn eigen verloop.
+
+**Test:** `test/site.test.mjs` zet alle animaties stil op 1,5 s (vóór de
+glans), 2,95 s (tijdens) en 6 s (erna), maakt een schermafdruk van elke regel
+van de rode kop, en telt links en rechts hoeveel ervan letter is, op 393, 430
+en 1280 pixels breed. Op de oude css zakt hij (links 0,00 na de glans); twee
+mutanten, allebei gedood.
