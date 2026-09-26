@@ -81,6 +81,10 @@ Or build your own league: switch each question on or off, with its points shown.
 - Season questions: World champion, constructors' title and more: predict once before the first race, scored at the end of the year.
 - Private or public: Keep your league private with a code, or make it findable so anyone can join.
 
+## Guides
+
+- [How to run an F1 prediction league](https://predicttherace.com/en/how-to-run-an-f1-prediction-league/): Set up an F1 prediction league with friends or colleagues in five minutes: the four steps, the choices that matter and the three things that kill a league. Also in Dutch (https://predicttherace.com/f1-poule-organiseren/).
+
 ## Frequently asked questions
 
 ### Is Predict the Race free?

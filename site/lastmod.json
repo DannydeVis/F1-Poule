@@ -1,15 +1,20 @@
 {
   "https://predicttherace.com/": {
     "datum": "2026-09-26",
-    "hash": "55af44fee6f58b8f"
+    "hash": "3b15269a783670fb"
   },
   "https://predicttherace.com/de/": {
     "datum": "2026-09-26",
-    "hash": "a73eb64430f11fcf"
+    "hash": "20a7a2a5b9512627"
   },
   "https://predicttherace.com/en/": {
     "datum": "2026-09-26",
-    "hash": "84ba18f35e78e166"
+    "hash": "2bb0e692eec70fee"
+  },
+  "https://predicttherace.com/en/how-to-run-an-f1-prediction-league/": {
+    "datum": "2026-09-26",
+    "hash": "6f902d12ada7476a",
+    "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/privacy/": {
     "datum": "2026-09-26",
@@ -17,15 +22,20 @@
   },
   "https://predicttherace.com/es/": {
     "datum": "2026-09-26",
-    "hash": "ff78c6296d7311f8"
+    "hash": "cc6545be00c3a126"
+  },
+  "https://predicttherace.com/f1-poule-organiseren/": {
+    "datum": "2026-09-26",
+    "hash": "78239624fed57e84",
+    "sinds": "2026-09-26"
   },
   "https://predicttherace.com/fr/": {
     "datum": "2026-09-26",
-    "hash": "cb97a392887af69c"
+    "hash": "9d7af114157772ea"
   },
   "https://predicttherace.com/it/": {
     "datum": "2026-09-26",
-    "hash": "65d996fd7ac8a4e2"
+    "hash": "8c54e7fa8ac4238c"
   },
   "https://predicttherace.com/privacy/": {
     "datum": "2026-09-26",
@@ -33,6 +43,6 @@
   },
   "https://predicttherace.com/pt/": {
     "datum": "2026-09-26",
-    "hash": "3b205b4d4e4e2562"
+    "hash": "a209b15d77c1181d"
   }
 }

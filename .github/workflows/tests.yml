@@ -7,7 +7,12 @@ name: Tests
 on:
   push:
     branches: [main]
+  # ready_for_review erbij: een pull request met nieuwe teksten voor de site
+  # gaat eerst als concept open, zodat Danny ze kan lezen voordat ze online
+  # komen (de automerge slaat een concept over). Zet je hem daarna op "klaar",
+  # dan draaien de tests opnieuw en mergt de automerge hem alsnog.
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 jobs:

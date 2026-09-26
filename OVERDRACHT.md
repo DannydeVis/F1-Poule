@@ -7787,3 +7787,69 @@ testserver die de documenten weigert) en het nieuwe `test/lastmod.test.mjs`
 (op een kopie van de repo: een andere tekst geeft alleen die pagina een nieuwe
 datum, een andere vorm niemand, `--controle` zakt en schrijft niets). Dertien
 mutanten; ze zakken allemaal.
+
+## Zoekplan fase 1: de generator voor gidsen, en de eerste gids
+
+Danny: *"Ja ga verder"*, na fase 0.
+
+**Wat het is.** `site/paginas.mjs` beschrijft losse pagina's als data: per
+onderwerp een id (het hreflang-cluster), per taal pad, titel, omschrijving, een
+kort antwoord, secties en een FAQ. `artikelPagina()` in `scripts/maak-site.mjs`
+maakt er een pagina van met dezelfde kop, letters en kleuren als de voorpagina:
+kruimelpad, h1, kort antwoord, per sectie de vraag als h2 met het korte
+antwoord eronder, dan stappen, een tabel, een voorbeeld of een lijst, de FAQ,
+"lees ook", een knop naar de app en "bijgewerkt op".
+
+**Keuzes en valkuilen:**
+
+- *Paden op elke diepte.* Relatief, zoals de rest, zodat het ook op
+  `dannydevis.github.io/F1-Poule/` werkt. `terugNaar(pad)` geeft per map een
+  `../`: de Engelse gids staat twee mappen diep.
+- *hreflang per cluster.* Alleen de talen waarin de gids bestaat, x-default
+  naar het Engels (anders het Nederlands), in de HTML en in de sitemap gelijk.
+  Het taalmenu toont ook alleen die talen.
+- *De getallen komen uit de app.* `{jokers}`, `{exact}`, `{sprint}`,
+  `{venster}` enzovoort vult de generator in uit `app/index.html`
+  (`JOKERS_STANDAARD`, `JOKERKEUZES`, de puntenformule, de presets), uit
+  `scripts/herinneringen.mjs` (`VENSTER_UREN`) en uit `scripts/agenda.mjs` (de
+  melding van een uur). Verandert de app, dan verandert de gids mee, en
+  `--controle` zakt tot iemand opnieuw genereert.
+- *De maker als één knoop.* De voorpagina heeft nu een `Person` met
+  `@id: #maker`; Organization.founder, WebApplication.author en Article.author
+  verwijzen ernaar.
+- *datePublished* komt uit `site/lastmod.json`: een url die er voor het eerst
+  bij komt krijgt `sinds`. De voorpagina's en privacypagina's waren er al en
+  hebben hem niet.
+- *Een klassenaam die al bestond.* `.antwoord` is op de voorpagina het blok
+  "Wat is Predict the Race" met 56 pixels ruimte; op de gidspagina gaf dat grote
+  gaten. Daar heet het nu `.kernzin`. Let op bij nieuwe klassen: de gidspagina
+  laadt de hele css van de voorpagina.
+- *Kruimelpad met twee stappen* (voorpagina, gids). Een stap "Gidsen" komt pas
+  als er een overzichtspagina is: een kruimel zonder pagina erachter is een
+  dode link.
+
+**Interne links.** De voorpagina linkt in zijn eigen taal naar de gids: onder
+"Zo werkt het" (`teaser`) en in de voet onder "Gidsen". De gids linkt terug naar
+de voorpagina, naar drie plekken daarop (niveaus, puntentelling, FAQ), naar de
+app en naar de andere taal. De test controleert dat geen enkele url in de
+sitemap een wees is.
+
+**De eerste gids: "Een F1-poule organiseren" / "How to run an F1 prediction
+league".** Elk zelf geschreven, niet vertaald. Het antwoord eerst, dan: de vier
+stappen van het aanmaken (zoals de app ze vraagt), hoeveel vragen, de
+puntentelling met een voorbeeld, de deadlines, de jokers, de drie valkuilen uit
+`ROUTEKAART.md` met wat de app ertegen doet, een checklist voor de poulebaas en
+een FAQ met vragen die niet al op de voorpagina staan. In het Nederlands ook het
+Vlaamse woord "pronostiek". Geen verzonnen ervaringen: waar Danny een eigen
+anekdote wil, kan hij die bij het lezen toevoegen.
+
+**Eerst lezen, dan online.** De pull request gaat als concept open (de
+automerge slaat concepten over). `.github/workflows/tests.yml` draait nu ook bij
+`ready_for_review`, zodat hij na het akkoord zonder extra commit merget.
+
+**Tests:** in `test/site.test.mjs` krijgt elke gidspagina dezelfde keuring als
+een voorpagina, plus hreflang per cluster, het kruimelpad gelijk aan de
+BreadcrumbList, de zichtbare datum gelijk aan dateModified en de sitemap, geen
+`{plekhouder}` of streepje, en de getallen over de app zoals de app ze heeft.
+Daarbij: geen weespagina's, en elke gids gelinkt vanaf de voorpagina in zijn
+taal. Elf mutanten.
