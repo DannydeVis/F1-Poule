@@ -7485,3 +7485,39 @@ dezelfde punten als wie precies die lijst zelf invulde, geen weekendwinst,
 ronde 1 ook, en een race van vóór de overstap die de WK-stand houdt. Tien
 mutanten; ze zakken allemaal.
 
+## De voorpagina: de uitgebreidste F1-poule, of de simpelste
+
+Danny: *"Wat een belangrijk aspect is van deze app is dat er veel vragen zijn.
+Maar als je weinig vragen wil kan dat ook. Alleen wordt dat nergens gehighlight
+op de landingpagina. Maak daar een ding van."*
+
+**Wat er staat:** een eigen sectie (`#niveaus`) tussen "Zo werkt het" en de
+puntentelling, donker zoals de hero, met de kop **"De uitgebreidste F1-poule.
+Of de simpelste."** en drie kaarten: Simpel, Klassiek en Gevorderd. Elke kaart
+heeft de startlichten als maatstaf (één, drie en vijf lampjes), een regel over
+voor wie hij is, het aantal vragen groot, de punten per weekend, en alle vragen
+als pilletjes. Gevorderd springt eruit: rode rand, het getal in het accent, een
+badge "De meeste vragen", en op een breed scherm iets hoger. Het aantal vragen
+van Gevorderd (14) staat ook heel groot en vaag op de achtergrond. Eronder:
+zelf samenstellen kan ook, en de set ligt vast na de eerste race. Met een knop
+naar de app.
+
+**Wat uit de app komt:** de vragen per niveau (`PRESET_VRAGEN`, uit PRESETS in
+`app/index.html`), het aantal, en de punten per weekend (`PRESET_PUNTEN`). Het
+getal in de inleiding ("veertien vragen") staat als woord in de tekst; de test
+controleert dat het bij de app hoort.
+
+**Zeven talen:** `niveaus` in `site/teksten.mjs`, met de namen die de
+puntentelling in die taal al gebruikte (Einfach/Klassisch/Fortgeschritten, …).
+"F1-poule" breekt in de kop niet meer na het streepje (`.heel`). Ook in
+`llms.txt` staan de drie niveaus met hun vragen.
+
+**Meegenomen:** "Delen in de groepsapp" zei nog "als tekst voor WhatsApp"; nu:
+een plaatje voor de groepsapp of een staande versie voor je WhatsApp-status.
+
+**Tests:** `test/site.test.mjs` per taal: drie niveaus met evenveel vragen en
+pilletjes als de presets, de punten per weekend uit de app, startlichten 1-3-5
+en de badge alleen bij Gevorderd, en het aantal vragen in de tekst. Contrast en
+360 pixels zonder horizontale scroll lopen al voor de hele pagina mee. Zeven
+mutanten; ze zakken allemaal.
+

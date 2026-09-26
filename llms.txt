@@ -58,13 +58,23 @@ Season questions (once per year, scored at the end of the season):
 
 The league admin chooses what counts: Simple (just the two top 10s, 100 points per weekend), Classic (plus winner, pole and fastest lap, 145) or Advanced (everything, 202 per weekend plus sprint and season).
 
+## The most complete F1 league. Or the simplest.
+
+Switch everything on and you predict fourteen questions: from pole and fastest pit stop to safety cars, red flags and teammate duels. Rather keep it easy? Stick to two top 10s and everyone is done in a minute.
+
+- Simple (2 questions, 100 points per weekend): Qualifying top 10, Race top 10
+- Classic (5 questions, 145 points per weekend): Qualifying top 10, Race top 10, Race winner, Pole position, Fastest lap
+- Advanced (14 questions, 202 points per weekend): Qualifying top 10, Race top 10, Sprint top 10, Race winner, Pole position, Fastest lap, Fastest pit stop, Teammate battles, Number of safety cars, Red flag, yes or no, World champion, Constructors' champion, Number of different race winners, Which team finishes fourth
+
+Or build your own league: switch each question on or off, with its points shown. Once the first race has been run the set is locked, so every weekend stays fairly comparable.
+
 ## Features
 
 - Automatic results: The official result comes in by itself, and post-race penalties are checked again afterwards.
 - Jokers: Play a joker on a weekend and your points count double. Five per season by default, set by the league admin.
 - Head-to-head: Next to the standings you see, friend by friend, who won more often. That is what the group chat is really about.
 - Weekend winner: Whoever scores the most points in a weekend wins that weekend, even if they are behind in the season.
-- Share in your group chat: One tap prepares the weekend result as text for WhatsApp.
+- Share in your group chat: One tap turns the weekend result into an image for the group chat, or a portrait version for your WhatsApp status.
 - Deadlines in your calendar: Subscribe to the calendar and every deadline shows up in your own calendar, with your own reminder.
 - Forgot to predict?: With auto-fill switched on, anyone who submits nothing gets a random top 10 instead of zero.
 - Season questions: World champion, constructors' title and more: predict once before the first race, scored at the end of the year.

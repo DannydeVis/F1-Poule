@@ -57,6 +57,12 @@ const presetVragen = (naam) => {
 const perWeekend = (ids) => ids
   .filter((id) => PUNTEN[id] && !['sprint', 'seizoen'].includes(PUNTEN[id].sessie))
   .reduce((n, id) => n + PUNTEN[id].punten, 0);
+// Welke vragen er in elke preset zitten, voor de niveaus op de pagina.
+export const PRESET_VRAGEN = {
+  simpel: presetVragen('simpel'),
+  klassiek: presetVragen('klassiek'),
+  gevorderd: presetVragen('gevorderd'),
+};
 export const PRESET_PUNTEN = {
   simpel: perWeekend(presetVragen('simpel')),
   klassiek: perWeekend(presetVragen('klassiek')),
@@ -78,6 +84,11 @@ export const PLEKPUNTEN = [0, 1, 2, 3].map((d) => Math.max(0, Number(formule[1])
 //  Hulpjes
 // ------------------------------------------------------------
 
+// De naam van een vraag op de pagina: de twee top 10's uit de niveaus, de rest
+// uit de puntentabel, zonder wat er tussen haakjes achter staat.
+const vraagNaam = (t, id) => id === 'quali_top10' ? t.niveaus.top10[0]
+  : id === 'race_top10' ? t.niveaus.top10[1]
+  : String(t.punten.vragen[id] ?? id).replace(/\s*\(.*\)$/, '');
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const vul = (tekst, vars) => String(tekst).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
@@ -237,6 +248,43 @@ const CSS = `
   .voorbeeld{margin:18px 0 0;color:var(--ink2);font-size:16px}
   .presets{margin:22px 0 0;color:var(--ink2);font-size:16px;border-left:3px solid var(--accent);padding-left:14px}
 
+  /* ---- de niveaus: altijd donker, als een tweede hero midden op de pagina.
+     Drie kaarten met de startlichten als maatstaf: één lampje voor Simpel,
+     drie voor Klassiek, alle vijf voor Gevorderd. Het grote getal op de
+     achtergrond is het aantal vragen van Gevorderd (uit de app). ---- */
+  .niveaus{position:relative;overflow:hidden;isolation:isolate;background:var(--nacht);color:var(--nacht-ink);padding:76px 0}
+  .niveaus::before{content:"";position:absolute;inset:0;z-index:-1;
+    background:radial-gradient(60% 60% at 88% 0%,rgba(238,77,51,.20),transparent 60%),
+      radial-gradient(50% 50% at 0% 100%,rgba(238,77,51,.08),transparent 60%)}
+  .niveaus::after{content:attr(data-meest);position:absolute;z-index:-1;right:-1%;bottom:-12%;font-family:var(--cond);
+    font-weight:700;font-size:min(52vw,520px);line-height:1;color:#fff;opacity:.035;pointer-events:none}
+  .niveaus .label{color:#8a9099}
+  .niveaus h2{font-size:clamp(38px,6.4vw,64px);line-height:.95;margin:12px 0 18px}
+  .niveaus h2>span{display:block}
+  .niveaus h2>span+span{color:var(--accent)}
+  /* "F1-poule" breekt niet na het streepje. */
+  .niveaus h2 .heel{white-space:nowrap}
+  .niveaus .inleiding{color:var(--nacht-ink2)}
+  .niveaulijst{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+  .niveau{position:relative;background:var(--nacht2);border:1px solid var(--nacht-lijn);border-radius:18px;padding:24px;
+    display:flex;flex-direction:column;gap:10px}
+  .niveau.meest{border-color:#ee4d33;box-shadow:0 24px 60px -30px rgba(238,77,51,.55),inset 0 0 0 1px rgba(238,77,51,.35)}
+  .niveau .badge{position:absolute;top:-12px;right:18px;background:#ee4d33;color:#0b0b0c;border-radius:999px;
+    padding:4px 12px;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+  .lampen{display:flex;gap:6px}
+  .lampen i{width:18px;height:18px;border-radius:50%;background:#26282e;box-shadow:inset 0 0 0 2px #1d1f24}
+  .lampen i.aan{background:#ee4d33;box-shadow:0 0 14px rgba(238,77,51,.7)}
+  .niveau h3{font-family:var(--cond);font-size:30px;text-transform:uppercase;letter-spacing:.02em;margin:6px 0 0}
+  .niveau .tagline{margin:0;color:var(--nacht-ink2);font-size:16px}
+  .niveau .aantal{margin:6px 0 0;display:flex;align-items:baseline;gap:10px;font-family:var(--mono);font-size:13px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--nacht-ink2)}
+  .niveau .aantal b{font-family:var(--cond);font-size:64px;line-height:.9;letter-spacing:0;color:var(--nacht-ink)}
+  .niveau.meest .aantal b{color:#ee4d33}
+  .niveau .weekend{margin:0;font-size:15px;color:var(--nacht-ink2)}
+  .chips{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+  .chips li{border:1px solid var(--nacht-lijn);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--nacht-ink)}
+  .niveaus .zelf{margin:26px 0 22px;color:var(--nacht-ink2);max-width:44em;border-left:3px solid #ee4d33;padding-left:14px}
+
   .functies{list-style:none;margin:0;padding:0;display:grid;gap:14px}
   .functies li{background:var(--paneel);border:1px solid var(--lijn);border-radius:16px;padding:22px}
   .functies li::before{content:"";display:block;width:26px;height:4px;border-radius:2px;background:var(--accent);margin-bottom:14px}
@@ -295,6 +343,8 @@ const CSS = `
     .beelden{grid-template-columns:repeat(3,1fr)}
     .tabellen{grid-template-columns:1fr 1fr}
     .aanbod{left:auto;right:20px;bottom:20px;max-width:460px}
+    .niveaulijst{grid-template-columns:repeat(3,1fr);align-items:start}
+    .niveau.meest{transform:translateY(-10px)}
   }
   @media (min-width:960px){
     .hero{padding:84px 0 92px}
@@ -524,6 +574,31 @@ ${jsonLd(code)}
     <h2>${esc(t.stappen.kop)}</h2>
     <ol class="stappen">${t.stappen.items.map(([kop, tekst]) =>
       `<li><h3>${esc(kop)}</h3><p>${esc(tekst)}</p></li>`).join('')}</ol>
+  </div>
+</section>
+
+<section class="niveaus" id="niveaus" data-meest="${PRESET_VRAGEN.gevorderd.length}">
+  <div class="binnen">
+    <span class="label">${esc(t.niveaus.label)}</span>
+    <h2>${t.niveaus.kop.map((r) => `<span>${esc(r).replace(/(\S+-\S+)/g, '<span class="heel">$1</span>')}</span>`).join('')}</h2>
+    <p class="inleiding">${esc(t.niveaus.intro)}</p>
+    <ol class="niveaulijst">${['simpel', 'klassiek', 'gevorderd'].map((n, i) => {
+      const [naam, regel] = t.niveaus[n];
+      const meest = n === 'gevorderd';
+      return `
+      <li class="niveau${meest ? ' meest' : ''}">
+        ${meest ? `<span class="badge">${esc(t.niveaus.badge)}</span>` : ''}
+        <span class="lampen" aria-hidden="true">${[0, 1, 2, 3, 4].map((l) => `<i${l < [1, 3, 5][i] ? ' class="aan"' : ''}></i>`).join('')}</span>
+        <h3>${esc(naam)}</h3>
+        <p class="tagline">${esc(regel)}</p>
+        <p class="aantal"><b>${PRESET_VRAGEN[n].length}</b> ${esc(t.niveaus.vragen)}</p>
+        <p class="weekend">${esc(vul(t.niveaus.perWeekend, { n: PRESET_PUNTEN[n] }))}${meest ? ` · ${esc(t.niveaus.extra)}` : ''}</p>
+        <ul class="chips">${PRESET_VRAGEN[n].map((id) => `<li>${esc(vraagNaam(t, id))}</li>`).join('')}</ul>
+      </li>`;
+    }).join('')}
+    </ol>
+    <p class="zelf">${esc(t.niveaus.zelf)}</p>
+    <a class="knop" href="${app}">${esc(t.niveaus.knop)} <span aria-hidden="true">→</span></a>
   </div>
 </section>
 
@@ -825,6 +900,14 @@ Season questions (once per year, scored at the end of the season):
 ${SEIZOEN.map((id) => `| ${en.punten.vragen[id]} | ${PUNTEN[id].punten} |`).join('\n')}
 
 ${vul(en.punten.presets, vars)}
+
+## ${en.niveaus.kop.join(' ')}
+
+${en.niveaus.intro}
+
+${['simpel', 'klassiek', 'gevorderd'].map((n) => `- ${en.niveaus[n][0]} (${PRESET_VRAGEN[n].length} ${en.niveaus.vragen}, ${vul(en.niveaus.perWeekend, { n: PRESET_PUNTEN[n] })}): ${PRESET_VRAGEN[n].map((id) => vraagNaam(en, id)).join(', ')}`).join('\n')}
+
+${en.niveaus.zelf}
 
 ## Features
 

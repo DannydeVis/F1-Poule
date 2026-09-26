@@ -448,6 +448,43 @@
   .voorbeeld{margin:18px 0 0;color:var(--ink2);font-size:16px}
   .presets{margin:22px 0 0;color:var(--ink2);font-size:16px;border-left:3px solid var(--accent);padding-left:14px}
 
+  /* ---- de niveaus: altijd donker, als een tweede hero midden op de pagina.
+     Drie kaarten met de startlichten als maatstaf: één lampje voor Simpel,
+     drie voor Klassiek, alle vijf voor Gevorderd. Het grote getal op de
+     achtergrond is het aantal vragen van Gevorderd (uit de app). ---- */
+  .niveaus{position:relative;overflow:hidden;isolation:isolate;background:var(--nacht);color:var(--nacht-ink);padding:76px 0}
+  .niveaus::before{content:"";position:absolute;inset:0;z-index:-1;
+    background:radial-gradient(60% 60% at 88% 0%,rgba(238,77,51,.20),transparent 60%),
+      radial-gradient(50% 50% at 0% 100%,rgba(238,77,51,.08),transparent 60%)}
+  .niveaus::after{content:attr(data-meest);position:absolute;z-index:-1;right:-1%;bottom:-12%;font-family:var(--cond);
+    font-weight:700;font-size:min(52vw,520px);line-height:1;color:#fff;opacity:.035;pointer-events:none}
+  .niveaus .label{color:#8a9099}
+  .niveaus h2{font-size:clamp(38px,6.4vw,64px);line-height:.95;margin:12px 0 18px}
+  .niveaus h2>span{display:block}
+  .niveaus h2>span+span{color:var(--accent)}
+  /* "F1-poule" breekt niet na het streepje. */
+  .niveaus h2 .heel{white-space:nowrap}
+  .niveaus .inleiding{color:var(--nacht-ink2)}
+  .niveaulijst{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+  .niveau{position:relative;background:var(--nacht2);border:1px solid var(--nacht-lijn);border-radius:18px;padding:24px;
+    display:flex;flex-direction:column;gap:10px}
+  .niveau.meest{border-color:#ee4d33;box-shadow:0 24px 60px -30px rgba(238,77,51,.55),inset 0 0 0 1px rgba(238,77,51,.35)}
+  .niveau .badge{position:absolute;top:-12px;right:18px;background:#ee4d33;color:#0b0b0c;border-radius:999px;
+    padding:4px 12px;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+  .lampen{display:flex;gap:6px}
+  .lampen i{width:18px;height:18px;border-radius:50%;background:#26282e;box-shadow:inset 0 0 0 2px #1d1f24}
+  .lampen i.aan{background:#ee4d33;box-shadow:0 0 14px rgba(238,77,51,.7)}
+  .niveau h3{font-family:var(--cond);font-size:30px;text-transform:uppercase;letter-spacing:.02em;margin:6px 0 0}
+  .niveau .tagline{margin:0;color:var(--nacht-ink2);font-size:16px}
+  .niveau .aantal{margin:6px 0 0;display:flex;align-items:baseline;gap:10px;font-family:var(--mono);font-size:13px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--nacht-ink2)}
+  .niveau .aantal b{font-family:var(--cond);font-size:64px;line-height:.9;letter-spacing:0;color:var(--nacht-ink)}
+  .niveau.meest .aantal b{color:#ee4d33}
+  .niveau .weekend{margin:0;font-size:15px;color:var(--nacht-ink2)}
+  .chips{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+  .chips li{border:1px solid var(--nacht-lijn);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--nacht-ink)}
+  .niveaus .zelf{margin:26px 0 22px;color:var(--nacht-ink2);max-width:44em;border-left:3px solid #ee4d33;padding-left:14px}
+
   .functies{list-style:none;margin:0;padding:0;display:grid;gap:14px}
   .functies li{background:var(--paneel);border:1px solid var(--lijn);border-radius:16px;padding:22px}
   .functies li::before{content:"";display:block;width:26px;height:4px;border-radius:2px;background:var(--accent);margin-bottom:14px}
@@ -506,6 +543,8 @@
     .beelden{grid-template-columns:repeat(3,1fr)}
     .tabellen{grid-template-columns:1fr 1fr}
     .aanbod{left:auto;right:20px;bottom:20px;max-width:460px}
+    .niveaulijst{grid-template-columns:repeat(3,1fr);align-items:start}
+    .niveau.meest{transform:translateY(-10px)}
   }
   @media (min-width:960px){
     .hero{padding:84px 0 92px}
@@ -573,6 +612,45 @@
   </div>
 </section>
 
+<section class="niveaus" id="niveaus" data-meest="14">
+  <div class="binnen">
+    <span class="label">Você escolhe o nível</span>
+    <h2><span>O bolão de F1 mais completo.</span><span>Ou o mais simples.</span></h2>
+    <p class="inleiding">Ligue tudo e você palpita catorze perguntas: da pole e do pit stop mais rápido até safety cars, bandeira vermelha e duelos entre companheiros de equipe. Prefere algo tranquilo? Fique nos dois top 10 e todo mundo termina em um minuto.</p>
+    <ol class="niveaulijst">
+      <li class="niveau">
+        
+        <span class="lampen" aria-hidden="true"><i class="aan"></i><i></i><i></i><i></i><i></i></span>
+        <h3>Simples</h3>
+        <p class="tagline">Para o grupo que prefere algo rápido.</p>
+        <p class="aantal"><b>2</b> perguntas</p>
+        <p class="weekend">100 pontos por fim de semana</p>
+        <ul class="chips"><li>Top 10 da classificação</li><li>Top 10 da corrida</li></ul>
+      </li>
+      <li class="niveau">
+        
+        <span class="lampen" aria-hidden="true"><i class="aan"></i><i class="aan"></i><i class="aan"></i><i></i><i></i></span>
+        <h3>Clássico</h3>
+        <p class="tagline">O meio-termo ideal.</p>
+        <p class="aantal"><b>5</b> perguntas</p>
+        <p class="weekend">145 pontos por fim de semana</p>
+        <ul class="chips"><li>Top 10 da classificação</li><li>Top 10 da corrida</li><li>Vencedor da corrida</li><li>Pole position</li><li>Volta mais rápida</li></ul>
+      </li>
+      <li class="niveau meest">
+        <span class="badge">Mais perguntas</span>
+        <span class="lampen" aria-hidden="true"><i class="aan"></i><i class="aan"></i><i class="aan"></i><i class="aan"></i><i class="aan"></i></span>
+        <h3>Avançado</h3>
+        <p class="tagline">Para quem quer palpitar em tudo.</p>
+        <p class="aantal"><b>14</b> perguntas</p>
+        <p class="weekend">202 pontos por fim de semana · mais sprint e temporada</p>
+        <ul class="chips"><li>Top 10 da classificação</li><li>Top 10 da corrida</li><li>Top 10 da sprint</li><li>Vencedor da corrida</li><li>Pole position</li><li>Volta mais rápida</li><li>Pit stop mais rápido</li><li>Duelos entre companheiros</li><li>Número de safety cars</li><li>Bandeira vermelha, sim ou não</li><li>Campeão mundial</li><li>Campeão de construtores</li><li>Número de vencedores diferentes</li><li>Qual equipe termina em quarto</li></ul>
+      </li>
+    </ol>
+    <p class="zelf">Ou monte o seu próprio bolão: cada pergunta ligada ou não, com os pontos ao lado. Assim que a primeira corrida acontece a seleção fica fixa, para que todo fim de semana continue comparável.</p>
+    <a class="knop" href="../app/">Escolha o seu nível <span aria-hidden="true">→</span></a>
+  </div>
+</section>
+
 <section class="blok" id="punten">
   <div class="binnen">
     <h2>Como funciona a pontuação</h2>
@@ -601,7 +679,7 @@
 <section class="blok" id="functies">
   <div class="binnen">
     <h2>Tudo para um bolão que dura a temporada inteira</h2>
-    <ul class="functies"><li><h3>Resultados automáticos</h3><p>A classificação oficial chega sozinha, e as punições aplicadas depois da corrida são conferidas de novo.</p></li><li><h3>Coringas</h3><p>Use um coringa em um fim de semana e seus pontos valem em dobro. Cinco por temporada por padrão, ajustável pelo administrador.</p></li><li><h3>Confronto direto</h3><p>Ao lado da classificação você vê, amigo por amigo, quem venceu mais vezes. É disso que o grupo realmente fala.</p></li><li><h3>Vencedor do fim de semana</h3><p>Quem faz mais pontos em um fim de semana vence aquele fim de semana, mesmo estando atrás na temporada.</p></li><li><h3>Compartilhe no grupo</h3><p>Um toque prepara o resultado do fim de semana como texto para o WhatsApp.</p></li><li><h3>Prazos na sua agenda</h3><p>Assine a agenda e cada prazo aparece no seu próprio calendário, com o seu lembrete.</p></li><li><h3>Esqueceu o palpite?</h3><p>Com o preenchimento automático, quem não envia nada recebe um top 10 aleatório em vez de zero.</p></li><li><h3>Perguntas da temporada</h3><p>Campeão mundial, título de construtores e mais: um palpite antes da primeira corrida, pontuado no fim do ano.</p></li><li><h3>Privado ou público</h3><p>Mantenha seu bolão privado com um código ou deixe-o visível para qualquer pessoa entrar.</p></li></ul>
+    <ul class="functies"><li><h3>Resultados automáticos</h3><p>A classificação oficial chega sozinha, e as punições aplicadas depois da corrida são conferidas de novo.</p></li><li><h3>Coringas</h3><p>Use um coringa em um fim de semana e seus pontos valem em dobro. Cinco por temporada por padrão, ajustável pelo administrador.</p></li><li><h3>Confronto direto</h3><p>Ao lado da classificação você vê, amigo por amigo, quem venceu mais vezes. É disso que o grupo realmente fala.</p></li><li><h3>Vencedor do fim de semana</h3><p>Quem faz mais pontos em um fim de semana vence aquele fim de semana, mesmo estando atrás na temporada.</p></li><li><h3>Compartilhe no grupo</h3><p>Um toque transforma o resultado do fim de semana em uma imagem para o grupo, ou em uma versão vertical para o seu status do WhatsApp.</p></li><li><h3>Prazos na sua agenda</h3><p>Assine a agenda e cada prazo aparece no seu próprio calendário, com o seu lembrete.</p></li><li><h3>Esqueceu o palpite?</h3><p>Com o preenchimento automático, quem não envia nada recebe um top 10 aleatório em vez de zero.</p></li><li><h3>Perguntas da temporada</h3><p>Campeão mundial, título de construtores e mais: um palpite antes da primeira corrida, pontuado no fim do ano.</p></li><li><h3>Privado ou público</h3><p>Mantenha seu bolão privado com um código ou deixe-o visível para qualquer pessoa entrar.</p></li></ul>
   </div>
 </section>
 
