@@ -117,14 +117,17 @@ export function maakAgenda(races = [], { url = '', naam = 'F1 Poule' } = {}) {
       // afgezegd. Weglaten zou het item in de agenda van de abonnee laten
       // staan alsof er niets aan de hand is.
       regels.push(race.afgelast ? 'STATUS:CANCELLED' : 'STATUS:CONFIRMED');
-      // Twee uur van tevoren. Veel agenda-apps negeren dit bij een
-      // abonnement en gebruiken de melding die de gebruiker zelf instelt;
-      // daarom staat het er wel, maar leunen we er niet op.
+      // Een uur van tevoren: dan is het nog vers genoeg om te weten wat je
+      // wilt invullen, en lang genoeg om het ook echt te doen. (Stond op twee
+      // uur.) Een iPhone of Mac haalt meldingen standaard uit een abonnement,
+      // tenzij je dat bij het abonneren uitzet; de app zegt dat erbij. Google
+      // Agenda neemt ze nooit over. Daarom leunt niets op deze melding: de
+      // pushmelding in de app is er ook nog (zie BEDIENING.md §11c).
       regels.push(
         'BEGIN:VALARM',
         'ACTION:DISPLAY',
-        'TRIGGER:-PT2H',
-        vouw(`DESCRIPTION:${ontsnap(`${sessie.wat} ${naamRace}: nog twee uur om in te vullen`)}`),
+        'TRIGGER:-PT1H',
+        vouw(`DESCRIPTION:${ontsnap(`${sessie.wat} ${naamRace}: nog een uur om in te vullen`)}`),
         'END:VALARM',
         'END:VEVENT');
     }

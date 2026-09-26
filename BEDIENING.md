@@ -1077,9 +1077,12 @@ precies wat de app tot nu toe niet deed.
 
 Twee dingen om te weten:
 
-- **De `VALARM` van twee uur van tevoren is een suggestie.** Veel agenda-apps
-  negeren die bij een abonnement en gebruiken de melding die de gebruiker zelf
-  per agenda instelt. Daarom staat hij er wel, maar leunt niets erop.
+- **Elk item heeft een melding een uur van tevoren** (`VALARM`, stond op twee
+  uur). Een iPhone of Mac haalt meldingen standaard uit een abonnement: zet bij
+  het abonneren het weghalen van meldingen uit, of later in de instellingen bij
+  de geabonneerde agenda's. De app zegt dat onder de knop. Google Agenda neemt
+  de melding nooit over. Daarom leunt niets erop; de pushmelding van §11c is er
+  ook nog.
 - **Het bestand in de repo is leeg tot de eerste sync draait.** Dat is een
   geldige agenda; hij vult zichzelf binnen het uur.
 

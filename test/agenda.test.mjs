@@ -6,7 +6,9 @@
 // dubbel in je agenda staat, of een regel van 200 tekens die de helft van de
 // agenda-apps laat afhaken.
 
-import { maakControle } from './hulp.mjs';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { maakControle, wortel } from './hulp.mjs';
 import { maakAgenda, vouw, ontsnap, stempel } from '../scripts/agenda.mjs';
 
 const { check, afronden } = maakControle('de agenda met de deadlines');
@@ -117,5 +119,30 @@ const eersteMelbourne = ics.indexOf('UID:quali-1001');
 const eersteShanghai = ics.indexOf('UID:quali-1002');
 check('de races staan op volgorde van ronde',
   eersteMelbourne > 0 && eersteShanghai > eersteMelbourne);
+
+// --- de melding ------------------------------------------------------------
+// Een uur voor elke deadline. Stond op twee uur, en kwam bij Danny helemaal
+// niet door ("het enige wat hij doet is het in je agenda zetten"). Per item
+// precies één, als melding op het scherm, met een tekst die zegt waarvoor.
+const meldingen = (tekst) => tekst.replace(/\r\n /g, '').split('BEGIN:VEVENT').slice(1).map((b) => ({
+  aantal: (b.match(/BEGIN:VALARM/g) ?? []).length,
+  wanneer: b.match(/\r\nTRIGGER:([^\r]*)/)?.[1],
+  hoe: b.match(/BEGIN:VALARM\r\nACTION:([^\r]*)/)?.[1],
+  tekst: b.match(/BEGIN:VALARM[\s\S]*?\r\nDESCRIPTION:([^\r]*)/)?.[1],
+}));
+const hier = meldingen(ics);
+check('elk item heeft één melding, een uur voor de deadline',
+  hier.length === 4 && hier.every((m) => m.aantal === 1 && m.wanneer === '-PT1H' && m.hoe === 'DISPLAY'),
+  JSON.stringify(hier[0]));
+check('met een tekst die zegt waarvoor, en dat er nog een uur is',
+  hier[0].tekst === 'Kwalificatie Melbourne: nog een uur om in te vullen'
+    && hier[1].tekst === 'Race Melbourne: nog een uur om in te vullen',
+  `${hier[0].tekst} | ${hier[1].tekst}`);
+// De sync schrijft kalender.ics opnieuw zodra hij iets anders maakt, maar tot
+// die tijd is het bestand in de repo wat abonnees krijgen. Ook daar een uur.
+const online = meldingen(readFileSync(join(wortel, 'kalender.ics'), 'utf8'));
+check('en in het bestand dat online staat ook',
+  online.every((m) => m.aantal === 1 && m.wanneer === '-PT1H' && /: nog een uur om in te vullen$/.test(m.tekst ?? '')),
+  `${online.length} items · ${JSON.stringify(online.find((m) => m.wanneer !== '-PT1H') ?? {})}`);
 
 process.exit(afronden() ? 0 : 1);

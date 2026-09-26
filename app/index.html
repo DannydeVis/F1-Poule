@@ -2366,11 +2366,16 @@ const ENGELS = Object.fromEntries([
   ['deadlines in je agenda',
    'deadlines in your calendar'],
   ['Abonneer je één keer, en elke '
-   + 'kwalificatie en race staat in je agenda — met de melding die je daar zelf '
-   + 'instelt. Verschuift een sessie, dan schuift je agenda mee.',
-   'Subscribe once and every qualifying session and race is in your calendar — '
-   + 'with the reminder you set there yourself. If a session moves, your calendar '
-   + 'moves with it.'],
+   + 'kwalificatie en race staat in je agenda, met een melding een uur voordat '
+   + 'het invullen sluit. Verschuift een sessie, dan schuift je agenda mee.',
+   'Subscribe once and every qualifying session and race is in your calendar, '
+   + 'with a reminder an hour before predictions close. If a session moves, your '
+   + 'calendar moves with it.'],
+  ['Op een iPhone of Mac haalt een '
+   + 'abonnement de meldingen er standaard uit. Zet dat uit bij het abonneren, of '
+   + "later bij de geabonneerde agenda's in je instellingen.",
+   'On an iPhone or Mac, a subscription removes the alerts by default. Turn that '
+   + 'off when you subscribe, or later under subscribed calendars in your settings.'],
   ['Zet in mijn agenda',
    'Add to my calendar'],
   ['Werkt de knop niet, dan '
@@ -7419,9 +7424,12 @@ function agendaBlok() {
     <div class="scheiding"></div>
     <span class="label">${T('deadlines in je agenda')}</span>
     <p class="zacht" style="margin:0">${T('Abonneer je één keer, en elke '
-      + 'kwalificatie en race staat in je agenda — met de melding die je daar zelf '
-      + 'instelt. Verschuift een sessie, dan schuift je agenda mee.')}</p>
+      + 'kwalificatie en race staat in je agenda, met een melding een uur voordat '
+      + 'het invullen sluit. Verschuift een sessie, dan schuift je agenda mee.')}</p>
     <a class="knop klein" href="${esc(agendaAbonnee())}">${T('Zet in mijn agenda')}</a>
+    <p class="zacht agendamelding" style="margin:0;font-size:13px">${T('Op een iPhone of Mac haalt een '
+      + 'abonnement de meldingen er standaard uit. Zet dat uit bij het abonneren, of '
+      + "later bij de geabonneerde agenda's in je instellingen.")}</p>
     <p class="zacht" style="margin:0;font-size:13px">${T('Werkt de knop niet, dan '
       + 'wil je agenda de link zelf hebben. Kopieer hem en plak hem bij '
       + '"agenda toevoegen via url".')}</p>

@@ -136,6 +136,13 @@ check('de abonneerknop gebruikt webcal, zodat je agenda hem herkent',
   (abonnee ?? '').startsWith('webcal://') && abonnee.endsWith('/kalender.ics'),
   String(abonnee));
 
+// De melding in het bestand komt op een iPhone of Mac alleen door als je bij
+// het abonneren het weghalen van meldingen uitzet. Dat staat er dus bij.
+const hint = (await page.textContent('.agendamelding').catch(() => '')) ?? '';
+check('onder de knop staat hoe je de melding op een iPhone houdt',
+  await page.isVisible('.agendamelding').catch(() => false) && hint.includes('iPhone') && hint.includes('meldingen'),
+  hint.trim());
+
 // En het bestand waar hij naar wijst bestaat ook echt. Een agendalink die
 // 404 geeft ziet er in de broncode precies hetzelfde uit als eentje die werkt.
 const agenda = await page.evaluate(async () => {
