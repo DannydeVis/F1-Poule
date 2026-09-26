@@ -324,6 +324,27 @@ export function deelnemersUit(race, nu = Date.now(), sessies = []) {
 }
 
 /**
+ * Een voorlopige deelnemerslijst voor een race waar OpenF1 er nog geen heeft.
+ *
+ * Aanleiding: Kuala Lumpur kwam in 2026 laat in de kalender (de verplaatste
+ * Bahrein-race), en OpenF1 had er een week van tevoren nog geen coureurs bij
+ * (404 op drivers). De andere races hadden hun lijst al sinds het begin van
+ * het seizoen. Zonder lijst kan niemand in de app een voorspelling doen.
+ *
+ * Dan de lijst van de laatste race ervóór die er een heeft en niet afgelast
+ * is: het veld verandert van race op race zelden. Zodra OpenF1 de echte lijst
+ * heeft, vervangt de gewone verversing (deelnemersUit) hem.
+ *
+ * Geeft { drivers, naam } of null.
+ */
+export function voorlopigeLijst(race, races = []) {
+  const eerder = races
+    .filter((r) => r.round < race.round && !r.afgelast && (r.drivers ?? []).length)
+    .sort((a, b) => b.round - a.round)[0];
+  return eerder ? { drivers: eerder.drivers, naam: eerder.name } : null;
+}
+
+/**
  * Welk rondenummer krijgt elke race, en welke rijen moeten daarvoor een
  * nummer opschuiven?
  *

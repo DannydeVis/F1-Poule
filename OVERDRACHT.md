@@ -8046,3 +8046,23 @@ de vijfde (een gat niet benutten) door de unit-tests in
 vraagt elke run nog hun uitslag op (twee 404's per run). Onschuldig, en niet
 in deze wijziging meegenomen.
 
+**Nagekomen, na de eerste echte run** (26 september, 18:27 UTC, met de knop
+en "kalender" aan): de log zei "Kuala Lumpur (ronde 18) ertussen gezet; 7 races
+een ronde opgeschoven (Marina Bay 18→19 … Yas Marina 24→25)", 25 races, en de
+agenda werd bijgewerkt. Maar ook: "ronde 18 Kuala Lumpur: nog niets voor
+drivers (OpenF1 gaf 404 op drivers?session_key=11730)". De andere races hadden
+hun deelnemerslijst al sinds het begin van het seizoen; bij een race die later
+is toegevoegd heeft OpenF1 die nog niet, en zonder lijst kan niemand invullen.
+
+Daarom `voorlopigeLijst()` in `scripts/uitslagen.mjs`: heeft OpenF1 nog geen
+coureurs bij een race, en staat er ook niets, dan leent de sync de lijst van de
+laatste race ervóór die er een heeft en niet afgelast is (hier Baku). De log
+zegt het ("voorlopig de coureurs van Baku, OpenF1 heeft ze nog niet"). Zodra
+OpenF1 de echte lijst heeft, vervangt de gewone verversing hem: een race met
+een lijst binnen veertien dagen voor de kwalificatie wordt elke run ververst
+(`deelnemersUit()`). Drie mutanten gedood.
+
+In dezelfde run: de uitslag van Baku veranderde achteraf (P13 tot en met P15
+wisselden, een straf na de race). Dat is de herkeuring die daarvoor bestaat;
+de stand rekent vanzelf mee.
+

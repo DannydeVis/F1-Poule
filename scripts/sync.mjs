@@ -29,7 +29,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 import { readFileSync, writeFileSync } from 'node:fs';
 import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast,
          deelnemersUit, lijstDekt, opnieuwNakijken, zelfdeWaarde, veiligeVervanging,
-         rondeIndeling, dubbeleRaces }
+         rondeIndeling, dubbeleRaces, voorlopigeLijst }
   from './uitslagen.mjs';
 import { maakAgenda } from './agenda.mjs';
 import { wieKrijgtEenSeintje } from './herinneringen.mjs';
@@ -442,6 +442,17 @@ async function uitslagen(races, jaar) {
     // op wat er de allereerste keer in stond.
     const bron = wilLijst(race) && deelnemersUit(race, Date.now(), sessiesVanRace(race, weekenden));
     if (bron) await probeer(patch, 'drivers', () => deelnemers(bron), gemist);
+    // Heeft OpenF1 nog geen coureurs bij deze race, en staat er ook nog niets,
+    // dan voorlopig de lijst van de vorige race. Anders kan niemand invullen.
+    // Zie voorlopigeLijst() in uitslagen.mjs.
+    if (bron && !patch.drivers && !(race.drivers ?? []).length) {
+      const leen = voorlopigeLijst(race, races);
+      if (leen) {
+        patch.drivers = leen.drivers;
+        console.log(`  ronde ${race.round} ${race.name}: voorlopig de coureurs van ${leen.naam},`
+          + ' OpenF1 heeft ze nog niet');
+      }
+    }
     // Vlak na de race en een dag erna kijken we alles nog een keer na, ook wat
     // we al hebben. Zie opnieuwNakijken(): een tijdstraf of een geschrapte
     // ronde verandert de klassering achteraf, en dat is de punten van iedereen
