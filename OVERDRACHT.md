@@ -7622,3 +7622,44 @@ glans), 2,95 s (tijdens) en 6 s (erna), maakt een schermafdruk van elke regel
 van de rode kop, en telt links en rechts hoeveel ervan letter is, op 393, 430
 en 1280 pixels breed. Op de oude css zakt hij (links 0,00 na de glans); twee
 mutanten, allebei gedood.
+
+## De seizoensvragen en de joker
+
+Danny: *"Dubbel check even dat die eindvragen niet verdubbeld worden als iemand
+bijvoorbeeld de joker heeft ingezet bij de laatste race."*
+
+**In de app klopt het, en klopte het al.** De joker hangt aan een weekend:
+`scoreWeekend()` telt de sessies van dat weekend (sprint, kwalificatie, race)
+en verdubbelt die som. De seizoensvragen zitten daar niet in; ze staan in een
+eigen lijst (`SEIZOENVRAAG`) en komen er één keer bij in `standRijen()`, via
+`scoreSeizoen()`, dat de jokers niet kent. De antwoorden hangen aan ronde 1
+(dat is hun deadline), maar ook een joker op ronde 1 raakt ze niet. Er is geen
+tweede plek die de stand uitrekent: stand, weekendkaart, grafiek, deelplaatje
+en verhaal gaan allemaal door `standRijen()`.
+
+**Wat er niet klopte: de controle van de stand.** `scripts/controle-stand.mjs`
+(de workflow "Klopt de stand?") rekent de stand na met de rekenkern die uit
+`index.html` geknipt wordt. Twee fouten:
+
+- Hij haalde de jokers niet op, en gaf de poule niet door. Zonder
+  `jokers_vanaf` staan de jokers uit, dus telde bij hem elk weekend enkel: een
+  stand die er geloofwaardig uitzag en niet die van de app was. Nu haalt hij
+  de jokers op, zet hij "joker ×2" bij het weekend, en weigert
+  `rekenkern()` in `scripts/knipsel.mjs` zonder poule en jokers.
+- `vindAntwoord()` stond buiten de knip, terwijl `scoreSeizoen()` hem
+  gebruikt. Zolang het seizoen liep merkte niemand dat (dan geeft
+  `scoreSeizoen()` meteen nul), maar na de laatste race viel de controle om op
+  "vindAntwoord is not defined". Hij staat nu binnen `<knip zoeken>`.
+
+Kanttekening die er los van staat: de controle leest met de anon key, en sinds
+de afscherming ziet die alleen antwoorden en jokers van een poule waar hij lid
+van is, dus geen. Wil je dat hij echt de echte stand narekent, dan moet hij met
+de service_role-sleutel lezen (als GitHub-secret, zoals de sync).
+
+**Test:** `test/knipsel.test.mjs` rekent een heel seizoen na met de
+productiecode: twee spelers met dezelfde antwoorden (twee keer de goede
+winnaar, de goede kampioen), de een met jokers op de eerste en de laatste
+race. Uitkomst 150 tegen 100; een verdubbelde seizoenslaag zou 200 geven. Zes
+mutanten (seizoen dubbel via ronde 1, via de laatste race, via
+`scoreSeizoen`, `vindAntwoord` buiten de knip, geen weigering, joker
+verdubbelt niet): allemaal gedood.

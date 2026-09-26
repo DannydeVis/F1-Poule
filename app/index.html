@@ -4354,15 +4354,17 @@ const drv = (race, nr) => (race.drivers ?? []).find(d => d.nr === nr)
 const zelfde = (a, b) => String(a) === String(b);
 const vindPred = (raceId, memberId) =>
   S.preds.find(p => zelfde(p.race_id, raceId) && zelfde(p.member_id, memberId));
+// Binnen de knip, want scoreSeizoen() zoekt er de seizoensantwoorden mee op.
+// Stond hij erbuiten, dan viel de controle van de stand om zodra het seizoen
+// erop zat -- precies het moment dat de seizoensvragen gaan tellen.
+const vindAntwoord = (raceId, memberId, vraagId) =>
+  S.antwoorden.find(a => zelfde(a.race_id, raceId) && zelfde(a.member_id, memberId)
+                      && a.question_id === vraagId);
 // </knip zoeken>
 
 // Mijn eigen rij uit de spelerslijst. S.ik draagt alleen id en naam, en voor
 // het publieke profiel is ook de rest van de rij nodig.
 const ikRij = () => S.leden.find(l => zelfde(l.member_id, S.ik?.id)) ?? null;
-
-const vindAntwoord = (raceId, memberId, vraagId) =>
-  S.antwoorden.find(a => zelfde(a.race_id, raceId) && zelfde(a.member_id, memberId)
-                      && a.question_id === vraagId);
 
 // Alleen voor de demomodus: die heeft geen database om naar te schrijven.
 function zetAntwoord({ pool_id, race_id, member_id }, question_id, waarde) {

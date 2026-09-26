@@ -53,7 +53,7 @@ je eigen computer.
 | `terugkijken.test.mjs` | Dat je eigen inzending na de deadline zichtbaar blijft maar niet meer te wijzigen is, en dat andermans keuze pas na sluiting open gaat |
 | `wis-alles.test.mjs` | De wis-allesknop: twee tikken, en dat hij alleen het tabblad wist waar je op staat |
 | `kalender-en-coureurs.test.mjs` | Het testrecord Kuala Lumpur uit de kalender van OpenF1, wanneer de deelnemerslijst opnieuw opgehaald wordt, en dat een rondenummer nooit van race wisselt |
-| `knipsel.test.mjs` | Dat de rekenkern nog uit `index.html` te knippen is en klopt — de audit draait erop |
+| `knipsel.test.mjs` | Dat de rekenkern nog uit `index.html` te knippen is en klopt — de audit draait erop. Zonder poule en jokers weigert hij (anders is het een andere stand), en over een heel seizoen met jokers op de eerste en de laatste race tellen de seizoensvragen één keer: 150 tegen 100, niet 200 |
 | `account.test.mjs` | Het anonieme account: dat rondkijken er geen aanmaakt, dat een geclaimde speler nooit overgenomen wordt, en dat een gedeeld toestel gewoon een tweede speler mag inschrijven |
 | `terugblik.test.mjs` | Je blinde vlek en het zwaarste weekend — en vooral wannéér de app zijn mond houdt: een gemiddelde over twee weekenden is toeval, geen patroon |
 | `bijna-goed.test.mjs` | "Zo dichtbij": welke bijna-treffers wel en niet meetellen (drie plekken ernaast is niet bijna, een uitvaller telt nergens mee), en dat het ook echt op het scherm belandt |
