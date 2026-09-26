@@ -586,6 +586,40 @@ DESCRIPTION:Race Baku: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-11731@f1-poule
+DTSTAMP:20261003T080000Z
+DTSTART:20261003T080000Z
+DTEND:20261003T090000Z
+SUMMARY:Kwalificatie Kuala Lumpur — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Kuala Lumpur\, Bahrain
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Kuala Lumpur: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-11731@f1-poule
+DTSTAMP:20261004T070000Z
+DTSTART:20261004T070000Z
+DTEND:20261004T080000Z
+SUMMARY:Race Kuala Lumpur — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Kuala Lumpur\, Bahrain
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Kuala Lumpur: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11388@f1-poule
 DTSTAMP:20261010T130000Z
 DTSTART:20261010T130000Z
