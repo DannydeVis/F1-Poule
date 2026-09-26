@@ -1,10 +1,15 @@
-// Twee dingen die de sync klakkeloos van OpenF1 overnam.
+// De kalender en de deelnemerslijst.
 //
-// 1. "Ik weet niet hoe je aan Kuala Lumpur komt maar volgens mij is dat geen
-//    race." Klopt: OpenF1 heeft in 2026 een testrecord tussen de races staan,
-//    met de officiële naam "FORMULA 1 GULF AIR BAHRAIN GRAND PRIX IN MALAYSIA
-//    2026" en een meeting_key (1308) buiten de hele reeks van het seizoen
-//    (1279 t/m 1302). De kalender nam het gewoon over.
+// 1. De rondenummers. Hier stond eerst een filter dat Kuala Lumpur, "FORMULA 1
+//    GULF AIR BAHRAIN GRAND PRIX IN MALAYSIA 2026" met meeting_key 1308, voor
+//    een testrecord hield omdat die key buiten de volgorde van het seizoen
+//    viel. Danny, 26 september: "2-4 oktober is de race van Bahrein in
+//    Malaysia en die staat er nog niet in." Het was een echte race: Bahrein
+//    werd in april afgelast en verplaatst naar Sepang. Een race die er
+//    halverwege bij komt krijgt vanzelf een nieuwe, hogere meeting_key. Nu
+//    gaat alles erin, en komt zo'n race op zijn plek in de rondes
+//    (rondeIndeling); test/ingevoegde-race.test.mjs speelt het na met de
+//    echte sync.
 //
 // 2. "Soms valt er wel eens een coureur uit. Dan komt er een reserve coureur
 //    of ze gaan wisselen van team. Dat zag ik niet gebeuren." De sync haalde
@@ -14,66 +19,11 @@
 // zoals OpenF1 ze op 6 september 2026 teruggaf.
 
 import { maakControle } from './hulp.mjs';
-import { deelnemersUit, hoortNietInDeKalender, VERVERS_VENSTER_DAGEN,
-         weekendBron, lijstDekt, rondeToewijzing,
+import { deelnemersUit, VERVERS_VENSTER_DAGEN,
+         weekendBron, lijstDekt, rondeToewijzing, rondeIndeling,
          dubbeleRaces } from '../scripts/uitslagen.mjs';
 
 const { check, afronden } = maakControle('kalender en deelnemerslijst');
-
-// ------------------------------------------------------------------
-//  De echte kalender van 2026, zoals OpenF1 hem geeft
-// ------------------------------------------------------------------
-const ECHT = [
-  ['2026-03-08', 1279, 'Melbourne'],        ['2026-03-15', 1280, 'Shanghai'],
-  ['2026-03-29', 1281, 'Suzuka'],           ['2026-04-12', 1282, 'Sakhir'],
-  ['2026-04-19', 1283, 'Jeddah'],           ['2026-05-03', 1284, 'Miami Gardens'],
-  ['2026-05-24', 1285, 'Montréal'],         ['2026-06-07', 1286, 'Monte Carlo'],
-  ['2026-06-14', 1287, 'Barcelona'],        ['2026-06-28', 1288, 'Spielberg'],
-  ['2026-07-05', 1289, 'Silverstone'],      ['2026-07-19', 1290, 'Spa-Francorchamps'],
-  ['2026-07-26', 1291, 'Budapest'],         ['2026-08-23', 1292, 'Zandvoort'],
-  ['2026-09-06', 1293, 'Monza'],            ['2026-09-13', 1294, 'Madrid'],
-  ['2026-09-26', 1295, 'Baku'],             ['2026-10-11', 1296, 'Marina Bay'],
-  ['2026-10-25', 1297, 'Austin'],           ['2026-11-01', 1298, 'Mexico City'],
-  ['2026-11-08', 1299, 'São Paulo'],        ['2026-11-22', 1300, 'Las Vegas'],
-  ['2026-11-29', 1301, 'Lusail'],           ['2026-12-06', 1302, 'Yas Marina'],
-].map(([date_start, meeting_key, location]) => ({ date_start, meeting_key, location }));
-
-const KUALA = { date_start: '2026-10-04', meeting_key: 1308, location: 'Kuala Lumpur' };
-
-const namen = (rijen) => rijen.map((r) => r.location).join(', ');
-
-check('de echte kalender van 24 races is helemaal in orde',
-  hoortNietInDeKalender(ECHT).length === 0, namen(hoortNietInDeKalender(ECHT)));
-
-const metKuala = [...ECHT, KUALA];
-const eruit = hoortNietInDeKalender(metKuala);
-check('Kuala Lumpur wordt eruit gepikt en verder niemand',
-  eruit.length === 1 && eruit[0].location === 'Kuala Lumpur', namen(eruit));
-
-// Het scherpe punt: de buren van het verdwaalde record mogen niet mee. Baku
-// en Marina Bay staan er direct naast en zijn wél echt.
-check('Baku en Marina Bay blijven staan',
-  !eruit.some((r) => ['Baku', 'Marina Bay'].includes(r.location)), namen(eruit));
-
-// Een tweede testrecord erbij verandert daar niets aan.
-const tweeFout = [...ECHT, KUALA,
-  { date_start: '2026-05-10', meeting_key: 1350, location: 'Verweggistan' }];
-const eruit2 = hoortNietInDeKalender(tweeFout);
-check('twee verdwaalde records worden allebei gevonden',
-  eruit2.length === 2
-    && eruit2.some((r) => r.location === 'Kuala Lumpur')
-    && eruit2.some((r) => r.location === 'Verweggistan'), namen(eruit2));
-
-// Een kalender die van achteren naar voren genummerd is, is niet fout — dan
-// is er geen enkele race die uit de toon valt, alleen een andere volgorde.
-const omgekeerd = ECHT.map((r, i) => ({ ...r, meeting_key: 2000 - i }));
-check('een kalender die aflopend genummerd is levert geen valse alarmen',
-  hoortNietInDeKalender(omgekeerd).length === 0,
-  namen(hoortNietInDeKalender(omgekeerd)));
-
-check('een handjevol races is te weinig om iets over te zeggen',
-  hoortNietInDeKalender(ECHT.slice(0, 3)).length === 0);
-check('en een lege kalender ook', hoortNietInDeKalender([]).length === 0);
 
 // ------------------------------------------------------------------
 //  Deelnemerslijst: wanneer opnieuw ophalen?
@@ -316,6 +266,42 @@ check('een gat in de nummering wordt niet opgevuld',
 const zonderKey = rondeToewijzing([sessie(999, '2026-03-01')], [{ round: 4, race_key: null }]);
 check('een rij zonder race_key houdt zijn ronde bezet',
   zonderKey.get('999') === 5, String(zonderKey.get('999')));
+
+// Een race die er halverwege tussen komt: Kuala Lumpur op 4 oktober, tussen
+// Baku (17) en Marina Bay (18). Hij hoort op 18, en de rest schuift op.
+{
+  const kl = sessie(11731, '2026-10-04');
+  const db = [
+    { id: 'baku', name: 'Baku', round: 17, race_key: 11377 },
+    { id: 'mb', name: 'Marina Bay', round: 18, race_key: 11388 },
+    { id: 'aus', name: 'Austin', round: 19, race_key: 11396 },
+    { id: 'mex', name: 'Mexico City', round: 20, race_key: 11404 },
+  ];
+  const { ronde, verschuiven } = rondeIndeling([...KALENDER, kl].sort((a, b) =>
+    Date.parse(a.date_start) - Date.parse(b.date_start)), db);
+  check('een race midden in het seizoen komt op zijn plek, niet achteraan',
+    ronde.get('11731') === 18, String(ronde.get('11731')));
+  check('en de races erachter schuiven een ronde op, Baku niet',
+    ronde.get('11377') === 17 && ronde.get('11388') === 19 && ronde.get('11396') === 20
+      && ronde.get('11404') === 21, [...ronde].map(([k, v]) => `${k}=${v}`).join(' '));
+  check('per id, zodat een rij met zijn voorspellingen verhuist',
+    JSON.stringify(verschuiven.map((v) => [v.id, v.van, v.naar]))
+      === JSON.stringify([['mb', 18, 19], ['aus', 19, 20], ['mex', 20, 21]]),
+    JSON.stringify(verschuiven));
+  // Een gat achter de nieuwe race vangt de verschuiving op.
+  const metGatErachter = rondeIndeling([sessie(11377, '2026-09-26'), kl, sessie(11396, '2026-10-25')],
+    [{ id: 'baku', round: 17, race_key: 11377 }, { id: 'aus', round: 19, race_key: 11396 }]);
+  check('een gat erachter vangt het op: dan schuift er niemand',
+    metGatErachter.ronde.get('11731') === 18 && metGatErachter.verschuiven.length === 0,
+    JSON.stringify([...metGatErachter.ronde]));
+  // Een afgelaste race die OpenF1 niet meer kent, telt met zijn eigen datum.
+  const metAfgelast = rondeIndeling([sessie(11377, '2026-09-26'), kl],
+    [{ id: 'sakhir', round: 4, race_key: 11261, deadline_race: '2026-04-12T15:00:00Z' },
+     { id: 'baku', round: 17, race_key: 11377 }]);
+  check('een afgelaste rij uit april blijft gewoon staan waar hij stond',
+    metAfgelast.ronde.get('11731') === 18 && metAfgelast.verschuiven.length === 0,
+    JSON.stringify(metAfgelast));
+}
 
 // ------------------------------------------------------------------
 //  Dubbele rijen naar dezelfde sessie

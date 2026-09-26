@@ -29,7 +29,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 import { readFileSync, writeFileSync } from 'node:fs';
 import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast,
          deelnemersUit, lijstDekt, opnieuwNakijken, zelfdeWaarde, veiligeVervanging,
-         hoortNietInDeKalender, rondeToewijzing, dubbeleRaces }
+         rondeIndeling, dubbeleRaces }
   from './uitslagen.mjs';
 import { maakAgenda } from './agenda.mjs';
 import { wieKrijgtEenSeintje } from './herinneringen.mjs';
@@ -166,38 +166,34 @@ async function kalender(jaar) {
   const sprintPerMeeting = new Map(sprints.map((s) => [s.meeting_key, s]));
   if (sprints.length) console.log(`  ${sprints.length} sprintsessies gevonden`);
 
-  // OpenF1 heeft in 2026 een testrecord tussen de races staan: Kuala Lumpur,
-  // officieel "FORMULA 1 GULF AIR BAHRAIN GRAND PRIX IN MALAYSIA 2026", met
-  // een meeting_key (1308) buiten de hele reeks van het seizoen. Zonder deze
-  // controle staat dat gewoon in ieders poule, en laat de app mensen een
-  // voorspelling doen voor een race die nooit gereden wordt.
-  const nep = hoortNietInDeKalender(races);
-  for (const r of nep) {
-    console.log(`  overgeslagen: ${r.location} ${String(r.date_start).slice(0, 10)}`
-      + ` — meeting ${r.meeting_key} valt buiten de reeks van dit seizoen`);
-  }
-  const echt = races.filter((r) => !nep.includes(r));
+  // Alles wat OpenF1 als race heeft, gaat erin. Hier stond een filter dat
+  // Kuala Lumpur (meeting 1308, "FORMULA 1 GULF AIR BAHRAIN GRAND PRIX IN
+  // MALAYSIA 2026") voor een testrecord hield, omdat zijn meeting_key buiten
+  // de volgorde van het seizoen viel. Het was een echte race: Bahrein werd in
+  // april afgelast en in oktober verplaatst naar Sepang. Een race die er
+  // halverwege het seizoen bij komt, krijgt bij OpenF1 vanzelf een nieuwe,
+  // hogere meeting_key, dus juist zo'n race gooide dat filter eruit.
+  const opDatum = [...races].sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
 
-  const opDatum = echt.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
-
-  // Rondenummers zijn geen volgnummers maar de identiteit van een rij: de
-  // upsert gaat op (season, round), en aan races.id hangen de voorspellingen.
-  // Doorgeteld over de overgebleven races schuift alles ná een weggevallen
-  // race een plaats op, en dan komt een voorspelling bij de verkeerde race te
-  // staan. Een race die we al kennen houdt daarom zijn nummer.
-  if (!opDatum.length) {
-    console.log(`  geen echte races voor ${jaar} over`);
-    return 0;
-  }
+  // Rondenummers zijn de identiteit van een rij: de upsert gaat op (season,
+  // round), en aan races.id hangen de voorspellingen. Een race die we al
+  // kennen houdt zijn rij. Komt er een race tussen twee bestaande in, dan
+  // schuiven de rijen erachter eerst per id een nummer op, van achter naar
+  // voren zodat er nooit twee rijen hetzelfde nummer hebben. Pas daarna de
+  // upsert, die dan elke bekende race op zijn eigen (verhuisde) rij vindt.
+  // Zie rondeIndeling() in uitslagen.mjs.
   const bestaand = await haalRaces(jaar);
-  const ronde = rondeToewijzing(opDatum, bestaand);
-  for (const race of opDatum) {
-    const key = String(race.session_key);
-    const oud = bestaand.find((b) => String(b.race_key) === key);
-    if (oud && oud.round !== ronde.get(key)) {
-      console.log(`  let op: ${race.location} zou van ronde ${oud.round} naar`
-        + ` ${ronde.get(key)} gaan; dat doen we niet`);
-    }
+  const { ronde, verschuiven } = rondeIndeling(opDatum, bestaand);
+  for (const v of [...verschuiven].sort((a, b) => b.van - a.van)) {
+    await updateRace(v.id, { round: v.naar });
+  }
+  if (verschuiven.length) {
+    const nieuw = opDatum.filter((r) => !bestaand.some((b) => String(b.race_key) === String(r.session_key)));
+    const wat = `${nieuw.map((r) => `${r.location ?? r.circuit_short_name} (ronde ${ronde.get(String(r.session_key))})`)
+      .join(', ')} ertussen gezet; ${verschuiven.length} races een ronde opgeschoven`
+      + ` (${verschuiven.map((v) => `${v.name} ${v.van}→${v.naar}`).join(', ')})`;
+    console.log(`  ${wat}`);
+    noteer(`Kalender ${jaar}: ${wat}`);
   }
 
   const rijen = opDatum
@@ -224,12 +220,6 @@ async function kalender(jaar) {
   await upsertRaces(rijen);
   console.log(`  ${rijen.length} races weggeschreven`);
   noteer(`Kalender ${jaar}: ${rijen.length} races`);
-
-  // Stond zo'n record er al in, dan blijft de rij staan. Doorstrepen is hier
-  // het juiste, en niet verwijderen: er kunnen voorspellingen aan hangen, en
-  // 'afgelast' vertelt in de app precies het goede verhaal — hij telt voor
-  // niemand mee.
-  if (nep.length) await streepDoor(nep, jaar);
 
   await ruimDubbelenOp(jaar);
   return rijen.length;
@@ -262,16 +252,6 @@ async function ruimDubbelenOp(jaar) {
       console.log(`  ronde ${rij.round} verwijderd: dubbel met ronde ${houden.round}`
         + ` (${rij.name}, sessie ${rij.race_key})`);
     }
-  }
-}
-
-async function streepDoor(nep, jaar) {
-  const bestaand = await haalRaces(jaar);
-  for (const r of nep) {
-    const staat = bestaand.find((b) => b.race_key === r.session_key && !b.afgelast);
-    if (!staat) continue;
-    await updateRace(staat.id, { afgelast: true });
-    console.log(`  ${staat.name} doorgestreept: die race bestaat niet`);
   }
 }
 

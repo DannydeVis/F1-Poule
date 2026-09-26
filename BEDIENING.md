@@ -1009,24 +1009,28 @@ zegt, en zet hem daarna met de hand op afgelast:
 update public.races set afgelast = true where season = 2026 and round = 19;
 ```
 
-**Races die niet bestaan.** OpenF1 heeft in 2026 een testrecord tussen de races
-staan: Kuala Lumpur op 4 oktober, officieel "FORMULA 1 GULF AIR BAHRAIN GRAND
-PRIX IN MALAYSIA 2026". De kalender nam dat gewoon over, en dan laat de app
-mensen een voorspelling doen voor een race die nooit gereden wordt.
+**Een race die er halverwege bij komt.** In 2026 werd Bahrein in april
+afgelast en in oktober verplaatst naar Sepang: "FORMULA 1 GULF AIR BAHRAIN
+GRAND PRIX IN MALAYSIA 2026", Kuala Lumpur, 4 oktober, tussen Baku en Marina
+Bay. Tot 26 september hield de sync die race voor een testrecord (zijn
+`meeting_key` 1308 viel buiten de volgorde van het seizoen, zoals bij elke race
+die later wordt toegevoegd) en liet hem weg. Dat filter is weg: wat OpenF1 als
+race heeft, gaat erin.
 
-De sync herkent zoiets aan de nummering: OpenF1 deelt `meeting_key` op
-kalendervolgorde uit, dus bij echte races loopt die gelijk op met de datum.
-Kuala Lumpur heeft 1308 terwijl het hele seizoen tussen 1279 en 1302 zit, en is
-daarmee het enige record dat die volgorde breekt. Zo'n race wordt overgeslagen
-bij het opnieuw ophalen van de kalender, en als hij er al in stond wordt hij
-doorgestreept — niet verwijderd, want er kunnen voorspellingen aan hangen.
+Zo'n race komt op zijn plek in de rondes, niet als laatste: de rijen erachter
+schuiven eerst per id een ronde op, van achter naar voren, en pas dan schrijft
+de sync de kalender weg. Een rij verhuist zo mét zijn voorspellingen. De log
+van de sync en het logboek in het beheer zeggen het, bijvoorbeeld "Kuala Lumpur
+(ronde 18) ertussen gezet; 7 races een ronde opgeschoven (Marina Bay 18→19,
+…)". Zie `rondeIndeling()` in `scripts/uitslagen.mjs`.
 
-Wat daarbij níét gebeurt is opnieuw doornummeren. Het rondenummer is de
-sleutel waarmee een rij in de database wordt teruggevonden, en aan die rij
-hangen alle voorspellingen. Zou de nummering opschuiven omdat er een race
-tussenuit valt, dan stond je voorspelling ineens bij de volgende race. Een
-race die we al kennen houdt daarom zijn rondenummer, wat er ook vóór hem
-gebeurt.
+De rondenummers in de app lopen daardoor niet gelijk met de officiële
+nummering van de FIA: de afgelaste races blijven als doorgestreepte ronde
+staan. Voor de stand maakt dat niets uit, die rekent alleen op de volgorde.
+
+De kalender wordt één keer per dag opnieuw opgehaald (de run van 04:23 UTC, als
+GitHub hem aflevert). Wil je niet wachten: Actions → Uitslagen synchroniseren →
+Run workflow, met "Ook de kalender opnieuw ophalen" aangevinkt.
 
 Er zit een rem op: wijst die regel meer dan een kwart van de kalender aan, dan
 gebeurt er niets. Dan is niet de kalender raar maar de regel niet van
