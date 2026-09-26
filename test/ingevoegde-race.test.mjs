@@ -20,6 +20,8 @@
 //   5. Nog een keer draaien verandert niets, en een race ná de laatste krijgt
 //      gewoon het volgende nummer zonder dat er iets schuift.
 //   6. De agenda en het logboek zeggen het.
+//   7. Heeft OpenF1 nog geen coureurs bij de nieuwe race, dan krijgt hij
+//      voorlopig de lijst van de race ervoor: anders kan niemand invullen.
 //
 // De nabootsing is die van test/jaarwisseling.test.mjs: OpenF1 onder /v1,
 // PostgREST onder /rest/v1, en de sync als los proces.
@@ -155,6 +157,8 @@ function openf1(res, pad, zoek) {
     const lijst = wereld.uitslagen[zoek.get('session_key')];
     return lijst ? stuur(lijst.map((nr, i) => ({ driver_number: Number(nr), position: i + 1 }))) : niet();
   }
+  // Voor Kuala Lumpur heeft OpenF1 nog geen coureurs, zoals op 26 september.
+  if (pad === 'drivers' && String(zoek.get('session_key')).startsWith('1308')) return niet();
   if (pad === 'drivers') {
     return stuur([{ driver_number: 1, name_acronym: 'VER', full_name: 'Max', team_name: 'Red Bull', team_colour: '3671c6' },
                   { driver_number: 4, name_acronym: 'NOR', full_name: 'Lando', team_name: 'McLaren', team_colour: 'ff8000' }]);
@@ -205,7 +209,10 @@ const lijst = () => opRonde().map((r) => `${r.round}:${r.name}${r.afgelast ? '(a
 wereld.races = [
   rij(1, 1, 1279, 'Melbourne', -200, { quali_result: ['1', '4'], race_result: ['1', '4'] }),
   rij(2, 2, 1282, 'Sakhir', -167, { afgelast: true }),
-  rij(3, 3, 1295, 'Baku', -1, { quali_result: ['4', '1'], race_result: ['4', '1'] }),
+  rij(3, 3, 1295, 'Baku', -1, { quali_result: ['4', '1'], race_result: ['4', '1'],
+    drivers: [{ nr: '1', code: 'VER', naam: 'Max', team: 'Red Bull', kleur: '#3671c6' },
+              { nr: '4', code: 'NOR', naam: 'Lando', team: 'McLaren', kleur: '#ff8000' },
+              { nr: '81', code: 'PIA', naam: 'Oscar', team: 'McLaren', kleur: '#ff8000' }] }),
   rij(4, 4, 1296, 'Marina Bay', 15),
   rij(5, 5, 1297, 'Austin', 29),
   rij(6, 6, 1302, 'Yas Marina', 71),
@@ -249,6 +256,12 @@ wereld.answers = [
   check('en het logboek voor het beheer ook',
     wereld.sync_runs.some((r) => /Kuala Lumpur \(ronde 4\) ertussen gezet/.test(r.samenvatting ?? '')),
     JSON.stringify(wereld.sync_runs.at(-1)));
+  // OpenF1 heeft voor Kuala Lumpur nog geen coureurs (404). Zonder lijst kan
+  // niemand invullen, dus voorlopig die van Baku, de race ervoor.
+  const baku = naam(3);
+  check('zonder coureurs bij OpenF1 krijgt Kuala Lumpur voorlopig de lijst van de race ervoor',
+    JSON.stringify(kl?.drivers) === JSON.stringify(baku.drivers)
+      && /Kuala Lumpur: voorlopig de coureurs van Baku/.test(log), JSON.stringify(kl?.drivers));
   const ics = readFileSync(agenda, 'utf8');
   const plek = (w) => ics.indexOf(`Race ${w} `);
   check('in de agenda staat Kuala Lumpur tussen Baku en Marina Bay',

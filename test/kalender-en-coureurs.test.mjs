@@ -20,7 +20,7 @@
 
 import { maakControle } from './hulp.mjs';
 import { deelnemersUit, VERVERS_VENSTER_DAGEN,
-         weekendBron, lijstDekt, rondeToewijzing, rondeIndeling,
+         weekendBron, lijstDekt, rondeToewijzing, rondeIndeling, voorlopigeLijst,
          dubbeleRaces } from '../scripts/uitslagen.mjs';
 
 const { check, afronden } = maakControle('kalender en deelnemerslijst');
@@ -301,6 +301,27 @@ check('een rij zonder race_key houdt zijn ronde bezet',
   check('een afgelaste rij uit april blijft gewoon staan waar hij stond',
     metAfgelast.ronde.get('11731') === 18 && metAfgelast.verschuiven.length === 0,
     JSON.stringify(metAfgelast));
+}
+
+// ------------------------------------------------------------------
+//  Een voorlopige lijst voor een race waar OpenF1 nog niemand bij heeft
+// ------------------------------------------------------------------
+{
+  const lijst = (naam) => [{ nr: '1', code: naam }];
+  const races = [
+    { round: 15, name: 'Monza', drivers: lijst('MON') },
+    { round: 16, name: 'Madrid', drivers: lijst('MAD'), afgelast: true },
+    { round: 17, name: 'Baku', drivers: lijst('BAK') },
+    { round: 18, name: 'Kuala Lumpur', drivers: null },
+    { round: 19, name: 'Marina Bay', drivers: lijst('SIN') },
+  ];
+  const kl = voorlopigeLijst(races[3], races);
+  check('een race zonder lijst leent die van de laatste race ervoor, niet die erna',
+    kl?.naam === 'Baku' && kl.drivers[0].code === 'BAK', JSON.stringify(kl));
+  const naMadrid = voorlopigeLijst({ round: 17 }, races);
+  check('en slaat een afgelaste race over', naMadrid?.naam === 'Monza', JSON.stringify(naMadrid));
+  check('zonder eerdere race met een lijst is er niets te lenen',
+    voorlopigeLijst({ round: 1 }, races) === null);
 }
 
 // ------------------------------------------------------------------

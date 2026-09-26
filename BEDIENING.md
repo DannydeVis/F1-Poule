@@ -1028,6 +1028,11 @@ De rondenummers in de app lopen daardoor niet gelijk met de officiële
 nummering van de FIA: de afgelaste races blijven als doorgestreepte ronde
 staan. Voor de stand maakt dat niets uit, die rekent alleen op de volgorde.
 
+Heeft OpenF1 bij zo'n race nog geen coureurs (bij Kuala Lumpur een week van
+tevoren nog een 404), dan krijgt hij voorlopig de deelnemerslijst van de race
+ervoor, anders kan niemand invullen. Zodra OpenF1 de echte lijst heeft,
+vervangt de gewone verversing hem (`voorlopigeLijst()`).
+
 De kalender wordt één keer per dag opnieuw opgehaald (de run van 04:23 UTC, als
 GitHub hem aflevert). Wil je niet wachten: Actions → Uitslagen synchroniseren →
 Run workflow, met "Ook de kalender opnieuw ophalen" aangevinkt.
