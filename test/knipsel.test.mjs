@@ -33,7 +33,7 @@ for (const naam of BLOKKEN) {
 const moetErin = {
   primitieven: ['scoreLijst', 'duelStand', 'scoreEerste', 'scoreDuels', 'teamParen'],
   vragen: ['COUREURVRAAG', 'EXTRAVRAAG', 'coureurVragen', 'scoreTab', 'scoreWeekend'],
-  zoeken: ['zelfde', 'vindPred'],
+  zoeken: ['zelfde', 'vindPred', 'vindAntwoord'],
   optellen: ['bouwPreds', 'vraagActief', 'puntenVoor', 'standRijen',
              'weekendWinnaars', 'heeftVoorspeld', 'duels', 'weekendOverwinningen'],
 };
@@ -84,7 +84,7 @@ const antwoorden = [
 const map = mkdtempSync(join(tmpdir(), 'poule-knipsel-'));
 const pad = join(map, 'rekenen.mjs');
 writeFileSync(pad, `${rekenkern(bron, {
-  leden, races, antwoorden, vragen,
+  leden, races, antwoorden, vragen, poule: {}, jokers: [],
   poulevragen: ['winnaar'],
   ik: { id: 'a' },
 })}
@@ -113,6 +113,80 @@ if (uit) {
   check('het onderlinge duel staat 1-0 voor mij',
     uit.duels[0]?.ik === 1 && uit.duels[0]?.ander === 0,
     JSON.stringify(uit.duels));
+}
+
+// ------------------------------------------------------------------
+// 3. De jokers moeten erin, anders is het een andere stand.
+// ------------------------------------------------------------------
+// Zonder de poule staan de jokers uit en telt elk weekend enkel. Dat rekende
+// scripts/controle-stand.mjs een tijd lang: een stand die er geloofwaardig
+// uitzag en niet die van de app was.
+let zonder = '';
+try { rekenkern(bron, { leden, races, antwoorden, vragen, poulevragen: [], ik: { id: 'a' } }); }
+catch (e) { zonder = e.message; }
+check('zonder poule en jokers weigert de rekenkern, in plaats van stil een andere stand te geven',
+  zonder.includes('poule') && zonder.includes('jokers'), zonder || 'geen fout');
+
+// ------------------------------------------------------------------
+// 4. Een heel seizoen, met jokers: de seizoensvragen tellen één keer.
+// ------------------------------------------------------------------
+// Danny: "Dubbel check even dat die eindvragen niet verdubbeld worden als
+// iemand de joker heeft ingezet bij de laatste race."
+//
+// Twee spelers vullen precies hetzelfde in: twee keer de goede winnaar (25)
+// en de goede wereldkampioen (50). Alleen 'a' heeft jokers, op de eerste race
+// en op de laatste. De eerste omdat de seizoensantwoorden daaraan hangen (dat
+// is hun deadline), de laatste omdat daar het seizoen eindigt en de
+// seizoensvragen gescoord worden. Allebei zijn plekken waar een joker per
+// ongeluk de seizoenslaag zou kunnen raken.
+//
+//   a: 25×2 + 25×2 + 50 = 150     b: 25 + 25 + 50 = 100
+//
+// Een verdubbelde seizoenslaag zou 'a' op 200 zetten.
+{
+  const seizoenRaces = [
+    { id: 11, season: 2026, round: 1, name: 'Melbourne', drivers: DRIVERS,
+      deadline_quali: '2026-03-07T05:00:00Z', deadline_race: '2026-03-08T04:00:00Z',
+      quali_result: null, race_result: ['1', '44', '16', '6'] },
+    { id: 12, season: 2026, round: 2, name: 'Abu Dhabi', drivers: DRIVERS,
+      deadline_quali: '2026-12-05T14:00:00Z', deadline_race: '2026-12-06T13:00:00Z',
+      quali_result: null, race_result: ['1', '16', '44', '6'] },
+  ];
+  const seizoenVragen = [...vragen,
+    { id: 'kampioen', naam: 'Wereldkampioen', punten: 50, sessie: 'seizoen', soort: 'coureur', gok: false, volgorde: 210 }];
+  const seizoenAntwoorden = ['a', 'b'].flatMap((m) => [
+    { pool_id: 'p', race_id: 11, member_id: m, question_id: 'winnaar', waarde: '1' },
+    { pool_id: 'p', race_id: 12, member_id: m, question_id: 'winnaar', waarde: '1' },
+    { pool_id: 'p', race_id: 11, member_id: m, question_id: 'kampioen', waarde: '1' },
+  ]);
+  const pad2 = join(map, 'seizoen.mjs');
+  writeFileSync(pad2, `${rekenkern(bron, {
+    leden, races: seizoenRaces, antwoorden: seizoenAntwoorden, vragen: seizoenVragen,
+    poule: { jokers_vanaf: '2026-01-01T00:00:00Z' },
+    jokers: [{ pool_id: 'p', race_id: 11, member_id: 'a' }, { pool_id: 'p', race_id: 12, member_id: 'a' }],
+    poulevragen: ['winnaar', 'kampioen'],
+    ik: { id: 'a' },
+  })}
+export const draai = () => ({
+  eerste: scoreWeekend(vindPred(11, 'a'), S.races[0]),
+  laatste: scoreWeekend(vindPred(12, 'a'), S.races[1]),
+  seizoenA: scoreSeizoen('a'),
+  seizoenB: scoreSeizoen('b'),
+  stand: Object.fromEntries(standRijen().map((r) => [r.id, r.punten])),
+});
+`);
+  let s4;
+  try { s4 = (await import(pad2)).draai(); }
+  catch (e) { check('een afgelopen seizoen rekent door, seizoensvragen en al', false, String(e).split('\n')[0]); }
+  if (s4) {
+    check('een afgelopen seizoen rekent door, seizoensvragen en al', true);
+    check('de joker verdubbelt het eerste weekend', s4.eerste === 50, String(s4.eerste));
+    check('en het laatste', s4.laatste === 50, String(s4.laatste));
+    check('de seizoensvragen leveren met en zonder joker hetzelfde op: 50',
+      s4.seizoenA === 50 && s4.seizoenB === 50, `${s4.seizoenA} en ${s4.seizoenB}`);
+    check('in de stand tellen ze één keer mee, niet dubbel: 150 en 100',
+      s4.stand.a === 150 && s4.stand.b === 100, JSON.stringify(s4.stand));
+  }
 }
 
 process.exit(afronden() ? 0 : 1);

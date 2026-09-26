@@ -52,13 +52,16 @@ if (pools.length > 1) {
 }
 const poule = pools[0];
 
-const [leden, poulevragen, vragen, races, antwoorden] = await Promise.all([
+const [leden, poulevragen, vragen, races, antwoorden, jokers] = await Promise.all([
   sb(`pool_members?pool_id=eq.${poule.id}&select=*`),
   sb(`pool_questions?pool_id=eq.${poule.id}&select=question_id`),
   sb(`questions?select=*`),
   // Het seizoen van deze poule, zoals de app het ook doet. Stond op 2026.
   sb(`races?season=eq.${poule.season}&select=*&order=round`),
   sb(`answers?pool_id=eq.${poule.id}&select=*`),
+  // Zonder de jokers telt elk weekend enkel, en klopt de stand niet meer
+  // met de app zodra iemand er een gelegd heeft.
+  sb(`jokers?pool_id=eq.${poule.id}&select=*`),
 ]);
 
 const ikLid = leden.find((l) => (l.display_name ?? '').toLowerCase().includes(IK));
@@ -73,12 +76,13 @@ console.log(`Spelers: ${leden.map((l) => l.display_name).join(', ')}`);
 console.log(`Jij: ${ikLid.display_name} (${ikLid.member_id})`);
 console.log(`Vragen aan: ${poulevragen.length ? poulevragen.map((q) => q.question_id).join(', ') : 'alles (geen keuze gemaakt)'}`);
 console.log(`Races: ${races.length}, waarvan gescoord: ${races.filter((r) => r.quali_result || r.race_result).length}`);
+console.log(`Jokers: ${poule.jokers_vanaf ? `${jokers.length} gelegd` : 'staan uit'}`);
 
 // De module die de echte code draait, met de echte data erin.
 const map = mkdtempSync(join(tmpdir(), 'poule-controle-'));
 const pad = join(map, 'rekenen.mjs');
 writeFileSync(pad, `${rekenkern(bron, {
-  leden, races, antwoorden, vragen,
+  leden, races, antwoorden, vragen, poule, jokers,
   poulevragen: poulevragen.map((q) => q.question_id),
   ik: { id: ikLid.member_id },
 })}
@@ -97,6 +101,7 @@ export function draai() {
           quali: scoreTab(vindPred(r.id, l.member_id), r, 'quali'),
           race: scoreTab(vindPred(r.id, l.member_id), r, 'race'),
           totaal: scoreWeekend(vindPred(r.id, l.member_id), r),
+          joker: heeftJoker(r.id, l.member_id),
         })),
       })),
   };
@@ -109,7 +114,7 @@ const { stand, weekendOverwinningen, duels, perRace } = draai();
 console.log('\n=== per race, opnieuw berekend uit de ruwe data ===');
 for (const r of perRace) {
   console.log(`  ronde ${r.ronde} ${r.naam}: ${r.spelers.map((s) =>
-    `${s.naam}=${s.totaal} (Q${s.quali}+R${s.race})`).join(', ')}`);
+    `${s.naam}=${s.totaal} (Q${s.quali}+R${s.race}${s.joker ? ', joker ×2' : ''})`).join(', ')}`);
 }
 
 console.log('\n=== seizoensstand (herberekend) ===');

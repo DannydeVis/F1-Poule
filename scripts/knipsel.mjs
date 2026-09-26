@@ -35,11 +35,21 @@ export function knipUit(bron, naam) {
 /**
  * De vier blokken aan elkaar, met een toestand S eromheen. Dat is precies
  * wat de rekenkern nodig heeft: S.leden, S.races, S.antwoorden, S.vragen,
- * S.poulevragen, S.ik en S.preds. bouwPreds() vult S.preds uit S.antwoorden.
+ * S.poulevragen, S.ik, S.poule, S.jokers en S.preds. bouwPreds() vult
+ * S.preds uit S.antwoorden.
+ *
+ * De poule en de jokers zijn verplicht. Ze stonden er eerst niet in, en dan
+ * rekent de kern gewoon door: zonder `poule.jokers_vanaf` staan de jokers uit
+ * en telt elk weekend enkel. Dat gaf een stand die er geloofwaardig uitzag
+ * en toch niet die van de app was, zodra iemand een joker had gelegd.
  */
 export function rekenkern(bron, toestand) {
+  const mist = ['poule', 'jokers'].filter((k) => !(k in toestand));
+  if (mist.length) {
+    throw new Error(`rekenkern: ${mist.join(' en ')} ontbreekt; zonder rekent hij een andere stand dan de app`);
+  }
   return `
-const S = ${JSON.stringify({ preds: [], jokers: [], ...toestand })};
+const S = ${JSON.stringify({ preds: [], ...toestand })};
 
 ${BLOKKEN.map((naam) => knipUit(bron, naam)).join('\n\n')}
 
