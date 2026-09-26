@@ -324,106 +324,94 @@ export function deelnemersUit(race, nu = Date.now(), sessies = []) {
 }
 
 /**
- * Welke races uit OpenF1 horen niet bij dit seizoen?
- *
- * Aanleiding: "Ik weet niet hoe je aan Kuala Lumpur komt maar volgens mij is
- * dat geen race." Klopt. sync.mjs nam letterlijk over wat OpenF1 op
- * `sessions?year=2026&session_name=Race` teruggeeft, zonder één controle, en
- * daar zit een testrecord tussen:
- *
- *     2026-09-26  meeting 1295  Baku          ... AZERBAIJAN GRAND PRIX 2026
- *     2026-10-04  meeting 1308  Kuala Lumpur  ... BAHRAIN GRAND PRIX IN MALAYSIA 2026
- *     2026-10-11  meeting 1296  Marina Bay    ... SINGAPORE GRAND PRIX 2026
- *
- * "Bahrain Grand Prix in Malaysia" bestaat niet, en de meeting_key valt
- * buiten de hele reeks van het seizoen (1279 t/m 1302). Dat tweede is het
- * bruikbare signaal, want daar hoef je geen namen voor te lezen: OpenF1 deelt
- * meeting_key op kalendervolgorde uit, dus bij de echte races loopt hij
- * gelijk op met de datum. Precies één record breekt dat.
- *
- * Bewust niet op de naam gefilterd. Een lijst van "echte" circuits zou elk
- * jaar bijgewerkt moeten worden en zou een nieuwe Grand Prix weggooien —
- * en juist een nieuwe race is er een die niemand verwacht.
- */
-export function hoortNietInDeKalender(races) {
-  if (races.length < 6) return [];   // te weinig om een volgorde uit te lezen
-  const op = [...races].sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
-
-  // Voor elke race: welk deel van de races vóór hem heeft een hógere
-  // meeting_key, en welk deel van de races ná hem een lágere? Bij een
-  // kalender die netjes oploopt is dat allebei nul.
-  //
-  // Bewust een aandeel en geen aantal. Kuala Lumpur staat op vier na
-  // achteraan, dus er kunnen maar zeven races na hem misstaan — met een
-  // vaste drempel verdwijnt zo'n record precies daar waar het staat, en
-  // niemand zet een testrecord bij voorkeur in het midden. Als aandeel is
-  // het glashelder: van de zeven races die erna komen, staan er zeven fout.
-  const scheef = op.map((r, i) => {
-    const voor = op.slice(0, i).filter((x) => x.meeting_key > r.meeting_key).length;
-    const na = op.slice(i + 1).filter((x) => x.meeting_key < r.meeting_key).length;
-    return Math.max(i ? voor / i : 0, i < op.length - 1 ? na / (op.length - 1 - i) : 0);
-  });
-
-  // De helft is ruim: bij de echte kalender van 2026 komt geen enkele race
-  // boven 0,06 uit en Kuala Lumpur zit op 1,00.
-  const verdacht = op.filter((_, i) => scheef[i] > 0.5);
-
-  // En dan de rem. Deze uitkomst leidt tot het doorstrepen van races, dus
-  // hij mag nooit een heel seizoen meenemen. Wijst hij meer dan een kwart
-  // van de kalender aan, dan is niet de kalender raar maar deze regel niet
-  // van toepassing — bijvoorbeeld als OpenF1 ooit aflopend gaat nummeren.
-  // Dan liever niets doen dan alles weggooien.
-  return verdacht.length > op.length / 4 ? [] : verdacht;
-}
-
-/**
- * Welk rondenummer krijgt elke race?
+ * Welk rondenummer krijgt elke race, en welke rijen moeten daarvoor een
+ * nummer opschuiven?
  *
  * Dit lijkt een formaliteit maar is het niet. De upsert van de kalender gaat
  * op (season, round), dus het rondenummer is in de praktijk de identiteit van
  * een rij — en aan die rij hangen via races.id alle voorspellingen.
  *
- * Dat ging mis op het moment dat er voor het eerst een race uit de kalender
- * viel (het testrecord Kuala Lumpur). De nummering liep gewoon door over de
- * overgebleven races, dus alles ná Kuala Lumpur schoof een plaats op: de rij
- * die Kuala Lumpur was werd Marina Bay, de rij die Marina Bay was werd
- * Austin, en de laatste ronde bleef als wees achter. Had er iemand al voor
- * Marina Bay voorspeld, dan stond die voorspelling ineens bij Austin.
+ * Dat ging één keer mis, toen Kuala Lumpur (ten onrechte, zie hieronder) uit
+ * de kalender viel. De nummering liep gewoon door over de overgebleven races,
+ * dus alles erachter schoof een plaats op: de rij die Kuala Lumpur was werd
+ * Marina Bay, de rij die Marina Bay was werd Austin, en de laatste ronde bleef
+ * als wees achter. Had er iemand al voor Marina Bay voorspeld, dan stond die
+ * voorspelling ineens bij Austin.
  *
  * De echte identiteit van een race is zijn race_key: dat is de sessie bij
- * OpenF1 en die verandert nooit. Dus een race die we al kennen houdt het
- * rondenummer dat hij had, wat er ook vóór hem gebeurt. Alleen een race die
- * we nog nooit gezien hebben krijgt een nieuw nummer, en dan één hoger dan
- * het hoogste dat al bestaat.
+ * OpenF1 en die verandert nooit. Een race die we al kennen houdt dus zijn
+ * rij. Zijn rondenummer blijft ook staan, behalve in één geval: er komt
+ * midden in het seizoen een race bij. Dat gebeurde in 2026: Bahrein werd in
+ * april afgelast en kwam in oktober terug in Maleisië, tussen Baku en Marina
+ * Bay. De app rekent overal op rondes in de volgorde van de kalender (de stand
+ * vóór een weekend, wie er klom, de laatste race), dus die race hoort tussen
+ * 17 en 18 in, niet als ronde 25 achteraan.
  *
- * Niet het laagste vrije nummer, en dat is met opzet. Een gat in de nummering
- * is precies de plek waar ooit een race stond die eruit gehaald is; daar een
- * nieuwe race in schuiven maakt van dat gat weer een verwarring. Bovendien
- * levert het rare uitkomsten op: een race die in december wordt toegevoegd
- * zou dan ronde 1 kunnen krijgen. Doortellen is saai en voorspelbaar, en dat
- * is hier de bedoeling.
+ * Dan schuiven de rijen erachter een nummer op, en dat gebeurt per id
+ * (`verschuiven`, door sync.mjs uitgevoerd vóór de upsert). Zo verhuist een
+ * rij mét zijn voorspellingen naar zijn nieuwe nummer, in plaats van dat een
+ * andere race zijn nummer, en daarmee zijn rij, overneemt.
  *
- * kalenderRaces moet op datum gesorteerd zijn; alleen daaruit volgt de
- * nummering van een database die nog leeg is.
+ * Een nieuwe race na de laatste bekende krijgt het nummer na het hoogste dat
+ * er is. Een gat in de nummering wordt niet opgevuld: dat is de plek waar ooit
+ * een race stond, en een race die in december wordt toegevoegd hoort geen
+ * ronde 1 te krijgen. Wel vangt een gat een verschuiving op: wie erachter
+ * staat hoeft dan niet op te schuiven.
+ *
+ * Waar een nieuwe race komt, volgt uit de datum: vóór de eerste bestaande rij
+ * (op rondevolgorde) die later valt. De datum van een bestaande rij komt uit
+ * de kalender als OpenF1 hem nog kent, anders uit deadline_race; een rij
+ * zonder datum laat alles erachter komen.
  */
-export function rondeToewijzing(kalenderRaces, bestaand = []) {
-  const bekend = new Map();
-  const gebruikt = new Set();
-  for (const r of bestaand) {
-    if (Number.isFinite(r.round)) gebruikt.add(r.round);
-    if (r.race_key === null || r.race_key === undefined) continue;
-    bekend.set(String(r.race_key), r.round);
-  }
+export function rondeIndeling(kalenderRaces, bestaand = []) {
+  const opKey = new Map(kalenderRaces.map((r) => [String(r.session_key), r]));
+  const tijd = (w) => { const t = Date.parse(w ?? ''); return Number.isFinite(t) ? t : null; };
+  const datumVan = (rij) => {
+    const k = rij.race_key === null || rij.race_key === undefined ? null : String(rij.race_key);
+    return tijd((k !== null && opKey.get(k)?.date_start) || rij.deadline_race);
+  };
+  const oud = bestaand.filter((r) => Number.isFinite(r.round)).sort((a, b) => a.round - b.round);
+  const bekend = new Set(oud.filter((r) => r.race_key !== null && r.race_key !== undefined)
+    .map((r) => String(r.race_key)));
+  const nieuw = kalenderRaces.filter((r) => !bekend.has(String(r.session_key)))
+    .sort((a, b) => (tijd(a.date_start) ?? 0) - (tijd(b.date_start) ?? 0));
 
-  const uit = new Map();
-  let volgende = Math.max(0, ...gebruikt) + 1;
-  for (const race of kalenderRaces) {
-    const key = String(race.session_key);
-    if (bekend.has(key)) { uit.set(key, bekend.get(key)); continue; }
-    uit.set(key, volgende++);
+  // Samenvoegen: de bestaande rijen op nummer, de nieuwe op datum ertussen.
+  const volgorde = [];
+  let j = 0;
+  for (const rij of oud) {
+    const t = datumVan(rij);
+    while (j < nieuw.length && t !== null && (tijd(nieuw[j].date_start) ?? Infinity) < t) {
+      volgorde.push({ nieuw: nieuw[j++] });
+    }
+    volgorde.push({ rij });
   }
-  return uit;
+  while (j < nieuw.length) volgorde.push({ nieuw: nieuw[j++] });
+
+  // Nummeren: een bestaande rij houdt zijn nummer tenzij hij plaats moet maken.
+  const nummer = new Map();
+  const verschuiven = [];
+  let vorige = 0;
+  for (const x of volgorde) {
+    if (x.rij) {
+      const naar = Math.max(x.rij.round, vorige + 1);
+      if (naar !== x.rij.round) {
+        verschuiven.push({ id: x.rij.id, name: x.rij.name, van: x.rij.round, naar });
+      }
+      if (x.rij.race_key !== null && x.rij.race_key !== undefined) nummer.set(String(x.rij.race_key), naar);
+      vorige = naar;
+    } else {
+      vorige += 1;
+      nummer.set(String(x.nieuw.session_key), vorige);
+    }
+  }
+  const ronde = new Map(kalenderRaces.map((r) => [String(r.session_key), nummer.get(String(r.session_key))]));
+  return { ronde, verschuiven };
 }
+
+/** Alleen de nummers, voor wie de verschuivingen niet nodig heeft. */
+export const rondeToewijzing = (kalenderRaces, bestaand = []) =>
+  rondeIndeling(kalenderRaces, bestaand).ronde;
 
 /**
  * Rijen die naar dezelfde OpenF1-sessie wijzen: welke houden we, en welke

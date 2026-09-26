@@ -1388,6 +1388,10 @@ registreert, kan de app ook niet laten zien.**
 
 ## Kuala Lumpur bestaat niet
 
+> **Achteraf, 26 september 2026: dit klopte niet.** Kuala Lumpur was de echte,
+> verplaatste Bahrein-race. Zie "Kuala Lumpur bestaat wél" onderaan dit
+> bestand; het filter hieronder is weg.
+
 *"Ik weet niet hoe je aan Kuala Lumpur komt maar volgens mij is dat geen race."*
 
 Terecht. `sync.mjs` nam letterlijk over wat OpenF1 op
@@ -7990,4 +7994,55 @@ waar is.
 **Nog te doen, als tekst:** de voorpagina en de gids "organiseren" zeggen dat
 wie niets inlevert "een willekeurige top 10" krijgt. Dat klopt nog steeds, maar
 is niet meer alles. Gaat mee met de volgende concept-PR met teksten.
+
+## Kuala Lumpur bestaat wél: een race die er halverwege bij komt
+
+Danny, 26 september: *"Check even openf1 want 2-4 oktober is de race van
+Bahrein in Malaysia en die staat er nog niet in. Kan zijn dat Bahrein was
+afgelast maar die is vervangen door Maleisië."*
+
+Klopt, bevestigd op formula1.com: Bahrein (12 april) en Saoedi-Arabië werden
+afgelast, en Bahrein kwam terug als "Formula 1 Gulf Air Bahrain Grand Prix in
+Malaysia 2026", in Sepang van 2 tot 4 oktober. OpenF1 had hem al die tijd, met
+`meeting_key` 1308. Het filter `hoortNietInDeKalender()` (zie "Kuala Lumpur
+bestaat niet") hield hem voor een testrecord, juist omdat die key buiten de
+volgorde viel. Maar een race die later wordt toegevoegd krijgt altijd een
+nieuwe, hogere key: het filter gooide precies het soort race weg dat er
+halverwege bij komt.
+
+**Wat er nu gebeurt:**
+
+- *Het filter is weg*, met `streepDoor()`. Wat OpenF1 als race heeft, gaat erin.
+- *Op zijn plek in de rondes.* `rondeIndeling()` (vervangt de binnenkant van
+  `rondeToewijzing()`, die als dunne laag blijft) legt de nieuwe races op datum
+  tussen de bestaande rijen. Een bestaande rij houdt zijn nummer, tenzij hij
+  plaats moet maken; dan schuift hij op. Een gat in de nummering vangt dat op.
+  Een nieuwe race na de laatste krijgt gewoon het volgende nummer.
+- *Per id, van achter naar voren.* `sync.mjs` voert de verschuivingen uit vóór
+  de upsert op (season, round), met een PATCH per id en de hoogste eerst, zodat
+  er nooit twee rijen hetzelfde nummer hebben (`races_seizoen_ronde` is uniek).
+  Een rij verhuist zo mét zijn voorspellingen; de upsert vindt daarna elke
+  bekende race op zijn eigen, verhuisde rij. Dat is het verschil met de fout
+  van eerder, toen een andere race het nummer, en daarmee de rij, overnam.
+- *Waarom opschuiven en niet ronde 25:* de app rekent overal op rondes in
+  kalendervolgorde: de stand vóór een weekend (`standRijen(tot)`), wie er
+  klom, de seizoensgrafiek, de laatste race. Kuala Lumpur als ronde 25 zou na
+  Abu Dhabi tellen.
+- *De log en het logboek* zeggen wat er gebeurde: "Kuala Lumpur (ronde 18)
+  ertussen gezet; 7 races een ronde opgeschoven (Marina Bay 18→19, …)".
+
+In de database van 26 september: Melbourne 1 tot en met Madrid 16, met Sakhir
+(4) en Jeddah (5) als afgelaste rijen, Baku 17, Marina Bay 18 … Yas Marina 24.
+Kuala Lumpur stond er niet in. Na de eerste kalenderronde met deze versie is
+Kuala Lumpur ronde 18 en Yas Marina 25.
+
+**Getest** met de echte sync tegen een nagebootste OpenF1 en Supabase
+(`test/ingevoegde-race.test.mjs`); de nabootsing weigert, net als de database,
+twee rijen met hetzelfde nummer. Vijf mutanten, waarvan vier door die test en
+de vijfde (een gat niet benutten) door de unit-tests in
+`test/kalender-en-coureurs.test.mjs`.
+
+**Bijvangst die er nog staat:** Sakhir en Jeddah zijn afgelast, maar de sync
+vraagt elke run nog hun uitslag op (twee 404's per run). Onschuldig, en niet
+in deze wijziging meegenomen.
 
