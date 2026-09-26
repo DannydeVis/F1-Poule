@@ -87,7 +87,7 @@ await page.click('[data-tab="race"]');
 await page.waitForSelector('.score');
 const scherm = await tekst('#paneel');
 check('de goede gok levert 10 punten op',
-  /snelste ronde · 10 punten/.test(scherm),
+  /snelste ronde · 10 van 10 punten/.test(scherm),
   scherm.match(/snelste ronde[^A-Z]*/)?.[0] ?? 'die regel staat er niet');
 check('de snelste pitstop wacht nog steeds op zijn uitslag',
   scherm.includes('uitslag volgt nog'));

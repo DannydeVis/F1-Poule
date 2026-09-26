@@ -1070,7 +1070,12 @@
   .exactpil{display:inline-flex;align-items:center;gap:4px;font-style:normal;font-size:12px;
     font-weight:600;color:var(--paars);border:1px solid currentColor;border-radius:999px;
     padding:2px 9px 2px 6px;white-space:nowrap}
-  .voorspelkaart .pts:not(.v0)::before{content:"+ ";font-size:.72em;vertical-align:.12em}
+  .voorspelkaart .pts:not(.v0)::before,.inzending .pts:not(.v0)::before{content:"+ ";font-size:.72em;vertical-align:.12em}
+  /* Een inzending terugkijken (keuzeOverzicht): de blokken erin horen bij de
+     tegel of het paneel eromheen, deze laag is er alleen voor de plus. */
+  .inzending{display:contents}
+  /* De kop boven je top 10, net als boven elk ander onderdeel. */
+  .onderdeel{padding:0 18px 10px}
 
   /* De poule: iedereen met een rondje met zijn eerste letter, jij gemarkeerd. */
   .poulelijst{display:flex;flex-direction:column;border-top:1px solid var(--lijn)}
@@ -2210,8 +2215,10 @@ const ENGELS = Object.fromEntries([
    'which team finishes fourth in the constructors?'],
   ['vierde team',
    'fourth team'],
-  ['{wat} · {n} punten laten liggen',
-   '{wat} · {n} points left on the table'],
+  ['{wat} · {behaald} van {max} punten',
+   '{wat} · {behaald} of {max} points'],
+  ['niets gekozen',
+   'nothing picked'],
   ['{wat} · {n} punten',
    '{wat} · {n} points'],
   ['{wat} · niets gekozen',
@@ -2411,19 +2418,23 @@ const ENGELS = Object.fromEntries([
   // ---- beheer: de vier strepen in het seizoen ------------------
   ['automatisch invullen bij vergeten',
    'auto-fill when someone forgets'],
-  ['Wie een lijst vergeet krijgt sinds {datum} een willekeurige top 10, '
-   + 'gemarkeerd als automatisch. Races van vóór die datum blijven zoals ze '
-   + 'waren. Een weekend win je er niet mee.',
-   'Since {datum}, anyone who forgets a list gets a random top 10, marked as '
-   + 'automatic. Races from before that date stay as they were. It never wins '
-   + 'you a weekend.'],
+  ['Wie iets vergeet krijgt sinds {datum} een willekeurig antwoord, '
+   + 'gemarkeerd als automatisch: een top 10, en ook de losse vragen en de '
+   + 'duels. Races van vóór die datum blijven zoals ze waren. Een weekend win '
+   + 'je er niet mee.',
+   'Since {datum}, anything someone forgets gets a random answer, marked as '
+   + 'automatic: a top 10, and the extra questions and head-to-heads too. '
+   + 'Races from before that date stay as they were. It never wins you a '
+   + 'weekend.'],
   ['Nu levert een gemiste race nul punten op, en twee gemiste races is '
-   + 'meestal het einde van iemands seizoen. Aanzetten geeft wie niets inlevert '
-   + 'voortaan een willekeurige top 10. Alleen vanaf nu — de races die al gereden '
-   + 'zijn veranderen niet.',
+   + 'meestal het einde van iemands seizoen. Aanzetten geeft wie iets laat '
+   + 'liggen voortaan een willekeurig antwoord: een top 10, en ook de losse '
+   + 'vragen en de duels. Alleen vanaf nu — de races die al gereden zijn '
+   + 'veranderen niet.',
    'Right now a missed race is worth zero points, and two missed races usually '
-   + 'ends someone\'s season. Switching this on gives anyone who submits nothing '
-   + 'a random top 10. From now on only — races already run do not change.'],
+   + 'ends someone\'s season. Switching this on gives anything someone leaves '
+   + 'open a random answer: a top 10, and the extra questions and head-to-heads '
+   + 'too. From now on only — races already run do not change.'],
   ['Zet weer uit',
    'Switch off again'],
   ['Zet aan',
@@ -2591,8 +2602,12 @@ const ENGELS = Object.fromEntries([
    'result still to come'],
   ['precies goed',
    'spot on'],
-  ['teamgenoot-duels · niets gekozen',
-   'team mate head-to-heads · nothing picked'],
+  ['teamgenoot-duels',
+   'team-mate head-to-heads'],
+  ['{goed} van {n} goed',
+   '{goed} of {n} right'],
+  ['de sprint telt half',
+   'the sprint counts half'],
   ['teamgenoot-duels · {n} gekozen',
    'team mate head-to-heads · {n} picked'],
   ['tegen {wie}',
@@ -3288,10 +3303,8 @@ const ENGELS = Object.fromEntries([
    + 'hoeft niets te doen.',
    'The result is taking longer than usual. It will come by itself; you do not '
    + 'have to do anything.'],
-  ['geen duels gekozen · {n} punten laten liggen',
-   'no head-to-heads picked · {n} points left on the table'],
-  ['teamgenoot-duels · {behaald} van {punten} punten',
-   'team-mate head-to-heads · {behaald} of {punten} points'],
+  ['geen duels gekozen',
+   'no head-to-heads picked'],
   ['terug',
    'back'],
   ['Welkom,',
@@ -3784,6 +3797,11 @@ const COUREURVRAAG = {
   },
 };
 
+// Wat je bij een getal kunt kiezen: nul tot en met zes, en de zes betekent
+// "zes of meer". Staat hier en niet bij de knoppen, omdat automatisch
+// invullen er ook uit kiest (vulAutoAan) en de rekenkern de knoppen niet kent.
+const AANTALLEN = [0, 1, 2, 3, 4, 5, 6];
+
 // De twee vragen die niet over een coureur gaan. Ze delen de opbouw met de
 // vragen hierboven, maar hun antwoord is een getal of een ja/nee en hun
 // uitslag staat in een eigen kolom. `leeg` is null en niet '' of false: nul
@@ -3998,14 +4016,14 @@ const scoreTab = (p, race, welk) => {
     const antwoord = antwoordVan(p, id);
     return n + Math.round(
       scoreEerste(antwoord, COUREURVRAAG[id].uitslag(race), puntenVoor(id))
-      * contrairVoor(race, id, antwoord));
+      * contrairVoor(race, id, antwoord, p));
   }, 0);
   const extra = extraVragen(welk).reduce((n, id) => {
     const v = EXTRAVRAAG[id];
     const antwoord = p?.[id] ?? null;
     return n + Math.round(
       v.score(antwoord, race[v.kolom] ?? null, puntenVoor(id))
-      * contrairVoor(race, id, antwoord));
+      * contrairVoor(race, id, antwoord, p));
   }, 0);
   return lijst + duels + los + extra;
 };
@@ -4027,17 +4045,23 @@ const scoreTab = (p, race, welk) => {
 // navertellen het vertrouwen sloopt. De duels vallen er om dezelfde reden
 // buiten.
 const contrairAan = () => !!S.poule?.contrair_vanaf;
-function contrairVoor(race, id, antwoord) {
+// Wat de spelers op deze vraag antwoordden. Een antwoord dat de app zelf
+// invulde (vulAutoAan) telt niet mee: dat is van niemand, en het zou een
+// keuze die jij zelf maakte minder zeldzaam maken dan hij was.
+const contrairGegeven = (race, id) => S.leden
+  .map(l => vindPred(race.id, l.member_id))
+  .filter(pred => !autoAntwoord(pred, id))
+  .map(pred => COUREURVRAAG[id] ? antwoordVan(pred, id) : pred?.[id] ?? null)
+  .filter(a => !leegAntwoord(a));
+// `p` is de inzending waar het antwoord uit komt. Is het antwoord
+// automatisch ingevuld, dan is er ook niets zeldzaams aan: 1,0.
+function contrairVoor(race, id, antwoord, p = null) {
   if (!contrairAan() || leegAntwoord(antwoord)) return 1;
+  if (autoAntwoord(p, id)) return 1;
   // Niet met terugwerkende kracht, zelfde streep als bij de jokers.
   const start = weekendStart(race);
   if (start === null || start < Date.parse(S.poule.contrair_vanaf)) return 1;
-  const gegeven = S.leden
-    .map(l => {
-      const pred = vindPred(race.id, l.member_id);
-      return COUREURVRAAG[id] ? antwoordVan(pred, id) : pred?.[id] ?? null;
-    })
-    .filter(a => !leegAntwoord(a));
+  const gegeven = contrairGegeven(race, id);
   // In je eentje is niets zeldzaam, en met één inzending is het aandeel per
   // definitie 1. Allebei geven ze 1,0 -- maar expliciet is duidelijker dan
   // erop vertrouwen dat de deling dat toevallig ook doet.
@@ -4052,15 +4076,10 @@ function contrairVoor(race, id, antwoord) {
 
 // Hoe je dat op het scherm uitlegt. Zonder deze regel is een vraag die
 // ineens 18 punten oplevert in plaats van 10 gewoon een fout.
-function contrairNoot(race, id, antwoord) {
-  const keer = contrairVoor(race, id, antwoord);
+function contrairNoot(race, id, antwoord, p = null) {
+  const keer = contrairVoor(race, id, antwoord, p);
   if (keer === 1) return '';
-  const gegeven = S.leden
-    .map(l => {
-      const pred = vindPred(race.id, l.member_id);
-      return COUREURVRAAG[id] ? antwoordVan(pred, id) : pred?.[id] ?? null;
-    })
-    .filter(a => !leegAntwoord(a));
+  const gegeven = contrairGegeven(race, id);
   const zelfdeAntwoord = gegeven.filter(a => zelfde(a, antwoord)).length;
   const hoeveel = zelfdeAntwoord === 1
     ? T('je was de enige')
@@ -4960,7 +4979,9 @@ const GEBOUWD = ['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole',
 // van dat weekend. Eerst was dat de WK-stand, maar dat zette elke keer de
 // beste coureurs bovenaan, en dat leverde meer op dan de bedoeling was: "het
 // is beter om het totaal random neer te zetten". Een willekeurige lijst houdt
-// je met een paar punten aangehaakt, zonder dat vergeten ooit loont.
+// je met een paar punten aangehaakt, zonder dat vergeten ooit loont. Sinds
+// ALLES_VANAF krijgt ook elke losse vraag die iemand liet liggen een
+// willekeurig antwoord (willekeurigAntwoord()).
 //
 // Willekeurig, maar wel vast: dezelfde speler, race en sessie geven altijd
 // dezelfde lijst, op elk toestel en bij elke keer laden (zie dobbelsteen()).
@@ -5014,13 +5035,16 @@ function dobbelsteen(zaad) {
   };
 }
 
+// De coureurs van dit weekend als rugnummers, op nummer gesorteerd, zodat de
+// volgorde waarin ze in de database staan niet uitmaakt.
+const coureurNummers = (race) => [...new Set((race.drivers ?? []).map(d => String(d.nr)))]
+  .sort((a, b) => Number(a) - Number(b) || a.localeCompare(b));
+
 // Een willekeurige top 10 uit de coureurs van dit weekend, voor één speler en
-// één sessie. De coureurs eerst op nummer, zodat de volgorde waarin ze in de
-// database staan niet uitmaakt; dan geschud (Fisher-Yates) met de dobbelsteen
-// van deze poule, race, speler en sessie.
+// één sessie: geschud (Fisher-Yates) met de dobbelsteen van deze poule, race,
+// speler en sessie.
 function willekeurigeLijst(race, memberId, welk) {
-  const nrs = [...new Set((race.drivers ?? []).map(d => String(d.nr)))]
-    .sort((a, b) => Number(a) - Number(b) || a.localeCompare(b));
+  const nrs = coureurNummers(race);
   if (nrs.length < 10) return null;
   const rol = dobbelsteen(zaadVan(`${S.poule?.id}|${race.id}|${memberId}|${welk}`));
   for (let i = nrs.length - 1; i > 0; i--) {
@@ -5029,22 +5053,57 @@ function willekeurigeLijst(race, memberId, welk) {
   }
   return nrs.slice(0, 10);
 }
+
+// Een willekeurig antwoord op een losse vraag, net zo vast als de lijst
+// hierboven: dezelfde poule, race, speler en vraag geven altijd hetzelfde.
+// Een coureur uit het veld, een aantal uit AANTALLEN, ja of nee, en bij de
+// duels per team een van de twee. De teams daarbij op naam, om dezelfde reden
+// als de coureurs op nummer.
+function willekeurigAntwoord(race, memberId, id) {
+  const rol = dobbelsteen(zaadVan(`${S.poule?.id}|${race.id}|${memberId}|${id}`));
+  const kies = (lijst) => (lijst.length ? lijst[Math.floor(rol() * lijst.length)] : null);
+  if (COUREURVRAAG[id]) return kies(coureurNummers(race));
+  if (EXTRAVRAAG[id]) return EXTRAVRAAG[id].soort === 'getal' ? kies(AANTALLEN) : rol() < 0.5;
+  if (id === 'teamgenoot_duels') {
+    const paren = teamParen(race.drivers)
+      .sort((a, b) => String(a.team).localeCompare(String(b.team)));
+    return paren.length ? paren.map(pr => String(rol() < 0.5 ? pr.a.nr : pr.b.nr)) : null;
+  }
+  return null;
+}
 const oudeAutoLijst = (race, welk) =>
   Date.parse(race[SESSIES[welk].deadline]) <= WILLEKEURIG_VANAF;
 
-// Staat automatisch invullen aan voor deze lijst? De deadline moet voorbij
+// Tot dit moment vulde de app alleen de top 10 van de kwalificatie en de race
+// aan. Danny, na Baku: "Daarnaast wordt niet alles random ingevuld als iemand
+// niet alles zelf invult." Voor sessies met een deadline hierna vult hij alles
+// aan wat iemand liet liggen: ook de sprint, de losse vragen en de duels.
+// Weekenden van ervoor houden wat ze hadden, om dezelfde reden als bij
+// WILLEKEURIG_VANAF: punten die al in de stand stonden, schuiven niet.
+// De seizoensvragen blijven erbuiten; die horen bij geen enkel weekend.
+const ALLES_VANAF = Date.parse('2026-09-27T00:00:00Z');
+const allesAanvullen = (race, welk) => Date.parse(race[SESSIES[welk].deadline]) > ALLES_VANAF;
+
+// Staat automatisch invullen aan voor deze sessie? De deadline moet voorbij
 // zijn (anders valt er nog niets te vergeten) en erná liggen (anders zou het
 // met terugwerkende kracht gelden).
-function autoGeldt(race, welk) {
+function autoMoment(race, welk) {
   const vanaf = S.poule?.autofill_vanaf;
-  if (!vanaf || !top10Actief(welk)) return false;
+  if (!vanaf) return false;
   const deadline = race[SESSIES[welk].deadline];
   if (!deadline) return false;
   const t = Date.parse(deadline);
   return t < Date.now() && t > Date.parse(vanaf);
 }
-
 const isAuto = (pred, welk) => !!pred?.auto?.includes(TOP10VRAAG[welk]);
+// Is dit ene antwoord automatisch ingevuld? `auto` bewaart de veldnaam, en de
+// winnaar heeft een andere veldnaam dan zijn vraag (VRAAG_VELD).
+const autoAntwoord = (pred, id) => !!pred?.auto?.includes(VRAAG_VELD[id] ?? id);
+// De vragen van één sessie, zoals ze bij elkaar op een tabblad staan.
+const vragenVan = (welk) => [SESSIES[welk].vraag, ...coureurVragen(welk), ...extraVragen(welk),
+  ...(welk === 'race' && vraagActief('teamgenoot_duels') ? ['teamgenoot_duels'] : [])];
+// Heeft de app in deze sessie iets voor deze speler ingevuld?
+const autoInSessie = (pred, welk) => vragenVan(welk).some(id => autoAntwoord(pred, id));
 
 // Een automatische lijst moet overal waar hij te zien is zichzelf aanwijzen.
 // Punten die eruit komen zijn echt, maar de keuze is van de app en niet van
@@ -5090,36 +5149,49 @@ function autoLijst(race) {
     .slice(0, 10);
 }
 
-// Draait ná bouwPreds(): vult de gaten, en merkt aan welke lijst niet van de
-// speler zelf komt. Een halve inzending telt per lijst — wie de kwalificatie
-// wel invulde en de race vergat krijgt alleen die tweede aangevuld.
+// Een lege inzending: alle velden er, niets ingevuld.
+const leegPred = (race, memberId) => ({
+  pool_id:S.poule?.id, race_id:race.id, member_id:memberId,
+  quali_top10:null, race_top10:null, sprint_top10:null,
+  race_winnaar:null, pole:null, teamgenoot_duels:null,
+  snelste_ronde:null, snelste_pitstop:null,
+  safety_cars:null, rode_vlag:null });
+
+// Draait ná bouwPreds(): vult de gaten, en merkt per veld aan wat niet van de
+// speler zelf komt. Een halve inzending telt per vraag: wie de top 10 wel
+// invulde en de winnaar vergat, krijgt alleen een winnaar. Bij de duels telt
+// de vraag als geheel: wie er drie koos, koos er bewust drie.
 function vulAutoAan() {
   if (!S.poule?.autofill_vanaf) return;
   for (const r of S.races) {
-    // Bewust niet de sprint. Automatisch invullen bestaat om een gemist
-    // weekend niet je seizoen te laten kosten, en een sprint is een halve
-    // bijvangst op zes weekenden. Er ongevraagd een lijst voor neerzetten
-    // voegt punten toe zonder dat probleem op te lossen.
-    const welken = ['quali', 'race'].filter(w => autoGeldt(r, w));
-    if (!welken.length) continue;
-    const wk = welken.some(w => oudeAutoLijst(r, w)) ? autoLijst(r) : null;
+    const sessies = weekendSessies(r).filter(w => autoMoment(r, w));
+    if (!sessies.length) continue;
+    // De top 10's. Vóór ALLES_VANAF bewust niet de sprint: automatisch invullen
+    // bestond toen alleen om een gemist weekend niet je seizoen te laten kosten.
+    const lijsten = sessies.filter(w => top10Actief(w) && (w !== 'sprint' || allesAanvullen(r, w)));
+    const wk = lijsten.some(w => oudeAutoLijst(r, w)) ? autoLijst(r) : null;
+    // De losse vragen en de duels, alleen ná ALLES_VANAF.
+    const losse = sessies.filter(w => allesAanvullen(r, w))
+      .flatMap(w => vragenVan(w).filter(id => id !== SESSIES[w].vraag));
     for (const l of S.leden) {
-      for (const w of welken) {
-        const lijst = oudeAutoLijst(r, w) ? wk : willekeurigeLijst(r, String(l.member_id), w);
-        if (!lijst) continue;
-        let p = vindPred(r.id, l.member_id);
-        if (!p) {
-          p = { pool_id:S.poule.id, race_id:r.id, member_id:l.member_id,
-                quali_top10:null, race_top10:null, sprint_top10:null,
-                race_winnaar:null, pole:null, teamgenoot_duels:null,
-                snelste_ronde:null, snelste_pitstop:null,
-                safety_cars:null, rode_vlag:null };
-          S.preds.push(p);
-        }
-        const kolom = TOP10VRAAG[w];
-        if (p[kolom]?.length) continue;
-        p[kolom] = lijst;
+      const lid = String(l.member_id);
+      let p = vindPred(r.id, l.member_id);
+      const zet = (kolom, waarde) => {
+        if (waarde === null || waarde === undefined) return;
+        if (!p) { p = leegPred(r, l.member_id); S.preds.push(p); }
+        p[kolom] = waarde;
         p.auto = [...(p.auto ?? []), kolom];
+      };
+      for (const w of lijsten) {
+        const kolom = TOP10VRAAG[w];
+        if (p?.[kolom]?.length) continue;
+        zet(kolom, oudeAutoLijst(r, w) ? wk : willekeurigeLijst(r, lid, w));
+      }
+      for (const id of losse) {
+        const kolom = VRAAG_VELD[id] ?? id;
+        const nu = p?.[kolom];
+        if (Array.isArray(nu) ? nu.length : !leegAntwoord(nu)) continue;
+        zet(kolom, willekeurigAntwoord(r, lid, id));
       }
     }
   }
@@ -7736,14 +7808,16 @@ function autofillBlok() {
     <div class="scheiding"></div>
     <span class="label">${T('automatisch invullen bij vergeten')}</span>
     <p class="zacht" style="margin:0">${vanaf
-      ? T('Wie een lijst vergeet krijgt sinds {datum} een willekeurige top 10, '
-        + 'gemarkeerd als automatisch. Races van vóór die datum blijven zoals ze '
-        + 'waren. Een weekend win je er niet mee.',
+      ? T('Wie iets vergeet krijgt sinds {datum} een willekeurig antwoord, '
+        + 'gemarkeerd als automatisch: een top 10, en ook de losse vragen en de '
+        + 'duels. Races van vóór die datum blijven zoals ze waren. Een weekend win '
+        + 'je er niet mee.',
         { datum: esc(datumKort(vanaf)) })
       : T('Nu levert een gemiste race nul punten op, en twee gemiste races is '
-        + 'meestal het einde van iemands seizoen. Aanzetten geeft wie niets inlevert '
-        + 'voortaan een willekeurige top 10. Alleen vanaf nu — de races die al gereden '
-        + 'zijn veranderen niet.')}</p>
+        + 'meestal het einde van iemands seizoen. Aanzetten geeft wie iets laat '
+        + 'liggen voortaan een willekeurig antwoord: een top 10, en ook de losse '
+        + 'vragen en de duels. Alleen vanaf nu — de races die al gereden zijn '
+        + 'veranderen niet.')}</p>
     <button class="knop klein" id="autofillKnop">${
       vanaf ? T('Zet weer uit') : T('Zet aan')}</button>`;
 }
@@ -8685,8 +8759,8 @@ function kiesblad(r) {
 
 // De knoppen voor een getal en voor ja/nee. Ze worden twee keer gebruikt: om
 // te voorspellen, en om de uitslag met de hand in te vullen. Alleen het
-// data-attribuut verschilt, want de twee hangen aan een andere klik.
-const AANTALLEN = [0, 1, 2, 3, 4, 5, 6];
+// data-attribuut verschilt, want de twee hangen aan een andere klik. De
+// getallen zelf (AANTALLEN) staan bij EXTRAVRAAG.
 
 function extraKnoppen(id, gekozen, attribuut) {
   const knop = (waarde, tekst) => `
@@ -8814,6 +8888,7 @@ function uitslagWeergave(r, werkelijk) {
     <section class="tegel voorspelkaart">
       <div class="tegelkop"><h2>${T('Jouw voorspelling')}</h2></div>
       ${regels.length ? `
+      <div class="onderdeel">${top10Kop(lijst, werkelijk, S.tab)}</div>
       <div class="tabelkop" aria-hidden="true">
         <span>${T('voorspeld')}</span><span>${T('coureur')}</span>
         <span>${T('uitslag')}</span><span>${T('punten')}</span>
@@ -8869,7 +8944,9 @@ function pouleKaart(r, { open = false } = {}) {
     // Wie alleen de pole of een paar duels invulde heeft ook gewoon punten;
     // wie niets inleverde maar wel automatisch is aangevuld ook.
     const deed = open ? ingeleverdVoor(r, l.member_id, S.tab) : heeftVoorspeld(r, l.member_id);
-    const auto = !open && isAuto(p, S.tab);
+    // Automatisch: iets in deze sessie komt van de app. Niet alleen de top 10,
+    // want een poule kan die uit hebben staan en toch losse vragen spelen.
+    const auto = !open && autoInSessie(p, S.tab);
     return { id: l.member_id, naam: l.display_name, deed, auto,
              mij: zelfde(l.member_id, S.ik.id), joker: !open && heeftJoker(r.id, l.member_id),
              punten: werkelijk && (deed || auto) ? scoreTabMetJoker(p, r, S.tab) : null };
@@ -10052,14 +10129,11 @@ function coureurUitslag(r, mijn, id) {
   const gekozen = antwoordVan(mijn, id);
   // Een losse uitslag die nog niet binnen is: dan valt er ook nog niets over
   // te zeggen, ook niet dat je hem hebt laten liggen.
-  if (!werkelijk.length) return v.kolom ? wachtOpUitslag(T(v.label)) : '';
-  if (!gekozen) {
-    return `<p class="label amber" style="margin:0">${
-      T('{wat} · {n} punten laten liggen', { wat: esc(T(v.mis)), n: punten })}</p>`;
-  }
+  if (!werkelijk.length) return v.kolom ? wachtOpUitslag(T(v.label), autoStempel(mijn, id)) : '';
+  if (!gekozen) return onderdeelKop(esc(T(v.label)), 0, punten, ` · ${esc(T(v.mis))}`, { amber: true });
   const d = drv(r, gekozen);
   const gescoord = Math.round(scoreEerste(gekozen, werkelijk, punten)
-    * contrairVoor(r, id, gekozen));
+    * contrairVoor(r, id, gekozen, mijn));
   const plek = werkelijk.findIndex(x => zelfde(x, gekozen));
   // Bij een uitslag die maar één naam lang is zegt "werd P4" niets; dan is
   // het nuttiger om te zien wie het wél werd.
@@ -10067,9 +10141,8 @@ function coureurUitslag(r, mijn, id) {
     ? T('het werd {wie}', { wie: esc(drv(r, werkelijk[0]).code) })
     : plek === -1 ? T('niet gefinisht') : T('werd P{n}', { n: plek + 1 });
   return `
-    <span class="label">${T('{wat} · {n} punten', { wat: esc(T(v.label)), n: punten })}${
-      esc(contrairNoot(r, id, gekozen))}${
-      r[v.vlag] ? ` · ${T('handmatig ingevuld')}` : ''}</span>
+    ${onderdeelKop(esc(T(v.label)), gescoord, punten, `${esc(contrairNoot(r, id, gekozen, mijn))}${
+      r[v.vlag] ? ` · ${T('handmatig ingevuld')}` : ''}${autoStempel(mijn, id)}`)}
     <div class="sr" style="--team:${esc(d.kleur)}">
       <span class="pos">${v.letter}</span>
       <span class="code">${esc(d.code)}</span>
@@ -10084,17 +10157,15 @@ function extraUitslag(r, mijn, id) {
   const punten = puntenVoor(id);
   const werkelijk = r[v.kolom] ?? null;
   const gekozen = mijn?.[id] ?? null;
-  if (leegAntwoord(werkelijk)) return wachtOpUitslag(T(v.label));
+  if (leegAntwoord(werkelijk)) return wachtOpUitslag(T(v.label), autoStempel(mijn, id));
   if (leegAntwoord(gekozen)) {
-    return `<p class="label amber" style="margin:0">${
-      T('{wat} · {n} punten laten liggen', { wat: esc(T(v.mis)), n: punten })}</p>`;
+    return onderdeelKop(esc(T(v.label)), 0, punten, ` · ${esc(T(v.mis))}`, { amber: true });
   }
   const gescoord = Math.round(v.score(gekozen, werkelijk, punten)
-    * contrairVoor(r, id, gekozen));
+    * contrairVoor(r, id, gekozen, mijn));
   return `
-    <span class="label">${T('{wat} · {n} punten', { wat: esc(T(v.label)), n: punten })}${
-      esc(contrairNoot(r, id, gekozen))}${
-      r[v.vlag] ? ` · ${T('handmatig ingevuld')}` : ''}</span>
+    ${onderdeelKop(esc(T(v.label)), gescoord, punten, `${esc(contrairNoot(r, id, gekozen, mijn))}${
+      r[v.vlag] ? ` · ${T('handmatig ingevuld')}` : ''}${autoStempel(mijn, id)}`)}
     <div class="sr">
       <span class="pos">${v.letter}</span>
       <span class="code">${esc(String(v.soort === 'getal' ? gekozen
@@ -10111,8 +10182,36 @@ function extraUitslag(r, mijn, id) {
 // iedereen die dit seizoen volgt. Onder vrienden was dat een waarschuwing
 // waard, publiek is het een knop waarmee één iemand elke poule sloopt. De sync
 // draait elk uur, dus wachten is het antwoord.
-const wachtOpUitslag = (label) =>
-  `<p class="label" style="margin:0">${label} · ${T('uitslag volgt nog')}</p>`;
+const wachtOpUitslag = (label, extra = '') =>
+  `<p class="label" style="margin:0">${label} · ${T('uitslag volgt nog')}${extra}</p>`;
+
+// De kop boven elk onderdeel van een uitslag, overal dezelfde: wat het is en
+// wat je ervan behaalde. Danny: "Even een totaal kopje wat je in die
+// categorie aan punten behaald hebt." Eerst stond er bij de winnaar wat de
+// vraag waard was, bij de duels wat je behaalde, en bij de top 10 niets.
+// Meer dan erin zat kan ook, door de contrair-vermenigvuldiger; dan staat er
+// alleen wat je kreeg, en de noot erachter zegt waarom.
+function onderdeelKop(wat, behaald, max, extra = '', { amber = false } = {}) {
+  const punten = behaald > max
+    ? T('{wat} · {n} punten', { wat, n: behaald })
+    : T('{wat} · {behaald} van {max} punten', { wat, behaald, max });
+  return `<span class="label${amber ? ' amber' : ''}">${punten}${extra}</span>`;
+}
+// Achter de kop: dit antwoord koos de app, niet de speler.
+const autoStempel = (p, id) => autoAntwoord(p, id) ? ` · ${T('automatisch ingevuld')}` : '';
+// Wat één goed duel oplevert. De duelpunten gaan naar rato van het aantal
+// duels dat je speelde (scoreDuels), dus dat is lang niet altijd een heel
+// getal: 15 punten over negen duels is 1,7 per duel.
+const perDuelTekst = (x) => (Number.isInteger(x) ? String(x) : komma(x));
+// De top 10 van een sessie: wat hij opleverde en wat erin zat. Een sprint
+// telt voor de helft; de regels eronder tonen de gewone 5, 3 en 1 per plek,
+// dus zegt de kop erbij waarom het totaal lager is.
+function top10Kop(lijst, werkelijk, welk) {
+  const S_ = SESSIES[welk];
+  const behaald = Math.round(scoreLijst(lijst ?? [], werkelijk ?? []).totaal * (S_.weging ?? 1));
+  return onderdeelKop(T('top 10'), behaald, puntenVoor(S_.vraag),
+    S_.weging ? ` · ${T('de sprint telt half')}` : '');
+}
 
 // De duels na afloop: per team wie het werd, en of jouw keuze klopte. Alleen
 // de duels waar je een keuze in maakte staan erbij; de rest heb je niet
@@ -10124,8 +10223,7 @@ function duelUitslag(r, mijn, werkelijk) {
   const punten = puntenVoor('teamgenoot_duels');
   if (!paren.length || !werkelijk?.length) return '';
   if (!gekozen.length) {
-    return `<p class="label amber" style="margin:0">${T('geen duels gekozen · {n} punten laten liggen',
-      { n: punten })}</p>`;
+    return onderdeelKop(T('teamgenoot-duels'), 0, punten, ` · ${T('geen duels gekozen')}`, { amber: true });
   }
   const plek = (nr) => {
     const i = werkelijk.findIndex(x => zelfde(x, nr));
@@ -10135,12 +10233,15 @@ function duelUitslag(r, mijn, werkelijk) {
     .map(p => ({ p, keuze: gekozen.find(g => zelfde(g, p.a.nr) || zelfde(g, p.b.nr)) }))
     .filter(x => x.keuze && !(plek(x.p.a.nr) === Infinity && plek(x.p.b.nr) === Infinity));
   const totaal = scoreDuels(gekozen, werkelijk, paren, punten);
+  const winnaarVan = (p) => (plek(p.a.nr) < plek(p.b.nr) ? p.a : p.b);
+  const goed = gespeeld.filter(({ p, keuze }) => zelfde(keuze, winnaarVan(p).nr)).length;
+  const perDuel = gespeeld.length ? punten / gespeeld.length : 0;
   return `
-    <span class="label">${T('teamgenoot-duels · {behaald} van {punten} punten',
-      { behaald: totaal, punten })}</span>
+    ${onderdeelKop(T('teamgenoot-duels'), totaal, punten,
+      ` · ${T('{goed} van {n} goed', { goed, n: gespeeld.length })}${autoStempel(mijn, 'teamgenoot_duels')}`)}
     <ul class="strip">
       ${gespeeld.map(({ p, keuze }) => {
-        const won = plek(p.a.nr) < plek(p.b.nr) ? p.a : p.b;
+        const won = winnaarVan(p);
         const mijnD = drv(r, keuze);
         const raak = zelfde(keuze, won.nr);
         return `<li class="sr" style="--team:${esc(p.a.kleur)}">
@@ -10148,7 +10249,7 @@ function duelUitslag(r, mijn, werkelijk) {
           <span class="code">${esc(mijnD.code)}</span>
           <span class="werd">${raak ? T('won het duel')
             : T('verloor van {wie}', { wie: esc(won.code) })}</span>
-          <span class="pts ${raak ? 'v5' : 'v0'}">${raak ? '✓' : '✗'}</span>
+          <span class="pts ${raak ? 'v5' : 'v0'}">${raak ? perDuelTekst(perDuel) : 0}</span>
         </li>`;
       }).join('')}
     </ul>`;
@@ -10226,7 +10327,7 @@ function keuzeOverzicht(r, pred, welk) {
   // leek het alsof het scherm iets kwijt was in plaats van dat er niets was
   // ingeleverd.
   const top10 = !top10Actief(welk) ? '' : regels.length ? `
-    <span class="label">${T('top 10')}</span>
+    ${werkelijk ? top10Kop(lijst, werkelijk, welk) : `<span class="label">${T('top 10')}</span>`}
     <ul class="strip">
       ${regels.filter(x => x.nr).map(x => {
         const d = drv(r, x.nr);
@@ -10241,21 +10342,29 @@ function keuzeOverzicht(r, pred, welk) {
       }).join('')}
     </ul>` : `<p class="label" style="margin:0">${T('top 10 · niets ingevuld')}</p>`;
 
+  // Een vraag zonder antwoord: met uitslag de gewone kop (nul van zoveel),
+  // zonder uitslag alleen dat er niets gekozen is.
+  const nietsGekozen = (label, punten, uitslagBinnen) => uitslagBinnen
+    ? onderdeelKop(label, 0, punten, ` · ${T('niets gekozen')}`)
+    : `<p class="label" style="margin:0">${T('{wat} · niets gekozen', { wat: label })}</p>`;
+
   const los = coureurVragen(welk).map(id => {
     const v = COUREURVRAAG[id];
+    const punten = puntenVoor(id);
     const gekozen = antwoordVan(pred, id);
-    if (!gekozen) {
-      return `<p class="label" style="margin:0">${
-        T('{wat} · niets gekozen', { wat: esc(T(v.label)) })}</p>`;
-    }
-    const d = drv(r, gekozen);
     const uit = v.uitslag(r);
+    if (!gekozen) return nietsGekozen(esc(T(v.label)), punten, uit.length > 0);
+    const d = drv(r, gekozen);
     // null betekent "daar valt nog niets over te zeggen" en is iets anders
     // dan nul punten. Zonder dat onderscheid staat er een dikke 0 bij een
-    // vraag waarvan de uitslag simpelweg nog niet binnen is.
-    const gescoord = uit.length ? scoreEerste(gekozen, uit, puntenVoor(id)) : null;
+    // vraag waarvan de uitslag simpelweg nog niet binnen is. Met de
+    // contrair-vermenigvuldiger erbij, net als in de stand (scoreTab).
+    const gescoord = uit.length
+      ? Math.round(scoreEerste(gekozen, uit, punten) * contrairVoor(r, id, gekozen, pred)) : null;
     return `
-      <span class="label">${esc(T(v.label))}</span>
+      ${gescoord === null ? `<span class="label">${esc(T(v.label))}${autoStempel(pred, id)}</span>`
+        : onderdeelKop(esc(T(v.label)), gescoord, punten,
+            `${esc(contrairNoot(r, id, gekozen, pred))}${autoStempel(pred, id)}`)}
       <div class="sr" style="--team:${esc(d.kleur)}">
         <span class="pos">${v.letter}</span>
         <span class="code">${esc(d.code)}</span>
@@ -10270,62 +10379,74 @@ function keuzeOverzicht(r, pred, welk) {
     const v = EXTRAVRAAG[id];
     const punten = puntenVoor(id);
     const gekozen = pred?.[id] ?? null;
-    if (leegAntwoord(gekozen)) {
-      return `<p class="label" style="margin:0">${
-        T('{wat} · niets gekozen', { wat: esc(T(v.label)) })}</p>`;
-    }
     const echt = r[v.kolom] ?? null;
-    const gescoord = leegAntwoord(echt) ? null : v.score(gekozen, echt, punten);
+    if (leegAntwoord(gekozen)) return nietsGekozen(esc(T(v.label)), punten, !leegAntwoord(echt));
+    const gescoord = leegAntwoord(echt) ? null
+      : Math.round(v.score(gekozen, echt, punten) * contrairVoor(r, id, gekozen, pred));
     return `
-      <span class="label">${esc(T(v.label))}</span>
+      ${gescoord === null ? `<span class="label">${esc(T(v.label))}${autoStempel(pred, id)}</span>`
+        : onderdeelKop(esc(T(v.label)), gescoord, punten,
+            `${esc(contrairNoot(r, id, gekozen, pred))}${autoStempel(pred, id)}`)}
       <div class="sr">
         <span class="pos">${v.letter}</span>
         <span class="code">${esc(String(v.toon(gekozen)))}</span>
         <span class="werd">${gescoord === null ? T('uitslag volgt nog')
-          : gescoord === punten ? T('precies goed')
+          : zelfde(gekozen, echt) ? T('precies goed')
           : T('het werd {wat}', { wat: esc(String(v.toon(echt))) })}</span>
         ${gescoord === null ? ''
-          : `<span class="pts ${gescoord === punten ? 'v5' : gescoord ? 'v3' : 'v0'}">${gescoord}</span>`}
+          : `<span class="pts ${zelfde(gekozen, echt) ? 'v5' : gescoord ? 'v3' : 'v0'}">${gescoord}</span>`}
       </div>`;
   }).join('');
 
   const duelblok = welk !== 'race' || !vraagActief('teamgenoot_duels') ? '' : (() => {
     const gekozen = pred?.teamgenoot_duels ?? [];
-    if (!gekozen.length) {
-      return `<p class="label" style="margin:0">${T('teamgenoot-duels · niets gekozen')}</p>`;
-    }
-    const paren = teamParen(r.drivers)
-      .filter(p => gekozen.some(g => zelfde(g, p.a.nr) || zelfde(g, p.b.nr)));
+    const punten = puntenVoor('teamgenoot_duels');
+    if (!gekozen.length) return nietsGekozen(T('teamgenoot-duels'), punten, !!werkelijk?.length);
+    const alle = teamParen(r.drivers);
+    const paren = alle.filter(p => gekozen.some(g => zelfde(g, p.a.nr) || zelfde(g, p.b.nr)));
     if (!paren.length) return '';
     const plek = (nr) => {
       const i = (werkelijk ?? []).findIndex(x => zelfde(x, nr));
       return i === -1 ? Infinity : i;
     };
+    // Dezelfde telling als scoreDuels(): een duel waarin beide coureurs
+    // uitvielen telt niet mee, en de punten gaan naar rato.
+    const beslist = (p) => !!werkelijk && !(plek(p.a.nr) === Infinity && plek(p.b.nr) === Infinity);
+    const geteld = paren.filter(beslist);
+    const winnaarVan = (p) => (plek(p.a.nr) < plek(p.b.nr) ? p.a : p.b);
+    const keuzeIn = (p) => gekozen.find(g => zelfde(g, p.a.nr) || zelfde(g, p.b.nr));
+    const goed = geteld.filter(p => zelfde(keuzeIn(p), winnaarVan(p).nr)).length;
+    const perDuel = geteld.length ? punten / geteld.length : 0;
     return `
-      <span class="label">${T('teamgenoot-duels · {n} gekozen', { n: paren.length })}</span>
+      ${werkelijk?.length
+        ? onderdeelKop(T('teamgenoot-duels'), scoreDuels(gekozen, werkelijk, alle, punten), punten,
+            ` · ${T('{goed} van {n} goed', { goed, n: geteld.length })}${autoStempel(pred, 'teamgenoot_duels')}`)
+        : `<span class="label">${T('teamgenoot-duels · {n} gekozen', { n: paren.length })}${
+            autoStempel(pred, 'teamgenoot_duels')}</span>`}
       <ul class="strip">
         ${paren.map(p => {
           const keuze = gekozen.find(g => zelfde(g, p.a.nr) || zelfde(g, p.b.nr));
           const d = drv(r, keuze);
           const tegen = zelfde(keuze, p.a.nr) ? p.b : p.a;
           // Twee coureurs die allebei uitvielen leveren geen winnaar op.
-          const beslist = !!werkelijk && !(plek(p.a.nr) === Infinity && plek(p.b.nr) === Infinity);
-          const won = beslist ? (plek(p.a.nr) < plek(p.b.nr) ? p.a : p.b) : null;
+          const won = beslist(p) ? winnaarVan(p) : null;
           const raak = !!won && zelfde(keuze, won.nr);
           return `<li class="sr" style="--team:${esc(p.a.kleur)}">
             <span class="pos">${esc(stal(p.team)).slice(0, 3)}</span>
             <span class="code">${esc(d.code)}</span>
-            <span class="werd">${!beslist
+            <span class="werd">${!won
               ? T('tegen {wie}', { wie: esc(tegen.code) })
               : raak ? T('won het duel')
                 : T('verloor van {wie}', { wie: esc(won.code) })}</span>
-            ${beslist ? `<span class="pts ${raak ? 'v5' : 'v0'}">${raak ? '✓' : '✗'}</span>` : ''}
+            ${won ? `<span class="pts ${raak ? 'v5' : 'v0'}">${raak ? perDuelTekst(perDuel) : 0}</span>` : ''}
           </li>`;
         }).join('')}
       </ul>`;
   })();
 
-  return `${auto}${top10}${los}${extra}${duelblok}`;
+  // In een .inzending staat, net als in je eigen voorspelling, een plus voor
+  // elk getal dat punten opleverde.
+  return `<div class="inzending">${auto}${top10}${los}${extra}${duelblok}</div>`;
 }
 
 // ============================================================

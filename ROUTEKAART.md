@@ -836,9 +836,8 @@ Drie dingen om te weten als je hier verder bouwt:
 - **"Maximaal per weekend" laat de sprint erbuiten.** Hij bestaat op zes van de
   vierentwintig weekenden; meetellen zet het maximum achttien keer per seizoen
   te hoog. Hij wordt eronder apart genoemd. Zie `weekendSom()` en `sprintSom()`.
-- **Automatisch invullen slaat de sprint over.** Die regel bestaat om een
-  gemist weekend niet je seizoen te laten kosten, en een sprint is daar geen
-  onderdeel van.
+- **Automatisch invullen sloeg de sprint over.** Tot 27 september 2026; daarna
+  vult hij alles aan wat iemand liet liggen, ook de sprint (`ALLES_VANAF`).
 
 ---
 

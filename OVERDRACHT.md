@@ -7917,3 +7917,77 @@ test eerst niet). Elf mutanten.
 
 **Eerst lezen, dan online.** Weer als concept-PR; Danny leest beide talen.
 
+## Het racescherm: één kop per onderdeel, en automatisch invullen voor alles
+
+Danny, na Baku, met drie schermafdrukken: *"Kan je alles gelijk trekken qua
+puntentelling design. Even een totaal kopje wat je in die categorie aan punten
+behaald heb. Daarnaast word niet alles random ingevuld als iemand niet alles
+zelf invult."*
+
+**Wat er stond.** Bij de winnaar en de andere losse vragen stond wat de vraag
+waard was ("winnaar · 25 punten"), bij de duels wat je behaalde ("10 van 15
+punten") met per duel een vinkje, en boven de top 10 niets. In de inzending van
+een ander stond alleen "winnaar", zonder punten.
+
+**Wat het nu is.** `onderdeelKop()`: overal "<onderdeel> · <behaald> van <max>
+punten", in je eigen uitslag (`uitslagWeergave`, `coureurUitslag`,
+`extraUitslag`, `duelUitslag`) en in de inzending van een ander
+(`keuzeOverzicht`).
+
+- *De top 10* krijgt de kop boven zijn tabel (`top10Kop()`). Bij een sprint is
+  dat de helft van de regels eronder, dus staat er "de sprint telt half" bij.
+- *De duels* tonen per regel wat een goed duel opleverde: de punten gaan naar
+  rato (`scoreDuels`), dus 15 over vier duels is 3,8 per duel. De kop zegt
+  hoeveel er goed waren.
+- *Meer dan erin zat* kan met de contrair-vermenigvuldiger: dan staat er alleen
+  "38 punten" met de uitleg erachter, geen "38 van 25".
+- *Een vraag zonder antwoord* heeft dezelfde kop met nul punten.
+- *De plus* voor een getal dat punten opleverde stond alleen in je eigen
+  voorspelling; nu ook bij een ander (`.inzending`, met `display:contents`
+  zodat de indeling van de tegel niet verandert).
+- *Een fout meegenomen:* de inzending van een ander rekende de losse vragen
+  zonder de contrair-vermenigvuldiger, terwijl de stand die wel meerekent. Nu
+  hetzelfde getal.
+
+De test (`test/puntenkoppen.test.mjs`) legt vast dat de koppen samen precies het
+grote getal bovenaan zijn, op de race, de kwalificatie, een sprint en bij een
+ander. Veertien mutanten over beide delen, alle gedood, en de hele suite ook
+nog een keer gedraaid met `ALLES_VANAF` in het verleden: dan zakken alleen de
+twee controles die met opzet over de tijd vóór de streep gaan.
+
+**Automatisch invullen voor alles.** Tot nu toe vulde de app alleen de top 10
+van de kwalificatie en de race aan. Nu, voor sessies met een deadline na
+`ALLES_VANAF` (27 september 2026, na Baku), alles wat iemand liet liggen: de
+sprint, de pole, de winnaar, de snelste ronde en pitstop, safety cars, de rode
+vlag en de duels (`willekeurigAntwoord()`, met dezelfde vaste dobbelsteen als
+de lijsten, per poule, race, speler en vraag).
+
+- *Per vraag.* Wie zijn top 10 invulde en de winnaar vergat, krijgt alleen een
+  winnaar. De duels als geheel: wie er drie koos, koos bewust.
+- *Baku blijft zoals het was.* Dezelfde regel als bij `WILLEKEURIG_VANAF`: een
+  nieuwe regel geldt vanaf de eerstvolgende deadline, niet met terugwerkende
+  kracht op punten die al in de stand stonden.
+- *Niet de seizoensvragen.* Die horen bij geen weekend; een willekeurige
+  wereldkampioen is geen hulp.
+- *Contrair.* Een automatisch antwoord krijgt geen vermenigvuldiger (anders
+  zou een willekeurige gok als zeldzaam beloond worden) en telt niet mee als
+  "zelfde antwoord" bij de anderen (`contrairGegeven()`).
+- *Weekendwinst* blijft alleen voor wie zelf iets inleverde: `heeftVoorspeld()`
+  slaat elk veld in `auto` over, en daar staan de losse vragen nu ook in.
+- *Te zien.* Elk aangevuld antwoord zegt achter zijn kop "automatisch
+  ingevuld", ook zolang de uitslag nog niet binnen is.
+- `AANTALLEN` (de knoppen voor een getal) staat nu in het blok `<knip vragen>`,
+  zodat de rekenkern van `scripts/knipsel.mjs` er ook uit kan kiezen.
+
+**Tests met een datum.** Drie tests zetten automatisch invullen klaar met
+"zoveel uur geleden". Rond een streep als `ALLES_VANAF` gaat dat over een paar
+dagen vanzelf de andere kant op vallen. `test/sprintweekend.test.mjs` staat
+daarom nu op vaste data vóór de streep, en `test/automatisch-invullen.test.mjs`
+draait al op een vaste klok (15 oktober 2026), erna. De andere twee
+(`klimmen-en-reeksen`, `weekendkaart`) kijken alleen naar wat aan beide kanten
+waar is.
+
+**Nog te doen, als tekst:** de voorpagina en de gids "organiseren" zeggen dat
+wie niets inlevert "een willekeurige top 10" krijgt. Dat klopt nog steeds, maar
+is niet meer alles. Gaat mee met de volgende concept-PR met teksten.
+

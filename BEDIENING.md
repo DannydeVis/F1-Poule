@@ -429,6 +429,17 @@ krijgt wie een top 10 vergeet een **willekeurige top 10** uit de coureurs van
 dat weekend, zichtbaar gemarkeerd als automatisch. Dat levert een paar punten
 op: genoeg om niet op nul te staan, nooit genoeg om vergeten lonend te maken.
 
+Sinds 27 september 2026 (`ALLES_VANAF` in de app) geldt dat voor **alles** wat
+iemand liet liggen: ook de sprint, de pole, de winnaar, de snelste ronde en
+pitstop, het aantal safety cars, de rode vlag en de duels. Per vraag: wie de
+top 10 wel invulde en de winnaar vergat, krijgt alleen een winnaar. Bij de
+duels telt de vraag als geheel: wie er drie koos, koos er bewust drie. Elk
+aangevuld antwoord zegt achter zijn kop "automatisch ingevuld". Weekenden van
+vóór die datum houden wat ze hadden (alleen de twee top 10's), en de
+seizoensvragen blijven erbuiten. Een automatisch antwoord krijgt nooit de
+contrair-vermenigvuldiger, en telt niet mee als "zelfde antwoord" voor de
+anderen.
+
 Willekeurig, maar vast: dezelfde speler, race en sessie geven altijd dezelfde
 lijst, op elk toestel en bij elke keer laden, ook als de sync de coureurs in
 een andere volgorde wegschrijft. Elke speler die vergat krijgt een eigen
@@ -900,9 +911,8 @@ kwalificatie is zaterdag daarná. In de kalender zie je dat aan de merktekens:
 **De sprint telt voor halve punten.** Dezelfde top 10, dezelfde 5/3/1 per
 plek, maal 0,5 — een perfecte sprint is dus 25 punten en een perfecte race 50.
 Een sprint is een derde van een race lang en hoort niet net zo zwaar te wegen
-als het weekend zelf. Automatisch invullen slaat de sprint over: die regel
-bestaat om een gemist weekend niet je seizoen te laten kosten, en daar is een
-sprint geen onderdeel van.
+als het weekend zelf. Automatisch invullen sloeg de sprint tot 27 september
+2026 over; sindsdien vult hij ook de sprint aan (§6a).
 
 **Wat telt als safety car.** Een virtual safety car telt mee, en dat staat er
 in de app bij de vraag ook bij. Dat is een keuze: acht van de veertien races
