@@ -7663,3 +7663,44 @@ race. Uitkomst 150 tegen 100; een verdubbelde seizoenslaag zou 200 geven. Zes
 mutanten (seizoen dubbel via ronde 1, via de laatste race, via
 `scoreSeizoen`, `vindAntwoord` buiten de knip, geen weigering, joker
 verdubbelt niet): allemaal gedood.
+
+## De agenda krijgt een melding, een uur van tevoren
+
+Danny: *"De kalenderfunctie geeft geen herinnering als je hem toevoegt aan de
+agenda. Het enige wat hij doet is het in je agenda zetten. Ik denk beter als je
+standaard 1 uur van tevoren een melding krijgt."*
+
+**Wat er al stond:** elk item in `kalender.ics` had al een melding (`VALARM`),
+twee uur van tevoren. Die kwam niet door, en dat ligt niet aan het bestand:
+een iPhone of Mac haalt bij een agenda-abonnement de meldingen er standaard
+uit (bij het abonneren staat "meldingen verwijderen" aan). Google Agenda neemt
+meldingen uit een abonnement nooit over. Een bestand kan dat niet afdwingen.
+
+**Wat er veranderd is:**
+
+- De melding staat op een uur van tevoren ("Kwalificatie Melbourne: nog een uur
+  om in te vullen"). `scripts/agenda.mjs`, en `kalender.ics` in de repo is
+  meteen bijgewerkt: alleen die twee regels per item, opnieuw gevouwen met
+  `vouw()`, zodat het byte voor byte is wat de sync ook zou schrijven. Zo staat
+  het online zodra dit gemerged is, en niet pas na de volgende sync.
+- Onder "Zet in mijn agenda" staat nu: op een iPhone of Mac haalt een abonnement
+  de meldingen er standaard uit; zet dat uit bij het abonneren, of later bij de
+  geabonneerde agenda's in je instellingen. De uitleg erboven zegt niet meer
+  "met de melding die je daar zelf instelt" maar "met een melding een uur
+  voordat het invullen sluit".
+
+Wie al geabonneerd is (Danny zelf) krijgt de melding pas als het weghalen van
+meldingen uit staat: op een iPhone in Instellingen bij Agenda, onder de
+accounts en dan de geabonneerde agenda's (waar precies verschilt per
+iOS-versie).
+
+**Niet gedaan, wel een gat:** de sprint staat niet in de agenda, alleen de
+kwalificatie en de race. De agenda is voor alle poules hetzelfde en de
+sprintvraag doet alleen mee bij Gevorderd; een sprintdeadline in ieders agenda
+zou voor de meeste poules ruis zijn.
+
+**Tests:** `test/agenda.test.mjs`: elk item één melding, een uur van tevoren,
+op het scherm, met de goede tekst; en ook in het `kalender.ics` dat in de repo
+staat. `test/eerste-indruk.test.mjs`: de uitleg staat onder de knop. Vijf
+mutanten (twee uur, oude tekst, geluid in plaats van scherm, repo-bestand niet
+bijgewerkt, uitleg verborgen): allemaal gedood.
