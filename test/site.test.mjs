@@ -211,6 +211,14 @@ for (const code of TALEN) {
   await page.setViewportSize({ width: 360, height: 780 });
   const breed = await page.evaluate(() => document.documentElement.scrollWidth);
   check(`${code}: op een telefoon van 360 pixels geen horizontale scroll`, breed <= 360, String(breed));
+  // De hero knipt af wat uitsteekt, dus dat zie je niet aan de scroll: een
+  // woord dat breder is dan het scherm duwt de kop mee naar rechts, en valt
+  // er dan gewoon af.
+  const teBreed = await page.evaluate(() => [...document.querySelectorAll('h1, h2, h3')]
+    .filter((h) => { const r = h.getBoundingClientRect();
+      return r.width && (r.left < -1 || r.right > document.documentElement.clientWidth + 1 || h.scrollWidth > h.clientWidth + 1); })
+    .map((h) => `${h.textContent.trim().slice(0, 30)} ${Math.round(h.getBoundingClientRect().right)}/${document.documentElement.clientWidth}`));
+  check(`${code}: en op 360 pixels past elk woord in zijn kop`, teBreed.length === 0, teBreed.join(' | '));
 }
 
 check('elke pagina heeft precies dezelfde hreflang-set (wederkerig)', new Set(clusters.values()).size === 1,
@@ -218,6 +226,129 @@ check('elke pagina heeft precies dezelfde hreflang-set (wederkerig)', new Set(cl
 check('niets van een andere website geladen', extern.length === 0, extern.slice(0, 3).join(' '));
 check('geen 404 op een plaatje, lettertype of pagina', fouten404.length === 0, fouten404.slice(0, 3).join(' '));
 check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, jsFouten.join(' | '));
+
+// ---- beweging ------------------------------------------------------------------
+// Wat in beeld schuift, schuift pas als je erbij bent. Maar de inhoud mag er
+// nooit van afhangen: zonder JavaScript, met "minder beweging" aan, of als het
+// script onderaan niet draait, staat alles er gewoon.
+{
+  const t = teksten[TALEN.find((c) => !teksten[c].pad)];   // de taal op /
+  // Hoeveel van de .onthul-blokken echt te zien zijn (niet doorzichtig).
+  const TE_ZIEN = () => [...document.querySelectorAll('.onthul')].map((el) => {
+    let o = 1; for (let n = el; n; n = n.parentElement) o *= Number(getComputedStyle(n).opacity);
+    return o > 0.99;
+  });
+  const zichtbaar = (lijst) => `${lijst.filter(Boolean).length} van ${lijst.length}`;
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
+  await page.goto(url);
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(3200);
+  const vooraf = await page.evaluate(() => ({
+    beweegt: document.documentElement.classList.contains('beweegt'),
+    slot: [...document.querySelectorAll('.slot .onthul')].map((el) => Number(getComputedStyle(el).opacity)),
+  }));
+  check('met JavaScript beweegt de pagina', vooraf.beweegt);
+  // Ook na het vangnet van tweeënhalve seconde: wat onder de vouw zit wacht.
+  check('en wat nog onder de vouw zit wacht tot je erheen scrolt',
+    vooraf.slot.length > 0 && vooraf.slot.every((o) => o === 0), vooraf.slot.join());
+
+  // Stap voor stap naar beneden, zoals iemand die leest.
+  const hoog = await page.evaluate(() => document.documentElement.scrollHeight);
+  for (let y = 0; y <= hoog; y += 450) {
+    await page.evaluate((y) => scrollTo(0, y), y);
+    await page.waitForTimeout(60);
+  }
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(1600);
+  const na = await page.evaluate((TE_ZIEN) => ({
+    zichtbaar: [...document.querySelectorAll('.onthul')].map((el) => el.classList.contains('zichtbaar')),
+    te_zien: new Function(`return (${TE_ZIEN})()`)(),
+    tellers: [...document.querySelectorAll('[data-tel]')].map((n) => [n.getAttribute('data-tel'), n.textContent.trim()]),
+    balk: getComputedStyle(document.querySelector('.voortgang')).transform,
+  }), TE_ZIEN.toString());
+  check('na het scrollen is elk blok in beeld geschoven', na.zichtbaar.every(Boolean), zichtbaar(na.zichtbaar));
+  check('en ook echt te zien', na.te_zien.every(Boolean), zichtbaar(na.te_zien));
+  check('de tellers eindigen op het echte getal',
+    na.tellers.length >= 6 && na.tellers.every(([doel, staat]) => doel === staat), JSON.stringify(na.tellers));
+  const schaal = Number((na.balk.match(/matrix\(([\d.]+)/) ?? [])[1]);
+  check('de voortgangsbalk onder de kop staat onderaan vol', schaal > 0.98, na.balk);
+
+  // De band onder de hero: versiering, dus niet voorgelezen, en twee keer
+  // dezelfde rij zodat hij naadloos rondloopt.
+  const band = await page.evaluate(() => ({
+    verborgen: document.querySelector('.ticker')?.getAttribute('aria-hidden'),
+    items: [...document.querySelectorAll('.ticker span')].map((s) => s.textContent.trim()),
+  }));
+  const rij = band.items.slice(0, t.ticker.length);
+  check('de lichtkrant wordt niet voorgelezen', band.verborgen === 'true', band.verborgen);
+  check('en is twee keer dezelfde rij, met de getallen ingevuld',
+    band.items.length === 2 * t.ticker.length && band.items.slice(t.ticker.length).join('|') === rij.join('|')
+      && rij.join('|') === t.ticker.map((x) => vul(x, { exact: 5, meest: 14 })).join('|'),
+    rij.join(' · '));
+
+  const opbouw = await page.evaluate(() => ({
+    nummers: [...document.querySelectorAll('.sectiekop .label b')].map((b) => b.textContent.trim()),
+    iconen: [...document.querySelectorAll('#functies li')].map((li) => !!li.querySelector('.icoon svg')),
+    chips: [...document.querySelectorAll('.hero .zweef')].map((z) => z.getAttribute('aria-hidden')),
+    lampen: document.querySelectorAll('.hero .startlichten i').length,
+  }));
+  check('de secties zijn genummerd, 01 en verder, zonder gat',
+    opbouw.nummers.length >= 5 && opbouw.nummers.every((n, i) => n === String(i + 1).padStart(2, '0')),
+    opbouw.nummers.join());
+  check('elke functie heeft een pictogram',
+    opbouw.iconen.length === t.functies.items.length && opbouw.iconen.every(Boolean), zichtbaar(opbouw.iconen));
+  check('de zwevende kaartjes bij de telefoon zijn versiering',
+    opbouw.chips.length === t.hero.chips.length && opbouw.chips.every((a) => a === 'true'), opbouw.chips.join());
+  check('en boven de kop gaan vijf startlichten aan', opbouw.lampen === 5, String(opbouw.lampen));
+
+  const browser = context.browser();
+  // Zonder JavaScript.
+  {
+    const ctx = await browser.newContext({ javaScriptEnabled: false });
+    const p = await ctx.newPage();
+    await p.goto(url);
+    const r = await p.evaluate(TE_ZIEN);
+    check('zonder JavaScript staat alles er meteen', r.length > 20 && r.every(Boolean), zichtbaar(r));
+    await ctx.close();
+  }
+  // Met "minder beweging" aan: niets beweegt, alles staat er.
+  {
+    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+    const p = await ctx.newPage();
+    await p.goto(url);
+    await p.waitForLoadState('networkidle');
+    const r = await p.evaluate((TE_ZIEN) => ({
+      beweegt: document.documentElement.classList.contains('beweegt'),
+      animaties: document.getAnimations().length,
+      te_zien: new Function(`return (${TE_ZIEN})()`)(),
+    }), TE_ZIEN.toString());
+    check('wie om minder beweging vraagt krijgt geen animaties', !r.beweegt && r.animaties === 0,
+      `beweegt=${r.beweegt} · ${r.animaties} animaties`);
+    check('en ziet alles meteen', r.te_zien.every(Boolean), zichtbaar(r.te_zien));
+    await ctx.close();
+  }
+  // Het vangnet: het script onderaan draait niet (geblokkeerd, kapot). Dan
+  // komt alles toch tevoorschijn, ook wat onder de vouw zit.
+  {
+    const ctx = await browser.newContext();
+    let weg = false;
+    await ctx.route(url, async (route) => {
+      const r = await route.fetch();
+      const body = (await r.text()).replace(/<script>\(function\(\)\{try\{\s*var h=document\.documentElement[\s\S]*?<\/script>/,
+        () => { weg = true; return ''; });
+      await route.fulfill({ response: r, body });
+    });
+    const p = await ctx.newPage();
+    await p.goto(url);
+    await p.waitForTimeout(3200);
+    const r = await p.evaluate(TE_ZIEN);
+    check('als het script onderaan niet draait, komt alles na een paar tellen toch',
+      weg && r.every(Boolean), `script weg=${weg} · ${zichtbaar(r)}`);
+    await ctx.close();
+  }
+}
 
 // ---- de app zelf in app/ -----------------------------------------------------
 {

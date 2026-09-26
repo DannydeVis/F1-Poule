@@ -122,7 +122,7 @@ const CSS = `
   :root{
     --bg:#f2f1ee;--paneel:#fff;--paneel2:#e9e8e4;--lijn:#dcdad5;
     --ink:#14151a;--ink2:#5b5f67;--ink3:#696e75;--accent:#d93d24;--accent-ink:#fff;
-    --accent-tekst:#bf3219;--groen:#117c3e;
+    --accent-tekst:#bf3219;--groen:#117c3e;--accent-vlak:rgba(217,61,36,.10);
     --nacht:#0b0b0c;--nacht2:#15161a;--nacht-lijn:#2b2e35;--nacht-ink:#f2f3f5;--nacht-ink2:#aab0b8;
     --sans:Barlow,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
     --cond:"Barlow Condensed","Roboto Condensed","Arial Narrow",var(--sans);
@@ -131,7 +131,7 @@ const CSS = `
   @media (prefers-color-scheme:dark){:root{
     --bg:#0b0b0c;--paneel:#15161a;--paneel2:#1d1f24;--lijn:#2b2e35;
     --ink:#f2f3f5;--ink2:#a4aab2;--ink3:#8a9099;--accent:#ee4d33;--accent-ink:#0b0b0c;
-    --accent-tekst:#f26a52;--groen:#34b264;
+    --accent-tekst:#f26a52;--groen:#34b264;--accent-vlak:rgba(238,77,51,.14);--kerb:#f2f3f5;
   }}
   *{box-sizing:border-box}
   html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -147,6 +147,9 @@ const CSS = `
   .kop{position:sticky;top:0;z-index:20;background:rgba(11,11,12,.92);backdrop-filter:saturate(1.4) blur(10px);
     -webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--nacht-lijn);color:var(--nacht-ink)}
   .kop .binnen{display:flex;align-items:center;gap:18px;min-height:64px}
+  /* Hoe ver je op de pagina bent, als een rondeteller onder de kop. */
+  .voortgang{position:absolute;left:0;right:0;bottom:-1px;height:2px;pointer-events:none;
+    background:linear-gradient(90deg,#ee4d33,#ff9a6b);transform-origin:0 50%;transform:scaleX(0)}
   .merk{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto;min-height:44px}
   .merk .blok{width:24px;height:24px;flex:none;display:block}
   .merk b{font-family:var(--cond);font-size:20px;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
@@ -171,6 +174,15 @@ const CSS = `
     background:var(--accent);color:var(--accent-ink);box-shadow:0 10px 26px -12px var(--accent);transition:filter .15s,transform .15s}
   .knop:hover{filter:brightness(1.08)}
   .knop:active{transform:scale(.985)}
+  /* Een lichtstreep die over de knop veegt, en het pijltje dat een stukje
+     meeschuift. Klein, maar een knop voelt zo als iets dat je kunt indrukken. */
+  .knop{position:relative;overflow:hidden;isolation:isolate}
+  .knop::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.38) 50%,transparent 65%);
+    transform:translateX(-120%);transition:transform .7s ease}
+  .knop:hover::after{transform:translateX(120%)}
+  .knop span[aria-hidden]{display:inline-block;transition:transform .2s ease}
+  .knop:hover span[aria-hidden]{transform:translateX(4px)}
   .knop.klein{min-height:44px;padding:0 16px;font-size:15px}
   .kop .knop{display:none}
 
@@ -182,6 +194,56 @@ const CSS = `
       radial-gradient(50% 50% at 95% 100%,rgba(238,77,51,.10),transparent 60%)}
   .hero::after{content:"P1";position:absolute;z-index:-1;right:-2%;top:-6%;font-family:var(--cond);font-weight:700;
     font-size:min(46vw,440px);line-height:1;color:#fff;opacity:.035;pointer-events:none}
+  /* De livrei van de app (zoals op de deelplaatjes) rechtsboven, en een paar
+     snelheidsstrepen die door het beeld schieten. */
+  .livrei{position:absolute;z-index:-1;top:0;right:0;width:min(46vw,320px);aspect-ratio:1;pointer-events:none;
+    background:linear-gradient(45deg,transparent 58%,#ee4d33 58% 66%,transparent 66% 71%,rgba(238,77,51,.38) 71% 74%,transparent 74%)}
+  .snelheid{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+  .snelheid i{position:absolute;left:0;height:1px;width:180px;opacity:0;transform:translateX(-220px);
+    background:linear-gradient(90deg,transparent,rgba(238,77,51,.8),rgba(255,255,255,.7));border-radius:1px}
+  html.beweegt .snelheid i{animation:streep 6s cubic-bezier(.6,0,.4,1) infinite}
+  .snelheid i:nth-child(1){top:16%;animation-delay:.6s}
+  .snelheid i:nth-child(2){top:34%;animation-delay:2.8s;animation-duration:7s}
+  .snelheid i:nth-child(3){top:55%;animation-delay:1.7s;animation-duration:5.5s}
+  .snelheid i:nth-child(4){top:71%;animation-delay:4.1s}
+  .snelheid i:nth-child(5){top:86%;animation-delay:3.3s;animation-duration:6.5s}
+  .snelheid i:nth-child(6){top:95%;animation-delay:5.2s;animation-duration:8s}
+  /* Een streep schiet in een kwart van de tijd door het beeld, en wacht dan. */
+  @keyframes streep{0%{transform:translateX(-220px);opacity:0}3%{opacity:.8}24%{opacity:.5}
+    28%,100%{transform:translateX(calc(100vw + 40px));opacity:0}}
+
+  /* De startlichten: vijf keer rood, en dan uit. Lights out. */
+  .startrij{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px}
+  .startlichten{display:inline-flex;gap:8px;padding:8px 10px;border-radius:12px;background:#111216;
+    border:1px solid var(--nacht-lijn)}
+  .startlichten i{width:16px;height:16px;border-radius:50%;background:#2a2c33}
+  html.beweegt .hero .startlichten i{animation:lampAan .12s ease-out both,lampUit .3s ease-in 2.3s forwards}
+  .hero .startlichten i:nth-child(1){animation-delay:.35s,2.3s}
+  .hero .startlichten i:nth-child(2){animation-delay:.7s,2.3s}
+  .hero .startlichten i:nth-child(3){animation-delay:1.05s,2.3s}
+  .hero .startlichten i:nth-child(4){animation-delay:1.4s,2.3s}
+  .hero .startlichten i:nth-child(5){animation-delay:1.75s,2.3s}
+  @keyframes lampAan{from{background:#2a2c33;box-shadow:none}to{background:#ee4d33;box-shadow:0 0 14px 2px rgba(238,77,51,.75)}}
+  @keyframes lampUit{from{background:#ee4d33;box-shadow:0 0 14px 2px rgba(238,77,51,.75)}to{background:#2a2c33;box-shadow:none}}
+
+  /* De kop en de rest komen kort na elkaar op, en bij lights out veegt er
+     een lichtstreep over "Versla je vrienden". */
+  html.beweegt .hero h1 span,html.beweegt .hero .sub,html.beweegt .hero .actie,html.beweegt .hero .vertrouwen{
+    animation:opkomst .8s cubic-bezier(.2,.7,.2,1) both}
+  html.beweegt .hero .sub{animation-delay:.25s}
+  html.beweegt .hero .actie{animation-delay:.38s}
+  html.beweegt .hero .vertrouwen{animation-delay:.5s}
+  @keyframes opkomst{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  /* De glans: de letters zelf krijgen een verloop met een lichte streep erin
+     (de kleur blijft het accent, alleen de vulling verandert), en die streep
+     schuift er bij lights out één keer overheen. */
+  html.beweegt .hero h1 span+span{
+    background:linear-gradient(100deg,var(--accent) 42%,#ffd2c4 50%,var(--accent) 58%) 130% 0/260% 100% no-repeat;
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    animation:opkomst .8s cubic-bezier(.2,.7,.2,1) .12s both,glans 1.2s ease-out 2.35s both}
+  @keyframes glans{from{background-position:130% 0}to{background-position:-30% 0}}
+  html.beweegt .hero .knop{animation:opkomst .8s cubic-bezier(.2,.7,.2,1) .38s both,puls 1.4s ease-out 2.4s}
+  @keyframes puls{0%{box-shadow:0 0 0 0 rgba(238,77,51,.55)}100%{box-shadow:0 0 0 18px rgba(238,77,51,0)}}
   .hero .binnen{display:grid;gap:44px}
   .boven{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;letter-spacing:.16em;
     text-transform:uppercase;color:#7ee0a3;border:1px solid rgba(52,178,100,.45);background:rgba(52,178,100,.10);
@@ -189,6 +251,9 @@ const CSS = `
   .boven::before{content:"";width:8px;height:8px;border-radius:50%;background:#34b264}
   .hero h1{font-family:var(--cond);font-weight:700;text-transform:uppercase;font-size:clamp(46px,9vw,84px);
     line-height:.92;letter-spacing:.005em;margin:22px 0 20px}
+  /* "Startaufstellung" is het langste woord in alle zeven koppen: op een
+     smalle telefoon krimpt de Duitse kop mee, anders valt de punt eraf. */
+  html[lang="de"] .hero h1{font-size:min(clamp(46px,9vw,84px),11.2vw)}
   .hero h1 span{display:block}
   .hero h1 span+span{color:var(--accent)}
   .hero .sub{font-size:19px;color:var(--nacht-ink2);max-width:36em;margin:0 0 28px}
@@ -213,6 +278,67 @@ const CSS = `
     box-shadow:0 40px 80px -30px rgba(0,0,0,.8),0 0 0 1px #2b2e35;transform:rotate(-2deg)}
   .telefoon img{display:block;width:100%;height:auto}
   .telefoon .achter{position:absolute;width:82%;right:-26%;top:12%;z-index:-1;transform:rotate(6deg);opacity:.55}
+  html.beweegt .telefoon .scherm:not(.achter){animation:telefoonIn 1s cubic-bezier(.2,.7,.2,1) .15s both}
+  html.beweegt .telefoon .achter{animation:telefoonAchter 1.1s cubic-bezier(.2,.7,.2,1) .4s both}
+  @keyframes telefoonIn{from{opacity:0;transform:translateY(46px) rotate(5deg)}to{opacity:1;transform:rotate(-2deg)}}
+  @keyframes telefoonAchter{from{opacity:0;transform:translateX(40px) rotate(14deg)}to{opacity:.55;transform:rotate(6deg)}}
+  /* Meldingen die om de telefoon zweven: wat er in een weekend gebeurt. */
+  .zweef{position:absolute;z-index:2;display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border-radius:12px;
+    background:rgba(21,22,26,.94);border:1px solid var(--nacht-lijn);color:var(--nacht-ink);font-size:14px;font-weight:600;
+    white-space:nowrap;box-shadow:0 16px 34px -14px rgba(0,0,0,.8)}
+  .zweef::before{content:"";width:9px;height:9px;border-radius:50%;background:#34b264;flex:none}
+  .zweef-1{top:9%;left:-4%}
+  .zweef-2{top:45%;right:-4%}
+  .zweef-2::before{background:#ee4d33}
+  .zweef-3{bottom:9%;left:2%}
+  .zweef-3::before{background:#e0a53a}
+  html.beweegt .zweef{animation:zweefIn .6s cubic-bezier(.2,.9,.3,1.3) both,zweven 5s ease-in-out infinite}
+  html.beweegt .zweef-1{animation-delay:1s,1.6s}
+  html.beweegt .zweef-2{animation-delay:1.5s,2.4s}
+  html.beweegt .zweef-3{animation-delay:2.5s,3.1s}
+  @keyframes zweefIn{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}
+  @keyframes zweven{0%,100%{translate:0 0}50%{translate:0 -7px}}
+
+  /* De ticker onder de hero, als de balk onderin een tv-uitzending. */
+  .ticker{overflow:hidden;background:#ee4d33;color:#0b0b0c;border-block:1px solid #b92f19}
+  .ticker .rol{display:flex;width:max-content}
+  html.beweegt .ticker .rol{animation:tikker 42s linear infinite}
+  .ticker:hover .rol{animation-play-state:paused}
+  .ticker span{display:inline-flex;align-items:center;gap:20px;padding:13px 20px 13px 0;font-family:var(--mono);font-size:13px;
+    font-weight:700;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+  .ticker span::after{content:"";width:14px;height:14px;flex:none;border:1px solid #0b0b0c;
+    background:repeating-conic-gradient(#0b0b0c 0 25%,transparent 0 50%) 0 0/7px 7px}
+  @keyframes tikker{to{transform:translateX(-50%)}}
+
+  /* ---- in beeld schuiven ----
+     Alleen als er JavaScript is en niemand om minder beweging vroeg (dan zet
+     het scriptje in <head> html.beweegt). Zonder dat staat alles er gewoon.
+     Het vangnet: loopt het script onderaan om wat voor reden niet, dan komt
+     alles na tweeënhalve seconde alsnog tevoorschijn. */
+  html.beweegt .onthul{transition:opacity .75s cubic-bezier(.2,.7,.2,1),transform .75s cubic-bezier(.2,.7,.2,1);
+    transition-delay:calc(var(--i,0) * 90ms)}
+  html.beweegt .onthul:not(.zichtbaar){opacity:0;transform:var(--start,translateY(28px))}
+  html.beweegt:not(.klaar) .onthul{animation:vangnet .01s 2.5s forwards}
+  @keyframes vangnet{to{opacity:1;transform:none}}
+
+  /* Een sectiekop: een genummerd label, en daaronder de kop met een kerbstrook
+     (rood-wit, zoals de randen van een circuit) die zich uittekent. */
+  .sectiekop{margin-bottom:30px}
+  .sectiekop .label{display:inline-flex;align-items:center;gap:12px}
+  .sectiekop .label b{color:var(--accent-tekst);font-weight:700}
+  .sectiekop .label b::after{content:"";display:inline-block;width:26px;height:1px;background:currentColor;
+    margin-left:12px;vertical-align:middle;opacity:.7}
+  .sectiekop h2{margin:14px 0 0;font-size:clamp(36px,6vw,62px);line-height:.95;max-width:15em}
+  .sectiekop h2::after{content:"";display:block;width:84px;height:6px;margin-top:20px;border-radius:1px;
+    background:repeating-linear-gradient(90deg,#ee4d33 0 14px,var(--kerb,#fff) 14px 28px);
+    transform-origin:0 50%;transition:transform .9s cubic-bezier(.2,.7,.2,1) .3s}
+  html.beweegt .sectiekop:not(.zichtbaar) h2::after{transform:scaleX(0)}
+  .antwoord .binnen{display:grid;gap:14px}
+  .cijfers{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .cijfers li{background:var(--paneel);border:1px solid var(--lijn);border-radius:16px;padding:18px 14px;
+    display:flex;flex-direction:column;gap:6px}
+  .cijfers b{font-family:var(--cond);font-size:clamp(44px,8vw,68px);line-height:.85;color:var(--accent-tekst)}
+  .cijfers span{font-size:14px;line-height:1.3;color:var(--ink2)}
 
   /* ---- secties ---- */
   section[id]{scroll-margin-top:76px}
@@ -228,11 +354,20 @@ const CSS = `
   .antwoord p{margin:0;font-size:18px;color:var(--ink2)}
   .antwoord h2{font-size:clamp(28px,4vw,36px);margin:0 0 6px}
 
-  .stappen{list-style:none;margin:0;padding:0;display:grid;gap:14px;counter-reset:stap}
-  .stappen li{background:var(--paneel);border:1px solid var(--lijn);border-radius:16px;padding:22px 22px 22px 76px;
-    position:relative;counter-increment:stap}
-  .stappen li::before{content:counter(stap,decimal-leading-zero);position:absolute;left:22px;top:18px;
-    font-family:var(--cond);font-weight:700;font-size:36px;line-height:1;color:var(--accent)}
+  /* De vier stappen als een stuk circuit: een kerbstrook die zich uittekent,
+     met de stappen als meetpunten erop. */
+  .stappen{list-style:none;margin:0;padding:0;display:grid;gap:30px;counter-reset:stap;position:relative}
+  .stappen::before{content:"";position:absolute;left:29px;top:6px;bottom:6px;width:6px;border-radius:3px;
+    background:repeating-linear-gradient(180deg,#ee4d33 0 14px,var(--kerb,#fff) 14px 28px);
+    box-shadow:0 0 0 1px var(--lijn);transform-origin:50% 0;transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
+  html.beweegt .stappen:not(.zichtbaar)::before{transform:scaleY(0)}
+  .stappen li{position:relative;padding:4px 0 0 86px;counter-increment:stap;min-height:64px}
+  .stappen li::before{content:counter(stap,decimal-leading-zero);position:absolute;left:0;top:0;width:64px;height:64px;
+    border-radius:50%;display:grid;place-items:center;background:var(--bg);border:3px solid var(--accent);
+    font-family:var(--cond);font-weight:700;font-size:28px;line-height:1;color:var(--ink);
+    transition:background .25s,color .25s,transform .25s}
+  .stappen li:hover::before{background:var(--accent);color:var(--accent-ink);transform:scale(1.06)}
+  .stappen h3{font-size:20px;margin:8px 0 6px}
   .stappen p{margin:0;color:var(--ink2);font-size:16px}
 
   .tabel{width:100%;border-collapse:separate;border-spacing:0;background:var(--paneel);border:1px solid var(--lijn);
@@ -243,7 +378,16 @@ const CSS = `
   .tabel td:last-child,.tabel th:last-child{text-align:right;width:36%}
   .tabel td:last-child{font-family:var(--cond);font-weight:700;font-size:26px;line-height:1}
   .tabel tr.top td:last-child{color:var(--accent-tekst)}
-  .tabellen{display:grid;gap:18px;margin-top:18px}
+  /* Onder elke regel een balk naar hoeveel punten het is; ze groeien als de
+     tabel in beeld komt. */
+  .tabel tbody td:first-child{position:relative}
+  .tabel tbody td:first-child::after{content:"";position:absolute;left:18px;bottom:6px;height:3px;border-radius:2px;
+    width:calc((100% - 36px) * var(--w,0));background:var(--accent);opacity:.85;transform-origin:0 50%;
+    transition:transform .9s cubic-bezier(.2,.7,.2,1) calc(var(--i,0) * 80ms + .2s)}
+  html.beweegt .tabel:not(.zichtbaar) tbody td:first-child::after{transform:scaleX(0)}
+  .tabel tbody tr{transition:background .2s}
+  .tabel tbody tr:hover{background:var(--accent-vlak)}
+  .tabellen{display:grid;gap:18px;margin-top:18px;align-items:start}
   .tabellen .tabel td:last-child{font-size:22px}
   .voorbeeld{margin:18px 0 0;color:var(--ink2);font-size:16px}
   .presets{margin:22px 0 0;color:var(--ink2);font-size:16px;border-left:3px solid var(--accent);padding-left:14px}
@@ -259,7 +403,13 @@ const CSS = `
   .niveaus::after{content:attr(data-meest);position:absolute;z-index:-1;right:-1%;bottom:-12%;font-family:var(--cond);
     font-weight:700;font-size:min(52vw,520px);line-height:1;color:#fff;opacity:.035;pointer-events:none}
   .niveaus .label{color:#8a9099}
-  .niveaus h2{font-size:clamp(38px,6.4vw,64px);line-height:.95;margin:12px 0 18px}
+  .niveaus .label b{color:#ee4d33}
+  .niveaus{--kerb:#f2f3f5}
+  .niveau{transition:transform .25s ease,box-shadow .25s ease}
+  .niveau:hover{transform:translateY(-4px)}
+  .lampen i{transition:background .25s ease calc(var(--l,0) * 140ms + .35s),box-shadow .25s ease calc(var(--l,0) * 140ms + .35s)}
+  html.beweegt .niveau:not(.zichtbaar) .lampen i.aan{background:#26282e;box-shadow:inset 0 0 0 2px #1d1f24}
+  .niveaus h2{font-size:clamp(38px,6.4vw,64px);line-height:.95}
   .niveaus h2>span{display:block}
   .niveaus h2>span+span{color:var(--accent)}
   /* "F1-poule" breekt niet na het streepje. */
@@ -286,9 +436,16 @@ const CSS = `
   .niveaus .zelf{margin:26px 0 22px;color:var(--nacht-ink2);max-width:44em;border-left:3px solid #ee4d33;padding-left:14px}
 
   .functies{list-style:none;margin:0;padding:0;display:grid;gap:14px}
-  .functies li{background:var(--paneel);border:1px solid var(--lijn);border-radius:16px;padding:22px}
-  .functies li::before{content:"";display:block;width:26px;height:4px;border-radius:2px;background:var(--accent);margin-bottom:14px}
+  .functies li{position:relative;background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:24px;
+    transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+  .functies li:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 22px 44px -28px rgba(0,0,0,.45)}
+  .functies .icoon{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;margin-bottom:16px;
+    background:var(--accent-vlak);color:var(--accent-tekst);transition:transform .3s cubic-bezier(.2,.9,.3,1.4)}
+  .functies li:hover .icoon{transform:rotate(-8deg) scale(1.1)}
+  .functies .icoon svg{width:24px;height:24px}
+  .functies .nr{position:absolute;top:22px;right:22px;font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--ink3)}
   .functies p{margin:0;color:var(--ink2);font-size:16px}
+  .functies .breed h3{font-family:var(--cond);font-size:26px;text-transform:uppercase;letter-spacing:.01em}
 
   .beelden{display:grid;gap:22px}
   .beelden figure{margin:0;display:grid;gap:12px;justify-items:center;text-align:center}
@@ -296,6 +453,9 @@ const CSS = `
     box-shadow:0 24px 48px -28px rgba(0,0,0,.45)}
   .beelden img{display:block;width:100%;height:auto}
   .beelden figcaption{color:var(--ink2);font-size:15px;max-width:22em}
+  .beelden figure{--start:translateY(48px) rotate(var(--r,0deg))}
+  .beelden .kader{transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s}
+  .beelden figure:hover .kader{transform:translateY(-10px) rotate(var(--r,0deg));box-shadow:0 36px 60px -30px rgba(0,0,0,.55)}
 
   /* Eén kaart over privacy. Hier stond er een tweede naast ("Wie zit
      erachter?"); die is op verzoek weg. Smal gehouden, zodat de regels niet
@@ -306,7 +466,9 @@ const CSS = `
   .los a{color:var(--accent-tekst)}
 
   .faq{display:grid;gap:10px;max-width:880px}
-  .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px}
+  .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;transition:border-color .2s,box-shadow .2s}
+  .faq details:hover{border-color:var(--ink3)}
+  .faq details[open]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
   .faq summary{cursor:pointer;list-style:none;padding:18px 54px 18px 20px;position:relative}
   .faq summary::-webkit-details-marker{display:none}
   .faq summary::after{content:"+";position:absolute;right:20px;top:50%;transform:translateY(-50%);
@@ -318,6 +480,16 @@ const CSS = `
   .slot{background:var(--nacht);color:var(--nacht-ink);text-align:center;padding:76px 0;position:relative;overflow:hidden;isolation:isolate}
   .slot::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(60% 80% at 50% 0%,rgba(238,77,51,.2),transparent 70%)}
   .slot p{color:var(--nacht-ink2);font-size:18px;margin:0 auto 26px;max-width:32em}
+  .slot h2{font-size:clamp(40px,7vw,76px);line-height:.95;max-width:14em;margin:0 auto 18px}
+  .slot .startlichten{margin:0 auto 26px;padding:12px 14px;gap:12px;border-radius:16px}
+  .slot .startlichten i{width:26px;height:26px}
+  html.beweegt .slot .zichtbaar .startlichten i{animation:lampAan .12s ease-out both,lampUit .3s ease-in 2.1s forwards}
+  .slot .startlichten i:nth-child(1){animation-delay:.2s,2.1s}
+  .slot .startlichten i:nth-child(2){animation-delay:.55s,2.1s}
+  .slot .startlichten i:nth-child(3){animation-delay:.9s,2.1s}
+  .slot .startlichten i:nth-child(4){animation-delay:1.25s,2.1s}
+  .slot .startlichten i:nth-child(5){animation-delay:1.6s,2.1s}
+  html.beweegt .slot .zichtbaar .knop{animation:puls 1.4s ease-out 2.2s 2}
 
   .voet{background:var(--nacht);color:var(--nacht-ink2);border-top:1px solid var(--nacht-lijn);padding:40px 0 48px;font-size:14px}
   .voet .binnen{display:grid;gap:24px}
@@ -338,7 +510,6 @@ const CSS = `
   @media (min-width:720px){
     .kopnav{display:flex}
     .kop .knop{display:inline-flex}
-    .stappen{grid-template-columns:repeat(2,1fr)}
     .functies{grid-template-columns:repeat(2,1fr)}
     .beelden{grid-template-columns:repeat(3,1fr)}
     .tabellen{grid-template-columns:1fr 1fr}
@@ -349,9 +520,21 @@ const CSS = `
   @media (min-width:960px){
     .hero{padding:84px 0 92px}
     .hero .binnen{grid-template-columns:1.15fr .85fr;align-items:center}
-    .stappen{grid-template-columns:repeat(4,1fr)}
-    .stappen li{padding:74px 22px 22px}
+    .stappen{grid-template-columns:repeat(4,1fr);gap:26px}
+    .stappen::before{left:0;right:0;top:29px;bottom:auto;width:auto;height:6px;transform-origin:0 50%;
+      background:repeating-linear-gradient(90deg,#ee4d33 0 14px,var(--kerb,#fff) 14px 28px)}
+    html.beweegt .stappen:not(.zichtbaar)::before{transform:scaleX(0)}
+    .stappen li{padding:86px 0 0}
     .functies{grid-template-columns:repeat(3,1fr)}
+    .functies .breed{grid-column:span 2}
+    .antwoord .binnen{grid-template-columns:1.5fr 1fr;align-items:center}
+    .antwoord .kader{align-content:center}
+    .cijfers{grid-template-columns:1fr}
+    .cijfers li{flex-direction:row;align-items:center;gap:18px;padding:16px 20px}
+    .cijfers b{min-width:1.6em}
+    .zweef-1{left:-24%}
+    .zweef-2{right:-20%}
+    .zweef-3{left:-14%}
   }
 `;
 
@@ -360,6 +543,51 @@ const CSS = `
 // ------------------------------------------------------------
 
 const SCHERMEN = ['races', 'uitslag', 'stand'];
+
+// De iconen bij de functies, in de volgorde van teksten[..].functies.items:
+// uitslagen, jokers, duels, weekendwinnaar, delen, agenda, automatisch
+// invullen (een dobbelsteen), seizoensvragen, privé of openbaar.
+const ICOON = (pad) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${pad}</svg>`;
+const ICONEN = [
+  '<path d="M5 21V4"/><path d="M5 4h13l-2.5 4L18 12H5"/><path d="M9 4v8M13 4v8"/>',
+  '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 20c0-3 2.2-5 5-5s5 2 5 5M11 20c0-3 2.2-5 5-5s5 2 5 5"/>',
+  '<path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+  '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/>',
+  '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="m9 15 2 2 4-4"/>',
+  '<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>',
+  '<path d="m3 8 4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>',
+  '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+];
+// Welke functies over twee kolommen staan: zo wordt het raster een bento in
+// plaats van negen gelijke tegels (2+1, 1+2, 1+1+1, 2+1).
+const BREED = [0, 3, 7];
+
+// Een sectiekop: een genummerd label, en de kop zelf.
+const sectiekop = (nr, label, kop) => `<div class="sectiekop onthul"><span class="label"><b>${nr}</b>${esc(label)}</span>
+    <h2>${kop}</h2></div>`;
+
+// html.beweegt: alleen met JavaScript en als niemand om minder beweging vroeg.
+const BEWEGING_KOP = `try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('beweegt')}catch(e){}`;
+// Onderaan: wat in beeld komt krijgt .zichtbaar (en telt zijn getallen op),
+// en de balk onder de kop loopt mee met hoe ver je bent.
+const BEWEGING = `(function(){try{
+  var h=document.documentElement;if(!h.classList.contains('beweegt'))return;
+  var els=[].slice.call(document.querySelectorAll('.onthul'));
+  function tel(el){[].slice.call(el.querySelectorAll('[data-tel]')).forEach(function(n){
+    var doel=+n.getAttribute('data-tel');if(!doel)return;var t0=0;n.textContent='0';
+    function stap(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/1200);n.textContent=String(Math.round(doel*(1-Math.pow(1-p,3))));
+      if(p<1)requestAnimationFrame(stap)}requestAnimationFrame(stap)})}
+  function toon(el){el.classList.add('zichtbaar');tel(el)}
+  if(!('IntersectionObserver' in window))els.forEach(toon);
+  else{var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);toon(e.target)}})},
+    {rootMargin:'0px 0px -8% 0px',threshold:0});els.forEach(function(el){io.observe(el)})}
+  h.classList.add('klaar');
+  var balk=document.querySelector('.voortgang');
+  if(balk){var bij=function(){var max=h.scrollHeight-innerHeight;balk.style.transform='scaleX('+(max>0?Math.min(1,scrollY/max):0)+')'};
+    addEventListener('scroll',bij,{passive:true});addEventListener('resize',bij);bij()}
+}catch(e){document.documentElement.classList.add('klaar');[].slice.call(document.querySelectorAll('.onthul')).forEach(function(el){el.classList.add('zichtbaar')})}})();`;
 const beeld = (code, scherm, thema) =>
   `${voor(code)}site/beeld/${scherm}-${teksten[code].schermen}-${thema}.jpg`;
 
@@ -479,13 +707,15 @@ function pagina(code) {
         lui ? ' loading="lazy"' : ''}${voorrang ? ' fetchpriority="high"' : ''} decoding="async"${
         breed ? ` sizes="${breed}"` : ''}>
     </picture>`;
-  const rij = (id) => `<tr><td>${esc(t.punten.vragen[id])}</td><td>${PUNTEN[id].punten}</td></tr>`;
+  const MAX = Math.max(...[...LOSSE, ...SEIZOEN].map((id) => PUNTEN[id].punten));
+  const rij = (id, i) => `<tr style="--w:${(PUNTEN[id].punten / MAX).toFixed(2)};--i:${i}"><td>${esc(t.punten.vragen[id])}</td><td>${PUNTEN[id].punten}</td></tr>`;
 
   return `<!DOCTYPE html>
 <html lang="${code}">
 <head>
 <meta charset="utf-8">
-${code === 'nl' ? `<script>${DOORSTUREN}</script>\n` : ''}<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+${code === 'nl' ? `<script>${DOORSTUREN}</script>\n` : ''}<script>${BEWEGING_KOP}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(t.titel)}</title>
 <meta name="description" content="${esc(t.omschrijving)}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
@@ -532,12 +762,15 @@ ${jsonLd(code)}
     </details>
     <a class="knop klein" href="${app}">${esc(t.nav.app)}</a>
   </div>
+  <span class="voortgang" aria-hidden="true"></span>
 </header>
 <main>
 <section class="hero">
+  <div class="livrei" aria-hidden="true"></div>
+  <div class="snelheid" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="binnen">
     <div>
-      <span class="boven">${esc(t.hero.boven)}</span>
+      <div class="startrij"><span class="startlichten" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="boven">${esc(t.hero.boven)}</span></div>
       <h1>${t.hero.kop.map((r) => `<span>${esc(r)}</span>`).join('')}</h1>
       <p class="sub">${esc(t.hero.sub)}</p>
       <div class="actie">
@@ -556,90 +789,94 @@ ${jsonLd(code)}
     <div class="telefoon">
       <div class="achter scherm" aria-hidden="true"><img src="${beeld(code, 'stand', 'donker')}" alt="" width="390" height="844" loading="lazy" decoding="async"></div>
       <div class="scherm"><img src="${beeld(code, 'races', 'donker')}" alt="${esc(t.beelden.races[1])}" width="390" height="844" fetchpriority="high" decoding="async"></div>
+      ${t.hero.chips.map((c, i) => `<span class="zweef zweef-${i + 1}" aria-hidden="true">${esc(c)}</span>`).join('')}
     </div>
   </div>
 </section>
+<div class="ticker" aria-hidden="true"><div class="rol">${[0, 1].map(() => t.ticker.map((x) =>
+  `<span>${esc(vul(x, { exact: PLEKPUNTEN[0], meest: PRESET_VRAGEN.gevorderd.length }))}</span>`).join('')).join('')}</div></div>
 
 <section class="antwoord" id="wat">
   <div class="binnen">
-    <div class="kader">
+    <div class="kader onthul">
       <h2>${esc(t.antwoord.kop)}</h2>
       <p>${esc(t.antwoord.tekst)}</p>
     </div>
+    <ul class="cijfers">${[PRESET_VRAGEN.gevorderd.length, PLEKPUNTEN[0], 0].map((n, i) =>
+      `<li class="onthul" style="--i:${i + 1}"><b data-tel="${n}">${n}</b><span>${esc(t.cijfers[i])}</span></li>`).join('')}</ul>
   </div>
 </section>
 
 <section class="blok" id="hoe">
   <div class="binnen">
-    <h2>${esc(t.stappen.kop)}</h2>
-    <ol class="stappen">${t.stappen.items.map(([kop, tekst]) =>
-      `<li><h3>${esc(kop)}</h3><p>${esc(tekst)}</p></li>`).join('')}</ol>
+    ${sectiekop('01', t.stappen.kop, esc(t.stappen.pakkend))}
+    <ol class="stappen onthul">${t.stappen.items.map(([kop, tekst], i) =>
+      `<li class="onthul" style="--i:${i + 1}"><h3>${esc(kop)}</h3><p>${esc(tekst)}</p></li>`).join('')}</ol>
   </div>
 </section>
 
 <section class="niveaus" id="niveaus" data-meest="${PRESET_VRAGEN.gevorderd.length}">
   <div class="binnen">
-    <span class="label">${esc(t.niveaus.label)}</span>
-    <h2>${t.niveaus.kop.map((r) => `<span>${esc(r).replace(/(\S+-\S+)/g, '<span class="heel">$1</span>')}</span>`).join('')}</h2>
+    ${sectiekop('02', t.niveaus.label, t.niveaus.kop.map((r) => `<span>${esc(r).replace(/(\S+-\S+)/g, '<span class="heel">$1</span>')}</span>`).join(''))}
     <p class="inleiding">${esc(t.niveaus.intro)}</p>
     <ol class="niveaulijst">${['simpel', 'klassiek', 'gevorderd'].map((n, i) => {
       const [naam, regel] = t.niveaus[n];
       const meest = n === 'gevorderd';
       return `
-      <li class="niveau${meest ? ' meest' : ''}">
+      <li class="niveau onthul${meest ? ' meest' : ''}" style="--i:${i}">
         ${meest ? `<span class="badge">${esc(t.niveaus.badge)}</span>` : ''}
-        <span class="lampen" aria-hidden="true">${[0, 1, 2, 3, 4].map((l) => `<i${l < [1, 3, 5][i] ? ' class="aan"' : ''}></i>`).join('')}</span>
+        <span class="lampen" aria-hidden="true">${[0, 1, 2, 3, 4].map((l) => `<i style="--l:${l}"${l < [1, 3, 5][i] ? ' class="aan"' : ''}></i>`).join('')}</span>
         <h3>${esc(naam)}</h3>
         <p class="tagline">${esc(regel)}</p>
-        <p class="aantal"><b>${PRESET_VRAGEN[n].length}</b> ${esc(t.niveaus.vragen)}</p>
+        <p class="aantal"><b data-tel="${PRESET_VRAGEN[n].length}">${PRESET_VRAGEN[n].length}</b> ${esc(t.niveaus.vragen)}</p>
         <p class="weekend">${esc(vul(t.niveaus.perWeekend, { n: PRESET_PUNTEN[n] }))}${meest ? ` · ${esc(t.niveaus.extra)}` : ''}</p>
         <ul class="chips">${PRESET_VRAGEN[n].map((id) => `<li>${esc(vraagNaam(t, id))}</li>`).join('')}</ul>
       </li>`;
     }).join('')}
     </ol>
-    <p class="zelf">${esc(t.niveaus.zelf)}</p>
+    <p class="zelf onthul">${esc(t.niveaus.zelf)}</p>
     <a class="knop" href="${app}">${esc(t.niveaus.knop)} <span aria-hidden="true">→</span></a>
   </div>
 </section>
 
 <section class="blok" id="punten">
   <div class="binnen">
-    <h2>${esc(t.punten.kop)}</h2>
-    <p class="inleiding">${esc(t.punten.intro)}</p>
-    <table class="tabel">
+    ${sectiekop('03', t.punten.kop, esc(t.punten.pakkend))}
+    <p class="inleiding onthul">${esc(t.punten.intro)}</p>
+    <table class="tabel onthul">
       <thead><tr><th scope="col">${esc(t.punten.kolommen[0])}</th><th scope="col">${esc(t.punten.kolommen[1])}</th></tr></thead>
-      <tbody>${t.punten.rijen.map((r, i) => `<tr${i === 0 ? ' class="top"' : ''}><td>${esc(r)}</td><td>${PLEKPUNTEN[i] ?? 0}</td></tr>`).join('')}</tbody>
+      <tbody>${t.punten.rijen.map((r, i) => `<tr${i === 0 ? ' class="top"' : ''} style="--w:${((PLEKPUNTEN[i] ?? 0) / PLEKPUNTEN[0]).toFixed(2)};--i:${i}"><td>${esc(r)}</td><td>${PLEKPUNTEN[i] ?? 0}</td></tr>`).join('')}</tbody>
     </table>
     <p class="voorbeeld">${esc(t.punten.voorbeeld)}</p>
     <div class="tabellen">
-      <table class="tabel">
+      <table class="tabel onthul">
         <caption class="alleenlezer">${esc(t.punten.lossKop)}</caption>
         <thead><tr><th scope="col">${esc(t.punten.lossKop)}</th><th scope="col">${esc(t.punten.kolommenVraag[1])}</th></tr></thead>
         <tbody>${LOSSE.map(rij).join('')}</tbody>
       </table>
-      <table class="tabel">
+      <table class="tabel onthul" style="--i:1">
         <caption class="alleenlezer">${esc(t.punten.seizoenKop)}</caption>
         <thead><tr><th scope="col">${esc(t.punten.seizoenKop)}</th><th scope="col">${esc(t.punten.kolommenVraag[1])}</th></tr></thead>
         <tbody>${SEIZOEN.map(rij).join('')}</tbody>
       </table>
     </div>
-    <p class="presets">${esc(vul(t.punten.presets, vars))}</p>
+    <p class="presets onthul">${esc(vul(t.punten.presets, vars))}</p>
   </div>
 </section>
 
 <section class="blok" id="functies">
   <div class="binnen">
-    <h2>${esc(t.functies.kop)}</h2>
-    <ul class="functies">${t.functies.items.map(([kop, tekst]) =>
-      `<li><h3>${esc(kop)}</h3><p>${esc(tekst)}</p></li>`).join('')}</ul>
+    ${sectiekop('04', t.functies.kop, esc(t.functies.pakkend))}
+    <ul class="functies">${t.functies.items.map(([kop, tekst], i) =>
+      `<li class="onthul${BREED.includes(i) ? ' breed' : ''}" style="--i:${i % 3}"><span class="icoon">${ICOON(ICONEN[i] ?? ICONEN[0])}</span><span class="nr" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span><h3>${esc(kop)}</h3><p>${esc(tekst)}</p></li>`).join('')}</ul>
   </div>
 </section>
 
 <section class="blok" id="beelden">
   <div class="binnen">
-    <h2>${esc(t.beelden.kop)}</h2>
-    <div class="beelden">${SCHERMEN.map((s) => `
-      <figure>
+    ${sectiekop('05', t.beelden.kop, esc(t.beelden.pakkend))}
+    <div class="beelden">${SCHERMEN.map((s, i) => `
+      <figure class="onthul" style="--i:${i};--r:${[-3, 0, 3][i]}deg">
         <div class="kader">${plaatje(s, t.beelden[s][1])}</div>
         <figcaption>${esc(t.beelden[s][0])}</figcaption>
       </figure>`).join('')}
@@ -649,21 +886,22 @@ ${jsonLd(code)}
 
 <section class="blok">
   <div class="binnen los">
-    <article><h2>${esc(t.privacy.kop)}</h2><p>${esc(t.privacy.tekst)} <a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.privacy.meer)}</a></p></article>
+    <article class="onthul"><h2>${esc(t.privacy.kop)}</h2><p>${esc(t.privacy.tekst)} <a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.privacy.meer)}</a></p></article>
   </div>
 </section>
 
 <section class="blok" id="faq">
   <div class="binnen">
-    <h2>${esc(t.faq.kop)}</h2>
-    <div class="faq">${t.faq.items.map(([vraag, antwoord]) => `
+    ${sectiekop('06', t.nav.faq, esc(t.faq.kop))}
+    <div class="faq onthul">${t.faq.items.map(([vraag, antwoord]) => `
       <details><summary><h3>${esc(vraag)}</h3></summary><p>${esc(vul(antwoord, vars))}</p></details>`).join('')}
     </div>
   </div>
 </section>
 
 <section class="slot">
-  <div class="binnen">
+  <div class="binnen onthul">
+    <span class="startlichten" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
     <h2>${esc(t.slot.kop)}</h2>
     <p>${esc(t.slot.tekst)}</p>
     <a class="knop" href="${app}">${esc(t.slot.knop)} <span aria-hidden="true">→</span></a>
@@ -685,6 +923,7 @@ ${jsonLd(code)}
   </div>
 </footer>
 <script>${taalScript(code)}</script>
+<script>${BEWEGING}</script>
 <script src="${p}toestemming.js" defer></script>
 </body>
 </html>

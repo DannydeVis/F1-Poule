@@ -7521,3 +7521,75 @@ en de badge alleen bij Gevorderd, en het aantal vragen in de tekst. Contrast en
 360 pixels zonder horizontale scroll lopen al voor de hele pagina mee. Zeven
 mutanten; ze zakken allemaal.
 
+
+## De voorpagina: minder sjabloon, meer race
+
+Danny: *"Ik vind de landingspagina nog wel wat AI-stijl hebben. Weinig
+animaties of leuke overgangen. Het is een standaard AI-template. Verander dat.
+Meer clickbait en professioneel."*
+
+**Het idee:** alles wat beweegt komt uit de Formule 1, niet uit een
+sjabloonbibliotheek. Startlichten, kerbstroken (rood-wit, zoals de rand van een
+circuit), een lichtkrant, snelheidsstrepen. En koppen die iets beloven in plaats
+van beschrijven.
+
+**Wat er beweegt:**
+
+- **Hero:** vijf startlichten boven de kop gaan één voor één aan en dan uit
+  ("lights out"); op dat moment trekt er een glans door de rode regel van de
+  kop en tikt de knop even aan. De kop, inleiding en knoppen komen gestaffeld
+  omhoog, de telefoons schuiven in. Drie zwevende kaartjes bij de telefoon
+  (*P1 exact · +5*, *Joker · 2×*, *Jij wint het weekend*), dunne
+  snelheidsstrepen die af en toe voorbij schieten, en een livreistreep
+  rechtsboven.
+- **Lichtkrant** onder de hero: een rode band die eindeloos doorloopt (de rij
+  staat er twee keer in, zodat hij naadloos rondgaat), met een geblokte vlag
+  tussen de zinnen. De getallen erin (5 punten, 14 vragen) komen uit de app.
+  Stopt als je eroverheen gaat.
+- **Drie cijfers** naast "Wat is het": 14 vragen, 5 punten voor een exacte
+  plek, 0 euro. Ze tellen op als ze in beeld komen.
+- **Genummerde secties** (01 tot 06) met een label, een korte kop die iets
+  belooft ("Van poulecode tot podium.", "Bijna goed telt ook.", "Zo ziet winnen
+  eruit.") en een kerbstrook eronder die zich uittekent.
+- **Zo werkt het** als een tijdlijn: een kerbstrook (verticaal op de telefoon,
+  horizontaal op een breed scherm) met genummerde rondjes.
+- **Puntentabellen** met balkjes die zich vullen naar hoeveel punten een vraag
+  waard is.
+- **Functies** als bento: pictogrammen per functie, drie brede tegels, en een
+  tegel die omhoog komt als je eroverheen gaat.
+- **Beelden** schuiven scheef in en liggen dan licht gedraaid; **niveaus**
+  doen hun lampjes pas aan als je erbij bent; het **slot** heeft grote
+  startlichten en de kop "Lights out. Tijd om te voorspellen."
+- Een dunne **voortgangsbalk** onder de kop loopt mee met hoe ver je bent.
+- Knoppen krijgen een glans en een pijltje dat een stap naar voren doet.
+
+**Nooit afhankelijk van JavaScript:** een scriptje in `<head>` zet
+`html.beweegt`, alleen met JavaScript en als niemand om minder beweging vroeg.
+Alleen dan staan de `.onthul`-blokken eerst verborgen; een IntersectionObserver
+onderaan geeft ze `.zichtbaar` als ze in beeld komen. Draait dat script om wat
+voor reden ook niet, dan haalt een vangnet in de css (`html.beweegt:not(.klaar)`)
+alles na tweeënhalve seconde alsnog tevoorschijn. Met *minder beweging* aan
+beweegt er niets en staat alles er meteen.
+
+**Teksten:** per taal in `site/teksten.mjs`: `hero.chips`, `ticker`, `cijfers`,
+en een `pakkend` bij stappen, punten, functies en beelden; het slot heeft een
+nieuwe kop. De oude koppen blijven als label boven de sectie staan (en in de
+HowTo en de FAQ van de gestructureerde gegevens verandert niets).
+
+**Tests:** `test/site.test.mjs`, "beweging": met JavaScript beweegt de pagina
+en wacht wat onder de vouw zit, ook na het vangnet; na scrollen is elk blok
+zichtbaar, eindigen de tellers op het echte getal en is de voortgangsbalk vol;
+de lichtkrant wordt niet voorgelezen en is twee keer dezelfde rij met de
+getallen ingevuld; secties 01 tot 06 zonder gat; elke functie een pictogram;
+de kaartjes zijn versiering; vijf startlichten. En de drie manieren waarop het
+mis kan gaan: zonder JavaScript, met minder beweging, en met het script
+onderaan weggehaald staat alles er. Contrast in licht en donker en 360 pixels
+zonder horizontale scroll liepen al mee voor de hele pagina. Vijftien
+mutanten; ze zakken allemaal.
+
+**Meegenomen: de Duitse kop op een smalle telefoon.** "Startaufstellung" is
+het langste woord in alle zeven koppen, en op 360 pixels viel de punt erachter
+van het scherm. De scroll-check zag dat niet, want de hero knipt af wat
+uitsteekt. Nu krimpt de Duitse kop mee met de schermbreedte (alleen als het
+moet), en de test controleert per taal dat op 360 pixels elk woord in zijn kop
+past. Ook daar een mutant voor.
