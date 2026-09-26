@@ -303,6 +303,47 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
     opbouw.chips.length === t.hero.chips.length && opbouw.chips.every((a) => a === 'true'), opbouw.chips.join());
   check('en boven de kop gaan vijf startlichten aan', opbouw.lampen === 5, String(opbouw.lampen));
 
+  // De glans over de rode regel van de kop. De letters krijgen daar een
+  // verloop als vulling, en waar het verloop niet komt zijn ze doorzichtig.
+  // Het dekte eerst maar een deel van de regel: vóór lights out viel
+  // "vrienden" weg, erna "versla je". Dus: tel de letters links en rechts in
+  // elke regel, vóór, tijdens en na de glans, op een smalle telefoon (de
+  // regel breekt), een grotere (hij past op één regel) en een breed scherm.
+  {
+    const TEL = async (b64) => {
+      const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
+      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+      const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+      const d = x.getImageData(0, 0, c.width, c.height).data;
+      // Het deel van een strook dat letter is: rood of licht, niet het donker eronder.
+      const deel = (van, tot) => { let n = 0, al = 0;
+        for (let y = 0; y < c.height; y++) for (let i = Math.floor(van * c.width); i < Math.floor(tot * c.width); i++) {
+          al++; if (d[(y * c.width + i) * 4] > 150) n++; }
+        return n / al; };
+      return [deel(0, 1 / 3), deel(2 / 3, 1)];
+    };
+    const mis = [];
+    for (const breedte of [393, 430, 1280]) {
+      await page.setViewportSize({ width: breedte, height: 860 });
+      await page.goto(url);
+      await page.waitForLoadState('networkidle');
+      for (const t of [1500, 2950, 6000]) {
+        const regels = await page.evaluate((t) => {
+          document.getAnimations().forEach((a) => { a.pause(); a.currentTime = t; });
+          const r = document.createRange(); r.selectNodeContents(document.querySelector('.hero h1 > span + span'));
+          return [...r.getClientRects()].filter((k) => k.width > 20)
+            .map(({ x, y, width, height }) => ({ x, y, width, height }));
+        }, t);
+        if (!regels.length) mis.push(`${breedte}px: geen regel gevonden`);
+        for (const k of regels) {
+          const [links, rechts] = await page.evaluate(TEL, (await page.screenshot({ clip: k })).toString('base64'));
+          if (links < 0.08 || rechts < 0.08) mis.push(`${breedte}px ${t}ms: links ${links.toFixed(2)}, rechts ${rechts.toFixed(2)}`);
+        }
+      }
+    }
+    check('de rode regel van de kop staat er helemaal, vóór, tijdens en na de glans', mis.length === 0, mis.slice(0, 3).join(' | '));
+  }
+
   const browser = context.browser();
   // Zonder JavaScript.
   {

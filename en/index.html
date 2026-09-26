@@ -429,20 +429,28 @@
 
   /* De kop en de rest komen kort na elkaar op, en bij lights out veegt er
      een lichtstreep over "Versla je vrienden". */
-  html.beweegt .hero h1 span,html.beweegt .hero .sub,html.beweegt .hero .actie,html.beweegt .hero .vertrouwen{
+  html.beweegt .hero h1>span,html.beweegt .hero .sub,html.beweegt .hero .actie,html.beweegt .hero .vertrouwen{
     animation:opkomst .8s cubic-bezier(.2,.7,.2,1) both}
   html.beweegt .hero .sub{animation-delay:.25s}
   html.beweegt .hero .actie{animation-delay:.38s}
   html.beweegt .hero .vertrouwen{animation-delay:.5s}
   @keyframes opkomst{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  html.beweegt .hero h1>span+span{animation-delay:.12s}
   /* De glans: de letters zelf krijgen een verloop met een lichte streep erin
      (de kleur blijft het accent, alleen de vulling verandert), en die streep
-     schuift er bij lights out één keer overheen. */
-  html.beweegt .hero h1 span+span{
-    background:linear-gradient(100deg,var(--accent) 42%,#ffd2c4 50%,var(--accent) 58%) 130% 0/260% 100% no-repeat;
+     schuift er bij lights out één keer overheen.
+     Het verloop is drie keer zo breed als de regel en schuift alleen tussen
+     100% en 0%: daartussen dekt het altijd de hele regel. (Daarbuiten viel
+     een deel van de letters weg: eerst "vrienden", na de glans "versla je".)
+     Het zit op een eigen binnenste element, los van de opkomst: Safari tekent
+     een tekstverloop op een element dat zelf beweegt niet altijd goed, en
+     clone geeft een regel die afbreekt op elke regel zijn eigen verloop. */
+  html.beweegt .hero h1 .glans{
+    background:linear-gradient(100deg,var(--accent) 44%,#ffd2c4 50%,var(--accent) 56%) 100% 0/300% 100% no-repeat;
+    -webkit-box-decoration-break:clone;box-decoration-break:clone;
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-    animation:opkomst .8s cubic-bezier(.2,.7,.2,1) .12s both,glans 1.2s ease-out 2.35s both}
-  @keyframes glans{from{background-position:130% 0}to{background-position:-30% 0}}
+    animation:glans 1.2s ease-out 2.35s both}
+  @keyframes glans{from{background-position:100% 0}to{background-position:0 0}}
   html.beweegt .hero .knop{animation:opkomst .8s cubic-bezier(.2,.7,.2,1) .38s both,puls 1.4s ease-out 2.4s}
   @keyframes puls{0%{box-shadow:0 0 0 0 rgba(238,77,51,.55)}100%{box-shadow:0 0 0 18px rgba(238,77,51,0)}}
   .hero .binnen{display:grid;gap:44px}
@@ -455,8 +463,8 @@
   /* "Startaufstellung" is het langste woord in alle zeven koppen: op een
      smalle telefoon krimpt de Duitse kop mee, anders valt de punt eraf. */
   html[lang="de"] .hero h1{font-size:min(clamp(46px,9vw,84px),11.2vw)}
-  .hero h1 span{display:block}
-  .hero h1 span+span{color:var(--accent)}
+  .hero h1>span{display:block}
+  .hero h1>span+span{color:var(--accent)}
   .hero .sub{font-size:19px;color:var(--nacht-ink2);max-width:36em;margin:0 0 28px}
   .actie{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
   .codeveld{display:flex;flex-direction:column;gap:6px}
@@ -761,7 +769,7 @@
   <div class="binnen">
     <div>
       <div class="startrij"><span class="startlichten" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="boven">Free F1 prediction game</span></div>
-      <h1><span>Predict the grid.</span><span>Beat your friends.</span></h1>
+      <h1><span>Predict the grid.</span><span><span class="glans">Beat your friends.</span></span></h1>
       <p class="sub">The free F1 prediction game for you and your friends. Predict the top 10 every race weekend, the results come in by themselves, and the standings are one tap away from your group chat.</p>
       <div class="actie">
         <a class="knop" href="../app/">Start your league <span aria-hidden="true">→</span></a>
