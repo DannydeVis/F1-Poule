@@ -7853,3 +7853,67 @@ BreadcrumbList, de zichtbare datum gelijk aan dateModified en de sitemap, geen
 `{plekhouder}` of streepje, en de getallen over de app zoals de app ze heeft.
 Daarbij: geen weespagina's, en elke gids gelinkt vanaf de voorpagina in zijn
 taal. Elf mutanten.
+
+## Zoekplan fase 2, deel 1: de gidsen puntentelling en Excel
+
+Danny: *"Indexering is klaar, ga verder"*. De organiseren-gids was toen al
+online.
+
+**Wat het is.** Twee nieuwe gidsen, elk in het Nederlands en het Engels, elk
+zelf geschreven:
+
+- *Puntentelling voor een F1-poule* (`/f1-poule-puntentelling/`) en *F1
+  prediction scoring systems* (`/en/f1-prediction-scoring-system/`): vier
+  gangbare puntentellingen met voor en tegen, een volledig uitgerekende top 10,
+  waarom bijna goed telt, de losse vragen en seizoensvragen, gelijke stand
+  (1, 2, 2, 4), wat een joker doet.
+- *Een F1-poule bijhouden in Excel* (`/f1-poule-excel/`) en *Running an F1
+  prediction league in a spreadsheet* (`/en/f1-prediction-league-spreadsheet/`):
+  de kolommen, de formule die dezelfde punten geeft als de app, wat je doet met
+  P11 en met een coureur zonder plek, waar het met de hand misgaat, en dat de
+  app het werk kan doen.
+
+Beide staan op de voorpagina onder de puntentabel (`teaserPlek: 'punten'`); de
+organiseren-gids blijft onder "Zo werkt het". De drie gidsen linken onder "Lees
+ook" naar elkaar.
+
+**Alles komt uit de app, ook het rekenvoorbeeld.**
+
+- *Het voorbeeld rekent de app zelf uit.* `scripts/maak-site.mjs` knipt het
+  blok `<knip primitieven>` uit `app/index.html` (zoals `scripts/knipsel.mjs`
+  voor de controle-stand doet) en importeert `scoreLijst()` daaruit. De tabel,
+  het totaal, "als alleen exact goed telde" en "hooguit één plek ernaast"
+  komen daaruit. Een verzonnen race met echte namen; Sainz valt uit, Albon
+  wordt elfde en levert toch punten op.
+- *De formule volgt de app.* `{formMax}` en `{formStap}` komen uit dezelfde
+  regel van `scoreLijst()` als de puntentabel. De test rekent de formule na
+  voor elke voorspelde plek, elke uitslag tot P22 en een lege cel, en legt het
+  naast `scoreLijst()`.
+- *Nieuw ingevuld:* `{winnaar}`, `{pole}`, `{nSeizoen}`, `{wkPunten}`,
+  `{wkEerste}`, `{wkLaatste}` (het WK-schema, uit `WK_PUNTEN` in de app).
+- *Nagelopen in de code:* de hele uitslag telt, ook P11 (`uitslag()` in
+  `scripts/sync.mjs` neemt elke coureur met een plek), wie geen plek heeft
+  krijgt nul, de joker verdubbelt het hele weekend inclusief sprint en losse
+  vragen maar nooit de seizoensvragen (`scoreWeekend`, `standRijen`), een
+  gelijke weekendwinst wordt gedeeld (`weekendWinnaars`), en in twee vensters na
+  de race kijkt de sync opnieuw of een straf de uitslag veranderde
+  (`HERCONTROLE_VENSTERS`), vandaar "kort na de race".
+
+**Niet zeker genoeg om te schrijven, dus weggelaten:** hoe Google Spreadsheets
+functienamen per taal vertaalt. De gids zegt alleen dat het aan de taal ligt,
+met de Engelse namen erbij.
+
+**Een fout uit fase 1 meegenomen.** De stijl van de gidslinks op de voorpagina
+(`.verder`) stond alleen in de css van de gidspagina's, dus op de voorpagina
+waren het gewone zwarte links. Staat nu in de gedeelde css.
+
+**Tests** (`test/site.test.mjs`): de feiten per gids in plaats van per taal
+(anders moest de Excel-gids over jokers gaan), het rekenvoorbeeld regel voor
+regel gelijk aan `scoreLijst()`, de tekst onder het voorbeeld nog kloppend
+met de data, de formule nagerekend, de tabellen met losse vragen gelijk aan
+die van de voorpagina, elke gidslink onder het goede blok, en geen plekhouder
+of streepje, nu ook in de antwoorden achter een dichte FAQ-vraag (daar keek de
+test eerst niet). Elf mutanten.
+
+**Eerst lezen, dan online.** Weer als concept-PR; Danny leest beide talen.
+

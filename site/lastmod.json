@@ -1,7 +1,7 @@
 {
   "https://predicttherace.com/": {
     "datum": "2026-09-26",
-    "hash": "3b15269a783670fb"
+    "hash": "300b5dc1608a8d15"
   },
   "https://predicttherace.com/de/": {
     "datum": "2026-09-26",
@@ -9,11 +9,21 @@
   },
   "https://predicttherace.com/en/": {
     "datum": "2026-09-26",
-    "hash": "2bb0e692eec70fee"
+    "hash": "0844a227010609b3"
+  },
+  "https://predicttherace.com/en/f1-prediction-league-spreadsheet/": {
+    "datum": "2026-09-26",
+    "hash": "c71ab6c205430f6f",
+    "sinds": "2026-09-26"
+  },
+  "https://predicttherace.com/en/f1-prediction-scoring-system/": {
+    "datum": "2026-09-26",
+    "hash": "19b7281f5cde5c5a",
+    "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/how-to-run-an-f1-prediction-league/": {
     "datum": "2026-09-26",
-    "hash": "6f902d12ada7476a",
+    "hash": "82c7799b2be9e2ee",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/privacy/": {
@@ -24,9 +34,19 @@
     "datum": "2026-09-26",
     "hash": "cc6545be00c3a126"
   },
+  "https://predicttherace.com/f1-poule-excel/": {
+    "datum": "2026-09-26",
+    "hash": "33b9ea2eb3cc5c9e",
+    "sinds": "2026-09-26"
+  },
   "https://predicttherace.com/f1-poule-organiseren/": {
     "datum": "2026-09-26",
-    "hash": "78239624fed57e84",
+    "hash": "e54ddd78be9f7d82",
+    "sinds": "2026-09-26"
+  },
+  "https://predicttherace.com/f1-poule-puntentelling/": {
+    "datum": "2026-09-26",
+    "hash": "09f879346ea1fdda",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/fr/": {

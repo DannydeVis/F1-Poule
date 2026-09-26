@@ -1867,7 +1867,10 @@ een pagina verandert (een andere vorm telt niet). Niet met de hand aanpassen.
 omschrijving, kort antwoord, secties en FAQ. Getallen over de app schrijf je
 als `{jokers}`, `{exact}` enzovoort; die komen bij het maken uit de app zelf.
 Daarna `node scripts/maak-site.mjs`. De sitemap, llms.txt, de links vanaf de
-voorpagina en de datum volgen vanzelf.
+voorpagina en de datum volgen vanzelf. Een rekenvoorbeeld (`rekenvoorbeeld`:
+een voorspelde top 10 en een uitslag) rekent de generator uit met de code van
+de app zelf; onder welk blok van de voorpagina de link staat, kies je met
+`teaserPlek`. Alle velden staan bovenaan `site/paginas.mjs` uitgelegd.
 
 **Nieuwe teksten eerst lezen.** Een pull request met nieuwe teksten voor de
 site opent Claude Code als *concept*: de automerge slaat een concept over, dus

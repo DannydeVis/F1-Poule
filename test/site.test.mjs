@@ -27,6 +27,7 @@ import { maakControle, startSite, wortel, gepubliceerd, UITGESLOTEN } from './hu
 import { teksten, TALEN, STANDAARD, BASIS } from '../site/teksten.mjs';
 import { PRIVACY } from '../site/privacy.mjs';
 import { PAGINAS } from '../site/paginas.mjs';
+import { knipUit } from '../scripts/knipsel.mjs';
 
 const { check, afronden } = maakControle('de landingspagina in zeven talen');
 
@@ -291,13 +292,38 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
   const sprintApp = Number(appBron.match(/\{ id:'sprint_top10',\s*naam:'[^']*',\s*punten:(\d+)/)[1]);
   const vensterApp = Number(readFileSync(join(wortel, 'scripts', 'herinneringen.mjs'), 'utf8')
     .match(/VENSTER_UREN = (\d+)/)[1]);
-  // Wat de gids over de app zegt, moet uit de app komen. Per taal een paar
-  // zinnen met de getallen erin.
+  // De puntentelling van de app zelf: scoreLijst() uit <knip primitieven>.
+  const { scoreLijst } = await import(`data:text/javascript,${encodeURIComponent(knipUit(appBron, 'primitieven'))}`);
+  // Wat één coureur oplevert die je op plek `voor` zette en die op `echt`
+  // eindigde (null: geen plek in de uitslag), volgens de app.
+  const plekPunten = (voor, echt) => {
+    const lijst = Array.from({ length: 10 }, (_, i) => (i === voor - 1 ? 'X' : `v${i}`));
+    const uitslag = Array.from({ length: 22 }, (_, i) => (i === echt - 1 ? 'X' : `u${i}`));
+    return scoreLijst(lijst, uitslag).regels[voor - 1].punten;
+  };
+  const exactApp = plekPunten(1, 1), bijnaApp = plekPunten(4, 5);
+  const [, fMax, fStap] = appBron.match(/Math\.max\(0, (\d+) - (\d+) \* Math\.abs\(i - echt\)\)/);
+  const wkApp = appBron.match(/const WK_PUNTEN = \[([\d, ]+)\];/)[1].split(',').map((x) => x.trim()).join(', ');
+  const winnaarApp = puntenApp.winnaar;
+  // Wat een gids over de app zegt, moet uit de app komen. Per gids en per taal
+  // een paar zinnen met de getallen erin.
   const FEITEN = {
-    nl: [`standaard ${jokersApp} per seizoen`, `maximaal ${sprintApp}.`, `${vensterApp} uur voor een deadline`,
-      'een melding een uur voor elke deadline'],
-    en: [`${jokersApp} per season by default`, `adds up to ${sprintApp} more`, `${vensterApp} hours before a deadline`,
-      'a reminder an hour before every deadline'],
+    organiseren: {
+      nl: [`standaard ${jokersApp} per seizoen`, `maximaal ${sprintApp}.`, `${vensterApp} uur voor een deadline`,
+        'een melding een uur voor elke deadline'],
+      en: [`${jokersApp} per season by default`, `adds up to ${sprintApp} more`, `${vensterApp} hours before a deadline`,
+        'a reminder an hour before every deadline'],
+    },
+    puntentelling: {
+      nl: [`${exactApp} punten voor precies goed, ${bijnaApp} bij één plek ernaast`, `in het echt krijgt: ${wkApp}.`,
+        `standaard ${jokersApp} per seizoen`, `dan krijg je ${bijnaApp} punten`],
+      en: [`${exactApp} points for the exact spot, ${bijnaApp} for one place off`, `in the championship: ${wkApp}.`,
+        `${jokersApp} per season by default`, `you get ${bijnaApp} points`],
+    },
+    excel: {
+      nl: [`MAX(0;${fMax}-${fStap}*ABS(B2-C2))`, `=ALS(B14=C14;${winnaarApp};0)`, `de winnaar ${winnaarApp} punten waard`],
+      en: [`MAX(0,${fMax}-${fStap}*ABS(B2-C2))`, `=IF(B14=C14,${winnaarApp},0)`, `the winner is worth ${winnaarApp} points`],
+    },
   };
   for (const pg of PAGINAS) {
     const cluster = TALEN.filter((c) => pg.talen[c]);
@@ -327,6 +353,8 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
         datum: document.querySelector('time[datetime]')?.getAttribute('datetime') ?? '',
         datumTekst: document.querySelector('time[datetime]')?.textContent.trim() ?? '',
         tekst: document.body.innerText,
+        // Ook wat achter een dichte FAQ-vraag staat.
+        alles: document.querySelector('main').textContent.replace(/\s+/g, ' '),
         links: [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')),
       }));
       check(`${naam}: taal, titel en omschrijving van de goede lengte, één h1, canonical, indexeerbaar`,
@@ -355,11 +383,65 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
           && soort('Article')?.datePublished === lastmod[eigen]?.sinds && kop.datumTekst.length > 8,
         `${kop.datum} · ${kop.datumTekst} · ${soort('Article')?.dateModified} · ${lastmod[eigen]?.datum}`);
       check(`${naam}: geen {plekhouder} en geen streepje in de tekst`,
-        !/\{[a-zA-Z]+\}/.test(kop.tekst) && !/[–—]/.test(kop.tekst + kop.titel + kop.omschrijving),
-        (kop.tekst.match(/.{0,20}(\{[a-zA-Z]+\}|[–—]).{0,20}/) ?? [''])[0]);
-      if (FEITEN[code]) {
-        const mist = FEITEN[code].filter((z) => !kop.tekst.replace(/\s+/g, ' ').includes(z));
-        check(`${naam}: de getallen over de app komen uit de app`, mist.length === 0, mist.join(' | '));
+        !/\{[a-zA-Z]+\}/.test(kop.alles) && !/[–—]/.test(kop.alles + kop.titel + kop.omschrijving),
+        (kop.alles.match(/.{0,20}(\{[a-zA-Z]+\}|[–—]).{0,20}/) ?? [''])[0]);
+      const feiten = FEITEN[pg.id]?.[code];
+      check(`${naam}: de getallen over de app komen uit de app`,
+        feiten?.length > 0 && feiten.every((z) => kop.alles.includes(z)),
+        feiten ? feiten.filter((z) => !kop.alles.includes(z)).join(' | ') : 'geen FEITEN voor deze gids');
+      if (pg.rekenvoorbeeld) {
+        // Het rekenvoorbeeld is wat de app ervan maakt, regel voor regel, met
+        // het totaal eronder.
+        const { regels, totaal } = scoreLijst(pg.rekenvoorbeeld.voorspeld, pg.rekenvoorbeeld.uitslag);
+        const tabel = await page.evaluate(() => {
+          const t = document.querySelector('table.rekenvoorbeeld');
+          return t && { rijen: [...t.querySelectorAll('tbody tr')].map((r) => [...r.children].map((c) => c.textContent.trim())),
+            totaal: t.querySelector('tfoot td')?.textContent.trim() };
+        });
+        const geenPlek = t.secties.find((x) => x.rekenvoorbeeld).rekenvoorbeeld.geenPlek;
+        const verwachtRijen = regels.map((r) => [r.nr, `P${r.voorspeld}`, r.werkelijk ? `P${r.werkelijk}` : geenPlek, String(r.punten)]);
+        check(`${naam}: het rekenvoorbeeld is wat scoreLijst() uit de app ervan maakt`,
+          tabel && JSON.stringify(tabel.rijen) === JSON.stringify(verwachtRijen) && tabel.totaal === String(totaal),
+          JSON.stringify(tabel?.rijen?.find((r, i) => JSON.stringify(r) !== JSON.stringify(verwachtRijen[i])) ?? tabel?.totaal));
+        // De tekst eronder noemt Albon (P10, elfde: één plek ernaast) en
+        // Sainz (uitgevallen). Past iemand het voorbeeld aan, dan moet die
+        // tekst mee.
+        const van = (nr) => regels.find((r) => r.nr === nr);
+        check(`${naam}: de tekst onder het rekenvoorbeeld klopt nog met het voorbeeld`,
+          van('Albon')?.voorspeld === 10 && van('Albon')?.werkelijk === 11 && van('Albon')?.punten === bijnaApp
+            && van('Sainz')?.werkelijk === null && van('Sainz')?.punten === 0,
+          JSON.stringify([van('Albon'), van('Sainz')]));
+      }
+      if (t.secties.some((x) => x.vragentabel)) {
+        // De losse vragen en seizoensvragen: dezelfde tabellen als op de
+        // voorpagina in die taal, en daar komen de punten uit de app.
+        const tabellen = () => [...document.querySelectorAll('.tabellen table')]
+          .map((x) => [...x.querySelectorAll('th, td')].map((c) => c.textContent.trim()).join(' | '));
+        const hier = await page.evaluate(tabellen);
+        await page.goto(`${url}${teksten[code].pad ? teksten[code].pad + '/' : ''}`);
+        const daar = await page.evaluate(tabellen);
+        await page.goto(`${url}${t.pad}/`);
+        check(`${naam}: de tabellen met losse vragen en seizoensvragen zijn die van de voorpagina`,
+          hier.length === 2 && JSON.stringify(hier) === JSON.stringify(daar), `${hier.length} tabellen`);
+      }
+      if (t.secties.some((x) => x.formules)) {
+        // De formule voor een spreadsheet geeft voor elke voorspelde plek en
+        // elke uitslag (ook een lege cel: geen plek) wat de app geeft.
+        const formule = await page.evaluate(() => document.querySelector('.formules code')?.textContent ?? '');
+        let reken = null;
+        try {
+          const js = formule.replace(/^=/, '').replace(/\bALS\(/g, 'IF(').replace(/;/g, ',').replace(/C2=""/g, 'C2===""');
+          if (!/^[A-Z0-9(),"=*+\- ]+$/.test(js)) throw new Error(js);
+          reken = new Function('IF', 'MAX', 'ABS', 'B2', 'C2', `return ${js};`);
+        } catch { /* reken blijft leeg */ }
+        const fout = [];
+        for (let voor = 1; voor <= 10 && reken; voor++) {
+          for (const echt of [null, ...Array.from({ length: 22 }, (_, i) => i + 1)]) {
+            const uit = reken((c, a, b) => (c ? a : b), Math.max, Math.abs, voor, echt ?? '');
+            if (uit !== plekPunten(voor, echt)) fout.push(`P${voor}→${echt ?? 'leeg'}: ${uit} in plaats van ${plekPunten(voor, echt)}`);
+          }
+        }
+        check(`${naam}: de formule rekent elke plek zoals de app`, reken && fout.length === 0, fout.slice(0, 3).join(' | ') || formule);
       }
       const kapot = kop.links.filter((href) => !/^(https?:|mailto:|#)/.test(href)).filter((href) => {
         const doel = new URL(href, `${url}${t.pad}/`);
@@ -405,6 +487,15 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
   const gidsUrls = PAGINAS.flatMap((pg) => Object.entries(pg.talen).map(([c, t]) => [c, `${BASIS}/${t.pad}/`]));
   check('en elke gids wordt gelinkt vanaf de voorpagina in zijn eigen taal',
     gidsUrls.every(([c, u]) => gelinkt.get(u)?.has(urlVan(c))), gidsUrls.map(([c, u]) => `${c}:${gelinkt.get(u)?.size}`).join(' '));
+  // Onder het blok waar hij bij hoort: de puntentelling onder de puntentabel,
+  // niet ergens anders op de pagina.
+  const opPlek = PAGINAS.flatMap((pg) => Object.entries(pg.talen).map(([c, t]) => {
+    const html = readFileSync(bestandVan(urlVan(c)), 'utf8');
+    const blok = html.match(new RegExp(`<section[^>]*id="${pg.teaserPlek ?? 'hoe'}"[^>]*>([\\s\\S]*?)</section>`))?.[1] ?? '';
+    return [`${pg.id}(${c})`, blok.includes(`${t.pad}/"`)];
+  }));
+  check('onder het blok van de voorpagina waar hij bij hoort', opPlek.every(([, ok]) => ok),
+    opPlek.filter(([, ok]) => !ok).map(([n]) => n).join(' '));
 }
 
 // ---- beweging ------------------------------------------------------------------

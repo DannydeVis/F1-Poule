@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>F1-poule organiseren in 5 minuten | Predict the Race</title>
-<meta name="description" content="Zo zet je een F1-poule op met vrienden of collega's: de vier stappen, de keuzes die ertoe doen en de drie valkuilen waardoor een poule halverwege stilvalt.">
+<title>F1-poule bijhouden in Excel | Predict the Race</title>
+<meta name="description" content="Een F1-poule bijhouden in Excel of Google Spreadsheets: welke kolommen je nodig hebt, de formule voor de punten per plek en waar het in een seizoen misgaat.">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-<link rel="canonical" href="https://predicttherace.com/f1-poule-organiseren/">
-<link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-organiseren/">
-<link rel="alternate" hreflang="en" href="https://predicttherace.com/en/how-to-run-an-f1-prediction-league/">
-<link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/how-to-run-an-f1-prediction-league/">
+<link rel="canonical" href="https://predicttherace.com/f1-poule-excel/">
+<link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-excel/">
+<link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/">
+<link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/">
 <meta name="theme-color" content="#0b0b0c">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="../favicon.ico" sizes="16x16 32x32 48x48">
@@ -17,9 +17,9 @@
 <link rel="apple-touch-icon" href="../pictogrammen/predicttherace-apple-180.png">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Predict the Race">
-<meta property="og:url" content="https://predicttherace.com/f1-poule-organiseren/">
-<meta property="og:title" content="F1-poule organiseren in 5 minuten | Predict the Race">
-<meta property="og:description" content="Zo zet je een F1-poule op met vrienden of collega's: de vier stappen, de keuzes die ertoe doen en de drie valkuilen waardoor een poule halverwege stilvalt.">
+<meta property="og:url" content="https://predicttherace.com/f1-poule-excel/">
+<meta property="og:title" content="F1-poule bijhouden in Excel | Predict the Race">
+<meta property="og:description" content="Een F1-poule bijhouden in Excel of Google Spreadsheets: welke kolommen je nodig hebt, de formule voor de punten per plek en waar het in een seizoen misgaat.">
 <meta property="og:image" content="https://predicttherace.com/site/og/og-nl.jpg">
 <meta property="og:locale" content="nl_NL">
 <meta name="twitter:card" content="summary_large_image">
@@ -29,10 +29,10 @@
  "@graph": [
   {
    "@type": "WebPage",
-   "@id": "https://predicttherace.com/f1-poule-organiseren/#pagina",
-   "url": "https://predicttherace.com/f1-poule-organiseren/",
-   "name": "F1-poule organiseren in 5 minuten | Predict the Race",
-   "description": "Zo zet je een F1-poule op met vrienden of collega's: de vier stappen, de keuzes die ertoe doen en de drie valkuilen waardoor een poule halverwege stilvalt.",
+   "@id": "https://predicttherace.com/f1-poule-excel/#pagina",
+   "url": "https://predicttherace.com/f1-poule-excel/",
+   "name": "F1-poule bijhouden in Excel | Predict the Race",
+   "description": "Een F1-poule bijhouden in Excel of Google Spreadsheets: welke kolommen je nodig hebt, de formule voor de punten per plek en waar het in een seizoen misgaat.",
    "inLanguage": "nl",
    "isPartOf": {
     "@id": "https://predicttherace.com/#website"
@@ -41,19 +41,19 @@
     "@id": "https://predicttherace.com/#app"
    },
    "breadcrumb": {
-    "@id": "https://predicttherace.com/f1-poule-organiseren/#kruimel"
+    "@id": "https://predicttherace.com/f1-poule-excel/#kruimel"
    },
    "datePublished": "2026-09-26",
    "dateModified": "2026-09-26"
   },
   {
    "@type": "Article",
-   "@id": "https://predicttherace.com/f1-poule-organiseren/#artikel",
-   "headline": "Een F1-poule organiseren",
-   "description": "Zo zet je een F1-poule op met vrienden of collega's: de vier stappen, de keuzes die ertoe doen en de drie valkuilen waardoor een poule halverwege stilvalt.",
+   "@id": "https://predicttherace.com/f1-poule-excel/#artikel",
+   "headline": "Een F1-poule bijhouden in Excel",
+   "description": "Een F1-poule bijhouden in Excel of Google Spreadsheets: welke kolommen je nodig hebt, de formule voor de punten per plek en waar het in een seizoen misgaat.",
    "inLanguage": "nl",
    "mainEntityOfPage": {
-    "@id": "https://predicttherace.com/f1-poule-organiseren/#pagina"
+    "@id": "https://predicttherace.com/f1-poule-excel/#pagina"
    },
    "datePublished": "2026-09-26",
    "dateModified": "2026-09-26",
@@ -67,7 +67,7 @@
   },
   {
    "@type": "BreadcrumbList",
-   "@id": "https://predicttherace.com/f1-poule-organiseren/#kruimel",
+   "@id": "https://predicttherace.com/f1-poule-excel/#kruimel",
    "itemListElement": [
     {
      "@type": "ListItem",
@@ -78,8 +78,8 @@
     {
      "@type": "ListItem",
      "position": 2,
-     "name": "Een F1-poule organiseren",
-     "item": "https://predicttherace.com/f1-poule-organiseren/"
+     "name": "Een F1-poule bijhouden in Excel",
+     "item": "https://predicttherace.com/f1-poule-excel/"
     }
    ]
   },
@@ -91,39 +91,31 @@
   },
   {
    "@type": "FAQPage",
-   "@id": "https://predicttherace.com/f1-poule-organiseren/#faq",
+   "@id": "https://predicttherace.com/f1-poule-excel/#faq",
    "inLanguage": "nl",
    "mainEntity": [
     {
      "@type": "Question",
-     "name": "Kan iemand halverwege het seizoen nog instappen?",
+     "name": "Werkt dit ook in Google Spreadsheets?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Ja. Wie later meedoet, scoort vanaf de eerstvolgende race. De seizoensvragen die hij nog niet had, kan hij alsnog invullen, maar wat eenmaal is ingevuld ligt vast."
+      "text": "Ja, met dezelfde kolommen en dezelfde formule. Geeft hij een fout, kijk dan naar de taal: in het Engels heten de functies IF en SUM, en met een Engelse landinstelling scheid je met komma's in plaats van puntkomma's."
      }
     },
     {
      "@type": "Question",
-     "name": "Kan ik in meer dan één poule zitten?",
+     "name": "Hoe tel ik de winnaar en de pole position mee?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Ja. In de app wissel je tussen je poules, en de omschrijving die de poulebaas erbij zet, staat erbij als je wisselt."
+      "text": "Met een eigen regel per vraag: goed is punten, fout is nul. Staat de voorspelde winnaar in B14 en de echte in C14, dan geeft =ALS(B14=C14;25;0) de punten. In Predict the Race is de winnaar 25 punten waard en de pole position 10; die getallen kun je overnemen."
      }
     },
     {
      "@type": "Question",
-     "name": "Kan een poule openbaar zijn?",
+     "name": "Hoe zet ik spelers met evenveel punten op dezelfde plek?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Ja. Standaard is hij besloten en doe je mee met de code, maar je kunt hem ook vindbaar maken, zodat iedereen kan meedoen."
-     }
-    },
-    {
-     "@type": "Question",
-     "name": "Wat is het verschil tussen een poule en een pronostiek?",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "Er is geen verschil. In Vlaanderen heet een voorspelspel vaak een pronostiek, in Nederland meestal een poule. Je voorspelt de uitslag en speelt om punten tegen elkaar."
+      "text": "Met RANG op het tabblad met de totalen. Staan tien spelers in B2 tot en met B11, dan geeft =RANG(B2;B$2:B$11) spelers met evenveel punten dezelfde plek: 1, 2, 2, 4. Zo telt Predict the Race ook."
      }
     }
    ]
@@ -634,7 +626,7 @@
     <a class="merk" href="../" aria-label="Predict the Race"><img class="blok" src="../pictogrammen/predicttherace-logo.png" alt="" width="24" height="24"><b>Predict the Race</b></a>
     <details class="taalmenu">
       <summary aria-label="Taal">NL</summary>
-      <ul><li><a href="../f1-poule-organiseren/" hreflang="nl" lang="nl" aria-current="page">Nederlands <span>NL</span></a></li><li><a href="../en/how-to-run-an-f1-prediction-league/" hreflang="en" lang="en">English <span>EN</span></a></li></ul>
+      <ul><li><a href="../f1-poule-excel/" hreflang="nl" lang="nl" aria-current="page">Nederlands <span>NL</span></a></li><li><a href="../en/f1-prediction-league-spreadsheet/" hreflang="en" lang="en">English <span>EN</span></a></li></ul>
     </details>
     <a class="knop klein" href="../app/">Open de app</a>
   </div>
@@ -643,72 +635,58 @@
   <div class="binnen">
     <nav class="kruimel" aria-label="Kruimelpad"><ol>
       <li><a href="../">Predict the Race</a></li>
-      <li aria-current="page">Een F1-poule organiseren</li>
+      <li aria-current="page">Een F1-poule bijhouden in Excel</li>
     </ol></nav>
-    <h1>Een F1-poule organiseren</h1>
-    <p class="inleiding">Een F1-poule zet je in vijf minuten op: geef hem een naam, kies hoeveel vragen er meetellen en deel de code in de groepsapp. Het seizoen doorkomen is het lastige deel. Een poule valt stil als iemand onbereikbaar achter raakt, als mensen vergeten in te vullen, of als er na de race niets te bespreken is.</p>
+    <h1>Een F1-poule bijhouden in Excel</h1>
+    <p class="inleiding">Dat kan prima. Je hebt per speler vier kolommen nodig en één formule die de punten per coureur uitrekent. Het werk zit niet in de formule maar in het bijhouden: elk raceweekend de hele uitslag overtypen, straffen achteraf verwerken en zorgen dat iedereen op tijd inlevert.</p>
 
-    <section id="opzetten">
-      <h2>Hoe zet je een F1-poule op?</h2>
-      <p class="kernzin">In vier stappen. Daarna hoef je als poulebaas niets meer bij te houden.</p>
-      <ol><li>Geef de poule een naam. Die staat in de app en in de uitnodiging. Zit iemand in meer dan één poule, dan helpt een korte omschrijving erbij, zoals &quot;met de collega's, om de eer&quot;.</li><li>Vul je eigen naam in. Je bent meteen de eerste speler en de poulebaas: jij kiest de vragen en de spelregels.</li><li>Kies hoeveel er te voorspellen valt: Simpel, Klassiek of Gevorderd, of stel zelf samen welke vragen meetellen.</li><li>Deel de uitnodigingslink of de code van zes tekens in de groepsapp. Wie hem opent, kiest een naam en doet mee, zonder account en zonder wachtwoord.</li></ol>
-      <p>Daarna gaat het vanzelf. De kalender en de coureurs staan er al, en na elke kwalificatie en race komt de officiële uitslag binnen en rekent de app de punten uit. Niemand hoeft iets over te typen.</p>
-      <p>Doe het ruim voor de eerste race. Tot die gereden is kun je de vragen nog aanpassen; daarna ligt de set vast, zodat elk weekend met dezelfde regels telt.</p>
-    </section>
-
-    <section id="vragen">
-      <h2>Hoeveel vragen laat je meetellen?</h2>
-      <p class="kernzin">Zo veel als je groep volhoudt. Twee top 10's per weekend is genoeg voor een fanatieke poule; wie alles wil, voorspelt er 14.</p>
+    <section id="kolommen">
+      <h2>Welke kolommen heb je nodig?</h2>
+      <p class="kernzin">Per speler en per sessie vier: de coureur, de plek die de speler voorspelde, de plek waar de coureur echt eindigde, en de punten.</p>
       <table class="tabel">
-        <thead><tr><th scope="col">Niveau</th><th scope="col">Vragen</th><th scope="col">Punten per weekend</th></tr></thead>
-        <tbody><tr><th scope="row">Simpel</th><td>2</td><td>100</td></tr><tr><th scope="row">Klassiek</th><td>5</td><td>145</td></tr><tr><th scope="row">Gevorderd</th><td>14</td><td>202, plus sprint en seizoen</td></tr></tbody>
+        <thead><tr><th scope="col">Kolom</th><th scope="col">Wat erin staat</th><th scope="col">Voorbeeld</th></tr></thead>
+        <tbody><tr><th scope="row">A</th><td>De coureur</td><td>Verstappen</td></tr><tr><th scope="row">B</th><td>De voorspelde plek, 1 tot en met 10</td><td>1</td></tr><tr><th scope="row">C</th><td>De echte plek, leeg als hij geen plek kreeg</td><td>2</td></tr><tr><th scope="row">D</th><td>De punten, met de formule hieronder</td><td>3</td></tr></tbody>
       </table>
-      <p>Simpel is alleen de twee top 10's: de kwalificatie en de race. Klassiek voegt de winnaar, de pole position en de snelste ronde toe. Gevorderd zet alles aan, van snelste pitstop en teamgenoot-duels tot het aantal safety cars en een rode vlag.</p>
-      <p>Meer vragen betekent meer te winnen, maar ook langer invullen. In een groep waar de helft pas op zaterdagochtend aan de kwalificatie denkt, houdt Simpel het langer vol dan Gevorderd.</p>
+      <p>In rij 1 staan de kopjes, de tien coureurs in rij 2 tot en met 11. Maak per race een tabblad met voor elke speler zo'n blok van vier kolommen naast elkaar, en een tabblad met de totalen dat alles optelt. Kopieer je het blok voor de volgende speler, dan schuiven de formules vanzelf mee.</p>
     </section>
 
-    <section id="punten">
-      <h2>Hoe werkt de puntentelling?</h2>
-      <p class="kernzin">Voor elke coureur in je top 10 krijg je 5 punten als hij precies op die plek eindigt, 3 bij één plek ernaast en 1 bij twee plekken ernaast.</p>
-      <p class="voorbeeld">Voorbeeld: je zet een coureur op P3 en hij wordt vierde. Dat is één plek ernaast, dus 3 punten. Een perfecte top 10 is 50 punten per sessie, en op een sprintweekend komt de sprint erbij, goed voor maximaal 25.</p>
-      <p>Dat bijna goed ook telt, houdt het spannend voor iedereen. Je hoeft de volgorde niet perfect te hebben om punten te pakken, en één verrassing in de race gooit niet je hele weekend weg.</p>
+    <section id="formule">
+      <h2>Welke formule rekent de punten uit?</h2>
+      <p class="kernzin">Deze, in D2 en dan doorgetrokken tot D11: 5 punten voor precies goed, 2 minder voor elke plek ernaast, en nooit minder dan nul.</p>
+      <dl class="formules"><dt>Nederlandstalig Excel</dt><dd><code>=ALS(C2=&quot;&quot;;0;MAX(0;5-2*ABS(B2-C2)))</code></dd><dt>Het totaal van de sessie, in D12</dt><dd><code>=SOM(D2:D11)</code></dd></dl>
+      <p>Dat is dezelfde som als in Predict the Race: 5 punten voor exact, 3 voor één plek ernaast, 1 voor twee plekken ernaast, en vanaf drie plekken niets.</p>
+      <p>Het ALS-deel is er voor een lege cel. Zonder dat rekent Excel met plek 0, en kan een speler punten krijgen voor een coureur die geen plek in de uitslag had.</p>
     </section>
 
-    <section id="deadlines">
-      <h2>Tot wanneer kan iedereen invullen?</h2>
-      <p class="kernzin">Tot de sessie begint. De top 10 van de kwalificatie sluit bij de start van de kwalificatie, die van de race bij de start van de race.</p>
-      <p>Op een sprintweekend sluit de sprint als eerste. Na de deadline ligt je voorspelling vast.</p>
+    <section id="buiten-top-10">
+      <h2>Wat doe je met coureurs buiten de top 10?</h2>
+      <p class="kernzin">Hun echte plek gewoon invullen. Zet een speler iemand op P10 en wordt die elfde, dan is dat één plek ernaast en dus 3 punten.</p>
+      <p>Daarom heb je de hele uitslag nodig, niet alleen de top 10. Alleen een coureur zonder plek in de officiële uitslag, bijvoorbeeld niet geklasseerd of gediskwalificeerd, laat je leeg. Die levert nul op.</p>
     </section>
 
-    <section id="jokers">
-      <h2>Speel je met jokers?</h2>
-      <p class="kernzin">Met een joker tellen al je punten van één raceweekend dubbel. Staan jokers aan, dan heeft iedereen er standaard 5 per seizoen; als poulebaas kies je er 1 tot 5, of je laat ze uit.</p>
-      <p>Je zet een joker voordat het weekend begint, daarna ligt hij vast. Jokers geven wie achter staat iets om op te hopen, en ze maken van elk weekend een kleine gok: is dit het circuit waar jij het beter weet dan de rest?</p>
+    <section id="misgaat">
+      <h2>Waar gaat het mis met Excel?</h2>
+      <p class="kernzin">Zelden bij de formule. Het gaat mis bij het bijhouden: na een paar races doet één persoon al het werk, elk weekend opnieuw.</p>
+      <ul><li><b>Elke uitslag overtypen.</b> De hele uitslag van kwalificatie en race, elk raceweekend. Eén verwisselde regel en de stand klopt niet meer, zonder dat iemand het merkt.</li><li><b>Straffen achteraf.</b> Een tijdstraf na de finish schuift de uitslag op. Dan moet je terug naar dat tabblad en alles opnieuw nalopen.</li><li><b>Deadlines.</b> Wie stuurde zijn top 10 voor de start? In de groepsapp is &quot;ik had hem al getypt&quot; niet te controleren, en een lijst die na de start binnenkomt, geeft discussie.</li><li><b>De stand op je telefoon.</b> Een gedeeld spreadsheet kan, maar op een telefoon is een tabblad met vier kolommen per speler nauwelijks te lezen.</li></ul>
     </section>
 
-    <section id="valkuilen">
-      <h2>Waar loopt een F1-poule op stuk?</h2>
-      <p class="kernzin">Zelden op de vragen. Bijna altijd op een van drie dingen: een achterstand die niet meer in te halen is, vergeten in te vullen, of niets om na de race over te praten.</p>
-      <ul><li><b>Een onbereikbare achterstand.</b> Wie na acht races ver achter staat, haakt af. Geef daarom meer te winnen dan alleen de eindstand: de weekendwinnaar (wie een weekend de meeste punten pakt, wint dat weekend), de onderlinge duels (per vriend zie je wie er vaker won) en de jokers.</li><li><b>Vergeten in te vullen.</b> Eén gemiste race zet je op achterstand, na twee haak je af. Daartegen helpen het agenda-abonnement met een melding een uur voor elke deadline, een pushmelding als je 3 uur voor een deadline nog niets hebt ingevuld, en automatisch invullen: wie niets inlevert, krijgt een willekeurige top 10 in plaats van nul punten.</li><li><b>Niets om over te praten.</b> Na de race moet er iets te zien zijn. De uitslag per coureur, de stand met wie er klom en wie er zakte, en een plaatje van de uitslag voor de groepsapp geven de groep elk weekend iets om over na te praten.</li></ul>
-    </section>
-
-    <section id="checklist">
-      <h2>Checklist voor de poulebaas</h2>
-      <p class="kernzin">Loop dit na voordat het seizoen begint.</p>
-      <ul><li>De poule staat klaar en de code is gedeeld, vóór de eerste kwalificatie.</li><li>Het niveau is gekozen: Simpel, Klassiek, Gevorderd of zelf samengesteld.</li><li>Jokers: aan of uit, en hoeveel per speler.</li><li>Automatisch invullen: samen afgesproken of het aan gaat.</li><li>Iedereen heeft zich op de agenda geabonneerd of de meldingen aangezet.</li><li>De seizoensvragen zijn ingevuld vóór de eerste race.</li><li>Iedereen weet waar je om speelt: om de eer. De app kent geen inleg, pot of prijzen.</li></ul>
+    <section id="zonder-spreadsheet">
+      <h2>Kan het ook zonder spreadsheet?</h2>
+      <p class="kernzin">Ja. Predict the Race rekent op dezelfde manier, maar de uitslag komt vanzelf binnen.</p>
+      <p>Na elke kwalificatie en race haalt de app de officiële uitslag op en rekent de punten uit. Voorspellingen sluiten bij de start van de sessie, dus niemand kan achteraf nog iets veranderen. En verandert de uitslag kort na de race door een straf, dan rekent de app opnieuw.</p>
+      <p>Het is gratis en er is geen account nodig. Je deelt de poule met een code in de groepsapp.</p>
     </section>
     <section id="faq">
       <h2>Veelgestelde vragen</h2>
       <div class="faq">
-        <details><summary><h3>Kan iemand halverwege het seizoen nog instappen?</h3></summary><p>Ja. Wie later meedoet, scoort vanaf de eerstvolgende race. De seizoensvragen die hij nog niet had, kan hij alsnog invullen, maar wat eenmaal is ingevuld ligt vast.</p></details>
-        <details><summary><h3>Kan ik in meer dan één poule zitten?</h3></summary><p>Ja. In de app wissel je tussen je poules, en de omschrijving die de poulebaas erbij zet, staat erbij als je wisselt.</p></details>
-        <details><summary><h3>Kan een poule openbaar zijn?</h3></summary><p>Ja. Standaard is hij besloten en doe je mee met de code, maar je kunt hem ook vindbaar maken, zodat iedereen kan meedoen.</p></details>
-        <details><summary><h3>Wat is het verschil tussen een poule en een pronostiek?</h3></summary><p>Er is geen verschil. In Vlaanderen heet een voorspelspel vaak een pronostiek, in Nederland meestal een poule. Je voorspelt de uitslag en speelt om punten tegen elkaar.</p></details>
+        <details><summary><h3>Werkt dit ook in Google Spreadsheets?</h3></summary><p>Ja, met dezelfde kolommen en dezelfde formule. Geeft hij een fout, kijk dan naar de taal: in het Engels heten de functies IF en SUM, en met een Engelse landinstelling scheid je met komma's in plaats van puntkomma's.</p></details>
+        <details><summary><h3>Hoe tel ik de winnaar en de pole position mee?</h3></summary><p>Met een eigen regel per vraag: goed is punten, fout is nul. Staat de voorspelde winnaar in B14 en de echte in C14, dan geeft =ALS(B14=C14;25;0) de punten. In Predict the Race is de winnaar 25 punten waard en de pole position 10; die getallen kun je overnemen.</p></details>
+        <details><summary><h3>Hoe zet ik spelers met evenveel punten op dezelfde plek?</h3></summary><p>Met RANG op het tabblad met de totalen. Staan tien spelers in B2 tot en met B11, dan geeft =RANG(B2;B$2:B$11) spelers met evenveel punten dezelfde plek: 1, 2, 2, 4. Zo telt Predict the Race ook.</p></details>
       </div>
     </section>
     <section class="leesook">
       <h2>Lees ook</h2>
-      <ul><li><a href="../f1-poule-puntentelling/">Puntentelling voor een F1-poule</a></li><li><a href="../f1-poule-excel/">Een F1-poule bijhouden in Excel</a></li><li><a href="../#niveaus">Simpel, Klassiek of Gevorderd: de drie niveaus naast elkaar</a></li><li><a href="../#punten">De hele puntentelling, met de losse vragen en de seizoensvragen</a></li><li><a href="../#faq">Veelgestelde vragen over de app</a></li></ul>
+      <ul><li><a href="../f1-poule-puntentelling/">Puntentelling voor een F1-poule</a></li><li><a href="../f1-poule-organiseren/">Een F1-poule organiseren</a></li><li><a href="../#hoe">Zo werkt Predict the Race</a></li><li><a href="../#faq">Veelgestelde vragen over de app</a></li></ul>
     </section>
     <div class="slotblok">
       <h2>Klaar om te beginnen?</h2>
