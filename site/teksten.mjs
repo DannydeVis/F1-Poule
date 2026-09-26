@@ -42,13 +42,17 @@ export const teksten = {
       knop: 'Maak je poule',
       codeLabel: 'Heb je een code?', codeKnop: 'Doe mee',
       vertrouwen: ['Gratis', 'Geen wachtwoord', 'Geen advertenties', 'Op elke telefoon'],
+      chips: ['P1 exact · +5', 'Joker · 2×', 'Jij wint het weekend'],
     },
     antwoord: {
       kop: 'Wat is Predict the Race?',
       tekst: 'Predict the Race is een gratis webapp waarmee je met vrienden, collega\'s of familie een Formule 1-poule speelt. Iedereen voorspelt per raceweekend de top 10 van de kwalificatie en van de race, plus een paar losse vragen zoals de winnaar en de pole position. Na elke sessie komen de officiële uitslagen automatisch binnen en rekent de app de punten en de stand uit. Je doet mee met een poulecode, zonder wachtwoord en zonder te betalen.',
     },
+    ticker: ['Voorspel de top 10', '{exact} punten voor een exacte plek', 'Joker: alles dubbel', 'Uitslagen komen vanzelf', '{meest} vragen of maar 2', 'Gratis en zonder advertenties'],
+    cijfers: ['vragen om te voorspellen', 'punten voor een exacte plek', 'euro, nu en altijd'],
     stappen: {
       kop: 'Zo werkt het',
+      pakkend: 'Van poulecode tot podium.',
       items: [
         ['Maak een poule', 'Geef je poule een naam, kies welke vragen meetellen en deel de code of de uitnodigingslink in je groepsapp.'],
         ['Voorspel de top 10', 'Zet vóór de kwalificatie en vóór de race je top 10 op de startgrid. Op sprintweekenden komt de sprint erbij.'],
@@ -73,6 +77,7 @@ export const teksten = {
     },
     punten: {
       kop: 'Zo werkt de puntentelling',
+      pakkend: 'Bijna goed telt ook.',
       intro: 'Voor elke coureur in je top 10 krijg je punten naar hoe dicht je bij zijn echte plek zat. Een bijna-goede voorspelling levert dus ook iets op.',
       kolommen: ['Je voorspelling', 'Punten per coureur'],
       rijen: ['Precies op de goede plek', 'Eén plek ernaast', 'Twee plekken ernaast', 'Drie of meer plekken ernaast'],
@@ -92,6 +97,7 @@ export const teksten = {
     },
     functies: {
       kop: 'Alles voor een poule die het hele seizoen leeft',
+      pakkend: 'Gemaakt voor een heel seizoen opscheppen.',
       items: [
         ['Uitslagen automatisch', 'De officiële uitslag komt vanzelf binnen, en straffen achteraf worden nog nagekeken.'],
         ['Jokers', 'Zet een joker op een weekend en je punten tellen dubbel. Standaard vijf per seizoen, in te stellen door de poulebaas.'],
@@ -106,6 +112,7 @@ export const teksten = {
     },
     beelden: {
       kop: 'Zo ziet het eruit',
+      pakkend: 'Zo ziet winnen eruit.',
       races: ['Het weekend in één oogopslag: welke race eraan komt en hoe lang je nog hebt.', 'Het racesoverzicht van Predict the Race met de eerstvolgende race en de afteller'],
       uitslag: ['Na de race zie je per coureur wat je voorspelling opleverde.', 'De uitslag van een race met de punten per coureur'],
       stand: ['De stand, met je eigen regel gemarkeerd en de onderlinge duels eronder.', 'De stand van een poule met het podium en de ranglijst'],
@@ -132,7 +139,7 @@ export const teksten = {
         ['Is dit een officiële Formule 1-app?', 'Nee. Predict the Race is een onafhankelijk fanproject en is niet verbonden aan de Formule 1, de FIA of een team.'],
       ],
     },
-    slot: { kop: 'Klaar voor de volgende race?', tekst: 'Maak in een minuut je poule en deel de code met je vrienden.', knop: 'Maak je poule' },
+    slot: { kop: 'Lights out. Tijd om te voorspellen.', tekst: 'Maak in een minuut je poule en deel de code met je vrienden.', knop: 'Maak je poule' },
     voet: {
       disclaimer: 'Predict the Race is een onafhankelijk fanproject en is niet verbonden aan Formula 1, de FIA of een F1-team. F1 en Formula 1 zijn handelsmerken van Formula One Licensing B.V.',
       app: 'Open de app', bron: 'Broncode op GitHub', data: 'Uitslagen via OpenF1', cookies: 'Statistieken en cookies', privacy: 'Privacy', talen: 'Deze pagina in het',
@@ -156,13 +163,17 @@ export const teksten = {
       knop: 'Start your league',
       codeLabel: 'Got a code?', codeKnop: 'Join',
       vertrouwen: ['Free', 'No password', 'No ads', 'Works on any phone'],
+      chips: ['P1 spot on · +5', 'Joker · 2×', 'You win the weekend'],
     },
     antwoord: {
       kop: 'What is Predict the Race?',
       tekst: 'Predict the Race is a free web app for running a Formula 1 prediction league with friends, colleagues or family. Every race weekend, everyone predicts the top 10 of qualifying and of the race, plus a few extra questions such as the winner and pole position. After each session the official results come in automatically and the app works out the points and the standings. You join with a league code, with no password and no payment.',
     },
+    ticker: ['Predict the top 10', '{exact} points for an exact spot', 'Joker: everything doubles', 'Results come in by themselves', '{meest} questions or just 2', 'Free and without ads'],
+    cijfers: ['questions to predict', 'points for an exact spot', 'euros, now and always'],
     stappen: {
       kop: 'How it works',
+      pakkend: 'From league code to podium.',
       items: [
         ['Start a league', 'Name your league, choose which questions count and share the code or the invite link in your group chat.'],
         ['Predict the top 10', 'Before qualifying and before the race, put your top 10 on the starting grid. On sprint weekends the sprint is added.'],
@@ -187,6 +198,7 @@ export const teksten = {
     },
     punten: {
       kop: 'How scoring works',
+      pakkend: 'Close counts too.',
       intro: 'For every driver in your top 10 you score points for how close you were to their real position. A near miss still earns something.',
       kolommen: ['Your prediction', 'Points per driver'],
       rijen: ['Exactly right', 'One place off', 'Two places off', 'Three or more places off'],
@@ -206,6 +218,7 @@ export const teksten = {
     },
     functies: {
       kop: 'Everything a league needs to last the whole season',
+      pakkend: 'Built for a whole season of bragging rights.',
       items: [
         ['Automatic results', 'The official result comes in by itself, and post-race penalties are checked again afterwards.'],
         ['Jokers', 'Play a joker on a weekend and your points count double. Five per season by default, set by the league admin.'],
@@ -220,6 +233,7 @@ export const teksten = {
     },
     beelden: {
       kop: 'What it looks like',
+      pakkend: 'This is what winning looks like.',
       races: ['The weekend at a glance: which race is next and how long you have left.', 'The Predict the Race overview with the next race and a countdown'],
       uitslag: ['After the race you see what your prediction earned for every driver.', 'A race result with the points per driver'],
       stand: ['The standings, with your own row highlighted and head-to-head results below.', 'League standings with a podium and the table'],
@@ -246,7 +260,7 @@ export const teksten = {
         ['Is this an official Formula 1 app?', 'No. Predict the Race is an independent fan project and is not affiliated with Formula 1, the FIA or any team.'],
       ],
     },
-    slot: { kop: 'Ready for the next race?', tekst: 'Set up your league in a minute and share the code with your friends.', knop: 'Start your league' },
+    slot: { kop: 'Lights out and away we go.', tekst: 'Set up your league in a minute and share the code with your friends.', knop: 'Start your league' },
     voet: {
       disclaimer: 'Predict the Race is an independent fan project and is not affiliated with Formula 1, the FIA or any F1 team. F1 and Formula 1 are trademarks of Formula One Licensing B.V.',
       app: 'Open the app', bron: 'Source code on GitHub', data: 'Results via OpenF1', cookies: 'Statistics and cookies', privacy: 'Privacy', talen: 'This page in',
@@ -270,13 +284,17 @@ export const teksten = {
       knop: 'Tipprunde erstellen',
       codeLabel: 'Hast du einen Code?', codeKnop: 'Mitspielen',
       vertrouwen: ['Kostenlos', 'Kein Passwort', 'Keine Werbung', 'Auf jedem Handy'],
+      chips: ['P1 exakt · +5', 'Joker · 2×', 'Du gewinnst das Wochenende'],
     },
     antwoord: {
       kop: 'Was ist Predict the Race?',
       tekst: 'Predict the Race ist eine kostenlose Web-App, mit der du mit Freunden, Kollegen oder der Familie ein Formel-1-Tippspiel spielst. An jedem Rennwochenende tippen alle die Top 10 des Qualifyings und des Rennens, dazu ein paar Zusatzfragen wie den Sieger und die Pole-Position. Nach jeder Session kommen die offiziellen Ergebnisse automatisch, und die App berechnet Punkte und Tabelle. Du machst mit einem Code mit, ohne Passwort und ohne zu bezahlen.',
     },
+    ticker: ['Tippe die Top 10', '{exact} Punkte für einen exakten Platz', 'Joker: alles doppelt', 'Ergebnisse kommen von selbst', '{meest} Fragen oder nur 2', 'Kostenlos und ohne Werbung'],
+    cijfers: ['Fragen zum Tippen', 'Punkte für einen exakten Platz', 'Euro, jetzt und immer'],
     stappen: {
       kop: 'So funktioniert es',
+      pakkend: 'Vom Code bis aufs Podium.',
       items: [
         ['Tipprunde erstellen', 'Gib deiner Runde einen Namen, wähle, welche Fragen zählen, und teile den Code oder den Einladungslink in deiner Gruppe.'],
         ['Top 10 tippen', 'Setze vor dem Qualifying und vor dem Rennen deine Top 10 in die Startaufstellung. An Sprint-Wochenenden kommt der Sprint dazu.'],
@@ -301,6 +319,7 @@ export const teksten = {
     },
     punten: {
       kop: 'So werden Punkte vergeben',
+      pakkend: 'Knapp daneben zählt auch.',
       intro: 'Für jeden Fahrer in deiner Top 10 bekommst du Punkte danach, wie nah du an seiner echten Platzierung warst. Ein knapper Tipp bringt also auch etwas.',
       kolommen: ['Dein Tipp', 'Punkte pro Fahrer'],
       rijen: ['Genau richtig', 'Einen Platz daneben', 'Zwei Plätze daneben', 'Drei oder mehr Plätze daneben'],
@@ -320,6 +339,7 @@ export const teksten = {
     },
     functies: {
       kop: 'Alles für eine Tipprunde, die die ganze Saison lebt',
+      pakkend: 'Gemacht für eine ganze Saison Angeberei.',
       items: [
         ['Automatische Ergebnisse', 'Das offizielle Ergebnis kommt von selbst, und nachträgliche Strafen werden noch einmal geprüft.'],
         ['Joker', 'Setz einen Joker auf ein Wochenende und deine Punkte zählen doppelt. Standardmäßig fünf pro Saison, einstellbar durch den Admin.'],
@@ -334,6 +354,7 @@ export const teksten = {
     },
     beelden: {
       kop: 'So sieht es aus',
+      pakkend: 'So sieht Gewinnen aus.',
       races: ['Das Wochenende auf einen Blick: welches Rennen ansteht und wie viel Zeit bleibt.', 'Die Rennübersicht von Predict the Race mit dem nächsten Rennen und einem Countdown'],
       uitslag: ['Nach dem Rennen siehst du für jeden Fahrer, was dein Tipp gebracht hat.', 'Ein Rennergebnis mit den Punkten pro Fahrer'],
       stand: ['Die Tabelle, mit deiner eigenen Zeile hervorgehoben und den Duellen darunter.', 'Die Tabelle einer Tipprunde mit Podium und Rangliste'],
@@ -360,7 +381,7 @@ export const teksten = {
         ['Ist das eine offizielle Formel-1-App?', 'Nein. Predict the Race ist ein unabhängiges Fanprojekt und steht in keiner Verbindung zur Formel 1, zur FIA oder zu einem Team.'],
       ],
     },
-    slot: { kop: 'Bereit für das nächste Rennen?', tekst: 'Erstelle deine Tipprunde in einer Minute und teile den Code mit deinen Freunden.', knop: 'Tipprunde erstellen' },
+    slot: { kop: 'Lights out. Zeit zu tippen.', tekst: 'Erstelle deine Tipprunde in einer Minute und teile den Code mit deinen Freunden.', knop: 'Tipprunde erstellen' },
     voet: {
       disclaimer: 'Predict the Race ist ein unabhängiges Fanprojekt und steht in keiner Verbindung zur Formel 1, zur FIA oder zu einem F1-Team. F1 und Formula 1 sind Marken der Formula One Licensing B.V.',
       app: 'App öffnen', bron: 'Quellcode auf GitHub', data: 'Ergebnisse über OpenF1', cookies: 'Statistik und Cookies', privacy: 'Datenschutz', talen: 'Diese Seite auf',
@@ -384,13 +405,17 @@ export const teksten = {
       knop: 'Créer une ligue',
       codeLabel: 'Vous avez un code ?', codeKnop: 'Rejoindre',
       vertrouwen: ['Gratuit', 'Sans mot de passe', 'Sans publicité', 'Sur tous les téléphones'],
+      chips: ['P1 exact · +5', 'Joker · 2×', 'Vous gagnez le week-end'],
     },
     antwoord: {
       kop: 'Qu\'est-ce que Predict the Race ?',
       tekst: 'Predict the Race est une application web gratuite pour jouer aux pronostics de Formule 1 entre amis, collègues ou en famille. À chaque week-end de course, chacun pronostique le top 10 des qualifications et de la course, plus quelques questions bonus comme le vainqueur et la pole position. Après chaque séance, les résultats officiels arrivent automatiquement et l\'application calcule les points et le classement. On rejoint une ligue avec un code, sans mot de passe et sans payer.',
     },
+    ticker: ['Pronostiquez le top 10', '{exact} points pour une place exacte', 'Joker : tout compte double', 'Les résultats arrivent tout seuls', '{meest} questions ou seulement 2', 'Gratuit et sans publicité'],
+    cijfers: ['questions à pronostiquer', 'points pour une place exacte', 'euro, maintenant et toujours'],
     stappen: {
       kop: 'Comment ça marche',
+      pakkend: 'Du code de ligue au podium.',
       items: [
         ['Créez une ligue', 'Donnez un nom à votre ligue, choisissez les questions qui comptent et partagez le code ou le lien d\'invitation dans votre groupe.'],
         ['Pronostiquez le top 10', 'Avant les qualifications et avant la course, placez votre top 10 sur la grille. Les week-ends sprint, le sprint s\'ajoute.'],
@@ -415,6 +440,7 @@ export const teksten = {
     },
     punten: {
       kop: 'Comment les points sont attribués',
+      pakkend: 'Presque juste, ça compte aussi.',
       intro: 'Pour chaque pilote de votre top 10, vous marquez des points selon votre proximité avec sa vraie position. Un pronostic presque juste rapporte donc aussi.',
       kolommen: ['Votre pronostic', 'Points par pilote'],
       rijen: ['Pile à la bonne place', 'Une place d\'écart', 'Deux places d\'écart', 'Trois places d\'écart ou plus'],
@@ -434,6 +460,7 @@ export const teksten = {
     },
     functies: {
       kop: 'Tout pour une ligue qui vit toute la saison',
+      pakkend: 'Conçu pour une saison entière de chambrage.',
       items: [
         ['Résultats automatiques', 'Le classement officiel arrive tout seul, et les pénalités d\'après-course sont revérifiées.'],
         ['Jokers', 'Jouez un joker sur un week-end et vos points comptent double. Cinq par saison par défaut, réglable par l\'administrateur.'],
@@ -448,6 +475,7 @@ export const teksten = {
     },
     beelden: {
       kop: 'À quoi ça ressemble',
+      pakkend: 'Voilà à quoi ressemble la victoire.',
       races: ['Le week-end en un coup d\'œil : la prochaine course et le temps qu\'il vous reste.', 'L\'aperçu des courses de Predict the Race avec la prochaine course et un compte à rebours'],
       uitslag: ['Après la course, vous voyez ce que votre pronostic a rapporté pour chaque pilote.', 'Le résultat d\'une course avec les points par pilote'],
       stand: ['Le classement, avec votre ligne mise en avant et les face-à-face en dessous.', 'Le classement d\'une ligue avec le podium et le tableau'],
@@ -474,7 +502,7 @@ export const teksten = {
         ['Est-ce une application officielle de la Formule 1 ?', 'Non. Predict the Race est un projet de fan indépendant, sans lien avec la Formule 1, la FIA ou une écurie.'],
       ],
     },
-    slot: { kop: 'Prêt pour la prochaine course ?', tekst: 'Créez votre ligue en une minute et partagez le code avec vos amis.', knop: 'Créer une ligue' },
+    slot: { kop: 'Extinction des feux. À vous de jouer.', tekst: 'Créez votre ligue en une minute et partagez le code avec vos amis.', knop: 'Créer une ligue' },
     voet: {
       disclaimer: 'Predict the Race est un projet de fan indépendant, sans lien avec la Formule 1, la FIA ou une écurie de F1. F1 et Formula 1 sont des marques de Formula One Licensing B.V.',
       app: 'Ouvrir l\'appli', bron: 'Code source sur GitHub', data: 'Résultats via OpenF1', cookies: 'Statistiques et cookies', privacy: 'Confidentialité', talen: 'Cette page en',
@@ -498,13 +526,17 @@ export const teksten = {
       knop: 'Crea tu liga',
       codeLabel: '¿Tienes un código?', codeKnop: 'Unirme',
       vertrouwen: ['Gratis', 'Sin contraseña', 'Sin anuncios', 'En cualquier móvil'],
+      chips: ['P1 exacto · +5', 'Comodín · 2×', 'Ganas el fin de semana'],
     },
     antwoord: {
       kop: '¿Qué es Predict the Race?',
       tekst: 'Predict the Race es una aplicación web gratuita para jugar una porra de Fórmula 1 con amigos, compañeros de trabajo o familia. Cada fin de semana de carrera, todos predicen el top 10 de la clasificación y de la carrera, además de algunas preguntas extra como el ganador y la pole position. Después de cada sesión, los resultados oficiales llegan automáticamente y la app calcula los puntos y la clasificación. Te unes con un código, sin contraseña y sin pagar.',
     },
+    ticker: ['Predice el top 10', '{exact} puntos por una posición exacta', 'Comodín: todo vale doble', 'Los resultados llegan solos', '{meest} preguntas o solo 2', 'Gratis y sin anuncios'],
+    cijfers: ['preguntas para predecir', 'puntos por una posición exacta', 'euros, ahora y siempre'],
     stappen: {
       kop: 'Cómo funciona',
+      pakkend: 'Del código de liga al podio.',
       items: [
         ['Crea una liga', 'Ponle nombre a tu liga, elige qué preguntas cuentan y comparte el código o el enlace de invitación en tu grupo.'],
         ['Predice el top 10', 'Antes de la clasificación y antes de la carrera, coloca tu top 10 en la parrilla. Los fines de semana con sprint, se suma el sprint.'],
@@ -529,6 +561,7 @@ export const teksten = {
     },
     punten: {
       kop: 'Cómo se reparten los puntos',
+      pakkend: 'Casi acertar también cuenta.',
       intro: 'Por cada piloto de tu top 10 sumas puntos según lo cerca que estuviste de su posición real. Así que una predicción casi exacta también puntúa.',
       kolommen: ['Tu predicción', 'Puntos por piloto'],
       rijen: ['Posición exacta', 'Una posición de diferencia', 'Dos posiciones de diferencia', 'Tres o más posiciones de diferencia'],
@@ -548,6 +581,7 @@ export const teksten = {
     },
     functies: {
       kop: 'Todo para una liga que dure toda la temporada',
+      pakkend: 'Hecho para una temporada entera de piques.',
       items: [
         ['Resultados automáticos', 'La clasificación oficial llega sola, y las sanciones posteriores a la carrera se revisan de nuevo.'],
         ['Comodines', 'Juega un comodín en un fin de semana y tus puntos cuentan doble. Cinco por temporada por defecto, ajustable por el administrador.'],
@@ -562,6 +596,7 @@ export const teksten = {
     },
     beelden: {
       kop: 'Así se ve',
+      pakkend: 'Así se ve ganar.',
       races: ['El fin de semana de un vistazo: qué carrera viene y cuánto tiempo te queda.', 'La vista de carreras de Predict the Race con la próxima carrera y una cuenta atrás'],
       uitslag: ['Después de la carrera ves lo que tu predicción sumó con cada piloto.', 'El resultado de una carrera con los puntos por piloto'],
       stand: ['La clasificación, con tu fila resaltada y los cara a cara debajo.', 'La clasificación de una liga con el podio y la tabla'],
@@ -588,7 +623,7 @@ export const teksten = {
         ['¿Es una app oficial de la Fórmula 1?', 'No. Predict the Race es un proyecto independiente de aficionados y no está vinculado a la Fórmula 1, la FIA ni a ningún equipo.'],
       ],
     },
-    slot: { kop: '¿Listo para la próxima carrera?', tekst: 'Crea tu liga en un minuto y comparte el código con tus amigos.', knop: 'Crea tu liga' },
+    slot: { kop: 'Se apagan los semáforos. Te toca.', tekst: 'Crea tu liga en un minuto y comparte el código con tus amigos.', knop: 'Crea tu liga' },
     voet: {
       disclaimer: 'Predict the Race es un proyecto independiente de aficionados y no está vinculado a la Fórmula 1, la FIA ni a ningún equipo de F1. F1 y Formula 1 son marcas de Formula One Licensing B.V.',
       app: 'Abrir la app', bron: 'Código fuente en GitHub', data: 'Resultados vía OpenF1', cookies: 'Estadísticas y cookies', privacy: 'Privacidad', talen: 'Esta página en',
@@ -612,13 +647,17 @@ export const teksten = {
       knop: 'Crea la tua lega',
       codeLabel: 'Hai un codice?', codeKnop: 'Partecipa',
       vertrouwen: ['Gratis', 'Senza password', 'Senza pubblicità', 'Su ogni telefono'],
+      chips: ['P1 esatto · +5', 'Jolly · 2×', 'Vinci il weekend'],
     },
     antwoord: {
       kop: 'Che cos\'è Predict the Race?',
       tekst: 'Predict the Race è un\'app web gratuita per giocare ai pronostici di Formula 1 con amici, colleghi o in famiglia. A ogni weekend di gara, tutti pronosticano la top 10 delle qualifiche e della gara, più alcune domande extra come il vincitore e la pole position. Dopo ogni sessione i risultati ufficiali arrivano automaticamente e l\'app calcola punti e classifica. Si partecipa con un codice, senza password e senza pagare.',
     },
+    ticker: ['Pronostica la top 10', '{exact} punti per una posizione esatta', 'Jolly: tutto vale doppio', 'I risultati arrivano da soli', '{meest} domande o solo 2', 'Gratis e senza pubblicità'],
+    cijfers: ['domande da pronosticare', 'punti per una posizione esatta', 'euro, ora e sempre'],
     stappen: {
       kop: 'Come funziona',
+      pakkend: 'Dal codice della lega al podio.',
       items: [
         ['Crea una lega', 'Dai un nome alla tua lega, scegli quali domande contano e condividi il codice o il link d\'invito nel tuo gruppo.'],
         ['Pronostica la top 10', 'Prima delle qualifiche e prima della gara, metti la tua top 10 sulla griglia. Nei weekend sprint si aggiunge la sprint.'],
@@ -643,6 +682,7 @@ export const teksten = {
     },
     punten: {
       kop: 'Come funziona il punteggio',
+      pakkend: 'Anche quasi giusto conta.',
       intro: 'Per ogni pilota della tua top 10 ottieni punti in base a quanto eri vicino alla sua posizione reale. Anche un pronostico quasi giusto porta qualcosa.',
       kolommen: ['Il tuo pronostico', 'Punti per pilota'],
       rijen: ['Posizione esatta', 'Una posizione di scarto', 'Due posizioni di scarto', 'Tre o più posizioni di scarto'],
@@ -662,6 +702,7 @@ export const teksten = {
     },
     functies: {
       kop: 'Tutto per una lega che dura tutta la stagione',
+      pakkend: 'Fatto per una stagione intera di sfottò.',
       items: [
         ['Risultati automatici', 'La classifica ufficiale arriva da sola, e le penalità dopo la gara vengono ricontrollate.'],
         ['Jolly', 'Gioca un jolly su un weekend e i tuoi punti valgono doppio. Cinque a stagione di default, regolabili dall\'amministratore.'],
@@ -676,6 +717,7 @@ export const teksten = {
     },
     beelden: {
       kop: 'Ecco com\'è',
+      pakkend: 'Ecco com\'è vincere.',
       races: ['Il weekend a colpo d\'occhio: quale gara arriva e quanto tempo ti resta.', 'La panoramica delle gare di Predict the Race con la prossima gara e un conto alla rovescia'],
       uitslag: ['Dopo la gara vedi cosa ha portato il tuo pronostico per ogni pilota.', 'Il risultato di una gara con i punti per pilota'],
       stand: ['La classifica, con la tua riga evidenziata e i testa a testa sotto.', 'La classifica di una lega con il podio e la tabella'],
@@ -702,7 +744,7 @@ export const teksten = {
         ['È un\'app ufficiale della Formula 1?', 'No. Predict the Race è un progetto indipendente di appassionati e non è collegato alla Formula 1, alla FIA o ad alcuna squadra.'],
       ],
     },
-    slot: { kop: 'Pronto per la prossima gara?', tekst: 'Crea la tua lega in un minuto e condividi il codice con i tuoi amici.', knop: 'Crea la tua lega' },
+    slot: { kop: 'Semaforo spento. Tocca a te.', tekst: 'Crea la tua lega in un minuto e condividi il codice con i tuoi amici.', knop: 'Crea la tua lega' },
     voet: {
       disclaimer: 'Predict the Race è un progetto indipendente di appassionati e non è collegato alla Formula 1, alla FIA o ad alcuna squadra di F1. F1 e Formula 1 sono marchi di Formula One Licensing B.V.',
       app: 'Apri l\'app', bron: 'Codice sorgente su GitHub', data: 'Risultati tramite OpenF1', cookies: 'Statistiche e cookie', privacy: 'Privacy', talen: 'Questa pagina in',
@@ -726,13 +768,17 @@ export const teksten = {
       knop: 'Crie seu bolão',
       codeLabel: 'Tem um código?', codeKnop: 'Entrar',
       vertrouwen: ['Grátis', 'Sem senha', 'Sem anúncios', 'Em qualquer celular'],
+      chips: ['P1 exato · +5', 'Coringa · 2×', 'Você vence o fim de semana'],
     },
     antwoord: {
       kop: 'O que é o Predict the Race?',
       tekst: 'O Predict the Race é um app web gratuito para fazer um bolão de Fórmula 1 com amigos, colegas ou a família. Em cada fim de semana de corrida, todos dão palpites no top 10 da classificação e da corrida, além de algumas perguntas extras como o vencedor e a pole position. Depois de cada sessão, os resultados oficiais chegam automaticamente e o app calcula os pontos e a classificação. Você entra com um código, sem senha e sem pagar.',
     },
+    ticker: ['Palpite no top 10', '{exact} pontos por uma posição exata', 'Coringa: tudo vale o dobro', 'Os resultados chegam sozinhos', '{meest} perguntas ou só 2', 'Grátis e sem anúncios'],
+    cijfers: ['perguntas para palpitar', 'pontos por uma posição exata', 'euros, agora e sempre'],
     stappen: {
       kop: 'Como funciona',
+      pakkend: 'Do código do bolão ao pódio.',
       items: [
         ['Crie um bolão', 'Dê um nome ao bolão, escolha quais perguntas valem pontos e compartilhe o código ou o link de convite no seu grupo.'],
         ['Palpite no top 10', 'Antes da classificação e antes da corrida, monte seu top 10 no grid. Nos fins de semana com sprint, a sprint entra também.'],
@@ -757,6 +803,7 @@ export const teksten = {
     },
     punten: {
       kop: 'Como funciona a pontuação',
+      pakkend: 'Quase certo também conta.',
       intro: 'Para cada piloto do seu top 10 você ganha pontos conforme chegou perto da posição real. Um palpite quase certo também vale.',
       kolommen: ['Seu palpite', 'Pontos por piloto'],
       rijen: ['Posição exata', 'Uma posição de diferença', 'Duas posições de diferença', 'Três ou mais posições de diferença'],
@@ -776,6 +823,7 @@ export const teksten = {
     },
     functies: {
       kop: 'Tudo para um bolão que dura a temporada inteira',
+      pakkend: 'Feito para uma temporada inteira de zoeira.',
       items: [
         ['Resultados automáticos', 'A classificação oficial chega sozinha, e as punições aplicadas depois da corrida são conferidas de novo.'],
         ['Coringas', 'Use um coringa em um fim de semana e seus pontos valem em dobro. Cinco por temporada por padrão, ajustável pelo administrador.'],
@@ -790,6 +838,7 @@ export const teksten = {
     },
     beelden: {
       kop: 'Como ele é',
+      pakkend: 'É assim que é ganhar.',
       races: ['O fim de semana num relance: qual corrida vem aí e quanto tempo falta.', 'A visão de corridas do Predict the Race com a próxima corrida e uma contagem regressiva'],
       uitslag: ['Depois da corrida você vê quanto seu palpite rendeu com cada piloto.', 'O resultado de uma corrida com os pontos por piloto'],
       stand: ['A classificação, com a sua linha destacada e os confrontos diretos logo abaixo.', 'A classificação de um bolão com pódio e tabela'],
@@ -816,7 +865,7 @@ export const teksten = {
         ['É um app oficial da Fórmula 1?', 'Não. O Predict the Race é um projeto independente de fãs e não tem ligação com a Fórmula 1, a FIA ou qualquer equipe.'],
       ],
     },
-    slot: { kop: 'Pronto para a próxima corrida?', tekst: 'Crie seu bolão em um minuto e compartilhe o código com seus amigos.', knop: 'Crie seu bolão' },
+    slot: { kop: 'Luzes apagadas. É a sua vez.', tekst: 'Crie seu bolão em um minuto e compartilhe o código com seus amigos.', knop: 'Crie seu bolão' },
     voet: {
       disclaimer: 'O Predict the Race é um projeto independente de fãs e não tem ligação com a Fórmula 1, a FIA ou qualquer equipe de F1. F1 e Formula 1 são marcas da Formula One Licensing B.V.',
       app: 'Abrir o app', bron: 'Código-fonte no GitHub', data: 'Resultados via OpenF1', cookies: 'Estatísticas e cookies', privacy: 'Privacidade', talen: 'Esta página em',

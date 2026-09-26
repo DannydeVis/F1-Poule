@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
+<script>try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('beweegt')}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Predict the Race – kostenloses F1-Tippspiel mit Freunden</title>
 <meta name="description" content="Tippe bei jedem Formel-1-Rennen die Top 10 von Qualifying und Rennen und spiele in deiner eigenen Tipprunde gegen Freunde. Ergebnisse kommen automatisch. Gratis.">
@@ -322,7 +323,7 @@
   :root{
     --bg:#f2f1ee;--paneel:#fff;--paneel2:#e9e8e4;--lijn:#dcdad5;
     --ink:#14151a;--ink2:#5b5f67;--ink3:#696e75;--accent:#d93d24;--accent-ink:#fff;
-    --accent-tekst:#bf3219;--groen:#117c3e;
+    --accent-tekst:#bf3219;--groen:#117c3e;--accent-vlak:rgba(217,61,36,.10);
     --nacht:#0b0b0c;--nacht2:#15161a;--nacht-lijn:#2b2e35;--nacht-ink:#f2f3f5;--nacht-ink2:#aab0b8;
     --sans:Barlow,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
     --cond:"Barlow Condensed","Roboto Condensed","Arial Narrow",var(--sans);
@@ -331,7 +332,7 @@
   @media (prefers-color-scheme:dark){:root{
     --bg:#0b0b0c;--paneel:#15161a;--paneel2:#1d1f24;--lijn:#2b2e35;
     --ink:#f2f3f5;--ink2:#a4aab2;--ink3:#8a9099;--accent:#ee4d33;--accent-ink:#0b0b0c;
-    --accent-tekst:#f26a52;--groen:#34b264;
+    --accent-tekst:#f26a52;--groen:#34b264;--accent-vlak:rgba(238,77,51,.14);--kerb:#f2f3f5;
   }}
   *{box-sizing:border-box}
   html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -347,6 +348,9 @@
   .kop{position:sticky;top:0;z-index:20;background:rgba(11,11,12,.92);backdrop-filter:saturate(1.4) blur(10px);
     -webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--nacht-lijn);color:var(--nacht-ink)}
   .kop .binnen{display:flex;align-items:center;gap:18px;min-height:64px}
+  /* Hoe ver je op de pagina bent, als een rondeteller onder de kop. */
+  .voortgang{position:absolute;left:0;right:0;bottom:-1px;height:2px;pointer-events:none;
+    background:linear-gradient(90deg,#ee4d33,#ff9a6b);transform-origin:0 50%;transform:scaleX(0)}
   .merk{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto;min-height:44px}
   .merk .blok{width:24px;height:24px;flex:none;display:block}
   .merk b{font-family:var(--cond);font-size:20px;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
@@ -371,6 +375,15 @@
     background:var(--accent);color:var(--accent-ink);box-shadow:0 10px 26px -12px var(--accent);transition:filter .15s,transform .15s}
   .knop:hover{filter:brightness(1.08)}
   .knop:active{transform:scale(.985)}
+  /* Een lichtstreep die over de knop veegt, en het pijltje dat een stukje
+     meeschuift. Klein, maar een knop voelt zo als iets dat je kunt indrukken. */
+  .knop{position:relative;overflow:hidden;isolation:isolate}
+  .knop::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.38) 50%,transparent 65%);
+    transform:translateX(-120%);transition:transform .7s ease}
+  .knop:hover::after{transform:translateX(120%)}
+  .knop span[aria-hidden]{display:inline-block;transition:transform .2s ease}
+  .knop:hover span[aria-hidden]{transform:translateX(4px)}
   .knop.klein{min-height:44px;padding:0 16px;font-size:15px}
   .kop .knop{display:none}
 
@@ -382,6 +395,56 @@
       radial-gradient(50% 50% at 95% 100%,rgba(238,77,51,.10),transparent 60%)}
   .hero::after{content:"P1";position:absolute;z-index:-1;right:-2%;top:-6%;font-family:var(--cond);font-weight:700;
     font-size:min(46vw,440px);line-height:1;color:#fff;opacity:.035;pointer-events:none}
+  /* De livrei van de app (zoals op de deelplaatjes) rechtsboven, en een paar
+     snelheidsstrepen die door het beeld schieten. */
+  .livrei{position:absolute;z-index:-1;top:0;right:0;width:min(46vw,320px);aspect-ratio:1;pointer-events:none;
+    background:linear-gradient(45deg,transparent 58%,#ee4d33 58% 66%,transparent 66% 71%,rgba(238,77,51,.38) 71% 74%,transparent 74%)}
+  .snelheid{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+  .snelheid i{position:absolute;left:0;height:1px;width:180px;opacity:0;transform:translateX(-220px);
+    background:linear-gradient(90deg,transparent,rgba(238,77,51,.8),rgba(255,255,255,.7));border-radius:1px}
+  html.beweegt .snelheid i{animation:streep 6s cubic-bezier(.6,0,.4,1) infinite}
+  .snelheid i:nth-child(1){top:16%;animation-delay:.6s}
+  .snelheid i:nth-child(2){top:34%;animation-delay:2.8s;animation-duration:7s}
+  .snelheid i:nth-child(3){top:55%;animation-delay:1.7s;animation-duration:5.5s}
+  .snelheid i:nth-child(4){top:71%;animation-delay:4.1s}
+  .snelheid i:nth-child(5){top:86%;animation-delay:3.3s;animation-duration:6.5s}
+  .snelheid i:nth-child(6){top:95%;animation-delay:5.2s;animation-duration:8s}
+  /* Een streep schiet in een kwart van de tijd door het beeld, en wacht dan. */
+  @keyframes streep{0%{transform:translateX(-220px);opacity:0}3%{opacity:.8}24%{opacity:.5}
+    28%,100%{transform:translateX(calc(100vw + 40px));opacity:0}}
+
+  /* De startlichten: vijf keer rood, en dan uit. Lights out. */
+  .startrij{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px}
+  .startlichten{display:inline-flex;gap:8px;padding:8px 10px;border-radius:12px;background:#111216;
+    border:1px solid var(--nacht-lijn)}
+  .startlichten i{width:16px;height:16px;border-radius:50%;background:#2a2c33}
+  html.beweegt .hero .startlichten i{animation:lampAan .12s ease-out both,lampUit .3s ease-in 2.3s forwards}
+  .hero .startlichten i:nth-child(1){animation-delay:.35s,2.3s}
+  .hero .startlichten i:nth-child(2){animation-delay:.7s,2.3s}
+  .hero .startlichten i:nth-child(3){animation-delay:1.05s,2.3s}
+  .hero .startlichten i:nth-child(4){animation-delay:1.4s,2.3s}
+  .hero .startlichten i:nth-child(5){animation-delay:1.75s,2.3s}
+  @keyframes lampAan{from{background:#2a2c33;box-shadow:none}to{background:#ee4d33;box-shadow:0 0 14px 2px rgba(238,77,51,.75)}}
+  @keyframes lampUit{from{background:#ee4d33;box-shadow:0 0 14px 2px rgba(238,77,51,.75)}to{background:#2a2c33;box-shadow:none}}
+
+  /* De kop en de rest komen kort na elkaar op, en bij lights out veegt er
+     een lichtstreep over "Versla je vrienden". */
+  html.beweegt .hero h1 span,html.beweegt .hero .sub,html.beweegt .hero .actie,html.beweegt .hero .vertrouwen{
+    animation:opkomst .8s cubic-bezier(.2,.7,.2,1) both}
+  html.beweegt .hero .sub{animation-delay:.25s}
+  html.beweegt .hero .actie{animation-delay:.38s}
+  html.beweegt .hero .vertrouwen{animation-delay:.5s}
+  @keyframes opkomst{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  /* De glans: de letters zelf krijgen een verloop met een lichte streep erin
+     (de kleur blijft het accent, alleen de vulling verandert), en die streep
+     schuift er bij lights out één keer overheen. */
+  html.beweegt .hero h1 span+span{
+    background:linear-gradient(100deg,var(--accent) 42%,#ffd2c4 50%,var(--accent) 58%) 130% 0/260% 100% no-repeat;
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    animation:opkomst .8s cubic-bezier(.2,.7,.2,1) .12s both,glans 1.2s ease-out 2.35s both}
+  @keyframes glans{from{background-position:130% 0}to{background-position:-30% 0}}
+  html.beweegt .hero .knop{animation:opkomst .8s cubic-bezier(.2,.7,.2,1) .38s both,puls 1.4s ease-out 2.4s}
+  @keyframes puls{0%{box-shadow:0 0 0 0 rgba(238,77,51,.55)}100%{box-shadow:0 0 0 18px rgba(238,77,51,0)}}
   .hero .binnen{display:grid;gap:44px}
   .boven{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;letter-spacing:.16em;
     text-transform:uppercase;color:#7ee0a3;border:1px solid rgba(52,178,100,.45);background:rgba(52,178,100,.10);
@@ -389,6 +452,9 @@
   .boven::before{content:"";width:8px;height:8px;border-radius:50%;background:#34b264}
   .hero h1{font-family:var(--cond);font-weight:700;text-transform:uppercase;font-size:clamp(46px,9vw,84px);
     line-height:.92;letter-spacing:.005em;margin:22px 0 20px}
+  /* "Startaufstellung" is het langste woord in alle zeven koppen: op een
+     smalle telefoon krimpt de Duitse kop mee, anders valt de punt eraf. */
+  html[lang="de"] .hero h1{font-size:min(clamp(46px,9vw,84px),11.2vw)}
   .hero h1 span{display:block}
   .hero h1 span+span{color:var(--accent)}
   .hero .sub{font-size:19px;color:var(--nacht-ink2);max-width:36em;margin:0 0 28px}
@@ -413,6 +479,67 @@
     box-shadow:0 40px 80px -30px rgba(0,0,0,.8),0 0 0 1px #2b2e35;transform:rotate(-2deg)}
   .telefoon img{display:block;width:100%;height:auto}
   .telefoon .achter{position:absolute;width:82%;right:-26%;top:12%;z-index:-1;transform:rotate(6deg);opacity:.55}
+  html.beweegt .telefoon .scherm:not(.achter){animation:telefoonIn 1s cubic-bezier(.2,.7,.2,1) .15s both}
+  html.beweegt .telefoon .achter{animation:telefoonAchter 1.1s cubic-bezier(.2,.7,.2,1) .4s both}
+  @keyframes telefoonIn{from{opacity:0;transform:translateY(46px) rotate(5deg)}to{opacity:1;transform:rotate(-2deg)}}
+  @keyframes telefoonAchter{from{opacity:0;transform:translateX(40px) rotate(14deg)}to{opacity:.55;transform:rotate(6deg)}}
+  /* Meldingen die om de telefoon zweven: wat er in een weekend gebeurt. */
+  .zweef{position:absolute;z-index:2;display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border-radius:12px;
+    background:rgba(21,22,26,.94);border:1px solid var(--nacht-lijn);color:var(--nacht-ink);font-size:14px;font-weight:600;
+    white-space:nowrap;box-shadow:0 16px 34px -14px rgba(0,0,0,.8)}
+  .zweef::before{content:"";width:9px;height:9px;border-radius:50%;background:#34b264;flex:none}
+  .zweef-1{top:9%;left:-4%}
+  .zweef-2{top:45%;right:-4%}
+  .zweef-2::before{background:#ee4d33}
+  .zweef-3{bottom:9%;left:2%}
+  .zweef-3::before{background:#e0a53a}
+  html.beweegt .zweef{animation:zweefIn .6s cubic-bezier(.2,.9,.3,1.3) both,zweven 5s ease-in-out infinite}
+  html.beweegt .zweef-1{animation-delay:1s,1.6s}
+  html.beweegt .zweef-2{animation-delay:1.5s,2.4s}
+  html.beweegt .zweef-3{animation-delay:2.5s,3.1s}
+  @keyframes zweefIn{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}
+  @keyframes zweven{0%,100%{translate:0 0}50%{translate:0 -7px}}
+
+  /* De ticker onder de hero, als de balk onderin een tv-uitzending. */
+  .ticker{overflow:hidden;background:#ee4d33;color:#0b0b0c;border-block:1px solid #b92f19}
+  .ticker .rol{display:flex;width:max-content}
+  html.beweegt .ticker .rol{animation:tikker 42s linear infinite}
+  .ticker:hover .rol{animation-play-state:paused}
+  .ticker span{display:inline-flex;align-items:center;gap:20px;padding:13px 20px 13px 0;font-family:var(--mono);font-size:13px;
+    font-weight:700;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+  .ticker span::after{content:"";width:14px;height:14px;flex:none;border:1px solid #0b0b0c;
+    background:repeating-conic-gradient(#0b0b0c 0 25%,transparent 0 50%) 0 0/7px 7px}
+  @keyframes tikker{to{transform:translateX(-50%)}}
+
+  /* ---- in beeld schuiven ----
+     Alleen als er JavaScript is en niemand om minder beweging vroeg (dan zet
+     het scriptje in <head> html.beweegt). Zonder dat staat alles er gewoon.
+     Het vangnet: loopt het script onderaan om wat voor reden niet, dan komt
+     alles na tweeënhalve seconde alsnog tevoorschijn. */
+  html.beweegt .onthul{transition:opacity .75s cubic-bezier(.2,.7,.2,1),transform .75s cubic-bezier(.2,.7,.2,1);
+    transition-delay:calc(var(--i,0) * 90ms)}
+  html.beweegt .onthul:not(.zichtbaar){opacity:0;transform:var(--start,translateY(28px))}
+  html.beweegt:not(.klaar) .onthul{animation:vangnet .01s 2.5s forwards}
+  @keyframes vangnet{to{opacity:1;transform:none}}
+
+  /* Een sectiekop: een genummerd label, en daaronder de kop met een kerbstrook
+     (rood-wit, zoals de randen van een circuit) die zich uittekent. */
+  .sectiekop{margin-bottom:30px}
+  .sectiekop .label{display:inline-flex;align-items:center;gap:12px}
+  .sectiekop .label b{color:var(--accent-tekst);font-weight:700}
+  .sectiekop .label b::after{content:"";display:inline-block;width:26px;height:1px;background:currentColor;
+    margin-left:12px;vertical-align:middle;opacity:.7}
+  .sectiekop h2{margin:14px 0 0;font-size:clamp(36px,6vw,62px);line-height:.95;max-width:15em}
+  .sectiekop h2::after{content:"";display:block;width:84px;height:6px;margin-top:20px;border-radius:1px;
+    background:repeating-linear-gradient(90deg,#ee4d33 0 14px,var(--kerb,#fff) 14px 28px);
+    transform-origin:0 50%;transition:transform .9s cubic-bezier(.2,.7,.2,1) .3s}
+  html.beweegt .sectiekop:not(.zichtbaar) h2::after{transform:scaleX(0)}
+  .antwoord .binnen{display:grid;gap:14px}
+  .cijfers{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .cijfers li{background:var(--paneel);border:1px solid var(--lijn);border-radius:16px;padding:18px 14px;
+    display:flex;flex-direction:column;gap:6px}
+  .cijfers b{font-family:var(--cond);font-size:clamp(44px,8vw,68px);line-height:.85;color:var(--accent-tekst)}
+  .cijfers span{font-size:14px;line-height:1.3;color:var(--ink2)}
 
   /* ---- secties ---- */
   section[id]{scroll-margin-top:76px}
@@ -428,11 +555,20 @@
   .antwoord p{margin:0;font-size:18px;color:var(--ink2)}
   .antwoord h2{font-size:clamp(28px,4vw,36px);margin:0 0 6px}
 
-  .stappen{list-style:none;margin:0;padding:0;display:grid;gap:14px;counter-reset:stap}
-  .stappen li{background:var(--paneel);border:1px solid var(--lijn);border-radius:16px;padding:22px 22px 22px 76px;
-    position:relative;counter-increment:stap}
-  .stappen li::before{content:counter(stap,decimal-leading-zero);position:absolute;left:22px;top:18px;
-    font-family:var(--cond);font-weight:700;font-size:36px;line-height:1;color:var(--accent)}
+  /* De vier stappen als een stuk circuit: een kerbstrook die zich uittekent,
+     met de stappen als meetpunten erop. */
+  .stappen{list-style:none;margin:0;padding:0;display:grid;gap:30px;counter-reset:stap;position:relative}
+  .stappen::before{content:"";position:absolute;left:29px;top:6px;bottom:6px;width:6px;border-radius:3px;
+    background:repeating-linear-gradient(180deg,#ee4d33 0 14px,var(--kerb,#fff) 14px 28px);
+    box-shadow:0 0 0 1px var(--lijn);transform-origin:50% 0;transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
+  html.beweegt .stappen:not(.zichtbaar)::before{transform:scaleY(0)}
+  .stappen li{position:relative;padding:4px 0 0 86px;counter-increment:stap;min-height:64px}
+  .stappen li::before{content:counter(stap,decimal-leading-zero);position:absolute;left:0;top:0;width:64px;height:64px;
+    border-radius:50%;display:grid;place-items:center;background:var(--bg);border:3px solid var(--accent);
+    font-family:var(--cond);font-weight:700;font-size:28px;line-height:1;color:var(--ink);
+    transition:background .25s,color .25s,transform .25s}
+  .stappen li:hover::before{background:var(--accent);color:var(--accent-ink);transform:scale(1.06)}
+  .stappen h3{font-size:20px;margin:8px 0 6px}
   .stappen p{margin:0;color:var(--ink2);font-size:16px}
 
   .tabel{width:100%;border-collapse:separate;border-spacing:0;background:var(--paneel);border:1px solid var(--lijn);
@@ -443,7 +579,16 @@
   .tabel td:last-child,.tabel th:last-child{text-align:right;width:36%}
   .tabel td:last-child{font-family:var(--cond);font-weight:700;font-size:26px;line-height:1}
   .tabel tr.top td:last-child{color:var(--accent-tekst)}
-  .tabellen{display:grid;gap:18px;margin-top:18px}
+  /* Onder elke regel een balk naar hoeveel punten het is; ze groeien als de
+     tabel in beeld komt. */
+  .tabel tbody td:first-child{position:relative}
+  .tabel tbody td:first-child::after{content:"";position:absolute;left:18px;bottom:6px;height:3px;border-radius:2px;
+    width:calc((100% - 36px) * var(--w,0));background:var(--accent);opacity:.85;transform-origin:0 50%;
+    transition:transform .9s cubic-bezier(.2,.7,.2,1) calc(var(--i,0) * 80ms + .2s)}
+  html.beweegt .tabel:not(.zichtbaar) tbody td:first-child::after{transform:scaleX(0)}
+  .tabel tbody tr{transition:background .2s}
+  .tabel tbody tr:hover{background:var(--accent-vlak)}
+  .tabellen{display:grid;gap:18px;margin-top:18px;align-items:start}
   .tabellen .tabel td:last-child{font-size:22px}
   .voorbeeld{margin:18px 0 0;color:var(--ink2);font-size:16px}
   .presets{margin:22px 0 0;color:var(--ink2);font-size:16px;border-left:3px solid var(--accent);padding-left:14px}
@@ -459,7 +604,13 @@
   .niveaus::after{content:attr(data-meest);position:absolute;z-index:-1;right:-1%;bottom:-12%;font-family:var(--cond);
     font-weight:700;font-size:min(52vw,520px);line-height:1;color:#fff;opacity:.035;pointer-events:none}
   .niveaus .label{color:#8a9099}
-  .niveaus h2{font-size:clamp(38px,6.4vw,64px);line-height:.95;margin:12px 0 18px}
+  .niveaus .label b{color:#ee4d33}
+  .niveaus{--kerb:#f2f3f5}
+  .niveau{transition:transform .25s ease,box-shadow .25s ease}
+  .niveau:hover{transform:translateY(-4px)}
+  .lampen i{transition:background .25s ease calc(var(--l,0) * 140ms + .35s),box-shadow .25s ease calc(var(--l,0) * 140ms + .35s)}
+  html.beweegt .niveau:not(.zichtbaar) .lampen i.aan{background:#26282e;box-shadow:inset 0 0 0 2px #1d1f24}
+  .niveaus h2{font-size:clamp(38px,6.4vw,64px);line-height:.95}
   .niveaus h2>span{display:block}
   .niveaus h2>span+span{color:var(--accent)}
   /* "F1-poule" breekt niet na het streepje. */
@@ -486,9 +637,16 @@
   .niveaus .zelf{margin:26px 0 22px;color:var(--nacht-ink2);max-width:44em;border-left:3px solid #ee4d33;padding-left:14px}
 
   .functies{list-style:none;margin:0;padding:0;display:grid;gap:14px}
-  .functies li{background:var(--paneel);border:1px solid var(--lijn);border-radius:16px;padding:22px}
-  .functies li::before{content:"";display:block;width:26px;height:4px;border-radius:2px;background:var(--accent);margin-bottom:14px}
+  .functies li{position:relative;background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:24px;
+    transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+  .functies li:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 22px 44px -28px rgba(0,0,0,.45)}
+  .functies .icoon{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;margin-bottom:16px;
+    background:var(--accent-vlak);color:var(--accent-tekst);transition:transform .3s cubic-bezier(.2,.9,.3,1.4)}
+  .functies li:hover .icoon{transform:rotate(-8deg) scale(1.1)}
+  .functies .icoon svg{width:24px;height:24px}
+  .functies .nr{position:absolute;top:22px;right:22px;font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--ink3)}
   .functies p{margin:0;color:var(--ink2);font-size:16px}
+  .functies .breed h3{font-family:var(--cond);font-size:26px;text-transform:uppercase;letter-spacing:.01em}
 
   .beelden{display:grid;gap:22px}
   .beelden figure{margin:0;display:grid;gap:12px;justify-items:center;text-align:center}
@@ -496,6 +654,9 @@
     box-shadow:0 24px 48px -28px rgba(0,0,0,.45)}
   .beelden img{display:block;width:100%;height:auto}
   .beelden figcaption{color:var(--ink2);font-size:15px;max-width:22em}
+  .beelden figure{--start:translateY(48px) rotate(var(--r,0deg))}
+  .beelden .kader{transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s}
+  .beelden figure:hover .kader{transform:translateY(-10px) rotate(var(--r,0deg));box-shadow:0 36px 60px -30px rgba(0,0,0,.55)}
 
   /* Eén kaart over privacy. Hier stond er een tweede naast ("Wie zit
      erachter?"); die is op verzoek weg. Smal gehouden, zodat de regels niet
@@ -506,7 +667,9 @@
   .los a{color:var(--accent-tekst)}
 
   .faq{display:grid;gap:10px;max-width:880px}
-  .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px}
+  .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;transition:border-color .2s,box-shadow .2s}
+  .faq details:hover{border-color:var(--ink3)}
+  .faq details[open]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
   .faq summary{cursor:pointer;list-style:none;padding:18px 54px 18px 20px;position:relative}
   .faq summary::-webkit-details-marker{display:none}
   .faq summary::after{content:"+";position:absolute;right:20px;top:50%;transform:translateY(-50%);
@@ -518,6 +681,16 @@
   .slot{background:var(--nacht);color:var(--nacht-ink);text-align:center;padding:76px 0;position:relative;overflow:hidden;isolation:isolate}
   .slot::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(60% 80% at 50% 0%,rgba(238,77,51,.2),transparent 70%)}
   .slot p{color:var(--nacht-ink2);font-size:18px;margin:0 auto 26px;max-width:32em}
+  .slot h2{font-size:clamp(40px,7vw,76px);line-height:.95;max-width:14em;margin:0 auto 18px}
+  .slot .startlichten{margin:0 auto 26px;padding:12px 14px;gap:12px;border-radius:16px}
+  .slot .startlichten i{width:26px;height:26px}
+  html.beweegt .slot .zichtbaar .startlichten i{animation:lampAan .12s ease-out both,lampUit .3s ease-in 2.1s forwards}
+  .slot .startlichten i:nth-child(1){animation-delay:.2s,2.1s}
+  .slot .startlichten i:nth-child(2){animation-delay:.55s,2.1s}
+  .slot .startlichten i:nth-child(3){animation-delay:.9s,2.1s}
+  .slot .startlichten i:nth-child(4){animation-delay:1.25s,2.1s}
+  .slot .startlichten i:nth-child(5){animation-delay:1.6s,2.1s}
+  html.beweegt .slot .zichtbaar .knop{animation:puls 1.4s ease-out 2.2s 2}
 
   .voet{background:var(--nacht);color:var(--nacht-ink2);border-top:1px solid var(--nacht-lijn);padding:40px 0 48px;font-size:14px}
   .voet .binnen{display:grid;gap:24px}
@@ -538,7 +711,6 @@
   @media (min-width:720px){
     .kopnav{display:flex}
     .kop .knop{display:inline-flex}
-    .stappen{grid-template-columns:repeat(2,1fr)}
     .functies{grid-template-columns:repeat(2,1fr)}
     .beelden{grid-template-columns:repeat(3,1fr)}
     .tabellen{grid-template-columns:1fr 1fr}
@@ -549,9 +721,21 @@
   @media (min-width:960px){
     .hero{padding:84px 0 92px}
     .hero .binnen{grid-template-columns:1.15fr .85fr;align-items:center}
-    .stappen{grid-template-columns:repeat(4,1fr)}
-    .stappen li{padding:74px 22px 22px}
+    .stappen{grid-template-columns:repeat(4,1fr);gap:26px}
+    .stappen::before{left:0;right:0;top:29px;bottom:auto;width:auto;height:6px;transform-origin:0 50%;
+      background:repeating-linear-gradient(90deg,#ee4d33 0 14px,var(--kerb,#fff) 14px 28px)}
+    html.beweegt .stappen:not(.zichtbaar)::before{transform:scaleX(0)}
+    .stappen li{padding:86px 0 0}
     .functies{grid-template-columns:repeat(3,1fr)}
+    .functies .breed{grid-column:span 2}
+    .antwoord .binnen{grid-template-columns:1.5fr 1fr;align-items:center}
+    .antwoord .kader{align-content:center}
+    .cijfers{grid-template-columns:1fr}
+    .cijfers li{flex-direction:row;align-items:center;gap:18px;padding:16px 20px}
+    .cijfers b{min-width:1.6em}
+    .zweef-1{left:-24%}
+    .zweef-2{right:-20%}
+    .zweef-3{left:-14%}
   }
 </style>
 </head>
@@ -568,12 +752,15 @@
     </details>
     <a class="knop klein" href="../app/">App öffnen</a>
   </div>
+  <span class="voortgang" aria-hidden="true"></span>
 </header>
 <main>
 <section class="hero">
+  <div class="livrei" aria-hidden="true"></div>
+  <div class="snelheid" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="binnen">
     <div>
-      <span class="boven">Kostenloses F1-Tippspiel</span>
+      <div class="startrij"><span class="startlichten" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="boven">Kostenloses F1-Tippspiel</span></div>
       <h1><span>Tippe die Startaufstellung.</span><span>Schlag deine Freunde.</span></h1>
       <p class="sub">Das kostenlose F1-Tippspiel für dich und deine Freunde. Tippe an jedem Rennwochenende die Top 10, die Ergebnisse kommen von selbst, und den Tabellenstand teilst du mit einem Tipp in der Gruppe.</p>
       <div class="actie">
@@ -592,116 +779,132 @@
     <div class="telefoon">
       <div class="achter scherm" aria-hidden="true"><img src="../site/beeld/stand-en-donker.jpg" alt="" width="390" height="844" loading="lazy" decoding="async"></div>
       <div class="scherm"><img src="../site/beeld/races-en-donker.jpg" alt="Die Rennübersicht von Predict the Race mit dem nächsten Rennen und einem Countdown" width="390" height="844" fetchpriority="high" decoding="async"></div>
+      <span class="zweef zweef-1" aria-hidden="true">P1 exakt · +5</span><span class="zweef zweef-2" aria-hidden="true">Joker · 2×</span><span class="zweef zweef-3" aria-hidden="true">Du gewinnst das Wochenende</span>
     </div>
   </div>
 </section>
+<div class="ticker" aria-hidden="true"><div class="rol"><span>Tippe die Top 10</span><span>5 Punkte für einen exakten Platz</span><span>Joker: alles doppelt</span><span>Ergebnisse kommen von selbst</span><span>14 Fragen oder nur 2</span><span>Kostenlos und ohne Werbung</span><span>Tippe die Top 10</span><span>5 Punkte für einen exakten Platz</span><span>Joker: alles doppelt</span><span>Ergebnisse kommen von selbst</span><span>14 Fragen oder nur 2</span><span>Kostenlos und ohne Werbung</span></div></div>
 
 <section class="antwoord" id="wat">
   <div class="binnen">
-    <div class="kader">
+    <div class="kader onthul">
       <h2>Was ist Predict the Race?</h2>
       <p>Predict the Race ist eine kostenlose Web-App, mit der du mit Freunden, Kollegen oder der Familie ein Formel-1-Tippspiel spielst. An jedem Rennwochenende tippen alle die Top 10 des Qualifyings und des Rennens, dazu ein paar Zusatzfragen wie den Sieger und die Pole-Position. Nach jeder Session kommen die offiziellen Ergebnisse automatisch, und die App berechnet Punkte und Tabelle. Du machst mit einem Code mit, ohne Passwort und ohne zu bezahlen.</p>
     </div>
+    <ul class="cijfers"><li class="onthul" style="--i:1"><b data-tel="14">14</b><span>Fragen zum Tippen</span></li><li class="onthul" style="--i:2"><b data-tel="5">5</b><span>Punkte für einen exakten Platz</span></li><li class="onthul" style="--i:3"><b data-tel="0">0</b><span>Euro, jetzt und immer</span></li></ul>
   </div>
 </section>
 
 <section class="blok" id="hoe">
   <div class="binnen">
-    <h2>So funktioniert es</h2>
-    <ol class="stappen"><li><h3>Tipprunde erstellen</h3><p>Gib deiner Runde einen Namen, wähle, welche Fragen zählen, und teile den Code oder den Einladungslink in deiner Gruppe.</p></li><li><h3>Top 10 tippen</h3><p>Setze vor dem Qualifying und vor dem Rennen deine Top 10 in die Startaufstellung. An Sprint-Wochenenden kommt der Sprint dazu.</p></li><li><h3>Ergebnisse kommen von selbst</h3><p>Nach jeder Session holt die App das offizielle Ergebnis. Niemand muss etwas mitschreiben oder eintragen.</p></li><li><h3>Gewinne das Wochenende</h3><p>Sieh sofort deine Punkte, die Tabelle, den Wochenendsieger und deine Bilanz gegen jeden einzelnen Freund.</p></li></ol>
+    <div class="sectiekop onthul"><span class="label"><b>01</b>So funktioniert es</span>
+    <h2>Vom Code bis aufs Podium.</h2></div>
+    <ol class="stappen onthul"><li class="onthul" style="--i:1"><h3>Tipprunde erstellen</h3><p>Gib deiner Runde einen Namen, wähle, welche Fragen zählen, und teile den Code oder den Einladungslink in deiner Gruppe.</p></li><li class="onthul" style="--i:2"><h3>Top 10 tippen</h3><p>Setze vor dem Qualifying und vor dem Rennen deine Top 10 in die Startaufstellung. An Sprint-Wochenenden kommt der Sprint dazu.</p></li><li class="onthul" style="--i:3"><h3>Ergebnisse kommen von selbst</h3><p>Nach jeder Session holt die App das offizielle Ergebnis. Niemand muss etwas mitschreiben oder eintragen.</p></li><li class="onthul" style="--i:4"><h3>Gewinne das Wochenende</h3><p>Sieh sofort deine Punkte, die Tabelle, den Wochenendsieger und deine Bilanz gegen jeden einzelnen Freund.</p></li></ol>
   </div>
 </section>
 
 <section class="niveaus" id="niveaus" data-meest="14">
   <div class="binnen">
-    <span class="label">Du bestimmst das Niveau</span>
-    <h2><span>Die umfangreichste <span class="heel">F1-Tipprunde.</span></span><span>Oder die einfachste.</span></h2>
+    <div class="sectiekop onthul"><span class="label"><b>02</b>Du bestimmst das Niveau</span>
+    <h2><span>Die umfangreichste <span class="heel">F1-Tipprunde.</span></span><span>Oder die einfachste.</span></h2></div>
     <p class="inleiding">Schalte alles ein und du tippst vierzehn Fragen: von Pole und schnellstem Boxenstopp bis zu Safety-Cars, roter Flagge und Teamkollegen-Duellen. Lieber entspannt? Bleib bei zwei Top 10 und alle sind in einer Minute fertig.</p>
     <ol class="niveaulijst">
-      <li class="niveau">
+      <li class="niveau onthul" style="--i:0">
         
-        <span class="lampen" aria-hidden="true"><i class="aan"></i><i></i><i></i><i></i><i></i></span>
+        <span class="lampen" aria-hidden="true"><i style="--l:0" class="aan"></i><i style="--l:1"></i><i style="--l:2"></i><i style="--l:3"></i><i style="--l:4"></i></span>
         <h3>Einfach</h3>
         <p class="tagline">Für die Gruppe, die es kurz halten will.</p>
-        <p class="aantal"><b>2</b> Fragen</p>
+        <p class="aantal"><b data-tel="2">2</b> Fragen</p>
         <p class="weekend">100 Punkte pro Wochenende</p>
         <ul class="chips"><li>Top 10 Qualifying</li><li>Top 10 Rennen</li></ul>
       </li>
-      <li class="niveau">
+      <li class="niveau onthul" style="--i:1">
         
-        <span class="lampen" aria-hidden="true"><i class="aan"></i><i class="aan"></i><i class="aan"></i><i></i><i></i></span>
+        <span class="lampen" aria-hidden="true"><i style="--l:0" class="aan"></i><i style="--l:1" class="aan"></i><i style="--l:2" class="aan"></i><i style="--l:3"></i><i style="--l:4"></i></span>
         <h3>Klassisch</h3>
         <p class="tagline">Der goldene Mittelweg.</p>
-        <p class="aantal"><b>5</b> Fragen</p>
+        <p class="aantal"><b data-tel="5">5</b> Fragen</p>
         <p class="weekend">145 Punkte pro Wochenende</p>
         <ul class="chips"><li>Top 10 Qualifying</li><li>Top 10 Rennen</li><li>Rennsieger</li><li>Pole-Position</li><li>Schnellste Runde</li></ul>
       </li>
-      <li class="niveau meest">
+      <li class="niveau onthul meest" style="--i:2">
         <span class="badge">Die meisten Fragen</span>
-        <span class="lampen" aria-hidden="true"><i class="aan"></i><i class="aan"></i><i class="aan"></i><i class="aan"></i><i class="aan"></i></span>
+        <span class="lampen" aria-hidden="true"><i style="--l:0" class="aan"></i><i style="--l:1" class="aan"></i><i style="--l:2" class="aan"></i><i style="--l:3" class="aan"></i><i style="--l:4" class="aan"></i></span>
         <h3>Fortgeschritten</h3>
         <p class="tagline">Für alle, die wirklich alles tippen wollen.</p>
-        <p class="aantal"><b>14</b> Fragen</p>
+        <p class="aantal"><b data-tel="14">14</b> Fragen</p>
         <p class="weekend">202 Punkte pro Wochenende · plus Sprint und Saison</p>
         <ul class="chips"><li>Top 10 Qualifying</li><li>Top 10 Rennen</li><li>Top 10 im Sprint</li><li>Rennsieger</li><li>Pole-Position</li><li>Schnellste Runde</li><li>Schnellster Boxenstopp</li><li>Teamduelle</li><li>Anzahl der Safety-Car-Phasen</li><li>Rote Flagge, ja oder nein</li><li>Weltmeister</li><li>Konstrukteursweltmeister</li><li>Anzahl verschiedener Rennsieger</li><li>Welches Team wird Vierter</li></ul>
       </li>
     </ol>
-    <p class="zelf">Oder stell deine Runde selbst zusammen: jede Frage einzeln an oder aus, mit den Punkten dazu. Sobald das erste Rennen gefahren ist, steht die Auswahl fest, damit jedes Wochenende fair vergleichbar bleibt.</p>
+    <p class="zelf onthul">Oder stell deine Runde selbst zusammen: jede Frage einzeln an oder aus, mit den Punkten dazu. Sobald das erste Rennen gefahren ist, steht die Auswahl fest, damit jedes Wochenende fair vergleichbar bleibt.</p>
     <a class="knop" href="../app/">Wähle dein Niveau <span aria-hidden="true">→</span></a>
   </div>
 </section>
 
 <section class="blok" id="punten">
   <div class="binnen">
-    <h2>So werden Punkte vergeben</h2>
-    <p class="inleiding">Für jeden Fahrer in deiner Top 10 bekommst du Punkte danach, wie nah du an seiner echten Platzierung warst. Ein knapper Tipp bringt also auch etwas.</p>
-    <table class="tabel">
+    <div class="sectiekop onthul"><span class="label"><b>03</b>So werden Punkte vergeben</span>
+    <h2>Knapp daneben zählt auch.</h2></div>
+    <p class="inleiding onthul">Für jeden Fahrer in deiner Top 10 bekommst du Punkte danach, wie nah du an seiner echten Platzierung warst. Ein knapper Tipp bringt also auch etwas.</p>
+    <table class="tabel onthul">
       <thead><tr><th scope="col">Dein Tipp</th><th scope="col">Punkte pro Fahrer</th></tr></thead>
-      <tbody><tr class="top"><td>Genau richtig</td><td>5</td></tr><tr><td>Einen Platz daneben</td><td>3</td></tr><tr><td>Zwei Plätze daneben</td><td>1</td></tr><tr><td>Drei oder mehr Plätze daneben</td><td>0</td></tr></tbody>
+      <tbody><tr class="top" style="--w:1.00;--i:0"><td>Genau richtig</td><td>5</td></tr><tr style="--w:0.60;--i:1"><td>Einen Platz daneben</td><td>3</td></tr><tr style="--w:0.20;--i:2"><td>Zwei Plätze daneben</td><td>1</td></tr><tr style="--w:0.00;--i:3"><td>Drei oder mehr Plätze daneben</td><td>0</td></tr></tbody>
     </table>
     <p class="voorbeeld">Beispiel: Du setzt einen Fahrer auf P1 und er wird Zweiter. Das ist ein Platz daneben, also 3 Punkte. Mit einer perfekten Top 10 holst du 50 Punkte pro Session.</p>
     <div class="tabellen">
-      <table class="tabel">
+      <table class="tabel onthul">
         <caption class="alleenlezer">Zusatzfragen pro Wochenende</caption>
         <thead><tr><th scope="col">Zusatzfragen pro Wochenende</th><th scope="col">Punkte</th></tr></thead>
-        <tbody><tr><td>Rennsieger</td><td>25</td></tr><tr><td>Pole-Position</td><td>10</td></tr><tr><td>Schnellste Runde</td><td>10</td></tr><tr><td>Schnellster Boxenstopp</td><td>10</td></tr><tr><td>Teamduelle</td><td>15</td></tr><tr><td>Anzahl der Safety-Car-Phasen</td><td>12</td></tr><tr><td>Rote Flagge, ja oder nein</td><td>20</td></tr><tr><td>Top 10 im Sprint (Sprint-Wochenenden)</td><td>25</td></tr></tbody>
+        <tbody><tr style="--w:0.50;--i:0"><td>Rennsieger</td><td>25</td></tr><tr style="--w:0.20;--i:1"><td>Pole-Position</td><td>10</td></tr><tr style="--w:0.20;--i:2"><td>Schnellste Runde</td><td>10</td></tr><tr style="--w:0.20;--i:3"><td>Schnellster Boxenstopp</td><td>10</td></tr><tr style="--w:0.30;--i:4"><td>Teamduelle</td><td>15</td></tr><tr style="--w:0.24;--i:5"><td>Anzahl der Safety-Car-Phasen</td><td>12</td></tr><tr style="--w:0.40;--i:6"><td>Rote Flagge, ja oder nein</td><td>20</td></tr><tr style="--w:0.50;--i:7"><td>Top 10 im Sprint (Sprint-Wochenenden)</td><td>25</td></tr></tbody>
       </table>
-      <table class="tabel">
+      <table class="tabel onthul" style="--i:1">
         <caption class="alleenlezer">Saisonfragen, einmal im Jahr</caption>
         <thead><tr><th scope="col">Saisonfragen, einmal im Jahr</th><th scope="col">Punkte</th></tr></thead>
-        <tbody><tr><td>Weltmeister</td><td>50</td></tr><tr><td>Konstrukteursweltmeister</td><td>40</td></tr><tr><td>Anzahl verschiedener Rennsieger</td><td>30</td></tr><tr><td>Welches Team wird Vierter</td><td>30</td></tr></tbody>
+        <tbody><tr style="--w:1.00;--i:0"><td>Weltmeister</td><td>50</td></tr><tr style="--w:0.80;--i:1"><td>Konstrukteursweltmeister</td><td>40</td></tr><tr style="--w:0.60;--i:2"><td>Anzahl verschiedener Rennsieger</td><td>30</td></tr><tr style="--w:0.60;--i:3"><td>Welches Team wird Vierter</td><td>30</td></tr></tbody>
       </table>
     </div>
-    <p class="presets">Der Admin der Runde wählt, was zählt: Einfach (nur die zwei Top 10, 100 Punkte pro Wochenende), Klassisch (plus Sieger, Pole und schnellste Runde, 145) oder Fortgeschritten (alles, 202 pro Wochenende plus Sprint und Saison).</p>
+    <p class="presets onthul">Der Admin der Runde wählt, was zählt: Einfach (nur die zwei Top 10, 100 Punkte pro Wochenende), Klassisch (plus Sieger, Pole und schnellste Runde, 145) oder Fortgeschritten (alles, 202 pro Wochenende plus Sprint und Saison).</p>
   </div>
 </section>
 
 <section class="blok" id="functies">
   <div class="binnen">
-    <h2>Alles für eine Tipprunde, die die ganze Saison lebt</h2>
-    <ul class="functies"><li><h3>Automatische Ergebnisse</h3><p>Das offizielle Ergebnis kommt von selbst, und nachträgliche Strafen werden noch einmal geprüft.</p></li><li><h3>Joker</h3><p>Setz einen Joker auf ein Wochenende und deine Punkte zählen doppelt. Standardmäßig fünf pro Saison, einstellbar durch den Admin.</p></li><li><h3>Direkte Duelle</h3><p>Neben der Tabelle siehst du für jeden Freund, wer öfter gewonnen hat. Darum geht es in der Gruppe meistens.</p></li><li><h3>Wochenendsieger</h3><p>Wer an einem Wochenende die meisten Punkte holt, gewinnt das Wochenende, auch wenn er in der Saison hinten liegt.</p></li><li><h3>In der Gruppe teilen</h3><p>Ein Tipp macht aus dem Wochenendergebnis ein Bild für die Gruppe, oder eine Hochformat-Version für deinen WhatsApp-Status.</p></li><li><h3>Deadlines im Kalender</h3><p>Abonniere den Kalender und jede Deadline steht in deinem eigenen Kalender, mit deiner eigenen Erinnerung.</p></li><li><h3>Tipp vergessen?</h3><p>Mit automatischem Ausfüllen bekommt, wer nichts abgibt, eine zufällige Top 10 statt null Punkte.</p></li><li><h3>Saisonfragen</h3><p>Weltmeister, Konstrukteurstitel und mehr: einmal vor dem ersten Rennen tippen, gewertet am Jahresende.</p></li><li><h3>Privat oder öffentlich</h3><p>Halte deine Runde mit einem Code privat oder mach sie auffindbar, damit jeder mitspielen kann.</p></li></ul>
+    <div class="sectiekop onthul"><span class="label"><b>04</b>Alles für eine Tipprunde, die die ganze Saison lebt</span>
+    <h2>Gemacht für eine ganze Saison Angeberei.</h2></div>
+    <ul class="functies"><li class="onthul breed" style="--i:0"><span class="icoon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h13l-2.5 4L18 12H5"/><path d="M9 4v8M13 4v8"/></svg></span><span class="nr" aria-hidden="true">01</span><h3>Automatische Ergebnisse</h3><p>Das offizielle Ergebnis kommt von selbst, und nachträgliche Strafen werden noch einmal geprüft.</p></li><li class="onthul" style="--i:1"><span class="icoon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span><span class="nr" aria-hidden="true">02</span><h3>Joker</h3><p>Setz einen Joker auf ein Wochenende und deine Punkte zählen doppelt. Standardmäßig fünf pro Saison, einstellbar durch den Admin.</p></li><li class="onthul" style="--i:2"><span class="icoon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 20c0-3 2.2-5 5-5s5 2 5 5M11 20c0-3 2.2-5 5-5s5 2 5 5"/></svg></span><span class="nr" aria-hidden="true">03</span><h3>Direkte Duelle</h3><p>Neben der Tabelle siehst du für jeden Freund, wer öfter gewonnen hat. Darum geht es in der Gruppe meistens.</p></li><li class="onthul breed" style="--i:0"><span class="icoon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></span><span class="nr" aria-hidden="true">04</span><h3>Wochenendsieger</h3><p>Wer an einem Wochenende die meisten Punkte holt, gewinnt das Wochenende, auch wenn er in der Saison hinten liegt.</p></li><li class="onthul" style="--i:1"><span class="icoon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></span><span class="nr" aria-hidden="true">05</span><h3>In der Gruppe teilen</h3><p>Ein Tipp macht aus dem Wochenendergebnis ein Bild für die Gruppe, oder eine Hochformat-Version für deinen WhatsApp-Status.</p></li><li class="onthul" style="--i:2"><span class="icoon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="m9 15 2 2 4-4"/></svg></span><span class="nr" aria-hidden="true">06</span><h3>Deadlines im Kalender</h3><p>Abonniere den Kalender und jede Deadline steht in deinem eigenen Kalender, mit deiner eigenen Erinnerung.</p></li><li class="onthul" style="--i:0"><span class="icoon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg></span><span class="nr" aria-hidden="true">07</span><h3>Tipp vergessen?</h3><p>Mit automatischem Ausfüllen bekommt, wer nichts abgibt, eine zufällige Top 10 statt null Punkte.</p></li><li class="onthul breed" style="--i:1"><span class="icoon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8 4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg></span><span class="nr" aria-hidden="true">08</span><h3>Saisonfragen</h3><p>Weltmeister, Konstrukteurstitel und mehr: einmal vor dem ersten Rennen tippen, gewertet am Jahresende.</p></li><li class="onthul" style="--i:2"><span class="icoon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><span class="nr" aria-hidden="true">09</span><h3>Privat oder öffentlich</h3><p>Halte deine Runde mit einem Code privat oder mach sie auffindbar, damit jeder mitspielen kann.</p></li></ul>
   </div>
 </section>
 
 <section class="blok" id="beelden">
   <div class="binnen">
-    <h2>So sieht es aus</h2>
+    <div class="sectiekop onthul"><span class="label"><b>05</b>So sieht es aus</span>
+    <h2>So sieht Gewinnen aus.</h2></div>
     <div class="beelden">
-      <figure>
+      <figure class="onthul" style="--i:0;--r:-3deg">
         <div class="kader"><picture>
       <source srcset="../site/beeld/races-en-donker.jpg" media="(prefers-color-scheme: dark)">
       <img src="../site/beeld/races-en-licht.jpg" alt="Die Rennübersicht von Predict the Race mit dem nächsten Rennen und einem Countdown" width="390" height="844" loading="lazy" decoding="async">
     </picture></div>
         <figcaption>Das Wochenende auf einen Blick: welches Rennen ansteht und wie viel Zeit bleibt.</figcaption>
       </figure>
-      <figure>
+      <figure class="onthul" style="--i:1;--r:0deg">
         <div class="kader"><picture>
       <source srcset="../site/beeld/uitslag-en-donker.jpg" media="(prefers-color-scheme: dark)">
       <img src="../site/beeld/uitslag-en-licht.jpg" alt="Ein Rennergebnis mit den Punkten pro Fahrer" width="390" height="844" loading="lazy" decoding="async">
     </picture></div>
         <figcaption>Nach dem Rennen siehst du für jeden Fahrer, was dein Tipp gebracht hat.</figcaption>
       </figure>
-      <figure>
+      <figure class="onthul" style="--i:2;--r:3deg">
         <div class="kader"><picture>
       <source srcset="../site/beeld/stand-en-donker.jpg" media="(prefers-color-scheme: dark)">
       <img src="../site/beeld/stand-en-licht.jpg" alt="Die Tabelle einer Tipprunde mit Podium und Rangliste" width="390" height="844" loading="lazy" decoding="async">
@@ -714,14 +917,15 @@
 
 <section class="blok">
   <div class="binnen los">
-    <article><h2>Keine Werbung</h2><p>Predict the Race hat keine Werbung und verkauft nichts weiter. Du machst mit einem Code und einem Namen mit; eine E-Mail-Adresse brauchst du nur, wenn du dein Konto auf ein anderes Gerät mitnehmen willst. Besucherstatistiken mit Google Analytics kommen nur dazu, wenn du selbst zustimmst. <a href="../en/privacy/" hreflang="en">Die ganze Datenschutzerklärung lesen (auf Englisch)</a></p></article>
+    <article class="onthul"><h2>Keine Werbung</h2><p>Predict the Race hat keine Werbung und verkauft nichts weiter. Du machst mit einem Code und einem Namen mit; eine E-Mail-Adresse brauchst du nur, wenn du dein Konto auf ein anderes Gerät mitnehmen willst. Besucherstatistiken mit Google Analytics kommen nur dazu, wenn du selbst zustimmst. <a href="../en/privacy/" hreflang="en">Die ganze Datenschutzerklärung lesen (auf Englisch)</a></p></article>
   </div>
 </section>
 
 <section class="blok" id="faq">
   <div class="binnen">
-    <h2>Häufige Fragen</h2>
-    <div class="faq">
+    <div class="sectiekop onthul"><span class="label"><b>06</b>Fragen</span>
+    <h2>Häufige Fragen</h2></div>
+    <div class="faq onthul">
       <details><summary><h3>Ist Predict the Race kostenlos?</h3></summary><p>Ja. Es gibt kein Abo, keine Bezahlschranke und keine Werbung. Alle Funktionen stehen allen zur Verfügung.</p></details>
       <details><summary><h3>Wie trete ich einer Tipprunde bei?</h3></summary><p>Öffne den Einladungslink vom Admin der Runde oder gib den sechsstelligen Code ein. Danach wählst du deinen Namen oder fügst dich als neuen Spieler hinzu.</p></details>
       <details><summary><h3>Brauche ich ein Konto?</h3></summary><p>Nein, und du brauchst kein Passwort. Wenn du auf mehreren Geräten spielen willst, kannst du dich später mit Google oder einem Link per E-Mail anmelden.</p></details>
@@ -739,8 +943,9 @@
 </section>
 
 <section class="slot">
-  <div class="binnen">
-    <h2>Bereit für das nächste Rennen?</h2>
+  <div class="binnen onthul">
+    <span class="startlichten" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    <h2>Lights out. Zeit zu tippen.</h2>
     <p>Erstelle deine Tipprunde in einer Minute und teile den Code mit deinen Freunden.</p>
     <a class="knop" href="../app/">Tipprunde erstellen <span aria-hidden="true">→</span></a>
   </div>
@@ -778,6 +983,22 @@
   x.addEventListener('click',function(){try{localStorage.setItem(sleutel,hier)}catch(e){}balk.remove()});
   balk.append(s,a,x);document.body.appendChild(balk);
 }catch(e){}})();</script>
+<script>(function(){try{
+  var h=document.documentElement;if(!h.classList.contains('beweegt'))return;
+  var els=[].slice.call(document.querySelectorAll('.onthul'));
+  function tel(el){[].slice.call(el.querySelectorAll('[data-tel]')).forEach(function(n){
+    var doel=+n.getAttribute('data-tel');if(!doel)return;var t0=0;n.textContent='0';
+    function stap(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/1200);n.textContent=String(Math.round(doel*(1-Math.pow(1-p,3))));
+      if(p<1)requestAnimationFrame(stap)}requestAnimationFrame(stap)})}
+  function toon(el){el.classList.add('zichtbaar');tel(el)}
+  if(!('IntersectionObserver' in window))els.forEach(toon);
+  else{var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);toon(e.target)}})},
+    {rootMargin:'0px 0px -8% 0px',threshold:0});els.forEach(function(el){io.observe(el)})}
+  h.classList.add('klaar');
+  var balk=document.querySelector('.voortgang');
+  if(balk){var bij=function(){var max=h.scrollHeight-innerHeight;balk.style.transform='scaleX('+(max>0?Math.min(1,scrollY/max):0)+')'};
+    addEventListener('scroll',bij,{passive:true});addEventListener('resize',bij);bij()}
+}catch(e){document.documentElement.classList.add('klaar');[].slice.call(document.querySelectorAll('.onthul')).forEach(function(el){el.classList.add('zichtbaar')})}})();</script>
 <script src="../toestemming.js" defer></script>
 </body>
 </html>
