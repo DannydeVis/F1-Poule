@@ -39,6 +39,7 @@ const { check, afronden } = maakControle('de landingspagina in zeven talen');
 }
 
 const urlVan = (c) => `${BASIS}/${teksten[c].pad ? teksten[c].pad + '/' : ''}`;
+const vul = (tekst, vars) => String(tekst).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
 const lokaal = (url) => join(wortel, url.replace(BASIS + '/', '').replace(/\/$/, '/index.html'));
 const appBron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
 const puntenApp = Object.fromEntries([...appBron.matchAll(
@@ -109,6 +110,16 @@ for (const code of TALEN) {
       [...t.querySelectorAll('tbody tr')].map((r) => r.lastElementChild.textContent.trim())),
     links: [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')),
     beelden: [...document.querySelectorAll('img')].map((i) => ({ src: i.currentSrc || i.src, alt: i.getAttribute('alt') })),
+    niveaus: [...document.querySelectorAll('#niveaus .niveau')].map((n) => ({
+      naam: n.querySelector('h3').textContent.trim(),
+      aantal: Number(n.querySelector('.aantal b').textContent),
+      chips: n.querySelectorAll('.chips li').length,
+      lampen: n.querySelectorAll('.lampen i.aan').length,
+      weekend: n.querySelector('.weekend').textContent.trim(),
+      badge: !!n.querySelector('.badge'),
+    })),
+    niveauKop: document.querySelector('#niveaus h2')?.textContent.trim() ?? '',
+    niveauIntro: document.querySelector('#niveaus .inleiding')?.textContent.trim() ?? '',
   }));
 
   check(`${code}: de pagina zegt dat hij in het ${t.naam} is`, kop.lang === code, kop.lang);
@@ -151,6 +162,30 @@ for (const code of TALEN) {
     (losse ?? []).join() === LOSSE.map((id) => puntenApp[id]).join()
     && (seizoen ?? []).join() === SEIZOEN.map((id) => puntenApp[id]).join(),
     `${(losse ?? []).join()} | ${(seizoen ?? []).join()}`);
+
+  // De niveaus: "de uitgebreidste F1-poule, of de simpelste". Hoeveel vragen
+  // en punten elk niveau heeft komt uit de presets van de app, en het getal in
+  // de inleiding ("veertien vragen") moet daar ook bij kloppen.
+  {
+    const preset = (naam) => [...appBron.match(new RegExp(`${naam}:\\s*\\{[^}]*?vragen:\\[([^\\]]*)\\]`))[1]
+      .matchAll(/'([a-z0-9_]+)'/g)].map((m) => m[1]);
+    const vragen = ['simpel', 'klassiek', 'gevorderd'].map(preset);
+    const weekend = (ids) => ids.filter((id) => !['sprint_top10', 'kampioen', 'constructeur', 'winnaars', 'vierde_team']
+      .includes(id)).reduce((n, id) => n + puntenApp[id], 0);
+    const n = kop.niveaus;
+    check(`${code}: drie niveaus, met zoveel vragen als de presets in de app`,
+      n.length === 3 && n.every((x, i) => x.aantal === vragen[i].length && x.chips === vragen[i].length),
+      JSON.stringify(n.map((x) => [x.naam, x.aantal, x.chips])));
+    check(`${code}: met de punten per weekend uit de app`,
+      n.every((x, i) => x.weekend.startsWith(vul(t.niveaus.perWeekend, { n: weekend(vragen[i]) }))),
+      n.map((x) => x.weekend).join(' | '));
+    check(`${code}: startlichten 1, 3 en 5, en het uitgebreidste niveau valt op`,
+      n.map((x) => x.lampen).join() === '1,3,5' && n.map((x) => x.badge).join() === 'false,false,true');
+    const WOORD = { nl: 'veertien', en: 'fourteen', de: 'vierzehn', fr: 'quatorze', es: 'catorce', it: 'quattordici', pt: 'catorze' };
+    check(`${code}: de kop zegt het, en de inleiding noemt het echte aantal vragen`,
+      kop.niveauKop === t.niveaus.kop.join('') && vragen[2].length === 14 && kop.niveauIntro.includes(WOORD[code]),
+      `${kop.niveauKop} · ${vragen[2].length} vragen`);
+  }
 
   // Plaatjes met een beschrijving (het achterste telefoonplaatje is versiering).
   const zonderAlt = kop.beelden.filter((b) => b.alt === null);
