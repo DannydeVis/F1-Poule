@@ -1,15 +1,15 @@
 {
   "https://predicttherace.com/": {
-    "datum": "2026-09-26",
-    "hash": "300b5dc1608a8d15"
+    "datum": "2026-09-27",
+    "hash": "0f4f0692887e7cea"
   },
   "https://predicttherace.com/de/": {
-    "datum": "2026-09-26",
-    "hash": "20a7a2a5b9512627"
+    "datum": "2026-09-27",
+    "hash": "955c3ae21be1d3e4"
   },
   "https://predicttherace.com/en/": {
-    "datum": "2026-09-26",
-    "hash": "0844a227010609b3"
+    "datum": "2026-09-27",
+    "hash": "6ea83215602e8e9d"
   },
   "https://predicttherace.com/en/f1-prediction-league-spreadsheet/": {
     "datum": "2026-09-27",
@@ -23,7 +23,7 @@
   },
   "https://predicttherace.com/en/how-to-run-an-f1-prediction-league/": {
     "datum": "2026-09-27",
-    "hash": "f548e90048d63c07",
+    "hash": "6e29987e28a994de",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/privacy/": {
@@ -31,8 +31,8 @@
     "hash": "6b064a3659d01fe1"
   },
   "https://predicttherace.com/es/": {
-    "datum": "2026-09-26",
-    "hash": "cc6545be00c3a126"
+    "datum": "2026-09-27",
+    "hash": "e25df0f6e9eb02bd"
   },
   "https://predicttherace.com/f1-poule-excel/": {
     "datum": "2026-09-27",
@@ -41,7 +41,7 @@
   },
   "https://predicttherace.com/f1-poule-organiseren/": {
     "datum": "2026-09-27",
-    "hash": "018627cad9fdb096",
+    "hash": "6b8d0864f0e23e85",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/f1-poule-puntentelling/": {
@@ -50,19 +50,19 @@
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/fr/": {
-    "datum": "2026-09-26",
-    "hash": "9d7af114157772ea"
+    "datum": "2026-09-27",
+    "hash": "ff1275bd5bac7263"
   },
   "https://predicttherace.com/it/": {
-    "datum": "2026-09-26",
-    "hash": "8c54e7fa8ac4238c"
+    "datum": "2026-09-27",
+    "hash": "a0a2dac0d75aeb9a"
   },
   "https://predicttherace.com/privacy/": {
     "datum": "2026-09-26",
     "hash": "403bcba296b36c8c"
   },
   "https://predicttherace.com/pt/": {
-    "datum": "2026-09-26",
-    "hash": "a209b15d77c1181d"
+    "datum": "2026-09-27",
+    "hash": "50515e36805e5e1f"
   }
 }

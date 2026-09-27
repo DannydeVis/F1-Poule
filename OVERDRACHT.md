@@ -8214,3 +8214,44 @@ bijschrift.
 link bij de naam) komt met SEO fase 2. Volgende stap: AEO fase 3.1, de twee
 nieuwe FAQ's op de voorpagina in zeven talen.
 
+## Zoekplan AEO fase 3.1: twee nieuwe vragen op de voorpagina
+
+**Wat erbij kwam**, achteraan de veelgestelde vragen, in alle zeven talen (nu
+14 per taal):
+
+- *"Hoeveel punten kun je per weekend halen?"* De drie niveaus met hun punten
+  per weekend (`{simpel}`, `{klassiek}`, `{gevorderd}`, uit de app), dat de
+  sprint en de seizoensvragen er nog bij komen, en dat een joker een heel
+  weekend dubbel laat tellen. Bewust geen "maximaal": met contrair voorspellen
+  kan een zeldzaam goed antwoord meer opleveren.
+- *"Wat is het verschil met F1 Fantasy?"* In F1 Fantasy stel je binnen een
+  budget een team van coureurs en constructeurs samen en scoor je op hun echte
+  prestaties; in Predict the Race voorspel je de volgorde. Nagezocht op 27
+  september (onder meer artikelen op formula1.com): budget, vijf coureurs en
+  twee constructeurs, punten op prestaties, transfers. De tekst noemt geen
+  getallen die per seizoen kunnen veranderen.
+
+De vertalingen (de, fr, es, it, pt) schreef Claude Code, met de woorden die de
+voorpagina in die taal al gebruikt (Zusatzfragen, questions bonus, preguntas
+extra, domande extra, perguntas extras; comodín, jolly, coringa).
+
+**Automatisch invullen rechtgezet**, dat stond nog als "een willekeurige top
+10": in het functieblok en de FAQ "Wat als ik een race vergeet?" op de
+voorpagina (zeven talen) en in "Waar loopt een F1-poule op stuk?" in de
+organiseren-gids (NL en EN). Sinds 27 september vult de app alles in wat
+iemand liet liggen, van de top 10 tot de losse vragen (zie "Het racescherm: één
+kop per onderdeel, en automatisch invullen voor alles").
+
+**Tests:** in `site/vragen.mjs` staan de twee vragen (NL en EN) nu op
+beantwoord, dus `test/vragen.test.mjs` controleert dat ze letterlijk in de FAQ
+staan. `test/antwoordvorm.test.mjs` controleert dat de voorpagina in elke taal
+evenveel veelgestelde vragen heeft, zodat een vergeten vertaling opvalt. 28
+mutanten op die test, alle gevangen.
+
+**Nog open uit het plan:** AEO fase 3.2 (de kernpagina's als vraagblokken
+volgens de tabellen in het plan, deels al gedaan in fase 2) hoort bij SEO fase
+2, samen met de pagina's over en vergelijking; 3.3 (racepagina's) bij SEO fase
+4. Een bekend plekje: het functieblok zegt "Standaard vijf per seizoen" over
+de jokers, als woord in zeven talen. Dat klopt (`JOKERS_STANDAARD` is 5), maar
+volgt de app niet vanzelf.
+

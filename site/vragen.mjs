@@ -54,9 +54,9 @@ export const VRAGEN = [
   // Andere poulesites leggen uit hoe je een pot afspreekt (poules.com).
   { vraag: 'Speel je om geld?', taal: 'nl', varianten: ['f1 poule inleg'], bron: 'zoekresultaat', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Is dit een officiële Formule 1-app?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
-  // Nieuw in AEO fase 3.1, in alle zeven talen.
-  { vraag: 'Hoeveel punten kun je per weekend halen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'open' },
-  { vraag: 'Wat is het verschil met F1 Fantasy?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'open' },
+  // Sinds AEO fase 3.1, in alle zeven talen.
+  { vraag: 'Hoeveel punten kun je per weekend halen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
+  { vraag: 'Wat is het verschil met F1 Fantasy?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
 
   // ---- organiseren ----
   // De vragen uit de startlijst van het plan die een bestaande sectie al
@@ -156,11 +156,11 @@ export const VRAGEN = [
   { vraag: 'Which languages is the app in?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Do you play for money?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Is this an official Formula 1 app?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
-  { vraag: 'How many points can you score per weekend?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'open' },
+  { vraag: 'How many points can you score per weekend?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   // "F1 Prediction Game vs Fantasy F1: What's the Difference?" (podiumprophets.com).
   { vraag: 'How is this different from F1 Fantasy?', taal: 'en',
     varianten: ['What is the difference between an F1 prediction game and F1 Fantasy?'],
-    bron: 'zoekresultaat', doel: 'voorpagina#faq', status: 'open' },
+    bron: 'zoekresultaat', doel: 'voorpagina#faq', status: 'beantwoord' },
 
   // ---- organiseren ----
   { vraag: 'How do you set up an F1 prediction league?', taal: 'en', varianten: ['How do you run an F1 prediction league?'],

@@ -77,7 +77,7 @@ Or build your own league: switch each question on or off, with its points shown.
 - Weekend winner: Whoever scores the most points in a weekend wins that weekend, even if they are behind in the season.
 - Share in your group chat: One tap turns the weekend result into an image for the group chat, or a portrait version for your WhatsApp status.
 - Deadlines in your calendar: Subscribe to the calendar and every deadline shows up in your own calendar, with your own reminder.
-- Forgot to predict?: With auto-fill switched on, anyone who submits nothing gets a random top 10 instead of zero.
+- Forgot to predict?: With auto-fill switched on, the app randomly fills in whatever someone left blank, from the top 10 to the extra questions, instead of zero.
 - Season questions: World champion, constructors' title and more: predict once before the first race, scored at the end of the year.
 - Private or public: Keep your league private with a code, or make it findable so anyone can join.
 
@@ -115,7 +115,7 @@ The start of the session. The qualifying top 10 closes when qualifying starts, t
 
 ### What if I forget a race?
 
-Then you score nothing that weekend, unless the league admin has switched on auto-fill: then you get a random top 10.
+Then you score nothing that weekend, unless the league admin has switched on auto-fill: then the app randomly fills in whatever you left blank, from the top 10 to the extra questions.
 
 ### What is a joker?
 
@@ -136,3 +136,11 @@ No. There is no money involved in Predict the Race: no entry fee, no pot and no 
 ### Is this an official Formula 1 app?
 
 No. Predict the Race is an independent fan project and is not affiliated with Formula 1, the FIA or any team.
+
+### How many points can you score per weekend?
+
+On Simple there are 100 points to win per weekend, on Classic 145 and on Advanced 202. On a sprint weekend the sprint comes on top, and the season questions are settled at the end of the season. A joker doubles a whole weekend.
+
+### How is this different from F1 Fantasy?
+
+In F1 Fantasy, the official Formula 1 fantasy game, you build a team of drivers and constructors within a budget and score on how they perform on track. In Predict the Race you predict the order: the qualifying and race top 10, plus extra questions such as the winner. There is no budget and there are no transfers.

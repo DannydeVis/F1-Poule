@@ -113,7 +113,7 @@ export const PAGINAS = [
             kort: 'Een F1-poule loopt zelden op de vragen stuk. Bijna altijd is het een van drie dingen: een achterstand die niet meer in te halen is, spelers die vergeten in te vullen, of niets om na de race over te praten. Tegen elk daarvan helpt iets anders: meer te winnen dan de eindstand, herinneringen voor de deadline, en elk weekend iets om te laten zien.',
             punten: [
               ['Een onbereikbare achterstand', 'Wie na acht races ver achter staat, haakt af. Geef daarom meer te winnen dan alleen de eindstand: de weekendwinnaar (wie een weekend de meeste punten pakt, wint dat weekend), de onderlinge duels (per vriend zie je wie er vaker won) en de jokers.'],
-              ['Vergeten in te vullen', 'Eén gemiste race zet je op achterstand, na twee haak je af. Daartegen helpen het agenda-abonnement met een melding {agendaUur} voor elke deadline, een pushmelding als je {venster} voor een deadline nog niets hebt ingevuld, en automatisch invullen: wie niets inlevert, krijgt een willekeurige top 10 in plaats van nul punten.'],
+              ['Vergeten in te vullen', 'Eén gemiste race zet je op achterstand, na twee haak je af. Daartegen helpen het agenda-abonnement met een melding {agendaUur} voor elke deadline, een pushmelding als je {venster} voor een deadline nog niets hebt ingevuld, en automatisch invullen: wat iemand liet liggen, vult de app willekeurig in, van de top 10 tot de losse vragen, in plaats van nul punten.'],
               ['Niets om over te praten', 'Na de race moet er iets te zien zijn. De uitslag per coureur, de stand met wie er klom en wie er zakte, en een plaatje van de uitslag voor de groepsapp geven de groep elk weekend iets om over na te praten.'],
             ],
           },
@@ -199,7 +199,7 @@ export const PAGINAS = [
             kort: 'An F1 prediction league rarely dies because of the questions. It is almost always one of three things: a gap nobody can close, people forgetting to enter, or nothing to talk about after the race. Each has its own fix: more to win than the final standings, reminders before the deadline, and something to show every weekend.',
             punten: [
               ['A gap nobody can close', 'Someone who is miles behind after eight races stops playing. So give people more to win than the final standings: the weekend winner (whoever scores the most in a weekend wins that weekend), head-to-head records (you see who has won more often against each friend) and jokers.'],
-              ['Forgetting to enter', 'Miss one race and you are behind; miss two and you are gone. What helps: the calendar subscription with a reminder {agendaUur} before every deadline, a push notification when you have not entered anything {venster} before a deadline, and auto-fill, which gives anyone who forgets a random top 10 instead of zero.'],
+              ['Forgetting to enter', 'Miss one race and you are behind; miss two and you are gone. What helps: the calendar subscription with a reminder {agendaUur} before every deadline, a push notification when you have not entered anything {venster} before a deadline, and auto-fill, which randomly fills in whatever someone left blank, from the top 10 to the extra questions, instead of zero.'],
               ['Nothing to talk about', 'After the race there has to be something to look at. The result per driver, the standings showing who climbed and who dropped, and a result image for the group chat give everyone something to argue about every weekend.'],
             ],
           },
