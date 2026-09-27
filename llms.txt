@@ -43,6 +43,16 @@ Predict the Race is made by Danny de Visser from Rotterdam, who also makes Padel
 - [F1 prediction scoring systems](https://predicttherace.com/en/f1-prediction-scoring-system/): Four ways to score an F1 prediction league, what each gets right and wrong, a fully worked example, and the scoring Predict the Race uses. Also in Dutch (https://predicttherace.com/f1-poule-puntentelling/).
 - [Running an F1 prediction league in a spreadsheet](https://predicttherace.com/en/f1-prediction-league-spreadsheet/): Run an F1 prediction league in Excel or Google Sheets: the columns you need, the formula that scores each position, and where a spreadsheet lets you down. Also in Dutch (https://predicttherace.com/f1-poule-excel/).
 
+## Race pages
+
+- [Singapore Grand Prix 2026](https://predicttherace.com/en/races/2026/singapore/): Session times for the Singapore GP 2026 in UTC, the 2025 top 10 and how often the safety car came out in Singapore. Predict the race for free with friends. Also in Dutch (https://predicttherace.com/races/2026/singapore/).
+- [United States Grand Prix 2026](https://predicttherace.com/en/races/2026/austin/): Session times for the United States GP 2026 in UTC, the 2025 top 10 and how often the safety car came out in Austin. Predict the race for free with friends. Also in Dutch (https://predicttherace.com/races/2026/austin/).
+- [Mexico City Grand Prix 2026](https://predicttherace.com/en/races/2026/mexico-city/): Session times for the Mexico City GP 2026 in UTC, the 2025 top 10 and how often the safety car came out in Mexico City. Predict the race for free with friends. Also in Dutch (https://predicttherace.com/races/2026/mexico-city/).
+- [São Paulo Grand Prix 2026](https://predicttherace.com/en/races/2026/sao-paulo/): Session times for the São Paulo GP 2026 in UTC, the 2025 top 10 and how often the safety car came out in São Paulo. Predict the race for free with friends. Also in Dutch (https://predicttherace.com/races/2026/sao-paulo/).
+- [Las Vegas Grand Prix 2026](https://predicttherace.com/en/races/2026/las-vegas/): Session times for the Las Vegas GP 2026 in UTC, the 2025 top 10 and how often the safety car came out in Las Vegas. Predict the race for free with friends. Also in Dutch (https://predicttherace.com/races/2026/las-vegas/).
+- [Qatar Grand Prix 2026](https://predicttherace.com/en/races/2026/qatar/): Session times for the Qatar GP 2026 in UTC, the 2025 top 10 and how often the safety car came out in Lusail. Predict the race for free with friends. Also in Dutch (https://predicttherace.com/races/2026/qatar/).
+- [Abu Dhabi Grand Prix 2026](https://predicttherace.com/en/races/2026/abu-dhabi/): Session times for the Abu Dhabi GP 2026 in UTC, the 2025 top 10 and how often the safety car came out in Abu Dhabi. Predict the race for free with friends. Also in Dutch (https://predicttherace.com/races/2026/abu-dhabi/).
+
 ## How it works
 
 1. Start a league: Name your league, choose which questions count and share the code or the invite link in your group chat.

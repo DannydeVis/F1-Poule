@@ -5,7 +5,7 @@
 // zijn, los te lezen, met getallen die kloppen met de app. Draait zonder
 // browser: leest de gegenereerde HTML en de bronnen in site/.
 //
-// Wat hier vastligt, per gids en per taal:
+// Wat hier vastligt, per gids (en per racepagina) en per taal:
 //   1. Onder de h1 staat wie het schreef en wanneer: de naam als link, de datum
 //      als <time>. Daaronder het korte antwoord op de hoofdvraag (p.kort).
 //   2. Elke sectie is een section.vraag met een h2 die op een vraagteken
@@ -35,6 +35,7 @@ import { join } from 'node:path';
 import { maakControle, wortel, gepubliceerd } from './hulp.mjs';
 import { MAKER, TALEN, teksten } from '../site/teksten.mjs';
 import { PAGINAS } from '../site/paginas.mjs';
+import { RACEPAGINAS } from '../scripts/racepaginas.mjs';
 
 const { check, afronden } = maakControle('de antwoordvorm van de gidsen');
 
@@ -48,7 +49,9 @@ const VERWIJS = {
 };
 
 const lees = (pad) => readFileSync(join(wortel, ...pad.split('/'), 'index.html'), 'utf8');
-const gidsen = PAGINAS.flatMap((pg) => Object.entries(pg.talen).map(([taal, t]) => ({ pg, taal, t, html: lees(t.pad) })));
+// De gidsen en de about-pagina, en de racepagina's met hun overzicht: die
+// hebben dezelfde vorm (scripts/racepaginas.mjs) en dezelfde regels.
+const gidsen = [...PAGINAS, ...RACEPAGINAS].flatMap((pg) => Object.entries(pg.talen).map(([taal, t]) => ({ pg, taal, t, html: lees(t.pad) })));
 check('er zijn gidsen om te keuren', gidsen.length >= 6, String(gidsen.length));
 
 for (const { pg, taal, t, html } of gidsen) {
