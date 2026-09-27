@@ -108,16 +108,35 @@ const AGENDA_UUR = Number(uitBron(readFileSync(join(wortel, 'scripts', 'agenda.m
 // standaardlijst, maar de gids over puntentellingen vergelijkt ermee.
 const WK_PUNTEN = uitBron(appBron, /const WK_PUNTEN = \[([\d, ]+)\];/, 'WK_PUNTEN in app/index.html')[1]
   .split(',').map(Number);
-// De {namen} die in site/paginas.mjs kunnen staan.
+// De getallen uit de app die in elke tekst als {naam} kunnen staan, op de
+// voorpagina (site/teksten.mjs) en in de gidsen (site/paginas.mjs): de punten
+// per vraag onder hun id ({winnaar}, {pole}, {sprint_top10}), de plekpunten
+// ({exact}, {een}, {twee}), een perfecte top 10 ({perfect}), de niveaus
+// ({simpel}, {klassiek}, {gevorderd}) en het grootste aantal vragen ({meest}).
+// Een getal voor een puntenwoord staat nooit letterlijk in een tekst
+// (test/site.test.mjs). Komt een getal bewust niet uit de app, zoals de punten
+// van een echte F1-zege, dan schrijf je {=25}: dat blijft 25.
+const APP_GETALLEN = {
+  ...Object.fromEntries(Object.entries(PUNTEN).map(([id, v]) => [id, v.punten])),
+  exact: PLEKPUNTEN[0], een: PLEKPUNTEN[1], twee: PLEKPUNTEN[2], perfect: 10 * PLEKPUNTEN[0],
+  ...PRESET_PUNTEN, meest: PRESET_VRAGEN.gevorderd.length,
+};
+if (APP_GETALLEN.perfect !== PUNTEN.race_top10.punten) {
+  throw new Error(`tien keer ${PLEKPUNTEN[0]} is niet ${PUNTEN.race_top10.punten}, het maximum van race_top10 in app/index.html`);
+}
+// De {namen} die in site/paginas.mjs kunnen staan: alles van hierboven, en wat
+// alleen de gidsen nodig hebben.
 const feitenVoor = (code) => ({
-  exact: PLEKPUNTEN[0], bijna: PLEKPUNTEN[1], twee: PLEKPUNTEN[2],
-  top10: PUNTEN.race_top10.punten, sprint: PUNTEN.sprint_top10.punten,
-  simpel: PRESET_PUNTEN.simpel, klassiek: PRESET_PUNTEN.klassiek, gevorderd: PRESET_PUNTEN.gevorderd,
+  ...APP_GETALLEN,
+  bijna: PLEKPUNTEN[1], top10: PUNTEN.race_top10.punten, sprint: PUNTEN.sprint_top10.punten,
   nSimpel: PRESET_VRAGEN.simpel.length, nKlassiek: PRESET_VRAGEN.klassiek.length, nGevorderd: PRESET_VRAGEN.gevorderd.length,
   jokers: JOKERS, jokersMax: JOKERS_MAX,
   venster: PAGINA_UI[code].uren(VENSTER), agendaUur: PAGINA_UI[code].uren(AGENDA_UUR),
   winnaar: PUNTEN.winnaar.punten, pole: PUNTEN.pole.punten, nSeizoen: SEIZOEN.length,
   formMax: formule[1], formStap: formule[2],
+  // De spreadsheetformule uit dezelfde twee getallen als scoreLijst().
+  formuleNL: `=ALS(C2="";0;MAX(0;${formule[1]}-${formule[2]}*ABS(B2-C2)))`,
+  formuleEN: `=IF(C2="",0,MAX(0,${formule[1]}-${formule[2]}*ABS(B2-C2)))`,
   wkPunten: WK_PUNTEN.join(', '), wkEerste: WK_PUNTEN[0], wkLaatste: WK_PUNTEN.at(-1),
 });
 
@@ -132,7 +151,9 @@ const vraagNaam = (t, id) => id === 'quali_top10' ? t.niveaus.top10[0]
   : String(t.punten.vragen[id] ?? id).replace(/\s*\(.*\)$/, '');
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const vul = (tekst, vars) => String(tekst).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
+// {naam} wordt vars.naam; {=25} blijft 25 (een getal dat bewust niet uit de app komt).
+const vul = (tekst, vars) => String(tekst).replace(/\{(=?)(\w+)\}/g, (heel, letterlijk, k) =>
+  (letterlijk ? k : vars[k] ?? heel));
 const urlVan = (code) => `${BASIS}/${teksten[code].pad ? teksten[code].pad + '/' : ''}`;
 // Relatief van de ene pagina naar de andere: werkt op het eigen domein én op
 // dannydevis.github.io/F1-Poule/, waar alles een map dieper staat.
@@ -649,7 +670,7 @@ const SITENAMEN = ['PredictTheRace', new URL(BASIS).host];
 function jsonLd(code, datum) {
   const t = teksten[code];
   const url = urlVan(code);
-  const plat = (s) => vul(s, { maker: MAKER.naam, ...PRESET_PUNTEN });
+  const plat = (s) => vul(s, { maker: MAKER.naam, ...APP_GETALLEN });
   const graaf = [
     // alternateName: Google haalt de sitenaam in de zoekresultaten uit de
     // WebSite op de voorpagina, en kiest uit deze namen als hij de hoofdnaam
@@ -756,7 +777,7 @@ function pagina(code, datum) {
   const p = voor(code);
   const url = urlVan(code);
   const app = `${p}app/`;
-  const vars = { maker: MAKER.naam, ...PRESET_PUNTEN };
+  const vars = { maker: MAKER.naam, ...APP_GETALLEN };
   const hreflang = [...TALEN.map((c) => `<link rel="alternate" hreflang="${c}" href="${urlVan(c)}">`),
     `<link rel="alternate" hreflang="x-default" href="${urlVan(STANDAARD)}">`].join('\n');
   const ogAlt = TALEN.filter((c) => c !== code)
@@ -861,7 +882,7 @@ ${jsonLd(code, datum)}
   </div>
 </section>
 <div class="ticker" aria-hidden="true"><div class="rol">${[0, 1].map(() => t.ticker.map((x) =>
-  `<span>${esc(vul(x, { exact: PLEKPUNTEN[0], meest: PRESET_VRAGEN.gevorderd.length }))}</span>`).join('')).join('')}</div></div>
+  `<span>${esc(vul(x, APP_GETALLEN))}</span>`).join('')).join('')}</div></div>
 
 <section class="antwoord" id="wat">
   <div class="binnen">
@@ -915,7 +936,7 @@ ${jsonLd(code, datum)}
       <thead><tr><th scope="col">${esc(t.punten.kolommen[0])}</th><th scope="col">${esc(t.punten.kolommen[1])}</th></tr></thead>
       <tbody>${t.punten.rijen.map((r, i) => `<tr${i === 0 ? ' class="top"' : ''} style="--w:${((PLEKPUNTEN[i] ?? 0) / PLEKPUNTEN[0]).toFixed(2)};--i:${i}"><td>${esc(r)}</td><td>${PLEKPUNTEN[i] ?? 0}</td></tr>`).join('')}</tbody>
     </table>
-    <p class="voorbeeld">${esc(t.punten.voorbeeld)}</p>
+    <p class="voorbeeld">${esc(vul(t.punten.voorbeeld, vars))}</p>
     <div class="tabellen">
       <table class="tabel onthul">
         <caption class="alleenlezer">${esc(t.punten.lossKop)}</caption>
@@ -1096,9 +1117,16 @@ ${alineas.map((a) => `      <p>${alinea(a)}</p>`).join('\n')}
 // ------------------------------------------------------------
 //
 // Eén sjabloon voor alle artikelpagina's, met dezelfde kop, letters en kleuren
-// als de voorpagina. Vaste volgorde: kruimelpad, h1, het korte antwoord, de
-// secties (de vraag als h2, het korte antwoord eronder, dan de uitleg), de
-// FAQ, "lees ook", de knop naar de app en de datum.
+// als de voorpagina. Vaste volgorde: kruimelpad, h1, wie het schreef en
+// wanneer, het korte antwoord, de secties, de FAQ, "lees ook" en de knop naar
+// de app.
+//
+// De antwoordvorm uit het zoekplan (docs/zoekplan/2-aeo.md, fase 2): elke
+// sectie is één vraag (section.vraag), met de vraag als h2 en direct daaronder
+// het korte antwoord (p.kort): het antwoord eerst, 25 tot 80 woorden, zonder
+// verwijswoord vooraan, zodat hij los gelezen kan worden. Daarna de uitleg.
+// Elke tabel heeft een bijschrift en th's met scope. Het korte antwoord staat
+// altijd open in de HTML; <details> is alleen voor de FAQ.
 //
 // Paden zijn relatief, net als op de voorpagina, zodat het ook werkt op
 // dannydevis.github.io/F1-Poule/ waar alles een map dieper staat. Een pagina
@@ -1134,7 +1162,10 @@ const ARTIKEL_CSS = `
   .artikel h2{font-size:clamp(23px,3.6vw,29px);line-height:1.2;margin:0 0 10px}
   .artikel p,.artikel li{line-height:1.65}
   .artikel p{margin:0 0 12px}
-  .artikel .kernzin{font-weight:600}
+  .artikel section .kort{font-weight:600}
+  .artikel .door{font-size:15px;color:var(--ink2);margin:0 0 16px}
+  .artikel .door a{color:var(--accent-tekst)}
+  .artikel caption{text-align:left;font-size:15px;color:var(--ink2);padding:0 0 8px}
   .artikel ol,.artikel ul{margin:0 0 14px;padding-left:24px}
   .artikel li{margin:0 0 8px}
   .artikel .voorbeeld{background:var(--paneel);border:1px solid var(--lijn);border-left:3px solid var(--accent);
@@ -1147,7 +1178,6 @@ const ARTIKEL_CSS = `
   .artikel .slotblok{margin-top:34px;padding:26px;border-radius:16px;background:var(--nacht);color:var(--nacht-ink)}
   .artikel .slotblok h2{margin:0 0 6px}
   .artikel .slotblok p{color:var(--nacht-ink2)}
-  .artikel .datum{margin:30px 0 0}
   .artikel .tabel.getallen th:last-child{text-align:right}
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
   .artikel .tabellen{margin:4px 0 16px}
@@ -1234,11 +1264,24 @@ function artikelPagina(pg, code, datum, sinds) {
     ...(t.leesOok ?? []).map(([anker, tekst]) => `<li><a href="${thuis}#${anker}">${esc(tekst)}</a></li>`)];
   // De teksten van de voorpagina in deze taal: de namen van de vragen.
   const t2 = teksten[code];
+  // Een tabel zonder bijschrift is een fout in site/paginas.mjs, geen lege caption.
+  const bijschrift = (tabel, waar) => {
+    if (!tabel.bijschrift) throw new Error(`site/paginas.mjs: de tabel in ${pg.id}#${waar} (${code}) heeft geen bijschrift`);
+    return tabel.bijschrift;
+  };
+  // Wie het schreef en wanneer, direct onder de h1. De naam linkt naar de
+  // about-pagina zodra die er in deze taal is, tot dan naar het profiel van de
+  // maker (dezelfde url als de Person in de JSON-LD).
+  const over = PAGINAS.find((x) => x.id === 'over')?.talen[code];
+  const door = esc(ui.door)
+    .replace('{naam}', `<a href="${over ? `${p}${over.pad}/` : MAKER.url}" rel="author">${esc(MAKER.naam)}</a>`)
+    .replace('{datum}', `<time datetime="${datum}">${esc(datumTekst(code, datum))}</time>`);
   const rekenTabel = (r) => {
     const uit = rekenvoorbeeld(pg);
     if (!uit) throw new Error(`site/paginas.mjs: ${pg.id} heeft een rekenvoorbeeld-tabel maar geen rekenvoorbeeld`);
     return `
       <table class="tabel getallen rekenvoorbeeld">
+        <caption>${f(bijschrift(r, 'rekenvoorbeeld'))}</caption>
         <thead><tr>${r.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
         <tbody>${uit.regels.map((x) => `<tr><th scope="row">${esc(x.nr)}</th><td>P${x.voorspeld}</td><td>${
           x.werkelijk === null ? f(r.geenPlek) : `P${x.werkelijk}`}</td><td>${x.punten}</td></tr>`).join('')}</tbody>
@@ -1246,19 +1289,21 @@ function artikelPagina(pg, code, datum, sinds) {
       </table>`;
   };
   const sectie = (s) => `
-    <section id="${s.id}">
+    <section class="vraag" id="${s.id}">
       <h2>${f(s.vraag)}</h2>
-      <p class="kernzin">${f(s.kort)}</p>${s.stappen ? `
+      <p class="kort">${f(s.kort)}</p>${s.stappen ? `
       <ol>${s.stappen.map((x) => `<li>${f(x)}</li>`).join('')}</ol>` : ''}${s.tabel ? `
       <table class="tabel">
+        <caption>${f(bijschrift(s.tabel, s.id))}</caption>
         <thead><tr>${s.tabel.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
         <tbody>${s.tabel.rijen.map((r) => `<tr>${r.map((c, i) => i === 0 ? `<th scope="row">${f(c)}</th>` : `<td>${f(c)}</td>`).join('')}</tr>`).join('')}</tbody>
       </table>` : ''}${s.rekenvoorbeeld ? rekenTabel(s.rekenvoorbeeld) : ''}${s.voorbeeld ? `
       <p class="voorbeeld">${f(s.voorbeeld)}</p>` : ''}${s.vragentabel ? `
       <div class="tabellen">${[[t2.punten.lossKop, LOSSE], [t2.punten.seizoenKop, SEIZOEN]].map(([kop, ids]) => `
         <table class="tabel getallen">
+          <caption class="alleenlezer">${esc(kop)}</caption>
           <thead><tr><th scope="col">${esc(kop)}</th><th scope="col">${esc(t2.punten.kolommenVraag[1])}</th></tr></thead>
-          <tbody>${ids.map((id) => `<tr><td>${esc(t2.punten.vragen[id])}</td><td>${PUNTEN[id].punten}</td></tr>`).join('')}</tbody>
+          <tbody>${ids.map((id) => `<tr><th scope="row">${esc(t2.punten.vragen[id])}</th><td>${PUNTEN[id].punten}</td></tr>`).join('')}</tbody>
         </table>`).join('')}
       </div>` : ''}${s.formules ? `
       <dl class="formules">${s.formules.map(([wat, formule]) => `<dt>${f(wat)}</dt><dd><code>${f(formule)}</code></dd>`).join('')}</dl>` : ''}${s.punten ? `
@@ -1313,7 +1358,8 @@ ${artikelJsonLd(pg, code, datum, sinds)}
       <li aria-current="page">${esc(t.kop)}</li>
     </ol></nav>
     <h1>${esc(t.kop)}</h1>
-    <p class="inleiding">${f(t.kort)}</p>
+    <p class="door">${door}</p>
+    <p class="kort inleiding">${f(t.kort)}</p>
 ${t.secties.map(sectie).join('\n')}${t.faq?.length ? `
     <section id="faq">
       <h2>${esc(ui.faq)}</h2>
@@ -1330,7 +1376,6 @@ ${leesOok.length ? `    <section class="leesook">
       <p>${esc(ui.slot.tekst)}</p>
       <a class="knop" href="${app}">${esc(ui.slot.knop)} <span aria-hidden="true">→</span></a>
     </div>
-    <p class="label datum"><time datetime="${datum}">${esc(vul(ui.bijgewerkt, { datum: datumTekst(code, datum) }))}</time></p>
   </div>
 </main>
 <footer class="voet">
@@ -1434,7 +1479,7 @@ Sitemap: ${BASIS}/sitemap.xml
 
 function llms() {
   const en = teksten.en;
-  const vars = { maker: MAKER.naam, ...PRESET_PUNTEN };
+  const vars = { maker: MAKER.naam, ...APP_GETALLEN };
   return `# Predict the Race
 
 > ${en.omschrijving}

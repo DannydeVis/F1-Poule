@@ -44,7 +44,7 @@
     "@id": "https://predicttherace.com/f1-poule-excel/#kruimel"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26"
+   "dateModified": "2026-09-27"
   },
   {
    "@type": "Article",
@@ -56,7 +56,7 @@
     "@id": "https://predicttherace.com/f1-poule-excel/#pagina"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26",
+   "dateModified": "2026-09-27",
    "author": {
     "@id": "https://predicttherace.com/#maker"
    },
@@ -590,7 +590,10 @@
   .artikel h2{font-size:clamp(23px,3.6vw,29px);line-height:1.2;margin:0 0 10px}
   .artikel p,.artikel li{line-height:1.65}
   .artikel p{margin:0 0 12px}
-  .artikel .kernzin{font-weight:600}
+  .artikel section .kort{font-weight:600}
+  .artikel .door{font-size:15px;color:var(--ink2);margin:0 0 16px}
+  .artikel .door a{color:var(--accent-tekst)}
+  .artikel caption{text-align:left;font-size:15px;color:var(--ink2);padding:0 0 8px}
   .artikel ol,.artikel ul{margin:0 0 14px;padding-left:24px}
   .artikel li{margin:0 0 8px}
   .artikel .voorbeeld{background:var(--paneel);border:1px solid var(--lijn);border-left:3px solid var(--accent);
@@ -603,7 +606,6 @@
   .artikel .slotblok{margin-top:34px;padding:26px;border-radius:16px;background:var(--nacht);color:var(--nacht-ink)}
   .artikel .slotblok h2{margin:0 0 6px}
   .artikel .slotblok p{color:var(--nacht-ink2)}
-  .artikel .datum{margin:30px 0 0}
   .artikel .tabel.getallen th:last-child{text-align:right}
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
   .artikel .tabellen{margin:4px 0 16px}
@@ -638,42 +640,44 @@
       <li aria-current="page">Een F1-poule bijhouden in Excel</li>
     </ol></nav>
     <h1>Een F1-poule bijhouden in Excel</h1>
-    <p class="inleiding">Dat kan prima. Je hebt per speler vier kolommen nodig en één formule die de punten per coureur uitrekent. Het werk zit niet in de formule maar in het bijhouden: elk raceweekend de hele uitslag overtypen, straffen achteraf verwerken en zorgen dat iedereen op tijd inlevert.</p>
+    <p class="door">Door <a href="https://github.com/DannydeVis" rel="author">Danny de Visser</a>, bijgewerkt op <time datetime="2026-09-27">27 september 2026</time></p>
+    <p class="kort inleiding">Een F1-poule bijhouden in Excel kan prima. Je hebt per speler vier kolommen nodig en één formule die de punten per coureur uitrekent. Het werk zit niet in de formule maar in het bijhouden: elk raceweekend de hele uitslag overtypen, straffen achteraf verwerken en zorgen dat iedereen op tijd inlevert.</p>
 
-    <section id="kolommen">
+    <section class="vraag" id="kolommen">
       <h2>Welke kolommen heb je nodig?</h2>
-      <p class="kernzin">Per speler en per sessie vier: de coureur, de plek die de speler voorspelde, de plek waar de coureur echt eindigde, en de punten.</p>
+      <p class="kort">Voor een F1-poule in Excel heb je per speler en per sessie vier kolommen nodig: de coureur, de plek die de speler voorspelde, de plek waar de coureur echt eindigde, en de punten. Maak per race een tabblad met zo'n blok per speler, en een tabblad met de totalen.</p>
       <table class="tabel">
+        <caption>De vier kolommen per speler, met een voorbeeldregel</caption>
         <thead><tr><th scope="col">Kolom</th><th scope="col">Wat erin staat</th><th scope="col">Voorbeeld</th></tr></thead>
         <tbody><tr><th scope="row">A</th><td>De coureur</td><td>Verstappen</td></tr><tr><th scope="row">B</th><td>De voorspelde plek, 1 tot en met 10</td><td>1</td></tr><tr><th scope="row">C</th><td>De echte plek, leeg als hij geen plek kreeg</td><td>2</td></tr><tr><th scope="row">D</th><td>De punten, met de formule hieronder</td><td>3</td></tr></tbody>
       </table>
-      <p>In rij 1 staan de kopjes, de tien coureurs in rij 2 tot en met 11. Maak per race een tabblad met voor elke speler zo'n blok van vier kolommen naast elkaar, en een tabblad met de totalen dat alles optelt. Kopieer je het blok voor de volgende speler, dan schuiven de formules vanzelf mee.</p>
+      <p>In rij 1 staan de kopjes, de tien coureurs in rij 2 tot en met 11. Zet de blokken van de spelers naast elkaar; kopieer je het blok voor de volgende speler, dan schuiven de formules vanzelf mee.</p>
     </section>
 
-    <section id="formule">
+    <section class="vraag" id="formule">
       <h2>Welke formule rekent de punten uit?</h2>
-      <p class="kernzin">Deze, in D2 en dan doorgetrokken tot D11: 5 punten voor precies goed, 2 minder voor elke plek ernaast, en nooit minder dan nul.</p>
+      <p class="kort">De formule voor de punten is =ALS(C2=&quot;&quot;;0;MAX(0;5-2*ABS(B2-C2))), in D2 en dan doorgetrokken tot D11. Hij geeft 5 punten voor precies goed, 2 minder voor elke plek ernaast en nooit minder dan nul, dus dezelfde punten als Predict the Race.</p>
       <dl class="formules"><dt>Nederlandstalig Excel</dt><dd><code>=ALS(C2=&quot;&quot;;0;MAX(0;5-2*ABS(B2-C2)))</code></dd><dt>Het totaal van de sessie, in D12</dt><dd><code>=SOM(D2:D11)</code></dd></dl>
       <p>Dat is dezelfde som als in Predict the Race: 5 punten voor exact, 3 voor één plek ernaast, 1 voor twee plekken ernaast, en vanaf drie plekken niets.</p>
       <p>Het ALS-deel is er voor een lege cel. Zonder dat rekent Excel met plek 0, en kan een speler punten krijgen voor een coureur die geen plek in de uitslag had.</p>
     </section>
 
-    <section id="buiten-top-10">
+    <section class="vraag" id="buiten-top-10">
       <h2>Wat doe je met coureurs buiten de top 10?</h2>
-      <p class="kernzin">Hun echte plek gewoon invullen. Zet een speler iemand op P10 en wordt die elfde, dan is dat één plek ernaast en dus 3 punten.</p>
-      <p>Daarom heb je de hele uitslag nodig, niet alleen de top 10. Alleen een coureur zonder plek in de officiële uitslag, bijvoorbeeld niet geklasseerd of gediskwalificeerd, laat je leeg. Die levert nul op.</p>
+      <p class="kort">Een coureur buiten de top 10 vul je gewoon in met zijn echte plek. Zet een speler iemand op P10 en wordt die elfde, dan is dat één plek ernaast en dus 3 punten. Alleen een coureur zonder plek in de officiële uitslag laat je leeg; die levert nul op.</p>
+      <p>Daarom heb je de hele uitslag nodig, niet alleen de top 10. Geen plek betekent bijvoorbeeld niet geklasseerd of gediskwalificeerd.</p>
     </section>
 
-    <section id="misgaat">
+    <section class="vraag" id="misgaat">
       <h2>Waar gaat het mis met Excel?</h2>
-      <p class="kernzin">Zelden bij de formule. Het gaat mis bij het bijhouden: na een paar races doet één persoon al het werk, elk weekend opnieuw.</p>
+      <p class="kort">Een Excel-poule gaat zelden mis bij de formule, maar bijna altijd bij het bijhouden. Na een paar races doet één persoon al het werk: elke uitslag overtypen, straffen achteraf verwerken, deadlines bewaken en de stand rondsturen, elk weekend opnieuw.</p>
       <ul><li><b>Elke uitslag overtypen.</b> De hele uitslag van kwalificatie en race, elk raceweekend. Eén verwisselde regel en de stand klopt niet meer, zonder dat iemand het merkt.</li><li><b>Straffen achteraf.</b> Een tijdstraf na de finish schuift de uitslag op. Dan moet je terug naar dat tabblad en alles opnieuw nalopen.</li><li><b>Deadlines.</b> Wie stuurde zijn top 10 voor de start? In de groepsapp is &quot;ik had hem al getypt&quot; niet te controleren, en een lijst die na de start binnenkomt, geeft discussie.</li><li><b>De stand op je telefoon.</b> Een gedeeld spreadsheet kan, maar op een telefoon is een tabblad met vier kolommen per speler nauwelijks te lezen.</li></ul>
     </section>
 
-    <section id="zonder-spreadsheet">
+    <section class="vraag" id="zonder-spreadsheet">
       <h2>Kan het ook zonder spreadsheet?</h2>
-      <p class="kernzin">Ja. Predict the Race rekent op dezelfde manier, maar de uitslag komt vanzelf binnen.</p>
-      <p>Na elke kwalificatie en race haalt de app de officiële uitslag op en rekent de punten uit. Voorspellingen sluiten bij de start van de sessie, dus niemand kan achteraf nog iets veranderen. En verandert de uitslag kort na de race door een straf, dan rekent de app opnieuw.</p>
+      <p class="kort">Ja, een F1-poule kan ook zonder spreadsheet. Predict the Race rekent de punten op dezelfde manier uit, maar haalt na elke kwalificatie en race zelf de officiële uitslag op. Voorspellingen sluiten bij de start van de sessie, dus niemand kan achteraf nog iets veranderen.</p>
+      <p>Verandert de uitslag kort na de race nog door een straf, dan rekent de app opnieuw. En de stand staat op ieders telefoon, met wie er klom en wie er zakte.</p>
       <p>Het is gratis en er is geen account nodig. Je deelt de poule met een code in de groepsapp.</p>
     </section>
     <section id="faq">
@@ -693,7 +697,6 @@
       <p>Maak je poule in een minuut en deel de code met je vrienden.</p>
       <a class="knop" href="../app/">Maak je poule <span aria-hidden="true">→</span></a>
     </div>
-    <p class="label datum"><time datetime="2026-09-26">Bijgewerkt op 26 september 2026</time></p>
   </div>
 </main>
 <footer class="voet">

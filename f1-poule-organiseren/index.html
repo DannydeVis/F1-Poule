@@ -44,7 +44,7 @@
     "@id": "https://predicttherace.com/f1-poule-organiseren/#kruimel"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26"
+   "dateModified": "2026-09-27"
   },
   {
    "@type": "Article",
@@ -56,7 +56,7 @@
     "@id": "https://predicttherace.com/f1-poule-organiseren/#pagina"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26",
+   "dateModified": "2026-09-27",
    "author": {
     "@id": "https://predicttherace.com/#maker"
    },
@@ -598,7 +598,10 @@
   .artikel h2{font-size:clamp(23px,3.6vw,29px);line-height:1.2;margin:0 0 10px}
   .artikel p,.artikel li{line-height:1.65}
   .artikel p{margin:0 0 12px}
-  .artikel .kernzin{font-weight:600}
+  .artikel section .kort{font-weight:600}
+  .artikel .door{font-size:15px;color:var(--ink2);margin:0 0 16px}
+  .artikel .door a{color:var(--accent-tekst)}
+  .artikel caption{text-align:left;font-size:15px;color:var(--ink2);padding:0 0 8px}
   .artikel ol,.artikel ul{margin:0 0 14px;padding-left:24px}
   .artikel li{margin:0 0 8px}
   .artikel .voorbeeld{background:var(--paneel);border:1px solid var(--lijn);border-left:3px solid var(--accent);
@@ -611,7 +614,6 @@
   .artikel .slotblok{margin-top:34px;padding:26px;border-radius:16px;background:var(--nacht);color:var(--nacht-ink)}
   .artikel .slotblok h2{margin:0 0 6px}
   .artikel .slotblok p{color:var(--nacht-ink2)}
-  .artikel .datum{margin:30px 0 0}
   .artikel .tabel.getallen th:last-child{text-align:right}
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
   .artikel .tabellen{margin:4px 0 16px}
@@ -646,42 +648,44 @@
       <li aria-current="page">Een F1-poule organiseren</li>
     </ol></nav>
     <h1>Een F1-poule organiseren</h1>
-    <p class="inleiding">Een F1-poule zet je in vijf minuten op: geef hem een naam, kies hoeveel vragen er meetellen en deel de code in de groepsapp. Het seizoen doorkomen is het lastige deel. Een poule valt stil als iemand onbereikbaar achter raakt, als mensen vergeten in te vullen, of als er na de race niets te bespreken is.</p>
+    <p class="door">Door <a href="https://github.com/DannydeVis" rel="author">Danny de Visser</a>, bijgewerkt op <time datetime="2026-09-27">27 september 2026</time></p>
+    <p class="kort inleiding">Een F1-poule zet je in vijf minuten op: geef hem een naam, kies hoeveel vragen er meetellen en deel de code in de groepsapp. Het seizoen doorkomen is het lastige deel. Een poule valt stil als iemand onbereikbaar achter raakt, als mensen vergeten in te vullen, of als er na de race niets te bespreken is.</p>
 
-    <section id="opzetten">
+    <section class="vraag" id="opzetten">
       <h2>Hoe zet je een F1-poule op?</h2>
-      <p class="kernzin">In vier stappen. Daarna hoef je als poulebaas niets meer bij te houden.</p>
+      <p class="kort">Een F1-poule zet je in vier stappen op: geef hem een naam, vul je eigen naam in, kies hoeveel er te voorspellen valt en deel de code in de groepsapp. Daarna hoeft de poulebaas niets meer bij te houden, want de kalender, de coureurs en de uitslagen komen vanzelf binnen.</p>
       <ol><li>Geef de poule een naam. Die staat in de app en in de uitnodiging. Zit iemand in meer dan één poule, dan helpt een korte omschrijving erbij, zoals &quot;met de collega's, om de eer&quot;.</li><li>Vul je eigen naam in. Je bent meteen de eerste speler en de poulebaas: jij kiest de vragen en de spelregels.</li><li>Kies hoeveel er te voorspellen valt: Simpel, Klassiek of Gevorderd, of stel zelf samen welke vragen meetellen.</li><li>Deel de uitnodigingslink of de code van zes tekens in de groepsapp. Wie hem opent, kiest een naam en doet mee, zonder account en zonder wachtwoord.</li></ol>
       <p>Daarna gaat het vanzelf. De kalender en de coureurs staan er al, en na elke kwalificatie en race komt de officiële uitslag binnen en rekent de app de punten uit. Niemand hoeft iets over te typen.</p>
       <p>Doe het ruim voor de eerste race. Tot die gereden is kun je de vragen nog aanpassen; daarna ligt de set vast, zodat elk weekend met dezelfde regels telt.</p>
     </section>
 
-    <section id="vragen">
+    <section class="vraag" id="vragen">
       <h2>Hoeveel vragen laat je meetellen?</h2>
-      <p class="kernzin">Zo veel als je groep volhoudt. Twee top 10's per weekend is genoeg voor een fanatieke poule; wie alles wil, voorspelt er 14.</p>
+      <p class="kort">Laat zo veel vragen meetellen als je groep volhoudt. De twee top 10's per weekend, van de kwalificatie en de race, zijn genoeg voor een fanatieke poule. Wie meer wil, kiest Klassiek met de winnaar, de pole position en de snelste ronde erbij, of Gevorderd met alle 14 vragen.</p>
       <table class="tabel">
+        <caption>De drie niveaus van Predict the Race</caption>
         <thead><tr><th scope="col">Niveau</th><th scope="col">Vragen</th><th scope="col">Punten per weekend</th></tr></thead>
         <tbody><tr><th scope="row">Simpel</th><td>2</td><td>100</td></tr><tr><th scope="row">Klassiek</th><td>5</td><td>145</td></tr><tr><th scope="row">Gevorderd</th><td>14</td><td>202, plus sprint en seizoen</td></tr></tbody>
       </table>
-      <p>Simpel is alleen de twee top 10's: de kwalificatie en de race. Klassiek voegt de winnaar, de pole position en de snelste ronde toe. Gevorderd zet alles aan, van snelste pitstop en teamgenoot-duels tot het aantal safety cars en een rode vlag.</p>
+      <p>Simpel is alleen de twee top 10's. Gevorderd zet alles aan, van snelste pitstop en teamgenoot-duels tot het aantal safety cars en een rode vlag.</p>
       <p>Meer vragen betekent meer te winnen, maar ook langer invullen. In een groep waar de helft pas op zaterdagochtend aan de kwalificatie denkt, houdt Simpel het langer vol dan Gevorderd.</p>
     </section>
 
-    <section id="jokers">
+    <section class="vraag" id="jokers">
       <h2>Speel je met jokers?</h2>
-      <p class="kernzin">Met een joker tellen al je punten van één raceweekend dubbel. Staan jokers aan, dan heeft iedereen er standaard 5 per seizoen; als poulebaas kies je er 1 tot 5, of je laat ze uit.</p>
-      <p>Je zet een joker voordat het weekend begint, daarna ligt hij vast. Jokers geven wie achter staat iets om op te hopen, en ze maken van elk weekend een kleine gok: is dit het circuit waar jij het beter weet dan de rest?</p>
+      <p class="kort">Ja, als je wilt dat wie achter staat iets heeft om op te hopen. Met een joker tellen al je punten van één raceweekend dubbel. Staan jokers aan, dan heeft iedereen er standaard 5 per seizoen; als poulebaas kies je er 1 tot 5, of je laat ze uit.</p>
+      <p>Je zet een joker voordat het weekend begint, daarna ligt hij vast. Zo wordt elk weekend een kleine gok: is dit het circuit waar jij het beter weet dan de rest?</p>
     </section>
 
-    <section id="valkuilen">
+    <section class="vraag" id="valkuilen">
       <h2>Waar loopt een F1-poule op stuk?</h2>
-      <p class="kernzin">Zelden op de vragen. Bijna altijd op een van drie dingen: een achterstand die niet meer in te halen is, vergeten in te vullen, of niets om na de race over te praten.</p>
+      <p class="kort">Een F1-poule loopt zelden op de vragen stuk. Bijna altijd is het een van drie dingen: een achterstand die niet meer in te halen is, spelers die vergeten in te vullen, of niets om na de race over te praten. Tegen elk daarvan helpt iets anders: meer te winnen dan de eindstand, herinneringen voor de deadline, en elk weekend iets om te laten zien.</p>
       <ul><li><b>Een onbereikbare achterstand.</b> Wie na acht races ver achter staat, haakt af. Geef daarom meer te winnen dan alleen de eindstand: de weekendwinnaar (wie een weekend de meeste punten pakt, wint dat weekend), de onderlinge duels (per vriend zie je wie er vaker won) en de jokers.</li><li><b>Vergeten in te vullen.</b> Eén gemiste race zet je op achterstand, na twee haak je af. Daartegen helpen het agenda-abonnement met een melding een uur voor elke deadline, een pushmelding als je 3 uur voor een deadline nog niets hebt ingevuld, en automatisch invullen: wie niets inlevert, krijgt een willekeurige top 10 in plaats van nul punten.</li><li><b>Niets om over te praten.</b> Na de race moet er iets te zien zijn. De uitslag per coureur, de stand met wie er klom en wie er zakte, en een plaatje van de uitslag voor de groepsapp geven de groep elk weekend iets om over na te praten.</li></ul>
     </section>
 
-    <section id="checklist">
-      <h2>Checklist voor de poulebaas</h2>
-      <p class="kernzin">Loop dit na voordat het seizoen begint.</p>
+    <section class="vraag" id="checklist">
+      <h2>Wat regel je voordat het seizoen begint?</h2>
+      <p class="kort">Regel vóór de eerste kwalificatie de poule en de code, het niveau, de jokers en automatisch invullen. Zorg dat iedereen de agenda of de meldingen aanzet en de seizoensvragen invult, en spreek af waar je om speelt. Wie dat op tijd regelt, hoeft er de rest van het seizoen niet meer aan te denken.</p>
       <ul><li>De poule staat klaar en de code is gedeeld, vóór de eerste kwalificatie.</li><li>Het niveau is gekozen: Simpel, Klassiek, Gevorderd of zelf samengesteld.</li><li>Jokers: aan of uit, en hoeveel per speler.</li><li>Automatisch invullen: samen afgesproken of het aan gaat.</li><li>Iedereen heeft zich op de agenda geabonneerd of de meldingen aangezet.</li><li>De seizoensvragen zijn ingevuld vóór de eerste race.</li><li>Iedereen weet waar je om speelt: om de eer. De app kent geen inleg, pot of prijzen.</li></ul>
     </section>
     <section id="faq">
@@ -702,7 +706,6 @@
       <p>Maak je poule in een minuut en deel de code met je vrienden.</p>
       <a class="knop" href="../app/">Maak je poule <span aria-hidden="true">→</span></a>
     </div>
-    <p class="label datum"><time datetime="2026-09-26">Bijgewerkt op 26 september 2026</time></p>
   </div>
 </main>
 <footer class="voet">

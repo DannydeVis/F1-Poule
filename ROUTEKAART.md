@@ -922,5 +922,5 @@ start van seizoen 2027 (februari en maart). Eén fase per branch.
 | SEO 4 | pilot met racepagina's, met stopcriterium | nog niet |
 | SEO 5 | meer talen, alleen waar Search Console het zegt | nog niet |
 | AEO 1 | de vragenlijst: elke vraag één plek (`site/vragen.mjs`) | **gebouwd** (26 en 27 september): de startlijst uit het plan, elke vraag die al op de site stond, en wat Claude Code met een zoekmachine vond (1.1). Search Console volgt vanaf november |
-| AEO 2 | de antwoordvorm in de generator: auteursregel, kort antwoord, getallen uit de app | nog niet (het vraagblok zelf bestaat al) |
+| AEO 2 | de antwoordvorm in de generator: auteursregel, kort antwoord, getallen uit de app | **gebouwd** (27 september): elke sectie een vraag met een kort antwoord van 25 tot 80 woorden, tabellen met bijschrift, geen kaal getal meer, ook niet op de voorpagina |
 | AEO 3 | toepassen: twee nieuwe FAQ's op de voorpagina, kernpagina's als vraagblokken | nog niet |

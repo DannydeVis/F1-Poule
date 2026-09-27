@@ -44,7 +44,7 @@
     "@id": "https://predicttherace.com/en/f1-prediction-scoring-system/#kruimel"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26"
+   "dateModified": "2026-09-27"
   },
   {
    "@type": "Article",
@@ -56,7 +56,7 @@
     "@id": "https://predicttherace.com/en/f1-prediction-scoring-system/#pagina"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26",
+   "dateModified": "2026-09-27",
    "author": {
     "@id": "https://predicttherace.com/#maker"
    },
@@ -598,7 +598,10 @@
   .artikel h2{font-size:clamp(23px,3.6vw,29px);line-height:1.2;margin:0 0 10px}
   .artikel p,.artikel li{line-height:1.65}
   .artikel p{margin:0 0 12px}
-  .artikel .kernzin{font-weight:600}
+  .artikel section .kort{font-weight:600}
+  .artikel .door{font-size:15px;color:var(--ink2);margin:0 0 16px}
+  .artikel .door a{color:var(--accent-tekst)}
+  .artikel caption{text-align:left;font-size:15px;color:var(--ink2);padding:0 0 8px}
   .artikel ol,.artikel ul{margin:0 0 14px;padding-left:24px}
   .artikel li{margin:0 0 8px}
   .artikel .voorbeeld{background:var(--paneel);border:1px solid var(--lijn);border-left:3px solid var(--accent);
@@ -611,7 +614,6 @@
   .artikel .slotblok{margin-top:34px;padding:26px;border-radius:16px;background:var(--nacht);color:var(--nacht-ink)}
   .artikel .slotblok h2{margin:0 0 6px}
   .artikel .slotblok p{color:var(--nacht-ink2)}
-  .artikel .datum{margin:30px 0 0}
   .artikel .tabel.getallen th:last-child{text-align:right}
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
   .artikel .tabellen{margin:4px 0 16px}
@@ -646,19 +648,21 @@
       <li aria-current="page">F1 prediction scoring systems</li>
     </ol></nav>
     <h1>F1 prediction scoring systems</h1>
-    <p class="inleiding">Most F1 prediction leagues score every driver in your top 10, with more points the closer he finishes to where you put him. Predict the Race gives 5 points for the exact spot, 3 for one place off and 1 for two places off. Scoring exact hits only sounds strict but fair; in practice almost nobody scores and luck decides the table.</p>
+    <p class="door">By <a href="https://github.com/DannydeVis" rel="author">Danny de Visser</a>, updated <time datetime="2026-09-27">September 27, 2026</time></p>
+    <p class="kort inleiding">Most F1 prediction leagues score every driver in your top 10, with more points the closer he finishes to where you put him. Predict the Race gives 5 points for the exact spot, 3 for one place off and 1 for two places off. Scoring exact hits only sounds strict but fair; in practice almost nobody scores and luck decides the table.</p>
 
-    <section id="systems">
+    <section class="vraag" id="systems">
       <h2>What scoring systems are there?</h2>
-      <p class="kernzin">Four common ones. What sets them apart is whether nearly right still scores.</p>
+      <p class="kort">There are four common scoring systems for F1 predictions: exact spot only, points by distance, real championship points, and winner and podium only. What sets them apart is whether nearly right still scores. Predict the Race scores by distance, so anyone who reads the field well still scores when the order comes out slightly different.</p>
       <ul><li><b>Exact position only.</b> You score when a driver finishes exactly where you put him. Easy to explain, but a top 10 that is one place off everywhere scores nothing. A few races in, everyone is close to zero and one lucky guess decides the league.</li><li><b>Points by distance.</b> 5 points for the exact spot, 3 for one place off, 1 for two places off, nothing beyond that. This is how Predict the Race scores. If you read the field well, you score even when the order shuffles a little. The catch is the maths: by hand, that is ten drivers per session for every player.</li><li><b>Real F1 points.</b> For each driver in the right spot you get the points he gets in the championship: 25, 18, 15, 12, 10, 8, 6, 4, 2, 1. It feels like the real thing, but a correct P10 is worth 1 point and the winner 25. Miss the winner and you are miles behind, and the bottom half of your top 10 barely matters.</li><li><b>Winner and podium only.</b> Quick to fill in, but most people pick the same favourite. Everyone ends up with roughly the same score and there is little to play for.</li></ul>
       <p>Extra questions such as pole position or fastest lap come on top, each worth a fixed number of points when you get it right.</p>
     </section>
 
-    <section id="worked-example">
+    <section class="vraag" id="worked-example">
       <h2>How do you score a top 10?</h2>
-      <p class="kernzin">For each driver, count how many places he finished from your prediction and look up the points. Below is a made-up race, scored by the same code that scores the app.</p>
+      <p class="kort">Score a top 10 driver by driver: 5 points if he finishes exactly where you put him, 3 for one place off, 1 for two places off, and nothing after that. Add up the ten rows; a perfect top 10 is worth 50. Below is a made-up race, scored with the same code the app uses.</p>
       <table class="tabel getallen rekenvoorbeeld">
+        <caption>A made-up race: your top 10 against the result</caption>
         <thead><tr><th scope="col">Driver</th><th scope="col">Your pick</th><th scope="col">Result</th><th scope="col">Points</th></tr></thead>
         <tbody><tr><th scope="row">Verstappen</th><td>P1</td><td>P2</td><td>3</td></tr><tr><th scope="row">Norris</th><td>P2</td><td>P1</td><td>3</td></tr><tr><th scope="row">Leclerc</th><td>P3</td><td>P3</td><td>5</td></tr><tr><th scope="row">Piastri</th><td>P4</td><td>P5</td><td>3</td></tr><tr><th scope="row">Hamilton</th><td>P5</td><td>P6</td><td>3</td></tr><tr><th scope="row">Russell</th><td>P6</td><td>P4</td><td>1</td></tr><tr><th scope="row">Antonelli</th><td>P7</td><td>P8</td><td>3</td></tr><tr><th scope="row">Alonso</th><td>P8</td><td>P7</td><td>3</td></tr><tr><th scope="row">Sainz</th><td>P9</td><td>DNF</td><td>0</td></tr><tr><th scope="row">Albon</th><td>P10</td><td>P11</td><td>3</td></tr></tbody>
         <tfoot><tr><th scope="row" colspan="3">Total</th><td>27</td></tr></tfoot>
@@ -667,39 +671,38 @@
       <p>Look at Albon: predicted P10, finished eleventh. That is one place off, so 3 points, even though he ended up outside the top 10. Sainz retired and has no classified position, so he scores zero.</p>
     </section>
 
-    <section id="nearly-right">
+    <section class="vraag" id="nearly-right">
       <h2>Why should nearly right count?</h2>
-      <p class="kernzin">Because an F1 result always has some luck in it. One slow pit stop and your P4 becomes P5.</p>
-      <p>If only exact hits count, the luckiest player wins. If distance counts, the player who reads the field best wins, and that is what a prediction league should reward.</p>
+      <p class="kort">Nearly right should count because an F1 result always has some luck in it: one slow pit stop and your P4 becomes P5. If only the exact spot counts, the luckiest player wins. If distance counts, the player who reads the field best wins, and that is what a prediction league should be about.</p>
       <p>It also keeps the league alive. A bad weekend still earns you something, and the leader stays within reach.</p>
     </section>
 
-    <section id="extra-questions">
+    <section class="vraag" id="extra-questions">
       <h2>What else can you score?</h2>
-      <p class="kernzin">Besides the two top 10s there are extra questions every weekend and 4 season questions, each worth a fixed number of points for a correct answer.</p>
+      <p class="kort">Besides the two top 10s, you can score extra questions every weekend, such as the winner, pole position and fastest lap, plus 4 season questions for the whole year. Each one is worth a fixed number of points for a right answer: the winner 25, pole position 10.</p>
       <div class="tabellen">
         <table class="tabel getallen">
+          <caption class="alleenlezer">Extra questions each weekend</caption>
           <thead><tr><th scope="col">Extra questions each weekend</th><th scope="col">Points</th></tr></thead>
-          <tbody><tr><td>Race winner</td><td>25</td></tr><tr><td>Pole position</td><td>10</td></tr><tr><td>Fastest lap</td><td>10</td></tr><tr><td>Fastest pit stop</td><td>10</td></tr><tr><td>Teammate battles</td><td>15</td></tr><tr><td>Number of safety cars</td><td>12</td></tr><tr><td>Red flag, yes or no</td><td>20</td></tr><tr><td>Sprint top 10 (sprint weekends)</td><td>25</td></tr></tbody>
+          <tbody><tr><th scope="row">Race winner</th><td>25</td></tr><tr><th scope="row">Pole position</th><td>10</td></tr><tr><th scope="row">Fastest lap</th><td>10</td></tr><tr><th scope="row">Fastest pit stop</th><td>10</td></tr><tr><th scope="row">Teammate battles</th><td>15</td></tr><tr><th scope="row">Number of safety cars</th><td>12</td></tr><tr><th scope="row">Red flag, yes or no</th><td>20</td></tr><tr><th scope="row">Sprint top 10 (sprint weekends)</th><td>25</td></tr></tbody>
         </table>
         <table class="tabel getallen">
+          <caption class="alleenlezer">Season questions, once a year</caption>
           <thead><tr><th scope="col">Season questions, once a year</th><th scope="col">Points</th></tr></thead>
-          <tbody><tr><td>World champion</td><td>50</td></tr><tr><td>Constructors' champion</td><td>40</td></tr><tr><td>Number of different race winners</td><td>30</td></tr><tr><td>Which team finishes fourth</td><td>30</td></tr></tbody>
+          <tbody><tr><th scope="row">World champion</th><td>50</td></tr><tr><th scope="row">Constructors' champion</th><td>40</td></tr><tr><th scope="row">Number of different race winners</th><td>30</td></tr><tr><th scope="row">Which team finishes fourth</th><td>30</td></tr></tbody>
         </table>
       </div>
       <p>How much a weekend is worth depends on the level the league admin picks: 100 points on Simple, 145 on Classic and 202 on Advanced. On sprint weekends the sprint comes on top, and the season questions are settled at the end of the season.</p>
     </section>
 
-    <section id="ties">
+    <section class="vraag" id="ties">
       <h2>What happens when two players are level on points?</h2>
-      <p class="kernzin">They share the position. Two players on the same points are both second, and the next player is fourth: 1, 2, 2, 4.</p>
-      <p>The weekend winner works the same way. If two players share the top score, they both win that weekend.</p>
+      <p class="kort">Two players on the same points share the position. If they are level in second, the next player is fourth: 1, 2, 2, 4. Predict the Race ranks the standings that way. The weekend winner works the same: if two players share the top score, they both won that weekend.</p>
     </section>
 
-    <section id="jokers">
+    <section class="vraag" id="jokers">
       <h2>What does a joker do to your points?</h2>
-      <p class="kernzin">A joker doubles everything you score that weekend: both top 10s, the sprint and the extra questions. Season questions are never doubled.</p>
-      <p>With jokers switched on, everyone gets 5 per season by default. You play a joker before the weekend starts.</p>
+      <p class="kort">A joker doubles everything you score in one weekend: both top 10s, the sprint and the extra questions. Season questions are never doubled. With jokers switched on in your league, everyone gets 5 per season by default, and you play a joker before the weekend starts.</p>
     </section>
     <section id="faq">
       <h2>Frequently asked questions</h2>
@@ -719,7 +722,6 @@
       <p>Start your league in a minute and share the code with your friends.</p>
       <a class="knop" href="../../app/">Start your league <span aria-hidden="true">→</span></a>
     </div>
-    <p class="label datum"><time datetime="2026-09-26">Updated September 26, 2026</time></p>
   </div>
 </main>
 <footer class="voet">

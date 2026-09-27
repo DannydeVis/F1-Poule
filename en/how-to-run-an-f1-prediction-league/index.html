@@ -44,7 +44,7 @@
     "@id": "https://predicttherace.com/en/how-to-run-an-f1-prediction-league/#kruimel"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26"
+   "dateModified": "2026-09-27"
   },
   {
    "@type": "Article",
@@ -56,7 +56,7 @@
     "@id": "https://predicttherace.com/en/how-to-run-an-f1-prediction-league/#pagina"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26",
+   "dateModified": "2026-09-27",
    "author": {
     "@id": "https://predicttherace.com/#maker"
    },
@@ -598,7 +598,10 @@
   .artikel h2{font-size:clamp(23px,3.6vw,29px);line-height:1.2;margin:0 0 10px}
   .artikel p,.artikel li{line-height:1.65}
   .artikel p{margin:0 0 12px}
-  .artikel .kernzin{font-weight:600}
+  .artikel section .kort{font-weight:600}
+  .artikel .door{font-size:15px;color:var(--ink2);margin:0 0 16px}
+  .artikel .door a{color:var(--accent-tekst)}
+  .artikel caption{text-align:left;font-size:15px;color:var(--ink2);padding:0 0 8px}
   .artikel ol,.artikel ul{margin:0 0 14px;padding-left:24px}
   .artikel li{margin:0 0 8px}
   .artikel .voorbeeld{background:var(--paneel);border:1px solid var(--lijn);border-left:3px solid var(--accent);
@@ -611,7 +614,6 @@
   .artikel .slotblok{margin-top:34px;padding:26px;border-radius:16px;background:var(--nacht);color:var(--nacht-ink)}
   .artikel .slotblok h2{margin:0 0 6px}
   .artikel .slotblok p{color:var(--nacht-ink2)}
-  .artikel .datum{margin:30px 0 0}
   .artikel .tabel.getallen th:last-child{text-align:right}
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
   .artikel .tabellen{margin:4px 0 16px}
@@ -646,42 +648,44 @@
       <li aria-current="page">How to run an F1 prediction league</li>
     </ol></nav>
     <h1>How to run an F1 prediction league</h1>
-    <p class="inleiding">Setting up takes five minutes: name the league, decide how much to predict and drop the code in the group chat. Keeping it alive all season is the hard part. Leagues die when someone falls hopelessly behind, when people forget to enter, or when there is nothing to talk about after the race.</p>
+    <p class="door">By <a href="https://github.com/DannydeVis" rel="author">Danny de Visser</a>, updated <time datetime="2026-09-27">September 27, 2026</time></p>
+    <p class="kort inleiding">Setting up takes five minutes: name the league, decide how much to predict and drop the code in the group chat. Keeping it alive all season is the hard part. Leagues die when someone falls hopelessly behind, when people forget to enter, or when there is nothing to talk about after the race.</p>
 
-    <section id="set-up">
+    <section class="vraag" id="set-up">
       <h2>How do you set up an F1 prediction league?</h2>
-      <p class="kernzin">In four steps. After that, the league admin has nothing left to keep track of.</p>
+      <p class="kort">You set up an F1 prediction league in four steps: name the league, enter your own name, decide how much to predict and share the code in your group chat. After that the league admin has nothing to keep track of, because the calendar, the drivers and the results come in on their own.</p>
       <ol><li>Name the league. The name shows in the app and in the invite. A short description helps anyone who plays in more than one league, something like &quot;work league, for the glory&quot;.</li><li>Enter your own name. You are the first player and the league admin, so you pick the questions and the rules.</li><li>Decide how much to predict: Simple, Classic or Advanced, or build your own set of questions.</li><li>Share the invite link or the six-character code in your group chat. Anyone who opens it picks a name and is in, with no account and no password.</li></ol>
       <p>From then on it runs itself. The calendar and the drivers are already there, and after every qualifying session and race the official result comes in and the points are worked out. Nobody types anything in.</p>
       <p>Do it well before the first race. Until that race has been run you can still change the questions; after that the set is locked, so every weekend is scored by the same rules.</p>
     </section>
 
-    <section id="questions">
+    <section class="vraag" id="questions">
       <h2>How many questions should count?</h2>
-      <p class="kernzin">As many as your group will keep up with. Two top 10s a weekend is plenty for a competitive league; if you want everything, there are 14.</p>
+      <p class="kort">Count as many questions as your group will keep up with. The two top 10s each weekend, qualifying and race, are plenty for a competitive league. If you want more, Classic adds the winner, pole position and fastest lap, and Advanced switches on all 14 questions.</p>
       <table class="tabel">
+        <caption>The three levels in Predict the Race</caption>
         <thead><tr><th scope="col">Level</th><th scope="col">Questions</th><th scope="col">Points per weekend</th></tr></thead>
         <tbody><tr><th scope="row">Simple</th><td>2</td><td>100</td></tr><tr><th scope="row">Classic</th><td>5</td><td>145</td></tr><tr><th scope="row">Advanced</th><td>14</td><td>202, plus sprint and season</td></tr></tbody>
       </table>
-      <p>Simple is just the two top 10s, qualifying and race. Classic adds the winner, pole position and fastest lap. Advanced switches everything on, from fastest pit stop and teammate battles to the number of safety cars and a red flag.</p>
+      <p>Simple is just the two top 10s. Advanced switches everything on, from fastest pit stop and teammate battles to the number of safety cars and a red flag.</p>
       <p>More questions means more to win, but also more to fill in. In a group where half the players only think about qualifying on Saturday morning, Simple lasts longer than Advanced.</p>
     </section>
 
-    <section id="jokers">
+    <section class="vraag" id="jokers">
       <h2>Should you play with jokers?</h2>
-      <p class="kernzin">A joker doubles all your points for one race weekend. With jokers switched on, everyone gets 5 per season by default; as the league admin you can set anything from 1 to 5, or leave them off.</p>
-      <p>You play a joker before the weekend starts, and then it is locked in. Jokers give players who are behind something to hope for, and they turn every weekend into a small bet: is this the circuit where you know better than everyone else?</p>
+      <p class="kort">Yes, if you want players who are behind to have something to hope for. A joker doubles all your points for one race weekend. With jokers switched on, everyone gets 5 per season by default; as the league admin you can set anything from 1 to 5, or leave them off.</p>
+      <p>You play a joker before the weekend starts, and then it is locked in. It turns every weekend into a small bet: is this the circuit where you know better than everyone else?</p>
     </section>
 
-    <section id="pitfalls">
+    <section class="vraag" id="pitfalls">
       <h2>What kills an F1 prediction league?</h2>
-      <p class="kernzin">Rarely the questions. It is almost always one of three things: a gap nobody can close, people forgetting to enter, or nothing to talk about after the race.</p>
+      <p class="kort">An F1 prediction league rarely dies because of the questions. It is almost always one of three things: a gap nobody can close, people forgetting to enter, or nothing to talk about after the race. Each has its own fix: more to win than the final standings, reminders before the deadline, and something to show every weekend.</p>
       <ul><li><b>A gap nobody can close.</b> Someone who is miles behind after eight races stops playing. So give people more to win than the final standings: the weekend winner (whoever scores the most in a weekend wins that weekend), head-to-head records (you see who has won more often against each friend) and jokers.</li><li><b>Forgetting to enter.</b> Miss one race and you are behind; miss two and you are gone. What helps: the calendar subscription with a reminder an hour before every deadline, a push notification when you have not entered anything 3 hours before a deadline, and auto-fill, which gives anyone who forgets a random top 10 instead of zero.</li><li><b>Nothing to talk about.</b> After the race there has to be something to look at. The result per driver, the standings showing who climbed and who dropped, and a result image for the group chat give everyone something to argue about every weekend.</li></ul>
     </section>
 
-    <section id="checklist">
-      <h2>A checklist for the league admin</h2>
-      <p class="kernzin">Go through this before the season starts.</p>
+    <section class="vraag" id="checklist">
+      <h2>What should you sort out before the season starts?</h2>
+      <p class="kort">Before the first qualifying session, sort out the league and the code, the level, jokers and auto-fill. Make sure everyone subscribes to the calendar or switches on notifications, fills in the season questions, and knows what you are playing for. Sort that out early and nobody has to think about it again all season.</p>
       <ul><li>The league exists and the code is shared, before the first qualifying session.</li><li>The level is chosen: Simple, Classic, Advanced or your own set.</li><li>Jokers: on or off, and how many each.</li><li>Auto-fill: agreed together whether it is on.</li><li>Everyone has subscribed to the calendar or switched on notifications.</li><li>The season questions are filled in before the first race.</li><li>Everyone knows what you are playing for: bragging rights. There is no entry fee, pot or prize in the app.</li></ul>
     </section>
     <section id="faq">
@@ -702,7 +706,6 @@
       <p>Start your league in a minute and share the code with your friends.</p>
       <a class="knop" href="../../app/">Start your league <span aria-hidden="true">→</span></a>
     </div>
-    <p class="label datum"><time datetime="2026-09-26">Updated September 26, 2026</time></p>
   </div>
 </main>
 <footer class="voet">
