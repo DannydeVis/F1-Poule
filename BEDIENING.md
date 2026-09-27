@@ -1896,6 +1896,12 @@ een voorspelde top 10 en een uitslag) rekent de generator uit met de code van
 de app zelf; onder welk blok van de voorpagina de link staat, kies je met
 `teaserPlek`. Alle velden staan bovenaan `site/paginas.mjs` uitgelegd.
 
+**De about-pagina** (`/over/`, `/en/about/`) staat in `site/paginas.mjs`
+onder id `over`. De eerste zin is de kernzin en de zin over de maker komt uit
+`site/teksten.mjs`; pas je die aan, dan verandert de pagina mee. Wil je er
+iets persoonlijks bij (waarom je begon, hoe het gratis blijft), zeg het, dan
+komt het erin.
+
 **Overal hetzelfde verhaal (GEO).** De kernzin ("Predict the Race is een
 gratis F1-poule voor vriendengroepen: ...") staat per taal in
 `site/teksten.mjs`, met een korte versie en een zin over de maker. Hij staat

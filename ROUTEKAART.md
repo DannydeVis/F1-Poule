@@ -917,7 +917,7 @@ start van seizoen 2027 (februari en maart). Eén fase per branch.
 |---|---|---|
 | SEO 0 | hygiëne: documenten van het domein, titels met de zoekterm eerst, sitenaam, datum per pagina, llms.txt eerlijk | **gebouwd en nagelopen** (26 september): documenten geven 404, redirects in orde, indexering aangevraagd, nulmeting in `docs/zoekplan/meting.md`. Bing nagelopen op 27 september |
 | SEO 1 | de generator klaar voor meer paginasoorten (gidsen, about, vergelijking) | **gebouwd**, met de eerste gids (organiseren, NL en EN) als proef; online |
-| SEO 2 | kernpagina's in NL en EN (organiseren, puntentelling, excel, over, vergelijking) | **deels**: organiseren online; puntentelling en excel gebouwd, wachten op Danny's akkoord; over en vergelijking nog niet |
+| SEO 2 | kernpagina's in NL en EN (organiseren, puntentelling, excel, over, vergelijking) | **deels**: organiseren, puntentelling, excel en de about-pagina (27 september) online; vergelijking nog niet |
 | SEO 3 | IndexNow | **gebouwd en nagelopen** (27 september): na elke deploy gaan de gewijzigde pagina's naar IndexNow; de trigger werkt, de eerste melding van de hele sitemap is ontvangen (202) |
 | SEO 4 | pilot met racepagina's, met stopcriterium | nog niet |
 | SEO 5 | meer talen, alleen waar Search Console het zegt | nog niet |

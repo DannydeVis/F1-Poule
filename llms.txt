@@ -13,7 +13,7 @@ Predict the Race is made by Danny de Visser from Rotterdam, who also makes Padel
 - Price: free, no ads, no money involved
 - Visitor statistics: Google Analytics, only after the visitor says yes; without that, nothing is measured
 - Privacy: https://predicttherace.com/en/privacy/ (Dutch: https://predicttherace.com/privacy/)
-- Made by: Danny de Visser (https://github.com/DannydeVis); source code: https://github.com/DannydeVis/F1-Poule
+- Made by: Danny de Visser (https://predicttherace.com/en/about/); source code: https://github.com/DannydeVis/F1-Poule
 - Data source for calendar and results: OpenF1 (https://openf1.org)
 - Not affiliated with Formula 1, the FIA or any F1 team
 
