@@ -8356,6 +8356,14 @@ kan die instellingen niet aanpassen. Fase 0 (de nulmeting, dertig minuten) en
 fase 5 (vermeldingen op andere sites) zijn ook voor Danny; de promptset en de
 tabellen staan in `docs/zoekplan/meting.md`.
 
+**Gedaan door Danny, 27 september:** de About van de repo (beschrijving,
+website en topics; nagekeken, GitHub zette er zelf `prediction-games` bij), het
+profiel, Bing Webmaster Tools nagelopen, het kanaal "AI-assistenten" in GA4 en
+de nulmeting met de promptset. De antwoorden van de nulmeting zijn niet
+doorgegeven; wat er in `meting.md` staat, is dat hij gedaan is. Nog open van
+zijn kant: twee zinnen voor de about-pagina (waarom hij begon, hoe het gratis
+blijft), en in oktober AlternativeTo.
+
 **Volgende stappen uit het plan:** fase 2 (llms.txt opnieuw opbouwen) na SEO
 fase 2; fase 3 (eigen cijfers: hoe voorspelbaar was 2026, de week na Abu Dhabi,
 en safety cars per circuit); fase 4 met de vergelijkingspagina.

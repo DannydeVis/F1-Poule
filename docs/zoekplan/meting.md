@@ -17,7 +17,7 @@ het beginpunt, geen fout.
 |---|---|---|
 | datum | 26 september 2026 | |
 | URL's geïndexeerd (Google) | nog geen gegevens (van 9) | Search Console, Pagina's |
-| URL's geïndexeerd (Bing) | nog niet nagekeken | Bing Webmaster Tools |
+| URL's geïndexeerd (Bing) | nagelopen op 27 september | Bing Webmaster Tools |
 | vertoningen, laatste 28 dagen | 0 (nog leeg) | Search Console, Prestaties |
 | klikken, laatste 28 dagen | 0 (nog leeg) | Search Console, Prestaties |
 | waarvan zonder "predict the race" (niet-merk) | 0 | filter: zoekopdracht bevat niet |
@@ -101,6 +101,10 @@ personalisatie uit). Tel iets pas als het een paar keer terugkomt.
 Per prompt en assistent: genoemd, met link, klopten de feiten, welke andere
 apps.
 
-| maand | assistent | vraag | genoemd? | bron die hij gaf | opmerking |
-|---|---|---|---|---|---|
-| | | | | | |
+Nulmeting GEO (fase 0): gedaan op 27 september 2026, samen met het kanaal
+"AI-assistenten" in GA4. De antwoorden per assistent zijn niet genoteerd; de
+eerste maandmeting in november is het vergelijkingspunt.
+
+| maand | assistent | prompt | genoemd? | met link? | feiten goed? | andere apps | opmerking |
+|---|---|---|---|---|---|---|---|
+| | | | | | | | |
