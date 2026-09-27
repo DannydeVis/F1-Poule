@@ -90,23 +90,6 @@ export const PAGINAS = [
             ],
           },
           {
-            id: 'punten',
-            vraag: 'Hoe werkt de puntentelling?',
-            kort: 'Voor elke coureur in je top 10 krijg je {exact} punten als hij precies op die plek eindigt, {bijna} bij één plek ernaast en {twee} bij twee plekken ernaast.',
-            voorbeeld: 'Voorbeeld: je zet een coureur op P3 en hij wordt vierde. Dat is één plek ernaast, dus {bijna} punten. Een perfecte top 10 is {top10} punten per sessie, en op een sprintweekend komt de sprint erbij, goed voor maximaal {sprint}.',
-            tekst: [
-              'Dat bijna goed ook telt, houdt het spannend voor iedereen. Je hoeft de volgorde niet perfect te hebben om punten te pakken, en één verrassing in de race gooit niet je hele weekend weg.',
-            ],
-          },
-          {
-            id: 'deadlines',
-            vraag: 'Tot wanneer kan iedereen invullen?',
-            kort: 'Tot de sessie begint. De top 10 van de kwalificatie sluit bij de start van de kwalificatie, die van de race bij de start van de race.',
-            tekst: [
-              'Op een sprintweekend sluit de sprint als eerste. Na de deadline ligt je voorspelling vast.',
-            ],
-          },
-          {
             id: 'jokers',
             vraag: 'Speel je met jokers?',
             kort: 'Met een joker tellen al je punten van één raceweekend dubbel. Staan jokers aan, dan heeft iedereen er standaard {jokers} per seizoen; als poulebaas kies je er 1 tot {jokersMax}, of je laat ze uit.',
@@ -189,23 +172,6 @@ export const PAGINAS = [
             tekst: [
               'Simple is just the two top 10s, qualifying and race. Classic adds the winner, pole position and fastest lap. Advanced switches everything on, from fastest pit stop and teammate battles to the number of safety cars and a red flag.',
               'More questions means more to win, but also more to fill in. In a group where half the players only think about qualifying on Saturday morning, Simple lasts longer than Advanced.',
-            ],
-          },
-          {
-            id: 'scoring',
-            vraag: 'How does the scoring work?',
-            kort: 'For every driver in your top 10 you get {exact} points if he finishes exactly there, {bijna} if he is one place off and {twee} if he is two places off.',
-            voorbeeld: 'Example: you put a driver in P3 and he finishes fourth. That is one place off, so {bijna} points. A perfect top 10 is worth {top10} points per session, and on a sprint weekend the sprint adds up to {sprint} more.',
-            tekst: [
-              'Because nearly right still scores, nobody is out of it after one surprise. You do not need the exact order to pick up points, and one chaotic race does not wipe out your weekend.',
-            ],
-          },
-          {
-            id: 'deadlines',
-            vraag: 'When do predictions close?',
-            kort: 'When the session starts. The qualifying top 10 closes at the start of qualifying, the race top 10 at the start of the race.',
-            tekst: [
-              'On a sprint weekend the sprint closes first. Once the deadline has passed, your prediction is locked.',
             ],
           },
           {

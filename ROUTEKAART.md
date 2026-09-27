@@ -921,3 +921,6 @@ start van seizoen 2027 (februari en maart). Eén fase per branch.
 | SEO 3 | IndexNow | nog niet |
 | SEO 4 | pilot met racepagina's, met stopcriterium | nog niet |
 | SEO 5 | meer talen, alleen waar Search Console het zegt | nog niet |
+| AEO 1 | de vragenlijst: elke vraag één plek (`site/vragen.mjs`) | **gebouwd** (26 september), met de startlijst uit het plan en elke vraag die al op de site stond. Wacht op Danny's verzamelronde (1.1) |
+| AEO 2 | de antwoordvorm in de generator: auteursregel, kort antwoord, getallen uit de app | nog niet (het vraagblok zelf bestaat al) |
+| AEO 3 | toepassen: twee nieuwe FAQ's op de voorpagina, kernpagina's als vraagblokken | nog niet |

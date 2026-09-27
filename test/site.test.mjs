@@ -289,7 +289,7 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
 {
   const lastmod = JSON.parse(readFileSync(join(wortel, 'site', 'lastmod.json'), 'utf8'));
   const jokersApp = Number(appBron.match(/const JOKERS_STANDAARD = (\d+);/)[1]);
-  const sprintApp = Number(appBron.match(/\{ id:'sprint_top10',\s*naam:'[^']*',\s*punten:(\d+)/)[1]);
+  const jokersMaxApp = Math.max(...appBron.match(/const JOKERKEUZES = \[([\d, ]+)\];/)[1].split(',').map(Number));
   const vensterApp = Number(readFileSync(join(wortel, 'scripts', 'herinneringen.mjs'), 'utf8')
     .match(/VENSTER_UREN = (\d+)/)[1]);
   // De puntentelling van de app zelf: scoreLijst() uit <knip primitieven>.
@@ -309,9 +309,9 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
   // een paar zinnen met de getallen erin.
   const FEITEN = {
     organiseren: {
-      nl: [`standaard ${jokersApp} per seizoen`, `maximaal ${sprintApp}.`, `${vensterApp} uur voor een deadline`,
+      nl: [`standaard ${jokersApp} per seizoen`, `kies je er 1 tot ${jokersMaxApp},`, `${vensterApp} uur voor een deadline`,
         'een melding een uur voor elke deadline'],
-      en: [`${jokersApp} per season by default`, `adds up to ${sprintApp} more`, `${vensterApp} hours before a deadline`,
+      en: [`${jokersApp} per season by default`, `anything from 1 to ${jokersMaxApp},`, `${vensterApp} hours before a deadline`,
         'a reminder an hour before every deadline'],
     },
     puntentelling: {

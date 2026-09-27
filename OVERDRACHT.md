@@ -8066,3 +8066,75 @@ In dezelfde run: de uitslag van Baku veranderde achteraf (P13 tot en met P15
 wisselden, een straf na de race). Dat is de herkeuring die daarvoor bestaat;
 de stand rekent vanzelf mee.
 
+## Zoekplan AEO fase 1: de vragenlijst
+
+Danny stuurde het tweede deel van het zoekplan, `2-aeo.md`. Beide plannen staan
+nu in de repo, in `docs/zoekplan/1-seo.md` en `docs/zoekplan/2-aeo.md` (de map
+komt niet op het domein). AEO fase 1 is de enige fase die "meteen kan".
+
+**Wat het is.** `site/vragen.mjs`: elke vraag die mensen (volgens ons) stellen,
+met precies één plek op de site. Per vraag de taal, varianten (andere woorden
+voor dezelfde vraag, ook zoektermen), de bron (nu overal `hypothese`), het doel
+(`organiseren#opzetten`, `voorpagina#faq`) en de status (open, beantwoord,
+bewust-niet, met een waarom). Het bestand komt niet online (`_config.yml` sluit
+`site/*.mjs` uit).
+
+**De startlijst uit het plan naast de gidsen die er al waren.** Het plan is
+geschreven op een commit van vóór de gidsen, dus zijn sectie-ids
+(`organiseren#maken`, `puntentelling#eerlijk` en zo) bestaan niet. Waar een
+bestaande sectie dezelfde vraag al beantwoordt, is de kop op de site de vraag
+en staat de formulering uit het plan als variant ernaast: "Hoe maak je een
+F1-poule?" is een variant van "Hoe zet je een F1-poule op?", "Hoe houd je een
+F1-poule het hele seizoen spannend?" van "Waar loopt een F1-poule op stuk?".
+Alleen "Welke formule rekent de punten uit?" stond er al letterlijk. Open,
+omdat er nog niets op de site staat: iemand vergeet in te vullen (organiseren),
+iedereen voorspelt hetzelfde (puntentelling, contrair), de pagina's
+vergelijking en over, en de twee nieuwe FAQ's voor de voorpagina (fase 3.1).
+Bewust niet: hoe laat de race begint, wie wint, een F1 Fantasy-team
+samenstellen. En voor SEO fase 5 per andere taal de zoekterm voor "een poule
+maken" (Tippspiel, pronostics, porra, pronostici, bolão).
+
+Ook elke vraag die al op de site stond (de FAQ van de voorpagina, "Wat is
+Predict the Race?", de koppen en FAQ's van de gidsen) staat in de lijst, in het
+Nederlands en Engels. Zo is de lijst het overzicht dat het plan mist, en moet
+een nieuwe sectie er eerst in.
+
+**Twee secties weg uit de organiseren-gids, in beide talen.** Met de lijst
+erbij bleek dat ze een vraag van de voorpagina herhaalden:
+
+- "Hoe werkt de puntentelling?" stond letterlijk als FAQ op de voorpagina en
+  als kop in de gids ("How does the scoring work?" tegen "How does scoring
+  work?" in het Engels). Het hele verhaal staat in de puntentelling-gids, en de
+  organiseren-gids linkt daar onder "Lees ook" al naar.
+- "Tot wanneer kan iedereen invullen?" had woord voor woord hetzelfde antwoord
+  als "Tot wanneer kan ik invullen?" op de voorpagina.
+
+Het plan heeft in de organiseren-gids ook geen plek voor punten of deadlines
+(fase 3.2: maken, voorspellen, vergeten, spannend, halverwege). De getallen die
+`test/site.test.mjs` in die gids controleerde, kwamen deels uit de
+puntensectie; die controle kijkt nu naar het hoogste aantal jokers
+(`JOKERKEUZES`) in plaats van de sprint.
+
+**Tests** (`test/vragen.test.mjs`, zonder browser, leest de gegenereerde
+HTML): de vier uit het plan (een beantwoorde vraag staat letterlijk op zijn
+doel; geen vraag twee keer in de lijst, ook niet als variant; geen vraag twee
+keer op de site binnen één taal; bewust-niet heeft een waarom), en daarbij:
+een variant, een open vraag of een bewust-niet-vraag staat nergens als kop of
+FAQ; elke vraag op de voorpagina en de gidsen staat in de lijst; een sectie
+beantwoordt één vraag; een geplande pagina bestaat nog niet; en of het lezen
+zelf werkt (elke pagina die online komt is bekend, elke sectie en FAQ-vraag uit
+de bron is gevonden). "Dezelfde vraag" is gelijk na het weglaten van
+hoofdletters, leestekens, streepjes en lidwoorden; zonder dat laatste zag de
+test het Engelse dubbel niet. Negentien mutanten, alle gevangen.
+
+**Wat Danny zelf doet (1.1).** Ongeveer drie kwartier vragen verzamelen: Google
+in een incognitovenster (suggesties en "Mensen vragen ook"), Bing Keyword
+Research, Reddit, en vanaf november Search Console met de regex uit het plan.
+Alles ongesorteerd sturen; Claude Code zet het in `site/vragen.mjs` (bron
+`autocomplete`, `paa`, `reddit`, `bing` of `gsc`).
+
+**Volgende stap:** AEO fase 2 (de antwoordvorm: auteursregel, `p.kort` van 25
+tot 80 woorden, getallen alleen uit placeholders, ook in de FAQ van de
+voorpagina). Het vraagblok met `vraag` en `kort` per sectie bestaat al sinds
+SEO fase 1.
+
