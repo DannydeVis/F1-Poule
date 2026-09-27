@@ -1,0 +1,1237 @@
+{
+  "jaar": 2026,
+  "bron": "OpenF1 (https://openf1.org): meetings, sessions, session_result, drivers",
+  "races": [
+    {
+      "circuit": 61,
+      "slug": "singapore",
+      "naam": "Singapore Grand Prix",
+      "officieel": "FORMULA 1 SINGAPORE AIRLINES SINGAPORE GRAND PRIX 2026",
+      "locatie": "Marina Bay",
+      "land": "Singapore",
+      "circuitNaam": "Singapore",
+      "start": "2026-10-09T08:30:00+00:00",
+      "eind": "2026-10-11T14:00:00+00:00",
+      "sessies": [
+        {
+          "naam": "Sprint Qualifying",
+          "sessie": 11379,
+          "start": "2026-10-09T12:30:00+00:00",
+          "eind": "2026-10-09T13:14:00+00:00"
+        },
+        {
+          "naam": "Sprint",
+          "sessie": 11383,
+          "start": "2026-10-10T09:00:00+00:00",
+          "eind": "2026-10-10T10:00:00+00:00"
+        },
+        {
+          "naam": "Qualifying",
+          "sessie": 11384,
+          "start": "2026-10-10T13:00:00+00:00",
+          "eind": "2026-10-10T14:00:00+00:00"
+        },
+        {
+          "naam": "Race",
+          "sessie": 11388,
+          "start": "2026-10-11T12:00:00+00:00",
+          "eind": "2026-10-11T14:00:00+00:00"
+        }
+      ],
+      "vorige": {
+        "jaar": 2025,
+        "datum": "2025-10-05",
+        "kwalificatie": [
+          {
+            "plek": 1,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 2,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 3,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 4,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 5,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 6,
+            "nr": "44",
+            "code": "HAM",
+            "naam": "Lewis Hamilton",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 7,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 8,
+            "nr": "6",
+            "code": "HAD",
+            "naam": "Isack Hadjar",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 9,
+            "nr": "87",
+            "code": "BEA",
+            "naam": "Oliver Bearman",
+            "team": "Haas F1 Team"
+          },
+          {
+            "plek": 10,
+            "nr": "14",
+            "code": "ALO",
+            "naam": "Fernando Alonso",
+            "team": "Aston Martin"
+          }
+        ],
+        "race": [
+          {
+            "plek": 1,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 2,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 3,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 4,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 5,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 6,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 7,
+            "nr": "14",
+            "code": "ALO",
+            "naam": "Fernando Alonso",
+            "team": "Aston Martin"
+          },
+          {
+            "plek": 8,
+            "nr": "44",
+            "code": "HAM",
+            "naam": "Lewis Hamilton",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 9,
+            "nr": "87",
+            "code": "BEA",
+            "naam": "Oliver Bearman",
+            "team": "Haas F1 Team"
+          },
+          {
+            "plek": 10,
+            "nr": "55",
+            "code": "SAI",
+            "naam": "Carlos Sainz",
+            "team": "Williams"
+          }
+        ]
+      },
+      "uitslag": null
+    },
+    {
+      "circuit": 9,
+      "slug": "austin",
+      "naam": "United States Grand Prix",
+      "officieel": "FORMULA 1 MSC CRUISES UNITED STATES GRAND PRIX 2026",
+      "locatie": "Austin",
+      "land": "United States",
+      "circuitNaam": "Austin",
+      "start": "2026-10-23T17:30:00+00:00",
+      "eind": "2026-10-25T22:00:00+00:00",
+      "sessies": [
+        {
+          "naam": "Qualifying",
+          "sessie": 11392,
+          "start": "2026-10-24T21:00:00+00:00",
+          "eind": "2026-10-24T22:00:00+00:00"
+        },
+        {
+          "naam": "Race",
+          "sessie": 11396,
+          "start": "2026-10-25T20:00:00+00:00",
+          "eind": "2026-10-25T22:00:00+00:00"
+        }
+      ],
+      "vorige": {
+        "jaar": 2025,
+        "datum": "2025-10-19",
+        "kwalificatie": [
+          {
+            "plek": 1,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 2,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 3,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 4,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 5,
+            "nr": "44",
+            "code": "HAM",
+            "naam": "Lewis Hamilton",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 6,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 7,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 8,
+            "nr": "87",
+            "code": "BEA",
+            "naam": "Oliver Bearman",
+            "team": "Haas F1 Team"
+          },
+          {
+            "plek": 9,
+            "nr": "55",
+            "code": "SAI",
+            "naam": "Carlos Sainz",
+            "team": "Williams"
+          },
+          {
+            "plek": 10,
+            "nr": "14",
+            "code": "ALO",
+            "naam": "Fernando Alonso",
+            "team": "Aston Martin"
+          }
+        ],
+        "race": [
+          {
+            "plek": 1,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 2,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 3,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 4,
+            "nr": "44",
+            "code": "HAM",
+            "naam": "Lewis Hamilton",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 5,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 6,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 7,
+            "nr": "22",
+            "code": "TSU",
+            "naam": "Yuki Tsunoda",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 8,
+            "nr": "27",
+            "code": "HUL",
+            "naam": "Nico Hulkenberg",
+            "team": "Kick Sauber"
+          },
+          {
+            "plek": 9,
+            "nr": "87",
+            "code": "BEA",
+            "naam": "Oliver Bearman",
+            "team": "Haas F1 Team"
+          },
+          {
+            "plek": 10,
+            "nr": "14",
+            "code": "ALO",
+            "naam": "Fernando Alonso",
+            "team": "Aston Martin"
+          }
+        ]
+      },
+      "uitslag": null
+    },
+    {
+      "circuit": 65,
+      "slug": "mexico-city",
+      "naam": "Mexico City Grand Prix",
+      "officieel": "FORMULA 1 GRAN PREMIO DE LA CIUDAD DE MÉXICO 2026",
+      "locatie": "Mexico City",
+      "land": "Mexico",
+      "circuitNaam": "Mexico City",
+      "start": "2026-10-30T18:30:00+00:00",
+      "eind": "2026-11-01T22:00:00+00:00",
+      "sessies": [
+        {
+          "naam": "Qualifying",
+          "sessie": 11400,
+          "start": "2026-10-31T21:00:00+00:00",
+          "eind": "2026-10-31T22:00:00+00:00"
+        },
+        {
+          "naam": "Race",
+          "sessie": 11404,
+          "start": "2026-11-01T20:00:00+00:00",
+          "eind": "2026-11-01T22:00:00+00:00"
+        }
+      ],
+      "vorige": {
+        "jaar": 2025,
+        "datum": "2025-10-26",
+        "kwalificatie": [
+          {
+            "plek": 1,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 2,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 3,
+            "nr": "44",
+            "code": "HAM",
+            "naam": "Lewis Hamilton",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 4,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 5,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 6,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 7,
+            "nr": "55",
+            "code": "SAI",
+            "naam": "Carlos Sainz",
+            "team": "Williams"
+          },
+          {
+            "plek": 8,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 9,
+            "nr": "6",
+            "code": "HAD",
+            "naam": "Isack Hadjar",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 10,
+            "nr": "87",
+            "code": "BEA",
+            "naam": "Oliver Bearman",
+            "team": "Haas F1 Team"
+          }
+        ],
+        "race": [
+          {
+            "plek": 1,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 2,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 3,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 4,
+            "nr": "87",
+            "code": "BEA",
+            "naam": "Oliver Bearman",
+            "team": "Haas F1 Team"
+          },
+          {
+            "plek": 5,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 6,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 7,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 8,
+            "nr": "44",
+            "code": "HAM",
+            "naam": "Lewis Hamilton",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 9,
+            "nr": "31",
+            "code": "OCO",
+            "naam": "Esteban Ocon",
+            "team": "Haas F1 Team"
+          },
+          {
+            "plek": 10,
+            "nr": "5",
+            "code": "BOR",
+            "naam": "Gabriel Bortoleto",
+            "team": "Kick Sauber"
+          }
+        ]
+      },
+      "uitslag": null
+    },
+    {
+      "circuit": 14,
+      "slug": "sao-paulo",
+      "naam": "São Paulo Grand Prix",
+      "officieel": "FORMULA 1 MSC CRUISES GRANDE PRÊMIO DE SÃO PAULO 2026",
+      "locatie": "São Paulo",
+      "land": "Brazil",
+      "circuitNaam": "Interlagos",
+      "start": "2026-11-06T15:30:00+00:00",
+      "eind": "2026-11-08T19:00:00+00:00",
+      "sessies": [
+        {
+          "naam": "Qualifying",
+          "sessie": 11408,
+          "start": "2026-11-07T18:00:00+00:00",
+          "eind": "2026-11-07T19:00:00+00:00"
+        },
+        {
+          "naam": "Race",
+          "sessie": 11412,
+          "start": "2026-11-08T17:00:00+00:00",
+          "eind": "2026-11-08T19:00:00+00:00"
+        }
+      ],
+      "vorige": {
+        "jaar": 2025,
+        "datum": "2025-11-09",
+        "kwalificatie": [
+          {
+            "plek": 1,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 2,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 3,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 4,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 5,
+            "nr": "6",
+            "code": "HAD",
+            "naam": "Isack Hadjar",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 6,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 7,
+            "nr": "30",
+            "code": "LAW",
+            "naam": "Liam Lawson",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 8,
+            "nr": "87",
+            "code": "BEA",
+            "naam": "Oliver Bearman",
+            "team": "Haas F1 Team"
+          },
+          {
+            "plek": 9,
+            "nr": "10",
+            "code": "GAS",
+            "naam": "Pierre Gasly",
+            "team": "Alpine"
+          },
+          {
+            "plek": 10,
+            "nr": "27",
+            "code": "HUL",
+            "naam": "Nico Hulkenberg",
+            "team": "Kick Sauber"
+          }
+        ],
+        "race": [
+          {
+            "plek": 1,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 2,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 3,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 4,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 5,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 6,
+            "nr": "87",
+            "code": "BEA",
+            "naam": "Oliver Bearman",
+            "team": "Haas F1 Team"
+          },
+          {
+            "plek": 7,
+            "nr": "30",
+            "code": "LAW",
+            "naam": "Liam Lawson",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 8,
+            "nr": "6",
+            "code": "HAD",
+            "naam": "Isack Hadjar",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 9,
+            "nr": "27",
+            "code": "HUL",
+            "naam": "Nico Hulkenberg",
+            "team": "Kick Sauber"
+          },
+          {
+            "plek": 10,
+            "nr": "10",
+            "code": "GAS",
+            "naam": "Pierre Gasly",
+            "team": "Alpine"
+          }
+        ]
+      },
+      "uitslag": null
+    },
+    {
+      "circuit": 152,
+      "slug": "las-vegas",
+      "naam": "Las Vegas Grand Prix",
+      "officieel": "FORMULA 1 HEINEKEN LAS VEGAS GRAND PRIX 2026",
+      "locatie": "Las Vegas",
+      "land": "United States",
+      "circuitNaam": "Las Vegas",
+      "start": "2026-11-20T00:30:00+00:00",
+      "eind": "2026-11-22T06:00:00+00:00",
+      "sessies": [
+        {
+          "naam": "Qualifying",
+          "sessie": 11416,
+          "start": "2026-11-21T04:00:00+00:00",
+          "eind": "2026-11-21T05:00:00+00:00"
+        },
+        {
+          "naam": "Race",
+          "sessie": 11420,
+          "start": "2026-11-22T04:00:00+00:00",
+          "eind": "2026-11-22T06:00:00+00:00"
+        }
+      ],
+      "vorige": {
+        "jaar": 2025,
+        "datum": "2025-11-23",
+        "kwalificatie": [
+          {
+            "plek": 1,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 2,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 3,
+            "nr": "55",
+            "code": "SAI",
+            "naam": "Carlos Sainz",
+            "team": "Williams"
+          },
+          {
+            "plek": 4,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 5,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 6,
+            "nr": "30",
+            "code": "LAW",
+            "naam": "Liam Lawson",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 7,
+            "nr": "14",
+            "code": "ALO",
+            "naam": "Fernando Alonso",
+            "team": "Aston Martin"
+          },
+          {
+            "plek": 8,
+            "nr": "6",
+            "code": "HAD",
+            "naam": "Isack Hadjar",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 9,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 10,
+            "nr": "10",
+            "code": "GAS",
+            "naam": "Pierre Gasly",
+            "team": "Alpine"
+          }
+        ],
+        "race": [
+          {
+            "plek": 1,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 2,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 3,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 4,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 5,
+            "nr": "55",
+            "code": "SAI",
+            "naam": "Carlos Sainz",
+            "team": "Williams"
+          },
+          {
+            "plek": 6,
+            "nr": "6",
+            "code": "HAD",
+            "naam": "Isack Hadjar",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 7,
+            "nr": "27",
+            "code": "HUL",
+            "naam": "Nico Hulkenberg",
+            "team": "Kick Sauber"
+          },
+          {
+            "plek": 8,
+            "nr": "44",
+            "code": "HAM",
+            "naam": "Lewis Hamilton",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 9,
+            "nr": "31",
+            "code": "OCO",
+            "naam": "Esteban Ocon",
+            "team": "Haas F1 Team"
+          },
+          {
+            "plek": 10,
+            "nr": "87",
+            "code": "BEA",
+            "naam": "Oliver Bearman",
+            "team": "Haas F1 Team"
+          }
+        ]
+      },
+      "uitslag": null
+    },
+    {
+      "circuit": 150,
+      "slug": "qatar",
+      "naam": "Qatar Grand Prix",
+      "officieel": "FORMULA 1 QATAR AIRWAYS QATAR GRAND PRIX 2026",
+      "locatie": "Lusail",
+      "land": "Qatar",
+      "circuitNaam": "Lusail",
+      "start": "2026-11-27T13:30:00+00:00",
+      "eind": "2026-11-29T18:00:00+00:00",
+      "sessies": [
+        {
+          "naam": "Qualifying",
+          "sessie": 11424,
+          "start": "2026-11-28T18:00:00+00:00",
+          "eind": "2026-11-28T19:00:00+00:00"
+        },
+        {
+          "naam": "Race",
+          "sessie": 11428,
+          "start": "2026-11-29T16:00:00+00:00",
+          "eind": "2026-11-29T18:00:00+00:00"
+        }
+      ],
+      "vorige": {
+        "jaar": 2025,
+        "datum": "2025-11-30",
+        "kwalificatie": [
+          {
+            "plek": 1,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 2,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 3,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 4,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 5,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 6,
+            "nr": "6",
+            "code": "HAD",
+            "naam": "Isack Hadjar",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 7,
+            "nr": "55",
+            "code": "SAI",
+            "naam": "Carlos Sainz",
+            "team": "Williams"
+          },
+          {
+            "plek": 8,
+            "nr": "14",
+            "code": "ALO",
+            "naam": "Fernando Alonso",
+            "team": "Aston Martin"
+          },
+          {
+            "plek": 9,
+            "nr": "10",
+            "code": "GAS",
+            "naam": "Pierre Gasly",
+            "team": "Alpine"
+          },
+          {
+            "plek": 10,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          }
+        ],
+        "race": [
+          {
+            "plek": 1,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 2,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 3,
+            "nr": "55",
+            "code": "SAI",
+            "naam": "Carlos Sainz",
+            "team": "Williams"
+          },
+          {
+            "plek": 4,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 5,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 6,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 7,
+            "nr": "14",
+            "code": "ALO",
+            "naam": "Fernando Alonso",
+            "team": "Aston Martin"
+          },
+          {
+            "plek": 8,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 9,
+            "nr": "30",
+            "code": "LAW",
+            "naam": "Liam Lawson",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 10,
+            "nr": "22",
+            "code": "TSU",
+            "naam": "Yuki Tsunoda",
+            "team": "Red Bull Racing"
+          }
+        ]
+      },
+      "uitslag": null
+    },
+    {
+      "circuit": 70,
+      "slug": "abu-dhabi",
+      "naam": "Abu Dhabi Grand Prix",
+      "officieel": "FORMULA 1 ETIHAD AIRWAYS ABU DHABI GRAND PRIX 2026",
+      "locatie": "Yas Marina",
+      "land": "United Arab Emirates",
+      "circuitNaam": "Yas Marina Circuit",
+      "start": "2026-12-04T09:30:00+00:00",
+      "eind": "2026-12-06T15:00:00+00:00",
+      "sessies": [
+        {
+          "naam": "Qualifying",
+          "sessie": 11432,
+          "start": "2026-12-05T14:00:00+00:00",
+          "eind": "2026-12-05T15:00:00+00:00"
+        },
+        {
+          "naam": "Race",
+          "sessie": 11436,
+          "start": "2026-12-06T13:00:00+00:00",
+          "eind": "2026-12-06T15:00:00+00:00"
+        }
+      ],
+      "vorige": {
+        "jaar": 2025,
+        "datum": "2025-12-07",
+        "kwalificatie": [
+          {
+            "plek": 1,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 2,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 3,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 4,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 5,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 6,
+            "nr": "14",
+            "code": "ALO",
+            "naam": "Fernando Alonso",
+            "team": "Aston Martin"
+          },
+          {
+            "plek": 7,
+            "nr": "5",
+            "code": "BOR",
+            "naam": "Gabriel Bortoleto",
+            "team": "Kick Sauber"
+          },
+          {
+            "plek": 8,
+            "nr": "31",
+            "code": "OCO",
+            "naam": "Esteban Ocon",
+            "team": "Haas F1 Team"
+          },
+          {
+            "plek": 9,
+            "nr": "6",
+            "code": "HAD",
+            "naam": "Isack Hadjar",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 10,
+            "nr": "22",
+            "code": "TSU",
+            "naam": "Yuki Tsunoda",
+            "team": "Red Bull Racing"
+          }
+        ],
+        "race": [
+          {
+            "plek": 1,
+            "nr": "1",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 2,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 3,
+            "nr": "4",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 4,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 5,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 6,
+            "nr": "14",
+            "code": "ALO",
+            "naam": "Fernando Alonso",
+            "team": "Aston Martin"
+          },
+          {
+            "plek": 7,
+            "nr": "31",
+            "code": "OCO",
+            "naam": "Esteban Ocon",
+            "team": "Haas F1 Team"
+          },
+          {
+            "plek": 8,
+            "nr": "44",
+            "code": "HAM",
+            "naam": "Lewis Hamilton",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 9,
+            "nr": "27",
+            "code": "HUL",
+            "naam": "Nico Hulkenberg",
+            "team": "Kick Sauber"
+          },
+          {
+            "plek": 10,
+            "nr": "18",
+            "code": "STR",
+            "naam": "Lance Stroll",
+            "team": "Aston Martin"
+          }
+        ]
+      },
+      "uitslag": null
+    }
+  ],
+  "ontbreekt": []
+}
