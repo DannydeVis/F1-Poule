@@ -8,7 +8,7 @@ name: IndexNow
 # "pages-build-deployment". Daar hangen we achter met workflow_run. Op
 # deployment_status wachten is onzeker: die deployment maakt GitHub met het
 # GITHUB_TOKEN, en gebeurtenissen van dat token starten normaal geen nieuwe
-# workflow. Of workflow_run hier afgaat, staat in OVERDRACHT.md ("IndexNow").
+# workflow. Dat workflow_run hier afgaat, is nagekeken (OVERDRACHT.md, "IndexNow").
 #
 # Welke pagina's veranderden: het verschil tussen de gedeployde commit en zijn
 # eerste ouder. Bij een samengevoegde pull request is dat alles uit die PR; bij

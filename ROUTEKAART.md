@@ -918,7 +918,7 @@ start van seizoen 2027 (februari en maart). Eén fase per branch.
 | SEO 0 | hygiëne: documenten van het domein, titels met de zoekterm eerst, sitenaam, datum per pagina, llms.txt eerlijk | **gebouwd en nagelopen** (26 september): documenten geven 404, redirects in orde, indexering aangevraagd, nulmeting in `docs/zoekplan/meting.md`. Bing nog na te kijken (`BEDIENING.md` §18) |
 | SEO 1 | de generator klaar voor meer paginasoorten (gidsen, about, vergelijking) | **gebouwd**, met de eerste gids (organiseren, NL en EN) als proef; online |
 | SEO 2 | kernpagina's in NL en EN (organiseren, puntentelling, excel, over, vergelijking) | **deels**: organiseren online; puntentelling en excel gebouwd, wachten op Danny's akkoord; over en vergelijking nog niet |
-| SEO 3 | IndexNow | **gebouwd** (27 september): na elke deploy gaan de gewijzigde pagina's naar IndexNow. Bij de eerste deploy nakijken of de workflow afgaat (`OVERDRACHT.md`) |
+| SEO 3 | IndexNow | **gebouwd en nagelopen** (27 september): na elke deploy gaan de gewijzigde pagina's naar IndexNow; de trigger werkt, de eerste melding van de hele sitemap is ontvangen (202) |
 | SEO 4 | pilot met racepagina's, met stopcriterium | nog niet |
 | SEO 5 | meer talen, alleen waar Search Console het zegt | nog niet |
 | AEO 1 | de vragenlijst: elke vraag één plek (`site/vragen.mjs`) | **gebouwd** (26 en 27 september): de startlijst uit het plan, elke vraag die al op de site stond, en wat Claude Code met een zoekmachine vond (1.1). Search Console volgt vanaf november |

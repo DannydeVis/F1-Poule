@@ -8277,13 +8277,13 @@ ChatGPT nieuwe pagina's sneller op. Google doet niet mee en leest de sitemap.
   van de sync verandert meestal alleen `kalender.ics`; dan meldt het script
   niets. Met de knop kan het ook voor alles.
 
-**Nog na te kijken bij de eerste deploy na deze merge:** of de workflow_run
-achter `pages-build-deployment` echt afgaat (in het Actions-tabblad staat dan
-een run van "IndexNow" vlak na "pages-build-deployment"). Een
-deployment_status-trigger is bewust niet gekozen: die deployment maakt GitHub
-met het GITHUB_TOKEN, en gebeurtenissen van dat token starten normaal geen
-workflow. Gaat workflow_run ook niet af, dan kan de stap achteraan de
-testworkflow op main, na een push.
+**Nagekeken na de merge (27 september, 06:34 UTC).** De workflow_run achter
+`pages-build-deployment` gaat af: veertig seconden na de deploy draaide
+"IndexNow" vanzelf, en zei terecht "geen pagina veranderd" (die merge raakte
+geen pagina's). Daarna één keer met de hand met "alles": 16 url's, antwoord
+202 (ontvangen, sleutel wordt nagekeken). Een deployment_status-trigger is
+bewust niet gekozen: die deployment maakt GitHub met het GITHUB_TOKEN, en
+gebeurtenissen van dat token starten normaal geen workflow.
 
 Het verschil met de vorige commit mist iets als één push meerdere commits
 bevat en alleen de laatste gedeployd wordt; dan staat de pagina wel in de
