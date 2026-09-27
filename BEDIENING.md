@@ -1893,15 +1893,18 @@ de app zelf; onder welk blok van de voorpagina de link staat, kies je met
 
 **De vragenlijst (AEO).** `site/vragen.mjs` houdt bij welke vraag op welke
 plek van de site beantwoord wordt: elke vraag precies één keer. Andere woorden
-voor dezelfde vraag zijn varianten en krijgen nooit een eigen kop. Vragen die
-je tegenkomt (Google-suggesties, "Mensen vragen ook", Reddit, en vanaf november
-Search Console met de regex uit `2-aeo.md`) stuur je ongesorteerd naar Claude
-Code; die zet ze erin. Een kop of FAQ-vraag die niet in de lijst staat, of die
-een andere pagina al beantwoordt, laat `test/vragen.test.mjs` zakken. Elk
-kwartaal (januari, april, juli, oktober) een half uur zo'n ronde.
+voor dezelfde vraag zijn varianten en krijgen nooit een eigen kop. Claude Code
+houdt hem zelf bij met een zoekmachine; de andere sites die het daarbij vond,
+staan in `docs/zoekplan/concurrenten.md`. Wat alleen jij kunt: vanaf november
+Search Console met de regex uit `2-aeo.md`. Vragen die je daar of ergens anders
+tegenkomt, stuur je ongesorteerd door. Een kop of FAQ-vraag die niet in de
+lijst staat, of die een andere pagina al beantwoordt, laat
+`test/vragen.test.mjs` zakken. Elk kwartaal (januari, april, juli, oktober)
+een nieuwe ronde; vraag Claude Code erom.
 
-**Nieuwe teksten eerst lezen.** Een pull request met nieuwe teksten voor de
-site opent Claude Code als *concept*: de automerge slaat een concept over, dus
-er gaat niets online voordat jij het gelezen hebt. Akkoord? Dan zet Claude
-Code (of jij, op GitHub met "Ready for review") hem op klaar; de tests draaien
-dan opnieuw en de automerge mergt hem.
+**Nieuwe teksten.** Tot 27 september opende Claude Code een pull request met
+nieuwe teksten als *concept*, zodat er niets online ging voordat jij het
+gelezen had. Op jouw verzoek ("kan je dat zelf niet doen?") niet meer: teksten
+gaan als gewone PR en de automerge zet ze online zodra de tests groen zijn.
+Wil je iets toch eerst lezen, zeg het, of zet de PR op GitHub zelf terug op
+concept ("Convert to draft"); de automerge slaat een concept over.

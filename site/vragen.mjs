@@ -11,7 +11,11 @@
 //   taal       een code uit TALEN in site/teksten.mjs
 //   varianten  andere woorden voor dezelfde vraag, ook zoektermen. Die mogen
 //              nergens als kop of FAQ staan.
-//   bron       hypothese | autocomplete | paa | reddit | gsc | bing
+//   bron       hypothese | autocomplete | paa | reddit | gsc | bing | zoekresultaat
+//              Het sterkste bewijs dat de vraag of een van zijn varianten leeft.
+//              zoekresultaat: een andere site stelt hem als titel, kop of FAQ,
+//              gevonden met een zoekmachine (dus niet uit de suggesties of
+//              "Mensen vragen ook", die vanuit Claude Code niet te bereiken zijn).
 //   doel       een id uit site/paginas.mjs (of 'voorpagina') met het id van de
 //              sectie erachter: 'puntentelling#gelijk', 'voorpagina#faq'. Een
 //              open vraag mag alleen een pagina noemen, als de sectie er nog
@@ -47,7 +51,8 @@ export const VRAGEN = [
   { vraag: 'Wat is een joker?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Werkt het op mijn telefoon?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'In welke talen is de app er?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
-  { vraag: 'Speel je om geld?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
+  // Andere poulesites leggen uit hoe je een pot afspreekt (poules.com).
+  { vraag: 'Speel je om geld?', taal: 'nl', varianten: ['f1 poule inleg'], bron: 'zoekresultaat', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Is dit een officiële Formule 1-app?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   // Nieuw in AEO fase 3.1, in alle zeven talen.
   { vraag: 'Hoeveel punten kun je per weekend halen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'open' },
@@ -68,18 +73,23 @@ export const VRAGEN = [
     bron: 'hypothese', doel: 'organiseren#vergeten', status: 'open' },
   { vraag: 'Kan iemand halverwege het seizoen nog instappen?', taal: 'nl', varianten: ['Kun je halverwege het seizoen nog beginnen?'],
     bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
+  // "Speluitleg" en "hoe werkt het?" staan op bijna elke poulesite (f1poule.com,
+  // gppoule.nl, poules.com). Welke sectie het wordt, kiest AEO fase 3.
+  { vraag: 'Hoe werkt een F1-poule?', taal: 'nl', varianten: ['f1 poule speluitleg', 'f1 poule spelregels'],
+    bron: 'zoekresultaat', doel: 'organiseren', status: 'open' },
   { vraag: 'Kan ik in meer dan één poule zitten?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
   { vraag: 'Kan een poule openbaar zijn?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
   { vraag: 'Wat is het verschil tussen een poule en een pronostiek?', taal: 'nl', varianten: ['Wat is een F1-pronostiek?'],
     bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
 
   // ---- puntentelling ----
-  { vraag: 'Welke puntentellingen zijn er?', taal: 'nl', varianten: ['Welke puntentelling is het eerlijkst voor een F1-poule?'],
+  { vraag: 'Welke puntentellingen zijn er?', taal: 'nl', varianten: ['Welke puntentelling is het eerlijkst voor een F1-poule?', 'f1 poule punten'],
     bron: 'hypothese', doel: 'puntentelling#systemen', status: 'beantwoord' },
   { vraag: 'Hoe reken je een top 10 uit?', taal: 'nl', varianten: ['Hoe reken je de punten voor een top 10 uit?'],
     bron: 'hypothese', doel: 'puntentelling#rekenvoorbeeld', status: 'beantwoord' },
   { vraag: 'Waarom telt bijna goed mee?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'puntentelling#bijna-goed', status: 'beantwoord' },
-  { vraag: 'Welke vragen kun je nog meer laten meetellen?', taal: 'nl', varianten: ['Hoeveel punten geef je voor de losse vragen?'],
+  { vraag: 'Welke vragen kun je nog meer laten meetellen?', taal: 'nl',
+    varianten: ['Hoeveel punten geef je voor de losse vragen?', 'Welke bonusvragen kun je stellen in een F1-poule?'],
     bron: 'hypothese', doel: 'puntentelling#losse-vragen', status: 'beantwoord' },
   { vraag: 'Wat als twee spelers evenveel punten hebben?', taal: 'nl', varianten: ['Wat gebeurt er bij een gelijke stand?'],
     bron: 'hypothese', doel: 'puntentelling#gelijk', status: 'beantwoord' },
@@ -92,20 +102,28 @@ export const VRAGEN = [
   { vraag: 'Wanneer staan de punten erin?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
 
   // ---- excel ----
+  // Op Excel-fora (helpmij.nl, pc-helpforum.be) vragen mensen hulp bij hun
+  // eigen Formule 1-poule.
   { vraag: 'Welke kolommen heb je nodig?', taal: 'nl', varianten: ['Hoe houd je een F1-poule bij in Excel?', 'f1 poule excel'],
-    bron: 'hypothese', doel: 'excel#kolommen', status: 'beantwoord' },
+    bron: 'zoekresultaat', doel: 'excel#kolommen', status: 'beantwoord' },
   { vraag: 'Welke formule rekent de punten uit?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'excel#formule', status: 'beantwoord' },
   { vraag: 'Wat doe je met coureurs buiten de top 10?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'excel#buiten-top-10', status: 'beantwoord' },
   { vraag: 'Waar gaat het mis met Excel?', taal: 'nl', varianten: ['Waar gaat een Excel-poule mis?'],
     bron: 'hypothese', doel: 'excel#misgaat', status: 'beantwoord' },
-  { vraag: 'Kan het ook zonder spreadsheet?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'excel#zonder-spreadsheet', status: 'beantwoord' },
+  // "Excel WK poule vervangen? Dit is de betere oplossing" (sportspoule.com).
+  { vraag: 'Kan het ook zonder spreadsheet?', taal: 'nl', varianten: ['Wat is beter dan een Excel-poule?'],
+    bron: 'zoekresultaat', doel: 'excel#zonder-spreadsheet', status: 'beantwoord' },
   { vraag: 'Werkt dit ook in Google Spreadsheets?', taal: 'nl', varianten: ['Werkt het ook in Google Sheets?'],
     bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
   { vraag: 'Hoe tel ik de winnaar en de pole position mee?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
   { vraag: 'Hoe zet ik spelers met evenveel punten op dezelfde plek?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
 
   // ---- vergelijking en over (SEO fase 2, nog niet gemaakt) ----
-  { vraag: 'Welke F1-poule-app past bij jouw groep?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'vergelijking#welke', status: 'open' },
+  { vraag: 'Welke F1-poule-app past bij jouw groep?', taal: 'nl', varianten: ['Wat is de beste F1-poule-app?', 'f1 poule app'],
+    bron: 'hypothese', doel: 'vergelijking#welke', status: 'open' },
+  // Formula 1 heeft een eigen voorspelspel, F1 Predict; vergelijkingen ermee
+  // staan al online ("Podium Prophets vs F1 Predict").
+  { vraag: 'Wat is het verschil met F1 Predict?', taal: 'nl', varianten: [], bron: 'zoekresultaat', doel: 'vergelijking#f1-predict', status: 'open' },
   { vraag: 'Wat is een gratis alternatief voor F1 Fantasy?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'vergelijking#alternatief', status: 'open' },
   { vraag: 'Wanneer past iets anders beter?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'vergelijking#anders', status: 'open' },
   { vraag: 'Wie maakt Predict the Race?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'over#wie', status: 'open' },
@@ -137,7 +155,10 @@ export const VRAGEN = [
   { vraag: 'Do you play for money?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Is this an official Formula 1 app?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'How many points can you score per weekend?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'open' },
-  { vraag: 'How is this different from F1 Fantasy?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'open' },
+  // "F1 Prediction Game vs Fantasy F1: What's the Difference?" (podiumprophets.com).
+  { vraag: 'How is this different from F1 Fantasy?', taal: 'en',
+    varianten: ['What is the difference between an F1 prediction game and F1 Fantasy?'],
+    bron: 'zoekresultaat', doel: 'voorpagina#faq', status: 'open' },
 
   // ---- organiseren ----
   { vraag: 'How do you set up an F1 prediction league?', taal: 'en', varianten: ['How do you run an F1 prediction league?'],
@@ -160,8 +181,10 @@ export const VRAGEN = [
   { vraag: 'How do you score a top 10?', taal: 'en', varianten: ['How do you score a top 10 prediction?'],
     bron: 'hypothese', doel: 'puntentelling#worked-example', status: 'beantwoord' },
   { vraag: 'Why should nearly right count?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#nearly-right', status: 'beantwoord' },
-  { vraag: 'What else can you score?', taal: 'en', varianten: ['How many points should the extra questions be worth?'],
-    bron: 'hypothese', doel: 'puntentelling#extra-questions', status: 'beantwoord' },
+  // Pagina's met ideeën voor bonusvragen en seizoensvoorspellingen.
+  { vraag: 'What else can you score?', taal: 'en',
+    varianten: ['How many points should the extra questions be worth?', 'What bonus questions can you add to an F1 prediction league?'],
+    bron: 'zoekresultaat', doel: 'puntentelling#extra-questions', status: 'beantwoord' },
   { vraag: 'What happens when two players are level on points?', taal: 'en', varianten: [],
     bron: 'hypothese', doel: 'puntentelling#ties', status: 'beantwoord' },
   { vraag: 'What does a joker do to your points?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#jokers', status: 'beantwoord' },
@@ -187,7 +210,11 @@ export const VRAGEN = [
     bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
 
   // ---- vergelijking en over ----
-  { vraag: 'Which F1 prediction game suits your group?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'vergelijking#which', status: 'open' },
+  // "Best F1 Prediction Apps & Games 2026" en meer van zulke lijstjes.
+  { vraag: 'Which F1 prediction game suits your group?', taal: 'en', varianten: ['What is the best F1 prediction app?', 'best f1 prediction game'],
+    bron: 'zoekresultaat', doel: 'vergelijking#which', status: 'open' },
+  { vraag: 'How is Predict the Race different from F1 Predict?', taal: 'en', varianten: [],
+    bron: 'zoekresultaat', doel: 'vergelijking#f1-predict', status: 'open' },
   { vraag: 'What is a free alternative to F1 Fantasy?', taal: 'en', varianten: ['f1 fantasy alternative'],
     bron: 'hypothese', doel: 'vergelijking#alternative', status: 'open' },
   { vraag: 'When does something else fit better?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'vergelijking#something-else', status: 'open' },
@@ -206,14 +233,19 @@ export const VRAGEN = [
   // ================================================================ DE, FR, ES, IT, PT
   // Voor later (SEO fase 5): de zoektermen voor een poule maken in de andere
   // talen. Er is in die talen nog geen gids, dus ook nog geen sectie-id.
-  { vraag: 'Wie erstellt man ein F1-Tippspiel?', taal: 'de', varianten: ['F1-Tippspiel erstellen', 'Tipprunde F1'],
-    bron: 'hypothese', doel: 'organiseren', status: 'open' },
-  { vraag: 'Comment organiser des pronostics F1 entre amis ?', taal: 'fr', varianten: ['organiser des pronostics F1 entre amis'],
-    bron: 'hypothese', doel: 'organiseren', status: 'open' },
-  { vraag: '¿Cómo se hace una porra de F1?', taal: 'es', varianten: ['cómo hacer una porra de F1'],
-    bron: 'hypothese', doel: 'organiseren', status: 'open' },
+  // Nagezocht op 27 september 2026: Tippspiel, pronostics entre amis, porra
+  // en bolão geven sites en apps om met vrienden te spelen. Het Italiaanse
+  // "pronostici F1" geeft vooral goktips; welk woord Italianen voor een spel
+  // met vrienden gebruiken, moet Search Console nog laten zien.
+  { vraag: 'Wie erstellt man ein F1-Tippspiel?', taal: 'de', varianten: ['F1-Tippspiel erstellen', 'Tipprunde F1', 'F1 Tippspiel mit Freunden'],
+    bron: 'zoekresultaat', doel: 'organiseren', status: 'open' },
+  { vraag: 'Comment organiser des pronostics F1 entre amis ?', taal: 'fr',
+    varianten: ['organiser des pronostics F1 entre amis', 'pronostic F1 jeu gratuit entre amis'],
+    bron: 'zoekresultaat', doel: 'organiseren', status: 'open' },
+  { vraag: '¿Cómo se hace una porra de F1?', taal: 'es', varianten: ['cómo hacer una porra de F1', 'porra F1 amigos'],
+    bron: 'zoekresultaat', doel: 'organiseren', status: 'open' },
   { vraag: 'Come si organizzano i pronostici F1 con gli amici?', taal: 'it', varianten: ['come organizzare i pronostici F1 con gli amici'],
     bron: 'hypothese', doel: 'organiseren', status: 'open' },
-  { vraag: 'Como organizar um bolão de F1 com os amigos?', taal: 'pt', varianten: ['como fazer um bolão de F1'],
-    bron: 'hypothese', doel: 'organiseren', status: 'open' },
+  { vraag: 'Como organizar um bolão de F1 com os amigos?', taal: 'pt', varianten: ['como fazer um bolão de F1', 'bolão F1 amigos'],
+    bron: 'zoekresultaat', doel: 'organiseren', status: 'open' },
 ];

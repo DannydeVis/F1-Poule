@@ -8127,11 +8127,32 @@ de bron is gevonden). "Dezelfde vraag" is gelijk na het weglaten van
 hoofdletters, leestekens, streepjes en lidwoorden; zonder dat laatste zag de
 test het Engelse dubbel niet. Negentien mutanten, alle gevangen.
 
-**Wat Danny zelf doet (1.1).** Ongeveer drie kwartier vragen verzamelen: Google
-in een incognitovenster (suggesties en "Mensen vragen ook"), Bing Keyword
-Research, Reddit, en vanaf november Search Console met de regex uit het plan.
-Alles ongesorteerd sturen; Claude Code zet het in `site/vragen.mjs` (bron
-`autocomplete`, `paa`, `reddit`, `bing` of `gsc`).
+**Het verzamelen (1.1) deed Claude Code zelf.** Danny, 27 september: *"Ik heb
+geen zin om vragen te beantwoorden, kan je dat zelf niet doen?"* De
+Google-suggesties, "Mensen vragen ook" en Bing zijn vanuit de omgeving van
+Claude Code niet te bereiken (de proxy geeft 403), dus is het gedaan met een
+zoekmachine: per zoekterm uit het plan, in alle zeven talen, gekeken welke
+vragen andere sites als titel, kop of FAQ hebben. Die krijgen bron
+`zoekresultaat` (nieuw). Wat erbij kwam:
+
+- *Nieuwe open vragen:* "Hoe werkt een F1-poule?" (bijna elke poulesite heeft
+  een speluitleg), en "Wat is het verschil met F1 Predict?": Formula 1 heeft
+  een eigen voorspelspel met een naam die op Predict the Race lijkt, en er
+  staan al vergelijkingen mee online.
+- *Nieuwe varianten* bij bestaande vragen: de beste app, bonusvragen, een pot
+  afspreken, wat beter is dan een Excel-poule, en per andere taal de gangbare
+  zoekterm. Het Italiaanse "pronostici F1" geeft vooral goktips; dat woord is
+  dus niet vanzelf het goede.
+- *De andere sites* staan in `docs/zoekplan/concurrenten.md`, ongecontroleerd,
+  als begin voor de vergelijkingspagina.
+
+Search Console (vanaf november, met de regex uit het plan) kan alleen met
+Danny's account; tot die tijd blijft het hierbij.
+
+**Werkafspraak veranderd.** Sinds Danny's bericht vraagt Claude Code hem niets
+meer voordat iets online gaat: PR #156 ging zonder concept-ronde door, en ook
+nieuwe teksten gaan voortaan gewoon als PR met automerge. Danny kan achteraf
+lezen en bijsturen.
 
 **Volgende stap:** AEO fase 2 (de antwoordvorm: auteursregel, `p.kort` van 25
 tot 80 woorden, getallen alleen uit placeholders, ook in de FAQ van de
