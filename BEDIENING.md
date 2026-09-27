@@ -1896,6 +1896,14 @@ een voorspelde top 10 en een uitslag) rekent de generator uit met de code van
 de app zelf; onder welk blok van de voorpagina de link staat, kies je met
 `teaserPlek`. Alle velden staan bovenaan `site/paginas.mjs` uitgelegd.
 
+**IndexNow.** Na elke deploy meldt de workflow "IndexNow" de gewijzigde
+pagina's bij Bing en de andere zoekmachines die meedoen (Google niet; die leest
+de sitemap). Er is niets voor nodig: de sleutel is openbaar en staat als
+`1a4736ac820aaebfde621c7e0963f5b6.txt` op de site. Wil je alles in één keer
+melden, bijvoorbeeld na een grote verbouwing: Actions → IndexNow → Run
+workflow → "Alle pagina's uit de sitemap doorgeven". In Bing Webmaster Tools
+zie je onder IndexNow of de meldingen binnenkomen; hoeft niet, maar kan.
+
 **De vragenlijst (AEO).** `site/vragen.mjs` houdt bij welke vraag op welke
 plek van de site beantwoord wordt: elke vraag precies één keer. Andere woorden
 voor dezelfde vraag zijn varianten en krijgen nooit een eigen kop. Claude Code

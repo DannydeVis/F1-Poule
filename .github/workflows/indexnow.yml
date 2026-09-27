@@ -1,0 +1,53 @@
+name: IndexNow
+
+# Na elke deploy van de site: geef de pagina's die veranderden door aan
+# IndexNow, zodat Bing (en via Bing ook Copilot) ze niet pas bij de volgende
+# ronde van zijn crawler ziet. Zie scripts/indexnow.mjs.
+#
+# GitHub Pages deployt deze repo met zijn eigen workflow
+# "pages-build-deployment". Daar hangen we achter met workflow_run. Op
+# deployment_status wachten is onzeker: die deployment maakt GitHub met het
+# GITHUB_TOKEN, en gebeurtenissen van dat token starten normaal geen nieuwe
+# workflow. Of workflow_run hier afgaat, staat in OVERDRACHT.md ("IndexNow").
+#
+# Welke pagina's veranderden: het verschil tussen de gedeployde commit en zijn
+# eerste ouder. Bij een samengevoegde pull request is dat alles uit die PR; bij
+# een commit van de sync meestal alleen kalender.ics, en dan meldt het script
+# niets. Met de knop (workflow_dispatch) kun je ook alles uit de sitemap
+# doorgeven, bijvoorbeeld de eerste keer.
+
+on:
+  workflow_run:
+    workflows: ['pages-build-deployment']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      alles:
+        description: 'Alle pagina''s uit de sitemap doorgeven (anders alleen wat de laatste commit veranderde)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  melden:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Gewijzigde pagina's doorgeven
+        env:
+          ALLES: ${{ inputs.alles }}
+        run: |
+          if [ "$ALLES" = "true" ]; then
+            node scripts/indexnow.mjs --alles
+          else
+            git diff --name-only HEAD^1 HEAD | node scripts/indexnow.mjs --stdin
+          fi
