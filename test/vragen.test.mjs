@@ -131,7 +131,7 @@ for (const p of PAGINALIJST) {
 const waarStaat = (taal, tekst) => opDeSite.get(`${taal}|${sleutel(tekst)}`) ?? [];
 
 // ---- 1. de lijst zelf -----------------------------------------------------------
-const BRONNEN = ['hypothese', 'autocomplete', 'paa', 'reddit', 'gsc', 'bing'];
+const BRONNEN = ['hypothese', 'autocomplete', 'paa', 'reddit', 'gsc', 'bing', 'zoekresultaat'];
 const STATUSSEN = ['open', 'beantwoord', 'bewust-niet'];
 const BESTAAND = new Set(['voorpagina', ...PAGINAS.map((p) => p.id)]);
 const naam = (v) => `${v.taal}: ${v.vraag}`;
