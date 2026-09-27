@@ -1,29 +1,29 @@
 {
   "https://predicttherace.com/": {
     "datum": "2026-09-27",
-    "hash": "0f4f0692887e7cea"
+    "hash": "29eedbf45adbd845"
   },
   "https://predicttherace.com/de/": {
     "datum": "2026-09-27",
-    "hash": "955c3ae21be1d3e4"
+    "hash": "f4842f148d9d7814"
   },
   "https://predicttherace.com/en/": {
     "datum": "2026-09-27",
-    "hash": "6ea83215602e8e9d"
+    "hash": "cce914189751e397"
   },
   "https://predicttherace.com/en/f1-prediction-league-spreadsheet/": {
     "datum": "2026-09-27",
-    "hash": "1f977c3f532610b6",
+    "hash": "00c265c12ee540ef",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/f1-prediction-scoring-system/": {
     "datum": "2026-09-27",
-    "hash": "c48a235413d3f108",
+    "hash": "f6bbe049740c3369",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/how-to-run-an-f1-prediction-league/": {
     "datum": "2026-09-27",
-    "hash": "6e29987e28a994de",
+    "hash": "c9f77df1e56d8528",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/privacy/": {
@@ -32,30 +32,30 @@
   },
   "https://predicttherace.com/es/": {
     "datum": "2026-09-27",
-    "hash": "e25df0f6e9eb02bd"
+    "hash": "d6fea6762e647159"
   },
   "https://predicttherace.com/f1-poule-excel/": {
     "datum": "2026-09-27",
-    "hash": "9d01e03125fdbe38",
+    "hash": "b08f7c5fcbec4a28",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/f1-poule-organiseren/": {
     "datum": "2026-09-27",
-    "hash": "6b8d0864f0e23e85",
+    "hash": "1c560991b3fb0132",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/f1-poule-puntentelling/": {
     "datum": "2026-09-27",
-    "hash": "b144bc64a5bf252e",
+    "hash": "5f218378d8777a33",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/fr/": {
     "datum": "2026-09-27",
-    "hash": "ff1275bd5bac7263"
+    "hash": "10ac542240bc3876"
   },
   "https://predicttherace.com/it/": {
     "datum": "2026-09-27",
-    "hash": "a0a2dac0d75aeb9a"
+    "hash": "13bc78202ec865f1"
   },
   "https://predicttherace.com/privacy/": {
     "datum": "2026-09-26",
@@ -63,6 +63,6 @@
   },
   "https://predicttherace.com/pt/": {
     "datum": "2026-09-27",
-    "hash": "50515e36805e5e1f"
+    "hash": "a7d15f8c78116517"
   }
 }

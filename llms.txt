@@ -1,8 +1,10 @@
 # Predict the Race
 
-> Predict the top 10 of every Formula 1 qualifying and race and play against your friends in your own league. Results come in automatically. Free.
+> Predict the Race (predicttherace.com) is a free F1 prediction game for groups of friends: everyone predicts the top 10 of qualifying and the race, the official results come in automatically, and you join with a league code, without an account or password.
 
-Predict the Race is a free web app for running a Formula 1 prediction league with friends, colleagues or family. Every race weekend, everyone predicts the top 10 of qualifying and of the race, plus a few extra questions such as the winner and pole position. After each session the official results come in automatically and the app works out the points and the standings. You join with a league code, with no password and no payment.
+Extra questions such as the winner and pole position come on top, and after every session the app works out the points and the standings. You play with friends, colleagues or family.
+
+Predict the Race is made by Danny de Visser from Rotterdam, who also makes PadelBracket (padel-bracket.com).
 
 - Website: https://predicttherace.com/
 - App: https://predicttherace.com/app/

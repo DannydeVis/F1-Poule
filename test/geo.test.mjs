@@ -1,0 +1,148 @@
+// Overal hetzelfde verhaal (zoekplan GEO fase 1).
+//
+// Een AI-assistent vat samen wat hij op verschillende plekken leest. Staat daar
+// telkens dezelfde zin met dezelfde vier feiten (gratis, voor vrienden, de top
+// 10, uitslagen vanzelf), dan beschrijft hij Predict the Race ook zo. Varianten
+// maken het vaag, en een oude zin ergens blijft hij herhalen.
+//
+// Draait zonder browser: leest site/teksten.mjs, de gegenereerde pagina's,
+// llms.txt en de README.
+//
+// Wat hier vastligt:
+//   1. Elke taal heeft een kernzin, een korte kernzin (hoogstens 160 tekens,
+//      voor plekken met een limiet) en een zin over de maker. Het domein komt
+//      uit BASIS, niet overgetypt.
+//   2. Het antwoordblok "Wat is Predict the Race?" begint in elke taal
+//      letterlijk met de kernzin en blijft onder de 80 woorden.
+//   3. llms.txt begint met de Engelse kernzin en noemt de maker; de README
+//      begint met dezelfde Engelse zinnen en noemt zichzelf geen privéproject.
+//   4. In de JSON-LD: de Organization heeft de kernzin als beschrijving, de
+//      maker de makerzin en sameAs met zijn echte profielen, in de taal van de
+//      pagina.
+//   5. Elke @id waarnaar een pagina verwijst, is ergens op de site volledig
+//      beschreven.
+//   6. Staat er een about-pagina (id 'over' in site/paginas.mjs), dan begint
+//      die met de kernzin.
+
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { maakControle, wortel } from './hulp.mjs';
+import { teksten, TALEN, BASIS, MAKER } from '../site/teksten.mjs';
+import { PRIVACY } from '../site/privacy.mjs';
+import { PAGINAS } from '../site/paginas.mjs';
+
+const { check, afronden } = maakControle('overal hetzelfde verhaal');
+
+const DOMEIN = new URL(BASIS).host;
+const zin = (code, welke) => String(teksten[code][welke] ?? '').replaceAll('{domein}', DOMEIN);
+const ontdoe = (s) => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#39;|&apos;/g, '\'')
+  .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
+const pad = (p) => (p ? `${p}/index.html` : 'index.html');
+const lees = (bestand) => readFileSync(join(wortel, ...bestand.split('/')), 'utf8');
+const graaf = (html) => [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
+  .flatMap(([, x]) => { try { return JSON.parse(x)['@graph'] ?? []; } catch { return []; } });
+
+// ---- 1. de zinnen zelf ----------------------------------------------------------------
+{
+  const mis = TALEN.filter((c) => !['kernzin', 'kernzinKort', 'makerzin'].every((k) => teksten[c][k]?.trim())
+    || !teksten[c].antwoord?.vervolg?.trim());
+  check('elke taal heeft een kernzin, een korte kernzin, een makerzin en het vervolg van het antwoordblok',
+    mis.length === 0, mis.join(', '));
+  const lang = TALEN.filter((c) => zin(c, 'kernzinKort').length > 160).map((c) => `${c} ${zin(c, 'kernzinKort').length}`);
+  check('de korte kernzin telt hoogstens 160 tekens', lang.length === 0, lang.join(', '));
+  const domein = TALEN.filter((c) => !teksten[c].kernzin.includes('{domein}') || teksten[c].kernzin.includes(DOMEIN));
+  check('het domein in de kernzin komt uit BASIS ({domein}), niet overgetypt', domein.length === 0, domein.join(', '));
+  const maker = TALEN.filter((c) => !zin(c, 'makerzin').includes(MAKER.naam));
+  check('de makerzin noemt de maker bij naam', maker.length === 0, maker.join(', '));
+}
+
+// ---- 2. het antwoordblok ----------------------------------------------------------
+{
+  const fout = [];
+  for (const c of TALEN) {
+    const html = lees(pad(teksten[c].pad));
+    const p = html.match(/<section class="antwoord" id="wat">[\s\S]*?<p>([\s\S]*?)<\/p>/)?.[1];
+    const tekst = p ? ontdoe(p) : '';
+    const woorden = tekst.split(/\s+/).filter(Boolean).length;
+    if (!tekst.startsWith(zin(c, 'kernzin'))) fout.push(`${c}: begint niet met de kernzin`);
+    if (woorden >= 80) fout.push(`${c}: ${woorden} woorden`);
+  }
+  check('het antwoordblok begint in elke taal letterlijk met de kernzin, en blijft onder de 80 woorden',
+    fout.length === 0, fout.join(' | '));
+}
+
+// ---- 3. llms.txt en de README ----------------------------------------------------
+{
+  const llms = lees('llms.txt');
+  check('llms.txt begint met de Engelse kernzin en noemt de maker',
+    llms.startsWith(`# Predict the Race\n\n> ${zin('en', 'kernzin')}\n`) && llms.includes(zin('en', 'makerzin')),
+    llms.split('\n').slice(0, 3).join(' / '));
+  const readme = lees('README.md');
+  const eerste = readme.split('\n**')[0];
+  check('de README begint met dezelfde Engelse kernzin en makerzin',
+    eerste.includes(zin('en', 'kernzin')) && eerste.includes(zin('en', 'makerzin')), eerste.slice(0, 120));
+  check('en noemt zichzelf geen privéproject meer', !/privéproject/i.test(readme), '');
+}
+
+// ---- 4. de JSON-LD: Organization en maker --------------------------------------------
+{
+  const fout = [];
+  for (const c of TALEN) {
+    const g = graaf(lees(pad(teksten[c].pad)));
+    const org = g.find((x) => x['@type'] === 'Organization');
+    const mens = g.find((x) => x['@type'] === 'Person' && x['@id'] === `${BASIS}/#maker`);
+    if (org?.description !== zin(c, 'kernzin')) fout.push(`${c}: Organization zonder de kernzin`);
+    if (mens?.description !== zin(c, 'makerzin')) fout.push(`${c}: maker zonder de makerzin`);
+    if (JSON.stringify(mens?.sameAs) !== JSON.stringify(MAKER.sameAs)) fout.push(`${c}: maker zonder sameAs`);
+  }
+  for (const pg of PAGINAS) {
+    for (const [c, t] of Object.entries(pg.talen)) {
+      const mens = graaf(lees(pad(t.pad))).find((x) => x['@type'] === 'Person');
+      if (mens && (mens.description !== zin(c, 'makerzin') || JSON.stringify(mens.sameAs) !== JSON.stringify(MAKER.sameAs))) {
+        fout.push(`${pg.id} (${c}): maker anders dan op de voorpagina`);
+      }
+    }
+  }
+  check('de Organization heeft de kernzin, de maker de makerzin en sameAs, in de taal van de pagina',
+    fout.length === 0 && MAKER.sameAs.length >= 2, fout.join(' | '));
+  const echt = MAKER.sameAs.every((u) => /^https:\/\/(github\.com\/DannydeVis|padel-bracket\.com\/)/.test(u));
+  check('sameAs wijst alleen naar profielen van de maker zelf (GitHub, PadelBracket)', echt, MAKER.sameAs.join(' '));
+}
+
+// ---- 5. elke verwijzing is ergens beschreven ----------------------------------------
+{
+  const bestanden = [
+    ...TALEN.map((c) => pad(teksten[c].pad)),
+    ...Object.values(PRIVACY).map((p) => pad(p.pad)),
+    ...PAGINAS.flatMap((pg) => Object.values(pg.talen).map((t) => pad(t.pad))),
+  ];
+  const beschreven = new Set();
+  const verwezen = new Map();
+  const loop = (knoop, waar) => {
+    if (Array.isArray(knoop)) return knoop.forEach((x) => loop(x, waar));
+    if (!knoop || typeof knoop !== 'object') return;
+    const sleutels = Object.keys(knoop);
+    if (knoop['@id'] && sleutels.length === 1) {
+      if (!verwezen.has(knoop['@id'])) verwezen.set(knoop['@id'], waar);
+    } else if (knoop['@id'] && knoop['@type']) beschreven.add(knoop['@id']);
+    for (const k of sleutels) if (k !== '@id') loop(knoop[k], waar);
+  };
+  for (const b of bestanden) loop(graaf(lees(b)), b);
+  const los = [...verwezen].filter(([id]) => !beschreven.has(id)).map(([id, waar]) => `${id} (vanaf ${waar})`);
+  check('elke @id waarnaar verwezen wordt, is ergens op de site volledig beschreven',
+    verwezen.size > 0 && los.length === 0, los.join(' | ') || `${verwezen.size} verwijzingen`);
+}
+
+// ---- 6. de about-pagina, zodra die er is ------------------------------------------------
+{
+  const over = PAGINAS.find((pg) => pg.id === 'over');
+  const fout = over ? Object.entries(over.talen).filter(([c, t]) => {
+    const main = lees(pad(t.pad));
+    const eerste = main.match(/<p class="kort[^"]*">([\s\S]*?)<\/p>/)?.[1] ?? '';
+    return !ontdoe(eerste).startsWith(zin(c, 'kernzin'));
+  }).map(([c]) => c) : [];
+  check(over ? 'de about-pagina begint met de kernzin' : 'nog geen about-pagina (id "over"); zodra die er is, begint hij met de kernzin',
+    fout.length === 0, fout.join(', '));
+}
+
+process.exit(afronden() ? 0 : 1);

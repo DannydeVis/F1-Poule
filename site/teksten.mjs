@@ -17,7 +17,12 @@
 // opnieuw.
 
 export const BASIS = 'https://predicttherace.com';
-export const MAKER = { naam: 'Danny de Visser', url: 'https://github.com/DannydeVis' };
+// De maker. sameAs: alleen profielen die echt van Danny zijn (zoekplan GEO 1.3).
+export const MAKER = {
+  naam: 'Danny de Visser',
+  url: 'https://github.com/DannydeVis',
+  sameAs: ['https://github.com/DannydeVis', 'https://padel-bracket.com/en/about/'],
+};
 export const BRON = 'https://github.com/DannydeVis/F1-Poule';
 // De sleutel voor IndexNow (scripts/indexnow.mjs). Hij is openbaar: de
 // generator zet hem als <sleutel>.txt in de hoofdmap, zodat Bing kan nagaan dat
@@ -47,9 +52,15 @@ export const teksten = {
       vertrouwen: ['Gratis', 'Geen wachtwoord', 'Geen advertenties', 'Op elke telefoon'],
       chips: ['P1 exact · +5', 'Joker · 2×', 'Jij wint het weekend'],
     },
+    // Overal letterlijk dezelfde zin (zoekplan GEO 1.1): het antwoordblok
+    // hieronder, de Organization in de JSON-LD, llms.txt en de README.
+    kernzin: 'Predict the Race ({domein}) is een gratis F1-poule voor vriendengroepen: iedereen voorspelt de top 10 van de kwalificatie en de race, de officiële uitslagen komen automatisch binnen, en je doet mee met een poulecode, zonder account of wachtwoord.',
+    kernzinKort: 'Gratis F1-poule voor vrienden: voorspel de top 10 van kwalificatie en race, de uitslagen komen vanzelf binnen. Geen account nodig.',
+    makerzin: 'Predict the Race wordt gemaakt door Danny de Visser uit Rotterdam, die ook PadelBracket (padel-bracket.com) maakt.',
     antwoord: {
       kop: 'Wat is Predict the Race?',
-      tekst: 'Predict the Race is een gratis webapp waarmee je met vrienden, collega\'s of familie een Formule 1-poule speelt. Iedereen voorspelt per raceweekend de top 10 van de kwalificatie en van de race, plus een paar losse vragen zoals de winnaar en de pole position. Na elke sessie komen de officiële uitslagen automatisch binnen en rekent de app de punten en de stand uit. Je doet mee met een poulecode, zonder wachtwoord en zonder te betalen.',
+      // Na de kernzin; samen onder de 80 woorden.
+      vervolg: 'Daarbij komen losse vragen zoals de winnaar en de pole position, en na elke sessie rekent de app de punten en de stand vanzelf uit. Je speelt met vrienden, collega\'s of familie.',
     },
     ticker: ['Voorspel de top 10', '{exact} punten voor een exacte plek', 'Joker: alles dubbel', 'Uitslagen komen vanzelf', '{meest} vragen of maar 2', 'Gratis en zonder advertenties'],
     cijfers: ['vragen om te voorspellen', 'punten voor een exacte plek', 'euro, nu en altijd'],
@@ -170,9 +181,15 @@ export const teksten = {
       vertrouwen: ['Free', 'No password', 'No ads', 'Works on any phone'],
       chips: ['P1 spot on · +5', 'Joker · 2×', 'You win the weekend'],
     },
+    // Overal letterlijk dezelfde zin (zoekplan GEO 1.1): het antwoordblok
+    // hieronder, de Organization in de JSON-LD, llms.txt en de README.
+    kernzin: 'Predict the Race ({domein}) is a free F1 prediction game for groups of friends: everyone predicts the top 10 of qualifying and the race, the official results come in automatically, and you join with a league code, without an account or password.',
+    kernzinKort: 'Free F1 prediction game for friends: predict the top 10 of qualifying and the race, results come in automatically. No account needed.',
+    makerzin: 'Predict the Race is made by Danny de Visser from Rotterdam, who also makes PadelBracket (padel-bracket.com).',
     antwoord: {
       kop: 'What is Predict the Race?',
-      tekst: 'Predict the Race is a free web app for running a Formula 1 prediction league with friends, colleagues or family. Every race weekend, everyone predicts the top 10 of qualifying and of the race, plus a few extra questions such as the winner and pole position. After each session the official results come in automatically and the app works out the points and the standings. You join with a league code, with no password and no payment.',
+      // Na de kernzin; samen onder de 80 woorden.
+      vervolg: 'Extra questions such as the winner and pole position come on top, and after every session the app works out the points and the standings. You play with friends, colleagues or family.',
     },
     ticker: ['Predict the top 10', '{exact} points for an exact spot', 'Joker: everything doubles', 'Results come in by themselves', '{meest} questions or just 2', 'Free and without ads'],
     cijfers: ['questions to predict', 'points for an exact spot', 'euros, now and always'],
@@ -293,9 +310,15 @@ export const teksten = {
       vertrouwen: ['Kostenlos', 'Kein Passwort', 'Keine Werbung', 'Auf jedem Handy'],
       chips: ['P1 exakt · +5', 'Joker · 2×', 'Du gewinnst das Wochenende'],
     },
+    // Overal letterlijk dezelfde zin (zoekplan GEO 1.1): het antwoordblok
+    // hieronder, de Organization in de JSON-LD, llms.txt en de README.
+    kernzin: 'Predict the Race ({domein}) ist ein kostenloses F1-Tippspiel für Freundesgruppen: Alle tippen die Top 10 von Qualifying und Rennen, die offiziellen Ergebnisse kommen automatisch, und du machst mit einem Code mit, ohne Konto und ohne Passwort.',
+    kernzinKort: 'Kostenloses F1-Tippspiel für Freunde: Tippe die Top 10 von Qualifying und Rennen, die Ergebnisse kommen von selbst. Kein Konto nötig.',
+    makerzin: 'Predict the Race wird von Danny de Visser aus Rotterdam gemacht, der auch PadelBracket (padel-bracket.com) macht.',
     antwoord: {
       kop: 'Was ist Predict the Race?',
-      tekst: 'Predict the Race ist eine kostenlose Web-App, mit der du mit Freunden, Kollegen oder der Familie ein Formel-1-Tippspiel spielst. An jedem Rennwochenende tippen alle die Top 10 des Qualifyings und des Rennens, dazu ein paar Zusatzfragen wie den Sieger und die Pole-Position. Nach jeder Session kommen die offiziellen Ergebnisse automatisch, und die App berechnet Punkte und Tabelle. Du machst mit einem Code mit, ohne Passwort und ohne zu bezahlen.',
+      // Na de kernzin; samen onder de 80 woorden.
+      vervolg: 'Dazu kommen Zusatzfragen wie der Sieger und die Pole-Position, und nach jeder Session berechnet die App Punkte und Tabelle von selbst. Du spielst mit Freunden, Kollegen oder der Familie.',
     },
     ticker: ['Tippe die Top 10', '{exact} Punkte für einen exakten Platz', 'Joker: alles doppelt', 'Ergebnisse kommen von selbst', '{meest} Fragen oder nur 2', 'Kostenlos und ohne Werbung'],
     cijfers: ['Fragen zum Tippen', 'Punkte für einen exakten Platz', 'Euro, jetzt und immer'],
@@ -416,9 +439,15 @@ export const teksten = {
       vertrouwen: ['Gratuit', 'Sans mot de passe', 'Sans publicité', 'Sur tous les téléphones'],
       chips: ['P1 exact · +5', 'Joker · 2×', 'Vous gagnez le week-end'],
     },
+    // Overal letterlijk dezelfde zin (zoekplan GEO 1.1): het antwoordblok
+    // hieronder, de Organization in de JSON-LD, llms.txt en de README.
+    kernzin: 'Predict the Race ({domein}) est un jeu de pronostics F1 gratuit pour groupes d\'amis : chacun pronostique le top 10 des qualifications et de la course, les résultats officiels arrivent automatiquement, et on rejoint une ligue avec un code, sans compte ni mot de passe.',
+    kernzinKort: 'Pronostics F1 gratuits entre amis : pronostiquez le top 10 des qualifications et de la course, les résultats arrivent tout seuls. Sans compte.',
+    makerzin: 'Predict the Race est créé par Danny de Visser, de Rotterdam, qui crée aussi PadelBracket (padel-bracket.com).',
     antwoord: {
       kop: 'Qu\'est-ce que Predict the Race ?',
-      tekst: 'Predict the Race est une application web gratuite pour jouer aux pronostics de Formule 1 entre amis, collègues ou en famille. À chaque week-end de course, chacun pronostique le top 10 des qualifications et de la course, plus quelques questions bonus comme le vainqueur et la pole position. Après chaque séance, les résultats officiels arrivent automatiquement et l\'application calcule les points et le classement. On rejoint une ligue avec un code, sans mot de passe et sans payer.',
+      // Na de kernzin; samen onder de 80 woorden.
+      vervolg: 'S\'y ajoutent des questions bonus comme le vainqueur et la pole position, et après chaque séance l\'application calcule les points et le classement. On joue entre amis, collègues ou en famille.',
     },
     ticker: ['Pronostiquez le top 10', '{exact} points pour une place exacte', 'Joker : tout compte double', 'Les résultats arrivent tout seuls', '{meest} questions ou seulement 2', 'Gratuit et sans publicité'],
     cijfers: ['questions à pronostiquer', 'points pour une place exacte', 'euro, maintenant et toujours'],
@@ -539,9 +568,15 @@ export const teksten = {
       vertrouwen: ['Gratis', 'Sin contraseña', 'Sin anuncios', 'En cualquier móvil'],
       chips: ['P1 exacto · +5', 'Comodín · 2×', 'Ganas el fin de semana'],
     },
+    // Overal letterlijk dezelfde zin (zoekplan GEO 1.1): het antwoordblok
+    // hieronder, de Organization in de JSON-LD, llms.txt en de README.
+    kernzin: 'Predict the Race ({domein}) es una porra de F1 gratis para grupos de amigos: todos predicen el top 10 de la clasificación y de la carrera, los resultados oficiales llegan automáticamente y te unes con un código, sin cuenta ni contraseña.',
+    kernzinKort: 'Porra de F1 gratis con amigos: predice el top 10 de la clasificación y de la carrera, los resultados llegan solos. Sin cuenta.',
+    makerzin: 'Predict the Race lo hace Danny de Visser, de Róterdam, que también hace PadelBracket (padel-bracket.com).',
     antwoord: {
       kop: '¿Qué es Predict the Race?',
-      tekst: 'Predict the Race es una aplicación web gratuita para jugar una porra de Fórmula 1 con amigos, compañeros de trabajo o familia. Cada fin de semana de carrera, todos predicen el top 10 de la clasificación y de la carrera, además de algunas preguntas extra como el ganador y la pole position. Después de cada sesión, los resultados oficiales llegan automáticamente y la app calcula los puntos y la clasificación. Te unes con un código, sin contraseña y sin pagar.',
+      // Na de kernzin; samen onder de 80 woorden.
+      vervolg: 'Además hay preguntas extra como el ganador y la pole position, y después de cada sesión la app calcula sola los puntos y la clasificación. Juegas con amigos, compañeros de trabajo o familia.',
     },
     ticker: ['Predice el top 10', '{exact} puntos por una posición exacta', 'Comodín: todo vale doble', 'Los resultados llegan solos', '{meest} preguntas o solo 2', 'Gratis y sin anuncios'],
     cijfers: ['preguntas para predecir', 'puntos por una posición exacta', 'euros, ahora y siempre'],
@@ -662,9 +697,15 @@ export const teksten = {
       vertrouwen: ['Gratis', 'Senza password', 'Senza pubblicità', 'Su ogni telefono'],
       chips: ['P1 esatto · +5', 'Jolly · 2×', 'Vinci il weekend'],
     },
+    // Overal letterlijk dezelfde zin (zoekplan GEO 1.1): het antwoordblok
+    // hieronder, de Organization in de JSON-LD, llms.txt en de README.
+    kernzin: 'Predict the Race ({domein}) è un gioco di pronostici F1 gratuito per gruppi di amici: tutti pronosticano la top 10 di qualifiche e gara, i risultati ufficiali arrivano automaticamente e si partecipa con un codice, senza account né password.',
+    kernzinKort: 'Pronostici F1 gratis con gli amici: pronostica la top 10 di qualifiche e gara, i risultati arrivano da soli. Nessun account.',
+    makerzin: 'Predict the Race è realizzato da Danny de Visser, di Rotterdam, che realizza anche PadelBracket (padel-bracket.com).',
     antwoord: {
       kop: 'Che cos\'è Predict the Race?',
-      tekst: 'Predict the Race è un\'app web gratuita per giocare ai pronostici di Formula 1 con amici, colleghi o in famiglia. A ogni weekend di gara, tutti pronosticano la top 10 delle qualifiche e della gara, più alcune domande extra come il vincitore e la pole position. Dopo ogni sessione i risultati ufficiali arrivano automaticamente e l\'app calcola punti e classifica. Si partecipa con un codice, senza password e senza pagare.',
+      // Na de kernzin; samen onder de 80 woorden.
+      vervolg: 'In più ci sono domande extra come il vincitore e la pole position, e dopo ogni sessione l\'app calcola da sola punti e classifica. Si gioca con amici, colleghi o in famiglia.',
     },
     ticker: ['Pronostica la top 10', '{exact} punti per una posizione esatta', 'Jolly: tutto vale doppio', 'I risultati arrivano da soli', '{meest} domande o solo 2', 'Gratis e senza pubblicità'],
     cijfers: ['domande da pronosticare', 'punti per una posizione esatta', 'euro, ora e sempre'],
@@ -785,9 +826,15 @@ export const teksten = {
       vertrouwen: ['Grátis', 'Sem senha', 'Sem anúncios', 'Em qualquer celular'],
       chips: ['P1 exato · +5', 'Coringa · 2×', 'Você vence o fim de semana'],
     },
+    // Overal letterlijk dezelfde zin (zoekplan GEO 1.1): het antwoordblok
+    // hieronder, de Organization in de JSON-LD, llms.txt en de README.
+    kernzin: 'O Predict the Race ({domein}) é um bolão de F1 grátis para grupos de amigos: todos dão palpites no top 10 da classificação e da corrida, os resultados oficiais chegam automaticamente e você entra com um código, sem conta nem senha.',
+    kernzinKort: 'Bolão de F1 grátis com amigos: palpite no top 10 da classificação e da corrida, os resultados chegam sozinhos. Sem conta.',
+    makerzin: 'O Predict the Race é feito por Danny de Visser, de Roterdã, que também faz o PadelBracket (padel-bracket.com).',
     antwoord: {
       kop: 'O que é o Predict the Race?',
-      tekst: 'O Predict the Race é um app web gratuito para fazer um bolão de Fórmula 1 com amigos, colegas ou a família. Em cada fim de semana de corrida, todos dão palpites no top 10 da classificação e da corrida, além de algumas perguntas extras como o vencedor e a pole position. Depois de cada sessão, os resultados oficiais chegam automaticamente e o app calcula os pontos e a classificação. Você entra com um código, sem senha e sem pagar.',
+      // Na de kernzin; samen onder de 80 woorden.
+      vervolg: 'Além disso há perguntas extras como o vencedor e a pole position, e depois de cada sessão o app calcula sozinho os pontos e a classificação. Você joga com amigos, colegas ou a família.',
     },
     ticker: ['Palpite no top 10', '{exact} pontos por uma posição exata', 'Coringa: tudo vale o dobro', 'Os resultados chegam sozinhos', '{meest} perguntas ou só 2', 'Grátis e sem anúncios'],
     cijfers: ['perguntas para palpitar', 'pontos por uma posição exata', 'euros, agora e sempre'],

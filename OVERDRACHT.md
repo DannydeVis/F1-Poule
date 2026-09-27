@@ -8296,3 +8296,67 @@ naar url, één POST met de goede velden, niets versturen bij alleen
 `kalender.ics`, `--droog` en `--alles`, 202 goed en 403 fout, en de trigger van
 de workflow. Dertien mutanten, alle gevangen.
 
+## Zoekplan GEO fase 1: overal hetzelfde verhaal
+
+Danny stuurde het derde deel van het zoekplan, `3-geo.md` (nu in
+`docs/zoekplan/`). GEO gaat erover of AI-assistenten Predict the Race noemen,
+en goed beschrijven, als iemand vraagt welke app hij voor een F1-poule moet
+gebruiken. Fase 1 is dat die assistenten overal dezelfde zin lezen.
+
+**De zinnen** staan per taal in `site/teksten.mjs`:
+
+- `kernzin`: "Predict the Race ({domein}) is een gratis F1-poule voor
+  vriendengroepen: iedereen voorspelt de top 10 van de kwalificatie en de race,
+  de officiële uitslagen komen automatisch binnen, en je doet mee met een
+  poulecode, zonder account of wachtwoord." Het domein komt uit `BASIS`. De
+  Nederlandse en Engelse zin zijn die uit het plan, de andere vijf vertaalde
+  Claude Code met de woorden uit hun titels (Tippspiel, pronostics, porra,
+  pronostici, bolão).
+- `kernzinKort`: hoogstens 160 tekens, voor plekken met een limiet (de
+  beschrijving van de repo op GitHub, AlternativeTo).
+- `makerzin`: "Predict the Race wordt gemaakt door Danny de Visser uit
+  Rotterdam, die ook PadelBracket (padel-bracket.com) maakt." Uit het plan van
+  Danny zelf.
+
+**Waar ze letterlijk staan:**
+
+- *Het antwoordblok* "Wat is Predict the Race?" op de voorpagina begint nu in
+  alle zeven talen met de kernzin; daarna `antwoord.vervolg` (de losse vragen,
+  de punten, met wie je speelt). Tussen 65 en 76 woorden. Het oude blok zei
+  hetzelfde in andere woorden.
+- *De JSON-LD*: de Organization heeft de kernzin als `description`, de maker
+  (`#maker`, via `persoon()` in `maak-site.mjs`, op de voorpagina en de gidsen)
+  de makerzin en `sameAs` met zijn GitHub-profiel en de about-pagina van
+  PadelBracket (`MAKER.sameAs`). Alles in de taal van de pagina. Het adres
+  (Rotterdam) komt pas op de about-pagina, zoals het plan zegt.
+- *llms.txt* begint met de Engelse kernzin en noemt de maker.
+- *De README* begint met een Engelse alinea: de kernzin, de makerzin en de
+  link. Onderaan staat niet meer "privéproject" maar "een gratis, openbaar
+  fanproject". Een licentie is er nog steeds niet; dat beslist Danny.
+
+Wat het plan onder 1.2 nog noemde, was al gedaan (SEO fase 0): "no trackers"
+is weg uit llms.txt, en het commentaar over analytics in `maak-site.mjs` klopt.
+
+**Tests** (`test/geo.test.mjs`, zonder browser): de zinnen in elke taal, de
+korte kernzin hoogstens 160 tekens, het domein uit `BASIS`, het antwoordblok
+begint met de kernzin en blijft onder de 80 woorden, llms.txt en de README
+beginnen ermee, de Organization en de maker in de JSON-LD, `sameAs` alleen naar
+profielen van de maker, en elke `@id` waarnaar een pagina verwijst is ergens
+volledig beschreven. Zodra er een about-pagina is (id `over`), controleert de
+test ook dat die met de kernzin begint. Dertien mutanten, alle gevangen.
+
+**Wat Danny zelf doet (1.5, tien minuten op GitHub):** bij de repo het
+tandwiel naast About: beschrijving `kernzinKort` in het Engels ("Free F1
+prediction game for friends: predict the top 10 of qualifying and the race,
+results come in automatically. No account needed."), website
+`https://predicttherace.com`, topics `formula1`, `f1`, `prediction-game`,
+`pwa`, `supabase`, `openf1`. En het profiel: naam, bio ("Maker van Predict the
+Race en PadelBracket"), website en plaats; `sameAs` wijst ernaar. Claude Code
+kan die instellingen niet aanpassen. Fase 0 (de nulmeting, dertig minuten) en
+fase 5 (vermeldingen op andere sites) zijn ook voor Danny; de promptset en de
+tabellen staan in `docs/zoekplan/meting.md`.
+
+**Volgende stappen uit het plan:** fase 2 (llms.txt opnieuw opbouwen) na SEO
+fase 2; fase 3 (eigen cijfers: hoe voorspelbaar was 2026, de week na Abu Dhabi,
+en safety cars per circuit); fase 4 met de vergelijkingspagina.
+
