@@ -8255,3 +8255,44 @@ volgens de tabellen in het plan, deels al gedaan in fase 2) hoort bij SEO fase
 de jokers, als woord in zeven talen. Dat klopt (`JOKERS_STANDAARD` is 5), maar
 volgt de app niet vanzelf.
 
+## Zoekplan SEO fase 3: IndexNow
+
+**Wat het is.** Na elke deploy van de site krijgen Bing en de andere
+zoekmachines die aan IndexNow meedoen te horen welke pagina's veranderden, in
+plaats van te wachten op hun crawler. Via Bing pikken ook Copilot en deels
+ChatGPT nieuwe pagina's sneller op. Google doet niet mee en leest de sitemap.
+
+- *De sleutel* (`INDEXNOW_SLEUTEL` in `site/teksten.mjs`, 32 hex-tekens, eigen
+  sleutel, niet die van PadelBracket) is openbaar. `maak-site.mjs` schrijft hem
+  als `1a4736ac820aaebfde621c7e0963f5b6.txt` in de hoofdmap; daar kijkt
+  IndexNow of een melding van deze site komt, en `--controle` bewaakt het.
+- *`scripts/indexnow.mjs`* maakt van gewijzigde bestanden url's: `index.html`
+  wordt de map erboven, `sitemap.xml` blijft `sitemap.xml`, en alleen wat in
+  de sitemap staat telt (dus nooit de app, het beheer of `404.html`). Dan één
+  POST naar `api.indexnow.org` met host, key, keyLocation en urlList. Met
+  `--droog` alleen laten zien, met `--alles` de hele sitemap.
+- *`.github/workflows/indexnow.yml`* draait na GitHub's eigen workflow
+  `pages-build-deployment` (workflow_run), alleen als die lukte, en geeft
+  `git diff --name-only HEAD^1 HEAD` van de gedeployde commit door. Een commit
+  van de sync verandert meestal alleen `kalender.ics`; dan meldt het script
+  niets. Met de knop kan het ook voor alles.
+
+**Nog na te kijken bij de eerste deploy na deze merge:** of de workflow_run
+achter `pages-build-deployment` echt afgaat (in het Actions-tabblad staat dan
+een run van "IndexNow" vlak na "pages-build-deployment"). Een
+deployment_status-trigger is bewust niet gekozen: die deployment maakt GitHub
+met het GITHUB_TOKEN, en gebeurtenissen van dat token starten normaal geen
+workflow. Gaat workflow_run ook niet af, dan kan de stap achteraan de
+testworkflow op main, na een push.
+
+Het verschil met de vorige commit mist iets als één push meerdere commits
+bevat en alleen de laatste gedeployd wordt; dan staat de pagina wel in de
+volgende ronde van de crawler. De knop met "alles" meldt de hele sitemap
+opnieuw.
+
+**Tests** (`test/indexnow.test.mjs`, zonder internet, tegen een nagebootste
+IndexNow op localhost): de sleutel en het sleutelbestand, de omzetting van pad
+naar url, één POST met de goede velden, niets versturen bij alleen
+`kalender.ics`, `--droog` en `--alles`, 202 goed en 403 fout, en de trigger van
+de workflow. Dertien mutanten, alle gevangen.
+

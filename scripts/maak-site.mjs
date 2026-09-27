@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Maakt de landingspagina's, de privacyverklaring, de sitemap, robots.txt,
- * llms.txt en 404.html uit site/teksten.mjs en site/privacy.mjs.
+ * llms.txt, 404.html en het sleutelbestand van IndexNow uit site/teksten.mjs
+ * en site/privacy.mjs.
  *
  *   node scripts/maak-site.mjs              schrijft alles weg
  *   node scripts/maak-site.mjs --controle   zegt alleen of het nog klopt
@@ -36,7 +37,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { teksten, TALEN, STANDAARD, BASIS, MAKER, BRON } from '../site/teksten.mjs';
+import { teksten, TALEN, STANDAARD, BASIS, MAKER, BRON, INDEXNOW_SLEUTEL } from '../site/teksten.mjs';
 import { PRIVACY, CONTACT, PRIVACY_BIJGEWERKT, privacyTaal } from '../site/privacy.mjs';
 import { PAGINAS, PAGINA_UI } from '../site/paginas.mjs';
 import { knipUit } from './knipsel.mjs';
@@ -1651,6 +1652,9 @@ bestanden.set('sitemap.xml', sitemap());
 bestanden.set('robots.txt', ROBOTS);
 bestanden.set('llms.txt', llms());
 bestanden.set('404.html', NIET_GEVONDEN);
+// Het sleutelbestand van IndexNow: de sleutel zelf, niets anders.
+if (!/^[0-9a-f]{32}$/.test(INDEXNOW_SLEUTEL)) throw new Error('INDEXNOW_SLEUTEL in site/teksten.mjs is geen 32 hex-tekens');
+bestanden.set(`${INDEXNOW_SLEUTEL}.txt`, INDEXNOW_SLEUTEL);
 
 const verouderd = [];
 for (const [pad, inhoud] of bestanden) {

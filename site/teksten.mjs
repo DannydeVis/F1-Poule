@@ -19,6 +19,10 @@
 export const BASIS = 'https://predicttherace.com';
 export const MAKER = { naam: 'Danny de Visser', url: 'https://github.com/DannydeVis' };
 export const BRON = 'https://github.com/DannydeVis/F1-Poule';
+// De sleutel voor IndexNow (scripts/indexnow.mjs). Hij is openbaar: de
+// generator zet hem als <sleutel>.txt in de hoofdmap, zodat Bing kan nagaan dat
+// de meldingen van deze site komen. Eigen sleutel, niet die van PadelBracket.
+export const INDEXNOW_SLEUTEL = '1a4736ac820aaebfde621c7e0963f5b6';
 
 // Volgorde = volgorde in het taalmenu. Nederlands staat in de hoofdmap, net als
 // bij padel-bracket.com; Engels is de internationale standaard (x-default).
