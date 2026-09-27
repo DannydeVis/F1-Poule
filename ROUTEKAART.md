@@ -915,7 +915,7 @@ start van seizoen 2027 (februari en maart). Eén fase per branch.
 
 | fase | wat | status |
 |---|---|---|
-| SEO 0 | hygiëne: documenten van het domein, titels met de zoekterm eerst, sitenaam, datum per pagina, llms.txt eerlijk | **gebouwd en nagelopen** (26 september): documenten geven 404, redirects in orde, indexering aangevraagd, nulmeting in `docs/zoekplan/meting.md`. Bing nog na te kijken (`BEDIENING.md` §18) |
+| SEO 0 | hygiëne: documenten van het domein, titels met de zoekterm eerst, sitenaam, datum per pagina, llms.txt eerlijk | **gebouwd en nagelopen** (26 september): documenten geven 404, redirects in orde, indexering aangevraagd, nulmeting in `docs/zoekplan/meting.md`. Bing nagelopen op 27 september |
 | SEO 1 | de generator klaar voor meer paginasoorten (gidsen, about, vergelijking) | **gebouwd**, met de eerste gids (organiseren, NL en EN) als proef; online |
 | SEO 2 | kernpagina's in NL en EN (organiseren, puntentelling, excel, over, vergelijking) | **deels**: organiseren online; puntentelling en excel gebouwd, wachten op Danny's akkoord; over en vergelijking nog niet |
 | SEO 3 | IndexNow | **gebouwd en nagelopen** (27 september): na elke deploy gaan de gewijzigde pagina's naar IndexNow; de trigger werkt, de eerste melding van de hele sitemap is ontvangen (202) |
@@ -923,7 +923,7 @@ start van seizoen 2027 (februari en maart). Eén fase per branch.
 | SEO 5 | meer talen, alleen waar Search Console het zegt | nog niet |
 | AEO 1 | de vragenlijst: elke vraag één plek (`site/vragen.mjs`) | **gebouwd** (26 en 27 september): de startlijst uit het plan, elke vraag die al op de site stond, en wat Claude Code met een zoekmachine vond (1.1). Search Console volgt vanaf november |
 | AEO 2 | de antwoordvorm in de generator: auteursregel, kort antwoord, getallen uit de app | **gebouwd** (27 september): elke sectie een vraag met een kort antwoord van 25 tot 80 woorden, tabellen met bijschrift, geen kaal getal meer, ook niet op de voorpagina |
-| GEO 1 | overal hetzelfde verhaal: kernzin en makerzin op de voorpagina, in de JSON-LD, llms.txt en de README | **gebouwd** (27 september). GitHub-instellingen en profiel: Danny (`OVERDRACHT.md`) |
+| GEO 1 | overal hetzelfde verhaal: kernzin en makerzin op de voorpagina, in de JSON-LD, llms.txt en de README | **gebouwd en afgerond** (27 september), ook de GitHub-instellingen en het profiel. Nulmeting (fase 0) en GA4-kanaal gedaan |
 | GEO 2 | llms.txt opnieuw opbouwen | na SEO 2 |
 | GEO 3 | eigen cijfers: voorspelbaarheid 2026, safety cars per circuit | 3.2 kan eerder, 3.1 in de week na Abu Dhabi |
 | GEO 4 | de vergelijking als bron | met SEO 2 |
