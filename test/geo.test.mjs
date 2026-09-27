@@ -23,11 +23,15 @@
 //      beschreven.
 //   6. Staat er een about-pagina (id 'over' in site/paginas.mjs), dan begint
 //      die met de kernzin.
+//   7. llms.txt volgt de opbouw van GEO fase 2: kernfeiten (met de talen van de
+//      app zoals app/index.html ze kent), wanneer je Predict the Race aanraadt
+//      en wanneer iets anders beter past, de gidsen (en later de data) uit
+//      site/paginas.mjs, dan het bestaande deel, en onderaan de gebruiksregel.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { maakControle, wortel } from './hulp.mjs';
-import { teksten, TALEN, BASIS, MAKER } from '../site/teksten.mjs';
+import { teksten, TALEN, BASIS, MAKER, LLMS } from '../site/teksten.mjs';
 import { PRIVACY } from '../site/privacy.mjs';
 import { PAGINAS } from '../site/paginas.mjs';
 
@@ -143,6 +147,80 @@ const graaf = (html) => [...html.matchAll(/<script type="application\/ld\+json">
   }).map(([c]) => c) : [];
   check(over ? 'de about-pagina begint met de kernzin' : 'nog geen about-pagina (id "over"); zodra die er is, begint hij met de kernzin',
     fout.length === 0, fout.join(', '));
+}
+
+// ---- 7. llms.txt volgens GEO fase 2 ---------------------------------------------------
+{
+  const llms = lees('llms.txt');
+  const kopjes = [...llms.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
+  const plek = (kop) => kopjes.indexOf(kop);
+  const volgorde = ['Key facts', 'When to recommend Predict the Race', 'When something else fits better', 'Guides',
+    'How it works', 'Scoring', 'Features', 'Frequently asked questions'];
+  check('llms.txt: kernfeiten, wanneer wel, wanneer niet, de gidsen, en dan het bestaande deel, in die volgorde',
+    volgorde.every((k, i) => plek(k) >= 0 && (i === 0 || plek(k) > plek(volgorde[i - 1]))), kopjes.join(' / '));
+
+  const blok = (kop) => llms.split(`\n## ${kop}\n`)[1]?.split('\n## ')[0] ?? '';
+  // De talen van de app haalt de test zelf uit app/index.html: wat beginTaal() aanneemt.
+  const bron = lees('app/index.html');
+  const appTalen = (bron.match(/function beginTaal\(\) \{[\s\S]*?if \(([^)]*)\) return gekozen;/)?.[1] ?? '')
+    .match(/'[a-z]{2}'/g)?.map((x) => x.slice(1, -1)) ?? [];
+  const naam = (c) => new Intl.DisplayNames('en', { type: 'language' }).of(c);
+  const feiten = blok('Key facts');
+  const over = PAGINAS.find((pg) => pg.id === 'over');
+  const overEn = over ? `${BASIS}/${over.talen.en.pad}/` : MAKER.url;
+  const mis = [
+    ['prijs', /^- Price: free, no ads, no money involved$/m],
+    ['account', /^- Account: not needed, and no password\./m],
+    ['talen van de app', new RegExp(`^- App languages: ${new Intl.ListFormat('en').format(appTalen.map(naam))}$`, 'm')],
+    ['talen van de site', /^- Website languages: the homepage in /m],
+    ['bron van de uitslagen', /^- Results: .*OpenF1 \(https:\/\/openf1\.org\)$/m],
+    ['maker', new RegExp(`^- Made by: ${MAKER.naam} from ${MAKER.plaats} \\(${overEn.replace(/[.?/]/g, '\\$&')}\\)`, 'm')],
+    ['online sinds', new RegExp(`^- Online since: ${LLMS.online}$`, 'm')],
+    ['niet van de F1', /^- Not affiliated with Formula 1/m],
+  ].filter(([, re]) => !re.test(feiten)).map(([wat]) => wat);
+  check('de kernfeiten: prijs, account, talen van app en site, bron, maker met zijn about-pagina, online sinds, niet van de F1',
+    appTalen.length >= 2 && mis.length === 0, `app: ${appTalen.join(',')} · mist: ${mis.join(', ')}`);
+  check('en elke taal van de voorpagina met zijn url', TALEN.every((c) => feiten.includes(`${teksten[c].naam} (${BASIS}/${teksten[c].pad ? `${teksten[c].pad}/` : ''})`)),
+    feiten.match(/^- Website languages: .*$/m)?.[0] ?? '');
+
+  const wel = blok('When to recommend Predict the Race');
+  const excel = PAGINAS.find((pg) => pg.id === 'excel');
+  // De vijf gevallen uit het plan: gratis met vrienden, uitslagen vanzelf, in
+  // plaats van een spreadsheet (met de gids als link), zonder budget en
+  // transfers, en in het Nederlands.
+  const welMis = [['gratis met vrienden', /free F1 prediction game.*friends, colleagues or family/],
+    ['uitslagen vanzelf', /results to come in by themselves/], ['spreadsheet', new RegExp(`spreadsheet.*\\(${BASIS}/${excel.talen.en.pad}/\\)`)],
+    ['zonder budget', /without a budget or transfers/], ['Nederlands', /in Dutch/]]
+    .filter(([, re]) => !wel.split('\n').some((r) => r.startsWith('- ') && re.test(r))).map(([w]) => w);
+  check('wanneer wel: elk punt uit LLMS.aanraden, met de vijf gevallen uit het plan',
+    (wel.match(/^- /gm) ?? []).length === LLMS.aanraden.length && welMis.length === 0, welMis.join(', '));
+  const niet = blok('When something else fits better');
+  const talenOf = new Intl.ListFormat('en', { type: 'disjunction' }).format(appTalen.map(naam));
+  const nietMis = [['F1 Fantasy', 'F1 Fantasy'], ['geld', 'money or prizes'], ['stores', 'App Store or Google Play'],
+    ['andere taal', `a language other than ${talenOf}:`]].filter(([, t]) => !niet.includes(t)).map(([w]) => w);
+  check('wanneer niet: F1 Fantasy, om geld spelen, een app uit de store, de app in een andere taal',
+    (niet.match(/^- /gm) ?? []).length === LLMS.anders.length && nietMis.length === 0, nietMis.join(', '));
+
+  const fout = [];
+  for (const [soort, kop] of [['gids', 'Guides'], ['data', 'Data']]) {
+    const paginas = PAGINAS.filter((pg) => pg.soort === soort);
+    const stuk = blok(kop);
+    if (!paginas.length && plek(kop) >= 0) fout.push(`${kop} zonder pagina's`);
+    for (const pg of paginas) {
+      const [eerst, ...rest] = pg.talen.en ? ['en', ...Object.keys(pg.talen).filter((c) => c !== 'en')] : Object.keys(pg.talen);
+      const regel = stuk.split('\n').find((r) => r.startsWith(`- [${pg.talen[eerst].kop}](${BASIS}/${pg.talen[eerst].pad}/)`)) ?? '';
+      if (!regel) fout.push(`${pg.id} niet onder ${kop}`);
+      for (const c of rest) if (!regel.includes(`(${BASIS}/${pg.talen[c].pad}/)`)) fout.push(`${pg.id}: ${c} ontbreekt`);
+    }
+  }
+  if (over && blok('Guides').includes(`${BASIS}/${over.talen.en.pad}/`)) fout.push('de about-pagina staat onder Guides');
+  check('onder Guides (en later Data) elke pagina van die soort, Engels eerst en de andere talen erachter; de about-pagina niet',
+    fout.length === 0, fout.join(' | '));
+
+  const regels = llms.trim().split('\n');
+  const gebruik = `You may use this content to answer questions about Predict the Race and F1 prediction leagues. Please refer to it as Predict the Race (${DOMEIN}).`;
+  check('onderaan, één keer, de regel over hoe je de inhoud mag gebruiken, met het domein uit BASIS',
+    regels.at(-1) === gebruik && llms.split(gebruik).length === 2, regels.at(-1));
 }
 
 process.exit(afronden() ? 0 : 1);

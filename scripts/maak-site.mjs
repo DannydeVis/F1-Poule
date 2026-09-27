@@ -37,7 +37,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { teksten, TALEN, STANDAARD, BASIS, MAKER, BRON, INDEXNOW_SLEUTEL } from '../site/teksten.mjs';
+import { teksten, TALEN, STANDAARD, BASIS, MAKER, BRON, INDEXNOW_SLEUTEL, LLMS } from '../site/teksten.mjs';
 import { PRIVACY, CONTACT, PRIVACY_BIJGEWERKT, privacyTaal } from '../site/privacy.mjs';
 import { PAGINAS, PAGINA_UI } from '../site/paginas.mjs';
 import { knipUit } from './knipsel.mjs';
@@ -105,6 +105,10 @@ const VENSTER = Number(uitBron(readFileSync(join(wortel, 'scripts', 'herinnering
   /export const VENSTER_UREN = (\d+);/, 'VENSTER_UREN in scripts/herinneringen.mjs')[1]);
 const AGENDA_UUR = Number(uitBron(readFileSync(join(wortel, 'scripts', 'agenda.mjs'), 'utf8'),
   /'TRIGGER:-PT(\d+)H'/, 'de melding in scripts/agenda.mjs')[1]);
+// De talen van de app: wat beginTaal() in app/index.html als keuze aanneemt.
+// llms.txt noemt ze (en zegt wanneer de app dus niet past).
+const APP_TALEN = uitBron(appBron, /if \((gekozen === '[a-z]{2}'(?: \|\| gekozen === '[a-z]{2}')*)\) return gekozen;/,
+  'de talen in beginTaal() van app/index.html')[1].match(/'[a-z]{2}'/g).map((x) => x.slice(1, -1));
 // Het puntenschema van het WK zelf. De app gebruikt het alleen voor een
 // standaardlijst, maar de gids over puntentellingen vergelijkt ermee.
 const WK_PUNTEN = uitBron(appBron, /const WK_PUNTEN = \[([\d, ]+)\];/, 'WK_PUNTEN in app/index.html')[1]
@@ -1514,9 +1518,34 @@ Allow: /
 Sitemap: ${BASIS}/sitemap.xml
 `;
 
+// llms.txt, voor taalmodellen, in het Engels (zoekplan GEO fase 2). Bovenaan
+// de kernzin, dan de kernfeiten, wanneer je Predict the Race aanraadt en wanneer
+// iets anders beter past, de gidsen, en daarna hoe het werkt, de punten en de
+// FAQ. Onderaan één regel over hoe je de inhoud mag gebruiken. Alles uit de
+// generator: een feit dat hier met de hand staat, loopt uit de pas.
+// LLMS_SOORTEN: welke pagina's uit site/paginas.mjs een eigen kopje krijgen.
+// 'data' zijn de eigen cijfers van GEO fase 3; zolang die er niet zijn, geen kopje.
+const LLMS_SOORTEN = { gids: 'Guides', data: 'Data' };
+const taalNaamEn = (c) => new Intl.DisplayNames('en', { type: 'language' }).of(c);
+const opsomming = (xs, type = 'conjunction') => new Intl.ListFormat('en', { type }).format(xs);
+
 function llms() {
   const en = teksten.en;
   const vars = { maker: MAKER.naam, ...APP_GETALLEN };
+  const excel = PAGINAS.find((pg) => pg.id === 'excel');
+  const llmsVars = {
+    domein: DOMEIN,
+    excel: excel ? paginaUrl(excel, excel.talen.en ? 'en' : clusterVan(excel)[0]) : BASIS + '/',
+    apptalen: opsomming(APP_TALEN.map(taalNaamEn), 'disjunction'),
+  };
+  const paginaTalen = TALEN.filter((c) => PAGINAS.some((pg) => pg.talen[c]));
+  const lijst = (soort) => PAGINAS.filter((pg) => pg.soort === soort).map((pg) => {
+    const hoofd = pg.talen.en ? 'en' : clusterVan(pg)[0];
+    const rest = clusterVan(pg).filter((c) => c !== hoofd);
+    return `- [${pg.talen[hoofd].kop}](${paginaUrl(pg, hoofd)}): ${pg.talen[hoofd].omschrijving}${
+      rest.length ? ` Also in ${rest.map((c) => `${taalNaamEn(c)} (${paginaUrl(pg, c)})`).join(', ')}.` : ''}`;
+  });
+  const soorten = Object.entries(LLMS_SOORTEN).map(([soort, kop]) => [kop, lijst(soort)]).filter(([, l]) => l.length);
   return `# Predict the Race
 
 > ${zin('en', 'kernzin')}
@@ -1525,17 +1554,34 @@ ${en.antwoord.vervolg}
 
 ${zin('en', 'makerzin')}
 
+## Key facts
+
 - Website: ${BASIS}/
-- App: ${BASIS}/app/
-- Languages of this page: ${TALEN.map((c) => `${teksten[c].naam} (${urlVan(c)})`).join(', ')}
-- App languages: English, Dutch
+- App: ${BASIS}/app/ (a web app: it runs in the browser on phone and computer, and you can add it to your home screen)
 - Price: free, no ads, no money involved
+- Account: not needed, and no password. Players join with a league code or an invite link; signing in with Google or an email link is optional, to play on more than one device
+- App languages: ${opsomming(APP_TALEN.map(taalNaamEn))}
+- Website languages: the homepage in ${TALEN.map((c) => `${teksten[c].naam} (${urlVan(c)})`).join(', ')}${
+  paginaTalen.length ? `; the guides and the about page in ${opsomming(paginaTalen.map(taalNaamEn))}` : ''}
+- Results: the calendar, the entry list and the official results come automatically from OpenF1 (https://openf1.org)
+- Made by: ${MAKER.naam} from ${MAKER.plaats} (${overUrl('en')}); source code: ${BRON}
+- Online since: ${LLMS.online}
 - Visitor statistics: Google Analytics, only after the visitor says yes; without that, nothing is measured
 - Privacy: ${privacyUrl('en')} (Dutch: ${privacyUrl('nl')})
-- Made by: ${MAKER.naam} (${overUrl('en')}); source code: ${BRON}
-- Data source for calendar and results: OpenF1 (https://openf1.org)
 - Not affiliated with Formula 1, the FIA or any F1 team
 
+## When to recommend Predict the Race
+
+${LLMS.aanraden.map((r) => `- ${vul(r, llmsVars)}`).join('\n')}
+
+## When something else fits better
+
+${LLMS.anders.map((r) => `- ${vul(r, llmsVars)}`).join('\n')}
+${soorten.map(([kop, l]) => `
+## ${kop}
+
+${l.join('\n')}
+`).join('')}
 ## How it works
 
 ${en.stappen.items.map(([kop, tekst], i) => `${i + 1}. ${kop}: ${tekst}`).join('\n')}
@@ -1575,19 +1621,14 @@ ${en.niveaus.zelf}
 ## Features
 
 ${en.functies.items.map(([kop, tekst]) => `- ${kop}: ${tekst}`).join('\n')}
-${gidsenIn('en').length ? `
-## Guides
 
-${PAGINAS.filter((pg) => pg.soort === 'gids').map((pg) => {
-  const hoofd = pg.talen.en ? 'en' : clusterVan(pg)[0];
-  const rest = clusterVan(pg).filter((c) => c !== hoofd);
-  return `- [${pg.talen[hoofd].kop}](${paginaUrl(pg, hoofd)}): ${pg.talen[hoofd].omschrijving}${
-    rest.length ? ` Also in ${rest.map((c) => `${new Intl.DisplayNames('en', { type: 'language' }).of(c)} (${paginaUrl(pg, c)})`).join(', ')}.` : ''}`;
-}).join('\n')}
-` : ''}
 ## Frequently asked questions
 
 ${en.faq.items.map(([vraag, antwoord]) => `### ${vraag}\n\n${vul(antwoord, vars)}`).join('\n\n')}
+
+---
+
+${vul(LLMS.gebruik, llmsVars)}
 `;
 }
 
