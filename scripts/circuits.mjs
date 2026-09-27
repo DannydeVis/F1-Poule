@@ -34,13 +34,15 @@ export const VANAF = 2023;
 const API = process.env.OPENF1_URL ?? 'https://api.openf1.org/v1';
 // OpenF1 laat drie verzoeken per seconde toe; wij blijven er ruim onder.
 export const WACHT_MS = 1000;
+// Tegen de nagebootste OpenF1 van de tests hoeft niemand te wachten.
+export const PAUZE_MS = process.env.OPENF1_URL ? 0 : WACHT_MS;
 
-const wacht = (ms) => new Promise((r) => setTimeout(r, ms));
+export const wacht = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Zoals haal() in scripts/verkennen.mjs: bij een 429 even wachten en opnieuw,
 // anders de fout teruggeven in plaats van een lege lijst. Een 404 en een 429
-// zijn twee heel verschillende verhalen.
-async function haal(pad, pogingen = 6) {
+// zijn twee heel verschillende verhalen. scripts/racedata.mjs gebruikt hem ook.
+export async function haal(pad, pogingen = 6) {
   for (let i = 0; i < pogingen; i++) {
     const res = await fetch(`${API}/${pad}`);
     if (res.ok) return res.json();
@@ -130,7 +132,7 @@ async function ophalen({ nu = Date.now() } = {}) {
   const ontbreekt = [];
   for (let jaar = VANAF; jaar <= new Date(nu).getUTCFullYear(); jaar++) {
     const sessies = await haal(`sessions?year=${jaar}&session_name=Race`);
-    await wacht(WACHT_MS);
+    await wacht(PAUZE_MS);
     if (!Array.isArray(sessies)) throw new Error(`sessions voor ${jaar} gaf ${sessies.fout}`);
     // Alleen races die voorbij zijn, met een paar uur marge voor de
     // berichten van na de finish.
@@ -139,7 +141,7 @@ async function ophalen({ nu = Date.now() } = {}) {
       .sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
     for (const s of gereden) {
       const berichten = await haal(`race_control?session_key=${s.session_key}`);
-      await wacht(WACHT_MS);
+      await wacht(PAUZE_MS);
       const waar = { jaar, locatie: s.location, datum: String(s.date_start).slice(0, 10), sessie: s.session_key };
       // Een 429 na zes pogingen is geen gat in OpenF1 maar ongeduld van ons:
       // dan liever de hele run laten zakken dan een race stil weglaten.

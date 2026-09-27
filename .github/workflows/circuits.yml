@@ -1,26 +1,32 @@
 name: Circuitcijfers
 
-# Safety cars en rode vlaggen per circuit, sinds 2023 (zoekplan GEO 3.2). Zie
-# scripts/circuits.mjs. api.openf1.org is niet vanaf elke plek bereikbaar,
-# vanaf een GitHub-runner wel; daarom hier en niet op de laptop.
+# Twee soorten eigen cijfers uit OpenF1, allebei voor de site:
+#   - safety cars en rode vlaggen per circuit sinds 2023 (zoekplan GEO 3.2,
+#     scripts/circuits.mjs, site/data/circuits.json);
+#   - de tijden en uitslagen voor de racepagina's (zoekplan SEO fase 4,
+#     scripts/racedata.mjs, site/data/races-<jaar>.json).
+# api.openf1.org is niet vanaf elke plek bereikbaar, vanaf een GitHub-runner
+# wel; daarom hier en niet op de laptop.
 #
-# Elke dinsdag, na een raceweekend, en met de hand vanuit het Actions-tabblad.
-# Schrijft site/data/circuits.json en legt hem vast als er iets veranderd is.
-# Daarna ook de site opnieuw, voor als de generator het bestand gebruikt: dan
-# staan de nieuwe cijfers meteen op de pagina's, en blijft `maak-site
-# --controle` in de tests groen.
+# Elke dag en met de hand vanuit het Actions-tabblad. Elke dag, omdat een
+# racepagina de tijden van het weekend toont en de FIA die soms verschuift.
+# Schrijft de twee bestanden en legt ze vast als er iets veranderd is. Daarna
+# ook de site opnieuw, zodat de nieuwe cijfers meteen op de pagina's staan en
+# `maak-site --controle` in de tests groen blijft.
 #
-# Op een pull request die het script of deze workflow aanpast: alleen de
-# tabel in de log (DROOG), niets vastgelegd. Zo is te zien wat er echt
-# uitkomt voordat het ergens staat.
+# Op een pull request die een van de scripts of deze workflow aanpast: alleen in
+# de log (DROOG), niets vastgelegd. Zo is te zien wat er echt uitkomt voordat
+# het ergens staat.
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '41 5 * * 2'
+    - cron: '41 5 * * *'
   pull_request:
     paths:
       - 'scripts/circuits.mjs'
+      - 'scripts/racedata.mjs'
+      - 'site/races.mjs'
       - '.github/workflows/circuits.yml'
 
 permissions:
@@ -40,6 +46,10 @@ jobs:
         env:
           DROOG: ${{ github.event_name == 'pull_request' && '1' || '' }}
         run: node scripts/circuits.mjs
+      - name: De racepagina's, tijden en uitslagen
+        env:
+          DROOG: ${{ github.event_name == 'pull_request' && '1' || '' }}
+        run: node scripts/racedata.mjs
 
       # De pull --rebase is er voor de samenloop dat automerge of de sync net
       # iets in main zet terwijl deze run bezig is.

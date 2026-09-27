@@ -8472,7 +8472,8 @@ Races waar OpenF1 niets heeft, staan onder `ontbreekt` met de reden; een 429 na
 zes pogingen laat de hele run zakken in plaats van een race stil weg te laten.
 
 **Waar het draait:** `.github/workflows/circuits.yml`, want `api.openf1.org` is
-vanaf hier niet bereikbaar, vanaf een GitHub-runner wel. Elke dinsdag en met de
+vanaf hier niet bereikbaar, vanaf een GitHub-runner wel. Elke dag (eerst
+elke dinsdag; sinds de racedata elke dag, zie "SEO fase 4") en met de
 hand. Hij schrijft `site/data/circuits.json`, draait daarna `maak-site` (voor
 als de generator het bestand gaat gebruiken) en legt vast als er iets
 veranderd is. Het bestand heeft geen datum van de run, alleen die van de laatste
@@ -8508,3 +8509,45 @@ onderdeel 9 legt de pagina naast het bestand; acht mutanten, alle gevangen.
 
 **Nog te doen:** de racepagina's (SEO fase 4) met de cijfers van hun eigen
 circuit.
+
+## Zoekplan SEO fase 4, deel 1: de gegevens voor de racepagina's
+
+Het plan (`docs/zoekplan/1-seo.md`, fase 4): een pilot met pagina's voor de
+laatste zeven races van 2026, NL en EN, met de tijden, de top 10 van vorig
+jaar, de circuitcijfers en na de race de uitslag. Stopcriterium: vier tot zes
+weken na de eerste pagina in Search Console kijken.
+
+**Welke races:** `site/races.mjs`: Singapore, Austin, Mexico-Stad, São Paulo,
+Las Vegas, Qatar en Abu Dhabi, met hun `circuit_key` van OpenF1 (dezelfde als
+in `site/data/circuits.json`) en de slug voor de url. Kuala Lumpur (2 tot 4
+oktober, er later bij gekomen) doet niet mee: geen vorige editie in OpenF1, en
+het plan zegt geen pagina zonder vorige editie.
+
+**Ophalen:** `scripts/racedata.mjs`, per race: de sessies van dit jaar
+(kwalificatie, sprint met zijn kwalificatie, race) met begin en eind, de naam
+van de meeting, de top 10 van kwalificatie en race van vorig jaar op hetzelfde
+circuit, en de top 10 van dit jaar zodra de sessie een paar uur voorbij is. Een
+race die dit jaar niet bestaat, staat onder `ontbreekt`. Namen zoals je ze
+schrijft (voornaam en achternaam, niet de hoofdletters van `full_name`). Het
+bestand heeft geen datum van de run.
+
+**Waar het draait:** in dezelfde workflow als de circuitcijfers
+(`.github/workflows/circuits.yml`), als tweede stap, nu elke dag in plaats van
+elke dinsdag: een racepagina toont de tijden, en de FIA verschuift die soms.
+Na beide stappen draait `maak-site` en legt de workflow alles vast wat
+veranderde. Zo zitten sync en site aan elkaar vast: de sync (elk uur) houdt de
+database en `kalender.ics` bij, deze workflow (elke dag) de bestanden voor de
+site; de generator leest alleen die bestanden, dus `maak-site --controle` blijft
+offline en reproduceerbaar. Het ophaalhulpje `haal()` staat in
+`scripts/circuits.mjs` en wordt door beide scripts gebruikt; tegen de
+nagebootste OpenF1 van de tests wacht het niet tussen verzoeken.
+
+**Tests:** `test/racedata.test.mjs`, zonder internet en tegen een nagebootste
+OpenF1 met alle gevallen (een race in de toekomst, een die al gereden is, een
+half weekend, een die ontbreekt, een zonder vorige editie). Twaalf mutanten,
+alle gevangen.
+
+**Volgende stap:** na de merge de workflow met de hand starten, zodat
+`site/data/races-2026.json` op main staat. Dan de pagina's zelf (deel 2):
+`/races/2026/<slug>/` en `/en/races/2026/<slug>/`, een overzicht per seizoen,
+`SportsEvent` in de JSON-LD.
