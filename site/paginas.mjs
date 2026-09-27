@@ -44,6 +44,11 @@
 //   vragentabel    true: de losse vragen en de seizoensvragen met hun punten,
 //                  zoals op de voorpagina (namen uit site/teksten.mjs)
 //   formules       [wat, formule]: formules voor een spreadsheet, als code
+//   circuittabel   { bijschrift, kop }: per circuit de races, de safety cars en
+//                  de races met een rode vlag, uit site/data/circuits.json (de
+//                  workflow "Circuitcijfers", zoekplan GEO 3.2). De cijfers
+//                  zelf staan in de tekst als {scRaces}, {scMet}, {rvMet},
+//                  {scGemiddeld}, {scTot} enzovoort (circuitFeiten() in maak-site.mjs).
 //
 // Getallen over de app (punten, aantal vragen, jokers, meldingen) staan er als
 // {naam} in en komen bij het maken uit de app zelf (APP_GETALLEN en
@@ -297,6 +302,17 @@ export const PAGINAS = [
             ],
           },
           {
+            id: 'safety-cars',
+            vraag: 'Hoe vaak komt de safety car in een race?',
+            kort: 'Van de {scRaces} Formule 1-races sinds {scVanaf} hadden er {scMet} minstens één safety car, een virtuele meegeteld. Gemiddeld kwam de safety car {scGemiddeld} keer per race de baan op, en {rvMet} races werden stilgelegd met een rode vlag. Zo telt Predict the Race ook bij de vraag hoeveel safety cars er komen. Hieronder de cijfers per circuit, tot en met {scTot}.',
+            circuittabel: { bijschrift: 'Per circuit: races sinds {scVanaf}, safety cars (virtuele meegeteld) en races met een rode vlag, tot en met {scTot}',
+              kop: ['Circuit', 'Races', 'Safety cars', 'Rode vlag'] },
+            tekst: [
+              'Het vaakst kwam de safety car in {scMeestPlek}: {scMeestAantal} keer in {scMeestRaces} races. Het minst in {scMinstPlek}: {scMinstAantal} keer in {scMinstRaces} races. Alleen circuits met minstens {scMinRaces} races tellen hier mee.',
+              'De cijfers komen uit de berichten van de wedstrijdleiding bij OpenF1 en zijn geteld met dezelfde regels als de app. Afgelaste races tellen niet mee. De tabel wordt automatisch bijgewerkt.',
+            ],
+          },
+          {
             id: 'gelijk',
             vraag: 'Wat als twee spelers evenveel punten hebben?',
             kort: 'Twee spelers met evenveel punten delen de plek. Staan ze samen op twee, dan is de volgende speler vierde: 1, 2, 2, 4. Zo telt Predict the Race de stand. Bij de weekendwinnaar werkt het net zo: hebben twee spelers dezelfde hoogste score, dan hebben ze dat weekend allebei gewonnen.',
@@ -366,6 +382,17 @@ export const PAGINAS = [
             vragentabel: true,
             tekst: [
               'How much a weekend is worth depends on the level the league admin picks: {simpel} points on Simple, {klassiek} on Classic and {gevorderd} on Advanced. On sprint weekends the sprint comes on top, and the season questions are settled at the end of the season.',
+            ],
+          },
+          {
+            id: 'safety-cars',
+            vraag: 'How often is there a safety car in an F1 race?',
+            kort: 'Of the {scRaces} Formula 1 races since {scVanaf}, {scMet} had at least one safety car, counting the virtual safety car. On average the safety car came out {scGemiddeld} times per race, and {rvMet} races were stopped with a red flag. That is also how Predict the Race scores the question on the number of safety cars. Below are the numbers per circuit, up to {scTot}.',
+            circuittabel: { bijschrift: 'Per circuit: races since {scVanaf}, safety cars (virtual included) and races with a red flag, up to {scTot}',
+              kop: ['Circuit', 'Races', 'Safety cars', 'Red flag'] },
+            tekst: [
+              'The safety car came out most often in {scMeestPlek}: {scMeestAantal} times in {scMeestRaces} races. The fewest were in {scMinstPlek}: {scMinstAantal} in {scMinstRaces} races. Only circuits with at least {scMinRaces} races count here.',
+              'The numbers come from the race control messages in OpenF1, counted with the same rules as the app. Cancelled races are not included. The table updates automatically.',
             ],
           },
           {

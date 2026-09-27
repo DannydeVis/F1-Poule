@@ -41,6 +41,7 @@ import { teksten, TALEN, STANDAARD, BASIS, MAKER, BRON, INDEXNOW_SLEUTEL, LLMS }
 import { PRIVACY, CONTACT, PRIVACY_BIJGEWERKT, privacyTaal } from '../site/privacy.mjs';
 import { PAGINAS, PAGINA_UI } from '../site/paginas.mjs';
 import { knipUit } from './knipsel.mjs';
+import { uitersten, MIN_RACES } from './circuits.mjs';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CONTROLE = process.argv.includes('--controle');
@@ -113,6 +114,12 @@ const APP_TALEN = uitBron(appBron, /if \((gekozen === '[a-z]{2}'(?: \|\| gekozen
 // standaardlijst, maar de gids over puntentellingen vergelijkt ermee.
 const WK_PUNTEN = uitBron(appBron, /const WK_PUNTEN = \[([\d, ]+)\];/, 'WK_PUNTEN in app/index.html')[1]
   .split(',').map(Number);
+// De circuitcijfers (zoekplan GEO 3.2): safety cars en rode vlaggen per
+// circuit, geteld door scripts/circuits.mjs met de regels van de app. De
+// workflow "Circuitcijfers" schrijft het bestand en maakt daarna de site
+// opnieuw, zodat de pagina's meteen de nieuwe cijfers tonen.
+const CIRCUITS_PAD = join(wortel, 'site', 'data', 'circuits.json');
+const CIRCUITS = existsSync(CIRCUITS_PAD) ? JSON.parse(readFileSync(CIRCUITS_PAD, 'utf8')) : null;
 // De getallen uit de app die in elke tekst als {naam} kunnen staan, op de
 // voorpagina (site/teksten.mjs) en in de gidsen (site/paginas.mjs): de punten
 // per vraag onder hun id ({winnaar}, {pole}, {sprint_top10}), de plekpunten
@@ -145,7 +152,26 @@ const feitenVoor = (code) => ({
   formuleNL: `=ALS(C2="";0;MAX(0;${formule[1]}-${formule[2]}*ABS(B2-C2)))`,
   formuleEN: `=IF(C2="",0,MAX(0,${formule[1]}-${formule[2]}*ABS(B2-C2)))`,
   wkPunten: WK_PUNTEN.join(', '), wkEerste: WK_PUNTEN[0], wkLaatste: WK_PUNTEN.at(-1),
+  ...circuitFeiten(code),
 });
+// De circuitcijfers als {namen}: {scRaces} races sinds {scVanaf} tot en met
+// {scTot}, waarvan {scMet} met een safety car en {rvMet} met een rode vlag,
+// gemiddeld {scGemiddeld} safety cars per race, en het circuit met de meeste
+// ({scMeestPlek}: {scMeestAantal} in {scMeestRaces} races) en de minste
+// ({scMinstPlek}, {scMinstAantal}, {scMinstRaces}) per race, van de circuits
+// met minstens {scMinRaces} races (uitersten() in scripts/circuits.mjs).
+function circuitFeiten(code) {
+  if (!CIRCUITS) return {};
+  const { gemiddeld, meest, minst } = uitersten(CIRCUITS);
+  return {
+    scVanaf: CIRCUITS.vanaf, scTot: datumTekst(code, CIRCUITS.tot), scRaces: CIRCUITS.races,
+    scMet: CIRCUITS.metSafetyCar, rvMet: CIRCUITS.metRodeVlag,
+    scGemiddeld: new Intl.NumberFormat(code, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(gemiddeld),
+    scMeestPlek: meest.locatie, scMeestAantal: meest.safetyCars, scMeestRaces: meest.races,
+    scMinstPlek: minst.locatie, scMinstAantal: minst.safetyCars, scMinstRaces: minst.races,
+    scMinRaces: MIN_RACES,
+  };
+}
 
 // ------------------------------------------------------------
 //  Hulpjes
@@ -1217,6 +1243,11 @@ const ARTIKEL_CSS = `
   .artikel .rekenvoorbeeld tbody th{font-weight:600}
   .artikel .rekenvoorbeeld tfoot th,.artikel .rekenvoorbeeld tfoot td{border-top:2px solid var(--ink3)}
   .artikel .rekenvoorbeeld tfoot td{color:var(--accent-tekst)}
+  .artikel .circuits th,.artikel .circuits td{padding:10px 8px}
+  @media (min-width:480px){.artikel .circuits th,.artikel .circuits td{padding:10px 14px}}
+  .artikel .circuits thead th:not(:first-child){text-align:right}
+  .artikel .circuits tbody th{font-weight:600}
+  .artikel .circuits td,.artikel .tabel.circuits td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:20px;line-height:1}
   .artikel .formules{margin:0 0 16px}
   .artikel .formules dt{font-weight:600;margin:14px 0 6px}
   .artikel .formules dd{margin:0}
@@ -1328,6 +1359,18 @@ function artikelPagina(pg, code, datum, sinds) {
         <tfoot><tr><th scope="row" colspan="3">${f(r.totaal)}</th><td>${uit.totaal}</td></tr></tfoot>
       </table>`;
   };
+  // Per circuit uit site/data/circuits.json: races, safety cars (virtuele
+  // meegeteld) en races met een rode vlag.
+  const circuitTabel = (c) => {
+    if (!CIRCUITS) throw new Error(`site/paginas.mjs: ${pg.id} heeft een circuittabel, maar site/data/circuits.json ontbreekt (workflow "Circuitcijfers")`);
+    return `
+      <table class="tabel getallen circuits">
+        <caption>${f(bijschrift(c, 'circuittabel'))}</caption>
+        <thead><tr>${c.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
+        <tbody>${CIRCUITS.circuits.map((x) => `<tr><th scope="row">${esc(x.locatie)}</th><td>${x.races}</td><td>${
+          x.safetyCars}</td><td>${x.metRodeVlag}</td></tr>`).join('')}</tbody>
+      </table>`;
+  };
   const sectie = (s) => `
     <section class="vraag" id="${s.id}">
       <h2>${f(s.vraag)}</h2>
@@ -1337,7 +1380,7 @@ function artikelPagina(pg, code, datum, sinds) {
         <caption>${f(bijschrift(s.tabel, s.id))}</caption>
         <thead><tr>${s.tabel.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
         <tbody>${s.tabel.rijen.map((r) => `<tr>${r.map((c, i) => i === 0 ? `<th scope="row">${f(c)}</th>` : `<td>${f(c)}</td>`).join('')}</tr>`).join('')}</tbody>
-      </table>` : ''}${s.rekenvoorbeeld ? rekenTabel(s.rekenvoorbeeld) : ''}${s.voorbeeld ? `
+      </table>` : ''}${s.rekenvoorbeeld ? rekenTabel(s.rekenvoorbeeld) : ''}${s.circuittabel ? circuitTabel(s.circuittabel) : ''}${s.voorbeeld ? `
       <p class="voorbeeld">${f(s.voorbeeld)}</p>` : ''}${s.vragentabel ? `
       <div class="tabellen">${[[t2.punten.lossKop, LOSSE], [t2.punten.seizoenKop, SEIZOEN]].map(([kop, ids]) => `
         <table class="tabel getallen">

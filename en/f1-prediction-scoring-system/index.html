@@ -628,6 +628,11 @@
   .artikel .rekenvoorbeeld tbody th{font-weight:600}
   .artikel .rekenvoorbeeld tfoot th,.artikel .rekenvoorbeeld tfoot td{border-top:2px solid var(--ink3)}
   .artikel .rekenvoorbeeld tfoot td{color:var(--accent-tekst)}
+  .artikel .circuits th,.artikel .circuits td{padding:10px 8px}
+  @media (min-width:480px){.artikel .circuits th,.artikel .circuits td{padding:10px 14px}}
+  .artikel .circuits thead th:not(:first-child){text-align:right}
+  .artikel .circuits tbody th{font-weight:600}
+  .artikel .circuits td,.artikel .tabel.circuits td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:20px;line-height:1}
   .artikel .formules{margin:0 0 16px}
   .artikel .formules dt{font-weight:600;margin:14px 0 6px}
   .artikel .formules dd{margin:0}
@@ -698,6 +703,18 @@
         </table>
       </div>
       <p>How much a weekend is worth depends on the level the league admin picks: 100 points on Simple, 145 on Classic and 202 on Advanced. On sprint weekends the sprint comes on top, and the season questions are settled at the end of the season.</p>
+    </section>
+
+    <section class="vraag" id="safety-cars">
+      <h2>How often is there a safety car in an F1 race?</h2>
+      <p class="kort">Of the 85 Formula 1 races since 2023, 58 had at least one safety car, counting the virtual safety car. On average the safety car came out 1.3 times per race, and 11 races were stopped with a red flag. That is also how Predict the Race scores the question on the number of safety cars. Below are the numbers per circuit, up to September 26, 2026.</p>
+      <table class="tabel getallen circuits">
+        <caption>Per circuit: races since 2023, safety cars (virtual included) and races with a red flag, up to September 26, 2026</caption>
+        <thead><tr><th scope="col">Circuit</th><th scope="col">Races</th><th scope="col">Safety cars</th><th scope="col">Red flag</th></tr></thead>
+        <tbody><tr><th scope="row">Austin</th><td>3</td><td>2</td><td>0</td></tr><tr><th scope="row">Baku</th><td>4</td><td>5</td><td>0</td></tr><tr><th scope="row">Barcelona</th><td>4</td><td>3</td><td>0</td></tr><tr><th scope="row">Budapest</th><td>4</td><td>1</td><td>0</td></tr><tr><th scope="row">Imola</th><td>2</td><td>2</td><td>0</td></tr><tr><th scope="row">Jeddah</th><td>3</td><td>3</td><td>0</td></tr><tr><th scope="row">Las Vegas</th><td>3</td><td>5</td><td>0</td></tr><tr><th scope="row">Lusail</th><td>3</td><td>5</td><td>0</td></tr><tr><th scope="row">Madrid</th><td>1</td><td>1</td><td>0</td></tr><tr><th scope="row">Marina Bay</th><td>3</td><td>2</td><td>0</td></tr><tr><th scope="row">Melbourne</th><td>4</td><td>12</td><td>1</td></tr><tr><th scope="row">Mexico City</th><td>3</td><td>4</td><td>1</td></tr><tr><th scope="row">Miami Gardens</th><td>4</td><td>6</td><td>0</td></tr><tr><th scope="row">Monte Carlo</th><td>4</td><td>4</td><td>2</td></tr><tr><th scope="row">Montréal</th><td>4</td><td>8</td><td>0</td></tr><tr><th scope="row">Monza</th><td>4</td><td>3</td><td>1</td></tr><tr><th scope="row">Sakhir</th><td>3</td><td>2</td><td>0</td></tr><tr><th scope="row">São Paulo</th><td>3</td><td>6</td><td>2</td></tr><tr><th scope="row">Shanghai</th><td>3</td><td>4</td><td>0</td></tr><tr><th scope="row">Silverstone</th><td>4</td><td>9</td><td>0</td></tr><tr><th scope="row">Spa-Francorchamps</th><td>4</td><td>3</td><td>1</td></tr><tr><th scope="row">Spielberg</th><td>4</td><td>6</td><td>0</td></tr><tr><th scope="row">Suzuka</th><td>4</td><td>3</td><td>1</td></tr><tr><th scope="row">Yas Island</th><td>3</td><td>1</td><td>0</td></tr><tr><th scope="row">Zandvoort</th><td>4</td><td>10</td><td>2</td></tr></tbody>
+      </table>
+      <p>The safety car came out most often in Melbourne: 12 times in 4 races. The fewest were in Budapest: 1 in 4 races. Only circuits with at least 3 races count here.</p>
+      <p>The numbers come from the race control messages in OpenF1, counted with the same rules as the app. Cancelled races are not included. The table updates automatically.</p>
     </section>
 
     <section class="vraag" id="ties">
