@@ -320,6 +320,10 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
       en: [`${exactApp} points for the exact spot, ${bijnaApp} for one place off`, `in the championship: ${wkApp}.`,
         `${jokersApp} per season by default`, `you get ${bijnaApp} points`],
     },
+    over: {
+      nl: ['komen van OpenF1', 'een database bij Supabase', 'onafhankelijk fanproject'],
+      en: ['come from OpenF1', 'a Supabase database', 'independent fan project'],
+    },
     excel: {
       nl: [`MAX(0;${fMax}-${fStap}*ABS(B2-C2))`, `=ALS(B14=C14;${winnaarApp};0)`, `de winnaar ${winnaarApp} punten waard`],
       en: [`MAX(0,${fMax}-${fStap}*ABS(B2-C2))`, `=IF(B14=C14,${winnaarApp},0)`, `the winner is worth ${winnaarApp} points`],
@@ -368,8 +372,15 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
       try { graaf = kop.ld.flatMap((x) => JSON.parse(x)['@graph'] ?? []); } catch { /* telt als leeg */ }
       const soort = (s) => graaf.find((x) => x['@type'] === s);
       const ldFaq = (soort('FAQPage')?.mainEntity ?? []).map((q) => ({ vraag: q.name, antwoord: q.acceptedAnswer?.text }));
-      check(`${naam}: JSON-LD met WebPage, Article en BreadcrumbList, en de FAQ zoals op het scherm`,
-        soort('WebPage') && soort('Article')?.author?.['@id'] === `${BASIS}/#maker` && soort('BreadcrumbList')
+      // Een gids is een Article van de maker; de about-pagina een AboutPage
+      // over de maker, met hem daar volledig beschreven, ook waar hij woont.
+      const over = pg.soort === 'over';
+      const hoofd = over ? soort('AboutPage') : soort('Article');
+      check(`${naam}: JSON-LD met ${over ? 'AboutPage (over de maker, met adres)' : 'WebPage, Article'} en BreadcrumbList, en de FAQ zoals op het scherm`,
+        (over ? hoofd?.mainEntity?.['@id'] === `${BASIS}/#maker` && !soort('Article')
+            && soort('Person')?.address?.addressLocality && soort('Person')?.url === eigen
+          : soort('WebPage') && hoofd?.author?.['@id'] === `${BASIS}/#maker`)
+          && soort('BreadcrumbList')
           && kop.faq.length === t.faq.length && JSON.stringify(ldFaq) === JSON.stringify(kop.faq),
         graaf.map((x) => x['@type']).join(', '));
       const ldKruimel = (soort('BreadcrumbList')?.itemListElement ?? []).map((i) => ({ naam: i.name, url: i.item }));
@@ -379,9 +390,9 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
           && (zichtbaar[i].url === null ? k.url === eigen : k.url === BASIS + zichtbaar[i].url.replace(/^\/$/, '/'))),
         JSON.stringify(zichtbaar));
       check(`${naam}: de datum op het scherm is dateModified en die van de sitemap`,
-        kop.datum === soort('Article')?.dateModified && kop.datum === lastmod[eigen]?.datum
-          && soort('Article')?.datePublished === lastmod[eigen]?.sinds && kop.datumTekst.length > 8,
-        `${kop.datum} · ${kop.datumTekst} · ${soort('Article')?.dateModified} · ${lastmod[eigen]?.datum}`);
+        kop.datum === hoofd?.dateModified && kop.datum === lastmod[eigen]?.datum
+          && hoofd?.datePublished === lastmod[eigen]?.sinds && kop.datumTekst.length > 8,
+        `${kop.datum} · ${kop.datumTekst} · ${hoofd?.dateModified} · ${lastmod[eigen]?.datum}`);
       check(`${naam}: geen {plekhouder} en geen streepje in de tekst`,
         !/\{[a-zA-Z]+\}/.test(kop.alles) && !/[–—]/.test(kop.alles + kop.titel + kop.omschrijving),
         (kop.alles.match(/.{0,20}(\{[a-zA-Z]+\}|[–—]).{0,20}/) ?? [''])[0]);
@@ -485,11 +496,11 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
   const wezen = alle.filter((u) => gelinkt.get(u).size === 0);
   check('geen weespagina: elke url in de sitemap krijgt een link van een andere pagina', wezen.length === 0, wezen.join(' '));
   const gidsUrls = PAGINAS.flatMap((pg) => Object.entries(pg.talen).map(([c, t]) => [c, `${BASIS}/${t.pad}/`]));
-  check('en elke gids wordt gelinkt vanaf de voorpagina in zijn eigen taal',
+  check('en elke gids (en de about-pagina) wordt gelinkt vanaf de voorpagina in zijn eigen taal',
     gidsUrls.every(([c, u]) => gelinkt.get(u)?.has(urlVan(c))), gidsUrls.map(([c, u]) => `${c}:${gelinkt.get(u)?.size}`).join(' '));
   // Onder het blok waar hij bij hoort: de puntentelling onder de puntentabel,
   // niet ergens anders op de pagina.
-  const opPlek = PAGINAS.flatMap((pg) => Object.entries(pg.talen).map(([c, t]) => {
+  const opPlek = PAGINAS.flatMap((pg) => Object.entries(pg.talen).filter(([, t]) => t.teaser).map(([c, t]) => {
     const html = readFileSync(bestandVan(urlVan(c)), 'utf8');
     const blok = html.match(new RegExp(`<section[^>]*id="${pg.teaserPlek ?? 'hoe'}"[^>]*>([\\s\\S]*?)</section>`))?.[1] ?? '';
     return [`${pg.id}(${c})`, blok.includes(`${t.pad}/"`)];

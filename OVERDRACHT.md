@@ -8368,3 +8368,46 @@ blijft), en in oktober AlternativeTo.
 fase 2; fase 3 (eigen cijfers: hoe voorspelbaar was 2026, de week na Abu Dhabi,
 en safety cars per circuit); fase 4 met de vergelijkingspagina.
 
+## De about-pagina: /over/ en /en/about/
+
+Danny wilde er zelf geen zinnen voor schrijven ("Nee hoeft niet"), dus staat
+er alleen wat al vastlag in zijn eigen zoekplan en in de app.
+
+**Wat erop staat** (`site/paginas.mjs`, id `over`, soort `over`, NL en EN):
+
+- *Bovenaan de kernzin*, letterlijk (via `{kernzin}`); `test/geo.test.mjs`
+  controleert dat nu ook.
+- *Wie maakt Predict the Race?* De makerzin (via `{makerzin}`: Danny de Visser
+  uit Rotterdam, ook PadelBracket), dat hij begon voor zijn eigen vriendenpoule
+  (uit het plan), en dat het een onafhankelijk fanproject is. Daaronder waar je
+  een vraag of fout kwijt kunt: GitHub, en het mailadres in de
+  privacyverklaring.
+- *Hoe blijft Predict the Race gratis?* Een fanproject zonder verdienmodel:
+  geen advertenties, geen abonnement, geen betaalde functies, geen gegevens
+  doorverkocht, geen geld in het spel. Hoe de kosten gedekt worden staat er
+  bewust niet: dat wilde het plan door Danny laten schrijven.
+- *Hoe werkt het achter de schermen?* OpenF1, een GitHub Action, Supabase,
+  GitHub Pages, broncode openbaar. Eerst stond er "elke 15 minuten"; dat is de
+  cron, maar GitHub laat een jonge repo maar een paar keer per dag draaien (zie
+  het commentaar in `sync.yml`), dus staat er nu "automatisch".
+
+**In de generator:** soort `over` wordt een `AboutPage` in de JSON-LD met de
+maker als `mainEntity`, geen Article. Daar staat de maker volledig beschreven,
+met `address` (Rotterdam, NL, uit `MAKER` in `site/teksten.mjs`). Op elke
+pagina wijst de `url` van de maker nu naar de about-pagina (`overUrl()`; in de
+talen zonder about-pagina de Engelse). De naam in de auteursregel onder elke
+gids linkt ernaartoe, en in de voet van de voorpagina (NL en EN) en de gidsen
+staat "Over Predict the Race". Onder "Gidsen" in de voet en in llms.txt staan
+alleen de gidsen (`gidsenIn()`); geen teaser op de voorpagina.
+
+**Tests:** `site.test.mjs` keurt de about-pagina zoals een gids, maar met een
+AboutPage over de maker (met adres, en de url van de pagina zelf) in plaats van
+een Article; de teaser-controle geldt alleen voor pagina's met een teaser.
+`vragen.test.mjs`: de drie vragen van de about-pagina staan nu op
+beantwoord, en `over` is geen geplande pagina meer. Vijf mutanten, alle
+gevangen.
+
+**Wat nu kan:** de bijlage van het GEO-plan, de koppeling vanaf
+padel-bracket.com naar `https://predicttherace.com/en/about/`, in een aparte
+sessie in de padel-repo.
+

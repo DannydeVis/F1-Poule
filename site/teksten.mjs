@@ -22,6 +22,8 @@ export const MAKER = {
   naam: 'Danny de Visser',
   url: 'https://github.com/DannydeVis',
   sameAs: ['https://github.com/DannydeVis', 'https://padel-bracket.com/en/about/'],
+  // Alleen op de about-pagina, in de gestructureerde gegevens (zoekplan GEO 1.3).
+  plaats: 'Rotterdam', land: 'NL',
 };
 export const BRON = 'https://github.com/DannydeVis/F1-Poule';
 // De sleutel voor IndexNow (scripts/indexnow.mjs). Hij is openbaar: de

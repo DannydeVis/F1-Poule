@@ -135,6 +135,8 @@ const feitenVoor = (code) => ({
   venster: PAGINA_UI[code].uren(VENSTER), agendaUur: PAGINA_UI[code].uren(AGENDA_UUR),
   winnaar: PUNTEN.winnaar.punten, pole: PUNTEN.pole.punten, nSeizoen: SEIZOEN.length,
   formMax: formule[1], formStap: formule[2],
+  // De vaste zinnen (GEO 1.1), zodat de about-pagina ze letterlijk overneemt.
+  kernzin: zin(code, 'kernzin'), makerzin: zin(code, 'makerzin'),
   // De spreadsheetformule uit dezelfde twee getallen als scoreLijst().
   formuleNL: `=ALS(C2="";0;MAX(0;${formule[1]}-${formule[2]}*ABS(B2-C2)))`,
   formuleEN: `=IF(C2="",0,MAX(0,${formule[1]}-${formule[2]}*ABS(B2-C2)))`,
@@ -164,7 +166,14 @@ const zin = (code, welke) => vul(teksten[code][welke], { domein: DOMEIN });
 const antwoordVan = (code) => `${zin(code, 'kernzin')} ${vul(teksten[code].antwoord.vervolg, { domein: DOMEIN })}`;
 // De maker in de JSON-LD, in de taal van de pagina. Eén keer beschreven, overal
 // dezelfde @id; sameAs alleen met profielen die echt van hem zijn.
-const persoon = (code) => ({ '@type': 'Person', '@id': `${BASIS}/#maker`, name: MAKER.naam, url: MAKER.url,
+// url: de about-pagina (in deze taal, anders de Engelse) zodra die er is, tot
+// dan zijn GitHub-profiel. Op de about-pagina zelf komt het adres erbij.
+const overUrl = (code) => {
+  const over = PAGINAS.find((pg) => pg.id === 'over');
+  if (!over) return MAKER.url;
+  return paginaUrl(over, over.talen[code] ? code : over.talen.en ? 'en' : Object.keys(over.talen)[0]);
+};
+const persoon = (code) => ({ '@type': 'Person', '@id': `${BASIS}/#maker`, name: MAKER.naam, url: overUrl(code),
   description: zin(code, 'makerzin'), sameAs: MAKER.sameAs });
 const urlVan = (code) => `${BASIS}/${teksten[code].pad ? teksten[code].pad + '/' : ''}`;
 // Relatief van de ene pagina naar de andere: werkt op het eigen domein én op
@@ -806,7 +815,7 @@ function pagina(code, datum) {
   const rij = (id, i) => `<tr style="--w:${(PUNTEN[id].punten / MAX).toFixed(2)};--i:${i}"><td>${esc(t.punten.vragen[id])}</td><td>${PUNTEN[id].punten}</td></tr>`;
   // De links naar de gidsen, elk onder het blok waar hij bij hoort
   // (teaserPlek in site/paginas.mjs, standaard onder de stappen).
-  const teasers = (plek) => paginasIn(code).filter((pg) => pg.talen[code].teaser && (pg.teaserPlek ?? 'hoe') === plek)
+  const teasers = (plek) => gidsenIn(code).filter((pg) => pg.talen[code].teaser && (pg.teaserPlek ?? 'hoe') === plek)
     .map((pg) => `
     <p class="verder"><a href="${p}${pg.talen[code].pad}/">${esc(pg.talen[code].teaser)} <span aria-hidden="true">→</span></a></p>`).join('');
 
@@ -1013,11 +1022,12 @@ ${jsonLd(code, datum)}
   <div class="binnen">
     <div><span class="label">${esc(t.nav.taal)}</span><ul>${TALEN.map((c) =>
       `<li><a href="${naar(code, c)}" hreflang="${c}" lang="${c}" data-taal="${c}">${esc(teksten[c].naam)}</a></li>`).join('')}</ul></div>${
-      paginasIn(code).length ? `
-    <div><span class="label">${esc(PAGINA_UI[code].gidsen)}</span><ul>${paginasIn(code).map((pg) =>
+      gidsenIn(code).length ? `
+    <div><span class="label">${esc(PAGINA_UI[code].gidsen)}</span><ul>${gidsenIn(code).map((pg) =>
       `<li><a href="${p}${pg.talen[code].pad}/">${esc(pg.talen[code].kop)}</a></li>`).join('')}</ul></div>` : ''}
     <ul>
-      <li><a href="${app}">${esc(t.voet.app)}</a></li>
+      <li><a href="${app}">${esc(t.voet.app)}</a></li>${overIn(code) ? `
+      <li><a href="${p}${overIn(code).pad}/">${esc(PAGINA_UI[code].over)}</a></li>` : ''}
       <li><a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.voet.privacy)}</a></li>
       <li><a href="${BRON}" rel="noopener">${esc(t.voet.bron)}</a></li>
       <li><a href="https://openf1.org" rel="noopener">${esc(t.voet.data)}</a></li>
@@ -1153,6 +1163,10 @@ const terugNaar = (pad) => '../'.repeat(pad.split('/').length);
 const clusterVan = (pg) => TALEN.filter((c) => pg.talen[c]);
 const xDefaultVan = (pg) => (pg.talen.en ? 'en' : pg.talen.nl ? 'nl' : clusterVan(pg)[0]);
 const paginasIn = (code) => PAGINAS.filter((pg) => pg.talen[code]);
+// De gidsen (soort 'gids'), zonder de about-pagina: die staat niet onder
+// "Gidsen" en heeft geen link in de blokken van de voorpagina.
+const gidsenIn = (code) => paginasIn(code).filter((pg) => pg.soort === 'gids');
+const overIn = (code) => PAGINAS.find((pg) => pg.id === 'over')?.talen[code];
 // De lege datum van de hash (0000-00-00, zie metDatum()) blijft gewoon staan.
 const datumTekst = (code, iso) => (/^0000/.test(iso) ? iso : new Intl.DateTimeFormat(code, {
   day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00Z`)));
@@ -1236,7 +1250,19 @@ function artikelJsonLd(pg, code, datum, sinds) {
   const url = paginaUrl(pg, code);
   const thuis = urlVan(code);
   const f = (s) => vulPagina(pg, code, s);
-  const graaf = [
+  const kruimel = { '@type': 'BreadcrumbList', '@id': `${url}#kruimel`, itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Predict the Race', item: thuis },
+    { '@type': 'ListItem', position: 2, name: t.kop, item: url }] };
+  // De about-pagina: een AboutPage over de maker, met hem hier volledig
+  // beschreven, ook waar hij woont (zoekplan GEO 1.3). Geen Article.
+  const graaf = pg.soort === 'over' ? [
+    { '@type': 'AboutPage', '@id': `${url}#pagina`, url, name: t.titel, description: t.omschrijving,
+      inLanguage: code, isPartOf: { '@id': `${BASIS}/#website` }, about: { '@id': `${BASIS}/#organisatie` },
+      mainEntity: { '@id': `${BASIS}/#maker` }, breadcrumb: { '@id': `${url}#kruimel` },
+      datePublished: sinds, dateModified: datum },
+    kruimel,
+    { ...persoon(code), address: { '@type': 'PostalAddress', addressLocality: MAKER.plaats, addressCountry: MAKER.land } },
+  ] : [
     { '@type': 'WebPage', '@id': `${url}#pagina`, url, name: t.titel, description: t.omschrijving,
       inLanguage: code, isPartOf: { '@id': `${BASIS}/#website` }, about: { '@id': `${BASIS}/#app` },
       breadcrumb: { '@id': `${url}#kruimel` }, datePublished: sinds, dateModified: datum },
@@ -1244,9 +1270,7 @@ function artikelJsonLd(pg, code, datum, sinds) {
       mainEntityOfPage: { '@id': `${url}#pagina` }, datePublished: sinds, dateModified: datum,
       author: { '@id': `${BASIS}/#maker` }, publisher: { '@id': `${BASIS}/#organisatie` },
       image: `${BASIS}/site/og/og-${code}.jpg` },
-    { '@type': 'BreadcrumbList', '@id': `${url}#kruimel`, itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Predict the Race', item: thuis },
-      { '@type': 'ListItem', position: 2, name: t.kop, item: url }] },
+    kruimel,
     persoon(code),
   ];
   if (t.faq?.length) {
@@ -1394,7 +1418,8 @@ ${leesOok.length ? `    <section class="leesook">
   <div class="binnen">
     <ul>
       <li><a href="${thuis}">${esc(ui.terug)}</a></li>
-      <li><a href="${app}">${esc(ui.app)}</a></li>
+      <li><a href="${app}">${esc(ui.app)}</a></li>${overIn(code) && pg.id !== 'over' ? `
+      <li><a href="${p}${overIn(code).pad}/">${esc(ui.over)}</a></li>` : ''}
       <li><a href="${p}${PRIVACY[privacyTaal(code)].pad}/">${esc(ui.privacy)}</a></li>
       <li><a href="${BRON}" rel="noopener">${esc(teksten[code].voet.bron)}</a></li>
       <li><a href="#" data-toestemming hidden>${esc(teksten[code].voet.cookies)}</a></li>
@@ -1507,7 +1532,7 @@ ${zin('en', 'makerzin')}
 - Price: free, no ads, no money involved
 - Visitor statistics: Google Analytics, only after the visitor says yes; without that, nothing is measured
 - Privacy: ${privacyUrl('en')} (Dutch: ${privacyUrl('nl')})
-- Made by: ${MAKER.naam} (${MAKER.url}); source code: ${BRON}
+- Made by: ${MAKER.naam} (${overUrl('en')}); source code: ${BRON}
 - Data source for calendar and results: OpenF1 (https://openf1.org)
 - Not affiliated with Formula 1, the FIA or any F1 team
 
@@ -1550,10 +1575,10 @@ ${en.niveaus.zelf}
 ## Features
 
 ${en.functies.items.map(([kop, tekst]) => `- ${kop}: ${tekst}`).join('\n')}
-${PAGINAS.length ? `
+${gidsenIn('en').length ? `
 ## Guides
 
-${PAGINAS.map((pg) => {
+${PAGINAS.filter((pg) => pg.soort === 'gids').map((pg) => {
   const hoofd = pg.talen.en ? 'en' : clusterVan(pg)[0];
   const rest = clusterVan(pg).filter((c) => c !== hoofd);
   return `- [${pg.talen[hoofd].kop}](${paginaUrl(pg, hoofd)}): ${pg.talen[hoofd].omschrijving}${

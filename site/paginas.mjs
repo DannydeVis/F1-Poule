@@ -1,4 +1,4 @@
-// De losse pagina's naast de voorpagina: gidsen, en later een about- en een
+// De losse pagina's naast de voorpagina: gidsen, de about-pagina, en later een
 // vergelijkingspagina. Alles wat scripts/maak-site.mjs nodig heeft om er een
 // pagina van te maken staat hier; een nieuwe pagina toevoegen is data invullen,
 // geen HTML kopiëren.
@@ -28,6 +28,9 @@
 //   leesOok        [anker op de voorpagina, linktekst]
 //
 // Per pagina, voor alle talen samen:
+//   soort          'gids' (onder "Gidsen" in de voet, met een teaser op de
+//                  voorpagina) of 'over' (de about-pagina: een AboutPage in de
+//                  JSON-LD, een link in de voet en bij de naam van de maker)
 //   verwant        de ids van de gidsen die onder "Lees ook" komen
 //   teaserPlek     onder welk blok van de voorpagina de link staat: 'hoe'
 //                  (standaard, onder de stappen) of 'punten' (onder de puntentabel)
@@ -554,6 +557,91 @@ export const PAGINAS = [
       },
     },
   },
+  // De about-pagina (zoekplan SEO fase 2, GEO 1.3): wie het maakt, hoe het
+  // gratis blijft en hoe het werkt. Begint met de kernzin; de feiten over de
+  // maker komen uit het zoekplan van Danny zelf. Geen teaser op de voorpagina,
+  // wel een link in de voet en bij de naam onder elke gids.
+  {
+    id: 'over',
+    soort: 'over',
+    verwant: ['organiseren'],
+    talen: {
+      nl: {
+        pad: 'over',
+        titel: 'Over de gratis F1-poule en de maker | Predict the Race',
+        omschrijving: 'Wie Predict the Race maakt en waarom, hoe de gratis F1-poule zonder advertenties en abonnement werkt, en waar de uitslagen en de broncode vandaan komen.',
+        kop: 'Over Predict the Race',
+        kort: '{kernzin}',
+        secties: [
+          {
+            id: 'wie',
+            vraag: 'Wie maakt Predict the Race?',
+            kort: '{makerzin} Hij begon eraan voor zijn eigen vriendenpoule. Predict the Race is een onafhankelijk fanproject en is niet verbonden aan de Formule 1, de FIA of een F1-team.',
+            tekst: [
+              'Een vraag, een idee of een fout gevonden? De broncode staat openbaar op GitHub, en daar kun je ook een melding maken. Voor vragen over je gegevens staat het mailadres in de privacyverklaring.',
+            ],
+          },
+          {
+            id: 'gratis',
+            vraag: 'Hoe blijft Predict the Race gratis?',
+            kort: 'Predict the Race is een fanproject zonder verdienmodel: geen advertenties, geen abonnement, geen betaalde functies, en er worden geen gegevens doorverkocht. Iedereen kan alles gebruiken, zonder account. Er zit ook geen geld in het spel: geen inleg, geen pot en geen prijzen.',
+            tekst: [
+              'Bezoekstatistieken met Google Analytics komen er alleen bij als je daar zelf ja op zegt. Wat er precies bewaard wordt, staat in de privacyverklaring.',
+            ],
+          },
+          {
+            id: 'techniek',
+            vraag: 'Hoe werkt Predict the Race achter de schermen?',
+            kort: 'De kalender, de deelnemers en de uitslagen komen van OpenF1, een openbare bron met Formule 1-gegevens. Een GitHub Action haalt ze automatisch op en zet ze in een database bij Supabase; de app rekent daarmee de punten en de stand uit. De site draait op GitHub Pages en de broncode staat openbaar op GitHub.',
+            tekst: [
+              'Na een race kijkt de sync in twee rondes nog of een straf de uitslag veranderde, en dan rekent de app opnieuw.',
+            ],
+          },
+        ],
+        faq: [],
+        leesOok: [
+          ['faq', 'Veelgestelde vragen over de app'],
+        ],
+      },
+      en: {
+        pad: 'en/about',
+        titel: 'About this free F1 prediction game | Predict the Race',
+        omschrijving: 'Who makes Predict the Race and why, how the free F1 prediction game stays free of ads and subscriptions, and where the results and the source code come from.',
+        kop: 'About Predict the Race',
+        kort: '{kernzin}',
+        secties: [
+          {
+            id: 'who',
+            vraag: 'Who makes Predict the Race?',
+            kort: '{makerzin} He started it for his own group of friends. Predict the Race is an independent fan project and is not affiliated with Formula 1, the FIA or any F1 team.',
+            tekst: [
+              'A question, an idea or found a bug? The source code is public on GitHub, and you can open an issue there. For questions about your data, the email address is in the privacy statement.',
+            ],
+          },
+          {
+            id: 'free',
+            vraag: 'How does Predict the Race stay free?',
+            kort: 'Predict the Race is a fan project with no business model: no ads, no subscription, no paid features, and no data sold on. Everyone can use everything, without an account. There is no money in the game either: no entry fee, no pot and no prizes.',
+            tekst: [
+              'Visitor statistics with Google Analytics are only added if you say yes to them yourself. What is stored exactly is in the privacy statement.',
+            ],
+          },
+          {
+            id: 'behind-the-scenes',
+            vraag: 'How does Predict the Race work behind the scenes?',
+            kort: 'The calendar, the entry lists and the results come from OpenF1, a public source of Formula 1 data. A GitHub Action fetches them automatically and stores them in a Supabase database, and the app works out the points and the standings from there. The site runs on GitHub Pages and the source code is public on GitHub.',
+            tekst: [
+              'After a race, the sync checks in two more rounds whether a penalty changed the result, and the app scores it again if so.',
+            ],
+          },
+        ],
+        faq: [],
+        leesOok: [
+          ['faq', 'Frequently asked questions about the app'],
+        ],
+      },
+    },
+  },
 ];
 
 // De vaste woorden van het sjabloon, alleen voor de talen waarin er pagina's
@@ -565,6 +653,7 @@ export const PAGINA_UI = {
     faq: 'Veelgestelde vragen',
     leesOok: 'Lees ook',
     gidsen: 'Gidsen',
+    over: 'Over Predict the Race',
     terug: 'Naar de voorpagina',
     app: 'Open de app',
     privacy: 'Privacy',
@@ -578,6 +667,7 @@ export const PAGINA_UI = {
     faq: 'Frequently asked questions',
     leesOok: 'Read next',
     gidsen: 'Guides',
+    over: 'About Predict the Race',
     terug: 'Back to the home page',
     app: 'Open the app',
     privacy: 'Privacy',
