@@ -8454,3 +8454,37 @@ about-pagina niet onder Guides, geen leeg kopje Data, en de gebruiksregel als
 laatste regel, één keer. Tien mutanten, alle gevangen (de eerste ronde miste
 er één: een geval uit het plan weghalen; nu noemt de test de vijf gevallen
 bij naam).
+
+## Zoekplan GEO 3.2: safety cars en rode vlaggen per circuit
+
+Het plan (`docs/zoekplan/3-geo.md`, fase 3.2): eigen cijfers die een assistent
+kan citeren, met jaartal en bron. Per race sinds 2023 het aantal safety cars
+(virtuele meegeteld) en of er een rode vlag was, uit OpenF1 `race_control`.
+
+**Hoe:** `scripts/circuits.mjs` haalt per seizoen vanaf 2023 de races op
+(`session_name=Race`, dus geen sprints), alleen die voorbij zijn, en telt per
+race met `telSafetyCars()` en `hadRodeVlag()` uit `scripts/uitslagen.mjs`:
+precies de functies waarmee de sync de vragen "Aantal safety cars" en "Rode
+vlag" scoort. Geen eigen telregels, dus de site en de punten in de app zeggen
+altijd hetzelfde. Per circuit gegroepeerd op `circuit_key` van OpenF1 (een baan
+die een andere naam krijgt, blijft dezelfde), met de naam van de laatste race.
+Races waar OpenF1 niets heeft, staan onder `ontbreekt` met de reden; een 429 na
+zes pogingen laat de hele run zakken in plaats van een race stil weg te laten.
+
+**Waar het draait:** `.github/workflows/circuits.yml`, want `api.openf1.org` is
+vanaf hier niet bereikbaar, vanaf een GitHub-runner wel. Elke dinsdag en met de
+hand. Hij schrijft `site/data/circuits.json`, draait daarna `maak-site` (voor
+als de generator het bestand gaat gebruiken) en legt vast als er iets
+veranderd is. Het bestand heeft geen datum van de run, alleen die van de laatste
+race (`tot`), dus zonder nieuwe race geen commit. Op een pull request die het
+script of de workflow aanpast, draait hij alleen in de log (DROOG).
+
+**Tests:** `test/circuits.test.mjs`, zonder internet. De rekenkant met een klein
+voorbeeld in de woorden die OpenF1 echt gebruikt, de workflow, het ophalen tegen
+een nagebootste OpenF1 (`OPENF1_URL`), en zodra het bestand er staat, of het met
+zichzelf klopt. Zestien mutanten, alle gevangen.
+
+**Nog te doen:** na de eerste run een paar races nalopen tegen een tweede bron
+(het plan vraagt dat voordat er iets gepubliceerd wordt), en daarna de cijfers
+op de site: de gids over de puntentelling (bij de safety cars en de rode vlag)
+en later de racepagina's (SEO fase 4).
