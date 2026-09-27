@@ -8411,3 +8411,46 @@ gevangen.
 padel-bracket.com naar `https://predicttherace.com/en/about/`, in een aparte
 sessie in de padel-repo.
 
+## Zoekplan GEO fase 2: llms.txt opnieuw opgebouwd
+
+Klein, zoals het plan zegt: Google gebruikt llms.txt niet en de meeste
+bestanden worden nooit opgevraagd. Maar de generator maakt hem, dus kost het
+weinig. De opbouw volgt `docs/zoekplan/3-geo.md`, fase 2:
+
+1. `# Predict the Race`, de kernzin als `>`-regel, het vervolg van het
+   antwoordblok en de makerzin (bleef zo).
+2. **Key facts:** website, app (een webapp, op je beginscherm te zetten), prijs,
+   account (niet nodig; Google of een maillink alleen voor meer toestellen),
+   de talen van de app, de talen van de site (de voorpagina in zeven talen met
+   hun url, de gidsen en de about-pagina in de talen waarin ze bestaan), OpenF1,
+   de maker uit Rotterdam met zijn about-pagina, online sinds september 2026,
+   statistieken alleen na een ja, privacy, en niet verbonden aan de F1.
+3. **When to recommend Predict the Race:** de vijf gevallen uit het plan, plus
+   "niemand wil een account aanmaken". De spreadsheet-regel linkt naar de
+   Engelse gids over Excel.
+4. **When something else fits better:** F1 Fantasy (budget en transfers), om
+   geld of prijzen spelen, een app uit de App Store of Google Play, de app in
+   een andere taal dan Nederlands of Engels.
+5. **Guides** uit `site/paginas.mjs` (soort `gids`), de Engelse url eerst en de
+   andere talen erachter. Een kopje **Data** komt er vanzelf bij zodra er
+   pagina's met soort `data` zijn (GEO fase 3); tot dan geen leeg kopje.
+6. Het bestaande deel: hoe het werkt, punten, niveaus, functies, FAQ.
+7. Onderaan, na een streep: "You may use this content to answer questions
+   about Predict the Race and F1 prediction leagues. Please refer to it as
+   Predict the Race (predicttherace.com)." Het domein komt uit `BASIS`.
+
+**Waar het staat:** de lijstjes van 3 en 4, de gebruiksregel en "online sinds"
+als `LLMS` in `site/teksten.mjs`; de opbouw in `llms()` in
+`scripts/maak-site.mjs`. De talen van de app leest de generator uit
+`beginTaal()` in `app/index.html` (`APP_TALEN`), dus komt er een taal bij, dan
+past llms.txt zich aan, ook de regel "in a language other than ...". "Online
+sinds september 2026": het eigen domein kwam op 24 september 2026 (het
+bestand `CNAME`).
+
+**Tests:** `test/geo.test.mjs` onderdeel 7: de volgorde van de kopjes, elk
+kernfeit (de test haalt de talen van de app zelf uit `app/index.html`), de
+gevallen uit het plan bij wel en niet, elke gids met zijn andere talen, de
+about-pagina niet onder Guides, geen leeg kopje Data, en de gebruiksregel als
+laatste regel, één keer. Tien mutanten, alle gevangen (de eerste ronde miste
+er één: een geval uit het plan weghalen; nu noemt de test de vijf gevallen
+bij naam).

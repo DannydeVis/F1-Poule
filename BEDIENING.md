@@ -1842,9 +1842,10 @@ van Google, want zonder meet-ID laadt er niets.
 
 ## 18. Gevonden worden: het zoekplan
 
-Het plan staat in `docs/zoekplan/`: `1-seo.md` en `2-aeo.md` (GEO volgt). Die
+Het plan staat in `docs/zoekplan/`: `1-seo.md`, `2-aeo.md` en `3-geo.md`. Die
 map komt niet op het domein. Wat er per fase gebouwd is, staat in
-`OVERDRACHT.md` ("Zoekplan fase ..." en "Zoekplan AEO fase ..."). Wat jij zelf
+`OVERDRACHT.md` ("Zoekplan fase ...", "Zoekplan AEO fase ..." en "Zoekplan GEO
+fase ..."). Wat jij zelf
 doet:
 
 **Na de eerste deploy met `_config.yml`: nalopen dat de documenten weg zijn.**
@@ -1898,9 +1899,9 @@ de app zelf; onder welk blok van de voorpagina de link staat, kies je met
 
 **De about-pagina** (`/over/`, `/en/about/`) staat in `site/paginas.mjs`
 onder id `over`. De eerste zin is de kernzin en de zin over de maker komt uit
-`site/teksten.mjs`; pas je die aan, dan verandert de pagina mee. Wil je er
-iets persoonlijks bij (waarom je begon, hoe het gratis blijft), zeg het, dan
-komt het erin.
+`site/teksten.mjs`; pas je die aan, dan verandert de pagina mee. Iets
+persoonlijks (waarom je begon, hoe het gratis blijft) wilde je er op 27
+september niet bij; verandert dat, zeg het dan.
 
 **Overal hetzelfde verhaal (GEO).** De kernzin ("Predict the Race is een
 gratis F1-poule voor vriendengroepen: ...") staat per taal in
@@ -1912,6 +1913,15 @@ alleen de FAQ. Gebruik de korte versie op plekken met een limiet: de
 beschrijving van de repo op GitHub, AlternativeTo, een pitch. De promptset om
 te meten of AI-assistenten Predict the Race noemen, staat in
 `docs/zoekplan/meting.md`.
+
+**llms.txt.** Een samenvatting van de site voor AI-assistenten, in het
+Engels, helemaal uit de generator. Bovenaan de kernzin, dan de kernfeiten
+(prijs, account, talen, bron, maker, online sinds), wanneer een assistent
+Predict the Race kan aanraden en eerlijk wanneer iets anders beter past (F1
+Fantasy, om geld spelen, een app uit de store, een andere taal). Die twee
+lijstjes staan als `LLMS` in `site/teksten.mjs`. Verandert er iets aan de app
+waardoor een punt niet meer klopt, pas het daar aan. De gidsen komen er
+vanzelf bij zodra ze in `site/paginas.mjs` staan.
 
 **IndexNow.** Na elke deploy meldt de workflow "IndexNow" de gewijzigde
 pagina's bij Bing en de andere zoekmachines die meedoen (Google niet; die leest
