@@ -1896,6 +1896,17 @@ een voorspelde top 10 en een uitslag) rekent de generator uit met de code van
 de app zelf; onder welk blok van de voorpagina de link staat, kies je met
 `teaserPlek`. Alle velden staan bovenaan `site/paginas.mjs` uitgelegd.
 
+**Overal hetzelfde verhaal (GEO).** De kernzin ("Predict the Race is een
+gratis F1-poule voor vriendengroepen: ...") staat per taal in
+`site/teksten.mjs`, met een korte versie en een zin over de maker. Hij staat
+letterlijk op de voorpagina, in de gestructureerde gegevens, in llms.txt en
+bovenaan de README; `test/geo.test.mjs` bewaakt dat. Verander je iets aan wat
+de app doet (bijvoorbeeld inloggen verplicht), pas dan de kernzin aan, niet
+alleen de FAQ. Gebruik de korte versie op plekken met een limiet: de
+beschrijving van de repo op GitHub, AlternativeTo, een pitch. De promptset om
+te meten of AI-assistenten Predict the Race noemen, staat in
+`docs/zoekplan/meting.md`.
+
 **IndexNow.** Na elke deploy meldt de workflow "IndexNow" de gewijzigde
 pagina's bij Bing en de andere zoekmachines die meedoen (Google niet; die leest
 de sitemap). Er is niets voor nodig: de sleutel is openbaar en staat als

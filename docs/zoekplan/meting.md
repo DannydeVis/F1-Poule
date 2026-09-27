@@ -67,8 +67,39 @@ Nieuwe vragen uit die rondes gaan in `site/vragen.mjs`.
 ## GEO
 
 Per maand: noemen AI-assistenten Predict the Race als je vraagt naar een
-F1-poule met vrienden? Zelfde vragen elke keer, in NL en EN. Bing Webmaster
-Tools laat ook zien hoe vaak Copilot de site citeert.
+F1-poule met vrienden? Zelfde vragen elke keer. Bing Webmaster Tools laat ook
+zien hoe vaak Copilot de site citeert. Waar je kijkt (uit `3-geo.md`, fase 6):
+
+| waar | wat | wanneer |
+|---|---|---|
+| Bing Webmaster Tools, AI Performance | citaties, geciteerde pagina's, grounding queries (export als CSV) | maandelijks |
+| Search Console, Search Generative AI-rapport | vertoningen per pagina in AI-overzichten en AI Mode, als het rapport er is | maandelijks |
+| GA4, kanaal "AI-assistenten" (zie `3-geo.md`, 0.3) | sessies en landingspagina's, een ondergrens | maandelijks |
+| de promptset hieronder | prompts 1, 4, 5, 6 en 8 op ChatGPT, Perplexity en Google AI Mode | maandelijks |
+| de promptset hieronder | alle 13 prompts op alle assistenten | elk kwartaal |
+| beheer (BEDIENING §16) | nieuwe poules per week | wekelijks |
+
+De promptset. Stel ze in een schone sessie (uitgelogd, of met geheugen en
+personalisatie uit). Tel iets pas als het een paar keer terugkomt.
+
+| # | taal | prompt | soort |
+|---|---|---|---|
+| 1 | nl | Wat is een goede gratis app om met vrienden een F1-poule te spelen? | aanbeveling |
+| 2 | nl | Hoe zet ik een F1-poule op voor mijn vriendengroep? | taak |
+| 3 | nl | Welke puntentelling is eerlijk voor een F1-poule? | taak |
+| 4 | nl | Wat is Predict the Race? | merk |
+| 5 | en | What is the best free F1 prediction game to play with friends? | aanbeveling |
+| 6 | en | Is there a free alternative to F1 Fantasy where you just predict the top 10? | aanbeveling |
+| 7 | en | How do I run an F1 prediction league with my friends? | taak |
+| 8 | en | What is predicttherace.com? | merk |
+| 9 | de | Welches kostenlose F1-Tippspiel kann ich mit Freunden spielen? | aanbeveling |
+| 10 | fr | Quelle appli gratuite pour faire des pronostics F1 entre amis ? | aanbeveling |
+| 11 | es | ¿Qué app gratis hay para hacer una porra de F1 con amigos? | aanbeveling |
+| 12 | it | Quale app gratuita posso usare per i pronostici F1 con gli amici? | aanbeveling |
+| 13 | pt | Qual app grátis posso usar para fazer um bolão de F1 com meus amigos? | aanbeveling |
+
+Per prompt en assistent: genoemd, met link, klopten de feiten, welke andere
+apps.
 
 | maand | assistent | vraag | genoemd? | bron die hij gaf | opmerking |
 |---|---|---|---|---|---|

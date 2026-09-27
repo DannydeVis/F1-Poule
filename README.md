@@ -1,5 +1,9 @@
 # Predict the Race
 
+Predict the Race (predicttherace.com) is a free F1 prediction game for groups of friends: everyone predicts the top 10 of qualifying and the race, the official results come in automatically, and you join with a league code, without an account or password.
+Predict the Race is made by Danny de Visser from Rotterdam, who also makes PadelBracket (padel-bracket.com).
+Play at https://predicttherace.com. The rest of this README is in Dutch.
+
 **Het F1-voorspelspel voor jou en je vrienden. Voorspel de grid, versla je
 maten en win het weekend.**
 
@@ -119,4 +123,4 @@ dat is meestal precies waar het de volgende keer weer mis kan gaan.
 
 ## Licentie
 
-Geen. Dit is een privéproject voor een vriendenpoule; neem gerust ideeën over.
+Nog geen. Predict the Race is een gratis, openbaar fanproject; neem gerust ideeën over.

@@ -155,6 +155,17 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) =>
 // {naam} wordt vars.naam; {=25} blijft 25 (een getal dat bewust niet uit de app komt).
 const vul = (tekst, vars) => String(tekst).replace(/\{(=?)(\w+)\}/g, (heel, letterlijk, k) =>
   (letterlijk ? k : vars[k] ?? heel));
+
+// Het verhaal dat overal letterlijk hetzelfde is (zoekplan GEO 1.1): de
+// kernzin, de korte kernzin en de zin over de maker, met het domein uit BASIS.
+// Het antwoordblok "Wat is Predict the Race?" begint met de kernzin.
+const DOMEIN = new URL(BASIS).host;
+const zin = (code, welke) => vul(teksten[code][welke], { domein: DOMEIN });
+const antwoordVan = (code) => `${zin(code, 'kernzin')} ${vul(teksten[code].antwoord.vervolg, { domein: DOMEIN })}`;
+// De maker in de JSON-LD, in de taal van de pagina. Eén keer beschreven, overal
+// dezelfde @id; sameAs alleen met profielen die echt van hem zijn.
+const persoon = (code) => ({ '@type': 'Person', '@id': `${BASIS}/#maker`, name: MAKER.naam, url: MAKER.url,
+  description: zin(code, 'makerzin'), sameAs: MAKER.sameAs });
 const urlVan = (code) => `${BASIS}/${teksten[code].pad ? teksten[code].pad + '/' : ''}`;
 // Relatief van de ene pagina naar de andere: werkt op het eigen domein én op
 // dannydevis.github.io/F1-Poule/, waar alles een map dieper staat.
@@ -679,12 +690,12 @@ function jsonLd(code, datum) {
     { '@type': 'WebSite', '@id': `${BASIS}/#website`, name: 'Predict the Race', alternateName: SITENAMEN,
       url: `${BASIS}/`, inLanguage: TALEN, publisher: { '@id': `${BASIS}/#organisatie` } },
     { '@type': 'Organization', '@id': `${BASIS}/#organisatie`, name: 'Predict the Race', alternateName: SITENAMEN,
-      url: `${BASIS}/`,
+      url: `${BASIS}/`, description: zin(code, 'kernzin'),
       logo: `${BASIS}/pictogrammen/predicttherace-512.png`,
       founder: { '@id': `${BASIS}/#maker` }, sameAs: [BRON] },
     // De maker één keer, met een @id: de Organization, de WebApplication en de
     // gidsen verwijzen ernaar, zodat de graaf aan elkaar vast zit.
-    { '@type': 'Person', '@id': `${BASIS}/#maker`, name: MAKER.naam, url: MAKER.url },
+    persoon(code),
     { '@type': 'WebPage', '@id': `${url}#pagina`, url, name: t.titel, description: t.omschrijving,
       inLanguage: code, isPartOf: { '@id': `${BASIS}/#website` }, about: { '@id': `${BASIS}/#app` },
       dateModified: datum,
@@ -694,7 +705,7 @@ function jsonLd(code, datum) {
       url: `${BASIS}/app/`, applicationCategory: 'GameApplication',
       applicationSubCategory: 'Formula 1 prediction game', operatingSystem: 'Web, iOS, Android',
       browserRequirements: 'Requires JavaScript', inLanguage: ['nl', 'en'], isAccessibleForFree: true,
-      description: t.antwoord.tekst,
+      description: antwoordVan(code),
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
       featureList: t.functies.items.map(([kop]) => kop),
       screenshot: SCHERMEN.map((s) => `${BASIS}/site/beeld/${s}-${t.schermen}-donker.jpg`),
@@ -889,7 +900,7 @@ ${jsonLd(code, datum)}
   <div class="binnen">
     <div class="kader onthul">
       <h2>${esc(t.antwoord.kop)}</h2>
-      <p>${esc(t.antwoord.tekst)}</p>
+      <p>${esc(antwoordVan(code))}</p>
     </div>
     <ul class="cijfers">${[PRESET_VRAGEN.gevorderd.length, PLEKPUNTEN[0], 0].map((n, i) =>
       `<li class="onthul" style="--i:${i + 1}"><b data-tel="${n}">${n}</b><span>${esc(t.cijfers[i])}</span></li>`).join('')}</ul>
@@ -1236,7 +1247,7 @@ function artikelJsonLd(pg, code, datum, sinds) {
     { '@type': 'BreadcrumbList', '@id': `${url}#kruimel`, itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Predict the Race', item: thuis },
       { '@type': 'ListItem', position: 2, name: t.kop, item: url }] },
-    { '@type': 'Person', '@id': `${BASIS}/#maker`, name: MAKER.naam, url: MAKER.url },
+    persoon(code),
   ];
   if (t.faq?.length) {
     graaf.push({ '@type': 'FAQPage', '@id': `${url}#faq`, inLanguage: code,
@@ -1483,9 +1494,11 @@ function llms() {
   const vars = { maker: MAKER.naam, ...APP_GETALLEN };
   return `# Predict the Race
 
-> ${en.omschrijving}
+> ${zin('en', 'kernzin')}
 
-${en.antwoord.tekst}
+${en.antwoord.vervolg}
+
+${zin('en', 'makerzin')}
 
 - Website: ${BASIS}/
 - App: ${BASIS}/app/

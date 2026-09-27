@@ -923,4 +923,8 @@ start van seizoen 2027 (februari en maart). Eén fase per branch.
 | SEO 5 | meer talen, alleen waar Search Console het zegt | nog niet |
 | AEO 1 | de vragenlijst: elke vraag één plek (`site/vragen.mjs`) | **gebouwd** (26 en 27 september): de startlijst uit het plan, elke vraag die al op de site stond, en wat Claude Code met een zoekmachine vond (1.1). Search Console volgt vanaf november |
 | AEO 2 | de antwoordvorm in de generator: auteursregel, kort antwoord, getallen uit de app | **gebouwd** (27 september): elke sectie een vraag met een kort antwoord van 25 tot 80 woorden, tabellen met bijschrift, geen kaal getal meer, ook niet op de voorpagina |
+| GEO 1 | overal hetzelfde verhaal: kernzin en makerzin op de voorpagina, in de JSON-LD, llms.txt en de README | **gebouwd** (27 september). GitHub-instellingen en profiel: Danny (`OVERDRACHT.md`) |
+| GEO 2 | llms.txt opnieuw opbouwen | na SEO 2 |
+| GEO 3 | eigen cijfers: voorspelbaarheid 2026, safety cars per circuit | 3.2 kan eerder, 3.1 in de week na Abu Dhabi |
+| GEO 4 | de vergelijking als bron | met SEO 2 |
 | AEO 3 | toepassen: twee nieuwe FAQ's op de voorpagina, kernpagina's als vraagblokken | **deels** (27 september): de twee FAQ's staan er in zeven talen (3.1); de kernpagina's volgen met SEO fase 2 (3.2) |
