@@ -27,11 +27,13 @@
 //      niet uit de app, als {=25}). En geen HTML in de teksten.
 //  10. Na het maken staat er nergens nog een {plekhouder}, ook geen {=25}: niet
 //      in de tekst van een pagina, niet in de JSON-LD en niet in llms.txt.
+//  11. De voorpagina heeft in elke taal evenveel veelgestelde vragen: een vraag
+//      die er in het Nederlands bij komt, komt er in alle zeven bij.
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { maakControle, wortel, gepubliceerd } from './hulp.mjs';
-import { MAKER } from '../site/teksten.mjs';
+import { MAKER, TALEN, teksten } from '../site/teksten.mjs';
 import { PAGINAS } from '../site/paginas.mjs';
 
 const { check, afronden } = maakControle('de antwoordvorm van de gidsen');
@@ -165,6 +167,13 @@ for (const { pg, taal, t, html } of gidsen) {
 
   const html = JSON.stringify(PAGINAS).match(/<\/?[a-z][^>]*>/gi) ?? [];
   check('geen HTML in de teksten van de gidsen: de opmaak komt uit het sjabloon', html.length === 0, html.join(' '));
+}
+
+// ---- 11. de FAQ van de voorpagina in elke taal even lang -----------------------------
+{
+  const aantal = TALEN.map((c) => `${c} ${teksten[c].faq.items.length}`);
+  check('de voorpagina heeft in elke taal evenveel veelgestelde vragen',
+    new Set(TALEN.map((c) => teksten[c].faq.items.length)).size === 1, aantal.join(', '));
 }
 
 process.exit(afronden() ? 0 : 1);
