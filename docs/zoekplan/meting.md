@@ -45,7 +45,20 @@ niet-merk.
 ## AEO
 
 Per maand: verschijnt een pagina in een uitgelicht antwoord of in "Anderen
-vroegen ook"? Welke vraag, welke pagina.
+vroegen ook"? Welke vraag, welke pagina. Waar je kijkt (uit `2-aeo.md`):
+
+| waar | wat | wanneer |
+|---|---|---|
+| Search Console, Prestaties, filter "Aangepast (regex)" met de regex hieronder | vertoningen en klikken op vraag-zoekopdrachten, per pagina | maandelijks |
+| Search Console, rapport over AI-overzichten en AI Mode, als het er voor deze property is | vertoningen per pagina (geen klikken, geen zoekopdrachten) | maandelijks |
+| Google, met de hand, in incognito | 10 kernvragen (5 NL, 5 EN) uit `site/vragen.mjs`: staat een pagina van ons in het uitgelichte fragment, onder "Mensen vragen ook" of als bron in het AI-overzicht? | elk kwartaal |
+| Bing Webmaster Tools, AI Performance | bij welke zoekvragen Copilot ons aanhaalt | maandelijks |
+
+```
+^(hoe|wat|wie|wanneer|waarom|welke|welk|kan|kun|moet|is|how|what|who|when|why|which|can|do|does|are)\b
+```
+
+Nieuwe vragen uit die rondes gaan in `site/vragen.mjs`.
 
 | maand | zoekvraag | waar zichtbaar | pagina | opmerking |
 |---|---|---|---|---|

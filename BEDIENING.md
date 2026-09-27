@@ -1842,10 +1842,10 @@ van Google, want zonder meet-ID laadt er niets.
 
 ## 18. Gevonden worden: het zoekplan
 
-Het plan staat in drie delen (SEO, AEO, GEO) buiten de repo; ze gaan pas in
-`docs/zoekplan/` als vaststaat dat die map niet op het domein komt (zie
-hieronder). Wat er van SEO fase 0 in de repo zit, staat in `OVERDRACHT.md`
-("Zoekplan fase 0"). Wat jij zelf doet:
+Het plan staat in `docs/zoekplan/`: `1-seo.md` en `2-aeo.md` (GEO volgt). Die
+map komt niet op het domein. Wat er per fase gebouwd is, staat in
+`OVERDRACHT.md` ("Zoekplan fase ..." en "Zoekplan AEO fase ..."). Wat jij zelf
+doet:
 
 **Na de eerste deploy met `_config.yml`: nalopen dat de documenten weg zijn.**
 In de browser (de omgeving van Claude Code mag het domein niet bereiken):
@@ -1890,6 +1890,15 @@ voorpagina en de datum volgen vanzelf. Een rekenvoorbeeld (`rekenvoorbeeld`:
 een voorspelde top 10 en een uitslag) rekent de generator uit met de code van
 de app zelf; onder welk blok van de voorpagina de link staat, kies je met
 `teaserPlek`. Alle velden staan bovenaan `site/paginas.mjs` uitgelegd.
+
+**De vragenlijst (AEO).** `site/vragen.mjs` houdt bij welke vraag op welke
+plek van de site beantwoord wordt: elke vraag precies één keer. Andere woorden
+voor dezelfde vraag zijn varianten en krijgen nooit een eigen kop. Vragen die
+je tegenkomt (Google-suggesties, "Mensen vragen ook", Reddit, en vanaf november
+Search Console met de regex uit `2-aeo.md`) stuur je ongesorteerd naar Claude
+Code; die zet ze erin. Een kop of FAQ-vraag die niet in de lijst staat, of die
+een andere pagina al beantwoordt, laat `test/vragen.test.mjs` zakken. Elk
+kwartaal (januari, april, juli, oktober) een half uur zo'n ronde.
 
 **Nieuwe teksten eerst lezen.** Een pull request met nieuwe teksten voor de
 site opent Claude Code als *concept*: de automerge slaat een concept over, dus
