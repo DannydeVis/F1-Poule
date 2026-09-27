@@ -1,0 +1,59 @@
+name: Circuitcijfers
+
+# Safety cars en rode vlaggen per circuit, sinds 2023 (zoekplan GEO 3.2). Zie
+# scripts/circuits.mjs. api.openf1.org is niet vanaf elke plek bereikbaar,
+# vanaf een GitHub-runner wel; daarom hier en niet op de laptop.
+#
+# Elke dinsdag, na een raceweekend, en met de hand vanuit het Actions-tabblad.
+# Schrijft site/data/circuits.json en legt hem vast als er iets veranderd is.
+# Daarna ook de site opnieuw, voor als de generator het bestand gebruikt: dan
+# staan de nieuwe cijfers meteen op de pagina's, en blijft `maak-site
+# --controle` in de tests groen.
+#
+# Op een pull request die het script of deze workflow aanpast: alleen de
+# tabel in de log (DROOG), niets vastgelegd. Zo is te zien wat er echt
+# uitkomt voordat het ergens staat.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '41 5 * * 2'
+  pull_request:
+    paths:
+      - 'scripts/circuits.mjs'
+      - '.github/workflows/circuits.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  tellen:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Tellen met de regels van de app
+        env:
+          DROOG: ${{ github.event_name == 'pull_request' && '1' || '' }}
+        run: node scripts/circuits.mjs
+
+      # De pull --rebase is er voor de samenloop dat automerge of de sync net
+      # iets in main zet terwijl deze run bezig is.
+      - name: Vastleggen als er iets veranderd is
+        if: github.event_name != 'pull_request'
+        run: |
+          node scripts/maak-site.mjs
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Niets veranderd, niets vast te leggen"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Circuitcijfers bijgewerkt"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
