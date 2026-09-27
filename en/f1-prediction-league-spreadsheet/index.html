@@ -44,7 +44,7 @@
     "@id": "https://predicttherace.com/en/f1-prediction-league-spreadsheet/#kruimel"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26"
+   "dateModified": "2026-09-27"
   },
   {
    "@type": "Article",
@@ -56,7 +56,7 @@
     "@id": "https://predicttherace.com/en/f1-prediction-league-spreadsheet/#pagina"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26",
+   "dateModified": "2026-09-27",
    "author": {
     "@id": "https://predicttherace.com/#maker"
    },
@@ -590,7 +590,10 @@
   .artikel h2{font-size:clamp(23px,3.6vw,29px);line-height:1.2;margin:0 0 10px}
   .artikel p,.artikel li{line-height:1.65}
   .artikel p{margin:0 0 12px}
-  .artikel .kernzin{font-weight:600}
+  .artikel section .kort{font-weight:600}
+  .artikel .door{font-size:15px;color:var(--ink2);margin:0 0 16px}
+  .artikel .door a{color:var(--accent-tekst)}
+  .artikel caption{text-align:left;font-size:15px;color:var(--ink2);padding:0 0 8px}
   .artikel ol,.artikel ul{margin:0 0 14px;padding-left:24px}
   .artikel li{margin:0 0 8px}
   .artikel .voorbeeld{background:var(--paneel);border:1px solid var(--lijn);border-left:3px solid var(--accent);
@@ -603,7 +606,6 @@
   .artikel .slotblok{margin-top:34px;padding:26px;border-radius:16px;background:var(--nacht);color:var(--nacht-ink)}
   .artikel .slotblok h2{margin:0 0 6px}
   .artikel .slotblok p{color:var(--nacht-ink2)}
-  .artikel .datum{margin:30px 0 0}
   .artikel .tabel.getallen th:last-child{text-align:right}
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
   .artikel .tabellen{margin:4px 0 16px}
@@ -638,43 +640,45 @@
       <li aria-current="page">Running an F1 prediction league in a spreadsheet</li>
     </ol></nav>
     <h1>Running an F1 prediction league in a spreadsheet</h1>
-    <p class="inleiding">A spreadsheet works fine. Each player needs four columns and one formula to score every driver. The work is not in the formula but in the upkeep: typing in the full result every race weekend, fixing it after penalties, and making sure everyone submits before the start.</p>
+    <p class="door">By <a href="https://github.com/DannydeVis" rel="author">Danny de Visser</a>, updated <time datetime="2026-09-27">September 27, 2026</time></p>
+    <p class="kort inleiding">An F1 prediction league runs fine in a spreadsheet. Each player needs four columns and one formula to score every driver. The work is not in the formula but in the upkeep: typing in the full result every race weekend, fixing it after penalties, and making sure everyone submits before the start.</p>
 
-    <section id="columns">
+    <section class="vraag" id="columns">
       <h2>What columns do you need?</h2>
-      <p class="kernzin">Four per player per session: the driver, where the player predicted him, where he actually finished, and the points.</p>
+      <p class="kort">An F1 prediction league spreadsheet needs four columns per player per session: the driver, where the player predicted him, where he actually finished, and the points. Use one tab per race with a block like that for each player, and a totals tab that adds everything up.</p>
       <table class="tabel">
+        <caption>The four columns per player, with an example row</caption>
         <thead><tr><th scope="col">Column</th><th scope="col">What goes in it</th><th scope="col">Example</th></tr></thead>
         <tbody><tr><th scope="row">A</th><td>The driver</td><td>Verstappen</td></tr><tr><th scope="row">B</th><td>Predicted position, 1 to 10</td><td>1</td></tr><tr><th scope="row">C</th><td>Actual position, blank if not classified</td><td>2</td></tr><tr><th scope="row">D</th><td>Points, from the formula below</td><td>3</td></tr></tbody>
       </table>
-      <p>Row 1 holds the headers and the ten drivers go in rows 2 to 11. Use one tab per race with a block of four columns for each player side by side, and a totals tab that adds everything up. Copy the block for the next player and the formulas move along with it.</p>
+      <p>Row 1 holds the headers and the ten drivers go in rows 2 to 11. Put the players' blocks side by side; copy the block for the next player and the formulas move along with it.</p>
     </section>
 
-    <section id="formula">
+    <section class="vraag" id="formula">
       <h2>Which formula scores the points?</h2>
-      <p class="kernzin">This one, in D2 and filled down to D11: 5 points for the exact spot, 2 fewer for every place off, never below zero.</p>
+      <p class="kort">The formula that scores the points is =IF(C2=&quot;&quot;,0,MAX(0,5-2*ABS(B2-C2))), in D2 and filled down to D11. It gives 5 points for the exact spot, 2 fewer for every place off and never less than zero, the same points Predict the Race gives.</p>
       <dl class="formules"><dt>Excel or Google Sheets in English</dt><dd><code>=IF(C2=&quot;&quot;,0,MAX(0,5-2*ABS(B2-C2)))</code></dd><dt>The session total, in D12</dt><dd><code>=SUM(D2:D11)</code></dd></dl>
       <p>That is the same sum Predict the Race uses: 5 for exact, 3 for one place off, 1 for two places off, and nothing from three places off.</p>
       <p>The IF part is there for blank cells. Without it, a blank counts as position 0, and a player can pick up points for a driver who had no classified position.</p>
       <p>Where decimals are written with a comma, as in much of Europe, the commas in the formula become semicolons.</p>
     </section>
 
-    <section id="outside-top-10">
+    <section class="vraag" id="outside-top-10">
       <h2>What about drivers outside the top 10?</h2>
-      <p class="kernzin">Enter their actual position like any other. If a player puts someone in P10 and he finishes eleventh, that is one place off, so 3 points.</p>
-      <p>That is why you need the full result, not just the top 10. Only leave the cell blank for a driver with no position in the official classification, such as not classified or disqualified. He scores zero.</p>
+      <p class="kort">Enter a driver outside the top 10 with his actual position, like any other. If a player puts someone in P10 and he finishes eleventh, that is one place off, so 3 points. Only leave the cell blank for a driver with no position in the official classification; he scores zero.</p>
+      <p>That is why you need the full result, not just the top 10. No position means, for example, not classified or disqualified.</p>
     </section>
 
-    <section id="problems">
+    <section class="vraag" id="problems">
       <h2>Where does a spreadsheet let you down?</h2>
-      <p class="kernzin">Rarely in the formula. It goes wrong in the upkeep: a few races in, one person is doing all the work, every weekend.</p>
+      <p class="kort">A spreadsheet league rarely goes wrong in the formula, and almost always in the upkeep. A few races in, one person is doing all the work: typing in every result, fixing it after penalties, chasing deadlines and sending round the standings, every single weekend.</p>
       <ul><li><b>Typing in every result.</b> The full qualifying and race result, every race weekend. Swap two rows and the standings are wrong, and nobody notices.</li><li><b>Penalties after the flag.</b> A time penalty after the finish reshuffles the result. Then you go back to that tab and check everything again.</li><li><b>Deadlines.</b> Who sent their top 10 before the start? In a group chat, &quot;I had already typed it&quot; is impossible to check, and a list that turns up after lights out starts an argument.</li><li><b>Standings on a phone.</b> You can share the sheet, but four columns per player is hard to read on a phone.</li></ul>
     </section>
 
-    <section id="without-a-spreadsheet">
+    <section class="vraag" id="without-a-spreadsheet">
       <h2>Can you do it without a spreadsheet?</h2>
-      <p class="kernzin">Yes. Predict the Race scores the same way, and the results come in on their own.</p>
-      <p>After every qualifying session and race the app fetches the official result and works out the points. Predictions close when the session starts, so nobody can change anything afterwards. And if a penalty changes the result shortly after the race, the app scores it again.</p>
+      <p class="kort">Yes, an F1 prediction league works without a spreadsheet. Predict the Race scores the same way, but fetches the official result itself after every qualifying session and race. Predictions close when the session starts, so nobody can change anything afterwards.</p>
+      <p>If a penalty changes the result shortly after the race, the app scores it again. And the standings are on everyone's phone, showing who climbed and who dropped.</p>
       <p>It is free and nobody needs an account. You share the league with a code in the group chat.</p>
     </section>
     <section id="faq">
@@ -694,7 +698,6 @@
       <p>Start your league in a minute and share the code with your friends.</p>
       <a class="knop" href="../../app/">Start your league <span aria-hidden="true">→</span></a>
     </div>
-    <p class="label datum"><time datetime="2026-09-26">Updated September 26, 2026</time></p>
   </div>
 </main>
 <footer class="voet">

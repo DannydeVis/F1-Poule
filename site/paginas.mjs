@@ -17,6 +17,13 @@
 //   secties        { id, vraag, kort, tekst?, stappen?, tabel?, rekenvoorbeeld?,
 //                    voorbeeld?, vragentabel?, formules?, punten?, lijst? }
 //                  vraag wordt een h2, kort de eerste alinea eronder
+//                  Elk kort antwoord (ook dat bovenaan): het antwoord in de
+//                  eerste zin, 25 tot 80 woorden, het onderwerp bij naam, niet
+//                  beginnen met een verwijswoord (Dit, Deze, This, That...),
+//                  geen HTML. Zo kan hij los overgenomen worden
+//                  (test/antwoordvorm.test.mjs).
+//   tabel          { bijschrift, kop, rijen }: de eerste cel van elke rij wordt
+//                  een th, het bijschrift de caption (verplicht)
 //   faq            [vraag, antwoord], alleen vragen die niet al op de voorpagina staan
 //   leesOok        [anker op de voorpagina, linktekst]
 //
@@ -25,7 +32,7 @@
 //   teaserPlek     onder welk blok van de voorpagina de link staat: 'hoe'
 //                  (standaard, onder de stappen) of 'punten' (onder de puntentabel)
 //   rekenvoorbeeld { voorspeld: tien coureurs, uitslag: de uitslag op volgorde }.
-//                  Een sectie met rekenvoorbeeld: { kop, geenPlek, totaal } toont
+//                  Een sectie met rekenvoorbeeld: { bijschrift, kop, geenPlek, totaal } toont
 //                  het als tabel, uitgerekend door scoreLijst() uit de app, en
 //                  {voorbeeldTotaal}, {voorbeeldExact} en {voorbeeldDichtbij}
 //                  komen daar ook uit. Wie niet in de uitslag staat, kreeg geen plek.
@@ -36,8 +43,10 @@
 //   formules       [wat, formule]: formules voor een spreadsheet, als code
 //
 // Getallen over de app (punten, aantal vragen, jokers, meldingen) staan er als
-// {naam} in en komen bij het maken uit de app zelf (feitenVoor() in
-// maak-site.mjs). Nooit overtypen: verandert de app, dan verandert de pagina mee.
+// {naam} in en komen bij het maken uit de app zelf (APP_GETALLEN en
+// feitenVoor() in maak-site.mjs; de spreadsheetformule als {formuleNL} en
+// {formuleEN}). Nooit overtypen: verandert de app, dan verandert de pagina mee.
+// Een getal dat bewust niet uit de app komt, schrijf je als {=25}.
 //
 // Schrijfregels uit het zoekplan: het antwoord eerst, geen en-dash of em-dash,
 // en Nederlands en Engels elk zelf geschreven, niet de een uit de ander
@@ -60,7 +69,7 @@ export const PAGINAS = [
           {
             id: 'opzetten',
             vraag: 'Hoe zet je een F1-poule op?',
-            kort: 'In vier stappen. Daarna hoef je als poulebaas niets meer bij te houden.',
+            kort: 'Een F1-poule zet je in vier stappen op: geef hem een naam, vul je eigen naam in, kies hoeveel er te voorspellen valt en deel de code in de groepsapp. Daarna hoeft de poulebaas niets meer bij te houden, want de kalender, de coureurs en de uitslagen komen vanzelf binnen.',
             stappen: [
               'Geef de poule een naam. Die staat in de app en in de uitnodiging. Zit iemand in meer dan één poule, dan helpt een korte omschrijving erbij, zoals "met de collega\'s, om de eer".',
               'Vul je eigen naam in. Je bent meteen de eerste speler en de poulebaas: jij kiest de vragen en de spelregels.',
@@ -75,8 +84,9 @@ export const PAGINAS = [
           {
             id: 'vragen',
             vraag: 'Hoeveel vragen laat je meetellen?',
-            kort: 'Zo veel als je groep volhoudt. Twee top 10\'s per weekend is genoeg voor een fanatieke poule; wie alles wil, voorspelt er {nGevorderd}.',
+            kort: 'Laat zo veel vragen meetellen als je groep volhoudt. De twee top 10\'s per weekend, van de kwalificatie en de race, zijn genoeg voor een fanatieke poule. Wie meer wil, kiest Klassiek met de winnaar, de pole position en de snelste ronde erbij, of Gevorderd met alle {nGevorderd} vragen.',
             tabel: {
+              bijschrift: 'De drie niveaus van Predict the Race',
               kop: ['Niveau', 'Vragen', 'Punten per weekend'],
               rijen: [
                 ['Simpel', '{nSimpel}', '{simpel}'],
@@ -85,22 +95,22 @@ export const PAGINAS = [
               ],
             },
             tekst: [
-              'Simpel is alleen de twee top 10\'s: de kwalificatie en de race. Klassiek voegt de winnaar, de pole position en de snelste ronde toe. Gevorderd zet alles aan, van snelste pitstop en teamgenoot-duels tot het aantal safety cars en een rode vlag.',
+              'Simpel is alleen de twee top 10\'s. Gevorderd zet alles aan, van snelste pitstop en teamgenoot-duels tot het aantal safety cars en een rode vlag.',
               'Meer vragen betekent meer te winnen, maar ook langer invullen. In een groep waar de helft pas op zaterdagochtend aan de kwalificatie denkt, houdt Simpel het langer vol dan Gevorderd.',
             ],
           },
           {
             id: 'jokers',
             vraag: 'Speel je met jokers?',
-            kort: 'Met een joker tellen al je punten van één raceweekend dubbel. Staan jokers aan, dan heeft iedereen er standaard {jokers} per seizoen; als poulebaas kies je er 1 tot {jokersMax}, of je laat ze uit.',
+            kort: 'Ja, als je wilt dat wie achter staat iets heeft om op te hopen. Met een joker tellen al je punten van één raceweekend dubbel. Staan jokers aan, dan heeft iedereen er standaard {jokers} per seizoen; als poulebaas kies je er 1 tot {jokersMax}, of je laat ze uit.',
             tekst: [
-              'Je zet een joker voordat het weekend begint, daarna ligt hij vast. Jokers geven wie achter staat iets om op te hopen, en ze maken van elk weekend een kleine gok: is dit het circuit waar jij het beter weet dan de rest?',
+              'Je zet een joker voordat het weekend begint, daarna ligt hij vast. Zo wordt elk weekend een kleine gok: is dit het circuit waar jij het beter weet dan de rest?',
             ],
           },
           {
             id: 'valkuilen',
             vraag: 'Waar loopt een F1-poule op stuk?',
-            kort: 'Zelden op de vragen. Bijna altijd op een van drie dingen: een achterstand die niet meer in te halen is, vergeten in te vullen, of niets om na de race over te praten.',
+            kort: 'Een F1-poule loopt zelden op de vragen stuk. Bijna altijd is het een van drie dingen: een achterstand die niet meer in te halen is, spelers die vergeten in te vullen, of niets om na de race over te praten. Tegen elk daarvan helpt iets anders: meer te winnen dan de eindstand, herinneringen voor de deadline, en elk weekend iets om te laten zien.',
             punten: [
               ['Een onbereikbare achterstand', 'Wie na acht races ver achter staat, haakt af. Geef daarom meer te winnen dan alleen de eindstand: de weekendwinnaar (wie een weekend de meeste punten pakt, wint dat weekend), de onderlinge duels (per vriend zie je wie er vaker won) en de jokers.'],
               ['Vergeten in te vullen', 'Eén gemiste race zet je op achterstand, na twee haak je af. Daartegen helpen het agenda-abonnement met een melding {agendaUur} voor elke deadline, een pushmelding als je {venster} voor een deadline nog niets hebt ingevuld, en automatisch invullen: wie niets inlevert, krijgt een willekeurige top 10 in plaats van nul punten.'],
@@ -109,8 +119,8 @@ export const PAGINAS = [
           },
           {
             id: 'checklist',
-            vraag: 'Checklist voor de poulebaas',
-            kort: 'Loop dit na voordat het seizoen begint.',
+            vraag: 'Wat regel je voordat het seizoen begint?',
+            kort: 'Regel vóór de eerste kwalificatie de poule en de code, het niveau, de jokers en automatisch invullen. Zorg dat iedereen de agenda of de meldingen aanzet en de seizoensvragen invult, en spreek af waar je om speelt. Wie dat op tijd regelt, hoeft er de rest van het seizoen niet meer aan te denken.',
             lijst: [
               'De poule staat klaar en de code is gedeeld, vóór de eerste kwalificatie.',
               'Het niveau is gekozen: Simpel, Klassiek, Gevorderd of zelf samengesteld.',
@@ -145,7 +155,7 @@ export const PAGINAS = [
           {
             id: 'set-up',
             vraag: 'How do you set up an F1 prediction league?',
-            kort: 'In four steps. After that, the league admin has nothing left to keep track of.',
+            kort: 'You set up an F1 prediction league in four steps: name the league, enter your own name, decide how much to predict and share the code in your group chat. After that the league admin has nothing to keep track of, because the calendar, the drivers and the results come in on their own.',
             stappen: [
               'Name the league. The name shows in the app and in the invite. A short description helps anyone who plays in more than one league, something like "work league, for the glory".',
               'Enter your own name. You are the first player and the league admin, so you pick the questions and the rules.',
@@ -160,8 +170,9 @@ export const PAGINAS = [
           {
             id: 'questions',
             vraag: 'How many questions should count?',
-            kort: 'As many as your group will keep up with. Two top 10s a weekend is plenty for a competitive league; if you want everything, there are {nGevorderd}.',
+            kort: 'Count as many questions as your group will keep up with. The two top 10s each weekend, qualifying and race, are plenty for a competitive league. If you want more, Classic adds the winner, pole position and fastest lap, and Advanced switches on all {nGevorderd} questions.',
             tabel: {
+              bijschrift: 'The three levels in Predict the Race',
               kop: ['Level', 'Questions', 'Points per weekend'],
               rijen: [
                 ['Simple', '{nSimpel}', '{simpel}'],
@@ -170,22 +181,22 @@ export const PAGINAS = [
               ],
             },
             tekst: [
-              'Simple is just the two top 10s, qualifying and race. Classic adds the winner, pole position and fastest lap. Advanced switches everything on, from fastest pit stop and teammate battles to the number of safety cars and a red flag.',
+              'Simple is just the two top 10s. Advanced switches everything on, from fastest pit stop and teammate battles to the number of safety cars and a red flag.',
               'More questions means more to win, but also more to fill in. In a group where half the players only think about qualifying on Saturday morning, Simple lasts longer than Advanced.',
             ],
           },
           {
             id: 'jokers',
             vraag: 'Should you play with jokers?',
-            kort: 'A joker doubles all your points for one race weekend. With jokers switched on, everyone gets {jokers} per season by default; as the league admin you can set anything from 1 to {jokersMax}, or leave them off.',
+            kort: 'Yes, if you want players who are behind to have something to hope for. A joker doubles all your points for one race weekend. With jokers switched on, everyone gets {jokers} per season by default; as the league admin you can set anything from 1 to {jokersMax}, or leave them off.',
             tekst: [
-              'You play a joker before the weekend starts, and then it is locked in. Jokers give players who are behind something to hope for, and they turn every weekend into a small bet: is this the circuit where you know better than everyone else?',
+              'You play a joker before the weekend starts, and then it is locked in. It turns every weekend into a small bet: is this the circuit where you know better than everyone else?',
             ],
           },
           {
             id: 'pitfalls',
             vraag: 'What kills an F1 prediction league?',
-            kort: 'Rarely the questions. It is almost always one of three things: a gap nobody can close, people forgetting to enter, or nothing to talk about after the race.',
+            kort: 'An F1 prediction league rarely dies because of the questions. It is almost always one of three things: a gap nobody can close, people forgetting to enter, or nothing to talk about after the race. Each has its own fix: more to win than the final standings, reminders before the deadline, and something to show every weekend.',
             punten: [
               ['A gap nobody can close', 'Someone who is miles behind after eight races stops playing. So give people more to win than the final standings: the weekend winner (whoever scores the most in a weekend wins that weekend), head-to-head records (you see who has won more often against each friend) and jokers.'],
               ['Forgetting to enter', 'Miss one race and you are behind; miss two and you are gone. What helps: the calendar subscription with a reminder {agendaUur} before every deadline, a push notification when you have not entered anything {venster} before a deadline, and auto-fill, which gives anyone who forgets a random top 10 instead of zero.'],
@@ -194,8 +205,8 @@ export const PAGINAS = [
           },
           {
             id: 'checklist',
-            vraag: 'A checklist for the league admin',
-            kort: 'Go through this before the season starts.',
+            vraag: 'What should you sort out before the season starts?',
+            kort: 'Before the first qualifying session, sort out the league and the code, the level, jokers and auto-fill. Make sure everyone subscribes to the calendar or switches on notifications, fills in the season questions, and knows what you are playing for. Sort that out early and nobody has to think about it again all season.',
             lijst: [
               'The league exists and the code is shared, before the first qualifying session.',
               'The level is chosen: Simple, Classic, Advanced or your own set.',
@@ -243,7 +254,7 @@ export const PAGINAS = [
           {
             id: 'systemen',
             vraag: 'Welke puntentellingen zijn er?',
-            kort: 'Vier gangbare. Het grote verschil is of bijna goed ook punten oplevert.',
+            kort: 'Er zijn vier gangbare puntentellingen voor een F1-poule: alleen exact goed, punten naar afstand, de echte WK-punten, en alleen winnaar en podium. Het grote verschil is of bijna goed ook punten oplevert. Predict the Race telt naar afstand, omdat wie het veld goed inschat dan ook scoort als de volgorde net anders uitvalt.',
             punten: [
               ['Alleen exact goed', 'Punten als een coureur precies eindigt op de plek waar jij hem zette. Makkelijk uit te leggen, maar een top 10 die overal één plek naast zit, levert niets op. Na een paar races staat iedereen rond nul en beslist één gelukstreffer de stand.'],
               ['Punten naar afstand', '{exact} punten voor precies goed, {bijna} voor één plek ernaast, {twee} voor twee plekken ernaast, en daarna niets. Zo telt Predict the Race. Wie het veld goed inschat, scoort ook als de volgorde net anders uitvalt. Het nadeel is het rekenwerk: met de hand zijn dat tien coureurs per sessie per speler.'],
@@ -257,8 +268,9 @@ export const PAGINAS = [
           {
             id: 'rekenvoorbeeld',
             vraag: 'Hoe reken je een top 10 uit?',
-            kort: 'Per coureur tel je hoeveel plekken hij van jouw voorspelling af zit, en zoek je de punten daarbij op. Hieronder een verzonnen race, uitgerekend met dezelfde code die in de app de punten geeft.',
-            rekenvoorbeeld: { kop: ['Coureur', 'Jouw plek', 'Uitslag', 'Punten'], geenPlek: 'uitgevallen', totaal: 'Totaal' },
+            kort: 'Een top 10 reken je per coureur uit: {exact} punten als hij precies op jouw plek eindigt, {een} bij één plek ernaast, {twee} bij twee plekken ernaast, en daarna niets. Tel de tien regels op; een perfecte top 10 is {perfect} punten. Hieronder een verzonnen race, uitgerekend met dezelfde code die in de app de punten geeft.',
+            rekenvoorbeeld: { bijschrift: 'Een verzonnen race: jouw top 10 naast de uitslag',
+              kop: ['Coureur', 'Jouw plek', 'Uitslag', 'Punten'], geenPlek: 'uitgevallen', totaal: 'Totaal' },
             voorbeeld: 'Totaal {voorbeeldTotaal} van de {top10} punten. Als alleen exact goed telde, was het {voorbeeldExact} geweest, terwijl {voorbeeldDichtbij} van de 10 coureurs hooguit één plek van hun voorspelde plek eindigden.',
             tekst: [
               'Kijk naar Albon: in de voorspelling op P10, in de uitslag elfde. Dat is één plek ernaast en dus {bijna} punten, ook al valt hij buiten de top 10. Sainz viel uit en kreeg geen plek in de uitslag, dus nul.',
@@ -267,16 +279,15 @@ export const PAGINAS = [
           {
             id: 'bijna-goed',
             vraag: 'Waarom telt bijna goed mee?',
-            kort: 'Omdat een F1-uitslag altijd een beetje toeval is. Eén trage pitstop en je P4 wordt P5.',
+            kort: 'Bijna goed telt mee omdat een F1-uitslag altijd een beetje toeval is: één trage pitstop en je P4 wordt P5. Als alleen exact goed telt, wint wie geluk heeft. Telt de afstand mee, dan wint wie het veld het best inschat, en daar hoort een poule over te gaan.',
             tekst: [
-              'Als alleen exact goed telt, wint wie geluk heeft. Telt de afstand mee, dan wint wie het veld het best inschat, en daar hoort een poule over te gaan.',
               'Het houdt de poule ook spannend. Wie een slecht weekend heeft, pakt toch punten, en de achterstand op de koploper blijft in te halen.',
             ],
           },
           {
             id: 'losse-vragen',
             vraag: 'Welke vragen kun je nog meer laten meetellen?',
-            kort: 'Naast de twee top 10\'s zijn er losse vragen per weekend en {nSeizoen} seizoensvragen, elk met een vast aantal punten voor een goed antwoord.',
+            kort: 'Naast de twee top 10\'s kun je losse vragen per weekend laten meetellen, zoals de winnaar, de pole position en de snelste ronde, plus {nSeizoen} seizoensvragen voor het hele jaar. Elke vraag levert een vast aantal punten op voor een goed antwoord: de winnaar is {winnaar} punten waard, de pole position {pole}.',
             vragentabel: true,
             tekst: [
               'Wat een weekend kan opleveren, hangt af van het niveau dat de poulebaas kiest: {simpel} punten bij Simpel, {klassiek} bij Klassiek en {gevorderd} bij Gevorderd. Op een sprintweekend komt de sprint erbij, en de seizoensvragen tellen aan het eind van het seizoen mee.',
@@ -285,18 +296,12 @@ export const PAGINAS = [
           {
             id: 'gelijk',
             vraag: 'Wat als twee spelers evenveel punten hebben?',
-            kort: 'Dan delen ze de plek. Twee spelers met evenveel punten staan allebei tweede, en wie daarna komt, staat vierde: 1, 2, 2, 4.',
-            tekst: [
-              'Bij de weekendwinnaar werkt het net zo. Hebben twee spelers dezelfde hoogste score, dan hebben ze dat weekend allebei gewonnen.',
-            ],
+            kort: 'Twee spelers met evenveel punten delen de plek. Staan ze samen op twee, dan is de volgende speler vierde: 1, 2, 2, 4. Zo telt Predict the Race de stand. Bij de weekendwinnaar werkt het net zo: hebben twee spelers dezelfde hoogste score, dan hebben ze dat weekend allebei gewonnen.',
           },
           {
             id: 'jokers',
             vraag: 'Wat doet een joker met je punten?',
-            kort: 'Met een joker tellen al je punten van dat weekend dubbel: de top 10\'s, de sprint en de losse vragen. De seizoensvragen tellen nooit dubbel.',
-            tekst: [
-              'Staan jokers aan, dan heeft iedereen er standaard {jokers} per seizoen. Een joker zet je voordat het weekend begint.',
-            ],
+            kort: 'Een joker verdubbelt al je punten van één weekend: de top 10\'s, de sprint en de losse vragen. De seizoensvragen tellen nooit dubbel. Staan jokers aan in je poule, dan heeft iedereen er standaard {jokers} per seizoen, en je zet een joker voordat het weekend begint.',
           },
         ],
         faq: [
@@ -321,7 +326,7 @@ export const PAGINAS = [
           {
             id: 'systems',
             vraag: 'What scoring systems are there?',
-            kort: 'Four common ones. What sets them apart is whether nearly right still scores.',
+            kort: 'There are four common scoring systems for F1 predictions: exact spot only, points by distance, real championship points, and winner and podium only. What sets them apart is whether nearly right still scores. Predict the Race scores by distance, so anyone who reads the field well still scores when the order comes out slightly different.',
             punten: [
               ['Exact position only', 'You score when a driver finishes exactly where you put him. Easy to explain, but a top 10 that is one place off everywhere scores nothing. A few races in, everyone is close to zero and one lucky guess decides the league.'],
               ['Points by distance', '{exact} points for the exact spot, {bijna} for one place off, {twee} for two places off, nothing beyond that. This is how Predict the Race scores. If you read the field well, you score even when the order shuffles a little. The catch is the maths: by hand, that is ten drivers per session for every player.'],
@@ -335,8 +340,9 @@ export const PAGINAS = [
           {
             id: 'worked-example',
             vraag: 'How do you score a top 10?',
-            kort: 'For each driver, count how many places he finished from your prediction and look up the points. Below is a made-up race, scored by the same code that scores the app.',
-            rekenvoorbeeld: { kop: ['Driver', 'Your pick', 'Result', 'Points'], geenPlek: 'DNF', totaal: 'Total' },
+            kort: 'Score a top 10 driver by driver: {exact} points if he finishes exactly where you put him, {een} for one place off, {twee} for two places off, and nothing after that. Add up the ten rows; a perfect top 10 is worth {perfect}. Below is a made-up race, scored with the same code the app uses.',
+            rekenvoorbeeld: { bijschrift: 'A made-up race: your top 10 against the result',
+              kop: ['Driver', 'Your pick', 'Result', 'Points'], geenPlek: 'DNF', totaal: 'Total' },
             voorbeeld: '{voorbeeldTotaal} out of {top10} points. Counting exact hits only, it would have been {voorbeeldExact}, even though {voorbeeldDichtbij} of the 10 drivers finished within one place of the prediction.',
             tekst: [
               'Look at Albon: predicted P10, finished eleventh. That is one place off, so {bijna} points, even though he ended up outside the top 10. Sainz retired and has no classified position, so he scores zero.',
@@ -345,16 +351,15 @@ export const PAGINAS = [
           {
             id: 'nearly-right',
             vraag: 'Why should nearly right count?',
-            kort: 'Because an F1 result always has some luck in it. One slow pit stop and your P4 becomes P5.',
+            kort: 'Nearly right should count because an F1 result always has some luck in it: one slow pit stop and your P4 becomes P5. If only the exact spot counts, the luckiest player wins. If distance counts, the player who reads the field best wins, and that is what a prediction league should be about.',
             tekst: [
-              'If only exact hits count, the luckiest player wins. If distance counts, the player who reads the field best wins, and that is what a prediction league should reward.',
               'It also keeps the league alive. A bad weekend still earns you something, and the leader stays within reach.',
             ],
           },
           {
             id: 'extra-questions',
             vraag: 'What else can you score?',
-            kort: 'Besides the two top 10s there are extra questions every weekend and {nSeizoen} season questions, each worth a fixed number of points for a correct answer.',
+            kort: 'Besides the two top 10s, you can score extra questions every weekend, such as the winner, pole position and fastest lap, plus {nSeizoen} season questions for the whole year. Each one is worth a fixed number of points for a right answer: the winner {winnaar}, pole position {pole}.',
             vragentabel: true,
             tekst: [
               'How much a weekend is worth depends on the level the league admin picks: {simpel} points on Simple, {klassiek} on Classic and {gevorderd} on Advanced. On sprint weekends the sprint comes on top, and the season questions are settled at the end of the season.',
@@ -363,18 +368,12 @@ export const PAGINAS = [
           {
             id: 'ties',
             vraag: 'What happens when two players are level on points?',
-            kort: 'They share the position. Two players on the same points are both second, and the next player is fourth: 1, 2, 2, 4.',
-            tekst: [
-              'The weekend winner works the same way. If two players share the top score, they both win that weekend.',
-            ],
+            kort: 'Two players on the same points share the position. If they are level in second, the next player is fourth: 1, 2, 2, 4. Predict the Race ranks the standings that way. The weekend winner works the same: if two players share the top score, they both won that weekend.',
           },
           {
             id: 'jokers',
             vraag: 'What does a joker do to your points?',
-            kort: 'A joker doubles everything you score that weekend: both top 10s, the sprint and the extra questions. Season questions are never doubled.',
-            tekst: [
-              'With jokers switched on, everyone gets {jokers} per season by default. You play a joker before the weekend starts.',
-            ],
+            kort: 'A joker doubles everything you score in one weekend: both top 10s, the sprint and the extra questions. Season questions are never doubled. With jokers switched on in your league, everyone gets {jokers} per season by default, and you play a joker before the weekend starts.',
           },
         ],
         faq: [
@@ -401,14 +400,15 @@ export const PAGINAS = [
         titel: 'F1-poule bijhouden in Excel | Predict the Race',
         omschrijving: 'Een F1-poule bijhouden in Excel of Google Spreadsheets: welke kolommen je nodig hebt, de formule voor de punten per plek en waar het in een seizoen misgaat.',
         kop: 'Een F1-poule bijhouden in Excel',
-        kort: 'Dat kan prima. Je hebt per speler vier kolommen nodig en één formule die de punten per coureur uitrekent. Het werk zit niet in de formule maar in het bijhouden: elk raceweekend de hele uitslag overtypen, straffen achteraf verwerken en zorgen dat iedereen op tijd inlevert.',
+        kort: 'Een F1-poule bijhouden in Excel kan prima. Je hebt per speler vier kolommen nodig en één formule die de punten per coureur uitrekent. Het werk zit niet in de formule maar in het bijhouden: elk raceweekend de hele uitslag overtypen, straffen achteraf verwerken en zorgen dat iedereen op tijd inlevert.',
         teaser: 'Liever zelf bijhouden in Excel? De kolommen en de formule',
         secties: [
           {
             id: 'kolommen',
             vraag: 'Welke kolommen heb je nodig?',
-            kort: 'Per speler en per sessie vier: de coureur, de plek die de speler voorspelde, de plek waar de coureur echt eindigde, en de punten.',
+            kort: 'Voor een F1-poule in Excel heb je per speler en per sessie vier kolommen nodig: de coureur, de plek die de speler voorspelde, de plek waar de coureur echt eindigde, en de punten. Maak per race een tabblad met zo\'n blok per speler, en een tabblad met de totalen.',
             tabel: {
+              bijschrift: 'De vier kolommen per speler, met een voorbeeldregel',
               kop: ['Kolom', 'Wat erin staat', 'Voorbeeld'],
               rijen: [
                 ['A', 'De coureur', 'Verstappen'],
@@ -418,15 +418,15 @@ export const PAGINAS = [
               ],
             },
             tekst: [
-              'In rij 1 staan de kopjes, de tien coureurs in rij 2 tot en met 11. Maak per race een tabblad met voor elke speler zo\'n blok van vier kolommen naast elkaar, en een tabblad met de totalen dat alles optelt. Kopieer je het blok voor de volgende speler, dan schuiven de formules vanzelf mee.',
+              'In rij 1 staan de kopjes, de tien coureurs in rij 2 tot en met 11. Zet de blokken van de spelers naast elkaar; kopieer je het blok voor de volgende speler, dan schuiven de formules vanzelf mee.',
             ],
           },
           {
             id: 'formule',
             vraag: 'Welke formule rekent de punten uit?',
-            kort: 'Deze, in D2 en dan doorgetrokken tot D11: {exact} punten voor precies goed, {formStap} minder voor elke plek ernaast, en nooit minder dan nul.',
+            kort: 'De formule voor de punten is {formuleNL}, in D2 en dan doorgetrokken tot D11. Hij geeft {exact} punten voor precies goed, {formStap} minder voor elke plek ernaast en nooit minder dan nul, dus dezelfde punten als Predict the Race.',
             formules: [
-              ['Nederlandstalig Excel', '=ALS(C2="";0;MAX(0;{formMax}-{formStap}*ABS(B2-C2)))'],
+              ['Nederlandstalig Excel', '{formuleNL}'],
               ['Het totaal van de sessie, in D12', '=SOM(D2:D11)'],
             ],
             tekst: [
@@ -437,15 +437,15 @@ export const PAGINAS = [
           {
             id: 'buiten-top-10',
             vraag: 'Wat doe je met coureurs buiten de top 10?',
-            kort: 'Hun echte plek gewoon invullen. Zet een speler iemand op P10 en wordt die elfde, dan is dat één plek ernaast en dus {bijna} punten.',
+            kort: 'Een coureur buiten de top 10 vul je gewoon in met zijn echte plek. Zet een speler iemand op P10 en wordt die elfde, dan is dat één plek ernaast en dus {bijna} punten. Alleen een coureur zonder plek in de officiële uitslag laat je leeg; die levert nul op.',
             tekst: [
-              'Daarom heb je de hele uitslag nodig, niet alleen de top 10. Alleen een coureur zonder plek in de officiële uitslag, bijvoorbeeld niet geklasseerd of gediskwalificeerd, laat je leeg. Die levert nul op.',
+              'Daarom heb je de hele uitslag nodig, niet alleen de top 10. Geen plek betekent bijvoorbeeld niet geklasseerd of gediskwalificeerd.',
             ],
           },
           {
             id: 'misgaat',
             vraag: 'Waar gaat het mis met Excel?',
-            kort: 'Zelden bij de formule. Het gaat mis bij het bijhouden: na een paar races doet één persoon al het werk, elk weekend opnieuw.',
+            kort: 'Een Excel-poule gaat zelden mis bij de formule, maar bijna altijd bij het bijhouden. Na een paar races doet één persoon al het werk: elke uitslag overtypen, straffen achteraf verwerken, deadlines bewaken en de stand rondsturen, elk weekend opnieuw.',
             punten: [
               ['Elke uitslag overtypen', 'De hele uitslag van kwalificatie en race, elk raceweekend. Eén verwisselde regel en de stand klopt niet meer, zonder dat iemand het merkt.'],
               ['Straffen achteraf', 'Een tijdstraf na de finish schuift de uitslag op. Dan moet je terug naar dat tabblad en alles opnieuw nalopen.'],
@@ -456,9 +456,9 @@ export const PAGINAS = [
           {
             id: 'zonder-spreadsheet',
             vraag: 'Kan het ook zonder spreadsheet?',
-            kort: 'Ja. Predict the Race rekent op dezelfde manier, maar de uitslag komt vanzelf binnen.',
+            kort: 'Ja, een F1-poule kan ook zonder spreadsheet. Predict the Race rekent de punten op dezelfde manier uit, maar haalt na elke kwalificatie en race zelf de officiële uitslag op. Voorspellingen sluiten bij de start van de sessie, dus niemand kan achteraf nog iets veranderen.',
             tekst: [
-              'Na elke kwalificatie en race haalt de app de officiële uitslag op en rekent de punten uit. Voorspellingen sluiten bij de start van de sessie, dus niemand kan achteraf nog iets veranderen. En verandert de uitslag kort na de race door een straf, dan rekent de app opnieuw.',
+              'Verandert de uitslag kort na de race nog door een straf, dan rekent de app opnieuw. En de stand staat op ieders telefoon, met wie er klom en wie er zakte.',
               'Het is gratis en er is geen account nodig. Je deelt de poule met een code in de groepsapp.',
             ],
           },
@@ -478,14 +478,15 @@ export const PAGINAS = [
         titel: 'F1 prediction league spreadsheet | Predict the Race',
         omschrijving: 'Run an F1 prediction league in Excel or Google Sheets: the columns you need, the formula that scores each position, and where a spreadsheet lets you down.',
         kop: 'Running an F1 prediction league in a spreadsheet',
-        kort: 'A spreadsheet works fine. Each player needs four columns and one formula to score every driver. The work is not in the formula but in the upkeep: typing in the full result every race weekend, fixing it after penalties, and making sure everyone submits before the start.',
+        kort: 'An F1 prediction league runs fine in a spreadsheet. Each player needs four columns and one formula to score every driver. The work is not in the formula but in the upkeep: typing in the full result every race weekend, fixing it after penalties, and making sure everyone submits before the start.',
         teaser: 'Prefer a spreadsheet? The columns and the formula',
         secties: [
           {
             id: 'columns',
             vraag: 'What columns do you need?',
-            kort: 'Four per player per session: the driver, where the player predicted him, where he actually finished, and the points.',
+            kort: 'An F1 prediction league spreadsheet needs four columns per player per session: the driver, where the player predicted him, where he actually finished, and the points. Use one tab per race with a block like that for each player, and a totals tab that adds everything up.',
             tabel: {
+              bijschrift: 'The four columns per player, with an example row',
               kop: ['Column', 'What goes in it', 'Example'],
               rijen: [
                 ['A', 'The driver', 'Verstappen'],
@@ -495,15 +496,15 @@ export const PAGINAS = [
               ],
             },
             tekst: [
-              'Row 1 holds the headers and the ten drivers go in rows 2 to 11. Use one tab per race with a block of four columns for each player side by side, and a totals tab that adds everything up. Copy the block for the next player and the formulas move along with it.',
+              'Row 1 holds the headers and the ten drivers go in rows 2 to 11. Put the players\' blocks side by side; copy the block for the next player and the formulas move along with it.',
             ],
           },
           {
             id: 'formula',
             vraag: 'Which formula scores the points?',
-            kort: 'This one, in D2 and filled down to D11: {exact} points for the exact spot, {formStap} fewer for every place off, never below zero.',
+            kort: 'The formula that scores the points is {formuleEN}, in D2 and filled down to D11. It gives {exact} points for the exact spot, {formStap} fewer for every place off and never less than zero, the same points Predict the Race gives.',
             formules: [
-              ['Excel or Google Sheets in English', '=IF(C2="",0,MAX(0,{formMax}-{formStap}*ABS(B2-C2)))'],
+              ['Excel or Google Sheets in English', '{formuleEN}'],
               ['The session total, in D12', '=SUM(D2:D11)'],
             ],
             tekst: [
@@ -515,15 +516,15 @@ export const PAGINAS = [
           {
             id: 'outside-top-10',
             vraag: 'What about drivers outside the top 10?',
-            kort: 'Enter their actual position like any other. If a player puts someone in P10 and he finishes eleventh, that is one place off, so {bijna} points.',
+            kort: 'Enter a driver outside the top 10 with his actual position, like any other. If a player puts someone in P10 and he finishes eleventh, that is one place off, so {bijna} points. Only leave the cell blank for a driver with no position in the official classification; he scores zero.',
             tekst: [
-              'That is why you need the full result, not just the top 10. Only leave the cell blank for a driver with no position in the official classification, such as not classified or disqualified. He scores zero.',
+              'That is why you need the full result, not just the top 10. No position means, for example, not classified or disqualified.',
             ],
           },
           {
             id: 'problems',
             vraag: 'Where does a spreadsheet let you down?',
-            kort: 'Rarely in the formula. It goes wrong in the upkeep: a few races in, one person is doing all the work, every weekend.',
+            kort: 'A spreadsheet league rarely goes wrong in the formula, and almost always in the upkeep. A few races in, one person is doing all the work: typing in every result, fixing it after penalties, chasing deadlines and sending round the standings, every single weekend.',
             punten: [
               ['Typing in every result', 'The full qualifying and race result, every race weekend. Swap two rows and the standings are wrong, and nobody notices.'],
               ['Penalties after the flag', 'A time penalty after the finish reshuffles the result. Then you go back to that tab and check everything again.'],
@@ -534,9 +535,9 @@ export const PAGINAS = [
           {
             id: 'without-a-spreadsheet',
             vraag: 'Can you do it without a spreadsheet?',
-            kort: 'Yes. Predict the Race scores the same way, and the results come in on their own.',
+            kort: 'Yes, an F1 prediction league works without a spreadsheet. Predict the Race scores the same way, but fetches the official result itself after every qualifying session and race. Predictions close when the session starts, so nobody can change anything afterwards.',
             tekst: [
-              'After every qualifying session and race the app fetches the official result and works out the points. Predictions close when the session starts, so nobody can change anything afterwards. And if a penalty changes the result shortly after the race, the app scores it again.',
+              'If a penalty changes the result shortly after the race, the app scores it again. And the standings are on everyone\'s phone, showing who climbed and who dropped.',
               'It is free and nobody needs an account. You share the league with a code in the group chat.',
             ],
           },
@@ -560,7 +561,7 @@ export const PAGINAS = [
 export const PAGINA_UI = {
   nl: {
     kruimel: 'Kruimelpad',
-    bijgewerkt: 'Bijgewerkt op {datum}',
+    door: 'Door {naam}, bijgewerkt op {datum}',
     faq: 'Veelgestelde vragen',
     leesOok: 'Lees ook',
     gidsen: 'Gidsen',
@@ -573,7 +574,7 @@ export const PAGINA_UI = {
   },
   en: {
     kruimel: 'Breadcrumb',
-    bijgewerkt: 'Updated {datum}',
+    door: 'By {naam}, updated {datum}',
     faq: 'Frequently asked questions',
     leesOok: 'Read next',
     gidsen: 'Guides',

@@ -8159,3 +8159,58 @@ tot 80 woorden, getallen alleen uit placeholders, ook in de FAQ van de
 voorpagina). Het vraagblok met `vraag` en `kort` per sectie bestaat al sinds
 SEO fase 1.
 
+## Zoekplan AEO fase 2: de antwoordvorm
+
+AEO fase 2 uit `docs/zoekplan/2-aeo.md`: hoe een antwoord op de gidsen eruitziet,
+zodat één alinea los overgenomen kan worden (een uitgelicht fragment, een
+AI-overzicht) en dan nog klopt. Het vraagblok met `vraag` en `kort` per sectie
+bestond al sinds SEO fase 1; dit maakt er regels van.
+
+**In het sjabloon** (`scripts/maak-site.mjs`, `artikel()`):
+
+- *Onder de h1* wie het schreef en wanneer: "Door Danny de Visser, bijgewerkt
+  op 27 september 2026". De datum is dateModified (een `<time>`); de regel
+  "Bijgewerkt op" onderaan is weg. De naam linkt naar de about-pagina zodra die
+  er is in die taal, tot dan naar het GitHub-profiel (dezelfde url als de
+  Person in de JSON-LD).
+- *Elke sectie* is `section.vraag`, met de vraag als h2 en direct daaronder
+  `p.kort` (was `p.kernzin`). Het korte antwoord bovenaan is ook `p.kort`.
+- *Elke tabel* heeft een bijschrift (`bijschrift` bij `tabel` en
+  `rekenvoorbeeld` in `site/paginas.mjs`; zonder bijschrift weigert de
+  generator), en de tabellen met losse vragen hebben een `th scope="row"`
+  vooraan elke rij.
+
+**Getallen alleen uit de app.** `APP_GETALLEN` is nu één lijst voor de
+voorpagina en de gidsen: de punten per vraag onder hun id (`{winnaar}`,
+`{pole}`, `{sprint_top10}`...), `{exact}`, `{een}`, `{twee}`, `{perfect}`
+(tien keer exact; de generator stopt als dat niet het maximum van een top 10
+in de app is), `{simpel}`, `{klassiek}`, `{gevorderd}` en `{meest}`. Een getal
+dat bewust niet uit de app komt, schrijf je als `{=25}`. De FAQ "Hoe werkt de
+puntentelling?" en het voorbeeld onder de puntentabel op de voorpagina hadden
+5, 3, 1 en 50 letterlijk staan, in alle zeven talen; nu plekhouders. De
+voorpagina's zijn daardoor byte voor byte hetzelfde gebleven. De formule in de
+Excel-gids komt uit `{formuleNL}` en `{formuleEN}`, gebouwd uit dezelfde twee
+getallen als `scoreLijst()`.
+
+**Alle korte antwoorden herschreven**, NL en EN, drie gidsen: het antwoord
+eerst, 25 tot 80 woorden (ze waren vaak zeven tot vijftien), het onderwerp bij
+naam, en geen "Dit", "Deze", "This" of "That" vooraan. Waar de uitleg eronder
+daarna hetzelfde zei, is die ingekort. "Checklist voor de poulebaas" is een
+vraag geworden: "Wat regel je voordat het seizoen begint?" (en in de
+vragenlijst gezet). Niets nieuws beweerd: alles komt uit de teksten die er al
+stonden.
+
+**Tests** (`test/antwoordvorm.test.mjs`, zonder browser): per gids de
+auteursregel met link en dateModified, elke sectie een vraag met p.kort direct
+onder de h2, 25 tot 80 woorden, geen verwijswoord vooraan, geen kort antwoord
+in `<details>`, elke tabel een bijschrift en th's met scope, 3 tot 8 stappen,
+hoogstens 5 FAQ-vragen, unieke ids en max-snippet:-1; over de hele site geen
+nosnippet en nergens een plekhouder over (ook niet in de JSON-LD en
+llms.txt); in de bronnen geen kaal getal voor een puntenwoord en geen HTML.
+27 mutanten, alle gevangen, en de generator weigert een tabel zonder
+bijschrift.
+
+**Nog niet:** de FAQ per gids is al hoogstens vier; de about-pagina (voor de
+link bij de naam) komt met SEO fase 2. Volgende stap: AEO fase 3.1, de twee
+nieuwe FAQ's op de voorpagina in zeven talen.
+

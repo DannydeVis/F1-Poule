@@ -1885,6 +1885,11 @@ een pagina verandert (een andere vorm telt niet). Niet met de hand aanpassen.
 `site/paginas.mjs`: per onderwerp een item, per taal een pad, titel,
 omschrijving, kort antwoord, secties en FAQ. Getallen over de app schrijf je
 als `{jokers}`, `{exact}` enzovoort; die komen bij het maken uit de app zelf.
+Een getal voor "punten" mag nooit letterlijk in een tekst staan, ook niet op de
+voorpagina (`test/antwoordvorm.test.mjs`); een getal dat bewust niet uit de app
+komt, schrijf je als `{=25}`. Elke sectie is een vraag met een kort antwoord
+van 25 tot 80 woorden dat los te lezen is, en elke tabel heeft een
+`bijschrift`.
 Daarna `node scripts/maak-site.mjs`. De sitemap, llms.txt, de links vanaf de
 voorpagina en de datum volgen vanzelf. Een rekenvoorbeeld (`rekenvoorbeeld`:
 een voorspelde top 10 en een uitslag) rekent de generator uit met de code van

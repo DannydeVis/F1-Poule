@@ -44,7 +44,7 @@
     "@id": "https://predicttherace.com/f1-poule-puntentelling/#kruimel"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26"
+   "dateModified": "2026-09-27"
   },
   {
    "@type": "Article",
@@ -56,7 +56,7 @@
     "@id": "https://predicttherace.com/f1-poule-puntentelling/#pagina"
    },
    "datePublished": "2026-09-26",
-   "dateModified": "2026-09-26",
+   "dateModified": "2026-09-27",
    "author": {
     "@id": "https://predicttherace.com/#maker"
    },
@@ -598,7 +598,10 @@
   .artikel h2{font-size:clamp(23px,3.6vw,29px);line-height:1.2;margin:0 0 10px}
   .artikel p,.artikel li{line-height:1.65}
   .artikel p{margin:0 0 12px}
-  .artikel .kernzin{font-weight:600}
+  .artikel section .kort{font-weight:600}
+  .artikel .door{font-size:15px;color:var(--ink2);margin:0 0 16px}
+  .artikel .door a{color:var(--accent-tekst)}
+  .artikel caption{text-align:left;font-size:15px;color:var(--ink2);padding:0 0 8px}
   .artikel ol,.artikel ul{margin:0 0 14px;padding-left:24px}
   .artikel li{margin:0 0 8px}
   .artikel .voorbeeld{background:var(--paneel);border:1px solid var(--lijn);border-left:3px solid var(--accent);
@@ -611,7 +614,6 @@
   .artikel .slotblok{margin-top:34px;padding:26px;border-radius:16px;background:var(--nacht);color:var(--nacht-ink)}
   .artikel .slotblok h2{margin:0 0 6px}
   .artikel .slotblok p{color:var(--nacht-ink2)}
-  .artikel .datum{margin:30px 0 0}
   .artikel .tabel.getallen th:last-child{text-align:right}
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
   .artikel .tabellen{margin:4px 0 16px}
@@ -646,19 +648,21 @@
       <li aria-current="page">Puntentelling voor een F1-poule</li>
     </ol></nav>
     <h1>Puntentelling voor een F1-poule</h1>
-    <p class="inleiding">In een F1-poule krijg je punten voor elke coureur in je top 10, en hoe dichter hij bij jouw plek eindigt, hoe meer. Predict the Race geeft 5 punten voor precies goed, 3 bij één plek ernaast en 1 bij twee plekken ernaast. Alleen exact goed laten tellen klinkt streng en eerlijk, maar dan scoort bijna niemand en beslist geluk de stand.</p>
+    <p class="door">Door <a href="https://github.com/DannydeVis" rel="author">Danny de Visser</a>, bijgewerkt op <time datetime="2026-09-27">27 september 2026</time></p>
+    <p class="kort inleiding">In een F1-poule krijg je punten voor elke coureur in je top 10, en hoe dichter hij bij jouw plek eindigt, hoe meer. Predict the Race geeft 5 punten voor precies goed, 3 bij één plek ernaast en 1 bij twee plekken ernaast. Alleen exact goed laten tellen klinkt streng en eerlijk, maar dan scoort bijna niemand en beslist geluk de stand.</p>
 
-    <section id="systemen">
+    <section class="vraag" id="systemen">
       <h2>Welke puntentellingen zijn er?</h2>
-      <p class="kernzin">Vier gangbare. Het grote verschil is of bijna goed ook punten oplevert.</p>
+      <p class="kort">Er zijn vier gangbare puntentellingen voor een F1-poule: alleen exact goed, punten naar afstand, de echte WK-punten, en alleen winnaar en podium. Het grote verschil is of bijna goed ook punten oplevert. Predict the Race telt naar afstand, omdat wie het veld goed inschat dan ook scoort als de volgorde net anders uitvalt.</p>
       <ul><li><b>Alleen exact goed.</b> Punten als een coureur precies eindigt op de plek waar jij hem zette. Makkelijk uit te leggen, maar een top 10 die overal één plek naast zit, levert niets op. Na een paar races staat iedereen rond nul en beslist één gelukstreffer de stand.</li><li><b>Punten naar afstand.</b> 5 punten voor precies goed, 3 voor één plek ernaast, 1 voor twee plekken ernaast, en daarna niets. Zo telt Predict the Race. Wie het veld goed inschat, scoort ook als de volgorde net anders uitvalt. Het nadeel is het rekenwerk: met de hand zijn dat tien coureurs per sessie per speler.</li><li><b>De WK-punten.</b> Voor elke coureur op de goede plek krijg je de punten die hij in het echt krijgt: 25, 18, 15, 12, 10, 8, 6, 4, 2, 1. Dat voelt als echte Formule 1, maar een goede P10 is 1 punt waard en de winnaar 25. Wie de winnaar mist, staat meteen ver achter, en de onderkant van je top 10 telt nauwelijks mee.</li><li><b>Alleen winnaar en podium.</b> Snel ingevuld, maar de meeste mensen kiezen dezelfde favoriet. Dan scoort iedereen ongeveer hetzelfde en valt er weinig te winnen.</li></ul>
       <p>Losse vragen, zoals de pole position of de snelste ronde, komen daar bovenop. Die leveren een vast aantal punten op als je ze goed hebt.</p>
     </section>
 
-    <section id="rekenvoorbeeld">
+    <section class="vraag" id="rekenvoorbeeld">
       <h2>Hoe reken je een top 10 uit?</h2>
-      <p class="kernzin">Per coureur tel je hoeveel plekken hij van jouw voorspelling af zit, en zoek je de punten daarbij op. Hieronder een verzonnen race, uitgerekend met dezelfde code die in de app de punten geeft.</p>
+      <p class="kort">Een top 10 reken je per coureur uit: 5 punten als hij precies op jouw plek eindigt, 3 bij één plek ernaast, 1 bij twee plekken ernaast, en daarna niets. Tel de tien regels op; een perfecte top 10 is 50 punten. Hieronder een verzonnen race, uitgerekend met dezelfde code die in de app de punten geeft.</p>
       <table class="tabel getallen rekenvoorbeeld">
+        <caption>Een verzonnen race: jouw top 10 naast de uitslag</caption>
         <thead><tr><th scope="col">Coureur</th><th scope="col">Jouw plek</th><th scope="col">Uitslag</th><th scope="col">Punten</th></tr></thead>
         <tbody><tr><th scope="row">Verstappen</th><td>P1</td><td>P2</td><td>3</td></tr><tr><th scope="row">Norris</th><td>P2</td><td>P1</td><td>3</td></tr><tr><th scope="row">Leclerc</th><td>P3</td><td>P3</td><td>5</td></tr><tr><th scope="row">Piastri</th><td>P4</td><td>P5</td><td>3</td></tr><tr><th scope="row">Hamilton</th><td>P5</td><td>P6</td><td>3</td></tr><tr><th scope="row">Russell</th><td>P6</td><td>P4</td><td>1</td></tr><tr><th scope="row">Antonelli</th><td>P7</td><td>P8</td><td>3</td></tr><tr><th scope="row">Alonso</th><td>P8</td><td>P7</td><td>3</td></tr><tr><th scope="row">Sainz</th><td>P9</td><td>uitgevallen</td><td>0</td></tr><tr><th scope="row">Albon</th><td>P10</td><td>P11</td><td>3</td></tr></tbody>
         <tfoot><tr><th scope="row" colspan="3">Totaal</th><td>27</td></tr></tfoot>
@@ -667,39 +671,38 @@
       <p>Kijk naar Albon: in de voorspelling op P10, in de uitslag elfde. Dat is één plek ernaast en dus 3 punten, ook al valt hij buiten de top 10. Sainz viel uit en kreeg geen plek in de uitslag, dus nul.</p>
     </section>
 
-    <section id="bijna-goed">
+    <section class="vraag" id="bijna-goed">
       <h2>Waarom telt bijna goed mee?</h2>
-      <p class="kernzin">Omdat een F1-uitslag altijd een beetje toeval is. Eén trage pitstop en je P4 wordt P5.</p>
-      <p>Als alleen exact goed telt, wint wie geluk heeft. Telt de afstand mee, dan wint wie het veld het best inschat, en daar hoort een poule over te gaan.</p>
+      <p class="kort">Bijna goed telt mee omdat een F1-uitslag altijd een beetje toeval is: één trage pitstop en je P4 wordt P5. Als alleen exact goed telt, wint wie geluk heeft. Telt de afstand mee, dan wint wie het veld het best inschat, en daar hoort een poule over te gaan.</p>
       <p>Het houdt de poule ook spannend. Wie een slecht weekend heeft, pakt toch punten, en de achterstand op de koploper blijft in te halen.</p>
     </section>
 
-    <section id="losse-vragen">
+    <section class="vraag" id="losse-vragen">
       <h2>Welke vragen kun je nog meer laten meetellen?</h2>
-      <p class="kernzin">Naast de twee top 10's zijn er losse vragen per weekend en 4 seizoensvragen, elk met een vast aantal punten voor een goed antwoord.</p>
+      <p class="kort">Naast de twee top 10's kun je losse vragen per weekend laten meetellen, zoals de winnaar, de pole position en de snelste ronde, plus 4 seizoensvragen voor het hele jaar. Elke vraag levert een vast aantal punten op voor een goed antwoord: de winnaar is 25 punten waard, de pole position 10.</p>
       <div class="tabellen">
         <table class="tabel getallen">
+          <caption class="alleenlezer">Losse vragen per weekend</caption>
           <thead><tr><th scope="col">Losse vragen per weekend</th><th scope="col">Punten</th></tr></thead>
-          <tbody><tr><td>Winnaar van de race</td><td>25</td></tr><tr><td>Pole position</td><td>10</td></tr><tr><td>Snelste ronde</td><td>10</td></tr><tr><td>Snelste pitstop</td><td>10</td></tr><tr><td>Teamgenoot-duels</td><td>15</td></tr><tr><td>Aantal safety cars</td><td>12</td></tr><tr><td>Rode vlag, ja of nee</td><td>20</td></tr><tr><td>Top 10 van de sprint (sprintweekenden)</td><td>25</td></tr></tbody>
+          <tbody><tr><th scope="row">Winnaar van de race</th><td>25</td></tr><tr><th scope="row">Pole position</th><td>10</td></tr><tr><th scope="row">Snelste ronde</th><td>10</td></tr><tr><th scope="row">Snelste pitstop</th><td>10</td></tr><tr><th scope="row">Teamgenoot-duels</th><td>15</td></tr><tr><th scope="row">Aantal safety cars</th><td>12</td></tr><tr><th scope="row">Rode vlag, ja of nee</th><td>20</td></tr><tr><th scope="row">Top 10 van de sprint (sprintweekenden)</th><td>25</td></tr></tbody>
         </table>
         <table class="tabel getallen">
+          <caption class="alleenlezer">Seizoensvragen, één keer per jaar</caption>
           <thead><tr><th scope="col">Seizoensvragen, één keer per jaar</th><th scope="col">Punten</th></tr></thead>
-          <tbody><tr><td>Wereldkampioen</td><td>50</td></tr><tr><td>Constructeurskampioen</td><td>40</td></tr><tr><td>Aantal verschillende racewinnaars</td><td>30</td></tr><tr><td>Welk team wordt vierde</td><td>30</td></tr></tbody>
+          <tbody><tr><th scope="row">Wereldkampioen</th><td>50</td></tr><tr><th scope="row">Constructeurskampioen</th><td>40</td></tr><tr><th scope="row">Aantal verschillende racewinnaars</th><td>30</td></tr><tr><th scope="row">Welk team wordt vierde</th><td>30</td></tr></tbody>
         </table>
       </div>
       <p>Wat een weekend kan opleveren, hangt af van het niveau dat de poulebaas kiest: 100 punten bij Simpel, 145 bij Klassiek en 202 bij Gevorderd. Op een sprintweekend komt de sprint erbij, en de seizoensvragen tellen aan het eind van het seizoen mee.</p>
     </section>
 
-    <section id="gelijk">
+    <section class="vraag" id="gelijk">
       <h2>Wat als twee spelers evenveel punten hebben?</h2>
-      <p class="kernzin">Dan delen ze de plek. Twee spelers met evenveel punten staan allebei tweede, en wie daarna komt, staat vierde: 1, 2, 2, 4.</p>
-      <p>Bij de weekendwinnaar werkt het net zo. Hebben twee spelers dezelfde hoogste score, dan hebben ze dat weekend allebei gewonnen.</p>
+      <p class="kort">Twee spelers met evenveel punten delen de plek. Staan ze samen op twee, dan is de volgende speler vierde: 1, 2, 2, 4. Zo telt Predict the Race de stand. Bij de weekendwinnaar werkt het net zo: hebben twee spelers dezelfde hoogste score, dan hebben ze dat weekend allebei gewonnen.</p>
     </section>
 
-    <section id="jokers">
+    <section class="vraag" id="jokers">
       <h2>Wat doet een joker met je punten?</h2>
-      <p class="kernzin">Met een joker tellen al je punten van dat weekend dubbel: de top 10's, de sprint en de losse vragen. De seizoensvragen tellen nooit dubbel.</p>
-      <p>Staan jokers aan, dan heeft iedereen er standaard 5 per seizoen. Een joker zet je voordat het weekend begint.</p>
+      <p class="kort">Een joker verdubbelt al je punten van één weekend: de top 10's, de sprint en de losse vragen. De seizoensvragen tellen nooit dubbel. Staan jokers aan in je poule, dan heeft iedereen er standaard 5 per seizoen, en je zet een joker voordat het weekend begint.</p>
     </section>
     <section id="faq">
       <h2>Veelgestelde vragen</h2>
@@ -719,7 +722,6 @@
       <p>Maak je poule in een minuut en deel de code met je vrienden.</p>
       <a class="knop" href="../app/">Maak je poule <span aria-hidden="true">→</span></a>
     </div>
-    <p class="label datum"><time datetime="2026-09-26">Bijgewerkt op 26 september 2026</time></p>
   </div>
 </main>
 <footer class="voet">
