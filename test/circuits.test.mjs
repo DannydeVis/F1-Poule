@@ -16,7 +16,7 @@
 //   4. cijfers(): de datum van de laatste race (geen datum van de run), de
 //      totalen, en welke races ontbreken.
 //   5. Het script blijft onder de limiet van OpenF1 (drie verzoeken per seconde).
-//   6. De workflow: met de hand, elke week, en op een pull request alleen in de
+//   6. De workflow: met de hand, elke dag, en op een pull request alleen in de
 //      log; legt alleen vast als er iets veranderd is, en maakt de site opnieuw.
 //   7. Staat site/data/circuits.json er, dan klopt hij met zichzelf.
 //   8. Het ophalen, tegen een nagebootste OpenF1: elk seizoen vanaf 2023, alleen
@@ -120,8 +120,8 @@ check('tussen twee verzoeken minstens een derde seconde (drie per seconde)', WAC
 {
   const wf = readFileSync(join(wortel, '.github', 'workflows', 'circuits.yml'), 'utf8');
   const vastleggen = wf.split('- name: Vastleggen')[1] ?? '';
-  check('de workflow: met de hand, elke week, en op een pull request die het script aanpast',
-    /workflow_dispatch:/.test(wf) && /schedule:\s*\n\s*- cron: '[\d*]+ [\d*]+ \* \* [\d]'/.test(wf)
+  check('de workflow: met de hand, elke dag, en op een pull request die het script aanpast',
+    /workflow_dispatch:/.test(wf) && /schedule:\s*\n\s*- cron: '\d+ \d+ \* \* \*'/.test(wf)
       && /pull_request:\s*\n\s*paths:[\s\S]*'scripts\/circuits\.mjs'/.test(wf));
   check('op een pull request alleen de tabel in de log (DROOG), niets vastgelegd',
     /DROOG: \$\{\{ github\.event_name == 'pull_request' && '1' \|\| '' \}\}/.test(wf)

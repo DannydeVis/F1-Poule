@@ -1923,14 +1923,16 @@ lijstjes staan als `LLMS` in `site/teksten.mjs`. Verandert er iets aan de app
 waardoor een punt niet meer klopt, pas het daar aan. De gidsen komen er
 vanzelf bij zodra ze in `site/paginas.mjs` staan.
 
-**Circuitcijfers.** De workflow "Circuitcijfers" telt elke dinsdag per
+**Circuitcijfers.** De workflow "Circuitcijfers" telt elke dag per
 circuit hoe vaak de safety car eruit kwam en of er een rode vlag was, over
 alle races sinds 2023, met dezelfde regels als de app (een virtuele safety car
 telt mee). Hij schrijft `site/data/circuits.json` en legt dat vast als er een
 race bij kwam. Je hoeft niets te doen; met de hand kan ook: Actions →
 Circuitcijfers → Run workflow. De gids over de puntentelling toont de cijfers
 ("Hoe vaak komt de safety car in een race?"), en na elke run van de workflow
-staan de nieuwe cijfers er vanzelf op.
+staan de nieuwe cijfers er vanzelf op. Dezelfde workflow haalt ook de tijden en
+uitslagen op voor de racepagina's (`site/data/races-2026.json`); welke races
+dat zijn, staat in `site/races.mjs`.
 
 **IndexNow.** Na elke deploy meldt de workflow "IndexNow" de gewijzigde
 pagina's bij Bing en de andere zoekmachines die meedoen (Google niet; die leest
