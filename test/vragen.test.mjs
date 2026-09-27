@@ -24,6 +24,11 @@
 //   7. Een sectie beantwoordt één vraag: geen twee vragen met hetzelfde doel,
 //      behalve in een FAQ.
 //
+// De racepagina's (scripts/racepaginas.mjs) tellen mee voor 2 en 4, maar hun
+// vragen staan niet in de lijst: dat zijn sjablonen uit site/races.mjs, één per
+// race ("Hoe laat begint de Grand Prix van Singapore?"). Die bewaakt
+// test/racepaginas.test.mjs.
+//
 // Twee vragen gelden als dezelfde als ze na het weglaten van hoofdletters,
 // leestekens, streepjes en lidwoorden gelijk zijn: "How does scoring work?"
 // en "How does the scoring work?" zijn één vraag.
@@ -35,6 +40,7 @@ import { teksten, TALEN } from '../site/teksten.mjs';
 import { PRIVACY } from '../site/privacy.mjs';
 import { PAGINAS } from '../site/paginas.mjs';
 import { VRAGEN, GEPLANDE_PAGINAS } from '../site/vragen.mjs';
+import { RACEPAGINAS } from '../scripts/racepaginas.mjs';
 
 const { check, afronden } = maakControle('de vragenlijst');
 
@@ -44,6 +50,7 @@ const PAGINALIJST = [
   ...TALEN.map((taal) => ({ pad: teksten[taal].pad, pagina: 'voorpagina', taal })),
   ...Object.entries(PRIVACY).map(([taal, p]) => ({ pad: p.pad, pagina: 'privacy', taal })),
   ...PAGINAS.flatMap((pg) => Object.entries(pg.talen).map(([taal, t]) => ({ pad: t.pad, pagina: pg.id, taal }))),
+  ...RACEPAGINAS.flatMap((pg) => Object.entries(pg.talen).map(([taal, t]) => ({ pad: t.pad, pagina: pg.id, taal }))),
 ].map((p) => ({ ...p, bestand: p.pad ? `${p.pad}/index.html` : 'index.html' }));
 
 // Elke index.html die online komt, behalve de app en het beheer.
@@ -96,7 +103,7 @@ for (const p of PAGINALIJST) {
   const mis = [];
   for (const p of PAGINALIJST) {
     if (p.lang !== p.taal) mis.push(`${p.bestand}: lang=${p.lang}`);
-    const pg = PAGINAS.find((x) => x.id === p.pagina);
+    const pg = [...PAGINAS, ...RACEPAGINAS].find((x) => x.id === p.pagina);
     if (pg) {
       const t = pg.talen[p.taal];
       const koppen = t.secties.filter((s) => p.plekken.some((x) => x.sectie === s.id && x.soort === 'kop' && x.tekst === s.vraag));

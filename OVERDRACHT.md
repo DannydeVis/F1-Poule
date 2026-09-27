@@ -8551,3 +8551,58 @@ alle gevangen.
 `site/data/races-2026.json` op main staat. Dan de pagina's zelf (deel 2):
 `/races/2026/<slug>/` en `/en/races/2026/<slug>/`, een overzicht per seizoen,
 `SportsEvent` in de JSON-LD.
+
+## Zoekplan SEO fase 4, deel 2: de racepagina's
+
+Na de merge van deel 1 heb ik de workflow met de hand gestart;
+`site/data/races-2026.json` kwam om 14:46 UTC op main (7 races, niets
+ontbreekt). Daarmee zijn de pagina's gebouwd.
+
+**Wat er staat**, per race in NL (`/races/2026/<slug>/`) en EN
+(`/en/races/2026/<slug>/`):
+
+- bovenaan wanneer en waar de race is, als kort antwoord;
+- *Hoe laat begint de ...?*: elke sessie (sprintkwalificatie, sprint,
+  kwalificatie, race) met dag en tijd in UTC, op de Nederlandse pagina ook in
+  Nederlandse tijd (Europe/Amsterdam, dus met de wintertijd vanaf 25 oktober),
+  en dat elke voorspelling sluit bij de start van zijn sessie (pole bij de
+  kwalificatie, winnaar en safety cars bij de race: zo staat het in `VRAGEN`
+  in de app en in de sync);
+- *Wie won de ... in 2025?*: de top 10 van race en kwalificatie van vorig jaar;
+- *Hoe vaak komt de safety car in ...?*: per jaar uit `circuits.json`, met het
+  gemiddelde tegen dat van alle circuits en een link naar de tabel in de gids
+  over de puntentelling;
+- na de race komt er *Wie won de ... 2026?* bij, direct na de tijden;
+- onderaan een knop "Voorspel de GP van ..." naar de app.
+
+Een overzicht op `/races/` en `/en/races/` noemt en linkt de races op datum. De
+voorpagina (NL en EN) en elke artikelpagina linken ernaar in de voet; elke
+racepagina hangt eronder in het kruimelpad.
+
+**Hoe het gebouwd is:** `scripts/racepaginas.mjs` maakt van de twee
+databestanden en de teksten in `site/races.mjs` pagina's in dezelfde vorm als
+`site/paginas.mjs`. De generator voegt ze toe (`ALLE`), dus hreflang, sitemap,
+lastmod, de auteursregel, IndexNow en llms.txt ("Race pages") gaan vanzelf mee.
+Nieuw in het sjabloon: een tussenstap in het kruimelpad (`kruimel`), meerdere
+tabellen per sectie (`tabellen`), een tabel met een eigen klasse (`compact`,
+minder witruimte, zodat vier kolommen op 360 pixels passen), links naar andere
+pagina's (`links`) en een eigen slotblok (`slot`). In de JSON-LD: een WebPage
+over een `SportsEvent` (naam, begin van de eerste sessie, einde van de race,
+baan, plaats, land) en voor het overzicht een `CollectionPage` met een
+`ItemList`. De drempel uit het plan zit in de bouwer: geen pagina zonder race in
+de gegevens of zonder vorige editie.
+
+**Tests:** `test/racepaginas.test.mjs` legt de pagina's naast de gegevens (de
+tijden rekent hij zelf opnieuw uit). `site.test.mjs`, `antwoordvorm.test.mjs`
+en `geo.test.mjs` keuren de racepagina's nu zoals de gidsen (titel en
+omschrijving, hreflang, JSON-LD, kruimelpad, datum, links, contrast, 360
+pixels, kort antwoord van 25 tot 80 woorden, bijschriften, @id's).
+`vragen.test.mjs` kent ze; hun vragen zijn sjablonen per race en staan niet in
+`site/vragen.mjs`, maar mogen nergens dubbel staan. Veertien mutanten, alle
+gevangen (dertien door `racepaginas.test.mjs`, een verkeerde begindatum in de
+`SportsEvent` door `site.test.mjs`).
+
+**Stopcriterium** (het plan): vier tot zes weken na de eerste pagina in Search
+Console kijken, dus half november. Geen vertoningen: niet uitrollen naar 2027,
+deze pagina's blijven als archief. Wel vertoningen: in januari de races van
+2027 in `site/races.mjs` zetten zodra de kalender er is.

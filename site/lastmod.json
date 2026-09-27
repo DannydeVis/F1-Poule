@@ -1,7 +1,7 @@
 {
   "https://predicttherace.com/": {
     "datum": "2026-09-27",
-    "hash": "da71a62104b932ec"
+    "hash": "dbc6b16a70f39f55"
   },
   "https://predicttherace.com/de/": {
     "datum": "2026-09-27",
@@ -9,31 +9,71 @@
   },
   "https://predicttherace.com/en/": {
     "datum": "2026-09-27",
-    "hash": "2b477f98fe957f94"
+    "hash": "f1df0eeb3f74a217"
   },
   "https://predicttherace.com/en/about/": {
     "datum": "2026-09-27",
-    "hash": "d38e410c69bba4ed",
+    "hash": "11831993a2091ba1",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/en/f1-prediction-league-spreadsheet/": {
     "datum": "2026-09-27",
-    "hash": "0c491cd79bf7d1b4",
+    "hash": "1906307872f62125",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/f1-prediction-scoring-system/": {
     "datum": "2026-09-27",
-    "hash": "4fb566bd12880da4",
+    "hash": "533e55a0043014c0",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/how-to-run-an-f1-prediction-league/": {
     "datum": "2026-09-27",
-    "hash": "bf77557f20e2b0eb",
+    "hash": "fe182e2b4834778d",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/privacy/": {
     "datum": "2026-09-26",
     "hash": "6b064a3659d01fe1"
+  },
+  "https://predicttherace.com/en/races/": {
+    "datum": "2026-09-27",
+    "hash": "5d32537f318cfeda",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/en/races/2026/abu-dhabi/": {
+    "datum": "2026-09-27",
+    "hash": "621efc8ca389c2b7",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/en/races/2026/austin/": {
+    "datum": "2026-09-27",
+    "hash": "19d861ac7a057d2c",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/en/races/2026/las-vegas/": {
+    "datum": "2026-09-27",
+    "hash": "ba8a47af8383f988",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/en/races/2026/mexico-city/": {
+    "datum": "2026-09-27",
+    "hash": "257b89380ff22673",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/en/races/2026/qatar/": {
+    "datum": "2026-09-27",
+    "hash": "797c0624dc4c060b",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/en/races/2026/sao-paulo/": {
+    "datum": "2026-09-27",
+    "hash": "5a58c22c6dcb67fe",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/en/races/2026/singapore/": {
+    "datum": "2026-09-27",
+    "hash": "eda76a9884b177da",
+    "sinds": "2026-09-27"
   },
   "https://predicttherace.com/es/": {
     "datum": "2026-09-27",
@@ -41,17 +81,17 @@
   },
   "https://predicttherace.com/f1-poule-excel/": {
     "datum": "2026-09-27",
-    "hash": "541ec98e644b0b14",
+    "hash": "7b3d8ff4d057a8a2",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/f1-poule-organiseren/": {
     "datum": "2026-09-27",
-    "hash": "43e5b41f4d451fad",
+    "hash": "7b05a858c3206cf6",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/f1-poule-puntentelling/": {
     "datum": "2026-09-27",
-    "hash": "6a003eebf1282962",
+    "hash": "8a17acd2b2be7680",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/fr/": {
@@ -64,7 +104,7 @@
   },
   "https://predicttherace.com/over/": {
     "datum": "2026-09-27",
-    "hash": "acfb179f87d727e8",
+    "hash": "f72c3355da354ff1",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/privacy/": {
@@ -74,5 +114,45 @@
   "https://predicttherace.com/pt/": {
     "datum": "2026-09-27",
     "hash": "760140ec9c4825a0"
+  },
+  "https://predicttherace.com/races/": {
+    "datum": "2026-09-27",
+    "hash": "5a225c22cff6804f",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/races/2026/abu-dhabi/": {
+    "datum": "2026-09-27",
+    "hash": "9e47f849292196a3",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/races/2026/austin/": {
+    "datum": "2026-09-27",
+    "hash": "f1c09c8e5b0776bb",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/races/2026/las-vegas/": {
+    "datum": "2026-09-27",
+    "hash": "e477aac3d3dbc0be",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/races/2026/mexico-city/": {
+    "datum": "2026-09-27",
+    "hash": "02f3159bbec1c236",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/races/2026/qatar/": {
+    "datum": "2026-09-27",
+    "hash": "0211c99a4d555d81",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/races/2026/sao-paulo/": {
+    "datum": "2026-09-27",
+    "hash": "10a6e77b2fbd671e",
+    "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/races/2026/singapore/": {
+    "datum": "2026-09-27",
+    "hash": "1f7dc486935ccfa5",
+    "sinds": "2026-09-27"
   }
 }

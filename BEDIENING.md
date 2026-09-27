@@ -1934,6 +1934,18 @@ staan de nieuwe cijfers er vanzelf op. Dezelfde workflow haalt ook de tijden en
 uitslagen op voor de racepagina's (`site/data/races-2026.json`); welke races
 dat zijn, staat in `site/races.mjs`.
 
+**De racepagina's.** Een pilot met de laatste zeven races van 2026, in het
+Nederlands (`/races/2026/singapore/` enzovoort) en het Engels
+(`/en/races/2026/...`), met een overzicht op `/races/` en `/en/races/`. Per
+race: de tijden van elke sessie (UTC, en op de Nederlandse pagina ook
+Nederlandse tijd), de top 10 van vorig jaar, hoe vaak de safety car er kwam, en
+na de race de uitslag. Alles komt uit de workflow "Circuitcijfers" en staat er
+de dag erna vanzelf op; je hoeft niets te doen. **Wat jij doet (half november):**
+in Search Console bij Prestaties filteren op pagina's die `/races/` bevatten.
+Geen vertoningen? Dan komen er in 2027 geen racepagina's bij en blijven deze
+als archief staan. Wel vertoningen? Dan in januari de races van 2027 klaarzetten
+(zeg het tegen Claude Code).
+
 **IndexNow.** Na elke deploy meldt de workflow "IndexNow" de gewijzigde
 pagina's bij Bing en de andere zoekmachines die meedoen (Google niet; die leest
 de sitemap). Er is niets voor nodig: de sleutel is openbaar en staat als

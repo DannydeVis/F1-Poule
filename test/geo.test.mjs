@@ -34,6 +34,7 @@ import { maakControle, wortel } from './hulp.mjs';
 import { teksten, TALEN, BASIS, MAKER, LLMS } from '../site/teksten.mjs';
 import { PRIVACY } from '../site/privacy.mjs';
 import { PAGINAS } from '../site/paginas.mjs';
+import { RACEPAGINAS } from '../scripts/racepaginas.mjs';
 
 const { check, afronden } = maakControle('overal hetzelfde verhaal');
 
@@ -118,7 +119,7 @@ const graaf = (html) => [...html.matchAll(/<script type="application\/ld\+json">
   const bestanden = [
     ...TALEN.map((c) => pad(teksten[c].pad)),
     ...Object.values(PRIVACY).map((p) => pad(p.pad)),
-    ...PAGINAS.flatMap((pg) => Object.values(pg.talen).map((t) => pad(t.pad))),
+    ...[...PAGINAS, ...RACEPAGINAS].flatMap((pg) => Object.values(pg.talen).map((t) => pad(t.pad))),
   ];
   const beschreven = new Set();
   const verwezen = new Map();

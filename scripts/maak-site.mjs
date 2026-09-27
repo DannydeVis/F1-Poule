@@ -42,6 +42,7 @@ import { PRIVACY, CONTACT, PRIVACY_BIJGEWERKT, privacyTaal } from '../site/priva
 import { PAGINAS, PAGINA_UI } from '../site/paginas.mjs';
 import { knipUit } from './knipsel.mjs';
 import { uitersten, MIN_RACES } from './circuits.mjs';
+import { RACEPAGINAS } from './racepaginas.mjs';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CONTROLE = process.argv.includes('--controle');
@@ -1057,7 +1058,8 @@ ${jsonLd(code, datum)}
       `<li><a href="${p}${pg.talen[code].pad}/">${esc(pg.talen[code].kop)}</a></li>`).join('')}</ul></div>` : ''}
     <ul>
       <li><a href="${app}">${esc(t.voet.app)}</a></li>${overIn(code) ? `
-      <li><a href="${p}${overIn(code).pad}/">${esc(PAGINA_UI[code].over)}</a></li>` : ''}
+      <li><a href="${p}${overIn(code).pad}/">${esc(PAGINA_UI[code].over)}</a></li>` : ''}${racesIn(code) ? `
+      <li><a href="${p}${racesIn(code).pad}/">${esc(racesIn(code).voet)}</a></li>` : ''}
       <li><a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.voet.privacy)}</a></li>
       <li><a href="${BRON}" rel="noopener">${esc(t.voet.bron)}</a></li>
       <li><a href="https://openf1.org" rel="noopener">${esc(t.voet.data)}</a></li>
@@ -1192,7 +1194,13 @@ const paginaUrl = (pg, code) => `${BASIS}/${pg.talen[code].pad}/`;
 const terugNaar = (pad) => '../'.repeat(pad.split('/').length);
 const clusterVan = (pg) => TALEN.filter((c) => pg.talen[c]);
 const xDefaultVan = (pg) => (pg.talen.en ? 'en' : pg.talen.nl ? 'nl' : clusterVan(pg)[0]);
-const paginasIn = (code) => PAGINAS.filter((pg) => pg.talen[code]);
+// Alle artikelpagina's: de gidsen en de about-pagina uit site/paginas.mjs, en
+// de racepagina's met hun overzicht, gebouwd uit de gegevens van de workflow
+// "Circuitcijfers" (scripts/racepaginas.mjs, zoekplan SEO fase 4).
+const ALLE = [...PAGINAS, ...RACEPAGINAS];
+const paginasIn = (code) => ALLE.filter((pg) => pg.talen[code]);
+// Het overzicht van de races in deze taal, voor de voet en het kruimelpad.
+const racesIn = (code) => ALLE.find((pg) => pg.id === 'races')?.talen[code];
 // De gidsen (soort 'gids'), zonder de about-pagina: die staat niet onder
 // "Gidsen" en heeft geen link in de blokken van de voorpagina.
 const gidsenIn = (code) => paginasIn(code).filter((pg) => pg.soort === 'gids');
@@ -1200,7 +1208,7 @@ const overIn = (code) => PAGINAS.find((pg) => pg.id === 'over')?.talen[code];
 // De lege datum van de hash (0000-00-00, zie metDatum()) blijft gewoon staan.
 const datumTekst = (code, iso) => (/^0000/.test(iso) ? iso : new Intl.DateTimeFormat(code, {
   day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00Z`)));
-for (const pg of PAGINAS) for (const code of clusterVan(pg)) {
+for (const pg of ALLE) for (const code of clusterVan(pg)) {
   if (!PAGINA_UI[code]) throw new Error(`site/paginas.mjs: geen PAGINA_UI voor ${code} (pagina ${pg.id})`);
 }
 
@@ -1248,6 +1256,9 @@ const ARTIKEL_CSS = `
   .artikel .circuits thead th:not(:first-child){text-align:right}
   .artikel .circuits tbody th{font-weight:600}
   .artikel .circuits td,.artikel .tabel.circuits td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:20px;line-height:1}
+  .artikel .links a{color:var(--accent-tekst)}
+  .artikel .compact th,.artikel .compact td{padding:10px 8px}
+  @media (min-width:480px){.artikel .compact th,.artikel .compact td{padding:10px 14px}}
   .artikel .formules{margin:0 0 16px}
   .artikel .formules dt{font-weight:600;margin:14px 0 6px}
   .artikel .formules dd{margin:0}
@@ -1285,12 +1296,35 @@ function artikelJsonLd(pg, code, datum, sinds) {
   const url = paginaUrl(pg, code);
   const thuis = urlVan(code);
   const f = (s) => vulPagina(pg, code, s);
+  const ouder = pg.kruimel ? ALLE.find((x) => x.id === pg.kruimel) : null;
   const kruimel = { '@type': 'BreadcrumbList', '@id': `${url}#kruimel`, itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Predict the Race', item: thuis },
-    { '@type': 'ListItem', position: 2, name: t.kop, item: url }] };
+    ...(ouder?.talen[code] ? [{ '@type': 'ListItem', position: 2, name: ouder.talen[code].kop, item: paginaUrl(ouder, code) }] : []),
+    { '@type': 'ListItem', position: ouder?.talen[code] ? 3 : 2, name: t.kop, item: url }] };
+  const pagina = (type, extra) => ({ '@type': type, '@id': `${url}#pagina`, url, name: t.titel, description: t.omschrijving,
+    inLanguage: code, isPartOf: { '@id': `${BASIS}/#website` }, breadcrumb: { '@id': `${url}#kruimel` },
+    datePublished: sinds, dateModified: datum, ...extra });
   // De about-pagina: een AboutPage over de maker, met hem hier volledig
   // beschreven, ook waar hij woont (zoekplan GEO 1.3). Geen Article.
-  const graaf = pg.soort === 'over' ? [
+  // Een racepagina: een WebPage over een SportsEvent (naam, begin, eind, plaats),
+  // voor begrip, niet voor een rich result. Het overzicht: een CollectionPage
+  // met de racepagina's als ItemList (zoekplan SEO fase 4).
+  const graaf = pg.soort === 'race' ? [
+    pagina('WebPage', { about: { '@id': `${url}#race` } }),
+    { '@type': 'SportsEvent', '@id': `${url}#race`, name: t.kop, url, sport: 'Formula 1',
+      startDate: pg.evenement.start, endDate: pg.evenement.eind,
+      eventStatus: 'https://schema.org/EventScheduled', eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      location: { '@type': 'Place', name: pg.evenement.baan,
+        address: { '@type': 'PostalAddress', addressLocality: pg.evenement.plaats, addressCountry: pg.evenement.land } } },
+    kruimel,
+  ] : pg.soort === 'races' ? [
+    pagina('CollectionPage', { mainEntity: { '@id': `${url}#lijst` } }),
+    { '@type': 'ItemList', '@id': `${url}#lijst`, itemListElement: pg.lijst.map((id, i) => {
+      const x = ALLE.find((y) => y.id === id);
+      return { '@type': 'ListItem', position: i + 1, url: paginaUrl(x, code), name: x.talen[code].kop };
+    }) },
+    kruimel,
+  ] : pg.soort === 'over' ? [
     { '@type': 'AboutPage', '@id': `${url}#pagina`, url, name: t.titel, description: t.omschrijving,
       inLanguage: code, isPartOf: { '@id': `${BASIS}/#website` }, about: { '@id': `${BASIS}/#organisatie` },
       mainEntity: { '@id': `${BASIS}/#maker` }, breadcrumb: { '@id': `${url}#kruimel` },
@@ -1329,7 +1363,7 @@ function artikelPagina(pg, code, datum, sinds) {
     `<link rel="alternate" hreflang="x-default" href="${paginaUrl(pg, xDefaultVan(pg))}">`].join('\n');
   const taalLinks = cluster.map((c) => `<li><a href="${p}${pg.talen[c].pad}/" hreflang="${c}" lang="${c}"${
     c === code ? ' aria-current="page"' : ''}>${esc(teksten[c].naam)} <span>${teksten[c].kort}</span></a></li>`).join('');
-  const verwant = pg.verwant.map((id) => PAGINAS.find((x) => x.id === id)).filter((x) => x?.talen[code]);
+  const verwant = pg.verwant.map((id) => ALLE.find((x) => x.id === id)).filter((x) => x?.talen[code]);
   const leesOok = [
     ...verwant.map((x) => `<li><a href="${p}${x.talen[code].pad}/">${esc(x.talen[code].kop)}</a></li>`),
     ...(t.leesOok ?? []).map(([anker, tekst]) => `<li><a href="${thuis}#${anker}">${esc(tekst)}</a></li>`)];
@@ -1347,6 +1381,17 @@ function artikelPagina(pg, code, datum, sinds) {
   const door = esc(ui.door)
     .replace('{naam}', `<a href="${over ? `${p}${over.pad}/` : MAKER.url}" rel="author">${esc(MAKER.naam)}</a>`)
     .replace('{datum}', `<time datetime="${datum}">${esc(datumTekst(code, datum))}</time>`);
+  // Een link naar een andere artikelpagina: { pagina: id, anker? }. Een pagina
+  // die in deze taal niet bestaat, is een fout, geen lege link.
+  const naarPagina = (l) => {
+    const doel = ALLE.find((x) => x.id === l.pagina)?.talen[code];
+    if (!doel) throw new Error(`${pg.id} (${code}) linkt naar ${l.pagina}, en die is er niet in deze taal`);
+    return `${p}${doel.pad}/${l.anker ? `#${l.anker}` : ''}`;
+  };
+  // Het kruimelpad: de voorpagina, soms een tussenstap (een racepagina hangt
+  // onder het overzicht van de races), en deze pagina.
+  const ouder = pg.kruimel ? ALLE.find((x) => x.id === pg.kruimel)?.talen[code] : null;
+  const slot = t.slot ?? ui.slot;
   const rekenTabel = (r) => {
     const uit = rekenvoorbeeld(pg);
     if (!uit) throw new Error(`site/paginas.mjs: ${pg.id} heeft een rekenvoorbeeld-tabel maar geen rekenvoorbeeld`);
@@ -1376,11 +1421,16 @@ function artikelPagina(pg, code, datum, sinds) {
       <h2>${f(s.vraag)}</h2>
       <p class="kort">${f(s.kort)}</p>${s.stappen ? `
       <ol>${s.stappen.map((x) => `<li>${f(x)}</li>`).join('')}</ol>` : ''}${s.tabel ? `
-      <table class="tabel">
+      <table class="tabel${s.tabel.klasse ? ` ${s.tabel.klasse}` : ''}">
         <caption>${f(bijschrift(s.tabel, s.id))}</caption>
         <thead><tr>${s.tabel.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
         <tbody>${s.tabel.rijen.map((r) => `<tr>${r.map((c, i) => i === 0 ? `<th scope="row">${f(c)}</th>` : `<td>${f(c)}</td>`).join('')}</tr>`).join('')}</tbody>
-      </table>` : ''}${s.rekenvoorbeeld ? rekenTabel(s.rekenvoorbeeld) : ''}${s.circuittabel ? circuitTabel(s.circuittabel) : ''}${s.voorbeeld ? `
+      </table>` : ''}${(s.tabellen ?? []).map((tabel, i) => `
+      <table class="tabel${tabel.klasse ? ` ${tabel.klasse}` : ''}">
+        <caption>${f(bijschrift(tabel, `${s.id}-${i + 1}`))}</caption>
+        <thead><tr>${tabel.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
+        <tbody>${tabel.rijen.map((rij) => `<tr>${rij.map((c, j) => j === 0 ? `<th scope="row">${f(c)}</th>` : `<td>${f(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>`).join('')}${s.rekenvoorbeeld ? rekenTabel(s.rekenvoorbeeld) : ''}${s.circuittabel ? circuitTabel(s.circuittabel) : ''}${s.voorbeeld ? `
       <p class="voorbeeld">${f(s.voorbeeld)}</p>` : ''}${s.vragentabel ? `
       <div class="tabellen">${[[t2.punten.lossKop, LOSSE], [t2.punten.seizoenKop, SEIZOEN]].map(([kop, ids]) => `
         <table class="tabel getallen">
@@ -1392,7 +1442,8 @@ function artikelPagina(pg, code, datum, sinds) {
       <dl class="formules">${s.formules.map(([wat, formule]) => `<dt>${f(wat)}</dt><dd><code>${f(formule)}</code></dd>`).join('')}</dl>` : ''}${s.punten ? `
       <ul>${s.punten.map(([kop, tekst]) => `<li><b>${f(kop)}.</b> ${f(tekst)}</li>`).join('')}</ul>` : ''}${s.lijst ? `
       <ul>${s.lijst.map((x) => `<li>${f(x)}</li>`).join('')}</ul>` : ''}${(s.tekst ?? []).map((x) => `
-      <p>${f(x)}</p>`).join('')}
+      <p>${f(x)}</p>`).join('')}${s.links ? `
+      <ul class="links">${s.links.map((l) => `<li><a href="${naarPagina(l)}">${f(l.tekst)}</a></li>`).join('')}</ul>` : ''}
     </section>`;
 
   return `<!DOCTYPE html>
@@ -1437,7 +1488,8 @@ ${artikelJsonLd(pg, code, datum, sinds)}
 <main class="artikel">
   <div class="binnen">
     <nav class="kruimel" aria-label="${esc(ui.kruimel)}"><ol>
-      <li><a href="${thuis}">Predict the Race</a></li>
+      <li><a href="${thuis}">Predict the Race</a></li>${ouder ? `
+      <li><a href="${p}${ouder.pad}/">${esc(ouder.kop)}</a></li>` : ''}
       <li aria-current="page">${esc(t.kop)}</li>
     </ol></nav>
     <h1>${esc(t.kop)}</h1>
@@ -1455,9 +1507,9 @@ ${leesOok.length ? `    <section class="leesook">
       <ul>${leesOok.join('')}</ul>
     </section>` : ''}
     <div class="slotblok">
-      <h2>${esc(ui.slot.kop)}</h2>
-      <p>${esc(ui.slot.tekst)}</p>
-      <a class="knop" href="${app}">${esc(ui.slot.knop)} <span aria-hidden="true">→</span></a>
+      <h2>${f(slot.kop)}</h2>
+      <p>${f(slot.tekst)}</p>
+      <a class="knop" href="${app}">${f(slot.knop)} <span aria-hidden="true">→</span></a>
     </div>
   </div>
 </main>
@@ -1466,7 +1518,8 @@ ${leesOok.length ? `    <section class="leesook">
     <ul>
       <li><a href="${thuis}">${esc(ui.terug)}</a></li>
       <li><a href="${app}">${esc(ui.app)}</a></li>${overIn(code) && pg.id !== 'over' ? `
-      <li><a href="${p}${overIn(code).pad}/">${esc(ui.over)}</a></li>` : ''}
+      <li><a href="${p}${overIn(code).pad}/">${esc(ui.over)}</a></li>` : ''}${racesIn(code) && pg.id !== 'races' ? `
+      <li><a href="${p}${racesIn(code).pad}/">${esc(racesIn(code).voet)}</a></li>` : ''}
       <li><a href="${p}${PRIVACY[privacyTaal(code)].pad}/">${esc(ui.privacy)}</a></li>
       <li><a href="${BRON}" rel="noopener">${esc(teksten[code].voet.bron)}</a></li>
       <li><a href="#" data-toestemming hidden>${esc(teksten[code].voet.cookies)}</a></li>
@@ -1506,7 +1559,7 @@ ${[...PRIVACY_TALEN.map((a) => `    <xhtml:link rel="alternate" hreflang="${a}" 
     <lastmod>${DATUM.get(privacyUrl(c))}</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
-  </url>`).join('\n')}${PAGINAS.flatMap((pg) => clusterVan(pg).map((c) => `
+  </url>`).join('\n')}${ALLE.flatMap((pg) => clusterVan(pg).map((c) => `
   <url>
     <loc>${paginaUrl(pg, c)}</loc>
 ${[...clusterVan(pg).map((a) => `    <xhtml:link rel="alternate" hreflang="${a}" href="${paginaUrl(pg, a)}"/>`),
@@ -1568,7 +1621,8 @@ Sitemap: ${BASIS}/sitemap.xml
 // generator: een feit dat hier met de hand staat, loopt uit de pas.
 // LLMS_SOORTEN: welke pagina's uit site/paginas.mjs een eigen kopje krijgen.
 // 'data' zijn de eigen cijfers van GEO fase 3; zolang die er niet zijn, geen kopje.
-const LLMS_SOORTEN = { gids: 'Guides', data: 'Data' };
+// 'race': de racepagina's (SEO fase 4), zodra er gegevens voor zijn.
+const LLMS_SOORTEN = { gids: 'Guides', data: 'Data', race: 'Race pages' };
 const taalNaamEn = (c) => new Intl.DisplayNames('en', { type: 'language' }).of(c);
 const opsomming = (xs, type = 'conjunction') => new Intl.ListFormat('en', { type }).format(xs);
 
@@ -1582,7 +1636,7 @@ function llms() {
     apptalen: opsomming(APP_TALEN.map(taalNaamEn), 'disjunction'),
   };
   const paginaTalen = TALEN.filter((c) => PAGINAS.some((pg) => pg.talen[c]));
-  const lijst = (soort) => PAGINAS.filter((pg) => pg.soort === soort).map((pg) => {
+  const lijst = (soort) => ALLE.filter((pg) => pg.soort === soort).map((pg) => {
     const hoofd = pg.talen.en ? 'en' : clusterVan(pg)[0];
     const rest = clusterVan(pg).filter((c) => c !== hoofd);
     return `- [${pg.talen[hoofd].kop}](${paginaUrl(pg, hoofd)}): ${pg.talen[hoofd].omschrijving}${
@@ -1765,7 +1819,7 @@ for (const code of TALEN) {
 for (const taal of PRIVACY_TALEN) {
   bestanden.set(join(PRIVACY[taal].pad, 'index.html'), metDatum(privacyUrl(taal), () => privacyPagina(taal)));
 }
-for (const pg of PAGINAS) for (const code of clusterVan(pg)) {
+for (const pg of ALLE) for (const code of clusterVan(pg)) {
   bestanden.set(join(pg.talen[code].pad, 'index.html'),
     metDatum(paginaUrl(pg, code), (datum, sinds) => artikelPagina(pg, code, datum, sinds)));
 }

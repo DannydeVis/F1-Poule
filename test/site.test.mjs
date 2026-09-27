@@ -27,6 +27,7 @@ import { maakControle, startSite, wortel, gepubliceerd, UITGESLOTEN } from './hu
 import { teksten, TALEN, STANDAARD, BASIS } from '../site/teksten.mjs';
 import { PRIVACY } from '../site/privacy.mjs';
 import { PAGINAS } from '../site/paginas.mjs';
+import { RACEPAGINAS } from '../scripts/racepaginas.mjs';
 import { knipUit } from '../scripts/knipsel.mjs';
 
 const { check, afronden } = maakControle('de landingspagina in zeven talen');
@@ -329,7 +330,9 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
       en: [`MAX(0,${fMax}-${fStap}*ABS(B2-C2))`, `=IF(B14=C14,${winnaarApp},0)`, `the winner is worth ${winnaarApp} points`],
     },
   };
-  for (const pg of PAGINAS) {
+  // De gidsen en de about-pagina, en de racepagina's met hun overzicht
+  // (scripts/racepaginas.mjs): hetzelfde sjabloon, dezelfde keuring.
+  for (const pg of [...PAGINAS, ...RACEPAGINAS]) {
     const cluster = TALEN.filter((c) => pg.talen[c]);
     const verwacht = [...cluster.map((c) => `${c}=${BASIS}/${pg.talen[c].pad}/`),
       `x-default=${BASIS}/${pg.talen[pg.talen.en ? 'en' : 'nl'].pad}/`].sort();
@@ -374,11 +377,23 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
       const ldFaq = (soort('FAQPage')?.mainEntity ?? []).map((q) => ({ vraag: q.name, antwoord: q.acceptedAnswer?.text }));
       // Een gids is een Article van de maker; de about-pagina een AboutPage
       // over de maker, met hem daar volledig beschreven, ook waar hij woont.
+      // Een racepagina een WebPage over een SportsEvent, het overzicht een
+      // CollectionPage met de racepagina's als ItemList.
       const over = pg.soort === 'over';
-      const hoofd = over ? soort('AboutPage') : soort('Article');
-      check(`${naam}: JSON-LD met ${over ? 'AboutPage (over de maker, met adres)' : 'WebPage, Article'} en BreadcrumbList, en de FAQ zoals op het scherm`,
+      const race = pg.soort === 'race';
+      const races = pg.soort === 'races';
+      const hoofd = over ? soort('AboutPage') : race ? soort('WebPage') : races ? soort('CollectionPage') : soort('Article');
+      const evenement = soort('SportsEvent');
+      const lijstUrls = (soort('ItemList')?.itemListElement ?? []).map((i) => i.url);
+      check(`${naam}: JSON-LD met ${over ? 'AboutPage (over de maker, met adres)' : race ? 'WebPage over een SportsEvent'
+        : races ? 'CollectionPage met een ItemList' : 'WebPage, Article'} en BreadcrumbList, en de FAQ zoals op het scherm`,
         (over ? hoofd?.mainEntity?.['@id'] === `${BASIS}/#maker` && !soort('Article')
             && soort('Person')?.address?.addressLocality && soort('Person')?.url === eigen
+          : race ? hoofd?.about?.['@id'] === evenement?.['@id'] && evenement?.name === t.kop && !soort('Article')
+            && evenement.startDate === pg.evenement.start && evenement.endDate === pg.evenement.eind
+            && evenement.location?.name === pg.evenement.baan && evenement.location?.address?.addressCountry
+          : races ? hoofd?.mainEntity?.['@id'] === soort('ItemList')?.['@id'] && !soort('Article')
+            && JSON.stringify(lijstUrls) === JSON.stringify(pg.lijst.map((id) => `${BASIS}/${RACEPAGINAS.find((x) => x.id === id).talen[code].pad}/`))
           : soort('WebPage') && hoofd?.author?.['@id'] === `${BASIS}/#maker`)
           && soort('BreadcrumbList')
           && kop.faq.length === t.faq.length && JSON.stringify(ldFaq) === JSON.stringify(kop.faq),
@@ -396,8 +411,10 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
       check(`${naam}: geen {plekhouder} en geen streepje in de tekst`,
         !/\{[a-zA-Z]+\}/.test(kop.alles) && !/[–—]/.test(kop.alles + kop.titel + kop.omschrijving),
         (kop.alles.match(/.{0,20}(\{[a-zA-Z]+\}|[–—]).{0,20}/) ?? [''])[0]);
+      // De racepagina's hebben geen getallen over de app; wat erop staat, komt
+      // uit de gegevens en test/racepaginas.test.mjs legt het daarnaast.
       const feiten = FEITEN[pg.id]?.[code];
-      check(`${naam}: de getallen over de app komen uit de app`,
+      if (!race && !races) check(`${naam}: de getallen over de app komen uit de app`,
         feiten?.length > 0 && feiten.every((z) => kop.alles.includes(z)),
         feiten ? feiten.filter((z) => !kop.alles.includes(z)).join(' | ') : 'geen FEITEN voor deze gids');
       if (pg.rekenvoorbeeld) {
@@ -709,14 +726,15 @@ await stoppen();
   // Eerst de zeven landingspagina's, dan de privacyverklaring in zijn twee
   // talen (zie test/privacypagina.test.mjs voor die pagina's zelf).
   const privacy = Object.values(PRIVACY).map((p) => `${BASIS}/${p.pad}/`);
-  // En dan de gidsen, elk in de talen waarin hij bestaat.
-  const gidsen = PAGINAS.flatMap((pg) => TALEN.filter((c) => pg.talen[c]).map((c) => `${BASIS}/${pg.talen[c].pad}/`));
-  check('de sitemap noemt elke taal, de privacyverklaring en de gidsen',
+  // En dan de gidsen, elk in de talen waarin hij bestaat, en de racepagina's
+  // met hun overzicht.
+  const gidsen = [...PAGINAS, ...RACEPAGINAS].flatMap((pg) => TALEN.filter((c) => pg.talen[c]).map((c) => `${BASIS}/${pg.talen[c].pad}/`));
+  check('de sitemap noemt elke taal, de privacyverklaring, de gidsen en de racepagina\'s',
     JSON.stringify(locs) === JSON.stringify([...TALEN.map(urlVan), ...privacy, ...gidsen]), locs.join(' '));
   const perUrl = sitemap.split('<url>').slice(1).map((u) => ({
     loc: u.match(/<loc>([^<]+)</)?.[1], n: (u.match(/hreflang="/g) ?? []).length }));
   const clusterGrootte = (loc) => {
-    const pg = PAGINAS.find((x) => Object.values(x.talen).some((t) => loc === `${BASIS}/${t.pad}/`));
+    const pg = [...PAGINAS, ...RACEPAGINAS].find((x) => Object.values(x.talen).some((t) => loc === `${BASIS}/${t.pad}/`));
     return pg ? Object.keys(pg.talen).length : privacy.includes(loc) ? privacy.length : TALEN.length;
   };
   check('met bij elke url de alternatieven van zijn eigen cluster, plus x-default',
