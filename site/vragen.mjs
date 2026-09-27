@@ -96,6 +96,9 @@ export const VRAGEN = [
   { vraag: 'Wat als twee spelers evenveel punten hebben?', taal: 'nl', varianten: ['Wat gebeurt er bij een gelijke stand?'],
     bron: 'hypothese', doel: 'puntentelling#gelijk', status: 'beantwoord' },
   { vraag: 'Wat doet een joker met je punten?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'puntentelling#jokers', status: 'beantwoord' },
+  // Met de circuitcijfers (zoekplan GEO 3.2).
+  { vraag: 'Hoe vaak komt de safety car in een race?', taal: 'nl', varianten: ['hoeveel safety cars per race', 'safety car per circuit'],
+    bron: 'hypothese', doel: 'puntentelling#safety-cars', status: 'beantwoord' },
   { vraag: 'Wat als iedereen hetzelfde voorspelt?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'puntentelling#hetzelfde', status: 'open' },
   { vraag: 'Kan ik de punten per vraag zelf aanpassen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Telt een coureur buiten de top 10 mee?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
@@ -192,6 +195,8 @@ export const VRAGEN = [
   { vraag: 'What happens when two players are level on points?', taal: 'en', varianten: [],
     bron: 'hypothese', doel: 'puntentelling#ties', status: 'beantwoord' },
   { vraag: 'What does a joker do to your points?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#jokers', status: 'beantwoord' },
+  { vraag: 'How often is there a safety car in an F1 race?', taal: 'en', varianten: ['how many safety cars per race', 'safety car statistics by circuit'],
+    bron: 'hypothese', doel: 'puntentelling#safety-cars', status: 'beantwoord' },
   { vraag: 'What if everyone predicts the same thing?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#same-picks', status: 'open' },
   { vraag: 'Can I change the points per question?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Does a driver outside the top 10 still count?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },

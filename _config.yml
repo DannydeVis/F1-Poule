@@ -16,6 +16,14 @@
 # hier niet uitgesloten is. Een te ruim patroon laat dus tests zakken.
 #
 # Niet uitsluiten: site/og/ en site/beeld/ (de plaatjes van de voorpagina).
+#
+# site/data: de circuitcijfers (workflow "Circuitcijfers"), alleen voor de
+# generator. De gids over de puntentelling toont ze; een openbaar databestand
+# komt pas met de datapagina van zoekplan GEO 3.1. "site/*.json" pakt dit al,
+# want `*` neemt ook een `/` mee, maar zo staat het er met naam.
+#
+# Geen commentaar tussen de regels van de lijst: test/hulp.mjs leest de lijst
+# tot de eerste regel die niet met "-" begint.
 exclude:
   - "*.md"
   - "*.sql"
@@ -24,6 +32,7 @@ exclude:
   - scripts
   - "site/*.mjs"
   - "site/*.json"
+  - site/data
   - site/bron
   - node_modules
   - CNAME

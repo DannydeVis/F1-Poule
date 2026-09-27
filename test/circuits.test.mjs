@@ -22,13 +22,19 @@
 //   8. Het ophalen, tegen een nagebootste OpenF1: elk seizoen vanaf 2023, alleen
 //      races die voorbij zijn, een race zonder berichten staat bij "ontbreekt",
 //      en DROOG schrijft niets weg.
+//   9. uitersten(): het gemiddelde per race, en het circuit met de meeste en de
+//      minste safety cars per race (niet in totaal), alleen van circuits met
+//      genoeg races. De gids over de puntentelling toont de cijfers uit site/data/circuits.json:
+//      elke regel van de tabel, en de getallen in de tekst (met het gemiddelde,
+//      het meeste en het minste per race, hier opnieuw uitgerekend).
 
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { maakControle, wortel } from './hulp.mjs';
-import { raceCijfers, perCircuit, cijfers, VANAF, WACHT_MS, BESTAND } from '../scripts/circuits.mjs';
+import { raceCijfers, perCircuit, cijfers, uitersten, MIN_RACES, VANAF, WACHT_MS, BESTAND } from '../scripts/circuits.mjs';
+import { PAGINAS } from '../site/paginas.mjs';
 
 const { check, afronden } = maakControle('circuitcijfers');
 
@@ -198,6 +204,55 @@ check('tussen twee verzoeken minstens een derde seconde (drie per seconde)', WAC
     uit.split('\n').filter((r) => /races van|ontbreekt/.test(r)).join(' / '));
   check('DROOG schrijft niets weg', /DROOG: niets weggeschreven/.test(uit)
     && (existsSync(join(wortel, BESTAND)) ? statSync(join(wortel, BESTAND)).mtimeMs : null) === voor);
+}
+
+// ---- 9. uitersten() en de cijfers op de gids over de puntentelling ----------------------------------
+{
+  const c = (locatie, races, safetyCars) => ({ locatie, races, safetyCars, metSafetyCar: 0, metRodeVlag: 0, perRace: [] });
+  // Veel in totaal is niet veel per race: Lang heeft er 9 in 6 races (1,5), Kort 6 in 3 (2,0).
+  // Eén heeft er 5 in één race, maar te weinig races om mee te tellen.
+  const u = uitersten({ races: 16, circuits: [c('Lang', 6, 9), c('Kort', 3, 6), c('Rustig', 4, 1), c('Leeg', 3, 0), c('Een', 1, 5)] });
+  check('uitersten: het meeste en minste per race, niet in totaal, en alleen circuits met genoeg races',
+    u.meest.locatie === 'Kort' && u.minst.locatie === 'Leeg' && MIN_RACES === 3, `${u.meest?.locatie} ${u.minst?.locatie}`);
+  check('en het gemiddelde over alle races', u.gemiddeld === 21 / 16, String(u.gemiddeld));
+  const gelijk = uitersten({ races: 7, circuits: [c('Zulu', 3, 3), c('Alfa', 3, 3), c('Bravo', 4, 4)] });
+  check('bij gelijke stand het circuit met de meeste races, dan op naam', gelijk.meest.locatie === 'Bravo' && gelijk.minst.locatie === 'Bravo'
+    && uitersten({ races: 6, circuits: [c('Zulu', 3, 3), c('Alfa', 3, 3)] }).meest.locatie === 'Alfa', `${gelijk.meest.locatie} ${gelijk.minst.locatie}`);
+}
+{
+  const pad = join(wortel, BESTAND);
+  const gids = PAGINAS.find((pg) => pg.id === 'puntentelling');
+  const secties = Object.entries(gids.talen).filter(([, t]) => t.secties.some((x) => x.circuittabel));
+  if (!existsSync(pad)) {
+    check('zonder site/data/circuits.json heeft geen pagina een circuittabel', secties.length === 0, secties.map(([c]) => c).join());
+  } else {
+    const d = JSON.parse(readFileSync(pad, 'utf8'));
+    const ontdoe = (x) => x.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+    const perRace = (c) => c.safetyCars / c.races;
+    const genoeg = d.circuits.filter((c) => c.races >= 3);
+    const meest = genoeg.reduce((a, b) => (perRace(b) > perRace(a) ? b : a));
+    const minst = genoeg.reduce((a, b) => (perRace(b) < perRace(a) ? b : a));
+    const totaal = d.circuits.reduce((n, c) => n + c.safetyCars, 0);
+    const fout = [];
+    for (const [c, t] of Object.entries(gids.talen)) {
+      const html = readFileSync(join(wortel, ...t.pad.split('/'), 'index.html'), 'utf8');
+      const sectie = html.match(/<section class="vraag" id="safety-cars">([\s\S]*?)<\/section>/)?.[1];
+      if (!sectie) { fout.push(`${c}: geen sectie safety-cars`); continue; }
+      const rijen = [...sectie.matchAll(/<tr><th scope="row">([^<]+)<\/th><td>(\d+)<\/td><td>(\d+)<\/td><td>(\d+)<\/td><\/tr>/g)]
+        .map((m) => m.slice(1).join('|'));
+      const verwacht = d.circuits.map((x) => [x.locatie, x.races, x.safetyCars, x.metRodeVlag].join('|'));
+      if (JSON.stringify(rijen) !== JSON.stringify(verwacht)) fout.push(`${c}: tabel ${rijen.length} regels, ${verwacht.length} verwacht`);
+      if (!/<caption>[^<]+<\/caption>/.test(sectie)) fout.push(`${c}: tabel zonder bijschrift`);
+      const kort = ontdoe(sectie.match(/<p class="kort">([\s\S]*?)<\/p>/)?.[1] ?? '');
+      const gem = new Intl.NumberFormat(c, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(totaal / d.races);
+      for (const n of [d.races, d.metSafetyCar, d.metRodeVlag, d.vanaf, gem]) if (!kort.includes(String(n))) fout.push(`${c}: ${n} niet in het korte antwoord`);
+      const tekst = ontdoe(sectie);
+      for (const x of [meest.locatie, `${meest.safetyCars}`, minst.locatie]) if (!tekst.includes(x)) fout.push(`${c}: ${x} niet in de tekst`);
+    }
+    check('de gids over de puntentelling toont de circuitcijfers: elke regel van de tabel, en de getallen in de tekst',
+      secties.length === Object.keys(gids.talen).length && fout.length === 0,
+      fout.join(' | ') || `${d.circuits.length} circuits, meest ${meest.locatie}, minst ${minst.locatie}`);
+  }
 }
 
 process.exit(afronden() ? 0 : 1);

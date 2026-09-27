@@ -1928,8 +1928,9 @@ circuit hoe vaak de safety car eruit kwam en of er een rode vlag was, over
 alle races sinds 2023, met dezelfde regels als de app (een virtuele safety car
 telt mee). Hij schrijft `site/data/circuits.json` en legt dat vast als er een
 race bij kwam. Je hoeft niets te doen; met de hand kan ook: Actions →
-Circuitcijfers → Run workflow. Nog geen pagina gebruikt het bestand; de
-racepagina's en de gids over de puntentelling krijgen de cijfers later.
+Circuitcijfers → Run workflow. De gids over de puntentelling toont de cijfers
+("Hoe vaak komt de safety car in een race?"), en na elke run van de workflow
+staan de nieuwe cijfers er vanzelf op.
 
 **IndexNow.** Na elke deploy meldt de workflow "IndexNow" de gewijzigde
 pagina's bij Bing en de andere zoekmachines die meedoen (Google niet; die leest

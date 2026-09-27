@@ -50,7 +50,7 @@ const { check, afronden } = maakControle('de landingspagina in zeven talen');
 // zakt hier, en een patroon dat te veel pakt (een lettertype, een plaatje van
 // de voorpagina) ook. De testservers passen dezelfde uitsluiting toe.
 {
-  const INTERN = (p) => /\.(md|sql)$/.test(p) || /^(docs|test|scripts|site\/bron)\//.test(p)
+  const INTERN = (p) => /\.(md|sql)$/.test(p) || /^(docs|test|scripts|site\/bron|site\/data)\//.test(p)
     || /^site\/[^/]+\.(mjs|json)$/.test(p) || /(^|\/)[._]/.test(p) || /^(CNAME|node_modules)(\/|$)/.test(p);
   const bestanden = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'],
     { cwd: wortel, encoding: 'utf8' }).split('\n').filter(Boolean);

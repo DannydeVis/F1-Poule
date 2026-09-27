@@ -8484,7 +8484,27 @@ voorbeeld in de woorden die OpenF1 echt gebruikt, de workflow, het ophalen tegen
 een nagebootste OpenF1 (`OPENF1_URL`), en zodra het bestand er staat, of het met
 zichzelf klopt. Zestien mutanten, alle gevangen.
 
-**Nog te doen:** na de eerste run een paar races nalopen tegen een tweede bron
-(het plan vraagt dat voordat er iets gepubliceerd wordt), en daarna de cijfers
-op de site: de gids over de puntentelling (bij de safety cars en de rode vlag)
-en later de racepagina's (SEO fase 4).
+**De eerste run** (27 september, met de hand gestart na de merge): 85 races
+van 2023 tot en met Bakoe 2026, 25 circuits; in 58 races minstens één safety
+car, in 11 een rode vlag. Ontbreken: Imola 2023, Sakhir en Jeddah 2026, alle
+drie afgelast. Nagelopen tegen een tweede bron: Singapore 2024 zonder safety
+car (RacingNews365), Bahrein 2023 met één virtuele safety car (grandprix.com),
+Spa 2025 met een rode vlag (Autosport). Spa 2025 laat ook zien dat een start
+achter de safety car niet meetelt: daar komt geen "SAFETY CAR DEPLOYED" bij,
+en de app telt hem dus ook niet. Op de site staat dat niet als regel, omdat het
+maar van één race zeker is.
+
+**Op de site** (tweede PR): de gids over de puntentelling heeft een sectie "Hoe
+vaak komt de safety car in een race?" / "How often is there a safety car in an
+F1 race?", met een tabel per circuit (races, safety cars, races met een rode
+vlag). De generator leest `site/data/circuits.json`; de getallen staan in de
+tekst als `{scRaces}`, `{scMet}`, `{rvMet}`, `{scGemiddeld}`, `{scTot}` en het
+circuit met de meeste en de minste safety cars per race (`{scMeestPlek}`
+enzovoort, uit `uitersten()` in `scripts/circuits.mjs`, alleen circuits met
+minstens drie races). Een nieuw sectietype `circuittabel` in
+`site/paginas.mjs`. De vraag staat in `site/vragen.mjs`. De workflow maakt na
+elke run de site opnieuw, dus de gids loopt vanzelf mee. `circuits.test.mjs`
+onderdeel 9 legt de pagina naast het bestand; acht mutanten, alle gevangen.
+
+**Nog te doen:** de racepagina's (SEO fase 4) met de cijfers van hun eigen
+circuit.

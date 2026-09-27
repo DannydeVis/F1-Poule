@@ -107,6 +107,24 @@ export function cijfers(races, ontbreekt = []) {
   };
 }
 
+// Het vaakst en het minst: alleen circuits met genoeg races, anders wint een
+// baan met één race.
+export const MIN_RACES = 3;
+
+/**
+ * Voor de tekst op de site: het gemiddelde aantal safety cars per race over
+ * alles, en het circuit met de meeste en de minste per race. Bij gelijke
+ * stand het circuit met de meeste races, dan op naam.
+ */
+export function uitersten(data, minRaces = MIN_RACES) {
+  const totaal = data.circuits.reduce((n, c) => n + c.safetyCars, 0);
+  const perRace = (c) => c.safetyCars / c.races;
+  const genoeg = data.circuits.filter((c) => c.races >= minRaces);
+  const volgorde = (richting) => [...genoeg].sort((a, b) => richting * (perRace(a) - perRace(b))
+    || b.races - a.races || a.locatie.localeCompare(b.locatie, 'en'))[0] ?? null;
+  return { gemiddeld: data.races ? totaal / data.races : 0, meest: volgorde(-1), minst: volgorde(1) };
+}
+
 async function ophalen({ nu = Date.now() } = {}) {
   const races = [];
   const ontbreekt = [];
