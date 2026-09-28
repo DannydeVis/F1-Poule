@@ -37,12 +37,21 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { teksten, TALEN, STANDAARD, BASIS, MAKER, BRON, INDEXNOW_SLEUTEL, LLMS } from '../site/teksten.mjs';
+import { teksten, TALEN, STANDAARD, BASIS, MAKER, BRON, INDEXNOW_SLEUTEL, LLMS, OPEN_POULE } from '../site/teksten.mjs';
 import { PRIVACY, CONTACT, PRIVACY_BIJGEWERKT, privacyTaal } from '../site/privacy.mjs';
 import { PAGINAS, PAGINA_UI } from '../site/paginas.mjs';
 import { knipUit } from './knipsel.mjs';
 import { uitersten, MIN_RACES } from './circuits.mjs';
 import { RACEPAGINAS } from './racepaginas.mjs';
+import { openPouleRegel, controleerCode } from './openpoule.mjs';
+
+// "Geen groep? Speel mee in de open poule" onder de knop (scripts/openpoule.mjs).
+// Zonder code in site/teksten.mjs niets; een verkeerde code laat het maken zakken.
+controleerCode(OPEN_POULE);
+const openPoule = (code, app, inspring) => {
+  const regel = openPouleRegel(OPEN_POULE, code, app);
+  return regel ? `\n${inspring}${regel}` : '';
+};
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CONTROLE = process.argv.includes('--controle');
@@ -605,6 +614,9 @@ const CSS = `
   .slot{background:var(--nacht);color:var(--nacht-ink);text-align:center;padding:76px 0;position:relative;overflow:hidden;isolation:isolate}
   .slot::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(60% 80% at 50% 0%,rgba(238,77,51,.2),transparent 70%)}
   .slot p{color:var(--nacht-ink2);font-size:18px;margin:0 auto 26px;max-width:32em}
+  .openpoule{font-size:15px;color:var(--nacht-ink2);margin:14px 0 0}
+  .openpoule a{color:var(--nacht-ink);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+  .slot .openpoule,.artikel .slotblok .openpoule{font-size:15px;margin:16px auto 0}
   .slot h2{font-size:clamp(40px,7vw,76px);line-height:.95;max-width:14em;margin:0 auto 18px}
   .slot .startlichten{margin:0 auto 26px;padding:12px 14px;gap:12px;border-radius:16px}
   .slot .startlichten i{width:26px;height:26px}
@@ -923,7 +935,7 @@ ${jsonLd(code, datum)}
             <button type="submit">${esc(t.hero.codeKnop)}</button>
           </div>
         </form>
-      </div>
+      </div>${openPoule(code, app, '      ')}
       <ul class="vertrouwen">${t.hero.vertrouwen.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
     </div>
     <div class="telefoon">
@@ -1045,7 +1057,7 @@ ${jsonLd(code, datum)}
     <span class="startlichten" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
     <h2>${esc(t.slot.kop)}</h2>
     <p>${esc(t.slot.tekst)}</p>
-    <a class="knop" href="${app}">${esc(t.slot.knop)} <span aria-hidden="true">→</span></a>
+    <a class="knop" href="${app}">${esc(t.slot.knop)} <span aria-hidden="true">→</span></a>${openPoule(code, app, '    ')}
   </div>
 </section>
 </main>
@@ -1509,7 +1521,7 @@ ${leesOok.length ? `    <section class="leesook">
     <div class="slotblok">
       <h2>${f(slot.kop)}</h2>
       <p>${f(slot.tekst)}</p>
-      <a class="knop" href="${app}">${f(slot.knop)} <span aria-hidden="true">→</span></a>
+      <a class="knop" href="${app}">${f(slot.knop)} <span aria-hidden="true">→</span></a>${openPoule(code, app, '      ')}
     </div>
   </div>
 </main>

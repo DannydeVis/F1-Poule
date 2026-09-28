@@ -31,6 +31,15 @@ export const BRON = 'https://github.com/DannydeVis/F1-Poule';
 // de meldingen van deze site komen. Eigen sleutel, niet die van PadelBracket.
 export const INDEXNOW_SLEUTEL = '1a4736ac820aaebfde621c7e0963f5b6';
 
+// De open poule, voor wie geen eigen groep heeft: de code zoals in een
+// uitnodigingslink (predicttherace.com/app/?code=...). Onder de knop op de
+// voorpagina, de gidsen en de racepagina's komt dan "Geen groep? Speel mee in
+// de open poule" (openPoule per taal hieronder), met die link.
+// null zolang de code er niet is: dan staat de regel nergens, liever dan een
+// kapotte link. De generator weigert een code die de app niet als poulecode
+// herkent (scripts/openpoule.mjs).
+export const OPEN_POULE = null;
+
 // Wat alleen in llms.txt staat (zoekplan GEO fase 2), in het Engels: wanneer
 // een assistent Predict the Race kan aanraden, en eerlijk wanneer iets anders
 // beter past. Wie ziet wanneer je niet past, gelooft je eerder als je zegt
@@ -77,6 +86,8 @@ export const teksten = {
       sub: 'Het gratis F1-voorspelspel voor jou en je vrienden. Voorspel elk raceweekend de top 10, de uitslagen komen vanzelf binnen en de stand deel je zo in de groepsapp.',
       knop: 'Maak je poule',
       codeLabel: 'Heb je een code?', codeKnop: 'Doe mee',
+      // De tweede regel onder de knop, zodra OPEN_POULE er is.
+      openPoule: { vraag: 'Geen groep?', link: 'Speel mee in de open poule' },
       vertrouwen: ['Gratis', 'Geen wachtwoord', 'Geen advertenties', 'Op elke telefoon'],
       chips: ['P1 exact · +5', 'Joker · 2×', 'Jij wint het weekend'],
     },
@@ -206,6 +217,7 @@ export const teksten = {
       sub: 'The free F1 prediction game for you and your friends. Predict the top 10 every race weekend, the results come in by themselves, and the standings are one tap away from your group chat.',
       knop: 'Start your league',
       codeLabel: 'Got a code?', codeKnop: 'Join',
+      openPoule: { vraag: 'No group?', link: 'Join the open league' },
       vertrouwen: ['Free', 'No password', 'No ads', 'Works on any phone'],
       chips: ['P1 spot on · +5', 'Joker · 2×', 'You win the weekend'],
     },
@@ -335,6 +347,7 @@ export const teksten = {
       sub: 'Das kostenlose F1-Tippspiel für dich und deine Freunde. Tippe an jedem Rennwochenende die Top 10, die Ergebnisse kommen von selbst, und den Tabellenstand teilst du mit einem Tipp in der Gruppe.',
       knop: 'Tipprunde erstellen',
       codeLabel: 'Hast du einen Code?', codeKnop: 'Mitspielen',
+      openPoule: { vraag: 'Keine Gruppe?', link: 'Spiel in der offenen Tipprunde mit' },
       vertrouwen: ['Kostenlos', 'Kein Passwort', 'Keine Werbung', 'Auf jedem Handy'],
       chips: ['P1 exakt · +5', 'Joker · 2×', 'Du gewinnst das Wochenende'],
     },
@@ -464,6 +477,7 @@ export const teksten = {
       sub: 'Le jeu de pronostics F1 gratuit pour vous et vos amis. Pronostiquez le top 10 à chaque Grand Prix, les résultats arrivent tout seuls, et le classement se partage en un geste dans votre groupe.',
       knop: 'Créer une ligue',
       codeLabel: 'Vous avez un code ?', codeKnop: 'Rejoindre',
+      openPoule: { vraag: 'Pas de groupe ?', link: 'Rejoignez la ligue ouverte' },
       vertrouwen: ['Gratuit', 'Sans mot de passe', 'Sans publicité', 'Sur tous les téléphones'],
       chips: ['P1 exact · +5', 'Joker · 2×', 'Vous gagnez le week-end'],
     },
@@ -593,6 +607,7 @@ export const teksten = {
       sub: 'El juego de predicciones de F1 gratis para ti y tus amigos. Predice el top 10 cada fin de semana de carrera, los resultados llegan solos y la clasificación se comparte con un toque en tu grupo.',
       knop: 'Crea tu liga',
       codeLabel: '¿Tienes un código?', codeKnop: 'Unirme',
+      openPoule: { vraag: '¿Sin grupo?', link: 'Juega en la liga abierta' },
       vertrouwen: ['Gratis', 'Sin contraseña', 'Sin anuncios', 'En cualquier móvil'],
       chips: ['P1 exacto · +5', 'Comodín · 2×', 'Ganas el fin de semana'],
     },
@@ -722,6 +737,7 @@ export const teksten = {
       sub: 'Il gioco di pronostici F1 gratuito per te e i tuoi amici. Pronostica la top 10 a ogni weekend di gara, i risultati arrivano da soli e la classifica si condivide con un tocco nel gruppo.',
       knop: 'Crea la tua lega',
       codeLabel: 'Hai un codice?', codeKnop: 'Partecipa',
+      openPoule: { vraag: 'Nessun gruppo?', link: 'Gioca nella lega aperta' },
       vertrouwen: ['Gratis', 'Senza password', 'Senza pubblicità', 'Su ogni telefono'],
       chips: ['P1 esatto · +5', 'Jolly · 2×', 'Vinci il weekend'],
     },
@@ -851,6 +867,7 @@ export const teksten = {
       sub: 'O jogo de palpites de F1 grátis para você e seus amigos. Dê seu palpite no top 10 em cada fim de semana de corrida, os resultados chegam sozinhos e a classificação vai para o grupo com um toque.',
       knop: 'Crie seu bolão',
       codeLabel: 'Tem um código?', codeKnop: 'Entrar',
+      openPoule: { vraag: 'Sem grupo?', link: 'Jogue no bolão aberto' },
       vertrouwen: ['Grátis', 'Sem senha', 'Sem anúncios', 'Em qualquer celular'],
       chips: ['P1 exato · +5', 'Coringa · 2×', 'Você vence o fim de semana'],
     },

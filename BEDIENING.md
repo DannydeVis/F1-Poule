@@ -1946,6 +1946,14 @@ Geen vertoningen? Dan komen er in 2027 geen racepagina's bij en blijven deze
 als archief staan. Wel vertoningen? Dan in januari de races van 2027 klaarzetten
 (zeg het tegen Claude Code).
 
+**De open poule.** Onder de knop op de voorpagina, de gidsen en de
+racepagina's hoort de regel "Geen groep? Speel mee in de open poule", met de
+uitnodigingslink van die poule. Die regel verschijnt pas als de code erin staat:
+zet in `site/teksten.mjs` bij `OPEN_POULE` de code van zes tekens (dezelfde als
+in de uitnodigingslink, `app/?code=...`) tussen aanhalingstekens, of geef de
+code aan Claude Code. Zorg dat de poule openbaar is en blijft. Een code die de
+app niet als poulecode herkent, laat het maken van de site zakken.
+
 **IndexNow.** Na elke deploy meldt de workflow "IndexNow" de gewijzigde
 pagina's bij Bing en de andere zoekmachines die meedoen (Google niet; die leest
 de sitemap). Er is niets voor nodig: de sleutel is openbaar en staat als
