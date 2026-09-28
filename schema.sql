@@ -209,6 +209,11 @@ alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
 alter table public.pool_members add column if not exists created_at   timestamptz not null default now();
 alter table public.pool_members add column if not exists user_id      uuid;
+-- Welk account deze speler aanmaakte. Alleen van belang zolang hij van niemand
+-- is: dan mag dat account (het gedeelde toestel waarop hij werd ingeschreven)
+-- nog voor hem invullen, en verder niemand. Zie mag_voor_speler(). Niet te
+-- lezen via de API: de kolomgrant voor select noemt hem niet.
+alter table public.pool_members add column if not exists aangemaakt_door uuid;
 -- Een publiek profiel: een code om te delen en een momentopname van je
 -- cijfers. Allebei leeg tot je het zelf aanzet.
 --
@@ -242,6 +247,22 @@ end $$;
 -- eigen link ooit moest oplossen.
 create unique index if not exists pool_members_pool_user_uniek
   on public.pool_members (pool_id, user_id) where user_id is not null;
+
+-- Een spelersnaam zoals hij in de poule komt: zonder spaties aan de randen,
+-- niet leeg en hoogstens 60 tekens. Gooit een fout met uitleg in plaats van
+-- stilletjes af te knippen: wie een naam intypt, hoort te zien wat er mis is.
+create or replace function public.speler_naam(p_naam text)
+returns text
+language plpgsql
+immutable
+set search_path = public
+as $$
+declare naam text := btrim(coalesce(p_naam, ''));
+begin
+  if naam = '' then raise exception 'je hebt een naam nodig'; end if;
+  if length(naam) > 60 then raise exception 'die naam is te lang (hoogstens 60 tekens)'; end if;
+  return naam;
+end $$;
 
 -- De inleg, het betaalverzoek en het betaald-vinkje zijn eruit gehaald. Zodra
 -- er geld in een poule zit — inleg, pot, prijs — kom je in Nederland in de
@@ -864,22 +885,26 @@ grant execute on function public.is_member(uuid) to anon, authenticated;
 
 -- Mag ik voor deze speler schrijven?
 --
--- Twee gevallen, en het tweede is er met opzet:
+-- Twee gevallen:
 --
 --   1. De speler hoort bij mijn account. Dat is het normale geval.
---   2. De speler hoort bij niemand. Dat is iedereen die de app nog niet
---      geopend heeft sinds er accounts zijn, plus de tweede speler die op
---      een gedeeld toestel is ingeschreven.
+--   2. De speler hoort bij niemand, en mijn account heeft hem aangemaakt: de
+--      tweede speler die op een gedeeld toestel is ingeschreven. Dat toestel
+--      mag voor hem blijven invullen tot hij zichzelf op zijn eigen toestel
+--      claimt.
 --
--- Zonder dat tweede geval zou het dichtzetten van deze policies een halve
--- poule buitensluiten op de dag dat het live gaat, zonder enige melding —
--- RLS geeft namelijk geen fout op een geblokkeerde schrijfactie, hij raakt
--- gewoon nul rijen. Nu groeit de bescherming mee: zodra iemand de app opent
--- claimt hij zichzelf, en vanaf dat moment kan niemand anders meer bij zijn
--- inzending.
+-- Tot 28 september stond hier bij het tweede geval "de speler hoort bij
+-- niemand", zonder meer. Dat was een gat, en groter dan het leek: de policies
+-- op answers, jokers en push_abonnementen staan op `for all`, dus deze regel
+-- gold ook voor lezen. Iedereen, zonder poulecode, kon zo alle antwoorden van
+-- spelers zonder account in de hele database opvragen, met hun member_id en
+-- pool_id erbij; die antwoorden overschrijven of weggooien; en met dat
+-- member_id de speler claimen en zo lid worden van een poule waarvan hij de
+-- code nooit had. test/identiteit.test.sql legt vast dat dat niet meer kan.
 --
--- Zodra `spelers zonder account` in de controle onderaan op 0 staat kan de
--- tweede regel weg. Zie OVERDRACHT.md.
+-- Een oude speler van vóór de accounts (aangemaakt_door leeg) is nu voor
+-- niemand te beschrijven tot hij geclaimd is. Dat gebeurt vanzelf zodra hij de
+-- app opent (herkenMij() in de app claimt hem eerst).
 create or replace function public.mag_voor_speler(p_member uuid)
 returns boolean
 language sql
@@ -887,10 +912,28 @@ stable
 security definer
 set search_path = public
 as $$
-  select exists (
+  select auth.uid() is not null and exists (
     select 1 from public.pool_members
     where member_id = p_member
-      and (user_id = auth.uid() or user_id is null)
+      and (user_id = auth.uid()
+           or (user_id is null and aangemaakt_door = auth.uid()))
+  );
+$$;
+
+-- Hetzelfde, en de speler hoort ook in die poule. Een antwoord of joker met
+-- de pool_id van poule A en je eigen speler uit poule B kwam er eerst gewoon
+-- in: de foreign keys kijken alleen of de speler en de poule bestaan, niet of
+-- ze bij elkaar horen.
+create or replace function public.mag_voor_speler_in(p_member uuid, p_pool uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.mag_voor_speler(p_member) and exists (
+    select 1 from public.pool_members
+    where member_id = p_member and pool_id = p_pool
   );
 $$;
 
@@ -921,9 +964,50 @@ as $$
 $$;
 
 revoke all on function public.mag_voor_speler(uuid) from public;
+revoke all on function public.mag_voor_speler_in(uuid, uuid) from public;
 revoke all on function public.mag_beheren(uuid)     from public;
 grant execute on function public.mag_voor_speler(uuid) to anon, authenticated;
+grant execute on function public.mag_voor_speler_in(uuid, uuid) to anon, authenticated;
 grant execute on function public.mag_beheren(uuid)     to anon, authenticated;
+
+-- Wat de policy op pool_members niet kan zeggen, omdat hij alleen de nieuwe rij
+-- ziet en niet de oude. Alleen voor wie via de API komt (anon en
+-- authenticated); de functies hierboven (security definer) draaien als de
+-- eigenaar en gaan erlangs, en de sync en het beheer ook.
+--
+--   * Een speler aan een account hangen gaat alleen via poule_claim_speler().
+--     Direct mag user_id alleen leeg worden: jezelf loslaten, of als
+--     poulebaas iemand losmaken. Zo kan een poulebaas een speler niet aan een
+--     ander account geven.
+--   * Je pagina (profiel, profiel_code) zet alleen het account van die speler
+--     aan of uit. Anders kon een poulebaas een pagina op andermans naam zetten.
+--   * Wordt een speler losgemaakt, dan mag ook het toestel dat hem ooit
+--     aanmaakte niet meer voor hem invullen (aangemaakt_door leeg): losmaken
+--     is er juist voor een speler die aan het verkeerde toestel hing.
+create or replace function public.pool_members_bewaken()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if current_user not in ('anon', 'authenticated') then return new; end if;
+  if new.user_id is distinct from old.user_id and new.user_id is not null then
+    raise exception 'een speler claimen gaat via poule_claim_speler()';
+  end if;
+  if (new.profiel is distinct from old.profiel or new.profiel_code is distinct from old.profiel_code)
+     and old.user_id is distinct from auth.uid() then
+    raise exception 'alleen de speler zelf zet zijn pagina aan of uit';
+  end if;
+  if new.user_id is null and old.user_id is not null then
+    new.aangemaakt_door := null;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists pool_members_bewaken on public.pool_members;
+create trigger pool_members_bewaken
+  before update on public.pool_members
+  for each row execute function public.pool_members_bewaken();
 
 -- ------------------------------------------------------------
 --  Een poule ophalen zonder de hele tabel open te zetten
@@ -1024,6 +1108,12 @@ $$;
 -- doet gewoon mee; hij hangt alleen aan niemand tot degene van wie hij is hem
 -- op zijn eigen toestel opent. Dat stond eerst in de app, en hoort hier: het
 -- is een regel van de database, niet van het scherm.
+--
+-- En de naam: niet leeg, niet eindeloos lang, en niet een naam die al
+-- meedoet (hoofdletters en spaties aan de randen tellen niet). De app stuurt
+-- een bestaande naam al naar die speler in plaats van een tweede aan te maken,
+-- maar wie de functie zelf aanroept, kon zo een tweede "Anna" in de stand
+-- zetten. Zie speler_naam().
 create or replace function public.poule_meedoen(p_pool uuid, p_naam text)
 returns jsonb
 language plpgsql
@@ -1032,17 +1122,22 @@ set search_path = public
 as $$
 declare
   nieuw public.pool_members%rowtype;
+  naam  text := public.speler_naam(p_naam);
 begin
   if not exists (select 1 from public.pools where id = p_pool) then
     raise exception 'die poule bestaat niet';
   end if;
+  if exists (select 1 from public.pool_members
+             where pool_id = p_pool and lower(btrim(display_name)) = lower(naam)) then
+    raise exception 'die naam doet al mee in deze poule';
+  end if;
   begin
-    insert into public.pool_members (pool_id, display_name, user_id)
-    values (p_pool, p_naam, auth.uid())
+    insert into public.pool_members (pool_id, display_name, user_id, aangemaakt_door)
+    values (p_pool, naam, auth.uid(), auth.uid())
     returning * into nieuw;
   exception when unique_violation then
-    insert into public.pool_members (pool_id, display_name, user_id)
-    values (p_pool, p_naam, null)
+    insert into public.pool_members (pool_id, display_name, user_id, aangemaakt_door)
+    values (p_pool, naam, null, auth.uid())
     returning * into nieuw;
   end;
   return jsonb_build_object('member_id', nieuw.member_id,
@@ -1085,6 +1180,7 @@ begin
   if coalesce(btrim(p_speler), '') = '' then
     raise exception 'je hebt zelf ook een naam nodig';
   end if;
+  perform public.speler_naam(p_speler);
 
   -- Het seizoen van de eerstvolgende race, en niet het laatste seizoen in de
   -- tabel. Dat was max(season), en dat ging goed zolang er maar één seizoen
@@ -1102,8 +1198,8 @@ begin
             extract(year from now())::int))
   returning * into nieuwe;
 
-  insert into public.pool_members (pool_id, display_name, user_id)
-  values (nieuwe.id, btrim(p_speler), auth.uid())
+  insert into public.pool_members (pool_id, display_name, user_id, aangemaakt_door)
+  values (nieuwe.id, btrim(p_speler), auth.uid(), auth.uid())
   returning * into ik;
 
   update public.pools set owner_member_id = ik.member_id where id = nieuwe.id
@@ -1296,6 +1392,8 @@ drop policy if exists answers_eigen     on public.answers;
 drop policy if exists jokers_lezen      on public.jokers;
 drop policy if exists jokers_eigen      on public.jokers;
 drop policy if exists push_eigen        on public.push_abonnementen;
+drop policy if exists pool_members_meedoen   on public.pool_members;
+drop policy if exists pool_members_bijwerken on public.pool_members;
 
 -- ---- poules -------------------------------------------------
 -- Lezen stond op `true`, en dat was het gat: met de publieke anon key was
@@ -1326,24 +1424,28 @@ create policy pools_bijwerken on public.pools
 create policy pool_members_lezen on public.pool_members
   for select to anon, authenticated
   using (user_id = auth.uid() or public.is_member(pool_id));
--- Meedoen mag, maar nooit namens een ander account.
-create policy pool_members_meedoen on public.pool_members
-  for insert to anon, authenticated
-  with check (user_id is null or user_id = auth.uid());
--- Dit is de kern van het claimen. `using` bepaalt welke rijen je mag aanraken,
--- `with check` hoe ze eruit mogen komen:
+-- Meedoen gaat alleen via poule_meedoen() en poule_aanmaken(): die kijken naar
+-- de code of maken de poule zelf, en controleren de naam. Een directe insert
+-- stond hier open (met elke naam, in elke poule waarvan je de id kende, dus
+-- ook zonder de code) en heeft geen policy meer, en ook geen grant.
 --
---   * een speler die van niemand is  -> claimen mag
---   * je eigen speler                -> loslaten mag
+-- Bijwerken, en `using` bepaalt welke rijen je mag aanraken, `with check` hoe
+-- ze eruit mogen komen:
+--
+--   * je eigen speler                -> je pagina aan of uit, en loslaten
+--   * als poulebaas een speler       -> losmaken (user_id leeg), meer niet
+--   * een speler die van niemand is  -> niets: claimen gaat via
+--                                       poule_claim_speler()
 --   * de speler van een ander        -> niets
 --
--- En de poulebaas mag een speler losmaken van het account waar hij per
--- ongeluk aan is blijven hangen. Zonder die uitweg is één misklik op het
--- "Wie ben jij?"-scherm genoeg om iemands seizoen onbereikbaar te maken.
+-- Eerst stond "een speler die van niemand is" ook in `using`. Daarmee kon elk
+-- lid zo'n speler hernoemen of er een nep-pagina op zetten. Welke kolommen
+-- er überhaupt te veranderen zijn, staat in de grant hieronder (naam, poule en
+-- id niet), en de rest in de trigger pool_members_bewaken().
 create policy pool_members_bijwerken on public.pool_members
   for update to anon, authenticated
-  using (user_id is null or user_id = auth.uid() or public.mag_beheren(pool_id))
-  with check (user_id is null or user_id = auth.uid() or public.mag_beheren(pool_id));
+  using (user_id = auth.uid() or public.mag_beheren(pool_id))
+  with check (user_id is null or user_id = auth.uid());
 
 -- ---- races en vragen ----------------------------------------
 -- races is de enige tabel die door álle poules gedeeld wordt: één rij per
@@ -1375,8 +1477,8 @@ create policy answers_lezen on public.answers
 -- maakt daar insert ... on conflict do update van.
 create policy answers_eigen on public.answers
   for all to anon, authenticated
-  using (public.mag_voor_speler(member_id))
-  with check (public.mag_voor_speler(member_id));
+  using (public.mag_voor_speler_in(member_id, pool_id))
+  with check (public.mag_voor_speler_in(member_id, pool_id));
 
 -- ---- jokers -------------------------------------------------
 -- Dezelfde afspraak als bij de antwoorden: binnen je poule zie je ze
@@ -1386,8 +1488,8 @@ create policy jokers_lezen on public.jokers
   for select to anon, authenticated using (public.is_member(pool_id));
 create policy jokers_eigen on public.jokers
   for all to anon, authenticated
-  using (public.mag_voor_speler(member_id))
-  with check (public.mag_voor_speler(member_id));
+  using (public.mag_voor_speler_in(member_id, pool_id))
+  with check (public.mag_voor_speler_in(member_id, pool_id));
 
 -- ---- waar een melding naartoe mag ---------------------------
 -- Anders dan bij de jokers: hier is er geen lezen-voor-je-medespelers. Een
@@ -1396,8 +1498,8 @@ create policy jokers_eigen on public.jokers
 -- de service_role key en gaat overal langs.
 create policy push_eigen on public.push_abonnementen
   for all to anon, authenticated
-  using (public.mag_voor_speler(member_id))
-  with check (public.mag_voor_speler(member_id));
+  using (public.mag_voor_speler_in(member_id, pool_id))
+  with check (public.mag_voor_speler_in(member_id, pool_id));
 
 -- ------------------------------------------------------------
 --  Rechten op tabelniveau
@@ -1422,7 +1524,13 @@ grant select, insert, update, delete on public.pools          to anon, authentic
 -- Je eigen code krijg je gewoon te zien: poule_ophalen() geeft hem mee voor de
 -- rijen die aan jouw account hangen, en die functie is security definer en gaat
 -- hier dus langs.
-grant insert, update, delete on public.pool_members to anon, authenticated;
+--
+-- Schrijven gaat ook per kolom. Aanmaken en weggooien doen alleen de functies
+-- (security definer); bijwerken mag alleen user_id (loslaten of losmaken) en je
+-- eigen pagina. Je naam, je poule en je id liggen vast: eerst kon je jezelf
+-- "Anna" noemen of je speler naar een andere poule verhuizen.
+revoke insert, update, delete on public.pool_members from anon, authenticated;
+grant update (user_id, profiel_code, profiel) on public.pool_members to anon, authenticated;
 revoke select on public.pool_members from anon, authenticated;
 grant select (member_id, pool_id, display_name, user_id, created_at)
   on public.pool_members to anon, authenticated;
@@ -1788,7 +1896,9 @@ set search_path = public
 as $$
 begin
   perform public.beheer_poort();
-  update public.pool_members set user_id = null where member_id = p_member;
+  -- Net als losmaken in de app (pool_members_bewaken()): ook het toestel dat
+  -- de speler ooit inschreef, vult daarna niet meer voor hem in.
+  update public.pool_members set user_id = null, aangemaakt_door = null where member_id = p_member;
   if not found then raise exception 'Die speler bestaat niet'; end if;
 end $$;
 
@@ -2057,10 +2167,11 @@ union all
 select 'aantal spelers',       (select count(*)::text from public.pool_members)
 union all
 -- Het getal om in de gaten te houden na het dichtzetten van de policies.
--- Deze spelers hangen nog aan geen enkel account, en hun antwoorden staan
--- daarom nog open voor iedereen die de poulecode heeft. Elke keer dat zo
--- iemand de app opent claimt hij zichzelf en zakt dit getal. Staat het op 0,
--- dan kan de tweede regel uit mag_voor_speler() weg.
+-- Deze spelers hangen nog aan geen enkel account. Sinds 28 september kan
+-- niemand hun antwoorden meer veranderen (behalve het toestel dat hen
+-- aanmaakte), maar wie de poulecode heeft, kan ze nog claimen door op hun naam
+-- te tikken. Elke keer dat zo iemand de app opent claimt hij zichzelf en zakt
+-- dit getal.
 select 'spelers zonder account',
        (select count(*)::text from public.pool_members where user_id is null)
 union all

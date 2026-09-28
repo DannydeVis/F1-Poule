@@ -254,9 +254,15 @@ begin
   if (select display_name from pool_members where member_id = 'cccc3333-0000-0000-0000-000000000053') <> 'Casper' then
     raise exception 'gezakt: de speler heeft zijn nieuwe naam niet';
   end if;
+  update pool_members set aangemaakt_door = user_id where member_id = 'aaaa1111-0000-0000-0000-000000000051';
   perform public.beheer_speler_losmaken('aaaa1111-0000-0000-0000-000000000051');
   if (select user_id from pool_members where member_id = 'aaaa1111-0000-0000-0000-000000000051') is not null then
     raise exception 'gezakt: Anna hangt nog aan haar account';
+  end if;
+  -- Losgemaakt is losgemaakt: ook het toestel dat haar inschreef vult niet
+  -- meer voor haar in (zie test/identiteit.test.sql).
+  if (select aangemaakt_door from pool_members where member_id = 'aaaa1111-0000-0000-0000-000000000051') is not null then
+    raise exception 'gezakt: na losmaken in het beheer mag het toestel dat Anna inschreef nog voor haar invullen';
   end if;
   raise notice 'ok: een speler hernoemen en losmaken';
 

@@ -3249,6 +3249,10 @@ const ENGELS = Object.fromEntries([
    'finished'],
   ['jouw andere poules',
    'your other pools'],
+  ['{wie} hangt nog aan geen enkel toestel, en dit toestel speelt in deze '
+   + 'poule al als iemand anders. {wie} vult zijn voorspelling in op zijn eigen toestel.',
+   '{wie} is not linked to any device yet, and this device already plays in this '
+   + 'pool as someone else. {wie} fills in their prediction on their own device.'],
   ['nog een poule',
    'another pool'],
   ['Met het werk of met vrienden erbij? Je poules hierboven blijven gewoon staan.',
@@ -4535,6 +4539,16 @@ function uitleg(error) {
     return T('{wie} hoort bij een ander toestel, dus hier kun je niets voor hem '
          + 'opslaan. Log in met je mailadres om hier ook {wie} te zijn, of vraag de '
          + 'poulebaas om {wie} los te maken.', { wie: S.ik.naam });
+  }
+  // Een speler die aan niemand hangt en die dit toestel niet aanmaakte: sinds
+  // 28 september mag alleen zijn eigen account (na claimen) voor hem invullen.
+  // Dat gebeurt hier als dit toestel in deze poule al als iemand anders speelt,
+  // zodat claimen niet lukte.
+  if (code === '42501' && S.ik && !DEMO
+      && !S.leden.find(l => zelfde(l.member_id, S.ik.id))?.user_id) {
+    return T('{wie} hangt nog aan geen enkel toestel, en dit toestel speelt in deze '
+         + 'poule al als iemand anders. {wie} vult zijn voorspelling in op zijn eigen toestel.',
+         { wie: S.ik.naam });
   }
   // Dezelfde code, een andere sleutel, een heel ander verhaal.
   if (alBezetDoorAccount(error)) {
@@ -10702,7 +10716,7 @@ function kiesSpeler() {
         <div class="scheiding"></div>
         <div class="veldblok">
           <span class="label">${T('nieuwe speler')}</span>
-          <input class="veld" id="naam" placeholder="${T('Jouw naam')}" autocomplete="name">
+          <input class="veld" id="naam" placeholder="${T('Jouw naam')}" autocomplete="name" maxlength="60">
           <button class="knop spook" id="maak">${T('Meedoen')}</button>
           <p class="err" id="f"></p>
         </div>
@@ -10767,7 +10781,14 @@ function kiesSpeler() {
       onthoud(S.poule.id, S.ik.id);
       const eersteKeer = !bestaand.user_id;
       if (eersteKeer) await claimSpeler(bestaand.member_id);
-      S.melding = T('Welkom terug, {naam}.', { naam: bestaand.display_name });
+      // Een naam intypen is hetzelfde als erop tikken, en krijgt dus dezelfde
+      // uitleg als die naam aan een ander account hangt. "Welkom terug" was
+      // daar onwaar: opslaan lukt dan niet.
+      S.melding = nietVanMij()
+        ? T('{wie} hoort bij een ander toestel. Je kunt hier meekijken, '
+          + 'maar niets opslaan. Log in met je mailadres om hier ook {wie} te zijn.',
+          { wie: bestaand.display_name })
+        : T('Welkom terug, {naam}.', { naam: bestaand.display_name });
       try {
         await laad();
         if (eersteKeer && isNuVanMij(bestaand.member_id) && magKoppelVraagTonen()) {
@@ -10866,7 +10887,7 @@ function maakStap(m, preset) {
 
   if (m.stap === 2) return `
     <div class="veldblok">
-      <input class="veld" id="snaam" placeholder="${T('Jouw naam')}"
+      <input class="veld" id="snaam" maxlength="60" placeholder="${T('Jouw naam')}"
         value="${esc(m.speler)}" autocomplete="name">
       <p class="zacht" style="margin:0">${T('Je wordt meteen het eerste lid, en de '
         + 'poulebaas — die kan later de vragenset aanpassen.')}</p>

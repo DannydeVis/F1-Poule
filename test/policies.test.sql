@@ -6,11 +6,13 @@
 -- om andermans top 10 te overschrijven of weg te gooien.
 --
 -- Wat hier óók in staat, en net zo belangrijk is: wat er níét dichtgaat.
--- Lezen blijft open, en spelers die nog aan geen enkel account hangen blijven
--- beschrijfbaar. Dat tweede is met opzet: zonder dat zou de dag waarop dit
--- live gaat een halve poule buitensluiten, en RLS geeft daar geen fout op —
--- een geblokkeerde update raakt gewoon nul rijen. Vandaar dat elke controle
--- hieronder `found` meet en niet alleen op een exception wacht.
+-- Lezen binnen je poule blijft open, en een speler die op een gedeeld toestel
+-- zonder account is ingeschreven, blijft beschrijfbaar voor dat toestel. Een
+-- speler zonder account is sinds 28 september niet meer voor iedereen
+-- beschrijfbaar; test/identiteit.test.sql heeft de aanvallen die dat openliet.
+-- RLS geeft op een geblokkeerde update geen fout, hij raakt gewoon nul rijen.
+-- Vandaar dat elke controle hieronder `found` meet en niet alleen op een
+-- exception wacht.
 
 \set ON_ERROR_STOP on
 
@@ -35,6 +37,13 @@ insert into pool_members (member_id, pool_id, display_name, user_id) values
   -- Een speler van vóór de accounts: hangt nog aan niemand.
   ('cccc3333-0000-0000-0000-000000000003',
    '11111111-0000-0000-0000-000000000001', 'Oude Speler', null);
+
+-- En een speler die op het toestel van Bram is ingeschreven terwijl Bram daar
+-- zelf al speelde: zonder account, aangemaakt door dat van Bram.
+insert into pool_members (member_id, pool_id, display_name, user_id, aangemaakt_door) values
+  ('eeee5555-0000-0000-0000-000000000005',
+   '11111111-0000-0000-0000-000000000001', 'Gedeeld Toestel', null,
+   'bbbbbbbb-0000-0000-0000-000000000002');
 
 -- Anna is de poulebaas.
 update pools set owner_member_id = 'aaaa1111-0000-0000-0000-000000000001'
@@ -122,16 +131,28 @@ begin
   raise notice 'ok: lezen blijft open, zoals de stand en het terugkijken nodig hebben';
 
   -- ============================================================
-  --  4. Een speler zonder account blijft beschrijfbaar
+  --  4. Een speler zonder account: alleen voor het toestel dat hem maakte
   -- ============================================================
-  -- Dit is de reden dat het dichtzetten niemand buitensluit. Wie de app nog
-  -- niet geopend heeft sinds er accounts zijn, speelt gewoon door.
+  -- Eerst was een speler zonder account voor iedereen beschrijfbaar. Nu mag
+  -- alleen het account dat hem aanmaakte (het gedeelde toestel) voor hem
+  -- invullen, tot hij zichzelf claimt. Een oude speler van vóór de accounts
+  -- is voor niemand beschrijfbaar tot hij de app opent en zichzelf claimt.
+  gelukt := false;
+  begin
+    insert into answers (pool_id, race_id, member_id, question_id, waarde)
+    values ('11111111-0000-0000-0000-000000000001', 901,
+            'cccc3333-0000-0000-0000-000000000003', 'winnaar', '"81"');
+    gelukt := true;
+  exception when insufficient_privilege then null;
+  end;
+  if gelukt then raise exception 'gezakt: Bram vulde iets in voor een oude speler zonder account'; end if;
+  raise notice 'ok: een oude speler zonder account is niet vrij wild';
+
   insert into answers (pool_id, race_id, member_id, question_id, waarde)
   values ('11111111-0000-0000-0000-000000000001', 901,
-          'cccc3333-0000-0000-0000-000000000003', 'winnaar', '"81"');
-  raise notice 'ok: een speler zonder account kan nog gewoon invullen';
-
-  delete from answers where member_id = 'cccc3333-0000-0000-0000-000000000003';
+          'eeee5555-0000-0000-0000-000000000005', 'winnaar', '"81"');
+  raise notice 'ok: het gedeelde toestel vult wel in voor de speler die het inschreef';
+  delete from answers where member_id = 'eeee5555-0000-0000-0000-000000000005';
 
   -- ============================================================
   --  5. Claimen kan, overnemen niet
@@ -289,7 +310,7 @@ begin
     raise exception 'gezakt: een poule is niet meer op zijn code te vinden'; end if;
   raise notice 'ok: een poule zoeken op zijn code kan zonder account';
 
-  if jsonb_array_length(public.poule_ophalen(p_code => 'ANNA01') -> 'leden') < 3 then
+  if jsonb_array_length(public.poule_ophalen(p_code => 'ANNA01') -> 'leden') < 4 then
     raise exception 'gezakt: het "Wie ben jij?"-scherm heeft niets te tonen'; end if;
   raise notice 'ok: de spelerslijst komt mee voor wie nog geen lid is';
 
@@ -315,10 +336,23 @@ begin
   if gelukt then raise exception 'gezakt: Bram schreef een speler in op het account van Anna'; end if;
   raise notice 'ok: je kunt geen speler inschrijven op andermans account';
 
-  insert into pool_members (pool_id, display_name, user_id)
-  values ('99999999-0000-0000-0000-000000000009', 'Bram', 
-          'bbbbbbbb-0000-0000-0000-000000000002');
-  raise notice 'ok: op je eigen account wel';
+  -- Ook op je eigen account niet rechtstreeks: meedoen gaat via de functie,
+  -- die de naam controleert en het account zelf invult.
+  gelukt := false;
+  begin
+    insert into pool_members (pool_id, display_name, user_id)
+    values ('99999999-0000-0000-0000-000000000009', 'Bram',
+            'bbbbbbbb-0000-0000-0000-000000000002');
+    gelukt := true;
+  exception when insufficient_privilege then null;
+  end;
+  if gelukt then raise exception 'gezakt: een speler kwam er rechtstreeks in, buiten poule_meedoen() om'; end if;
+  raise notice 'ok: rechtstreeks een speler invoegen kan niet meer';
+
+  if (public.poule_meedoen('99999999-0000-0000-0000-000000000009', 'Bram') ->> 'user_id')
+     is distinct from 'bbbbbbbb-0000-0000-0000-000000000002' then
+    raise exception 'gezakt: meedoen via de functie hangt de speler niet aan je account'; end if;
+  raise notice 'ok: via poule_meedoen() wel, op je eigen account';
 
   -- ============================================================
   -- 11. De poule zelf is niet weg te gooien

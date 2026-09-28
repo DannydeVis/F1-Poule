@@ -111,6 +111,18 @@ jobs:
           psql -d policies -v ON_ERROR_STOP=1 -f schema.sql
           psql -d policies -v ON_ERROR_STOP=1 -f test/policies.test.sql
 
+      # Niemand gebruikt andermans speler, account of naam: de aanvallen die
+      # tot 28 september lukten (een vreemde die zonder code binnenkwam via de
+      # antwoorden van een speler zonder account, jezelf "Anna" noemen, een
+      # tweede "anna" aanmelden, je speler naar een andere poule verhuizen) en
+      # die nu niet meer lukken. Als vreemde, als lid en als poulebaas.
+      - name: identiteit — niemand gebruikt andermans speler of naam
+        run: |
+          createdb identiteit
+          psql -d identiteit -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d identiteit -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d identiteit -v ON_ERROR_STOP=1 -f test/identiteit.test.sql
+
       # "Verwijder mijn account" moet precies doen wat het scherm belooft, en
       # het verschil tussen de twee smaken is niet cosmetisch: de ene laat de
       # stand van je medespelers heel, de andere niet.
