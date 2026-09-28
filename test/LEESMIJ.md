@@ -31,6 +31,7 @@ je eigen computer.
 | `uitslagen.test.mjs` | De vier losse uitslagen uit de gegevens van OpenF1: vooral welke berichten van de wedstrijdleiding wél en niet een safety car zijn |
 | `duel-weergave.test.mjs` | Dat "jij" vaststaat aan je eigen cijfer in het onderlinge duel, en niet aan dat van de tegenstander |
 | `poules-en-omschrijving.test.mjs` | De omschrijving van een poule, en meer dan één poule op hetzelfde toestel: wisselen zonder de code, en een poule die weg is |
+| `ook-elders.test.mjs` | "Opslaan, ook in je andere poules": alleen met een volle top 10 en andere poules; alleen de top 10 gaat mee, alleen naar een poule waar die sessie nog leeg is, en nooit over iets heen (ook niet als er net een bij kwam); overgeslagen bij een andere vragenset, een ander seizoen, geen speler of een speler van een ander toestel; de speler van je account als uitwijk; een poule die weg is gaat uit het lijstje; de melding per poule; de race naast de kwalificatie; Engels en 360 pixels; en gewoon Opslaan zet niets elders |
 | `publiek-profiel.test.mjs` | Je seizoen delen: dat de cijfers kloppen met de stand, en vooral dat er geen poulenaam, poulecode of medespeler op de gedeelde pagina staat |
 | `contrair.test.mjs` | Punten schalen met hoe zeldzaam je antwoord was: de formule uit ROUTEKAART.md nagerekend op een poule van vier, en dat de top 10 erbuiten blijft. Ook de enige plek met een decimaal op het scherm, dus hier staat de controle of het scheidingsteken bij de taal hoort |
 | `push.test.mjs` | Het rekenwerk van web push, nagerekend tegen de testvectoren uit RFC 8291 en 8292. Draait zonder browser |
@@ -107,7 +108,8 @@ De browsertests draaien `index.html` echt in Chromium, met de import van
 supabase-js vervangen door `nabootsing-supabase.mjs`: een kleine
 nabootsing die net als Postgres een unieke sleutel afdwingt — op `answers`
 is dat `(pool_id, race_id, member_id, question_id)`, één rij per ingevulde
-vraag.
+vraag. Een `upsert` met `ignoreDuplicates` laat een bestaande rij staan, net als
+`ON CONFLICT DO NOTHING`.
 
 `uitslagen.test.mjs` en `agenda.test.mjs` zijn de enige die geen browser nodig
 hebben. De eerste draait de functies uit `scripts/uitslagen.mjs` op berichten
