@@ -8730,3 +8730,28 @@ gewoon Opslaan niets elders zet. De nabootsing kent nu `ignoreDuplicates` (een
 bestaande rij blijft staan en komt niet terug, zoals bij Postgres). Zeventien
 mutanten, alle gevangen. Geen wijziging in `schema.sql`: de policies
 (`answers_eigen`, `mag_voor_speler`) en de deadline-trigger gelden gewoon.
+
+## Nog een poule vanuit de app (28 september)
+
+Danny, met een screenshot van "jouw andere poules": "het is nu onmogelijk om
+een nieuwe poule aan te maken of bij een nieuwe poule aan te sluiten tenzij je
+de link hebt." Twee dingen:
+
+- **De weg ernaartoe was onvindbaar.** Het kon wel, via **Wissel** in de hoek:
+  dat startscherm heeft de poulecode, Nieuwe poule maken en de openbare
+  poules. Maar op de Poule-tab stond onder je andere poules niets, en met één
+  poule stond daar helemaal niets. Nu staat daar altijd het blok "nog een
+  poule" (`pouleLijstBlok()`), met **Nieuwe poule maken** (`startAanmaken()`,
+  zonder de huidige poule te verlaten, dus Terug op stap 1 brengt je terug) en
+  **Meedoen met een code** (`naarStartscherm()`, dezelfde functie als Wissel,
+  met de focus op `#code`). Niet in de demo.
+- **De poules in dat lijstje werden platgedrukt** op een breed scherm: de
+  linkerkolom is daar een flexkolom met een vaste hoogte die zelf scrolt, en
+  `.knop.poulekeuze` had `min-height:0`, dus hij kromp tot een randje met de
+  naam en de code eronder uit. Nu `flex:none`. Op de telefoon was er niets aan
+  de hand, en daar keken de tests alleen naar.
+
+**Tests:** `test/nog-een-poule.test.mjs`: de knoppen met één poule, meedoen
+met een andere code (en de eerste blijft in je lijstje), het aanmaken en weer
+terug, en op 1280 pixels breed elke poule in het lijstje hoog genoeg voor wat
+erin staat (ook met een omschrijving). Zes mutanten, alle gevangen.

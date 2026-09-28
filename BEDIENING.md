@@ -295,6 +295,14 @@ hebt gedrukt — die knop staat in de zijbalk, naast de poulenaam, en is dus op
 elk tabblad en in elk racescherm bereikbaar in plaats van ergens onderaan een
 tabblad.
 
+Onder dat lijstje op de Poule-tab staat **nog een poule**, met twee knoppen:
+**Nieuwe poule maken** (het aanmaken in vier stappen; **Terug** op de eerste
+stap brengt je weer in je poule) en **Meedoen met een code** (het startscherm,
+met de cursor in het veld voor de code). Dat blok staat er altijd, ook als je
+maar in één poule zit; alleen in de demo niet. Eerder kon het alleen via
+**Wissel**, en dat was niet te vinden: "het is nu onmogelijk om een nieuwe
+poule aan te maken, tenzij je de link hebt" (28 september).
+
 Wisselen haalt de poule opnieuw uit de database op in plaats van uit het
 lijstje: de naam of de omschrijving kan veranderd zijn, en een poule die
 verwijderd is hoort uit het lijstje te verdwijnen in plaats van je op een leeg
