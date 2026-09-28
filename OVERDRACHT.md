@@ -8689,3 +8689,38 @@ kopie gedraaid: groen.
 
 **Na de merge:** de workflow met de hand gestart, zodat `circuits.json` meteen
 pole en winnaar heeft.
+
+## Wens 3 (28 september): je top 10 ook in je andere poules
+
+Onder **Opslaan** op het invulscherm staat nu **Opslaan, ook in je andere
+poules**, met een regel uitleg erboven. Alleen met een volle top 10, en alleen
+als `mijnPoules()` (het lijstje op dit toestel) nog andere poules heeft; in de
+demo nooit. De knop slaat eerst gewoon op (`bewaar()`); lukt dat niet, dan gaat
+er ook niets naar een andere poule. Daarna `zetInAnderePoules()`: per poule
+`poule_ophalen()` (dezelfde functie als het openen van een poule), en dan:
+
+- **Wie ben ik daar:** de speler die dit toestel onthield (`mijnId`), tenzij
+  die aan een ander account hangt; dan de speler van mijn account. Geen van
+  beide: overgeslagen. Een speler die van niemand is, wordt geclaimd, net als
+  bij het openen van die poule (`herkenMij()`); anders mag je de rij die je net
+  schreef niet lezen.
+- **Doet de poule mee:** hetzelfde seizoen als de race, en de top 10 van die
+  sessie in de vragenset (een lege vragenset is alles).
+- **Is de sessie leeg:** geen enkel antwoord van mijn speler voor die race met
+  een vraag uit die sessie (`sessieVan()`). Zo letterlijk als Danny het vroeg:
+  wie in de andere poule al de pole koos, is daar bewust mee bezig.
+- **Schrijven:** een `upsert` met `ignoreDuplicates`, dus `ON CONFLICT DO
+  NOTHING`. Een top 10 die er tussen het kijken en het schrijven bij kwam,
+  blijft staan; dan komt er niets terug en meldt de app hem als "stond al".
+
+Alleen de top 10 gaat mee, geen losse vragen. De melding na het opslaan heeft
+een zin per soort uitkomst (gezet, stond al, doet niet mee, geen speler, ander
+toestel, lukte niet), met de poules erin. Een poule die niet meer bestaat, gaat
+uit het lijstje, net als bij het wisselen.
+
+**Tests:** `test/ook-elders.test.mjs`, met twaalf poules in het lijstje (een ervan bestaat niet meer):
+elke uitkomst, de race naast de kwalificatie, het Engels, 360 pixels, en dat
+gewoon Opslaan niets elders zet. De nabootsing kent nu `ignoreDuplicates` (een
+bestaande rij blijft staan en komt niet terug, zoals bij Postgres). Zeventien
+mutanten, alle gevangen. Geen wijziging in `schema.sql`: de policies
+(`answers_eigen`, `mag_voor_speler`) en de deadline-trigger gelden gewoon.

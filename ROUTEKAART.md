@@ -939,4 +939,4 @@ Van Danny, na het zoekplan, als drie pull requests na elkaar.
 |---|---|---|
 | 1. teksten | onder de knop op de voorpagina (7 talen), de gidsen en de racepagina's "Geen groep? Speel mee in de open poule"; in de gids over organiseren een sectie over een poule op het werk | **gebouwd** (28 september). De regel voor de open poule staat klaar, maar pas op de site zodra de code van de open poule in `OPEN_POULE` (`site/teksten.mjs`) staat |
 | 2. racepagina's | per circuit hoe vaak de polesitter won sinds 2023; tijdens het weekend de top 10 van elke vrije training | **gebouwd** (28 september). Beide secties verschijnen pas als de workflow "Circuitcijfers" de gegevens heeft opgehaald; wat OpenF1 niet heeft, staat er niet |
-| 3. app | een voorspelling ook in je andere poules zetten: alleen de top 10's, alleen waar die sessie nog leeg is, nooit overschrijven | nog niet |
+| 3. app | een voorspelling ook in je andere poules zetten: alleen de top 10's, alleen waar die sessie nog leeg is, nooit overschrijven | **gebouwd** (28 september): de knop "Opslaan, ook in je andere poules" onder Opslaan, zie BEDIENING §5c |

@@ -985,6 +985,9 @@
   /* Wis alles hoort niet even zwaar te wegen als opslaan, tot hij vraagt of
      je het zeker weet — dan mag hij wel opvallen. */
   .opslaanbalk .wisknop{min-height:48px}
+  /* Ook in je andere poules: een tweede weg naar opslaan, dus lager dan de
+     gewone knop, net als Wis alles. */
+  .opslaanbalk .eldersknop{min-height:48px}
   .wisknop.zeker{color:var(--accent);border-color:var(--accent)}
   #paneel{display:flex;flex-direction:column;gap:14px;min-width:0}
   /* Twee kolommen voor een race op een breed scherm (zie de media query voor
@@ -2017,6 +2020,25 @@ const ENGELS = Object.fromEntries([
    'sprint'],
   ['de kwalificatie',
    'qualifying'],
+  // ---- je top 10 ook in je andere poules ----------------------
+  ['Opslaan, ook in je andere poules',
+   'Save, also in your other pools'],
+  ['Je top 10 gaat ook naar je andere poules, maar alleen waar je {wat} nog '
+   + 'niet hebt ingevuld. Wat daar al staat, blijft staan.',
+   'Your top 10 also goes to your other pools, but only where you have not '
+   + 'filled in {wat} yet. Whatever is already there stays.'],
+  ['Je top 10 voor {wat} staat nu ook in {poules}.',
+   'Your top 10 for {wat} is now also in {poules}.'],
+  ['In {poules} stond voor {wat} al iets; daar is niets veranderd.',
+   'In {poules} you already had something for {wat}; nothing changed there.'],
+  ['In {poules} doet deze top 10 niet mee.',
+   'This top 10 is not part of {poules}.'],
+  ['In {poules} speel je op dit toestel niet mee.',
+   'You do not play in {poules} on this device.'],
+  ['In {poules} hoort je speler bij een ander toestel.',
+   'In {poules} your player belongs to another device.'],
+  ['In {poules} lukte het niet; zet hem daar zelf.',
+   'It did not work in {poules}; add it there yourself.'],
   ['de race',
    'the race'],
   ['de sprint',
@@ -8093,6 +8115,86 @@ function knoopOpenbaar() {
   };
 }
 
+// ---- je top 10 ook in je andere poules ---------------------------
+// Wie met het werk en met vrienden in twee poules zit, vult elk weekend twee
+// keer dezelfde top 10 in. Hiermee gaat hij in één keer ook naar de andere
+// poules op dit toestel, met drie grenzen:
+//
+//   * alleen de top 10: de losse vragen verschillen per poule, en een
+//     gok als het aantal safety cars hoort bij de poule waar je hem doet;
+//   * alleen waar je die sessie nog helemaal niet hebt ingevuld: wie in de
+//     andere poule al de pole koos, is daar bewust mee bezig;
+//   * nooit overschrijven. Dat zit ook in de database: ignoreDuplicates maakt
+//     er ON CONFLICT DO NOTHING van, dus een top 10 die er tussen het kijken
+//     en het schrijven bij kwam, blijft staan.
+//
+// Een poule die de top 10 van die sessie niet doet, een ander seizoen speelt,
+// of waar je op dit toestel geen speler hebt (of een speler die bij een ander
+// toestel hoort), slaat hij over. De melding na het opslaan zegt per poule
+// wat er gebeurde.
+const anderePoules = () => (DEMO || !S.poule) ? []
+  : mijnPoules().filter(p => !zelfde(p.id, S.poule.id));
+
+async function zetInAnderePoules(race, welk, lijst) {
+  const uit = [];
+  for (const p of anderePoules()) uit.push({ naam: p.name, ...(await zetInPoule(p, race, welk, lijst)) });
+  return uit;
+}
+
+async function zetInPoule(p, race, welk, lijst) {
+  const vraag = SESSIES[welk].vraag;
+  try {
+    const { data, error } = await pouleOphalen({ p_id: p.id });
+    if (error) return { uitkomst: 'fout' };
+    // Weg, net als bij het wisselen: dan ook uit het lijstje.
+    if (!data?.poule) { vergeetUitLijst(p.id); return { uitkomst: 'fout' }; }
+    // Wie ben ik daar? Wat dit toestel onthield, tenzij die speler aan een
+    // ander account hangt; dan de speler van mijn account, als die er is.
+    const leden = data.leden ?? [];
+    const bekend = mijnId(p.id);
+    const vanToestel = bekend ? leden.find(l => zelfde(l.member_id, bekend)) : null;
+    const vanAccount = mijnUid ? leden.find(l => zelfde(l.user_id, mijnUid)) : null;
+    const magIk = (l) => l && (!l.user_id || zelfde(l.user_id, mijnUid));
+    const lid = magIk(vanToestel) ? vanToestel : (vanAccount ?? vanToestel);
+    if (!lid) return { uitkomst: 'geenspeler' };
+    if (!magIk(lid)) return { uitkomst: 'andertoestel' };
+    const vragen = data.poulevragen ?? [];
+    if (!zelfde(data.poule.season ?? SEIZOEN, race.season)
+        || (vragen.length && !vragen.includes(vraag))) return { uitkomst: 'doetnietmee' };
+    const ingevuld = (data.antwoorden ?? []).some(a => zelfde(a.race_id, race.id)
+      && zelfde(a.member_id, lid.member_id) && sessieVan(a.question_id) === welk);
+    if (ingevuld) return { uitkomst: 'stondal' };
+    // Een speler van vóór de login hangt nog aan niemand. Openen van die
+    // poule zou hem claimen (herkenMij); hier ook, anders mag ik de rij die
+    // ik schrijf daarna niet lezen.
+    if (!lid.user_id) await claimSpeler(lid.member_id);
+    const { data: rijen, error: fout } = await db.from('answers')
+      .upsert([{ pool_id: p.id, race_id: race.id, member_id: lid.member_id, question_id: vraag, waarde: lijst }],
+              { onConflict: 'pool_id,race_id,member_id,question_id', ignoreDuplicates: true })
+      .select();
+    if (fout) return { uitkomst: 'fout' };
+    // Niets terug: er kwam er net een bij, en die is blijven staan.
+    return { uitkomst: rijen?.length ? 'gezet' : 'stondal' };
+  } catch { return { uitkomst: 'fout' }; }
+}
+
+// Eén zin per soort uitkomst, met de poules erin. Niet escapen: de melding
+// gaat bij het tekenen al door esc().
+function eldersTekst(uitkomst, welk) {
+  const wat = T(SESSIES[welk].wat);
+  const namen = (...soort) => opsomming(uitkomst.filter(u => soort.includes(u.uitkomst)).map(u => u.naam));
+  const zinnen = [
+    ['gezet', 'Je top 10 voor {wat} staat nu ook in {poules}.'],
+    ['stondal', 'In {poules} stond voor {wat} al iets; daar is niets veranderd.'],
+    ['doetnietmee', 'In {poules} doet deze top 10 niet mee.'],
+    ['geenspeler', 'In {poules} speel je op dit toestel niet mee.'],
+    ['andertoestel', 'In {poules} hoort je speler bij een ander toestel.'],
+    ['fout', 'In {poules} lukte het niet; zet hem daar zelf.'],
+  ];
+  return zinnen.filter(([soort]) => namen(soort))
+    .map(([soort, zin]) => T(zin, { wat, poules: namen(soort) })).join(' ');
+}
+
 // ---- meer dan één poule -------------------------------------
 // Met het werk in de ene en de vrienden in de andere zit je zo in twee of
 // drie poules. Eerder onthield de app er maar één en moest je de code
@@ -8573,15 +8675,21 @@ function invulWeergave(paneel, r, dicht) {
       ${S.tab === 'race' ? duelKiezer(r) : ''}
     </section>` : '';
   const poule = pouleKaart(r, { open: true });
+  // Een volle top 10 kan in één keer ook naar je andere poules. Alleen als
+  // die er zijn, en alleen met een volle top 10: een halve gaat nergens in.
+  const elders = magOpslaan && top10Actief(S.tab) && compleet(lijst) && anderePoules().length > 0;
   const afsluiting = `
     <p class="label" style="margin:0">${T('sluit {wanneer}', {
       wanneer: esc(sluitTekst(deadline)) })}</p>
+    ${elders ? `<p class="zacht" style="margin:0">${T('Je top 10 gaat ook naar je andere poules, maar alleen waar je {wat} nog '
+      + 'niet hebt ingevuld. Wat daar al staat, blijft staan.', { wat: T(SESSIES[S.tab].wat) })}</p>` : ''}
     <div class="opslaanbalk">
       <button class="knop primair" id="opslaan" ${magOpslaan ? '' : 'disabled'}>${
         magOpslaan ? T('Opslaan')
           : top10Actief(S.tab) && klaar
             ? T('Maak de top 10 af · nog {n}', { n: 10 - klaar })
           : T('Nog niets gekozen')}</button>
+      ${elders ? `<button class="knop eldersknop" id="ookelders">${T('Opslaan, ook in je andere poules')}</button>` : ''}
       ${klaar || losGekozen
         ? `<button class="knop klein wisknop" id="wisalles">${T('Wis alles')}</button>` : ''}
       <p class="err">${esc(S.fout)}</p>
@@ -8680,18 +8788,24 @@ function invulWeergave(paneel, r, dicht) {
     S.fout = '';
     invulWeergave(paneel, r, dicht);
   };
-  paneel.querySelector('#opslaan').onclick = async (ev) => {
+  const opslaan = async (ev, { ookElders = false } = {}) => {
     const knop = ev.currentTarget;
-    knop.disabled = true;                       // dubbeltikken op mobiel
+    paneel.querySelectorAll('#opslaan, #ookelders').forEach(k => { k.disabled = true; });  // dubbeltikken op mobiel
     knop.textContent = T('Bezig met opslaan...');
     S.fout = '';
     try {
+      const welk = S.tab;
+      const lijst = [...S.keuze[welk]];
       await bewaar();
+      // Pas na het eigen opslaan: lukt dat niet, dan gaat hij ook nergens
+      // anders heen.
+      const elders = ookElders ? await zetInAnderePoules(r, welk, lijst) : [];
       // De eigenlijke fix voor "mijn voorspelling is weg": bewaar() schrijft
       // naar de database maar raakt S.preds niet aan. Zonder herladen toont
       // het scherm daarna nog de oude, lege stand.
       await laad();
-      S.melding = T('Voorspelling voor {race} opgeslagen.', { race: r.name });
+      S.melding = [T('Voorspelling voor {race} opgeslagen.', { race: r.name }),
+        eldersTekst(elders, welk)].filter(Boolean).join(' ');
       S.race = null; S.weergave = 'races';
       render();
     } catch (e) {
@@ -8699,6 +8813,9 @@ function invulWeergave(paneel, r, dicht) {
       invulWeergave(paneel, r, dicht);
     }
   };
+  paneel.querySelector('#opslaan').onclick = (ev) => opslaan(ev);
+  const ookElders = paneel.querySelector('#ookelders');
+  if (ookElders) ookElders.onclick = (ev) => opslaan(ev, { ookElders: true });
 }
 
 // De grootste losse keuze van het weekend, dus die staat bovenaan en niet

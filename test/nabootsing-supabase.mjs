@@ -299,6 +299,10 @@ function uitvoeren(tabel, q) {
     const uit = q._upsert.map((r) => {
       const bestaand = sleutel && rijen.find((x) => sleutel.every((k) => gelijk(x[k], r[k])));
       if (bestaand) {
+        // ignoreDuplicates: ON CONFLICT DO NOTHING. De bestaande rij blijft
+        // zoals hij is, en komt ook niet terug: net als bij Postgres geeft
+        // returning alleen de rijen die er echt bij kwamen.
+        if (q._opties?.ignoreDuplicates) return null;
         // ON CONFLICT DO UPDATE SET <alleen de meegestuurde kolommen>
         Object.assign(bestaand, kopie(r));
         return kopie(bestaand);
@@ -306,7 +310,7 @@ function uitvoeren(tabel, q) {
       const rij = { quali_top10: null, race_top10: null, ...kopie(r) };
       rijen.push(rij);
       return kopie(rij);
-    });
+    }).filter(Boolean);
     bewaren();
     return q._selectNa ? { data: uit, error: null } : { data: null, error: null };
   }

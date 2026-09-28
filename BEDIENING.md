@@ -412,6 +412,32 @@ het niet en het is geen Apple-toestel — dan beloven we niets.
 
 `test/beginscherm.test.mjs` legt allebei de wegen vast, plus het wegklikken en
 het manifest zelf.
+
+### 5c. Je top 10 ook in je andere poules
+
+Wie met het werk en met vrienden in twee poules zit, vult elk weekend twee keer
+dezelfde top 10 in. Onder **Opslaan** staat daarom een tweede knop: **Opslaan,
+ook in je andere poules**. Hij staat er alleen met een volle top 10 en als er
+op dit toestel nog andere poules in je lijstje staan. Eén tik slaat de
+voorspelling op in deze poule, en zet dezelfde top 10 in je andere poules, met
+drie grenzen:
+
+- **Alleen de top 10.** De pole, de winnaar en de andere losse vragen gaan niet
+  mee: die verschillen per poule, en een gok hoort bij de poule waar je hem
+  doet.
+- **Alleen waar die sessie nog leeg is.** Heb je in een andere poule voor die
+  sessie al iets ingevuld, ook alleen de pole, dan blijft die poule zoals hij
+  was. Per sessie: de race kan nog wel naar een poule waar de kwalificatie al
+  stond.
+- **Nooit overschrijven.** Ook de database overschrijft niets: komt er net een
+  top 10 bij terwijl je op de knop drukt, dan blijft die staan.
+
+Een poule die deze top 10 niet doet (een andere vragenset), een ander seizoen
+speelt, of waar je op dit toestel geen speler hebt, slaat hij over. Weet dit
+toestel niet wie je in een poule bent, dan kijkt hij naar de speler van je
+account. De melding na het opslaan zegt per poule wat er gebeurde.
+`test/ook-elders.test.mjs` legt het vast.
+
 ## 6. De vragenset op slot
 
 Zodra de eerste race van het seizoen gescoord is, worden de vinkjes in
