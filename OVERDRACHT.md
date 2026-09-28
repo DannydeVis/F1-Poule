@@ -8646,6 +8646,12 @@ in `test/hulp.mjs`, gedeeld met `site.test.mjs`. Acht mutanten, alle gevangen.
 **Wat Danny nog moet doen:** de code van de open poule geven (of zelf invullen,
 zie BEDIENING §18). Daarna staat de regel met de volgende deploy overal.
 
+**Later die dag:** Danny gaf de code, `80C98C`. `OPEN_POULE` staat erop en de
+site is opnieuw gemaakt: de regel staat nu op de voorpagina in zeven talen (in
+de hero en onderaan), onder elke gids, de about-pagina, elke racepagina en het
+overzicht van de races, met de link `app/?code=80C98C`. `test/openpoule.test.mjs`
+keurt de site nu met die code in plaats van zonder.
+
 ## Wens 2 (28 september): de polesitter en de vrije trainingen op de racepagina's
 
 **Hoe vaak wint de polesitter hier?** `scripts/circuits.mjs` haalt per race nu

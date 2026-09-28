@@ -1977,11 +1977,12 @@ als archief staan. Wel vertoningen? Dan in januari de races van 2027 klaarzetten
 
 **De open poule.** Onder de knop op de voorpagina, de gidsen en de
 racepagina's hoort de regel "Geen groep? Speel mee in de open poule", met de
-uitnodigingslink van die poule. Die regel verschijnt pas als de code erin staat:
-zet in `site/teksten.mjs` bij `OPEN_POULE` de code van zes tekens (dezelfde als
-in de uitnodigingslink, `app/?code=...`) tussen aanhalingstekens, of geef de
-code aan Claude Code. Zorg dat de poule openbaar is en blijft. Een code die de
-app niet als poulecode herkent, laat het maken van de site zakken.
+uitnodigingslink van die poule. De code staat in `site/teksten.mjs` bij
+`OPEN_POULE`: nu `80C98C` (sinds 28 september). Een andere open poule? Zet daar
+de nieuwe code van zes tekens (dezelfde als in de uitnodigingslink,
+`app/?code=...`) tussen aanhalingstekens, of geef hem aan Claude Code; `null`
+haalt de regel overal weg. Zorg dat de poule openbaar is en blijft. Een code die
+de app niet als poulecode herkent, laat het maken van de site zakken.
 
 **IndexNow.** Na elke deploy meldt de workflow "IndexNow" de gewijzigde
 pagina's bij Bing en de andere zoekmachines die meedoen (Google niet; die leest

@@ -37,8 +37,8 @@ export const INDEXNOW_SLEUTEL = '1a4736ac820aaebfde621c7e0963f5b6';
 // de open poule" (openPoule per taal hieronder), met die link.
 // null zolang de code er niet is: dan staat de regel nergens, liever dan een
 // kapotte link. De generator weigert een code die de app niet als poulecode
-// herkent (scripts/openpoule.mjs).
-export const OPEN_POULE = null;
+// herkent (scripts/openpoule.mjs). De code kwam van Danny, 28 september.
+export const OPEN_POULE = '80C98C';
 
 // Wat alleen in llms.txt staat (zoekplan GEO fase 2), in het Engels: wanneer
 // een assistent Predict the Race kan aanraden, en eerlijk wanneer iets anders
