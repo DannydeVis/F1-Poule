@@ -690,10 +690,9 @@ en staat er onder Poule een knop "Ik word poulebaas" om dat op te lossen. Wie
 null)` erbij zodat een gelijktijdige tweede poging nul rijen raakt in plaats
 van de eerste te overschrijven.
 
-Wees eerlijk over wat dat op dit moment is: het voorkomt ongelukken, geen
-kwaadwilligheid. Iemand die de anon key uit de broncode plukt kan er alsnog
-omheen. Voor een vriendenpoule is dat prima, maar bouw er geen dingen op die
-echt beschermd moeten zijn.
+Dit staat ook in de database (`mag_beheren()` in `schema.sql`), dus met de
+anon key uit de broncode kom je er niet omheen. Alleen een poule zonder
+poulebaas staat nog open voor elk lid, tot iemand "Ik word poulebaas" indrukt.
 
 ### Elke speler hoort bij een account
 
@@ -714,6 +713,8 @@ Drie regels die daarbij horen:
   Op een gedeeld toestel — één telefoon die rondgaat bij het inschrijven —
   betekent dat: de tweede speler wordt zonder account aangemaakt. Hij doet
   gewoon mee en wordt geclaimd zodra hij de app op zijn eigen toestel opent.
+  Tot die tijd mag alleen het toestel dat hem inschreef voor hem invullen
+  (`aangemaakt_door` in `schema.sql`); ieder ander toestel niet.
   Een foutmelding zou daar veel erger zijn. Deze terugval zit nog gewoon in
   `maakSpeler()`, maar is sinds het verwijderen van "Speler wisselen" niet
   meer via de UI te bereiken — wie zich al heeft aangewezen op dit toestel
@@ -794,17 +795,39 @@ De policies staan dicht. Wat dat concreet betekent:
 - **Je eigen inzending is van jou.** Zodra je speler aan je account hangt kan
   niemand anders hem nog overschrijven of weggooien — ook niet met de anon key
   uit `index.html`, en die staat daar publiek.
-- **Een speler die nog aan geen enkel account hangt blijft beschrijfbaar.** Dat
-  is met opzet: anders had het dichtzetten iedereen buitengesloten die de app
-  nog niet geopend had. De bescherming groeit mee, speler voor speler. Het
-  getal `spelers zonder account` onderaan de uitvoer van `schema.sql` laat zien
-  hoeveel er nog te gaan zijn.
+- **Een speler die nog aan geen enkel account hangt, is niet vrij wild.**
+  Alleen het toestel dat hem inschreef mag voor hem invullen; iedereen anders
+  pas nadat hij zichzelf claimt (door op zijn naam te tikken, of vanzelf als hij
+  de app opent). Tot 28 september was zo'n speler voor iedereen beschrijfbaar,
+  en dat bleek ook voor lezen te gelden. Een vreemde kon daarmee zonder code
+  een poule binnenkomen; zie OVERDRACHT, "Niemand gebruikt andermans speler".
+  Het getal `spelers zonder account` onderaan de uitvoer van `schema.sql` laat
+  zien hoeveel er nog aan niemand hangen.
+- **Een naam is van één speler per poule.** `poule_meedoen()` weigert een naam
+  die al meedoet (hoofdletters en spaties aan de randen tellen niet), een lege
+  naam en een naam van meer dan 60 tekens. Een naam veranderen kan niet via de
+  app of de API (het beheer kan het wel). Wie een bestaande naam intypt, is
+  voor de app die speler: hangt die aan een ander account, dan kun je meekijken
+  maar niets opslaan.
+- **Je speler blijft in zijn poule, en je pagina is van jou.** Rechtstreeks een
+  speler invoegen, hem naar een andere poule verhuizen, of een pagina op
+  andermans naam zetten kan niet. De poulebaas kan een speler alleen losmaken,
+  niet aan een ander account geven.
+- **Wat blijft, en bewust:** wie de poulecode heeft, kan een speler die nog aan
+  niemand hangt claimen door op zijn naam te tikken. Zonder wachtwoord is een
+  oude speler niet van een ander te onderscheiden. Ging het mis, dan maakt de
+  poulebaas hem los en tikt de echte speler daarna op zijn naam.
 - **De vragenset en de omschrijving zijn van de poulebaas**, nu ook in de
   database en niet alleen op het scherm.
 - **Lezen kan alleen binnen je eigen poule.** Dit stond lang open, en dat was
   het grootste gat in de app: met de anon key uit `index.html` — die staat daar
   met opzet publiek — was élke poule, élke spelersnaam en élk antwoord in de
   hele database uit te lezen. Zie hieronder hoe dat nu werkt.
+
+**Na een wijziging aan deze regels: draai `schema.sql` opnieuw** in de SQL
+Editor van Supabase (alles kopiëren, plakken, Run), net als bij het inrichten
+van het beheer (§16). De app zelf wacht daar niet op; de regels in de database
+gelden pas als het schema gedraaid is.
 
 ### Binnenkomen zonder de deur open te laten staan
 

@@ -11,7 +11,8 @@
 // Ook getest: de enige uitweg uit een verkeerde claim. Eén misklik op het
 // "Wie ben jij?"-scherm hangt iemands hele seizoen aan het verkeerde account,
 // en de database laat dat met opzet niet terugdraaien. De poulebaas kan de
-// speler losmaken; daarna claimt de volgende die zich aanmeldt hem opnieuw.
+// speler losmaken; daarna claimt de volgende die zich aanmeldt hem opnieuw, en
+// tot dan vult niemand voor hem in.
 
 import { maakControle, startPagina, meedoen, openRace, kiesTien, naDeClaim } from './hulp.mjs';
 
@@ -91,6 +92,25 @@ check('en de voorspelling van Danny is onaangeraakt',
   (await page.evaluate(() => globalThis.__db.answers
     .filter((a) => a.member_id === 'lid-1').length)) === 1);
 
+// --- dezelfde naam intypen is hetzelfde als erop tikken ---------------------
+// Wie "joey" intypt in plaats van op Joey te tikken, is voor de app dezelfde
+// Joey (een tweede aanmaken kan niet: de database weigert een naam die al
+// meedoet). Dan hoort er ook dezelfde uitleg bij, en geen "Welkom terug".
+await page.evaluate(() => localStorage.clear());
+await page.goto(url);
+await page.fill('#code', 'RTM026');
+await page.click('#mee');
+await page.waitForSelector('#naam');
+check('het naamveld houdt het bij 60 tekens, net als de database',
+  (await page.getAttribute('#naam', 'maxlength')) === '60');
+await page.fill('#naam', 'joey');
+await page.click('#maak');
+await page.waitForSelector('.meldingbalk, [data-race]');
+const getypt = await tekst('#app');
+check('een naam van een ander toestel intypen geeft dezelfde uitleg, geen "Welkom terug"',
+  getypt.includes('Joey hoort bij een ander toestel') && !getypt.includes('Welkom terug'),
+  (await tekst('.meldingbalk').catch(() => '')) || '(geen melding)');
+
 // --- losmaken vraagt een echt lid ------------------------------------------
 // De vreemdeling hierboven keek alleen maar mee en heeft zelf geen account
 // (hij claimde nooit iets), dus voor hem geeft de database geen toestemming
@@ -128,20 +148,43 @@ check('de tweede tik maakt Joey los van dat account',
 check('en het scherm legt uit wat er nu gebeurt',
   (await tekst('#app')).includes('Joey is losgemaakt'));
 
-// --- en dan kan er weer voor hem ingevuld worden --------------------------
-// Een speler die van niemand is blijft beschrijfbaar. Dat is met opzet: op de
-// dag dat de policies dichtgingen had nog niet iedereen zichzelf geclaimd, en
-// die mensen mogen niet buiten komen te staan.
+// --- en dan claimt Joey zichzelf, op zijn eigen toestel ---------------------
+// Een losgemaakte speler hangt aan niemand. Tot 28 september kon dan elk
+// toestel weer voor hem invullen, ook dat van Casper. Nu niet meer: alleen
+// zijn eigen account, en dat krijgt hij door zichzelf te claimen. Casper krijgt
+// uitleg in plaats van een stille mislukking.
 await page.click('[data-weergave="races"]');
 await openRace(page, 'Shanghai');
 await page.click('[data-tab="race"]');
 await page.waitForSelector('#paneel');
 await kiesTien(page);
 await page.click('#opslaan');
+await page.waitForSelector('.err');
+const uitlegLos = await tekst('.err');
+check('een ander toestel vult niets in voor een losgemaakte speler, en zegt waarom',
+  uitlegLos.includes('Joey hangt nog aan geen enkel toestel')
+    && (await page.evaluate(() => globalThis.__db.answers.filter((a) => a.member_id === 'lid-9').length)) === 0,
+  uitlegLos || '(geen foutmelding)');
+
+// Joey opent de poule op zijn eigen toestel en tikt op zijn naam.
+await page.evaluate(() => localStorage.clear());
+await page.goto(url);
+await page.fill('#code', 'RTM026');
+await page.click('#mee');
+await page.waitForSelector('[data-lid]');
+await page.click('[data-lid]:has(.nm:text-is("Joey"))');
+await naDeClaim(page);
+await openRace(page, 'Shanghai');
+await page.click('[data-tab="race"]');
+await page.waitForSelector('#paneel');
+await kiesTien(page);
+await page.click('#opslaan');
 await page.waitForSelector('[data-race]');
-check('een losgemaakte speler kan weer gewoon invullen',
-  (await page.evaluate(() => globalThis.__db.answers
-    .filter((a) => a.member_id === 'lid-9').length)) > 0);
+const joey = await speler('Joey');
+check('Joey claimt zichzelf op zijn eigen toestel en vult dan gewoon in',
+  !!joey.user_id && joey.user_id !== 'account-9'
+    && (await page.evaluate(() => globalThis.__db.answers.filter((a) => a.member_id === 'lid-9').length)) > 0,
+  JSON.stringify(joey));
 
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 

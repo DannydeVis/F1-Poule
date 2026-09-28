@@ -147,11 +147,23 @@ globalThis.__db = store;
 
 const wieBenIk = () => huidigeSessie()?.user?.id ?? null;
 
-// mag_voor_speler(): mijn eigen speler, of eentje die van niemand is.
+// mag_voor_speler(): mijn eigen speler, of eentje die van niemand is en die
+// mijn account aanmaakte (de tweede speler op een gedeeld toestel). Een speler
+// van niemand is sinds 28 september niet meer voor iedereen beschrijfbaar; zie
+// test/identiteit.test.sql.
 function magVoorSpeler(memberId) {
   const lid = store.pool_members.find((l) => gelijk(l.member_id, memberId));
   if (!lid) return true;   // bestaat niet: de foreign key mag erover klagen
-  return !lid.user_id || gelijk(lid.user_id, wieBenIk());
+  const ik = wieBenIk();
+  if (!ik) return false;
+  return gelijk(lid.user_id, ik) || (!lid.user_id && gelijk(lid.aangemaakt_door, ik));
+}
+
+// mag_voor_speler_in(): en de speler hoort ook in die poule.
+function magVoorSpelerIn(memberId, poolId) {
+  const lid = store.pool_members.find((l) => gelijk(l.member_id, memberId));
+  if (lid && poolId !== undefined && !gelijk(lid.pool_id, poolId)) return false;
+  return magVoorSpeler(memberId);
 }
 
 // mag_beheren(): de poulebaas, of elk lid als de poule geen eigenaar heeft.
@@ -195,10 +207,11 @@ const geweigerd = { data: null, error: { code: '42501',
 function magSchrijven(tabel, rij) {
   if (tabel === 'answers' || tabel === 'jokers'
       || tabel === 'push_abonnementen') {
-    return magVoorSpeler(rij.member_id);
+    return magVoorSpelerIn(rij.member_id, rij.pool_id);
   }
-  // Een speler inschrijven op andermans account kan niet.
-  if (tabel === 'pool_members' && rij.user_id) return gelijk(rij.user_id, wieBenIk());
+  // Een speler komt er alleen via poule_meedoen() en poule_aanmaken() in;
+  // bijwerken mag alleen naar "van niemand" of naar jezelf (with check).
+  if (tabel === 'pool_members') return !rij.user_id || gelijk(rij.user_id, wieBenIk());
   if (tabel === 'pool_questions') return magBeheren(rij.pool_id);
   return true;
 }
@@ -207,12 +220,13 @@ function magSchrijven(tabel, rij) {
 function magRaken(tabel, rij) {
   if (tabel === 'answers' || tabel === 'jokers'
       || tabel === 'push_abonnementen') {
-    return magVoorSpeler(rij.member_id);
+    return magVoorSpelerIn(rij.member_id, rij.pool_id);
   }
   if (tabel === 'pool_members') {
-    // Claimen wat van niemand is, je eigen speler loslaten, of — als
-    // poulebaas — een speler losmaken die aan het verkeerde account hangt.
-    return !rij.user_id || gelijk(rij.user_id, wieBenIk()) || magBeheren(rij.pool_id);
+    // Je eigen speler (loslaten, je pagina), of als poulebaas een speler
+    // losmaken. Een speler van niemand raak je niet: claimen gaat via
+    // poule_claim_speler().
+    return gelijk(rij.user_id, wieBenIk()) || magBeheren(rij.pool_id);
   }
   if (tabel === 'pool_questions') return magBeheren(rij.pool_id);
   if (tabel === 'pools') return magBeheren(rij.id);
@@ -257,6 +271,10 @@ function uitvoeren(tabel, q) {
   }
 
   if (q._insert) {
+    // Geen grant voor insert op pool_members: meedoen gaat via de functie.
+    if (tabel === 'pool_members') {
+      return { data: null, error: { code: '42501', message: 'permission denied for table pool_members' } };
+    }
     if (q._insert.some((r) => !magSchrijven(tabel, r))) return geweigerd;
     if (tabel === 'pool_members'
         && q._insert.some((r) => botstMetAccount(rijen, r, null))) return dubbelAccount;
@@ -335,6 +353,26 @@ function uitvoeren(tabel, q) {
   }
 
   if (q._update) {
+    // De kolomgrant en de trigger pool_members_bewaken() uit schema.sql: alleen
+    // user_id, profiel_code en profiel; user_id alleen naar leeg; je pagina
+    // alleen op je eigen speler.
+    if (tabel === 'pool_members') {
+      const kolommen = Object.keys(q._update);
+      if (kolommen.some((k) => !['user_id', 'profiel_code', 'profiel'].includes(k))) {
+        return { data: null, error: { code: '42501', message: 'permission denied for table pool_members' } };
+      }
+      if (kolommen.includes('user_id') && q._update.user_id) {
+        return { data: null, error: { code: 'P0001', message: 'een speler claimen gaat via poule_claim_speler()' } };
+      }
+      const raakt = rijen.filter((r) => q._filters.every((f) => past(r, f)) && magRaken(tabel, r));
+      if ((kolommen.includes('profiel') || kolommen.includes('profiel_code'))
+          && raakt.some((r) => !gelijk(r.user_id, wieBenIk()))) {
+        return { data: null, error: { code: 'P0001', message: 'alleen de speler zelf zet zijn pagina aan of uit' } };
+      }
+      if (kolommen.includes('user_id')) {
+        for (const r of raakt) if (r.user_id) r.aangemaakt_door = null;
+      }
+    }
     // update(...).eq(...).is(kolom, null): de is-controle hoort bij de
     // schrijfactie zelf, zodat een rij die inmiddels gevuld is niet geraakt
     // wordt. Zonder dat kan de app niet nagespeeld worden.
@@ -650,10 +688,17 @@ const functies = {
     // Twee spelers op één account in één poule houdt de unieke sleutel tegen;
     // dan wordt de speler zonder account aangemaakt. Dat stond eerst in de
     // app en hoort in de database.
+    const naam = String(p_naam ?? '').trim();
+    if (!naam) return { data: null, error: { code: 'P0001', message: 'je hebt een naam nodig' } };
+    if (naam.length > 60) return { data: null, error: { code: 'P0001', message: 'die naam is te lang (hoogstens 60 tekens)' } };
+    if (store.pool_members.some((m) => gelijk(m.pool_id, p_pool)
+        && String(m.display_name ?? '').trim().toLowerCase() === naam.toLowerCase())) {
+      return { data: null, error: { code: 'P0001', message: 'die naam doet al mee in deze poule' } };
+    }
     const bezet = ik && store.pool_members.some((m) =>
       gelijk(m.pool_id, p_pool) && gelijk(m.user_id, ik));
     const rij = { member_id: 'lid-' + (store.pool_members.length + 1),
-                  pool_id: p_pool, display_name: p_naam, user_id: bezet ? null : ik };
+                  pool_id: p_pool, display_name: naam, user_id: bezet ? null : ik, aangemaakt_door: ik };
     store.pool_members.push(rij);
     bewaren();
     return { data: kopie(rij), error: null };
@@ -680,12 +725,15 @@ const functies = {
     if (!String(p_speler ?? '').trim()) {
       return { data: null, error: { message: 'je hebt zelf ook een naam nodig' } };
     }
+    if (String(p_speler).trim().length > 60) {
+      return { data: null, error: { message: 'die naam is te lang (hoogstens 60 tekens)' } };
+    }
     const poule = { id: 'pool-' + (store.pools.length + 1), name: String(p_naam).trim(),
                     beschrijving: String(p_beschrijving ?? '').trim() || null,
                     season: 2026, join_code: 'ABC123', owner_member_id: null };
     store.pools.push(poule);
     const ik = { member_id: 'lid-' + (store.pool_members.length + 1), pool_id: poule.id,
-                 display_name: String(p_speler).trim(), user_id: wieBenIk() };
+                 display_name: String(p_speler).trim(), user_id: wieBenIk(), aangemaakt_door: wieBenIk() };
     store.pool_members.push(ik);
     // In één keer de baas, zodat er geen moment is waarop een verse poule
     // geen eigenaar heeft en dus voor elk lid te beheren is.

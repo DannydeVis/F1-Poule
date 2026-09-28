@@ -8755,3 +8755,82 @@ de link hebt." Twee dingen:
 met een andere code (en de eerste blijft in je lijstje), het aanmaken en weer
 terug, en op 1280 pixels breed elke poule in het lijstje hoog genoeg voor wat
 erin staat (ook met een omschrijving). Zes mutanten, alle gevangen.
+
+## Niemand gebruikt andermans speler, account of naam (28 september)
+
+Danny vroeg de hele weg na te lopen: kan iemand andermans account of naam
+gebruiken? De app zelf deed het goed (een speler van een ander account kun je
+meekijken, niet opslaan), maar de database had gaten. Uitgeprobeerd tegen een
+echte PostgreSQL met `schema.sql`, als vreemde, als lid en als poulebaas.
+
+**Het zwaarste: binnenkomen zonder code.** De policies op answers, jokers en
+push_abonnementen stonden op `for all` met `mag_voor_speler()`, en die zei ja
+voor elke speler zonder account. `for all` geldt ook voor lezen. Iedereen met
+de anon key zag dus de antwoorden van alle spelers zonder account in alle
+poules, met member_id en pool_id; kon die antwoorden overschrijven of
+weggooien; en kon met dat member_id de speler claimen en zo lid worden van een
+poule waarvan hij de code nooit had.
+
+**En verder:** als lid een speler zonder account hernoemen of er een
+nep-pagina op zetten; jezelf "Anna" noemen; je speler naar een andere poule
+verhuizen; rechtstreeks een speler invoegen (in elke poule waarvan je de id
+kende, met elke naam); via `poule_meedoen()` een tweede "anna" aanmelden of
+een lege naam; een antwoord in poule A met je speler uit poule B; en als
+poulebaas een speler aan een ander account geven of een pagina op andermans
+naam zetten.
+
+**Wat er veranderd is** (allemaal in `schema.sql`):
+
+- `mag_voor_speler()`: je eigen speler, of een speler zonder account die jouw
+  account aanmaakte (nieuwe kolom `aangemaakt_door`: het gedeelde toestel).
+  Een oude speler van vóór de accounts is voor niemand beschrijfbaar tot hij
+  geclaimd is; de app claimt hem zodra hij opent.
+- `mag_voor_speler_in(member, pool)` op answers, jokers en push: de speler
+  hoort ook in die poule.
+- `pool_members`: geen insert meer voor anon/authenticated (meedoen gaat via
+  de functies); bijwerken alleen `user_id`, `profiel_code` en `profiel` (grant
+  per kolom); de policy raakt alleen je eigen speler, of als poulebaas een
+  speler om hem los te maken; de trigger `pool_members_bewaken()` staat alleen
+  toe dat `user_id` leeg wordt (claimen gaat via `poule_claim_speler()`), laat
+  alleen de speler zelf zijn pagina aan- of uitzetten, en maakt bij losmaken
+  ook `aangemaakt_door` leeg.
+- `speler_naam()` in `poule_meedoen()` en `poule_aanmaken()`: niet leeg,
+  hoogstens 60 tekens, en in `poule_meedoen()` geen naam die al meedoet
+  (hoofdletters en spaties aan de randen tellen niet). Geen unieke index: in
+  productie kunnen al dubbele namen staan, en een index zou het schema dan
+  laten zakken.
+
+In de app: een bestaande naam intypen die aan een ander account hangt, geeft
+nu dezelfde uitleg als erop tikken (was "Welkom terug"); de naamvelden hebben
+`maxlength="60"`; en wie voor een losgemaakte speler probeert op te slaan
+terwijl dit toestel al als iemand anders speelt, krijgt uitleg in plaats van
+"storing". De nabootsing (`test/nabootsing-supabase.mjs`) volgt de nieuwe
+regels.
+
+**Wat bewust blijft:** wie de poulecode heeft, kan een speler die nog aan
+niemand hangt claimen door op zijn naam te tikken; zonder wachtwoord is een
+oude speler niet van een ander te onderscheiden. De poulebaas kan losmaken.
+Een speler die op een gedeeld toestel werd ingeschreven vóór deze wijziging,
+heeft geen `aangemaakt_door`; dat toestel kan pas weer voor hem invullen als
+hij zich geclaimd heeft.
+
+**Apart gezien, niet in deze wijziging:** een lid kan via de API de
+voorspellingen van zijn medespelers al vóór de deadline lezen (`answers_lezen`
+en `poule_ophalen()` geven alles; de app toont het pas na de deadline). Dat is
+een eerlijkheidskwestie, geen account- of naamkwestie; dichtzetten vraagt een
+aparte functie voor "wie is al klaar". En een poulecode is zes tekens (16,7
+miljoen mogelijkheden); raden kan in theorie, Supabase remt het af.
+
+**Tests:** `test/identiteit.test.sql` (nieuw, in de CI): elke aanval hierboven,
+en wat wel moet blijven kunnen (je eigen pagina, jezelf loslaten, losmaken
+door de poulebaas, claimen met de code, het gedeelde toestel). Zestien
+mutanten op het schema: vijftien gevangen; de zestiende (de oude insert-policy
+terug zonder de grant) verandert niets, want zonder grant doet een policy
+niets. `test/policies.test.sql` en `test/eigen-inzending.test.mjs` legden het
+oude, open gedrag vast en volgen nu het nieuwe. Vier mutanten op de app, alle
+gevangen. Lokaal alle SQL-tests uit de CI gedraaid tegen PostgreSQL 16, ook
+het opnieuw draaien op een beschadigde en een oude database.
+
+**Wat Danny moet doen:** na de merge `schema.sql` opnieuw draaien in de SQL
+Editor van Supabase (BEDIENING §7). Pas dan gelden de nieuwe regels.
+
