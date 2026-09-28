@@ -3,10 +3,12 @@
  * De gegevens voor de racepagina's (zoekplan SEO fase 4).
  *
  * Voor elke race uit site/races.mjs: de sessies van dit jaar met hun tijden
- * (kwalificatie, sprint en race; dezelfde bron als de sync en kalender.ics),
- * de top 10 van kwalificatie en race van vorig jaar op hetzelfde circuit, en
- * zodra de sessies gereden zijn de top 10 van dit jaar. De safety cars en rode
- * vlaggen per editie staan al in site/data/circuits.json (scripts/circuits.mjs).
+ * (vrije trainingen, kwalificatie, sprint en race; dezelfde bron als de sync en
+ * kalender.ics), de top 10 van kwalificatie en race van vorig jaar op hetzelfde
+ * circuit, de top 10 van elke vrije training zodra die er is, en zodra de
+ * sessies gereden zijn de top 10 van dit jaar. De safety cars, rode vlaggen,
+ * pole en winnaar per editie staan in site/data/circuits.json
+ * (scripts/circuits.mjs).
  *
  *   node scripts/racedata.mjs          ophalen en site/data/races-<jaar>.json schrijven
  *   DROOG=1 node scripts/racedata.mjs  alleen in de log, niets wegschrijven
@@ -25,17 +27,20 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { RACE_JAAR, RACES } from '../site/races.mjs';
-import { haal, wacht, PAUZE_MS } from './circuits.mjs';
+import { haal, wacht, PAUZE_MS, naamVan } from './circuits.mjs';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const BESTAND = join('site', 'data', `races-${RACE_JAAR}.json`);
-// De sessies die op de pagina komen, in de volgorde van het weekend.
-export const SESSIES = ['Sprint Qualifying', 'Sprint', 'Qualifying', 'Race'];
+// De sessies die op de pagina komen, in de volgorde van het weekend. De vrije
+// trainingen ook: hun tijden, en tijdens het weekend hun top 10.
+export const VRIJE_TRAININGEN = ['Practice 1', 'Practice 2', 'Practice 3'];
+export const SESSIES = [...VRIJE_TRAININGEN, 'Sprint Qualifying', 'Sprint', 'Qualifying', 'Race'];
 // Een sessie telt als gereden een paar uur na het einde, net als in
 // scripts/circuits.mjs: dan staat de uitslag er.
 const MARGE_MS = 3 * 3600e3;
-
-const naamVan = (d) => (d?.first_name && d?.last_name ? `${d.first_name} ${d.last_name}` : d?.full_name ?? null);
+// Een vrije training heeft geen straffen achteraf: een half uur na het einde
+// staat de uitslag er. Zo staat hij op de pagina bij de eerstvolgende run.
+const MARGE_TRAINING_MS = 30 * 60e3;
 
 /**
  * De top 10 van een sessie: session_result op plek, met naam en team uit
@@ -61,8 +66,8 @@ export function sessiesVan(sessies = []) {
     .map((s) => ({ naam: s.session_name, sessie: s.session_key, start: s.date_start, eind: s.date_end }));
 }
 
-/** Eén race zoals hij in het bestand komt. */
-export function raceRecord(race, meeting, sessies, vorige, uitslag) {
+/** Eén race zoals hij in het bestand komt. vrijeTrainingen: [{ naam, top }], alleen die met een uitslag. */
+export function raceRecord(race, meeting, sessies, vorige, uitslag, vrijeTrainingen = []) {
   return {
     circuit: race.circuit,
     slug: race.slug,
@@ -76,6 +81,7 @@ export function raceRecord(race, meeting, sessies, vorige, uitslag) {
     sessies: sessiesVan(sessies),
     vorige,
     uitslag,
+    vrijeTrainingen,
   };
 }
 
@@ -108,7 +114,7 @@ async function uitslagVan(sessie) {
   return top.length ? top : null;
 }
 
-const gereden = (s, nu) => s && new Date(s.date_end ?? s.date_start).getTime() + MARGE_MS < nu;
+const gereden = (s, nu, marge = MARGE_MS) => s && new Date(s.date_end ?? s.date_start).getTime() + marge < nu;
 
 async function ophalen({ nu = Date.now() } = {}) {
   const races = [];
@@ -140,7 +146,18 @@ async function ophalen({ nu = Date.now() } = {}) {
       race: gereden(hoofd, nu) ? await uitslagVan(hoofd) : null,
     } : null;
 
-    races.push(raceRecord(race, meeting, hier, vorige, uitslag));
+    // De vrije trainingen van dit weekend die er al zijn, op tijd. Alleen
+    // zolang de race niet gereden is: daarna staat de uitslag op de pagina en
+    // niet de trainingen, en dan hoeven ze ook niet elke run opgehaald.
+    const trainingen = [];
+    const nogTeRijden = hoofd && !gereden(hoofd, nu);
+    for (const s of hier.filter((x) => nogTeRijden && VRIJE_TRAININGEN.includes(x.session_name) && gereden(x, nu, MARGE_TRAINING_MS))
+      .sort((a, b) => new Date(a.date_start) - new Date(b.date_start))) {
+      const top = await uitslagVan(s);
+      if (top) trainingen.push({ naam: s.session_name, top });
+    }
+
+    races.push(raceRecord(race, meeting, hier, vorige, uitslag, trainingen));
   }
   return racedata(races, ontbreekt);
 }
@@ -152,6 +169,7 @@ function verslag(data) {
     const regel = (top) => (top ? top.map((x) => `${x.plek}.${x.code}`).join(' ') : 'geen');
     console.log(`  vorig jaar (${r.vorige?.datum ?? '-'}): kwalificatie ${regel(r.vorige?.kwalificatie)}`);
     console.log(`  ${' '.repeat(20)}race ${regel(r.vorige?.race)}`);
+    for (const v of r.vrijeTrainingen) console.log(`  ${v.naam}: ${regel(v.top)}`);
     if (r.uitslag) console.log(`  dit jaar: kwalificatie ${regel(r.uitslag.kwalificatie)} · race ${regel(r.uitslag.race)}`);
   }
   for (const o of data.ontbreekt) console.log(`  ontbreekt: ${o.slug}: ${o.reden}`);

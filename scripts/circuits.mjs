@@ -9,6 +9,11 @@
  * op de site dezelfde regels volgen als de punten in de app: een virtuele
  * safety car telt mee.
  *
+ * Per race ook wie er op pole stond en wie won (session_result van de
+ * kwalificatie en de race, de namen uit drivers), voor "hoe vaak wint de
+ * polesitter hier" op de racepagina's. Heeft OpenF1 een van de twee niet, dan
+ * telt die race daar niet mee.
+ *
  *   node scripts/circuits.mjs          alles ophalen en site/data/circuits.json schrijven
  *   DROOG=1 node scripts/circuits.mjs  alleen de tabel in de log, niets wegschrijven
  *
@@ -51,8 +56,16 @@ export async function haal(pad, pogingen = 6) {
   }
 }
 
-/** Eén race: waar, wanneer, en wat telSafetyCars en hadRodeVlag ervan zeggen. */
-export function raceCijfers(sessie, berichten) {
+/** Een naam zoals je hem schrijft: voornaam en achternaam, niet de hoofdletters van full_name. */
+export const naamVan = (d) => (d?.first_name && d?.last_name ? `${d.first_name} ${d.last_name}` : d?.full_name ?? null);
+
+/**
+ * Eén race: waar, wanneer, wat telSafetyCars en hadRodeVlag ervan zeggen, en
+ * wie er op pole stond en wie won ({ nr, naam }, of null als OpenF1 het niet
+ * heeft). Pole is de winnaar van de kwalificatie, zoals de app de vraag "Pole
+ * position" scoort. poleWon is null als een van de twee ontbreekt.
+ */
+export function raceCijfers(sessie, berichten, { pole = null, winnaar = null } = {}) {
   return {
     circuit: sessie.circuit_key,
     naam: sessie.circuit_short_name,
@@ -63,6 +76,9 @@ export function raceCijfers(sessie, berichten) {
     sessie: sessie.session_key,
     safetyCars: telSafetyCars(berichten),
     rodeVlag: hadRodeVlag(berichten),
+    pole,
+    winnaar,
+    poleWon: pole && winnaar ? pole.nr === winnaar.nr : null,
   };
 }
 
@@ -88,7 +104,11 @@ export function perCircuit(races) {
       metSafetyCar: rs.filter((r) => r.safetyCars > 0).length,
       safetyCars: rs.reduce((n, r) => n + r.safetyCars, 0),
       metRodeVlag: rs.filter((r) => r.rodeVlag).length,
-      perRace: rs.map(({ jaar, datum, sessie, safetyCars, rodeVlag }) => ({ jaar, datum, sessie, safetyCars, rodeVlag })),
+      // Alleen races waarvan pole en winnaar allebei bekend zijn.
+      metPole: rs.filter((r) => r.poleWon !== null && r.poleWon !== undefined).length,
+      poleGewonnen: rs.filter((r) => r.poleWon === true).length,
+      perRace: rs.map(({ jaar, datum, sessie, safetyCars, rodeVlag, pole, winnaar, poleWon }) => ({
+        jaar, datum, sessie, safetyCars, rodeVlag, pole: pole ?? null, winnaar: winnaar ?? null, poleWon: poleWon ?? null })),
     };
   }).sort((a, b) => a.locatie.localeCompare(b.locatie, 'en') || a.circuit - b.circuit);
 }
@@ -97,13 +117,15 @@ export function perCircuit(races) {
 export function cijfers(races, ontbreekt = []) {
   const datums = races.map((r) => r.datum).sort();
   return {
-    bron: 'OpenF1 (https://openf1.org), race_control',
+    bron: 'OpenF1 (https://openf1.org): race_control, en session_result en drivers voor pole en winnaar',
     regel: 'Een virtuele safety car telt mee, net als in de app (telSafetyCars en hadRodeVlag in scripts/uitslagen.mjs).',
     vanaf: VANAF,
     tot: datums.at(-1) ?? null,
     races: races.length,
     metSafetyCar: races.filter((r) => r.safetyCars > 0).length,
     metRodeVlag: races.filter((r) => r.rodeVlag).length,
+    metPole: races.filter((r) => r.poleWon !== null && r.poleWon !== undefined).length,
+    poleGewonnen: races.filter((r) => r.poleWon === true).length,
     ontbreekt: [...ontbreekt].sort((a, b) => a.datum.localeCompare(b.datum)),
     circuits: perCircuit(races),
   };
@@ -127,6 +149,32 @@ export function uitersten(data, minRaces = MIN_RACES) {
   return { gemiddeld: data.races ? totaal / data.races : 0, meest: volgorde(-1), minst: volgorde(1) };
 }
 
+// Een lijst van OpenF1, of null als die er niet is. Een 429 na zes pogingen
+// laat de run zakken, net als bij race_control.
+async function lijst(pad) {
+  const x = await haal(pad);
+  await wacht(PAUZE_MS);
+  if (!Array.isArray(x) && x.fout === '429') throw new Error(`te snel gevraagd: ${pad}`);
+  return Array.isArray(x) ? x : null;
+}
+
+// Wie er eerste werd in een sessie: het coureurnummer, of null.
+async function eerste(sessie) {
+  if (!sessie) return null;
+  const rij = (await lijst(`session_result?session_key=${sessie.session_key}`))?.find((x) => x.position === 1);
+  return rij ? String(rij.driver_number) : null;
+}
+
+// Pole en winnaar van één race, met de namen uit drivers van die race. Wat
+// OpenF1 niet heeft, blijft null: die race telt dan niet mee.
+async function podium(race, quali) {
+  const [pole, winnaar] = [await eerste(quali), await eerste(race)];
+  if (!pole && !winnaar) return {};
+  const wie = new Map(((await lijst(`drivers?session_key=${race.session_key}`)) ?? []).map((d) => [String(d.driver_number), d]));
+  const persoon = (nr) => (nr ? { nr, naam: naamVan(wie.get(nr)) } : null);
+  return { pole: persoon(pole), winnaar: persoon(winnaar) };
+}
+
 async function ophalen({ nu = Date.now() } = {}) {
   const races = [];
   const ontbreekt = [];
@@ -134,6 +182,10 @@ async function ophalen({ nu = Date.now() } = {}) {
     const sessies = await haal(`sessions?year=${jaar}&session_name=Race`);
     await wacht(PAUZE_MS);
     if (!Array.isArray(sessies)) throw new Error(`sessions voor ${jaar} gaf ${sessies.fout}`);
+    // De kwalificaties van dat jaar, per meeting: daar komt de pole vandaan.
+    const qualis = await haal(`sessions?year=${jaar}&session_name=Qualifying`);
+    await wacht(PAUZE_MS);
+    const qualiVan = new Map((Array.isArray(qualis) ? qualis : []).map((q) => [q.meeting_key, q]));
     // Alleen races die voorbij zijn, met een paar uur marge voor de
     // berichten van na de finish.
     const gereden = sessies
@@ -150,7 +202,7 @@ async function ophalen({ nu = Date.now() } = {}) {
         ontbreekt.push({ ...waar, reden: Array.isArray(berichten) ? 'geen berichten' : `OpenF1 gaf ${berichten.fout}` });
         continue;
       }
-      races.push(raceCijfers(s, berichten));
+      races.push(raceCijfers(s, berichten, await podium(s, qualiVan.get(s.meeting_key))));
     }
   }
   return { races, ontbreekt };
@@ -159,14 +211,15 @@ async function ophalen({ nu = Date.now() } = {}) {
 function tabel(data, races) {
   console.log(`\n=== per race (${races.length}) ===`);
   for (const r of [...races].sort((a, b) => a.datum.localeCompare(b.datum))) {
-    console.log(`  ${r.datum}  ${String(r.locatie).padEnd(18)} SC ${String(r.safetyCars).padEnd(3)} rode vlag ${r.rodeVlag ? 'ja' : 'nee'}  (${r.sessie})`);
+    console.log(`  ${r.datum}  ${String(r.locatie).padEnd(18)} SC ${String(r.safetyCars).padEnd(3)} rode vlag ${r.rodeVlag ? 'ja ' : 'nee'}`
+      + `  pole ${r.pole?.naam ?? '-'}, winnaar ${r.winnaar?.naam ?? '-'}  (${r.sessie})`);
   }
   console.log(`\n=== per circuit (${data.circuits.length}) ===`);
   for (const c of data.circuits) {
     console.log(`  ${String(c.locatie).padEnd(18)} ${String(c.races).padStart(2)} races, SC in ${c.metSafetyCar}, `
-      + `${c.safetyCars} SC totaal, rode vlag in ${c.metRodeVlag}`);
+      + `${c.safetyCars} SC totaal, rode vlag in ${c.metRodeVlag}, pole won ${c.poleGewonnen} van ${c.metPole}`);
   }
-  console.log(`\n  ${data.races} races van ${data.vanaf} tot ${data.tot}: SC in ${data.metSafetyCar}, rode vlag in ${data.metRodeVlag}`);
+  console.log(`\n  ${data.races} races van ${data.vanaf} tot ${data.tot}: SC in ${data.metSafetyCar}, rode vlag in ${data.metRodeVlag}, pole won ${data.poleGewonnen} van ${data.metPole}`);
   for (const o of data.ontbreekt) console.log(`  ontbreekt: ${o.datum} ${o.locatie} (${o.sessie}): ${o.reden}`);
 }
 

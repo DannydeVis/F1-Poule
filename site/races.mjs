@@ -51,7 +51,8 @@ export const RACE_TEKST = {
     tijdzone: 'Europe/Amsterdam',
     pad: 'races',
     // Met een zacht afbreekstreepje (\u00ad): op een telefoon mag het woord breken.
-    sessies: { 'Sprint Qualifying': 'Sprint\u00adkwalificatie', Sprint: 'Sprint', Qualifying: 'Kwalificatie', Race: 'Race' },
+    sessies: { 'Practice 1': 'Vrije training 1', 'Practice 2': 'Vrije training 2', 'Practice 3': 'Vrije training 3',
+      'Sprint Qualifying': 'Sprint\u00adkwalificatie', Sprint: 'Sprint', Qualifying: 'Kwalificatie', Race: 'Race' },
     ja: 'ja', nee: 'nee',
     titel: '{kort} {jaar}: tijden en cijfers | Predict the Race',
     omschrijving: 'De tijden van de {kort} {jaar} in Nederlandse tijd, de top 10 van {vorigJaar} en hoe vaak de safety car in {plaats} kwam. Voorspel de race gratis met vrienden.',
@@ -84,6 +85,23 @@ export const RACE_TEKST = {
       kop: ['Jaar', 'Safety cars', 'Rode vlag'],
       link: 'Safety cars op alle circuits',
     },
+    // Pole en winnaar per editie, uit circuits.json. {pole} en {winnaar} zijn
+    // de punten uit de app; die vult de generator.
+    pole: {
+      vraag: 'Hoe vaak wint de polesitter in {plaats}?',
+      kort: 'In {plaats} won de polesitter {gewonnen} van de {races} races sinds {vanaf}; over alle circuits was dat {gewonnenAlles} van de {racesAlles}. In Predict the Race zijn de pole position en de winnaar twee losse vragen, goed voor {pole} en {winnaar} punten.',
+      bijschrift: 'Pole position en winnaar in {plaats} per jaar (bron: OpenF1)',
+      kop: ['Jaar', 'Pole', 'Winnaar'],
+    },
+    // De vrije trainingen, alleen tijdens het weekend: tot de uitslag van de
+    // race er is.
+    training: {
+      vraag: 'Wie was het snelst in de vrije trainingen van de {naam}?',
+      snelst: 'In de {welke} vrije training was {wie} het snelst.',
+      welke: { 'Practice 1': 'eerste', 'Practice 2': 'tweede', 'Practice 3': 'derde' },
+      slot: 'Vrije trainingen tellen niet mee in Predict the Race, maar ze laten zien wie er dit weekend snel is. Hieronder de top 10 van elke training.',
+      bijschrift: '{sessie}: de top 10',
+    },
     slot: {
       kop: 'Voorspel de {kort}',
       tekst: 'Zet je top 10 voor de kwalificatie en de race klaar, met je vrienden in één poule. Gratis en zonder account.',
@@ -105,7 +123,8 @@ export const RACE_TEKST = {
   en: {
     tijdzone: 'UTC',
     pad: 'en/races',
-    sessies: { 'Sprint Qualifying': 'Sprint qualifying', Sprint: 'Sprint', Qualifying: 'Qualifying', Race: 'Race' },
+    sessies: { 'Practice 1': 'Practice 1', 'Practice 2': 'Practice 2', 'Practice 3': 'Practice 3',
+      'Sprint Qualifying': 'Sprint qualifying', Sprint: 'Sprint', Qualifying: 'Qualifying', Race: 'Race' },
     ja: 'yes', nee: 'no',
     titel: '{kort} {jaar}: times and stats | Predict the Race',
     omschrijving: 'Session times for the {kort} {jaar} in UTC, the {vorigJaar} top 10 and how often the safety car came out in {plaats}. Predict the race for free with friends.',
@@ -137,6 +156,19 @@ export const RACE_TEKST = {
       bijschrift: 'Safety cars and red flags in {plaats} by year, virtual safety car included (source: OpenF1)',
       kop: ['Year', 'Safety cars', 'Red flag'],
       link: 'Safety cars at every circuit',
+    },
+    pole: {
+      vraag: 'How often does the polesitter win in {plaats}?',
+      kort: 'In {plaats}, the polesitter won {gewonnen} of the {races} races since {vanaf}; across all circuits it was {gewonnenAlles} of {racesAlles}. In Predict the Race, pole position and the winner are two separate questions, worth {pole} and {winnaar} points.',
+      bijschrift: 'Pole position and winner in {plaats} by year (source: OpenF1)',
+      kop: ['Year', 'Pole', 'Winner'],
+    },
+    training: {
+      vraag: 'Who was fastest in practice for the {naam}?',
+      snelst: 'In {welke} practice, {wie} was fastest.',
+      welke: { 'Practice 1': 'first', 'Practice 2': 'second', 'Practice 3': 'third' },
+      slot: 'Practice does not count in Predict the Race, but it shows who is quick this weekend. Below is the top 10 of each session.',
+      bijschrift: '{sessie}: the top 10',
     },
     slot: {
       kop: 'Predict the {kort}',

@@ -42,6 +42,8 @@ export const dagKort = (iso, code, zone) => new Intl.DateTimeFormat(code, { week
   .format(new Date(iso));
 const getal = (code, x) => new Intl.NumberFormat(code, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(x);
 const coureur = (x) => x.naam ?? x.code ?? `#${x.nr}`;
+// "Max Verstappen (Red Bull Racing)", of alleen de naam als het team onbekend is.
+const metTeam = (x) => (x.team ? `${coureur(x)} (${x.team})` : coureur(x));
 
 // "George Russell (Mercedes) won ... voor Max Verstappen en Lando Norris."
 function winnaarZin(T, top, naam, jaar) {
@@ -61,9 +63,13 @@ function topTabellen(T, top, jaar) {
 }
 
 const IDS = {
-  nl: { tijden: 'tijden', uitslag: 'uitslag', vorig: 'vorig-jaar', safety: 'safety-cars' },
-  en: { tijden: 'times', uitslag: 'result', vorig: 'last-year', safety: 'safety-cars' },
+  nl: { tijden: 'tijden', training: 'vrije-trainingen', uitslag: 'uitslag', vorig: 'vorig-jaar', safety: 'safety-cars', pole: 'pole' },
+  en: { tijden: 'times', training: 'practice', uitslag: 'result', vorig: 'last-year', safety: 'safety-cars', pole: 'pole' },
 };
+
+// Races waarvan pole en winnaar allebei bekend zijn (poleWon ja of nee). Een
+// ouder circuits.json zonder die velden geeft een lege lijst: dan geen sectie.
+const metPole = (perRace = []) => perRace.filter((x) => typeof x.poleWon === 'boolean');
 
 /** Eén racepagina, of null als hij onder de drempel blijft. */
 export function racePagina(cfg, r, circuits) {
@@ -93,6 +99,19 @@ export function racePagina(cfg, r, circuits) {
           ...(code === 'nl' ? [tijd(s.start, NL_TIJD)] : [])]) },
       tekst: [T.tijden.tekst],
     }];
+    // De vrije trainingen alleen tijdens het weekend: zodra er een is, tot de
+    // uitslag van de race er staat.
+    const trainingen = (r.vrijeTrainingen ?? []).filter((x) => x.top?.length);
+    if (trainingen.length && !(r.uitslag?.race?.length >= 3)) {
+      const t = T.training;
+      secties.push({
+        id: ids.training,
+        vraag: vul(t.vraag, { naam }),
+        kort: [...trainingen.map((x) => vul(t.snelst, { welke: t.welke[x.naam] ?? x.naam, wie: metTeam(x.top[0]) })), t.slot].join(' '),
+        tabellen: trainingen.map((x) => ({ bijschrift: vul(t.bijschrift, { sessie: T.sessies[x.naam] ?? x.naam }), kop: T.uitslag.kop,
+          klasse: 'compact', rijen: x.top.map((y) => [String(y.plek), coureur(y), y.team ?? '']) })),
+      });
+    }
     if (r.uitslag?.race?.length >= 3) {
       secties.push({ id: ids.uitslag, vraag: vul(T.uitslag.vraag, { naam, jaar: RACE_JAAR }),
         kort: winnaarZin(T, r.uitslag, naam, RACE_JAAR), tabellen: topTabellen(T, r.uitslag, RACE_JAAR) });
@@ -113,6 +132,20 @@ export function racePagina(cfg, r, circuits) {
           rijen: circuit.perRace.map((x) => [String(x.jaar), String(x.safetyCars), x.rodeVlag ? T.ja : T.nee]) },
         links: [{ tekst: s.link, pagina: 'puntentelling', anker: 'safety-cars' }],
       });
+      // Hoe vaak de polesitter hier won, tegen alle circuits samen.
+      const hier = metPole(circuit.perRace);
+      if (hier.length) {
+        const alles = circuits.circuits.flatMap((c) => metPole(c.perRace));
+        const p = T.pole;
+        secties.push({
+          id: ids.pole,
+          vraag: vul(p.vraag, v),
+          kort: vul(p.kort, { plaats: v.plaats, gewonnen: hier.filter((x) => x.poleWon).length, races: hier.length, vanaf: circuits.vanaf,
+            gewonnenAlles: alles.filter((x) => x.poleWon).length, racesAlles: alles.length }),
+          tabel: { bijschrift: vul(p.bijschrift, v), kop: p.kop, klasse: 'compact',
+            rijen: hier.map((x) => [String(x.jaar), coureur(x.pole), coureur(x.winnaar)]) },
+        });
+      }
     }
     talen[code] = {
       pad: `${T.pad}/${RACE_JAAR}/${cfg.slug}`,

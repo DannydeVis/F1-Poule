@@ -1932,14 +1932,17 @@ Circuitcijfers → Run workflow. De gids over de puntentelling toont de cijfers
 ("Hoe vaak komt de safety car in een race?"), en na elke run van de workflow
 staan de nieuwe cijfers er vanzelf op. Dezelfde workflow haalt ook de tijden en
 uitslagen op voor de racepagina's (`site/data/races-2026.json`); welke races
-dat zijn, staat in `site/races.mjs`.
+dat zijn, staat in `site/races.mjs`. In het raceweekend (vrijdag tot en met
+zondag) draait hij ook elke twee uur, maar dan alleen voor de racepagina's: zo
+staat de top 10 van een vrije training er kort na afloop.
 
 **De racepagina's.** Een pilot met de laatste zeven races van 2026, in het
 Nederlands (`/races/2026/singapore/` enzovoort) en het Engels
 (`/en/races/2026/...`), met een overzicht op `/races/` en `/en/races/`. Per
 race: de tijden van elke sessie (UTC, en op de Nederlandse pagina ook
-Nederlandse tijd), de top 10 van vorig jaar, hoe vaak de safety car er kwam, en
-na de race de uitslag. Alles komt uit de workflow "Circuitcijfers" en staat er
+Nederlandse tijd), de top 10 van vorig jaar, hoe vaak de safety car er kwam, hoe
+vaak de polesitter er won, tijdens het weekend de top 10 van elke vrije
+training, en na de race de uitslag. Alles komt uit de workflow "Circuitcijfers" en staat er
 de dag erna vanzelf op; je hoeft niets te doen. **Wat jij doet (half november):**
 in Search Console bij Prestaties filteren op pagina's die `/races/` bevatten.
 Geen vertoningen? Dan komen er in 2027 geen racepagina's bij en blijven deze
