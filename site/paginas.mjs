@@ -623,7 +623,7 @@ export const PAGINAS = [
       nl: {
         pad: 'over',
         titel: 'Over de gratis F1-poule en de maker | Predict the Race',
-        omschrijving: 'Wie Predict the Race maakt en waarom, hoe de gratis F1-poule zonder advertenties en abonnement werkt, en waar de uitslagen en de broncode vandaan komen.',
+        omschrijving: 'Wie Predict the Race maakt en waarom, hoe de gratis F1-poule zonder advertenties en abonnement werkt, en waar de uitslagen vandaan komen.',
         kop: 'Over Predict the Race',
         kort: '{kernzin}',
         secties: [
@@ -632,7 +632,7 @@ export const PAGINAS = [
             vraag: 'Wie maakt Predict the Race?',
             kort: '{makerzin} Hij begon eraan voor zijn eigen vriendenpoule. Predict the Race is een onafhankelijk fanproject en is niet verbonden aan de Formule 1, de FIA of een F1-team.',
             tekst: [
-              'Een vraag, een idee of een fout gevonden? De broncode staat openbaar op GitHub, en daar kun je ook een melding maken. Voor vragen over je gegevens staat het mailadres in de privacyverklaring.',
+              'Een vraag, een idee of een fout gevonden? Het mailadres staat in de privacyverklaring, en daar kun je ook terecht met vragen over je gegevens.',
             ],
           },
           {
@@ -646,7 +646,7 @@ export const PAGINAS = [
           {
             id: 'techniek',
             vraag: 'Hoe werkt Predict the Race achter de schermen?',
-            kort: 'De kalender, de deelnemers en de uitslagen komen van OpenF1, een openbare bron met Formule 1-gegevens. Een GitHub Action haalt ze automatisch op en zet ze in een database bij Supabase; de app rekent daarmee de punten en de stand uit. De site draait op GitHub Pages en de broncode staat openbaar op GitHub.',
+            kort: 'De kalender, de deelnemers en de uitslagen komen van OpenF1, een openbare bron met Formule 1-gegevens. Een GitHub Action haalt ze automatisch op en zet ze in een database bij Supabase; de app rekent daarmee de punten en de stand uit. De site draait op GitHub Pages.',
             tekst: [
               'Na een race kijkt de sync in twee rondes nog of een straf de uitslag veranderde, en dan rekent de app opnieuw.',
             ],
@@ -660,7 +660,7 @@ export const PAGINAS = [
       en: {
         pad: 'en/about',
         titel: 'About this free F1 prediction game | Predict the Race',
-        omschrijving: 'Who makes Predict the Race and why, how the free F1 prediction game stays free of ads and subscriptions, and where the results and the source code come from.',
+        omschrijving: 'Who makes Predict the Race and why, how the free F1 prediction game stays free of ads and subscriptions, and where the results come from.',
         kop: 'About Predict the Race',
         kort: '{kernzin}',
         secties: [
@@ -669,7 +669,7 @@ export const PAGINAS = [
             vraag: 'Who makes Predict the Race?',
             kort: '{makerzin} He started it for his own group of friends. Predict the Race is an independent fan project and is not affiliated with Formula 1, the FIA or any F1 team.',
             tekst: [
-              'A question, an idea or found a bug? The source code is public on GitHub, and you can open an issue there. For questions about your data, the email address is in the privacy statement.',
+              'A question, an idea or found a bug? The email address is in the privacy statement, which is also where to go with questions about your data.',
             ],
           },
           {
@@ -683,7 +683,7 @@ export const PAGINAS = [
           {
             id: 'behind-the-scenes',
             vraag: 'How does Predict the Race work behind the scenes?',
-            kort: 'The calendar, the entry lists and the results come from OpenF1, a public source of Formula 1 data. A GitHub Action fetches them automatically and stores them in a Supabase database, and the app works out the points and the standings from there. The site runs on GitHub Pages and the source code is public on GitHub.',
+            kort: 'The calendar, the entry lists and the results come from OpenF1, a public source of Formula 1 data. A GitHub Action fetches them automatically and stores them in a Supabase database, and the app works out the points and the standings from there. The site runs on GitHub Pages.',
             tekst: [
               'After a race, the sync checks in two more rounds whether a penalty changed the result, and the app scores it again if so.',
             ],

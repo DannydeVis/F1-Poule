@@ -52,7 +52,7 @@ const { check, afronden } = maakControle('de landingspagina in zeven talen');
 // de voorpagina) ook. De testservers passen dezelfde uitsluiting toe.
 {
   const INTERN = (p) => /\.(md|sql)$/.test(p) || /^(docs|test|scripts|site\/bron|site\/data)\//.test(p)
-    || /^site\/[^/]+\.(mjs|json)$/.test(p) || /(^|\/)[._]/.test(p) || /^(CNAME|node_modules)(\/|$)/.test(p);
+    || /^site\/[^/]+\.(mjs|json)$/.test(p) || /(^|\/)[._]/.test(p) || /^(CNAME|LICENSE|node_modules)(\/|$)/.test(p);
   const bestanden = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'],
     { cwd: wortel, encoding: 'utf8' }).split('\n').filter(Boolean);
   const mis = bestanden.filter((p) => gepubliceerd(p) === INTERN(p));

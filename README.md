@@ -121,6 +121,12 @@ gemergd zodra ze groen zijn — de controle blijft, alleen het wachten is weg.
 Daar staat niet alleen wat er gebouwd is maar ook wat er onderweg misging, en
 dat is meestal precies waar het de volgende keer weer mis kan gaan.
 
-## Licentie
+## Rechten
 
-Nog geen. Predict the Race is een gratis, openbaar fanproject; neem gerust ideeën over.
+© 2026 Danny de Visser. Alle rechten voorbehouden.
+
+De code, de teksten, het ontwerp en de afbeeldingen van Predict the Race zijn
+van Danny de Visser. Niets hiervan mag gekopieerd, hergebruikt, aangepast of
+verspreid worden zonder zijn schriftelijke toestemming. Spelen op
+predicttherace.com is gratis; dat geeft geen enkel recht op de code of de
+rest van deze repository. Zie `LICENSE`.

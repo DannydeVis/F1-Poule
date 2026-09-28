@@ -8834,3 +8834,53 @@ het opnieuw draaien op een beschadigde en een oude database.
 **Wat Danny moet doen:** na de merge `schema.sql` opnieuw draaien in de SQL
 Editor van Supabase (BEDIENING §7). Pas dan gelden de nieuwe regels.
 
+## De code is van Danny (28 september)
+
+Danny, bij de README op GitHub ("Nog geen [licentie]. Predict the Race is een
+gratis, openbaar fanproject; neem gerust ideeën over."): "Ik weet eigenlijk
+niet waar het vandaan komt dat ik dit allemaal gratis wil weggeven. [...] Ik
+wil het echt alleen voor mezelf houden." Die zin kwam niet van hem: hij stond
+er sinds PR #86 (22 september), geschreven door Claude Code. Net als de link
+"Broncode op GitHub" in de voet van elke pagina (7 talen), de zinnen "de
+broncode staat openbaar op GitHub" op de about-pagina en in de
+privacyverklaring, `sameAs` naar de repository in de JSON-LD van de
+Organization, en "source code: ..." in `llms.txt`.
+
+**Wat er veranderd is:** in de README staat onder "Rechten" nu "© 2026 Danny
+de Visser. Alle rechten voorbehouden", met uitleg; er is een `LICENSE` (NL en
+EN, alle rechten voorbehouden; niet gepubliceerd op de site, net als de
+README). De link, de zinnen, `sameAs` en de regel in `llms.txt` zijn weg;
+`BRON` staat niet meer in `site/teksten.mjs`. De privacyverklaring heeft een
+nieuwe datum (28 september). `test/rechten.test.mjs` bewaakt het.
+
+**Wat bewust blijft, en waarom:**
+
+- Spelen is gratis, en dat staat overal: op de voorpagina, in de gidsen, in
+  `llms.txt`. Dat is het product, niet de code, en het is waar de meeste
+  zoekwoorden op draaien ("gratis F1-poule").
+- Maar een paar zinnen beloven meer dan gratis spelen, en die botsen met geld
+  verdienen later: op de about-pagina "een fanproject zonder verdienmodel: geen
+  advertenties, geen abonnement, geen betaalde functies", op de voorpagina
+  "geen advertenties en verkoopt verder niets", in de privacyverklaring
+  "fanproject zonder winstoogmerk", en in `llms.txt` de kernfeiten. Ze kloppen
+  vandaag. Zodra er een verdienmodel komt, moeten ze mee (en de
+  privacyverklaring ook als er een advertentienetwerk bij komt).
+- De webapp zelf (HTML, JavaScript, CSS) is voor iedere bezoeker te zien: zo
+  werkt een website. Wat afschermt, is dat het auteursrecht nu expliciet is
+  voorbehouden, en (als Danny dat kiest) de repository privé.
+
+**De repository privé maken** kan alleen Danny (GitHub → Settings → General →
+Danger Zone → Change visibility). Twee dingen om te weten:
+
+- GitHub Pages werkt voor een privé-repository alleen met een betaald account
+  (GitHub Pro, ongeveer 4 dollar per maand). Zonder dat gaat de site uit de
+  lucht.
+- Actions-minuten tellen dan wel. GitHub Pro heeft er 3.000 per maand voor
+  privé-repositories. Op een bouwdag als 28 september ging er een paar honderd
+  minuten per dag doorheen (vooral de browsertests, ongeveer 12 minuten per
+  keer, bij elke push en elke PR); zonder bouwen blijft het ruim onder de
+  3.000 (de sync, de circuitcijfers, de deploy). Staat de uitgavelimiet op 0,
+  dan stoppen de workflows als de minuten op zijn, en daarmee de sync van de
+  uitslagen. Dus: eerst de workflows zuiniger (tests alleen bij een PR, niet
+  ook bij elke push), dan privé.
+

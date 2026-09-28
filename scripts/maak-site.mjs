@@ -37,7 +37,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { teksten, TALEN, STANDAARD, BASIS, MAKER, BRON, INDEXNOW_SLEUTEL, LLMS, OPEN_POULE } from '../site/teksten.mjs';
+import { teksten, TALEN, STANDAARD, BASIS, MAKER, INDEXNOW_SLEUTEL, LLMS, OPEN_POULE } from '../site/teksten.mjs';
 import { PRIVACY, CONTACT, PRIVACY_BIJGEWERKT, privacyTaal } from '../site/privacy.mjs';
 import { PAGINAS, PAGINA_UI } from '../site/paginas.mjs';
 import { knipUit } from './knipsel.mjs';
@@ -744,7 +744,7 @@ function jsonLd(code, datum) {
     { '@type': 'Organization', '@id': `${BASIS}/#organisatie`, name: 'Predict the Race', alternateName: SITENAMEN,
       url: `${BASIS}/`, description: zin(code, 'kernzin'),
       logo: `${BASIS}/pictogrammen/predicttherace-512.png`,
-      founder: { '@id': `${BASIS}/#maker` }, sameAs: [BRON] },
+      founder: { '@id': `${BASIS}/#maker` } },
     // De maker één keer, met een @id: de Organization, de WebApplication en de
     // gidsen verwijzen ernaar, zodat de graaf aan elkaar vast zit.
     persoon(code),
@@ -1073,7 +1073,6 @@ ${jsonLd(code, datum)}
       <li><a href="${p}${overIn(code).pad}/">${esc(PAGINA_UI[code].over)}</a></li>` : ''}${racesIn(code) ? `
       <li><a href="${p}${racesIn(code).pad}/">${esc(racesIn(code).voet)}</a></li>` : ''}
       <li><a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.voet.privacy)}</a></li>
-      <li><a href="${BRON}" rel="noopener">${esc(t.voet.bron)}</a></li>
       <li><a href="https://openf1.org" rel="noopener">${esc(t.voet.data)}</a></li>
       <li><a href="#" data-toestemming hidden>${esc(t.voet.cookies)}</a></li>
     </ul>
@@ -1166,7 +1165,6 @@ ${alineas.map((a) => `      <p>${alinea(a)}</p>`).join('\n')}
       <li><a href="${thuis}">${esc(t.terug)}</a></li>
       <li><a href="${app}">${esc(t.app)}</a></li>
       <li><a href="${p}${PRIVACY[ander].pad}/" hreflang="${ander}" lang="${ander}">${esc(t.ander)}</a></li>
-      <li><a href="${BRON}" rel="noopener">${esc(teksten[taal].voet.bron)}</a></li>
       <li><a href="#" data-toestemming hidden>${esc(teksten[taal].voet.cookies)}</a></li>
     </ul>
     <small>${esc(teksten[taal].voet.disclaimer)}</small>
@@ -1533,7 +1531,6 @@ ${leesOok.length ? `    <section class="leesook">
       <li><a href="${p}${overIn(code).pad}/">${esc(ui.over)}</a></li>` : ''}${racesIn(code) && pg.id !== 'races' ? `
       <li><a href="${p}${racesIn(code).pad}/">${esc(racesIn(code).voet)}</a></li>` : ''}
       <li><a href="${p}${PRIVACY[privacyTaal(code)].pad}/">${esc(ui.privacy)}</a></li>
-      <li><a href="${BRON}" rel="noopener">${esc(teksten[code].voet.bron)}</a></li>
       <li><a href="#" data-toestemming hidden>${esc(teksten[code].voet.cookies)}</a></li>
     </ul>
     <small>${esc(teksten[code].voet.disclaimer)}</small>
@@ -1673,7 +1670,7 @@ ${zin('en', 'makerzin')}
 - Website languages: the homepage in ${TALEN.map((c) => `${teksten[c].naam} (${urlVan(c)})`).join(', ')}${
   paginaTalen.length ? `; the guides and the about page in ${opsomming(paginaTalen.map(taalNaamEn))}` : ''}
 - Results: the calendar, the entry list and the official results come automatically from OpenF1 (https://openf1.org)
-- Made by: ${MAKER.naam} from ${MAKER.plaats} (${overUrl('en')}); source code: ${BRON}
+- Made by: ${MAKER.naam} from ${MAKER.plaats} (${overUrl('en')})
 - Online since: ${LLMS.online}
 - Visitor statistics: Google Analytics, only after the visitor says yes; without that, nothing is measured
 - Privacy: ${privacyUrl('en')} (Dutch: ${privacyUrl('nl')})
