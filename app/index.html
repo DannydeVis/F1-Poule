@@ -291,6 +291,10 @@
     justify-content:stretch;text-align:left;padding:12px 14px;min-height:0;
     margin-bottom:8px;border:1px solid var(--lijn);background:var(--paneel);
     font-family:var(--sans);text-transform:none;letter-spacing:0;
+    /* Niet krimpen. Op een breed scherm is de linkerkolom een flexkolom met
+       een vaste hoogte die zelf scrolt; met min-height:0 werd deze knop daar
+       platgedrukt tot een randje, met de naam en de code eronder uit. */
+    flex:none;
   }
   .knop.poulekeuze:hover:not(:disabled){border-color:var(--accent)}
   .knop.poulekeuze .nm{font-size:17px;font-weight:700;color:var(--ink)}
@@ -3245,6 +3249,12 @@ const ENGELS = Object.fromEntries([
    'finished'],
   ['jouw andere poules',
    'your other pools'],
+  ['nog een poule',
+   'another pool'],
+  ['Met het werk of met vrienden erbij? Je poules hierboven blijven gewoon staan.',
+   'One with work or with friends too? The pools above simply stay where they are.'],
+  ['Meedoen met een code',
+   'Join with a code'],
   ['Dit lijstje staat op dit toestel. Op je '
    + 'telefoon én je laptop zijn het dus twee lijstjes.',
    'This list lives on this device. So on your phone and your laptop they '
@@ -6153,18 +6163,31 @@ function toonApp() {
   knoopUitloggen();
   knoopThema();
   const anders = app.querySelector('#anderePoule');
-  if (anders) anders.onclick = () => {
-    // Alleen "welke poule sta je nu in" vergeten. Het lijstje met al je
-    // poules blijft staan, anders raak je ze kwijt door één keer te kijken.
-    vergeetPoule();
-    S.poule = null; S.ik = null; S.races = []; S.leden = []; S.preds = [];
-    S.antwoorden = []; S.poulevragen = []; S.beheer = null; S.beheerFout = '';
-    S.omschrijving = null; S.omschrijvingFout = '';
-    S.race = null; S.weergave = 'races';
-    render();
+  if (anders) anders.onclick = naarStartscherm;
+  // Nog een poule: een nieuwe maken kan vanuit hier (Terug op de eerste stap
+  // brengt je weer in deze poule); meedoen gaat via het startscherm, met de
+  // cursor meteen in het veld voor de code.
+  const nieuwePoule = app.querySelector('#nieuwePoule');
+  if (nieuwePoule) nieuwePoule.onclick = () => startAanmaken();
+  const metCode = app.querySelector('#metCode');
+  if (metCode) metCode.onclick = () => {
+    naarStartscherm();
+    app.querySelector('#code')?.focus();
   };
   tikken();
   kijkNaarVerhaal();
+}
+
+// Terug naar het startscherm, voor een andere poule. Alleen "welke poule sta
+// je nu in" vergeten. Het lijstje met al je poules blijft staan, anders raak
+// je ze kwijt door één keer te kijken.
+function naarStartscherm() {
+  vergeetPoule();
+  S.poule = null; S.ik = null; S.races = []; S.leden = []; S.preds = [];
+  S.antwoorden = []; S.poulevragen = []; S.beheer = null; S.beheerFout = '';
+  S.omschrijving = null; S.omschrijvingFout = '';
+  S.race = null; S.weergave = 'races';
+  render();
 }
 
 // ---- linkerkolom: races -------------------------------------
@@ -8199,15 +8222,29 @@ function eldersTekst(uitkomst, welk) {
 // Met het werk in de ene en de vrienden in de andere zit je zo in twee of
 // drie poules. Eerder onthield de app er maar één en moest je de code
 // opnieuw intypen om te wisselen; nu staan ze hier gewoon naast elkaar.
+//
+// Daaronder de weg naar een poule die er nog niet bij staat: een nieuwe
+// maken, of meedoen met een code. Die stond alleen achter het kleine
+// "Wissel" in de hoek, en dan leek het alsof je zonder uitnodigingslink
+// nergens meer bij kon ("het is nu onmogelijk om een nieuwe poule aan te
+// maken"). Nu staat hij hier altijd, ook als je maar in één poule zit. Niet in
+// de demo: daar is geen echte poule om naast te zetten.
 function pouleLijstBlok() {
   const anderen = mijnPoules().filter(p => !zelfde(p.id, S.poule.id));
-  if (!anderen.length) return '';
-  return `
-    <div class="scheiding"></div>
+  const lijst = anderen.length ? `
     <span class="label">${T('jouw andere poules')}</span>
     ${anderen.map(pouleKnop).join('')}
     <p class="zacht" style="margin:0">${T('Dit lijstje staat op dit toestel. Op je '
-      + 'telefoon én je laptop zijn het dus twee lijstjes.')}</p>`;
+      + 'telefoon én je laptop zijn het dus twee lijstjes.')}</p>` : '';
+  const erbij = DEMO ? '' : `
+    <span class="label">${T('nog een poule')}</span>
+    <p class="zacht" style="margin:0">${T('Met het werk of met vrienden erbij? Je poules hierboven blijven gewoon staan.')}</p>
+    <button class="knop klein" id="nieuwePoule">${T('Nieuwe poule maken')}</button>
+    <button class="knop klein" id="metCode">${T('Meedoen met een code')}</button>`;
+  if (!lijst && !erbij) return '';
+  return `
+    <div class="scheiding"></div>
+    ${lijst}${erbij}`;
 }
 
 const pouleKnop = (p) => `
