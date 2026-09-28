@@ -139,6 +139,20 @@ export const PAGINAS = [
               'Iedereen weet waar je om speelt: om de eer. De app kent geen inleg, pot of prijzen.',
             ],
           },
+          {
+            id: 'werk',
+            vraag: 'Hoe organiseer je een F1-poule op je werk?',
+            kort: 'Een F1-poule op je werk zet je op zoals elke andere, maar houd de drempel laag: kies Simpel met alleen de twee top 10\'s, deel de code in de chat van je team en speel om de eer. Niemand hoeft een account aan te maken of een app te installeren, want het werkt in de browser op elke telefoon of computer.',
+            punten: [
+              ['Simpel houdt iedereen erbij', 'Niet elke collega kijkt elke race. Met twee top 10\'s ben je in een minuut klaar, en wie meer wil, kan in een eigen poule met vrienden Gevorderd spelen.'],
+              ['Om de eer', 'De app kent geen inleg, pot of prijzen. Er valt dus niets te innen of uit te betalen, en niemand hoeft na te denken over geld op het werk.'],
+              ['Automatisch invullen aan', 'Wie op vakantie is of een weekend vergeet, krijgt een willekeurige invulling in plaats van nul punten, en haakt niet af.'],
+              ['Een omschrijving erbij', 'Zet er iets bij als "met de collega\'s, om de eer". Wie ook een poule met vrienden heeft, ziet bij het wisselen meteen welke het is.'],
+            ],
+            tekst: [
+              'Op maandag heb je dan iets om over te praten: de weekendwinnaar, wie er in de stand klom, en het plaatje van de uitslag dat je met één tik in de chat zet.',
+            ],
+          },
         ],
         faq: [
           ['Kan iemand halverwege het seizoen nog instappen?', 'Ja. Wie later meedoet, scoort vanaf de eerstvolgende race. De seizoensvragen die hij nog niet had, kan hij alsnog invullen, maar wat eenmaal is ingevuld ligt vast.'],
@@ -225,12 +239,25 @@ export const PAGINAS = [
               'Everyone knows what you are playing for: bragging rights. There is no entry fee, pot or prize in the app.',
             ],
           },
+          {
+            id: 'at-work',
+            vraag: 'How do you run an F1 prediction league at work?',
+            kort: 'Run an office league like any other, but keep it easy to join: pick Simple with just the two top 10s, share the code in your team chat and play for bragging rights. Nobody needs an account or an app store download, because it runs in the browser on any phone or computer.',
+            punten: [
+              ['Simple keeps everyone in', 'Not every colleague watches every race. Two top 10s take a minute, and the fans can play Advanced in a league of their own with friends.'],
+              ['Bragging rights only', 'There is no entry fee, pot or prize in the app. Nothing to collect or pay out, and nobody has to think about money at work.'],
+              ['Switch on auto-fill', 'Whoever is on holiday or forgets a weekend gets a random entry instead of zero points, and does not drop out.'],
+              ['Add a description', 'Something like "work league, for glory". Anyone who is also in a league with friends sees at once which one is which when they switch.'],
+            ],
+            tekst: [
+              'Come Monday there is something to talk about: the weekend winner, who climbed the standings, and the result image you share in the chat with one tap.',
+            ],
+          },
         ],
         faq: [
           ['Can someone join halfway through the season?', 'Yes. Late joiners score from the next race on. Any season questions they have not answered yet can still be filled in, but an answer cannot be changed once it is in.'],
           ['Can I be in more than one league?', 'Yes. You switch between leagues in the app, and the description the league admin adds is shown when you switch.'],
           ['Can a league be public?', 'Yes. By default it is private and people join with the code, but you can make it findable so anyone can join.'],
-          ['Does it work for an office league?', 'Yes. Nobody needs an account or an app store download: it runs in the browser on any phone or computer. And there is no money involved, which keeps things simple at work.'],
         ],
         leesOok: [
           ['niveaus', 'Simple, Classic or Advanced: the three levels side by side'],

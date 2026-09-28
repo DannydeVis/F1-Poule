@@ -928,3 +928,15 @@ start van seizoen 2027 (februari en maart). Eén fase per branch.
 | GEO 3 | eigen cijfers: voorspelbaarheid 2026, safety cars per circuit | **3.2 deels** (27 september): de workflow "Circuitcijfers" telt safety cars en rode vlaggen per circuit sinds 2023 in `site/data/circuits.json`, en de gids over de puntentelling toont ze (NL en EN). De racepagina's volgen met SEO 4. 3.1 in de week na Abu Dhabi |
 | GEO 4 | de vergelijking als bron | met SEO 2 |
 | AEO 3 | toepassen: twee nieuwe FAQ's op de voorpagina, kernpagina's als vraagblokken | **deels** (27 september): de twee FAQ's staan er in zeven talen (3.1); de kernpagina's volgen met SEO fase 2 (3.2) |
+
+---
+
+## Drie wensen van 28 september
+
+Van Danny, na het zoekplan, als drie pull requests na elkaar.
+
+| wens | wat | status |
+|---|---|---|
+| 1. teksten | onder de knop op de voorpagina (7 talen), de gidsen en de racepagina's "Geen groep? Speel mee in de open poule"; in de gids over organiseren een sectie over een poule op het werk | **gebouwd** (28 september). De regel voor de open poule staat klaar, maar pas op de site zodra de code van de open poule in `OPEN_POULE` (`site/teksten.mjs`) staat |
+| 2. racepagina's | per circuit hoe vaak de polesitter won sinds 2023; tijdens het weekend de top 10 van elke vrije training | nog niet |
+| 3. app | een voorspelling ook in je andere poules zetten: alleen de top 10's, alleen waar die sessie nog leeg is, nooit overschrijven | nog niet |

@@ -79,6 +79,8 @@ export const VRAGEN = [
   // gppoule.nl, poules.com). Welke sectie het wordt, kiest AEO fase 3.
   { vraag: 'Hoe werkt een F1-poule?', taal: 'nl', varianten: ['f1 poule speluitleg', 'f1 poule spelregels'],
     bron: 'zoekresultaat', doel: 'organiseren', status: 'open' },
+  { vraag: 'Hoe organiseer je een F1-poule op je werk?', taal: 'nl', varianten: ['f1 poule op het werk', 'f1 poule met collega\'s', 'f1 poule kantoor'],
+    bron: 'hypothese', doel: 'organiseren#werk', status: 'beantwoord' },
   { vraag: 'Kan ik in meer dan één poule zitten?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
   { vraag: 'Kan een poule openbaar zijn?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
   { vraag: 'Wat is het verschil tussen een poule en een pronostiek?', taal: 'nl', varianten: ['Wat is een F1-pronostiek?'],
@@ -178,9 +180,12 @@ export const VRAGEN = [
   { vraag: 'What if someone forgets to predict?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'organiseren#forgetting', status: 'open' },
   { vraag: 'Can someone join halfway through the season?', taal: 'en', varianten: ['Can you start an F1 prediction league mid-season?'],
     bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
+  // Stond eerst als FAQ "Does it work for an office league?"; die vraag is nu
+  // een variant, het antwoord staat in de sectie.
+  { vraag: 'How do you run an F1 prediction league at work?', taal: 'en', varianten: ['Does it work for an office league?', 'f1 office pool'],
+    bron: 'hypothese', doel: 'organiseren#at-work', status: 'beantwoord' },
   { vraag: 'Can I be in more than one league?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
   { vraag: 'Can a league be public?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
-  { vraag: 'Does it work for an office league?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
 
   // ---- puntentelling ----
   { vraag: 'What scoring systems are there?', taal: 'en', varianten: ['What is the fairest scoring system for F1 predictions?'],

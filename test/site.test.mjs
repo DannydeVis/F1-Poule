@@ -23,7 +23,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { maakControle, startSite, wortel, gepubliceerd, UITGESLOTEN } from './hulp.mjs';
+import { maakControle, startSite, wortel, gepubliceerd, UITGESLOTEN, CONTRAST } from './hulp.mjs';
 import { teksten, TALEN, STANDAARD, BASIS } from '../site/teksten.mjs';
 import { PRIVACY } from '../site/privacy.mjs';
 import { PAGINAS } from '../site/paginas.mjs';
@@ -78,36 +78,6 @@ const puntenApp = Object.fromEntries([...appBron.matchAll(
 
 // De WCAG-formule, met doorzichtige vlakken opgeteld bij wat eronder ligt (zie
 // test/toegankelijkheid.test.mjs voor waarom).
-const CONTRAST = () => {
-  const rgba = (s) => { const m = s.match(/[\d.]+/g).map(Number); return { r: m[0], g: m[1], b: m[2], a: m.length > 3 ? m[3] : 1 }; };
-  const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
-  const lum = (k) => 0.2126 * lin(k.r) + 0.7152 * lin(k.g) + 0.0722 * lin(k.b);
-  const achter = (el) => {
-    const lagen = [];
-    for (let n = el; n; n = n.parentElement) {
-      const k = rgba(getComputedStyle(n).backgroundColor);
-      if (k.a > 0) lagen.push(k);
-      if (k.a >= 1) break;
-    }
-    let onder = lagen.length && lagen[lagen.length - 1].a >= 1 ? lagen.pop() : rgba(getComputedStyle(document.body).backgroundColor);
-    while (lagen.length) { const k = lagen.pop();
-      onder = { r: k.r * k.a + onder.r * (1 - k.a), g: k.g * k.a + onder.g * (1 - k.a), b: k.b * k.a + onder.b * (1 - k.a), a: 1 }; }
-    return onder;
-  };
-  const uit = [];
-  for (const el of document.querySelectorAll('body *')) {
-    if (!['summary'].includes(el.tagName.toLowerCase()) && el.closest('details:not([open])') && !el.closest('summary')) continue;
-    if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
-    const s = getComputedStyle(el);
-    if (s.visibility === 'hidden' || s.display === 'none' || !el.getBoundingClientRect().width) continue;
-    if (el.closest('.alleenlezer')) continue;
-    const a = lum(rgba(s.color)), b = lum(achter(el));
-    const r = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
-    const groot = parseFloat(s.fontSize) >= 24 || (parseFloat(s.fontSize) >= 18.66 && Number(s.fontWeight) >= 700);
-    if (r < (groot ? 3 : 4.5)) uit.push(`${el.className || el.tagName} "${el.textContent.trim().slice(0, 20)}" ${r.toFixed(2)}`);
-  }
-  return [...new Set(uit)];
-};
 
 const { page, context, url, extern, jsFouten, stoppen } = await startSite();
 const fouten404 = [];

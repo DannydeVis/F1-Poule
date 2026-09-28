@@ -8606,3 +8606,42 @@ gevangen (dertien door `racepaginas.test.mjs`, een verkeerde begindatum in de
 Console kijken, dus half november. Geen vertoningen: niet uitrollen naar 2027,
 deze pagina's blijven als archief. Wel vertoningen: in januari de races van
 2027 in `site/races.mjs` zetten zodra de kalender er is.
+
+## Wens 1 (28 september): de open poule onder de knop, en een poule op het werk
+
+**De open poule.** Onder de gewone knop komt een tweede regel: "Geen groep?
+Speel mee in de open poule", met de uitnodigingslink van die poule
+(`app/?code=...`). Op de voorpagina in zeven talen, onder de knop in de hero en
+onder die onderaan; op elke artikelpagina onder de knop in het slotblok. Dat
+zijn de gidsen en de racepagina's zoals gevraagd, en ook de about-pagina en het
+overzicht van de races, omdat die hetzelfde slotblok hebben.
+
+De code van die poule stond nergens (Danny gaf `[UITNODIGINGSLINK]` als
+plekhouder), en de lijst met openbare poules is vanuit Claude Code niet op te
+vragen: de proxy blokkeert Supabase. Daarom één constante, `OPEN_POULE` in
+`site/teksten.mjs`, nu `null`. Zolang die leeg is, staat de regel nergens; liever
+dat dan een link naar een poule die niet bestaat. Een code die de app niet als
+poulecode leest (`ZIET_ERUIT_ALS_POULECODE`, uit `app/index.html` gelezen),
+laat het maken van de site zakken: de app zou hem negeren en de bezoeker op het
+gewone startscherm zetten. De regel zelf maakt `scripts/openpoule.mjs`, los van
+de generator, zodat de test hem ook met een proefcode kan maken. De teksten per
+taal staan als `hero.openPoule` in `site/teksten.mjs`, in de aanspreekvorm van
+die taal (Tipprunde, ligue met vous, liga, lega, bolão). Kleuren: dezelfde als de
+tekst eromheen op de donkere achtergrond (`--nacht-ink2`, de link `--nacht-ink`).
+
+**Een poule op het werk.** In de gids over organiseren een sectie "Hoe organiseer
+je een F1-poule op je werk?" (NL, `#werk`) en "How do you run an F1 prediction
+league at work?" (EN, `#at-work`): Simpel, om de eer (de app kent geen inleg),
+automatisch invullen aan, een omschrijving erbij, en op maandag iets om over te
+praten. Alles uit de app of al elders op de site beschreven. De Engelse gids had
+al een FAQ "Does it work for an office league?"; die zou nu dezelfde vraag
+tweemaal beantwoorden, dus hij is een variant geworden en zijn antwoord staat in
+de sectie. Beide vragen staan in `site/vragen.mjs`.
+
+**Tests:** `test/openpoule.test.mjs`, ook met een proefcode in een kopie van de
+repo, zodat de regel getest is voordat de echte code erin staat (plaats,
+link, contrast in licht en donker, 360 pixels). De contrastcontrole staat nu
+in `test/hulp.mjs`, gedeeld met `site.test.mjs`. Acht mutanten, alle gevangen.
+
+**Wat Danny nog moet doen:** de code van de open poule geven (of zelf invullen,
+zie BEDIENING §18). Daarna staat de regel met de volgende deploy overal.
