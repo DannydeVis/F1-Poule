@@ -14,6 +14,12 @@
       "eind": "2026-10-11T14:00:00+00:00",
       "sessies": [
         {
+          "naam": "Practice 1",
+          "sessie": 11378,
+          "start": "2026-10-09T08:30:00+00:00",
+          "eind": "2026-10-09T09:30:00+00:00"
+        },
+        {
           "naam": "Sprint Qualifying",
           "sessie": 11379,
           "start": "2026-10-09T12:30:00+00:00",
@@ -186,7 +192,8 @@
           }
         ]
       },
-      "uitslag": null
+      "uitslag": null,
+      "vrijeTrainingen": []
     },
     {
       "circuit": 9,
@@ -199,6 +206,24 @@
       "start": "2026-10-23T17:30:00+00:00",
       "eind": "2026-10-25T22:00:00+00:00",
       "sessies": [
+        {
+          "naam": "Practice 1",
+          "sessie": 11389,
+          "start": "2026-10-23T17:30:00+00:00",
+          "eind": "2026-10-23T18:30:00+00:00"
+        },
+        {
+          "naam": "Practice 2",
+          "sessie": 11390,
+          "start": "2026-10-23T21:00:00+00:00",
+          "eind": "2026-10-23T22:00:00+00:00"
+        },
+        {
+          "naam": "Practice 3",
+          "sessie": 11391,
+          "start": "2026-10-24T17:30:00+00:00",
+          "eind": "2026-10-24T18:30:00+00:00"
+        },
         {
           "naam": "Qualifying",
           "sessie": 11392,
@@ -360,7 +385,8 @@
           }
         ]
       },
-      "uitslag": null
+      "uitslag": null,
+      "vrijeTrainingen": []
     },
     {
       "circuit": 65,
@@ -373,6 +399,24 @@
       "start": "2026-10-30T18:30:00+00:00",
       "eind": "2026-11-01T22:00:00+00:00",
       "sessies": [
+        {
+          "naam": "Practice 1",
+          "sessie": 11397,
+          "start": "2026-10-30T18:30:00+00:00",
+          "eind": "2026-10-30T19:30:00+00:00"
+        },
+        {
+          "naam": "Practice 2",
+          "sessie": 11398,
+          "start": "2026-10-30T22:00:00+00:00",
+          "eind": "2026-10-30T23:00:00+00:00"
+        },
+        {
+          "naam": "Practice 3",
+          "sessie": 11399,
+          "start": "2026-10-31T17:30:00+00:00",
+          "eind": "2026-10-31T18:30:00+00:00"
+        },
         {
           "naam": "Qualifying",
           "sessie": 11400,
@@ -534,7 +578,8 @@
           }
         ]
       },
-      "uitslag": null
+      "uitslag": null,
+      "vrijeTrainingen": []
     },
     {
       "circuit": 14,
@@ -547,6 +592,24 @@
       "start": "2026-11-06T15:30:00+00:00",
       "eind": "2026-11-08T19:00:00+00:00",
       "sessies": [
+        {
+          "naam": "Practice 1",
+          "sessie": 11405,
+          "start": "2026-11-06T15:30:00+00:00",
+          "eind": "2026-11-06T16:30:00+00:00"
+        },
+        {
+          "naam": "Practice 2",
+          "sessie": 11406,
+          "start": "2026-11-06T19:00:00+00:00",
+          "eind": "2026-11-06T20:00:00+00:00"
+        },
+        {
+          "naam": "Practice 3",
+          "sessie": 11407,
+          "start": "2026-11-07T14:30:00+00:00",
+          "eind": "2026-11-07T15:30:00+00:00"
+        },
         {
           "naam": "Qualifying",
           "sessie": 11408,
@@ -708,7 +771,8 @@
           }
         ]
       },
-      "uitslag": null
+      "uitslag": null,
+      "vrijeTrainingen": []
     },
     {
       "circuit": 152,
@@ -721,6 +785,24 @@
       "start": "2026-11-20T00:30:00+00:00",
       "eind": "2026-11-22T06:00:00+00:00",
       "sessies": [
+        {
+          "naam": "Practice 1",
+          "sessie": 11413,
+          "start": "2026-11-20T00:30:00+00:00",
+          "eind": "2026-11-20T01:30:00+00:00"
+        },
+        {
+          "naam": "Practice 2",
+          "sessie": 11414,
+          "start": "2026-11-20T04:00:00+00:00",
+          "eind": "2026-11-20T05:00:00+00:00"
+        },
+        {
+          "naam": "Practice 3",
+          "sessie": 11415,
+          "start": "2026-11-21T00:30:00+00:00",
+          "eind": "2026-11-21T01:30:00+00:00"
+        },
         {
           "naam": "Qualifying",
           "sessie": 11416,
@@ -882,7 +964,8 @@
           }
         ]
       },
-      "uitslag": null
+      "uitslag": null,
+      "vrijeTrainingen": []
     },
     {
       "circuit": 150,
@@ -895,6 +978,24 @@
       "start": "2026-11-27T13:30:00+00:00",
       "eind": "2026-11-29T18:00:00+00:00",
       "sessies": [
+        {
+          "naam": "Practice 1",
+          "sessie": 11421,
+          "start": "2026-11-27T13:30:00+00:00",
+          "eind": "2026-11-27T14:30:00+00:00"
+        },
+        {
+          "naam": "Practice 2",
+          "sessie": 11422,
+          "start": "2026-11-27T17:00:00+00:00",
+          "eind": "2026-11-27T18:00:00+00:00"
+        },
+        {
+          "naam": "Practice 3",
+          "sessie": 11423,
+          "start": "2026-11-28T14:30:00+00:00",
+          "eind": "2026-11-28T15:30:00+00:00"
+        },
         {
           "naam": "Qualifying",
           "sessie": 11424,
@@ -1056,7 +1157,8 @@
           }
         ]
       },
-      "uitslag": null
+      "uitslag": null,
+      "vrijeTrainingen": []
     },
     {
       "circuit": 70,
@@ -1069,6 +1171,24 @@
       "start": "2026-12-04T09:30:00+00:00",
       "eind": "2026-12-06T15:00:00+00:00",
       "sessies": [
+        {
+          "naam": "Practice 1",
+          "sessie": 11429,
+          "start": "2026-12-04T09:30:00+00:00",
+          "eind": "2026-12-04T10:30:00+00:00"
+        },
+        {
+          "naam": "Practice 2",
+          "sessie": 11430,
+          "start": "2026-12-04T13:00:00+00:00",
+          "eind": "2026-12-04T14:00:00+00:00"
+        },
+        {
+          "naam": "Practice 3",
+          "sessie": 11431,
+          "start": "2026-12-05T10:30:00+00:00",
+          "eind": "2026-12-05T11:30:00+00:00"
+        },
         {
           "naam": "Qualifying",
           "sessie": 11432,
@@ -1230,7 +1350,8 @@
           }
         ]
       },
-      "uitslag": null
+      "uitslag": null,
+      "vrijeTrainingen": []
     }
   ],
   "ontbreekt": []

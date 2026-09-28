@@ -1,11 +1,13 @@
 {
-  "bron": "OpenF1 (https://openf1.org), race_control",
+  "bron": "OpenF1 (https://openf1.org): race_control, en session_result en drivers voor pole en winnaar",
   "regel": "Een virtuele safety car telt mee, net als in de app (telSafetyCars en hadRodeVlag in scripts/uitslagen.mjs).",
   "vanaf": 2023,
   "tot": "2026-09-26",
   "races": 85,
   "metSafetyCar": 58,
   "metRodeVlag": 11,
+  "metPole": 85,
+  "poleGewonnen": 53,
   "ontbreekt": [
     {
       "jaar": 2023,
@@ -39,27 +41,56 @@
       "metSafetyCar": 2,
       "safetyCars": 2,
       "metRodeVlag": 0,
+      "metPole": 3,
+      "poleGewonnen": 1,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-10-22",
           "sessie": 9213,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "16",
+            "naam": "Charles Leclerc"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2024,
           "datum": "2024-10-20",
           "sessie": 9617,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "16",
+            "naam": "Charles Leclerc"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-10-19",
           "sessie": 9888,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -72,34 +103,72 @@
       "metSafetyCar": 4,
       "safetyCars": 5,
       "metRodeVlag": 0,
+      "metPole": 4,
+      "poleGewonnen": 2,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-04-30",
           "sessie": 9070,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "16",
+            "naam": "Charles Leclerc"
+          },
+          "winnaar": {
+            "nr": "11",
+            "naam": "Sergio Perez"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2024,
           "datum": "2024-09-15",
           "sessie": 9598,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "16",
+            "naam": "Charles Leclerc"
+          },
+          "winnaar": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-09-21",
           "sessie": 9904,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2026,
           "datum": "2026-09-26",
           "sessie": 11377,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "winnaar": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -112,34 +181,72 @@
       "metSafetyCar": 2,
       "safetyCars": 3,
       "metRodeVlag": 0,
+      "metPole": 4,
+      "poleGewonnen": 2,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-06-04",
           "sessie": 9102,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-06-23",
           "sessie": 9539,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-06-01",
           "sessie": 9971,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "winnaar": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2026,
           "datum": "2026-06-14",
           "sessie": 11307,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "winnaar": {
+            "nr": "44",
+            "naam": "Lewis Hamilton"
+          },
+          "poleWon": false
         }
       ]
     },
@@ -152,34 +259,72 @@
       "metSafetyCar": 1,
       "safetyCars": 1,
       "metRodeVlag": 0,
+      "metPole": 4,
+      "poleGewonnen": 1,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-07-23",
           "sessie": 9133,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "44",
+            "naam": "Lewis Hamilton"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2024,
           "datum": "2024-07-21",
           "sessie": 9566,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-08-03",
           "sessie": 9928,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "16",
+            "naam": "Charles Leclerc"
+          },
+          "winnaar": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2026,
           "datum": "2026-07-26",
           "sessie": 11342,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Lando Norris"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -192,20 +337,40 @@
       "metSafetyCar": 1,
       "safetyCars": 2,
       "metRodeVlag": 0,
+      "metPole": 2,
+      "poleGewonnen": 1,
       "perRace": [
         {
           "jaar": 2024,
           "datum": "2024-05-19",
           "sessie": 9515,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-05-18",
           "sessie": 9987,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         }
       ]
     },
@@ -218,27 +383,56 @@
       "metSafetyCar": 3,
       "safetyCars": 3,
       "metRodeVlag": 0,
+      "metPole": 3,
+      "poleGewonnen": 2,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-03-19",
           "sessie": 7779,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "11",
+            "naam": "Sergio Perez"
+          },
+          "winnaar": {
+            "nr": "11",
+            "naam": "Sergio Perez"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-03-09",
           "sessie": 9480,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-04-20",
           "sessie": 10022,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "poleWon": false
         }
       ]
     },
@@ -251,27 +445,56 @@
       "metSafetyCar": 2,
       "safetyCars": 5,
       "metRodeVlag": 0,
+      "metPole": 3,
+      "poleGewonnen": 1,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-11-19",
           "sessie": 9189,
           "safetyCars": 3,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "16",
+            "naam": "Charles Leclerc"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2024,
           "datum": "2024-11-24",
           "sessie": 9644,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "winnaar": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-11-23",
           "sessie": 9858,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         }
       ]
     },
@@ -284,27 +507,56 @@
       "metSafetyCar": 3,
       "safetyCars": 5,
       "metRodeVlag": 0,
+      "metPole": 3,
+      "poleGewonnen": 2,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-10-08",
           "sessie": 9221,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-12-01",
           "sessie": 9655,
           "safetyCars": 3,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-11-30",
           "sessie": 9850,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         }
       ]
     },
@@ -317,13 +569,24 @@
       "metSafetyCar": 1,
       "safetyCars": 1,
       "metRodeVlag": 0,
+      "metPole": 1,
+      "poleGewonnen": 0,
       "perRace": [
         {
           "jaar": 2026,
           "datum": "2026-09-13",
           "sessie": 11369,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "poleWon": false
         }
       ]
     },
@@ -336,27 +599,56 @@
       "metSafetyCar": 1,
       "safetyCars": 2,
       "metRodeVlag": 0,
+      "metPole": 3,
+      "poleGewonnen": 3,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-09-17",
           "sessie": 9165,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "55",
+            "naam": "Carlos Sainz"
+          },
+          "winnaar": {
+            "nr": "55",
+            "naam": "Carlos Sainz"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-09-22",
           "sessie": 9606,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-10-05",
           "sessie": 9896,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "winnaar": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -369,34 +661,72 @@
       "metSafetyCar": 4,
       "safetyCars": 12,
       "metRodeVlag": 1,
+      "metPole": 4,
+      "poleGewonnen": 3,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-04-02",
           "sessie": 7787,
           "safetyCars": 4,
-          "rodeVlag": true
+          "rodeVlag": true,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-03-24",
           "sessie": 9488,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "55",
+            "naam": "Carlos Sainz"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-03-16",
           "sessie": 9693,
           "safetyCars": 3,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2026,
           "datum": "2026-03-08",
           "sessie": 11234,
           "safetyCars": 3,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "winnaar": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -409,27 +739,56 @@
       "metSafetyCar": 3,
       "safetyCars": 4,
       "metRodeVlag": 1,
+      "metPole": 3,
+      "poleGewonnen": 2,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-10-29",
           "sessie": 9181,
           "safetyCars": 2,
-          "rodeVlag": true
+          "rodeVlag": true,
+          "pole": {
+            "nr": "16",
+            "naam": "Charles Leclerc"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2024,
           "datum": "2024-10-27",
           "sessie": 9625,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "55",
+            "naam": "Carlos Sainz"
+          },
+          "winnaar": {
+            "nr": "55",
+            "naam": "Carlos Sainz"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-10-26",
           "sessie": 9877,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -442,34 +801,72 @@
       "metSafetyCar": 3,
       "safetyCars": 6,
       "metRodeVlag": 0,
+      "metPole": 4,
+      "poleGewonnen": 1,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-05-07",
           "sessie": 9078,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "11",
+            "naam": "Sergio Perez"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2024,
           "datum": "2024-05-05",
           "sessie": 9507,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-05-04",
           "sessie": 10033,
           "safetyCars": 3,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2026,
           "datum": "2026-05-03",
           "sessie": 11280,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "winnaar": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -482,34 +879,72 @@
       "metSafetyCar": 2,
       "safetyCars": 4,
       "metRodeVlag": 2,
+      "metPole": 4,
+      "poleGewonnen": 4,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-05-28",
           "sessie": 9094,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-05-26",
           "sessie": 9523,
           "safetyCars": 0,
-          "rodeVlag": true
+          "rodeVlag": true,
+          "pole": {
+            "nr": "16",
+            "naam": "Charles Leclerc"
+          },
+          "winnaar": {
+            "nr": "16",
+            "naam": "Charles Leclerc"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-05-25",
           "sessie": 9979,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2026,
           "datum": "2026-06-07",
           "sessie": 11299,
           "safetyCars": 3,
-          "rodeVlag": true
+          "rodeVlag": true,
+          "pole": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "winnaar": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -522,34 +957,72 @@
       "metSafetyCar": 4,
       "safetyCars": 8,
       "metRodeVlag": 0,
+      "metPole": 4,
+      "poleGewonnen": 2,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-06-18",
           "sessie": 9110,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-06-09",
           "sessie": 9531,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-06-15",
           "sessie": 9963,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "winnaar": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2026,
           "datum": "2026-05-24",
           "sessie": 11291,
           "safetyCars": 3,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "winnaar": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "poleWon": false
         }
       ]
     },
@@ -562,34 +1035,72 @@
       "metSafetyCar": 1,
       "safetyCars": 3,
       "metRodeVlag": 1,
+      "metPole": 4,
+      "poleGewonnen": 1,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-09-03",
           "sessie": 9157,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "55",
+            "naam": "Carlos Sainz"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2024,
           "datum": "2024-09-01",
           "sessie": 9590,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "16",
+            "naam": "Charles Leclerc"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-09-07",
           "sessie": 9912,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2026,
           "datum": "2026-09-06",
           "sessie": 11361,
           "safetyCars": 3,
-          "rodeVlag": true
+          "rodeVlag": true,
+          "pole": {
+            "nr": "10",
+            "naam": "Pierre Gasly"
+          },
+          "winnaar": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "poleWon": false
         }
       ]
     },
@@ -602,27 +1113,56 @@
       "metSafetyCar": 2,
       "safetyCars": 2,
       "metRodeVlag": 0,
+      "metPole": 3,
+      "poleGewonnen": 3,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-03-05",
           "sessie": 7953,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-03-02",
           "sessie": 9472,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-04-13",
           "sessie": 10014,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "winnaar": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -635,27 +1175,56 @@
       "metSafetyCar": 3,
       "safetyCars": 6,
       "metRodeVlag": 2,
+      "metPole": 3,
+      "poleGewonnen": 2,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-11-05",
           "sessie": 9205,
           "safetyCars": 1,
-          "rodeVlag": true
+          "rodeVlag": true,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-11-03",
           "sessie": 9636,
           "safetyCars": 3,
-          "rodeVlag": true
+          "rodeVlag": true,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-11-09",
           "sessie": 9869,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -668,27 +1237,56 @@
       "metSafetyCar": 2,
       "safetyCars": 4,
       "metRodeVlag": 0,
+      "metPole": 3,
+      "poleGewonnen": 3,
       "perRace": [
         {
           "jaar": 2024,
           "datum": "2024-04-21",
           "sessie": 9673,
           "safetyCars": 3,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-03-23",
           "sessie": 9998,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "winnaar": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2026,
           "datum": "2026-03-15",
           "sessie": 11245,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "winnaar": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -701,34 +1299,72 @@
       "metSafetyCar": 3,
       "safetyCars": 9,
       "metRodeVlag": 0,
+      "metPole": 4,
+      "poleGewonnen": 1,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-07-09",
           "sessie": 9126,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-07-07",
           "sessie": 9558,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "winnaar": {
+            "nr": "44",
+            "naam": "Lewis Hamilton"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-07-06",
           "sessie": 9947,
           "safetyCars": 4,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2026,
           "datum": "2026-07-05",
           "sessie": 11326,
           "safetyCars": 4,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "winnaar": {
+            "nr": "16",
+            "naam": "Charles Leclerc"
+          },
+          "poleWon": false
         }
       ]
     },
@@ -741,34 +1377,72 @@
       "metSafetyCar": 1,
       "safetyCars": 3,
       "metRodeVlag": 1,
+      "metPole": 4,
+      "poleGewonnen": 2,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-07-30",
           "sessie": 9141,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-07-28",
           "sessie": 9574,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "44",
+            "naam": "Lewis Hamilton"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-07-27",
           "sessie": 9939,
           "safetyCars": 0,
-          "rodeVlag": true
+          "rodeVlag": true,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2026,
           "datum": "2026-07-19",
           "sessie": 11334,
           "safetyCars": 3,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "winnaar": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -781,34 +1455,72 @@
       "metSafetyCar": 4,
       "safetyCars": 6,
       "metRodeVlag": 0,
+      "metPole": 4,
+      "poleGewonnen": 3,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-07-02",
           "sessie": 9118,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-06-30",
           "sessie": 9550,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "poleWon": false
         },
         {
           "jaar": 2025,
           "datum": "2025-06-29",
           "sessie": 9955,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2026,
           "datum": "2026-06-28",
           "sessie": 11315,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "winnaar": {
+            "nr": "63",
+            "naam": "George Russell"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -821,34 +1533,72 @@
       "metSafetyCar": 2,
       "safetyCars": 3,
       "metRodeVlag": 1,
+      "metPole": 4,
+      "poleGewonnen": 4,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-09-24",
           "sessie": 9173,
           "safetyCars": 2,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-04-07",
           "sessie": 9496,
           "safetyCars": 0,
-          "rodeVlag": true
+          "rodeVlag": true,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-04-06",
           "sessie": 10006,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2026,
           "datum": "2026-03-29",
           "sessie": 11253,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "winnaar": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -861,27 +1611,56 @@
       "metSafetyCar": 1,
       "safetyCars": 1,
       "metRodeVlag": 0,
+      "metPole": 3,
+      "poleGewonnen": 3,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-11-26",
           "sessie": 9197,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-12-08",
           "sessie": 9662,
           "safetyCars": 1,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-12-07",
           "sessie": 9839,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         }
       ]
     },
@@ -894,34 +1673,72 @@
       "metSafetyCar": 3,
       "safetyCars": 10,
       "metRodeVlag": 2,
+      "metPole": 4,
+      "poleGewonnen": 4,
       "perRace": [
         {
           "jaar": 2023,
           "datum": "2023-08-27",
           "sessie": 9149,
           "safetyCars": 2,
-          "rodeVlag": true
+          "rodeVlag": true,
+          "pole": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2024,
           "datum": "2024-08-25",
           "sessie": 9582,
           "safetyCars": 0,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "4",
+            "naam": "Lando Norris"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2025,
           "datum": "2025-08-31",
           "sessie": 9920,
           "safetyCars": 4,
-          "rodeVlag": false
+          "rodeVlag": false,
+          "pole": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "winnaar": {
+            "nr": "81",
+            "naam": "Oscar Piastri"
+          },
+          "poleWon": true
         },
         {
           "jaar": 2026,
           "datum": "2026-08-23",
           "sessie": 11353,
           "safetyCars": 4,
-          "rodeVlag": true
+          "rodeVlag": true,
+          "pole": {
+            "nr": "1",
+            "naam": "Lando Norris"
+          },
+          "winnaar": {
+            "nr": "1",
+            "naam": "Lando Norris"
+          },
+          "poleWon": true
         }
       ]
     }
