@@ -10,6 +10,10 @@ name: Circuitcijfers
 #
 # Elke dag en met de hand vanuit het Actions-tabblad. Elke dag, omdat een
 # racepagina de tijden van het weekend toont en de FIA die soms verschuift.
+# Van vrijdag tot en met zondag ook elke twee uur, maar dan alleen de
+# racepagina's: de top 10 van een vrije training staat er dan kort nadat hij
+# gereden is. De circuitcijfers veranderen pas na een race, dus die blijven
+# een keer per dag.
 # Schrijft de twee bestanden en legt ze vast als er iets veranderd is. Daarna
 # ook de site opnieuw, zodat de nieuwe cijfers meteen op de pagina's staan en
 # `maak-site --controle` in de tests groen blijft.
@@ -22,6 +26,9 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '41 5 * * *'
+    # Het weekend. Dezelfde tekst staat hieronder bij "Tellen": daar wordt
+    # deze tijd overgeslagen.
+    - cron: '23 */2 * * 5,6,0'
   pull_request:
     paths:
       - 'scripts/circuits.mjs'
@@ -43,6 +50,7 @@ jobs:
         with:
           node-version: '24'
       - name: Tellen met de regels van de app
+        if: github.event.schedule != '23 */2 * * 5,6,0'
         env:
           DROOG: ${{ github.event_name == 'pull_request' && '1' || '' }}
         run: node scripts/circuits.mjs

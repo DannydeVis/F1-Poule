@@ -8645,3 +8645,47 @@ in `test/hulp.mjs`, gedeeld met `site.test.mjs`. Acht mutanten, alle gevangen.
 
 **Wat Danny nog moet doen:** de code van de open poule geven (of zelf invullen,
 zie BEDIENING §18). Daarna staat de regel met de volgende deploy overal.
+
+## Wens 2 (28 september): de polesitter en de vrije trainingen op de racepagina's
+
+**Hoe vaak wint de polesitter hier?** `scripts/circuits.mjs` haalt per race nu
+ook pole en winnaar op, uit dezelfde bron als de safety cars: `session_result`
+van de kwalificatie (dezelfde meeting) en van de race, met de namen uit
+`drivers`. Pole is de winnaar van de kwalificatie, zoals de app de vraag "Pole
+position" scoort; de sprintkwalificatie telt niet. Per race komen `pole`,
+`winnaar` (`{ nr, naam }`) en `poleWon` in `site/data/circuits.json`, per
+circuit en in totaal `metPole` en `poleGewonnen`. Mist OpenF1 een van de twee,
+dan zijn ze `null` en telt die race niet mee. Een racepagina krijgt de sectie
+`#pole` direct na de safety cars: hoe vaak de polesitter op dit circuit won
+tegen alle circuits samen, met een tabel per jaar (pole, winnaar). De punten
+voor pole en winnaar in het korte antwoord komen uit de app. Zonder
+pole-gegevens (zoals het huidige `circuits.json`, tot de workflow weer draait)
+is er geen sectie.
+
+**De vrije trainingen.** `scripts/racedata.mjs` kent nu ook Practice 1 tot en
+met 3: hun tijden staan in de tabel met sessies, en hun top 10 komt in
+`vrijeTrainingen`, een half uur na het einde (een training heeft geen straffen
+achteraf; de andere sessies wachten drie uur). Alleen voor een race die nog niet
+gereden is: daarna staat de uitslag op de pagina, en zo haalt niet elke run de
+trainingen van het hele seizoen op. De racepagina toont de sectie
+`#vrije-trainingen` (EN `#practice`) direct na de tijden, met de snelste van
+elke training in het korte antwoord en per training een tabel, tot de uitslag
+van de race er staat. Een training zonder uitslag laat hij weg.
+
+**Vaker in het weekend.** De workflow "Circuitcijfers" draait van vrijdag tot en
+met zondag ook elke twee uur (`23 */2 * * 5,6,0`), maar dan alleen de
+racedata; de circuitcijfers veranderen pas na een race en blijven een keer per
+dag. Zo staat een training er hoogstens twee uur en een half na afloop.
+
+**Tests:** `circuits.test.mjs` (pole en winnaar per race en per circuit, het
+ophalen met een race zonder kwalificatie, de naam uit drivers),
+`racedata.test.mjs` (de trainingen op tijd, de marge, geen training zonder
+uitslag of na de race, het weekendschema) en `racepaginas.test.mjs` (beide
+secties met een eigen voorbeeld, naast de echte gegevens zodra die er zijn, en
+in een kopie van de repo met pole en trainingen door de generator: de punten
+uit de app, de tabellen, contrast en 360 pixels). Drieëntwintig mutanten, alle
+gevangen. Met de hand ook `site.test`, `antwoordvorm`, `geo` en `vragen` in zo'n
+kopie gedraaid: groen.
+
+**Na de merge:** de workflow met de hand gestart, zodat `circuits.json` meteen
+pole en winnaar heeft.

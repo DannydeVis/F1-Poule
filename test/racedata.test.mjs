@@ -7,14 +7,17 @@
 // Wat hier vastligt:
 //   1. top10(): op plek, alleen wie geklasseerd is, hoogstens tien, met naam en
 //      team uit drivers.
-//   2. sessiesVan(): alleen kwalificatie, sprint (met zijn kwalificatie) en
-//      race, op tijd gezet.
+//   2. sessiesVan(): de vrije trainingen, kwalificatie, sprint (met zijn
+//      kwalificatie) en race, op tijd gezet; wat er verder is (testdagen) niet.
 //   3. Het bestand: de races op datum, geen datum van de run.
 //   4. Het ophalen, voor elke race uit site/races.mjs: de sessies en de naam
 //      van dit jaar, de top 10 van vorig jaar, de uitslag van dit jaar pas als
 //      de sessie gereden is, een race zonder vorige editie met vorige: null, en
 //      een race die dit jaar niet bestaat bij "ontbreekt". DROOG schrijft niets.
-//   5. De workflow haalt het elke dag op, en op een pull request alleen in de log.
+//      De top 10 van een vrije training een half uur na het einde, op tijd,
+//      zonder training zonder uitslag, en alleen zolang de race niet gereden is.
+//   5. De workflow haalt het elke dag op, in het weekend elke twee uur (zonder
+//      de circuitcijfers), en op een pull request alleen in de log.
 //   6. Staat site/data/races-<jaar>.json er, dan klopt hij met site/races.mjs.
 
 import { readFileSync, existsSync, mkdtempSync, statSync } from 'node:fs';
@@ -23,7 +26,7 @@ import { join } from 'node:path';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { maakControle, wortel } from './hulp.mjs';
-import { top10, sessiesVan, raceRecord, racedata, BESTAND, SESSIES } from '../scripts/racedata.mjs';
+import { top10, sessiesVan, raceRecord, racedata, BESTAND, SESSIES, VRIJE_TRAININGEN } from '../scripts/racedata.mjs';
 import { RACE_JAAR, RACES } from '../site/races.mjs';
 
 const { check, afronden } = maakControle('de gegevens voor de racepagina\'s');
@@ -61,9 +64,12 @@ const s = (key, meeting, naam, start, uren = 1) => ({ session_key: key, meeting_
   date_start: start, date_end: new Date(new Date(start).getTime() + uren * 3600e3).toISOString() });
 {
   const lijst = sessiesVan([s(5, 1, 'Race', '2026-10-11T12:00:00Z', 2), s(1, 1, 'Practice 1', '2026-10-09T09:00:00Z'),
-    s(4, 1, 'Qualifying', '2026-10-10T13:00:00Z'), s(2, 1, 'Sprint Qualifying', '2026-10-09T13:00:00Z'), s(3, 1, 'Sprint', '2026-10-10T09:00:00Z')]);
-  check('alleen kwalificatie, sprint en race, op tijd gezet', lijst.map((x) => x.naam).join() === 'Sprint Qualifying,Sprint,Qualifying,Race'
-    && SESSIES.length === 4, lijst.map((x) => x.naam).join());
+    s(4, 1, 'Qualifying', '2026-10-10T13:00:00Z'), s(2, 1, 'Sprint Qualifying', '2026-10-09T13:00:00Z'), s(3, 1, 'Sprint', '2026-10-10T09:00:00Z'),
+    s(9, 1, 'Day 1', '2026-10-08T09:00:00Z')]);
+  check('de vrije training, kwalificatie, sprint en race, op tijd gezet, en geen testdag',
+    lijst.map((x) => x.naam).join() === 'Practice 1,Sprint Qualifying,Sprint,Qualifying,Race'
+      && SESSIES.join() === 'Practice 1,Practice 2,Practice 3,Sprint Qualifying,Sprint,Qualifying,Race'
+      && VRIJE_TRAININGEN.every((x) => SESSIES.includes(x)), lijst.map((x) => x.naam).join());
   check('met start, eind en sessie', lijst.at(-1).start === '2026-10-11T12:00:00Z' && lijst.at(-1).eind && lijst.at(-1).sessie === 5);
 }
 
@@ -82,19 +88,29 @@ const s = (key, meeting, naam, start, uren = 1) => ({ session_key: key, meeting_
 // ---- 4. het ophalen, tegen een nagebootste OpenF1 ------------------------------------------
 {
   const dag = (d) => new Date(Date.now() + d * 864e5).toISOString();
-  const [sin, aus, mex, sao, lv] = RACES;
+  const min = (m) => new Date(Date.now() + m * 60e3).toISOString();
+  const [sin, aus, mex, sao, lv, zesde] = RACES;
   // Per circuit: de sessies van dit jaar en van vorig jaar.
   const dit = {
     [sin.circuit]: [s(101, 10, 'Practice 1', dag(12)), s(102, 10, 'Sprint Qualifying', dag(12.3)), s(103, 10, 'Sprint', dag(13)),
       s(104, 10, 'Qualifying', dag(13.3)), s(105, 10, 'Race', dag(14), 2)],
     // Al gereden: de uitslag van dit jaar hoort erbij.
-    [aus.circuit]: [s(201, 20, 'Qualifying', dag(-21)), s(202, 20, 'Race', dag(-20), 2)],
-    // Kwalificatie gereden, race nog niet.
-    [mex.circuit]: [s(301, 30, 'Qualifying', dag(-1)), s(302, 30, 'Race', dag(0.5), 2)],
+    // Met een vrije training: die hoort er niet meer bij, de race is gereden.
+    [aus.circuit]: [s(211, 20, 'Practice 1', dag(-22)), s(201, 20, 'Qualifying', dag(-21)), s(202, 20, 'Race', dag(-20), 2)],
+    // Kwalificatie gereden, race nog niet. De vrije trainingen door elkaar:
+    // de tweede is 40 minuten voorbij, de derde pas 10 minuten (nog te vroeg
+    // voor de uitslag), de eerste gisteren.
+    [mex.circuit]: [s(312, 30, 'Practice 2', min(-100)), s(301, 30, 'Qualifying', dag(-1)), s(302, 30, 'Race', dag(0.5), 2),
+      s(313, 30, 'Practice 3', min(-70)), s(311, 30, 'Practice 1', dag(-2))],
     // São Paulo bestaat dit jaar niet.
     [lv.circuit]: [s(501, 50, 'Qualifying', dag(40)), s(502, 50, 'Race', dag(41), 2)],
   };
   for (const r of RACES.slice(5)) dit[r.circuit] = [s(r.circuit * 10 + 1, r.circuit, 'Qualifying', dag(50)), s(r.circuit * 10 + 2, r.circuit, 'Race', dag(51), 2)];
+  // De zesde race is morgen, en van zijn vrije training heeft OpenF1 (nog)
+  // geen uitslag: die blijft weg.
+  dit[zesde.circuit] = [s(611, 60, 'Practice 1', dag(-0.5)), s(612, 60, 'Qualifying', dag(0.4)), s(613, 60, 'Race', dag(1), 2)];
+  // Een andere uitslag per training, zodat de volgorde te zien is.
+  const TRAINING = { 311: [81, 4, 1], 312: [16, 44, 63] };
   const vorig = {};
   for (const r of RACES) if (r !== lv) vorig[r.circuit] = [s(9000 + r.circuit, 900 + r.circuit, 'Qualifying', '2025-10-04T13:00:00Z'),
     s(9500 + r.circuit, 900 + r.circuit, 'Race', '2025-10-05T12:00:00Z', 2)];
@@ -109,7 +125,10 @@ const s = (key, meeting, naam, start, uren = 1) => ({ session_key: key, meeting_
     if (u.pathname === '/meetings') body = [{ meeting_key: Number(q.meeting_key), meeting_name: meetings[q.meeting_key] ?? `Meeting ${q.meeting_key}`,
       meeting_official_name: 'FORMULA 1 GRAND PRIX 2026', location: 'Plaats', country_name: 'Land', circuit_short_name: 'Baan',
       date_start: dag(12) }];
-    if (u.pathname === '/session_result') body = UITSLAG;
+    if (u.pathname === '/session_result') {
+      const key = Number(q.session_key);
+      body = key === 611 ? [] : TRAINING[key] ? TRAINING[key].map((nr, i) => ({ driver_number: nr, position: i + 1 })) : UITSLAG;
+    }
     if (u.pathname === '/drivers') body = COUREURS;
     res.writeHead(body ? 200 : 404, { 'content-type': 'application/json' });
     res.end(JSON.stringify(body ?? { detail: 'Not found' }));
@@ -132,8 +151,8 @@ const s = (key, meeting, naam, start, uren = 1) => ({ session_key: key, meeting_
     && RACES.every((x) => r(x.slug) || d.ontbreekt.some((o) => o.slug === x.slug)), `${code} · ${uit.split('\n').slice(-3).join(' / ')}`);
   check('São Paulo, dat dit jaar niet bestaat, staat bij "ontbreekt" met de reden',
     !r(sao.slug) && d.ontbreekt.some((o) => o.slug === sao.slug && /geen race/.test(o.reden)), JSON.stringify(d.ontbreekt));
-  check('met de naam van de meeting en de sessies van het weekend, zonder de vrije training',
-    r(sin.slug)?.naam === 'Singapore Grand Prix' && r(sin.slug).sessies.map((x) => x.naam).join() === 'Sprint Qualifying,Sprint,Qualifying,Race',
+  check('met de naam van de meeting en de sessies van het weekend, met de vrije training',
+    r(sin.slug)?.naam === 'Singapore Grand Prix' && r(sin.slug).sessies.map((x) => x.naam).join() === 'Practice 1,Sprint Qualifying,Sprint,Qualifying,Race',
     JSON.stringify(r(sin.slug)?.sessies?.map((x) => x.naam)));
   check('de top 10 van vorig jaar, kwalificatie en race', r(sin.slug)?.vorige?.jaar === RACE_JAAR - 1
     && r(sin.slug).vorige.race?.length === 10 && r(sin.slug).vorige.kwalificatie?.[0]?.code === 'NOR' && r(sin.slug).vorige.datum === '2025-10-05',
@@ -146,6 +165,15 @@ const s = (key, meeting, naam, start, uren = 1) => ({ session_key: key, meeting_
   check('een race die nog moet komen: geen uitslag opgevraagd',
     !gevraagd.includes('/session_result?session_key=105') && !gevraagd.includes('/session_result?session_key=302')
       && gevraagd.includes('/session_result?session_key=202'), gevraagd.filter((x) => x.startsWith('/session_result')).join(' '));
+  const trainingen = (slug) => (r(slug)?.vrijeTrainingen ?? []).map((x) => `${x.naam}:${x.top.map((y) => y.code).join(' ')}`).join(' | ');
+  check('de vrije trainingen van een weekend dat bezig is: op tijd, met hun eigen top 10, een half uur na het einde',
+    trainingen(mex.slug) === 'Practice 1:PIA NOR VER | Practice 2:LEC HAM RUS', trainingen(mex.slug));
+  check('nog niet een training die net klaar is, geen training zonder uitslag, en niets als de race gereden of nog ver weg is',
+    !gevraagd.includes('/session_result?session_key=313') && gevraagd.includes('/session_result?session_key=611')
+      && trainingen(zesde.slug) === '' && trainingen(aus.slug) === '' && trainingen(sin.slug) === ''
+      && !gevraagd.includes('/session_result?session_key=211') && !gevraagd.includes('/session_result?session_key=101')
+      && RACES.every((x) => !r(x.slug) || Array.isArray(r(x.slug).vrijeTrainingen)),
+    `${trainingen(zesde.slug)} · ${trainingen(aus.slug)} · ${gevraagd.filter((x) => /session_key=(313|611|211|101)$/.test(x)).join(' ')}`);
   const voor = statSync(join(map, 'races.json')).mtimeMs;
   const droog = await draai({ DROOG: '1' });
   check('DROOG schrijft niets weg', droog.code === 0 && /DROOG: niets weggeschreven/.test(droog.uit)
@@ -159,6 +187,13 @@ const s = (key, meeting, naam, start, uren = 1) => ({ session_key: key, meeting_
   check('de workflow haalt de racedata op, elke dag, en op een pull request alleen in de log',
     /- cron: '\d+ \d+ \* \* \*'/.test(wf) && /racedata:?[\s\S]*?DROOG: \$\{\{ github\.event_name == 'pull_request' && '1' \|\| '' \}\}[\s\S]*?run: node scripts\/racedata\.mjs/.test(wf.replace(/De racepagina's, tijden en uitslagen/, 'racedata'))
       && wf.indexOf('scripts/racedata.mjs') < wf.indexOf('- name: Vastleggen') && /'scripts\/racedata\.mjs'/.test(wf) && /'site\/races\.mjs'/.test(wf));
+  // In het weekend vaker, voor de vrije trainingen; dan alleen de racedata.
+  const weekend = wf.match(/- cron: '(\d+ \*\/(\d+) \* \* ([\d,]+))'/);
+  const stap = (naam) => wf.split('- name: ')[wf.split('- name: ').findIndex((x) => x.startsWith(naam))] ?? '';
+  check('in het weekend (vrijdag tot en met zondag) om de hoogstens drie uur, en dan niet de circuitcijfers, wel de racedata',
+    weekend && Number(weekend[2]) <= 3 && weekend[3].split(',').sort().join() === '0,5,6'
+      && stap('Tellen').includes(`if: github.event.schedule != '${weekend?.[1]}'`) && !/\bif:/.test(stap('De racepagina')),
+    weekend?.[1] ?? 'geen weekendschema');
 }
 
 // ---- 6. het bestand zelf, zodra de workflow het geschreven heeft --------------------------------
@@ -175,7 +210,9 @@ const s = (key, meeting, naam, start, uren = 1) => ({ session_key: key, meeting_
       const tijden = r.sessies.map((x) => x.start);
       if (JSON.stringify(tijden) !== JSON.stringify([...tijden].sort())) fout.push(`${r.slug}: sessies niet op tijd`);
       if (!r.sessies.some((x) => x.naam === 'Race')) fout.push(`${r.slug}: geen race`);
-      for (const top of [r.vorige?.kwalificatie, r.vorige?.race, r.uitslag?.kwalificatie, r.uitslag?.race].filter(Boolean)) {
+      const trainingen = r.vrijeTrainingen ?? [];
+      if (trainingen.some((x) => !VRIJE_TRAININGEN.includes(x.naam)) || new Set(trainingen.map((x) => x.naam)).size !== trainingen.length) fout.push(`${r.slug}: vreemde vrije training`);
+      for (const top of [r.vorige?.kwalificatie, r.vorige?.race, r.uitslag?.kwalificatie, r.uitslag?.race, ...trainingen.map((x) => x.top)].filter(Boolean)) {
         if (top.length > 10 || top.some((x, i) => x.plek !== i + 1)) fout.push(`${r.slug}: vreemde top 10`);
       }
     }
