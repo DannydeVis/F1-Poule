@@ -15,7 +15,7 @@ Predict the Race is made by Danny de Visser from Rotterdam, who also makes Padel
 - App languages: Dutch and English
 - Website languages: the homepage in Nederlands (https://predicttherace.com/), English (https://predicttherace.com/en/), Deutsch (https://predicttherace.com/de/), Français (https://predicttherace.com/fr/), Español (https://predicttherace.com/es/), Italiano (https://predicttherace.com/it/), Português (https://predicttherace.com/pt/); the guides and the about page in Dutch and English
 - Results: the calendar, the entry list and the official results come automatically from OpenF1 (https://openf1.org)
-- Made by: Danny de Visser from Rotterdam (https://predicttherace.com/en/about/); source code: https://github.com/DannydeVis/F1-Poule
+- Made by: Danny de Visser from Rotterdam (https://predicttherace.com/en/about/)
 - Online since: September 2026
 - Visitor statistics: Google Analytics, only after the visitor says yes; without that, nothing is measured
 - Privacy: https://predicttherace.com/en/privacy/ (Dutch: https://predicttherace.com/privacy/)

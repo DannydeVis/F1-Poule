@@ -29,7 +29,7 @@ export const PRIVACY = {
     omschrijving: 'Wat Predict the Race van je bewaart, waar het staat, wie het ziet en hoe je het weer weg krijgt. Geen advertenties, statistieken alleen met je ja.',
     kop: 'Wat Predict the Race van je weet',
     intro: 'Predict the Race is een gratis F1-voorspelspel voor vriendengroepen. Het bewaart zo weinig mogelijk, en wat het bewaart staat hieronder, in gewone taal.',
-    bijgewerkt: 'Bijgewerkt op 25 september 2026',
+    bijgewerkt: 'Bijgewerkt op 28 september 2026',
     secties: [
       ['Wat er bewaard wordt', [
         'De naam die je in een poule kiest, je voorspellingen en je punten. En een anoniem account: een willekeurig nummer, zodat de database weet welke voorspellingen van jou zijn.',
@@ -69,7 +69,7 @@ export const PRIVACY = {
         'Komen we er samen niet uit, dan kun je een klacht indienen bij de {ap}.',
       ]],
       ['Wie hierachter zit', [
-        'Predict the Race is gemaakt door Danny de Visser, als fanproject zonder winstoogmerk. Hij is verantwoordelijk voor wat er met je gegevens gebeurt. De broncode staat openbaar op GitHub, dus alles hierboven is na te lezen.',
+        'Predict the Race is gemaakt door Danny de Visser, als fanproject zonder winstoogmerk. Hij is verantwoordelijk voor wat er met je gegevens gebeurt.',
       ]],
     ],
     ap: 'Autoriteit Persoonsgegevens',
@@ -83,7 +83,7 @@ export const PRIVACY = {
     omschrijving: 'What Predict the Race keeps about you, where it lives, who sees it and how to get it removed. No ads, statistics only with your yes.',
     kop: 'What Predict the Race knows about you',
     intro: 'Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.',
-    bijgewerkt: 'Updated on 25 September 2026',
+    bijgewerkt: 'Updated on 28 September 2026',
     secties: [
       ['What is kept', [
         'The name you pick in a pool, your predictions and your points. And an anonymous account: a random number, so the database knows which predictions are yours.',
@@ -123,7 +123,7 @@ export const PRIVACY = {
         'If we cannot sort it out together, you can lodge a complaint with the {ap}, or with the data protection authority in your own country.',
       ]],
       ['Who is behind this', [
-        'Predict the Race is made by Danny de Visser, as a non-profit fan project. He is responsible for what happens to your data. The source code is public on GitHub, so everything above can be checked.',
+        'Predict the Race is made by Danny de Visser, as a non-profit fan project. He is responsible for what happens to your data.',
       ]],
     ],
     ap: 'Dutch Data Protection Authority (Autoriteit Persoonsgegevens)',

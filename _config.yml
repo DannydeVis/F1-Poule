@@ -36,3 +36,4 @@ exclude:
   - site/bron
   - node_modules
   - CNAME
+  - LICENSE
