@@ -51,4 +51,15 @@ grant usage on schema auth to anon, authenticated;
 grant execute on function auth.uid() to anon, authenticated;
 grant select on auth.users to anon, authenticated;
 
+-- Supabase geeft alles wat in het schema public wordt aangemaakt meteen aan
+-- anon en authenticated: tabellen, views, functies en reeksen (de "default
+-- privileges" van de rol postgres). Wie in de SQL-editor schema.sql draait,
+-- krijgt dus bij elke nieuwe tabel of view een grant cadeau, ook als er in
+-- schema.sql geen grant staat. Zonder deze regels was de testdatabase strenger
+-- dan de echte, en zag de test niet dat de view poule_controle voor iedereen
+-- open stond (Security Advisor van Supabase, 29 september 2026).
+alter default privileges in schema public grant all on tables to anon, authenticated;
+alter default privileges in schema public grant all on functions to anon, authenticated;
+alter default privileges in schema public grant all on sequences to anon, authenticated;
+
 do $$ begin raise notice 'ok: auth-nabootsing klaar (auth.users + auth.uid())'; end $$;

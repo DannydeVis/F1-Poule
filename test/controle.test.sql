@@ -35,6 +35,30 @@ begin
   end if;
   raise notice 'ok: en anon noch authenticated mag hem lezen';
 
+  -- Ook als er ooit weer een grant bij komt: de view leest met de rechten van
+  -- wie hem opvraagt, dus via hem komt niemand bij auth.users. Dat zijn de
+  -- twee fouten die de Security Advisor van Supabase op 29 september meldde
+  -- ("Exposed Auth Users" en "Security Definer View").
+  if not exists (select 1 from pg_class c join pg_namespace ns on ns.oid = c.relnamespace
+                 where ns.nspname = 'public' and c.relname = 'poule_controle'
+                   and 'security_invoker=true' = any(c.reloptions)) then
+    raise exception 'gezakt: poule_controle leest met de rechten van zijn eigenaar (geen security_invoker)';
+  end if;
+  raise notice 'ok: en hij leest met de rechten van wie hem opvraagt (security_invoker)';
+
+  -- En voor elke view die er ooit bij komt dezelfde regel als de Security
+  -- Advisor: een view in public die anon of authenticated kan lezen, moet
+  -- security_invoker zijn.
+  select string_agg(c.relname, ', ') into gevonden
+    from pg_class c join pg_namespace ns on ns.oid = c.relnamespace
+   where ns.nspname = 'public' and c.relkind in ('v', 'm')
+     and (has_table_privilege('anon', c.oid, 'select') or has_table_privilege('authenticated', c.oid, 'select'))
+     and (c.relkind = 'm' or not coalesce('security_invoker=true' = any(c.reloptions), false));
+  if gevonden is not null then
+    raise exception 'gezakt: deze views zijn via de API te lezen met de rechten van hun eigenaar: %', gevonden;
+  end if;
+  raise notice 'ok: geen enkele view in public is via de API te lezen met de rechten van zijn eigenaar';
+
   -- 2. op een verse database staat overal waar 'ok' hoort ook 'ok'
   select string_agg(controle, ', ') into gevonden
     from public.poule_controle

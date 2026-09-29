@@ -9178,3 +9178,58 @@ poule en geen tarief. Komt er ooit een maximum, pas dan deze zinnen aan.
   dezelfde zin. Scorito staat er bewust niet in: het punt staat op zichzelf.
   Onder de pitch staat waarom de zin erin staat, met de bron.
 - `docs/zoekplan/concurrenten.md`: het feit over Scorito, met bron en datum.
+
+## Security Advisor: poule_controle stond via de API open (29 september)
+
+Supabase mailde op 27 september "User data exposed through a view"; de
+Security Advisor gaf twee fouten, allebei op `public.poule_controle`:
+"Exposed Auth Users" en "Security Definer View".
+
+**Oorzaak.** In `schema.sql` stond bij de view "met opzet géén grant", in de
+veronderstelling dat hij dan dicht was. Bij Supabase is dat niet zo: de rol
+postgres heeft default privileges waardoor alles wat in `public` wordt
+aangemaakt (tabellen, views, functies, reeksen) meteen aan anon en
+authenticated gegeven wordt. Omdat `schema.sql` de view elke keer weggooit en
+opnieuw aanmaakt, kreeg hij die grant bij elke run opnieuw. Een view leest
+standaard met de rechten van zijn eigenaar (postgres, langs de RLS heen), en
+deze leest `auth.users` (de regel "beheerders"). Met de anon key uit
+`index.html` was de controletabel dus via `/rest/v1/poule_controle` te lezen:
+tellingen (poules, spelers, antwoorden) en het beheeradres met "(ingelogd)".
+Geen gegevens van spelers zelf, geen wachtwoorden of andere mailadressen, maar
+wel precies het overzicht dat fase 0 had dichtgezet. De test zag het niet: de
+testdatabase had die default privileges niet en was dus strenger dan de echte.
+
+**Reparatie.**
+- `schema.sql`: `create view public.poule_controle with (security_invoker =
+  true)`, en daarna `revoke all ... from public, anon, authenticated`. In de
+  SQL-editor verandert er niets: daar vraag je hem op als postgres, en die mag
+  alles.
+- `test/auth-nabootsing.sql`: dezelfde default privileges als Supabase. Met
+  alleen die regel zakte precies één test ("anon of authenticated mag
+  poule_controle lezen"), dus de fout was lokaal na te spelen. Alle andere
+  SQL-tests bleven groen: de tabellen zijn door RLS beschermd, niet door een
+  ontbrekende grant.
+- `test/controle.test.sql`: de view moet `security_invoker` zijn, en geen
+  enkele view in `public` mag via de API te lezen zijn met de rechten van zijn
+  eigenaar (dezelfde regel als de Security Advisor, ook voor views die er
+  later bij komen). Vijf mutanten, alle gevangen.
+
+**Dezelfde oorzaak bij vier functies.** `revoke all on function ... from
+public` haalt de automatische grant aan anon en authenticated niet weg. Drie
+hulpfuncties van het beheer zonder eigen grant waren daardoor bij Supabase
+toch via de API aan te roepen: `beheer_poort()` (onschuldig: die zegt alleen
+nee), `beheer_lijst(jsonb)` (onschuldig: rekent alleen) en
+`beheer_accountsoort(uuid)`. Die laatste zei voor elk account-id of het een
+Google-, mail- of anoniem account is: klein, maar niet de bedoeling.
+`verwijder_mijn_account()` was ook voor anon aan te roepen, maar zegt dan
+alleen dat je niet ingelogd bent. Nu `from public, anon, authenticated` (bij
+`verwijder_mijn_account` alleen anon; ingelogde spelers houden hem).
+`test/beheer.test.sql` §7 legt dat vast. Let op bij mutanten op deze test:
+hij draait zelf `schema.sql` opnieuw (`\ir ../schema.sql`), dus een mutant in
+een los bestand wordt overschreven; zet de mutant in `schema.sql` zelf, met
+een reservekopie. Vijf mutanten, alle gevangen.
+
+**Na de merge (Danny):** `schema.sql` opnieuw draaien in de SQL-editor, daarna
+Advisors, Security Advisor, Refresh. De twee fouten horen weg te zijn. De 76
+waarschuwingen zijn iets anders; die zijn niet bekeken (niet zichtbaar vanuit
+Claude Code). Met Export, CSV zijn ze door te sturen.
