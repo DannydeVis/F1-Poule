@@ -1421,7 +1421,7 @@ end $$;
 
 -- anon heeft geen account om te verwijderen; auth.uid() is daar null. Ook een
 -- anonieme speler heeft in Supabase de rol `authenticated`.
-revoke all on function public.verwijder_mijn_account(boolean) from public;
+revoke all on function public.verwijder_mijn_account(boolean) from public, anon;
 grant execute on function public.verwijder_mijn_account(boolean) to authenticated;
 
 -- ------------------------------------------------------------
@@ -1713,7 +1713,9 @@ begin
     raise exception 'Alleen voor beheerders' using errcode = '42501';
   end if;
 end $$;
-revoke all on function public.beheer_poort() from public;
+-- Ook anon en authenticated met naam: Supabase geeft elke nieuwe functie in
+-- public automatisch aan die twee, en "from public" haalt dat niet weg.
+revoke all on function public.beheer_poort() from public, anon, authenticated;
 
 -- Wat voor account er achter een speler zit: geen, anoniem (alleen op dit
 -- toestel), met een mailadres of met Google. Dat laatste is wat bepaalt of
@@ -1735,7 +1737,7 @@ as $$
   from (select p_user as id) x
   left join auth.users u on u.id = x.id
 $$;
-revoke all on function public.beheer_accountsoort(uuid) from public;
+revoke all on function public.beheer_accountsoort(uuid) from public, anon, authenticated;
 
 -- ---- de sync schrijft op wat hij deed ----------------------------------
 -- Eén regel per run van scripts/sync.mjs, zodat het beheer kan laten zien
@@ -2034,7 +2036,7 @@ begin
   if array_length(lijst, 1) > 30 then raise exception 'Een uitslag heeft hooguit dertig plekken'; end if;
   return lijst;
 end $$;
-revoke all on function public.beheer_lijst(jsonb) from public;
+revoke all on function public.beheer_lijst(jsonb) from public, anon, authenticated;
 
 -- Een race bijstellen. Twee dingen die de sync niet zelf kan beslissen:
 --
@@ -2215,7 +2217,10 @@ as $$
 $$;
 
 drop view if exists public.poule_controle;
-create view public.poule_controle as
+-- security_invoker: de view leest met de rechten van wie hem opvraagt, niet
+-- met die van de eigenaar. Jij in de SQL-editor mag alles, dus voor jou
+-- verandert er niets; iemand anders komt niet via deze view bij auth.users.
+create view public.poule_controle with (security_invoker = true) as
 -- Niet alleen "bestaat hij", maar ook "vuurt hij op alle drie". Deze trigger
 -- stond lang op `insert or update`, en dan kon je een antwoord dat vastligt
 -- verwijderen en opnieuw invoeren -- de regel omzeild zonder hem te breken.
@@ -2455,11 +2460,17 @@ select 'winnaar ingevuld',
 union all
 select 'ingevulde antwoorden',   (select count(*)::text from public.answers);
 
--- Met opzet géén grant. De app vraagt deze view nooit op -- alleen jij draait
--- schema.sql, en dat gaat in de Supabase SQL-editor langs de grants heen.
--- Wat erin staat zijn tellingen en geen rijen, maar "hoeveel poules en
--- spelers zijn er" is precies het soort overzicht dat fase 0 heeft
--- dichtgezet, en een view die niemand nodig heeft hoort dicht te blijven.
+-- Dicht voor iedereen behalve jou. De app vraagt deze view nooit op -- alleen
+-- jij, in de Supabase SQL-editor, en die gaat langs de grants heen. Wat erin
+-- staat zijn tellingen en geen rijen, maar "hoeveel poules en spelers zijn
+-- er" is precies het soort overzicht dat fase 0 heeft dichtgezet.
+--
+-- Weglaten van een grant is bij Supabase niet genoeg: alles wat in public
+-- wordt aangemaakt, krijgen anon en authenticated automatisch (de default
+-- privileges). Tot 29 september stond hier alleen "met opzet geen grant", en
+-- daardoor was de view via de API voor iedereen te lezen; de Security Advisor
+-- meldde "Exposed Auth Users" en "Security Definer View". Vandaar de revoke.
+revoke all on public.poule_controle from public, anon, authenticated;
 
 -- En hem meteen tonen, want daarvoor stond hij hier.
 select * from public.poule_controle;

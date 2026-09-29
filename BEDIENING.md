@@ -803,6 +803,14 @@ De policies staan dicht. Wat dat concreet betekent:
   open lijst daar niet; na inloggen met je mailadres wel. De regel
   `voorspellingen geheim tot de deadline` in de controletabel onderaan
   `schema.sql` zegt of dit in je database staat.
+- **De controletabel is alleen voor jou.** De view `poule_controle` is via de
+  API voor niemand te lezen, en hij leest met de rechten van wie hem opvraagt
+  (`security_invoker`). In de SQL-editor werkt `select * from poule_controle;`
+  gewoon. Tot 29 september stond hij via de API open, omdat Supabase alles wat
+  je in `public` aanmaakt automatisch aan anon en authenticated geeft; de
+  Security Advisor meldde dat als "Exposed Auth Users" en "Security Definer
+  View". Na het opnieuw draaien van `schema.sql`: Advisors, Security Advisor,
+  Refresh. Die twee fouten horen dan weg te zijn.
 - **Je eigen inzending is van jou.** Zodra je speler aan je account hangt kan
   niemand anders hem nog overschrijven of weggooien — ook niet met de anon key
   uit `index.html`, en die staat daar publiek.

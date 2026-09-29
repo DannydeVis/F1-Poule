@@ -20,6 +20,11 @@
 --      weggooien (ook met inzendingen voor een race die al dicht is), een
 --      uitslag overnemen of leegmaken, een race afgelasten.
 --   6. De bezoekersteller telt, ook zonder account, en schrijft verder niets.
+--   7. De hulpfuncties van het beheer (de poort, het soort account, een
+--      uitslag als lijst) zijn niet via de API aan te roepen, en een account
+--      verwijderen kan alleen wie ingelogd is. Supabase geeft elke nieuwe
+--      functie automatisch aan anon en authenticated; test/auth-nabootsing.sql
+--      doet dat na, dus hier staat wat er echt openstaat.
 
 \set ON_ERROR_STOP on
 
@@ -368,5 +373,39 @@ begin
   exception when insufficient_privilege then null;
   end;
   raise notice 'ok: ook als echte rol authenticated: lezen noch jezelf toevoegen';
+end $$;
+rollback;
+
+-- ---- 7. hulpfuncties niet via de API --------------------------------------------
+do $$
+declare
+  open text;
+begin
+  select string_agg(format('%s voor %s', f, r), ', ') into open
+    from unnest(array['public.beheer_poort()', 'public.beheer_accountsoort(uuid)', 'public.beheer_lijst(jsonb)']) f,
+         unnest(array['anon', 'authenticated']) r
+   where has_function_privilege(r, f, 'execute');
+  if has_function_privilege('anon', 'public.verwijder_mijn_account(boolean)', 'execute') then
+    open := concat_ws(', ', open, 'public.verwijder_mijn_account(boolean) voor anon');
+  end if;
+  if open is not null then
+    raise exception 'gezakt: via de API aan te roepen: %', open;
+  end if;
+  if not has_function_privilege('authenticated', 'public.verwijder_mijn_account(boolean)', 'execute') then
+    raise exception 'gezakt: een ingelogde speler kan zijn account niet meer verwijderen';
+  end if;
+  raise notice 'ok: de hulpfuncties van het beheer zijn niet via de API aan te roepen, en een account verwijderen kan alleen ingelogd';
+end $$;
+
+begin;
+set local role anon;
+do $$
+begin
+  begin
+    perform public.beheer_accountsoort('aaaaaaaa-0000-0000-0000-000000000003');
+    raise exception 'gezakt: anon kon het soort account van een speler opvragen';
+  exception when insufficient_privilege then null;
+  end;
+  raise notice 'ok: ook als echte rol anon: het soort account van een speler is niet op te vragen';
 end $$;
 rollback;
