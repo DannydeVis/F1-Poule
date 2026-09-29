@@ -45,6 +45,10 @@ Predict the Race is made by Danny de Visser from Rotterdam, who also makes Padel
 - [F1 prediction scoring systems](https://predicttherace.com/en/f1-prediction-scoring-system/): Four ways to score an F1 prediction league, what each gets right and wrong, a fully worked example, and the scoring Predict the Race uses. Also in Dutch (https://predicttherace.com/f1-poule-puntentelling/).
 - [Running an F1 prediction league in a spreadsheet](https://predicttherace.com/en/f1-prediction-league-spreadsheet/): Run an F1 prediction league in Excel or Google Sheets: the columns you need, the formula that scores each position, and where a spreadsheet lets you down. Also in Dutch (https://predicttherace.com/f1-poule-excel/).
 
+## Comparison
+
+- [F1 prediction games compared](https://predicttherace.com/en/f1-prediction-games-compared/): Predict the Race next to F1 Predict, F1 Fantasy, Superbru, GridRival, Kicktipp, Podium Prophets and a spreadsheet: what you do, what it costs, what fits. Also in Dutch (https://predicttherace.com/f1-poule-apps-vergeleken/).
+
 ## Race pages
 
 - [Singapore Grand Prix 2026](https://predicttherace.com/en/races/2026/singapore/): Session times for the Singapore GP 2026 in UTC, the 2025 top 10 and how often the safety car came out in Singapore. Predict the race for free with friends. Also in Dutch (https://predicttherace.com/races/2026/singapore/).

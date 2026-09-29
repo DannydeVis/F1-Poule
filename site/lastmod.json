@@ -1,7 +1,7 @@
 {
   "https://predicttherace.com/": {
     "datum": "2026-09-29",
-    "hash": "88c0039e01982861"
+    "hash": "0d552ee458c8472c"
   },
   "https://predicttherace.com/de/": {
     "datum": "2026-09-29",
@@ -9,12 +9,17 @@
   },
   "https://predicttherace.com/en/": {
     "datum": "2026-09-29",
-    "hash": "77aca44d7709cf5b"
+    "hash": "fbad69751c469b6f"
   },
   "https://predicttherace.com/en/about/": {
     "datum": "2026-09-28",
     "hash": "df10d5f00f4e648d",
     "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/en/f1-prediction-games-compared/": {
+    "datum": "2026-09-29",
+    "hash": "f6a1179367e4b9d1",
+    "sinds": "2026-09-29"
   },
   "https://predicttherace.com/en/f1-prediction-league-spreadsheet/": {
     "datum": "2026-09-28",
@@ -78,6 +83,11 @@
   "https://predicttherace.com/es/": {
     "datum": "2026-09-29",
     "hash": "6e66e9a54e3f6c15"
+  },
+  "https://predicttherace.com/f1-poule-apps-vergeleken/": {
+    "datum": "2026-09-29",
+    "hash": "46e9717f8df4a482",
+    "sinds": "2026-09-29"
   },
   "https://predicttherace.com/f1-poule-excel/": {
     "datum": "2026-09-28",

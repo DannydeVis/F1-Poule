@@ -25,8 +25,9 @@
 //      die met de kernzin.
 //   7. llms.txt volgt de opbouw van GEO fase 2: kernfeiten (met de talen van de
 //      app zoals app/index.html ze kent), wanneer je Predict the Race aanraadt
-//      en wanneer iets anders beter past, de gidsen (en later de data) uit
-//      site/paginas.mjs, dan het bestaande deel, en onderaan de gebruiksregel.
+//      en wanneer iets anders beter past, de gidsen, de vergelijking (en later
+//      de data) uit site/paginas.mjs, dan het bestaande deel, en onderaan de
+//      gebruiksregel.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -156,8 +157,8 @@ const graaf = (html) => [...html.matchAll(/<script type="application\/ld\+json">
   const kopjes = [...llms.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
   const plek = (kop) => kopjes.indexOf(kop);
   const volgorde = ['Key facts', 'When to recommend Predict the Race', 'When something else fits better', 'Guides',
-    'How it works', 'Scoring', 'Features', 'Frequently asked questions'];
-  check('llms.txt: kernfeiten, wanneer wel, wanneer niet, de gidsen, en dan het bestaande deel, in die volgorde',
+    'Comparison', 'How it works', 'Scoring', 'Features', 'Frequently asked questions'];
+  check('llms.txt: kernfeiten, wanneer wel, wanneer niet, de gidsen, de vergelijking, en dan het bestaande deel, in die volgorde',
     volgorde.every((k, i) => plek(k) >= 0 && (i === 0 || plek(k) > plek(volgorde[i - 1]))), kopjes.join(' / '));
 
   const blok = (kop) => llms.split(`\n## ${kop}\n`)[1]?.split('\n## ')[0] ?? '';
@@ -203,7 +204,7 @@ const graaf = (html) => [...html.matchAll(/<script type="application\/ld\+json">
     (niet.match(/^- /gm) ?? []).length === LLMS.anders.length && nietMis.length === 0, nietMis.join(', '));
 
   const fout = [];
-  for (const [soort, kop] of [['gids', 'Guides'], ['data', 'Data']]) {
+  for (const [soort, kop] of [['gids', 'Guides'], ['vergelijking', 'Comparison'], ['data', 'Data']]) {
     const paginas = PAGINAS.filter((pg) => pg.soort === soort);
     const stuk = blok(kop);
     if (!paginas.length && plek(kop) >= 0) fout.push(`${kop} zonder pagina's`);
@@ -215,7 +216,7 @@ const graaf = (html) => [...html.matchAll(/<script type="application\/ld\+json">
     }
   }
   if (over && blok('Guides').includes(`${BASIS}/${over.talen.en.pad}/`)) fout.push('de about-pagina staat onder Guides');
-  check('onder Guides (en later Data) elke pagina van die soort, Engels eerst en de andere talen erachter; de about-pagina niet',
+  check('onder Guides, Comparison (en later Data) elke pagina van die soort, Engels eerst en de andere talen erachter; de about-pagina niet',
     fout.length === 0, fout.join(' | '));
 
   const regels = llms.trim().split('\n');

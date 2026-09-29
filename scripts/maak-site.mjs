@@ -68,6 +68,9 @@ const openPoule = (code, app, inspring) => {
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CONTROLE = process.argv.includes('--controle');
+// Na hoeveel dagen de feiten op de vergelijking opnieuw gecontroleerd moeten
+// worden (zoekplan AEO fase 4: elke drie maanden).
+const CONTROLE_DAGEN = 92;
 
 // ------------------------------------------------------------
 //  De punten komen uit de app, niet uit dit bestand
@@ -1248,9 +1251,10 @@ const ALLE = [...PAGINAS, ...RACEPAGINAS];
 const paginasIn = (code) => ALLE.filter((pg) => pg.talen[code]);
 // Het overzicht van de races in deze taal, voor de voet en het kruimelpad.
 const racesIn = (code) => ALLE.find((pg) => pg.id === 'races')?.talen[code];
-// De gidsen (soort 'gids'), zonder de about-pagina: die staat niet onder
-// "Gidsen" en heeft geen link in de blokken van de voorpagina.
-const gidsenIn = (code) => paginasIn(code).filter((pg) => pg.soort === 'gids');
+// De gidsen (soort 'gids') en de vergelijking, zonder de about-pagina: die
+// staat niet onder "Gidsen" en heeft geen link in de blokken van de voorpagina.
+// De vergelijking heeft geen teaser: alleen een link in de voet.
+const gidsenIn = (code) => paginasIn(code).filter((pg) => pg.soort === 'gids' || pg.soort === 'vergelijking');
 const overIn = (code) => PAGINAS.find((pg) => pg.id === 'over')?.talen[code];
 // De lege datum van de hash (0000-00-00, zie metDatum()) blijft gewoon staan.
 const datumTekst = (code, iso) => (/^0000/.test(iso) ? iso : new Intl.DateTimeFormat(code, {
@@ -1312,6 +1316,23 @@ const ARTIKEL_CSS = `
   .artikel .formules code{display:block;font-family:var(--mono);font-size:clamp(13px,3.6vw,15px);line-height:1.5;padding:12px 14px;
     background:var(--paneel);border:1px solid var(--lijn);border-radius:10px;overflow-wrap:anywhere}
 `;
+// Alleen op een pagina met een appstabel (de vergelijking): op een smal scherm
+// wordt elke app een blok met de kolomnamen ervoor.
+const APPS_CSS = `
+  .artikel .apps th,.artikel .apps td{padding:10px 12px;vertical-align:top;font-size:15px;line-height:1.45}
+  .artikel .apps td:last-child{font-weight:400;font-size:15px;line-height:1.45}
+  .artikel .apps tbody th{font-weight:700}
+  .artikel .apps a{color:var(--accent-tekst)}
+  @media (max-width:720px){
+    .artikel .apps thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+    .artikel .apps,.artikel .apps caption,.artikel .apps tbody,.artikel .apps tr,.artikel .apps th,.artikel .apps td{display:block;width:auto}
+    .artikel .apps caption{padding:12px 16px 4px}
+    .artikel .apps tbody tr{border-top:1px solid var(--lijn);padding:8px 0}
+    .artikel .apps tbody tr:first-child{border-top:0}
+    .artikel .apps th,.artikel .apps td{border-top:0;padding:3px 16px}
+    .artikel .apps td::before{content:attr(data-kop) ": ";font-weight:600;color:var(--ink2)}
+  }
+`;
 
 // Het rekenvoorbeeld van een pagina (pg.rekenvoorbeeld): een voorspelde top 10
 // en een uitslag, uitgerekend door scoreLijst() uit de app.
@@ -1357,8 +1378,13 @@ const contrairFeiten = (pg, code) => {
   return { contrairSpelers: pg.contrairvoorbeeld.spelers, contrairEen: keerTekst(code, alleen.keer), contrairPunten: alleen.punten };
 };
 
+// De vergelijking: wanneer de feiten over de andere apps op hun eigen site
+// gecontroleerd zijn, als {gecontroleerd} in de tekst.
+const controleFeiten = (pg, code) => (pg.gecontroleerd ? { gecontroleerd: datumTekst(code, pg.gecontroleerd) } : {});
+
 // De tekst van een pagina met de getallen uit de app erin.
-const vulPagina = (pg, code, tekst) => vul(tekst, { ...feitenVoor(code), ...voorbeeldFeiten(pg), ...contrairFeiten(pg, code) });
+const vulPagina = (pg, code, tekst) => vul(tekst, {
+  ...feitenVoor(code), ...voorbeeldFeiten(pg), ...contrairFeiten(pg, code), ...controleFeiten(pg, code) });
 
 function artikelJsonLd(pg, code, datum, sinds) {
   const t = pg.talen[code];
@@ -1498,6 +1524,16 @@ function artikelPagina(pg, code, datum, sinds) {
           esc(keerTekst(code, x.keer))}</td><td>${x.punten}</td></tr>`).join('')}</tbody>
       </table>`;
   };
+  // De andere apps naast elkaar: de naam linkt naar hun eigen site (url) of
+  // naar een pagina van deze site (pagina), de rest is tekst.
+  const appsTabel = (a) => `
+      <table class="tabel apps">
+        <caption>${f(bijschrift(a, 'appstabel'))}</caption>
+        <thead><tr>${a.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
+        <tbody>${a.rijen.map((r) => `<tr><th scope="row">${r.url ? `<a href="${esc(r.url)}">${f(r.naam)}</a>`
+          : r.pagina ? `<a href="${naarPagina(r)}">${f(r.naam)}</a>` : f(r.naam)}</th>${
+          r.cellen.map((c, i) => `<td data-kop="${f(a.kop[i + 1])}">${f(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>`;
   const sectie = (s) => `
     <section class="vraag" id="${s.id}">
       <h2>${f(s.vraag)}</h2>
@@ -1512,7 +1548,7 @@ function artikelPagina(pg, code, datum, sinds) {
         <caption>${f(bijschrift(tabel, `${s.id}-${i + 1}`))}</caption>
         <thead><tr>${tabel.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
         <tbody>${tabel.rijen.map((rij) => `<tr>${rij.map((c, j) => j === 0 ? `<th scope="row">${f(c)}</th>` : `<td>${f(c)}</td>`).join('')}</tr>`).join('')}</tbody>
-      </table>`).join('')}${s.rekenvoorbeeld ? rekenTabel(s.rekenvoorbeeld) : ''}${s.circuittabel ? circuitTabel(s.circuittabel) : ''}${s.contrairtabel ? contrairTabel(s.contrairtabel) : ''}${s.voorbeeld ? `
+      </table>`).join('')}${s.rekenvoorbeeld ? rekenTabel(s.rekenvoorbeeld) : ''}${s.circuittabel ? circuitTabel(s.circuittabel) : ''}${s.contrairtabel ? contrairTabel(s.contrairtabel) : ''}${s.appstabel ? appsTabel(s.appstabel) : ''}${s.voorbeeld ? `
       <p class="voorbeeld">${f(s.voorbeeld)}</p>` : ''}${s.vragentabel ? `
       <div class="tabellen">${[[t2.punten.lossKop, LOSSE], [t2.punten.seizoenKop, SEIZOEN]].map(([kop, ids]) => `
         <table class="tabel getallen">
@@ -1554,7 +1590,7 @@ ${hreflang}
 <script type="application/ld+json">
 ${artikelJsonLd(pg, code, datum, sinds)}
 </script>
-<style>${lettertypen(p)}${CSS}${ARTIKEL_CSS}</style>
+<style>${lettertypen(p)}${CSS}${ARTIKEL_CSS}${t.secties.some((x) => x.appstabel) ? APPS_CSS : ''}</style>
 </head>
 <body>
 <header class="kop">
@@ -1575,7 +1611,7 @@ ${artikelJsonLd(pg, code, datum, sinds)}
       <li aria-current="page">${esc(t.kop)}</li>
     </ol></nav>
     <h1>${esc(t.kop)}</h1>
-    <p class="door">${door}</p>
+    <p class="door">${door}${t.openheid ? `. ${f(t.openheid)}` : ''}</p>
     <p class="kort inleiding">${f(t.kort)}</p>
 ${t.secties.map(sectie).join('\n')}${t.faq?.length ? `
     <section id="faq">
@@ -1703,7 +1739,8 @@ Sitemap: ${BASIS}/sitemap.xml
 // LLMS_SOORTEN: welke pagina's uit site/paginas.mjs een eigen kopje krijgen.
 // 'data' zijn de eigen cijfers van GEO fase 3; zolang die er niet zijn, geen kopje.
 // 'race': de racepagina's (SEO fase 4), zodra er gegevens voor zijn.
-const LLMS_SOORTEN = { gids: 'Guides', data: 'Data', race: 'Race pages' };
+// 'vergelijking': de vergelijking met andere apps (SEO fase 2, GEO fase 4).
+const LLMS_SOORTEN = { gids: 'Guides', vergelijking: 'Comparison', data: 'Data', race: 'Race pages' };
 const taalNaamEn = (c) => new Intl.DisplayNames('en', { type: 'language' }).of(c);
 const opsomming = (xs, type = 'conjunction') => new Intl.ListFormat('en', { type }).format(xs);
 
@@ -1917,6 +1954,21 @@ bestanden.set('404.html', NIET_GEVONDEN);
 // Het sleutelbestand van IndexNow: de sleutel zelf, niets anders.
 if (!/^[0-9a-f]{32}$/.test(INDEXNOW_SLEUTEL)) throw new Error('INDEXNOW_SLEUTEL in site/teksten.mjs is geen 32 hex-tekens');
 bestanden.set(`${INDEXNOW_SLEUTEL}.txt`, INDEXNOW_SLEUTEL);
+
+// De vergelijking noemt feiten over andere apps, en die veranderen. Na drie
+// maanden een waarschuwing om ze opnieuw op hun eigen site te controleren
+// (zoekplan AEO fase 2.6). Geen fout: een test die op datum zakt, blokkeert
+// elke andere merge.
+for (const pg of PAGINAS.filter((x) => x.gecontroleerd)) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(pg.gecontroleerd) || Number.isNaN(Date.parse(pg.gecontroleerd))) {
+    throw new Error(`site/paginas.mjs: gecontroleerd van ${pg.id} is geen datum (jjjj-mm-dd): ${pg.gecontroleerd}`);
+  }
+  const dagen = Math.round((Date.parse(`${VANDAAG}T00:00:00Z`) - Date.parse(`${pg.gecontroleerd}T00:00:00Z`)) / 864e5);
+  if (dagen > CONTROLE_DAGEN) {
+    console.warn(`Let op: de feiten op ${pg.id} zijn ${dagen} dagen geleden gecontroleerd (${pg.gecontroleerd}). `
+      + 'Controleer ze opnieuw op de eigen site van elke app en zet gecontroleerd in site/paginas.mjs op vandaag.');
+  }
+}
 
 const verouderd = [];
 for (const [pad, inhoud] of bestanden) {

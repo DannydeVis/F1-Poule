@@ -639,6 +639,164 @@ export const PAGINAS = [
       },
     },
   },
+  // De vergelijking met andere apps (zoekplan SEO fase 2, AEO 3.2, GEO fase 4).
+  // Bovenaan zegt de pagina wie hem schreef (openheid, in de auteursregel).
+  // Elk feit over een andere app staat op diens eigen site; wat daar niet te
+  // controleren viel, staat hier niet. gecontroleerd is de datum van die
+  // controle: hij staat zichtbaar op de pagina ({gecontroleerd}), en na drie
+  // maanden waarschuwt scripts/maak-site.mjs. F1 Predict is het officiële spel
+  // van de Formule 1 op f1predict.formula1.com, niet een losse app met die naam.
+  // Waar de feiten vandaan komen, per app: docs/zoekplan/concurrenten.md.
+  {
+    id: 'vergelijking',
+    soort: 'vergelijking',
+    verwant: ['organiseren', 'puntentelling', 'excel'],
+    gecontroleerd: '2026-09-29',
+    talen: {
+      nl: {
+        pad: 'f1-poule-apps-vergeleken',
+        titel: 'F1-poule-apps vergeleken | Predict the Race',
+        omschrijving: 'Predict the Race naast F1 Predict, F1 Fantasy, GP Poule, poules.com, Superbru en Excel: wat je voorspelt, wat het kost en wanneer iets anders beter past.',
+        kop: 'F1-poule-apps vergeleken',
+        openheid: 'Deze vergelijking is geschreven door de maker van Predict the Race.',
+        kort: 'F1-poule-apps verschillen vooral in wat je doet: in F1 Fantasy stel je een team samen, in F1 Predict, GP Poule, poules.com, Superbru en Predict the Race voorspel je de uitslag. Daarna verschillen ze in wat het kost en of er prijzen zijn. Predict the Race is gratis en zonder account, maar heeft geen prijzen en geen app in de stores.',
+        secties: [
+          {
+            id: 'welke',
+            vraag: 'Welke F1-poule-app past bij jouw groep?',
+            kort: 'Voor een vriendengroep die de volgorde wil voorspellen zonder dat er geld in zit, passen Predict the Race en GP Poule: allebei gratis, met een eigen poule. Wil je groep binnen een budget een team samenstellen, neem dan F1 Fantasy. Wie om prijzen wil spelen, kijkt naar F1 Predict of Superbru. En wie alles zelf wil bepalen, houdt het bij in Excel.',
+            appstabel: {
+              bijschrift: 'F1-poule-apps en Excel naast elkaar, volgens hun eigen site op {gecontroleerd}',
+              kop: ['App', 'Wat je doet', 'Wat het kost', 'Met je eigen groep'],
+              rijen: [
+                { naam: 'Predict the Race', cellen: ['De top 10 van kwalificatie en race voorspellen, plus losse vragen zoals de winnaar', 'Gratis, zonder advertenties en zonder prijzen', 'Een eigen poule met een code, zonder account'] },
+                { naam: 'F1 Predict', url: 'https://f1predict.formula1.com/', cellen: ['Vragen over elke Grand Prix beantwoorden', 'Gratis, met prijzen voor wie bovenaan het klassement eindigt', 'Leagues maken en er lid van worden'] },
+                { naam: 'F1 Fantasy', url: 'https://fantasy.formula1.com/', cellen: ['Binnen een budget een team van coureurs en constructeurs samenstellen', 'Gratis', 'Een league met een code, na inloggen'] },
+                { naam: 'GP Poule', url: 'https://www.gppoule.nl/', cellen: ['De top 10 van elke Grand Prix en sprint voorspellen, plus voorspellingen voor het hele seizoen', 'Gratis, met een betaald premium-lidmaatschap ernaast', 'Een eigen poule, of de landelijke poule'] },
+                { naam: 'poules.com', url: 'https://poules.com/nl/start/formule-1', cellen: ['De top 3 van de kwalificatie en de top 10 van de race voorspellen, plus twee bonusvragen', 'Betaald per speler per competitie; de eerste keer gratis', 'Een eigen poule, of een publieke'] },
+                { naam: 'Superbru', url: 'https://www.superbru.com/f1/', cellen: ['Pole, podium, plek 4 tot en met 10 en de snelste ronde voorspellen', 'Gratis; zonder advertenties met een betaald seizoensticket', 'Een eigen pool'] },
+                { naam: 'Excel of Google Sheets', pagina: 'excel', cellen: ['Wat je samen afspreekt', 'Niets extra als je Excel of Google Sheets al hebt', 'Iedereen die de sheet kan openen; iemand houdt de uitslagen bij'] },
+              ],
+            },
+            tekst: [
+              'Alles over de andere apps komt van hun eigen site, gecontroleerd op {gecontroleerd}. Wat daar niet te vinden was, staat hier ook niet. Is er iets veranderd? Het mailadres staat in de privacyverklaring.',
+            ],
+          },
+          {
+            id: 'f1-predict',
+            vraag: 'Wat is het verschil met F1 Predict?',
+            kort: 'F1 Predict is het officiële voorspelspel van de Formule 1: je beantwoordt per Grand Prix vragen over de race en speelt tegen fans over de hele wereld, met prijzen voor wie bovenaan eindigt. In Predict the Race voorspel je de top 10 van kwalificatie en race, in een poule met je eigen groep en zonder prijzen. Predict the Race is geen officiële app.',
+            tekst: [
+              'De namen lijken op elkaar, maar de spellen staan los van elkaar. F1 Predict staat op f1predict.formula1.com; Predict the Race is een onafhankelijk fanproject en niet verbonden aan de Formule 1, de FIA of een F1-team.',
+              'Ook in F1 Predict kun je leagues maken en er lid van worden. Hoeveel vragen er per race zijn en hoe de punten daar precies werken, viel op hun site niet na te gaan; daarom staat het hier niet.',
+            ],
+          },
+          {
+            id: 'alternatief',
+            vraag: 'Wat is een gratis alternatief voor F1 Fantasy?',
+            kort: 'Een gratis alternatief voor F1 Fantasy is een voorspelspel: je voorspelt de uitslag in plaats van een team samen te stellen, dus zonder budget en zonder transfers. Predict the Race is er zo een, net als GP Poule en Superbru. In Predict the Race voorspel je de top 10 van kwalificatie en race, met {exact} punten voor precies goed en {een} bij één plek ernaast.',
+            tekst: [
+              'Het verschil zit vooral in de telling. GP Poule geeft {=3} punten voor een plek precies goed en {=1} voor één plek ernaast. Predict the Race geeft ook nog {twee} punt bij twee plekken ernaast, zodat wie de volgorde goed inschat daar iets voor terugkrijgt.',
+            ],
+            links: [
+              { pagina: 'puntentelling', anker: 'bijna-goed', tekst: 'Waarom punten voor bijna goed eerlijker zijn' },
+            ],
+          },
+          {
+            id: 'anders',
+            vraag: 'Wanneer past iets anders beter?',
+            kort: 'Iets anders past beter als je groep een team wil samenstellen met een budget en transfers: neem dan F1 Fantasy. Wil je om prijzen spelen, dan is Predict the Race niets voor je, want prijzen zijn er niet. En wie de app in een andere taal dan Nederlands of Engels wil, of een app uit de App Store of Google Play, moet ook verder kijken.',
+            punten: [
+              ['Een team met een budget', 'F1 Fantasy, het officiële fantasyspel van de Formule 1. Je stelt een team van coureurs en constructeurs samen en scoort op wat zij in het echt doen.'],
+              ['Om prijzen spelen', 'F1 Predict en Superbru noemen allebei prijzen op hun site. Predict the Race heeft geen inleg, geen pot en geen prijzen.'],
+              ['Een app uit de store', 'Superbru heeft een app voor iPhone en Android, en F1 Fantasy speel je ook in de officiële F1-app. Predict the Race is een web-app die je vanuit de browser op je beginscherm zet.'],
+              ['Een andere taal', 'De app van Predict the Race is er in het Nederlands en het Engels. De voorpagina is er ook in het Duits, Frans, Spaans, Italiaans en Portugees, de app niet.'],
+              ['Alles zelf bepalen', 'Een spreadsheet. Je spreekt zelf de regels af, maar iemand moet na elke sessie de uitslag overtypen.'],
+            ],
+            tekst: [
+              'Predict the Race is bovendien jong: online sinds september 2026 en gemaakt door één persoon.',
+            ],
+          },
+        ],
+        faq: [],
+        leesOok: [
+          ['faq', 'Veelgestelde vragen over de app'],
+        ],
+      },
+      en: {
+        pad: 'en/f1-prediction-games-compared',
+        titel: 'F1 prediction games compared | Predict the Race',
+        omschrijving: 'Predict the Race next to F1 Predict, F1 Fantasy, Superbru, GridRival, Kicktipp, Podium Prophets and a spreadsheet: what you do, what it costs, what fits.',
+        kop: 'F1 prediction games compared',
+        openheid: 'This comparison was written by the maker of Predict the Race.',
+        kort: 'F1 prediction games come in two kinds. In F1 Fantasy and GridRival you build a team within a budget; in F1 Predict, Superbru, Kicktipp, Podium Prophets and Predict the Race you predict the results. Beyond that they differ in price, prizes and how much you predict. Predict the Race is free and needs no account, but has no prizes and no app in the stores.',
+        secties: [
+          {
+            id: 'which',
+            vraag: 'Which F1 prediction game suits your group?',
+            kort: 'For friends who want to predict the order with no money involved, Predict the Race and Podium Prophets fit best: both are free and have private leagues. If your group would rather build a team within a budget, pick F1 Fantasy or GridRival. To play for prizes, look at F1 Predict or Superbru. And a group that wants to set every rule itself can use Kicktipp or a spreadsheet.',
+            appstabel: {
+              bijschrift: 'F1 prediction games and a spreadsheet side by side, as their own sites described them on {gecontroleerd}',
+              kop: ['Game', 'What you do', 'What it costs', 'With your own group'],
+              rijen: [
+                { naam: 'Predict the Race', cellen: ['Predict the top 10 of qualifying and the race, plus extra questions such as the winner', 'Free, no ads, no prizes', 'A private league with a code, no account needed'] },
+                { naam: 'F1 Predict', url: 'https://f1predict.formula1.com/', cellen: ['Answer questions about each Grand Prix', 'Free, with prizes for the top of the leaderboard', 'Create and join leagues'] },
+                { naam: 'F1 Fantasy', url: 'https://fantasy.formula1.com/', cellen: ['Build a team of drivers and constructors within a budget', 'Free', 'A league with a code, after logging in'] },
+                { naam: 'Superbru', url: 'https://www.superbru.com/f1/', cellen: ['Predict pole, the podium, places 4 to 10 and the fastest lap', 'Free; ad-free with a paid season ticket', 'A private pool'] },
+                { naam: 'GridRival', url: 'https://gridrival.com/', cellen: ['Sign five drivers and one constructor on contracts within a budget', 'Free leagues', 'A private league, or a public one'] },
+                { naam: 'Kicktipp', url: 'https://www.kicktipp.de/', cellen: ['Predict results in a round you set up yourself; each round has its own points rules', 'Free', 'A private round, or a public one'] },
+                { naam: 'Podium Prophets', url: 'https://podiumprophets.com/', cellen: ['Predict the top 10 of qualifying, the race and both sprint sessions', 'Free, no ads', 'A private league with an invite link; each league can set its own points'] },
+                { naam: 'Spreadsheet', pagina: 'excel', cellen: ['Whatever you agree on', 'Nothing extra if you already have Excel or Google Sheets', 'Anyone who can open the sheet; someone keeps the results up to date'] },
+              ],
+            },
+            tekst: [
+              'Everything about the other games comes from their own sites, checked on {gecontroleerd}. What could not be found there is not here either. Has something changed? The email address is in the privacy statement.',
+            ],
+          },
+          {
+            id: 'f1-predict',
+            vraag: 'How is Predict the Race different from F1 Predict?',
+            kort: 'F1 Predict is the official prediction game of Formula 1: you answer questions about each Grand Prix and play against fans around the world, with prizes for the top of the leaderboard. Predict the Race is an independent fan project where you predict the top 10 of qualifying and the race, in a league with your own group. It has no prizes.',
+            tekst: [
+              'The names are alike, but the games are not connected. F1 Predict lives at f1predict.formula1.com, and Predict the Race is not affiliated with Formula 1, the FIA or any F1 team.',
+              'F1 Predict also lets you create and join leagues. How many questions it asks per race and exactly how its points work could not be checked on its site, so that is left out here.',
+            ],
+          },
+          {
+            id: 'alternative',
+            vraag: 'What is a free alternative to F1 Fantasy?',
+            kort: 'A free alternative to F1 Fantasy is a prediction game: instead of building a team, you predict the results, so there is no budget and there are no transfers. Predict the Race is one, and so are Podium Prophets and Superbru. In Predict the Race you predict the top 10 of qualifying and the race, with {exact} points for the exact spot and {een} for one place off.',
+            tekst: [
+              'Podium Prophets scores a top 10 the same way by default: {=5} points for the exact spot, {=3} for one place off and {=1} for two. Where the two differ is the extras. Podium Prophets adds race pace charts and session analysis; Predict the Race adds jokers, team-mate duels and a weekend winner.',
+            ],
+            links: [
+              { pagina: 'puntentelling', anker: 'nearly-right', tekst: 'Why points for nearly right are fairer' },
+            ],
+          },
+          {
+            id: 'something-else',
+            vraag: 'When does something else fit better?',
+            kort: 'Something else fits better if your group wants a team with a budget and transfers: that is F1 Fantasy, or GridRival. If you want to play for prizes, Predict the Race is not for you, because it has none. The same goes if you want the app in a language other than English or Dutch, or an app from the App Store or Google Play.',
+            punten: [
+              ['A team with a budget', 'F1 Fantasy, the official fantasy game of Formula 1, or GridRival, where you sign drivers on contracts and pocket it when their value goes up.'],
+              ['Playing for prizes', 'F1 Predict and Superbru both mention prizes on their sites. Predict the Race has no entry fee, no pot and no prizes.'],
+              ['An app from the store', 'Superbru has apps for iPhone and Android, and F1 Fantasy can also be played in the official F1 app. Predict the Race is a web app that you add to your home screen from the browser.'],
+              ['Another language', 'The Predict the Race app is in English and Dutch. The home page also exists in German, French, Spanish, Italian and Portuguese; the app does not.'],
+              ['Race analysis', 'Podium Prophets has race pace charts, long-run data and qualifying breakdowns. Predict the Race sticks to the game.'],
+              ['Setting every rule yourself', 'Kicktipp, where each round sets its own points, or a spreadsheet. In a spreadsheet, someone has to type in the results after every session.'],
+            ],
+            tekst: [
+              'Predict the Race is also young: online since September 2026 and made by one person.',
+            ],
+          },
+        ],
+        faq: [],
+        leesOok: [
+          ['faq', 'Frequently asked questions about the app'],
+        ],
+      },
+    },
+  },
   // De about-pagina (zoekplan SEO fase 2, GEO 1.3): wie het maakt, hoe het
   // gratis blijft en hoe het werkt. Begint met de kernzin; de feiten over de
   // maker komen uit het zoekplan van Danny zelf. Geen teaser op de voorpagina,

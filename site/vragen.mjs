@@ -34,7 +34,7 @@
 
 // Pagina's uit het zoekplan die er nog niet zijn. Een open vraag mag erheen
 // wijzen; staat de pagina in site/paginas.mjs, dan gaat hij hier weg.
-export const GEPLANDE_PAGINAS = ['vergelijking'];
+export const GEPLANDE_PAGINAS = [];
 
 export const VRAGEN = [
   // ================================================================ NL
@@ -126,14 +126,14 @@ export const VRAGEN = [
   { vraag: 'Hoe tel ik de winnaar en de pole position mee?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
   { vraag: 'Hoe zet ik spelers met evenveel punten op dezelfde plek?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
 
-  // ---- vergelijking (SEO fase 2, nog niet gemaakt) en over ----
+  // ---- vergelijking (SEO fase 2) en over ----
   { vraag: 'Welke F1-poule-app past bij jouw groep?', taal: 'nl', varianten: ['Wat is de beste F1-poule-app?', 'f1 poule app'],
-    bron: 'hypothese', doel: 'vergelijking#welke', status: 'open' },
+    bron: 'hypothese', doel: 'vergelijking#welke', status: 'beantwoord' },
   // Formula 1 heeft een eigen voorspelspel, F1 Predict; vergelijkingen ermee
   // staan al online ("Podium Prophets vs F1 Predict").
-  { vraag: 'Wat is het verschil met F1 Predict?', taal: 'nl', varianten: [], bron: 'zoekresultaat', doel: 'vergelijking#f1-predict', status: 'open' },
-  { vraag: 'Wat is een gratis alternatief voor F1 Fantasy?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'vergelijking#alternatief', status: 'open' },
-  { vraag: 'Wanneer past iets anders beter?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'vergelijking#anders', status: 'open' },
+  { vraag: 'Wat is het verschil met F1 Predict?', taal: 'nl', varianten: [], bron: 'zoekresultaat', doel: 'vergelijking#f1-predict', status: 'beantwoord' },
+  { vraag: 'Wat is een gratis alternatief voor F1 Fantasy?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'vergelijking#alternatief', status: 'beantwoord' },
+  { vraag: 'Wanneer past iets anders beter?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'vergelijking#anders', status: 'beantwoord' },
   { vraag: 'Wie maakt Predict the Race?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'over#wie', status: 'beantwoord' },
   { vraag: 'Hoe blijft Predict the Race gratis?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'over#gratis', status: 'beantwoord' },
   { vraag: 'Hoe werkt Predict the Race achter de schermen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'over#techniek', status: 'beantwoord' },
@@ -229,12 +229,12 @@ export const VRAGEN = [
   // ---- vergelijking en over ----
   // "Best F1 Prediction Apps & Games 2026" en meer van zulke lijstjes.
   { vraag: 'Which F1 prediction game suits your group?', taal: 'en', varianten: ['What is the best F1 prediction app?', 'best f1 prediction game'],
-    bron: 'zoekresultaat', doel: 'vergelijking#which', status: 'open' },
+    bron: 'zoekresultaat', doel: 'vergelijking#which', status: 'beantwoord' },
   { vraag: 'How is Predict the Race different from F1 Predict?', taal: 'en', varianten: [],
-    bron: 'zoekresultaat', doel: 'vergelijking#f1-predict', status: 'open' },
+    bron: 'zoekresultaat', doel: 'vergelijking#f1-predict', status: 'beantwoord' },
   { vraag: 'What is a free alternative to F1 Fantasy?', taal: 'en', varianten: ['f1 fantasy alternative'],
-    bron: 'hypothese', doel: 'vergelijking#alternative', status: 'open' },
-  { vraag: 'When does something else fit better?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'vergelijking#something-else', status: 'open' },
+    bron: 'hypothese', doel: 'vergelijking#alternative', status: 'beantwoord' },
+  { vraag: 'When does something else fit better?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'vergelijking#something-else', status: 'beantwoord' },
   { vraag: 'Who makes Predict the Race?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'over#who', status: 'beantwoord' },
   { vraag: 'How does Predict the Race stay free?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'over#free', status: 'beantwoord' },
   { vraag: 'How does Predict the Race work behind the scenes?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'over#behind-the-scenes', status: 'beantwoord' },
