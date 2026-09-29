@@ -811,6 +811,15 @@ De policies staan dicht. Wat dat concreet betekent:
   Security Advisor meldde dat als "Exposed Auth Users" en "Security Definer
   View". Na het opnieuw draaien van `schema.sql`: Advisors, Security Advisor,
   Refresh. Die twee fouten horen dan weg te zijn.
+- **Alleen de regels uit `schema.sql`.** `schema.sql` gooit bij elke run
+  élke beveiligingsregel (policy) in `public` weg en zet daarna alleen de
+  zijne terug. Tot 29 september stonden er nog `pools_all` en `members_all` uit
+  een vroege opzet, die iedereen met de anon key alles gaven op poules en
+  spelers; ze zijn die avond met de hand weggehaald. De regel `policies: alleen
+  die uit schema.sql` in de controletabel zegt `ok`, of noemt wat er te veel
+  (ONBEKEND) of te weinig (ONTBREEKT) staat. Staat er iets onbekends, draai
+  `schema.sql` dan opnieuw. Zet nooit met de hand een policy in Supabase: die
+  gaat bij de volgende run weg, en tot dan zet hij misschien een tabel open.
 - **Je eigen inzending is van jou.** Zodra je speler aan je account hangt kan
   niemand anders hem nog overschrijven of weggooien — ook niet met de anon key
   uit `index.html`, en die staat daar publiek.

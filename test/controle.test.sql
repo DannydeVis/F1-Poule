@@ -498,3 +498,87 @@ begin
   end if;
   raise notice 'ok: en met alles teruggezet staat hij weer op ok';
 end $$;
+
+-- ============================================================
+--  9. Alleen de policies uit schema.sql, en geen triggerfunctie via de API
+-- ============================================================
+--
+-- In productie stonden tot 29 september nog `pools_all` en `members_all` uit
+-- een vroege opzet: policies tellen bij elkaar op, dus die gaven anon alles op
+-- pools en pool_members, hoe streng de rest ook was. schema.sql gooit
+-- sindsdien elke policy in public weg voordat hij de zijne aanmaakt
+-- (test/oude-structuur.sql en oude-structuur-controle.sql laten dat zien); de
+-- regel hier moet het zien als er later met de hand een bij komt, of als er
+-- een ontbreekt.
+
+do $$
+declare
+  regel constant text := 'policies: alleen die uit schema.sql';
+  gevonden text;
+begin
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden is distinct from 'ok' then
+    raise exception 'gezakt: op een verse database zegt de regel "%"', gevonden;
+  end if;
+  raise notice 'ok: op een verse database staan precies de policies uit schema.sql';
+
+  create policy pools_all on public.pools for all to anon using (true) with check (true);
+  create policy members_all on public.pool_members for all to anon using (true) with check (true);
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden is distinct from 'ONBEKEND: pool_members.members_all, pools.pools_all' then
+    raise exception 'gezakt: met twee onbekende policies zegt de regel "%"', gevonden;
+  end if;
+  raise notice 'ok: een onbekende policy wordt gemeld, met tabel en naam';
+
+  drop policy pools_all on public.pools;
+  drop policy members_all on public.pool_members;
+  drop policy answers_lezen on public.answers;
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden is distinct from 'ONTBREEKT: answers.answers_lezen' then
+    raise exception 'gezakt: met een ontbrekende policy zegt de regel "%"', gevonden;
+  end if;
+  raise notice 'ok: een ontbrekende policy wordt gemeld';
+
+  -- Allebei tegelijk: eerst wat er te veel is, dan wat er mist.
+  create policy stiekem on public.answers for select to anon using (true);
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden is distinct from 'ONBEKEND: answers.stiekem · ONTBREEKT: answers.answers_lezen' then
+    raise exception 'gezakt: met een onbekende en een ontbrekende policy zegt de regel "%"', gevonden;
+  end if;
+  raise notice 'ok: en allebei tegelijk ook';
+  drop policy stiekem on public.answers;
+  create policy answers_lezen on public.answers
+    for select to anon, authenticated
+    using (public.is_member(pool_id) and public.antwoord_open(race_id, question_id));
+
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden is distinct from 'ok' then
+    raise exception 'gezakt: met alles teruggezet zegt de regel "%"', gevonden;
+  end if;
+  raise notice 'ok: en met alles teruggezet staat hij weer op ok';
+
+  -- Triggerfuncties: niemand hoeft ze aan te roepen, en Supabase geeft ze
+  -- anders automatisch aan anon en authenticated.
+  select string_agg(p.proname, ', ' order by p.proname) into gevonden
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.prorettype = 'trigger'::regtype
+     and (has_function_privilege('anon', p.oid, 'execute')
+          or has_function_privilege('authenticated', p.oid, 'execute'));
+  if gevonden is not null then
+    raise exception 'gezakt: deze triggerfuncties zijn via de API aan te roepen: %', gevonden;
+  end if;
+  raise notice 'ok: geen triggerfunctie is via de API aan te roepen';
+
+  -- Elke eigen functie heeft een vaste search_path (Security Advisor:
+  -- "Function Search Path Mutable"; zo stonden beheer_adres() en
+  -- check_deadlines() erin). Functies van een extensie tellen niet mee.
+  select string_agg(p.proname, ', ' order by p.proname) into gevonden
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+     and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%');
+  if gevonden is not null then
+    raise exception 'gezakt: deze functies hebben geen vaste search_path: %', gevonden;
+  end if;
+  raise notice 'ok: elke eigen functie heeft een vaste search_path';
+end $$;

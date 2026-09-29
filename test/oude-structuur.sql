@@ -52,3 +52,17 @@ insert into pools (name, join_code, inleg, betaallink)
   values ('Vrijdagmiddagpoule', 'RTM026', 12.50, 'https://tikkie.me/pay/abc');
 insert into pool_members (pool_id, display_name, betaald) select id, 'Danny', true from pools;
 insert into races (season, round, name) values (2026, 1, 'Melbourne');
+
+-- Wat er in productie ook nog stond (Security Advisor van Supabase, 29
+-- september 2026): twee policies uit een vroege opzet die anon alles gaven op
+-- pools en pool_members, en een triggerfunctie die nergens meer aan hing.
+-- schema.sql hoort ze weg te halen, ook al kent hij hun namen niet.
+alter table pools        enable row level security;
+alter table pool_members enable row level security;
+create policy pools_all   on pools        for all to anon using (true) with check (true);
+create policy members_all on pool_members for all to anon using (true) with check (true);
+create function check_deadlines() returns trigger language plpgsql as $f$
+begin
+  new.updated_at = now();
+  return new;
+end $f$;
