@@ -559,6 +559,10 @@ create index if not exists races_seizoen_idx on public.races (season, round);
 --  kwalificatiekolom meestuurt.
 -- ------------------------------------------------------------
 
+-- check_deadlines() stond in productie nog, uit een opzet van vóór dit
+-- bestand, voor kolommen die er niet meer zijn. Geen trigger gebruikt hem.
+drop function if exists public.check_deadlines();
+
 create or replace function public.poule_deadline_bewaken()
 returns trigger
 language plpgsql
@@ -1458,32 +1462,21 @@ alter table public.answers        enable row level security;
 alter table public.jokers         enable row level security;
 alter table public.push_abonnementen enable row level security;
 
--- Alle namen die dit bestand ooit gebruikt heeft, zodat een tweede run niet
--- struikelt over een policy uit een vorige versie.
-drop policy if exists pools_open        on public.pools;
-drop policy if exists pools_lezen       on public.pools;
-drop policy if exists pools_aanmaken    on public.pools;
-drop policy if exists pools_bijwerken   on public.pools;
-drop policy if exists pool_members_open on public.pool_members;
-drop policy if exists pool_members_lezen     on public.pool_members;
-drop policy if exists pool_members_meedoen   on public.pool_members;
-drop policy if exists pool_members_bijwerken on public.pool_members;
-drop policy if exists races_open        on public.races;
-drop policy if exists races_all         on public.races;
-drop policy if exists races_lezen       on public.races;
-drop policy if exists questions_lezen   on public.questions;
-drop policy if exists pool_questions_open on public.pool_questions;
-drop policy if exists pool_questions_lezen   on public.pool_questions;
-drop policy if exists pool_questions_beheren on public.pool_questions;
-drop policy if exists answers_open      on public.answers;
-drop policy if exists answers_lezen     on public.answers;
-drop policy if exists answers_eigen     on public.answers;
-drop policy if exists jokers_lezen      on public.jokers;
-drop policy if exists jokers_eigen      on public.jokers;
-drop policy if exists push_eigen        on public.push_abonnementen;
-drop policy if exists pool_members_meedoen   on public.pool_members;
-drop policy if exists pool_members_bijwerken on public.pool_members;
-
+-- Eerst élke policy in public weg, ook die dit bestand niet kent, en daarna
+-- alleen de policies hieronder terug. Tot 29 september stond hier een lijst
+-- met de namen die dit bestand ooit gebruikt had. Een policy met een andere
+-- naam bleef dan gewoon staan, en policies tellen bij elkaar op: in productie
+-- stonden nog `pools_all` en `members_all` uit een vroege opzet, die anon
+-- alles gaven op pools en pool_members (lezen, wijzigen, weggooien, andermans
+-- speler overnemen). De Security Advisor van Supabase vond ze.
+do $$
+declare
+  p record;
+begin
+  for p in select tablename, policyname from pg_policies where schemaname = 'public' loop
+    execute format('drop policy %I on public.%I', p.policyname, p.tablename);
+  end loop;
+end $$;
 -- ---- poules -------------------------------------------------
 -- Lezen stond op `true`, en dat was het gat: met de publieke anon key was
 -- élke poule in de database op te vragen. Nu alleen wat je zonder sleutel
@@ -1494,8 +1487,10 @@ drop policy if exists pool_members_bijwerken on public.pool_members;
 create policy pools_lezen on public.pools
   for select to anon, authenticated
   using (is_public or public.is_member(id));
-create policy pools_aanmaken on public.pools
-  for insert to anon, authenticated with check (true);
+-- Aanmaken gaat alleen via poule_aanmaken(): die maakt de poule, de eerste
+-- speler en de poulebaas in één keer. Tot 29 september stond hier ook een
+-- policy pools_aanmaken (`with check (true)`), waarmee iedereen rechtstreeks
+-- lege poules in de tabel kon zetten; de app gebruikte hem niet meer.
 -- Alleen de poulebaas past de omschrijving of de vragenset aan. Let op de
 -- volgorde bij het aanmaken: eerst de poule (nog zonder eigenaar), dan de
 -- speler, dan pas deze update — op dat moment is de eigenaar nog leeg en ben
@@ -1613,7 +1608,12 @@ create policy push_eigen on public.push_abonnementen
 
 grant usage on schema public to anon, authenticated;
 
-grant select, insert, update, delete on public.pools          to anon, authenticated;
+-- Lezen en bijwerken, meer niet: aanmaken en weggooien doen alleen functies
+-- (poule_aanmaken, beheer_poule_verwijderen). Zo zet ook een policy die er
+-- per ongeluk bij komt, zoals pools_all tot 29 september, hier geen poule bij
+-- en gooit hij er geen weg.
+grant select, update on public.pools to anon, authenticated;
+revoke insert, delete on public.pools from anon, authenticated;
 -- pool_members is de enige tabel met een kolomgrens erin. Lezen mag op alles
 -- behalve profiel_code en profiel: die eerste is de link naar je publieke
 -- pagina, en die deel je zelf of niet -- ook niet met je medespelers. RLS werkt
@@ -1681,6 +1681,7 @@ create or replace function public.beheer_adres()
 returns text
 language sql
 immutable
+set search_path = ''
 as $$ select 'devisser.danny@gmail.com'::text $$;
 
 create or replace function public.ik_ben_beheerder()
@@ -2181,6 +2182,21 @@ grant execute on function public.beheer_race_bijwerken(bigint, jsonb) to anon, a
 grant execute on function public.beheer_sync()                        to anon, authenticated;
 grant execute on function public.beheer_statistieken()                to anon, authenticated;
 
+-- Triggerfuncties zijn niet om aan te roepen, alleen om af te gaan, en een
+-- trigger gaat af zonder dat wie schrijft hem mag uitvoeren. Supabase geeft
+-- elke functie in public toch automatisch aan anon en authenticated; hier gaat
+-- dat voor alle triggerfuncties weer af, ook voor die er later bij komen.
+do $$
+declare
+  f record;
+begin
+  for f in select p.oid::regprocedure as naam
+             from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public' and p.prorettype = 'trigger'::regtype loop
+    execute format('revoke all on function %s from public, anon, authenticated', f.naam);
+  end loop;
+end $$;
+
 -- ------------------------------------------------------------
 --  Controle
 --  Hieronder moet overal 'ok' staan.
@@ -2316,6 +2332,34 @@ select 'voorspellingen geheim tot de deadline',
              and p.prosrc like '%antwoord_open(%' and p.prosrc like '%joker_open(%')
            then 'POULE_OPHALEN GEEFT ALLES — draai schema.sql opnieuw'
          else 'ok' end
+union all
+-- Alleen de policies uit dit bestand, niet meer en niet minder. Policies
+-- tellen bij elkaar op, dus één extra policy met `true` zet een tabel open,
+-- hoe streng de rest ook is. Zo stonden er tot 29 september nog `pools_all`
+-- en `members_all` uit een vroege opzet. schema.sql gooit sindsdien elke
+-- onbekende policy weg; deze regel ziet het als er later met de hand een
+-- bij komt. Voeg je hierboven een policy toe, zet hem dan ook in deze lijst
+-- (test/controle.test.sql zakt anders op een verse database).
+select 'policies: alleen die uit schema.sql',
+       coalesce(nullif(concat_ws(' · ',
+         'ONBEKEND: ' || (select string_agg(w.naam, ', ' order by w.naam)
+                            from (select tablename || '.' || policyname as naam
+                                    from pg_policies where schemaname = 'public') w
+                           where w.naam <> all (v.namen)),
+         'ONTBREEKT: ' || (select string_agg(x, ', ' order by x)
+                             from unnest(v.namen) x
+                            where x not in (select tablename || '.' || policyname
+                                              from pg_policies where schemaname = 'public'))
+       ), ''), 'ok')
+  from (select array[
+          'answers.answers_eigen', 'answers.answers_lezen',
+          'jokers.jokers_eigen', 'jokers.jokers_lezen',
+          'pool_members.pool_members_bijwerken', 'pool_members.pool_members_lezen',
+          'pool_questions.pool_questions_beheren', 'pool_questions.pool_questions_lezen',
+          'pools.pools_bijwerken', 'pools.pools_lezen',
+          'push_abonnementen.push_eigen',
+          'questions.questions_lezen',
+          'races.races_lezen'] as namen) v
 union all
 select 'aantal poules',        (select count(*)::text from public.pools)
 union all

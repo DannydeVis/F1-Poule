@@ -97,3 +97,26 @@ begin
   end if;
   raise notice 'ok: ontbrekende kolommen zijn bijgemaakt';
 end $$;
+
+-- Wat er in productie nog stond uit een vroege opzet (oude-structuur.sql,
+-- onderaan): twee policies die anon alles gaven en een losse triggerfunctie.
+-- schema.sql kent hun namen niet en hoort ze toch weg te halen.
+do $$
+declare
+  over text;
+begin
+  select string_agg(tablename || '.' || policyname, ', ' order by tablename, policyname) into over
+    from pg_policies
+   where schemaname = 'public' and policyname in ('pools_all', 'members_all');
+  if over is not null then
+    raise exception 'gezakt: deze policies uit een vroege opzet staan er nog: %', over;
+  end if;
+  if to_regprocedure('public.check_deadlines()') is not null then
+    raise exception 'gezakt: check_deadlines() staat er nog';
+  end if;
+  select uitkomst into over from public.poule_controle where controle = 'policies: alleen die uit schema.sql';
+  if over is distinct from 'ok' then
+    raise exception 'gezakt: na schema.sql zegt de controletabel over de policies "%"', over;
+  end if;
+  raise notice 'ok: policies en een functie uit een vroege opzet zijn weg, ook zonder dat schema.sql hun namen kent';
+end $$;

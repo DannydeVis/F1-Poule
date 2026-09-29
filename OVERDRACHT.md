@@ -9233,3 +9233,74 @@ een reservekopie. Vijf mutanten, alle gevangen.
 Advisors, Security Advisor, Refresh. De twee fouten horen weg te zijn. De 76
 waarschuwingen zijn iets anders; die zijn niet bekeken (niet zichtbaar vanuit
 Claude Code). Met Export, CSV zijn ze door te sturen.
+
+## De 71 waarschuwingen: twee policies die anon alles gaven (29 september)
+
+Na de reparatie van `poule_controle` stuurde Danny de export van de Security
+Advisor (71 waarschuwingen). Daar zat één echt lek tussen.
+
+**`pools_all` en `members_all`.** Twee policies uit een vroege opzet, `for all
+to anon using (true) with check (true)`, op `pools` en `pool_members`. Ze
+stonden nergens in `schema.sql` (ook niet in de git-geschiedenis) en werden
+dus ook nooit weggegooid: `schema.sql` gooide alleen policies weg met namen
+die hij zelf ooit gebruikt had. Policies tellen bij elkaar op, dus met de anon
+key kon iedereen (met de tabelrechten die `schema.sql` geeft):
+
+- elke poule lezen, ook de code, en elke poule wijzigen of weggooien;
+- alle spelers lezen, en bij elke speler `user_id` veranderen: andermans
+  speler overnemen of losmaken.
+
+Danny heeft ze op 29 september om 22:45 met de hand weggehaald. Daarna stonden
+er precies de 14 policies uit `schema.sql` van dat moment (na deze PR zijn het
+er 13: `pools_aanmaken` is weg, zie hieronder). De controletabel (2 poules, 4
+spelers, 41 antwoorden) geeft geen teken dat er iets mee gebeurd is; zeker
+weten kan alleen via de API-logs van Supabase.
+
+**Voortaan.** `schema.sql` gooit nu élke policy in `public` weg voordat hij de
+zijne aanmaakt (een lus over `pg_policies`), in plaats van een lijst met
+bekende namen. De controletabel heeft een regel `policies: alleen die uit
+schema.sql`: `ok`, of ONBEKEND en ONTBREEKT met tabel en naam. De lijst in die
+regel moet gelijk blijven aan de `create policy`-regels; op een verse
+database zakt `test/controle.test.sql` als dat niet zo is.
+
+**De rest van de lijst.**
+- `check_deadlines()`: een triggerfunctie uit dezelfde vroege opzet, voor
+  kolommen die er niet meer zijn, aan geen enkele trigger. `schema.sql` gooit
+  hem weg.
+- `beheer_adres()` had geen vaste search_path; nu wel. Een test eist dat
+  voortaan voor elke eigen functie.
+- Triggerfuncties (zes stuks) stonden open voor anon en authenticated. Een
+  trigger gaat af zonder dat wie schrijft hem mag uitvoeren, dus `schema.sql`
+  haalt dat recht nu weg bij elke functie die `trigger` teruggeeft. Alle
+  SQL-tests met schrijven als anon en authenticated bleven groen.
+- 65 waarschuwingen "security definer function executable" blijven, en dat is
+  bewust. Het zijn de functies waarmee de app met de database praat
+  (`poule_ophalen`, `poule_meedoen`, `tel_bezoek`, de `beheer_*`-functies,
+  die zelf eerst vragen of je beheerder bent) en de hulpfuncties die de
+  policies aanroepen (`is_member`, `mag_voor_speler`, `antwoord_open` en
+  dergelijke). Een policy draait met de rechten van wie de vraag stelt, dus
+  die moeten voor anon en authenticated aan te roepen zijn.
+- "Leaked password protection": niet van toepassing. De app kent geen
+  wachtwoorden, alleen Google en een link in je mail.
+- `pools_aanmaken` (`with check (true)`): iedereen mocht rechtstreeks een
+  poule in de tabel zetten. De app maakt een poule alleen via
+  `poule_aanmaken()` (security definer: poule, eerste speler en poulebaas in
+  één keer), dus de policy is weg, en anon en authenticated hebben op `pools`
+  geen insert- of delete-recht meer. Ook een policy die er per ongeluk bij
+  komt, zet daar dan niets open. `test/policies.test.sql` §9 zei "een poule
+  aanmaken kan zonder account" met een rechtstreekse insert; nu: rechtstreeks
+  kan niet, via `poule_aanmaken()` wel.
+
+**Tests.** `test/oude-structuur.sql` zet de twee policies en de functie erin
+zoals ze in productie stonden; `oude-structuur-controle.sql` eist dat
+`schema.sql` ze weghaalt. `test/controle.test.sql` §9: de nieuwe regel ziet
+een onbekende en een ontbrekende policy, geen triggerfunctie is via de API
+aan te roepen, en elke eigen functie heeft een vaste search_path.
+`test/policies.test.sql`: rechtstreeks een poule toevoegen kan niet, ook niet
+met een extra policy. Negen mutanten, alle gevangen.
+
+**Na de merge (Danny):** `schema.sql` opnieuw draaien, daarna Advisors,
+Security Advisor, Refresh. Verwacht: 0 errors, en bij de waarschuwingen alleen
+nog de functies van de app en de hulpfuncties van de policies, plus de
+wachtwoordcontrole. De regel `policies: alleen die uit schema.sql` hoort `ok`
+te zeggen.

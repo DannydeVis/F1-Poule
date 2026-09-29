@@ -332,9 +332,36 @@ begin
     raise exception 'gezakt: het "Wie ben jij?"-scherm heeft niets te tonen'; end if;
   raise notice 'ok: de spelerslijst komt mee voor wie nog geen lid is';
 
+  -- Een poule aanmaken kan zonder account, maar alleen via poule_aanmaken():
+  -- die maakt de poule, de eerste speler en de poulebaas in één keer. Tot 29
+  -- september mocht iedereen ook rechtstreeks een poule in de tabel zetten
+  -- (policy pools_aanmaken, `with check (true)`); de app gebruikte dat al niet
+  -- meer, en de Security Advisor van Supabase meldde hem.
+  gelukt := false;
+  begin
+    insert into pools (id, name, join_code)
+    values ('99999999-0000-0000-0000-000000000008', 'Rechtstreeks', 'RECHT1');
+    gelukt := true;
+  exception when insufficient_privilege then null;
+  end;
+  if gelukt then raise exception 'gezakt: een poule is rechtstreeks in de tabel te zetten'; end if;
+  -- En het tweede slot: ook zonder policy ertussen mogen anon en
+  -- authenticated geen poule toevoegen of weggooien. Een policy die er per
+  -- ongeluk bij komt (zoals pools_all) zet dan nog steeds niets open.
+  if has_table_privilege('anon', 'public.pools', 'insert') or has_table_privilege('authenticated', 'public.pools', 'insert')
+     or has_table_privilege('anon', 'public.pools', 'delete') or has_table_privilege('authenticated', 'public.pools', 'delete') then
+    raise exception 'gezakt: anon of authenticated heeft het recht om poules toe te voegen of weg te gooien'; end if;
+  raise notice 'ok: rechtstreeks een poule in de tabel zetten kan niet, ook niet met een extra policy';
+
+  if public.poule_aanmaken('Via de functie', null, 'Kees', array['race_top10']) -> 'poule' ->> 'id' is null then
+    raise exception 'gezakt: een poule aanmaken via poule_aanmaken() kan niet meer zonder account'; end if;
+  raise notice 'ok: een poule aanmaken kan zonder account, via poule_aanmaken()';
+
+  -- De poule waar de stappen hieronder mee verder gaan, klaargezet door de
+  -- beheerder van de database zelf.
+  reset role;
   insert into pools (id, name, join_code)
   values ('99999999-0000-0000-0000-000000000009', 'Nieuwe poule', 'NIEUW1');
-  raise notice 'ok: een poule aanmaken kan zonder account';
 
   -- ============================================================
   -- 10. Een speler aanmelden namens een ánder account kan niet
