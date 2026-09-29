@@ -2162,6 +2162,38 @@ union all
 select 'poules met een eigen jokeraantal',
        (select count(*)::text from public.pools where jokers_aantal <> 5)
 union all
+-- Sinds 28 september kan niemand meer andermans speler, account of naam
+-- gebruiken. Ook die wijziging kwam zonder regel in deze tabel, en een
+-- uitdraai kon dus niet zeggen of hij bij jou geland was. Hier staat per stuk
+-- wat er moet staan: de bewaking op pool_members, de oude meedoen-policy weg,
+-- geen schrijfrecht op pool_members buiten de kolommen om, de naamcontrole,
+-- en de policies op antwoorden, jokers en meldingen via mag_voor_speler_in().
+select 'spelers: niemand gebruikt andermans speler of naam',
+       case
+         when not exists (
+           select 1 from pg_trigger
+           where tgrelid = 'public.pool_members'::regclass
+             and tgname = 'pool_members_bewaken'
+             and (tgtype & 16) > 0) then 'ZONDER BEWAKING — draai schema.sql opnieuw'
+         when exists (
+           select 1 from pg_policies
+           where schemaname = 'public' and tablename = 'pool_members'
+             and policyname = 'pool_members_meedoen') then 'OUDE MEEDOEN-POLICY — draai schema.sql opnieuw'
+         when has_table_privilege('anon', 'public.pool_members', 'insert, update, delete')
+           or has_table_privilege('authenticated', 'public.pool_members', 'insert, update, delete')
+           then 'APP MAG SPELERS SCHRIJVEN — draai schema.sql opnieuw'
+         when to_regprocedure('public.speler_naam(text)') is null
+           then 'ZONDER NAAMCONTROLE — draai schema.sql opnieuw'
+         when (select count(*) from pg_policies
+               where schemaname = 'public'
+                 and (tablename, policyname) in (('answers', 'answers_eigen'),
+                                                 ('jokers', 'jokers_eigen'),
+                                                 ('push_abonnementen', 'push_eigen'))
+                 and qual like '%mag_voor_speler_in(%'
+                 and with_check like '%mag_voor_speler_in(%') <> 3
+           then 'OUDE POLICIES OP ANTWOORDEN — draai schema.sql opnieuw'
+         else 'ok' end
+union all
 select 'aantal poules',        (select count(*)::text from public.pools)
 union all
 select 'aantal spelers',       (select count(*)::text from public.pool_members)

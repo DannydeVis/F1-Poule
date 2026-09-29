@@ -40,7 +40,8 @@ begin
     from public.poule_controle
    where uitkomst not in ('ok')
      and controle in ('deadline-trigger op answers', 'vragen in de lijst',
-                      'jokeraantal: grens en bewaking');
+                      'jokeraantal: grens en bewaking',
+                      'spelers: niemand gebruikt andermans speler of naam');
   if gevonden is not null then
     raise exception 'gezakt: deze regels zeggen geen ok: %', gevonden;
   end if;
@@ -288,3 +289,116 @@ begin
   delete from public.pools where name = 'Controlepoule';
 end $$;
 
+-- ============================================================
+--  7. Andermans speler of naam: staat de bewaking er, en ziet de tabel het
+--     als een stuk ervan weg is
+-- ============================================================
+--
+-- Dezelfde les als bij de jokergrens: de bewaking van 28 september kwam
+-- zonder regel in de tabel, dus een uitdraai zei niet of hij geland was.
+-- Elk stuk wordt hier weggehaald en teruggezet, want een regel die alleen
+-- 'ok' kan zeggen controleert niets.
+
+do $$
+declare
+  regel constant text := 'spelers: niemand gebruikt andermans speler of naam';
+  gevonden text;
+  tabel    text;
+  policy   text;
+  rol      text;
+  recht    text;
+begin
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden is null then
+    raise exception 'gezakt: de regel over andermans speler staat niet in de tabel';
+  end if;
+  if gevonden <> 'ok' then
+    raise exception 'gezakt: vers gedraaid schema zegt al "%"', gevonden;
+  end if;
+  raise notice 'ok: een vers gedraaid schema meldt de bewaking van spelers als in orde';
+
+  -- De trigger weg: dan kan een lid weer een pagina op andermans speler zetten.
+  drop trigger pool_members_bewaken on public.pool_members;
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden not like 'ZONDER BEWAKING%' then
+    raise exception 'gezakt: zonder de trigger zegt de tabel "%"', gevonden;
+  end if;
+  raise notice 'ok: een ontbrekende bewaking wordt gemeld (%)', gevonden;
+
+  -- Een trigger met die naam die niet op update vuurt, is net zo goed weg.
+  create trigger pool_members_bewaken
+    before insert on public.pool_members
+    for each row execute function public.pool_members_bewaken();
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden not like 'ZONDER BEWAKING%' then
+    raise exception 'gezakt: met een trigger die niet op update vuurt zegt de tabel "%"', gevonden;
+  end if;
+  raise notice 'ok: en een trigger die niet op update vuurt ook';
+  drop trigger pool_members_bewaken on public.pool_members;
+  create trigger pool_members_bewaken
+    before update on public.pool_members
+    for each row execute function public.pool_members_bewaken();
+
+  -- De oude policy terug: daarmee kon je jezelf aan elke speler hangen.
+  create policy pool_members_meedoen on public.pool_members
+    for insert to anon, authenticated with check (true);
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden not like 'OUDE MEEDOEN-POLICY%' then
+    raise exception 'gezakt: met de oude meedoen-policy zegt de tabel "%"', gevonden;
+  end if;
+  raise notice 'ok: de oude meedoen-policy wordt gemeld (%)', gevonden;
+  drop policy pool_members_meedoen on public.pool_members;
+
+  -- Schrijfrecht op de hele tabel, voor elke rol en elk recht apart. Het
+  -- recht op drie kolommen dat er hoort te staan, telt niet mee: op een vers
+  -- schema staat het er al, en toen zei de regel 'ok'.
+  foreach rol in array array['anon', 'authenticated'] loop
+    foreach recht in array array['insert', 'update', 'delete'] loop
+      execute format('grant %s on public.pool_members to %I', recht, rol);
+      select uitkomst into gevonden from public.poule_controle where controle = regel;
+      if gevonden not like 'APP MAG SPELERS SCHRIJVEN%' then
+        raise exception 'gezakt: met % voor % zegt de tabel "%"', recht, rol, gevonden;
+      end if;
+      execute format('revoke %s on public.pool_members from %I', recht, rol);
+    end loop;
+  end loop;
+  grant update (user_id, profiel_code, profiel) on public.pool_members to anon, authenticated;
+  raise notice 'ok: schrijfrecht op pool_members wordt gemeld, per rol en per recht';
+
+  -- De naamcontrole weg: dan kan een naam weer leeg of eindeloos lang.
+  alter function public.speler_naam(text) rename to speler_naam_weg;
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden not like 'ZONDER NAAMCONTROLE%' then
+    raise exception 'gezakt: zonder speler_naam() zegt de tabel "%"', gevonden;
+  end if;
+  raise notice 'ok: een ontbrekende naamcontrole wordt gemeld (%)', gevonden;
+  alter function public.speler_naam_weg(text) rename to speler_naam;
+
+  -- Elke policy op zich terug naar "wie is lid, mag schrijven". In using of
+  -- in with check alleen is ook fout.
+  foreach tabel in array array['answers', 'jokers', 'push_abonnementen'] loop
+    policy := case tabel when 'answers' then 'answers_eigen'
+                         when 'jokers' then 'jokers_eigen'
+                         else 'push_eigen' end;
+    execute format('alter policy %I on public.%I using (public.is_member(pool_id))', policy, tabel);
+    select uitkomst into gevonden from public.poule_controle where controle = regel;
+    if gevonden not like 'OUDE POLICIES OP ANTWOORDEN%' then
+      raise exception 'gezakt: met een oude using op % zegt de tabel "%"', tabel, gevonden;
+    end if;
+    execute format('alter policy %I on public.%I using (public.mag_voor_speler_in(member_id, pool_id))
+                    with check (public.is_member(pool_id))', policy, tabel);
+    select uitkomst into gevonden from public.poule_controle where controle = regel;
+    if gevonden not like 'OUDE POLICIES OP ANTWOORDEN%' then
+      raise exception 'gezakt: met een oude with check op % zegt de tabel "%"', tabel, gevonden;
+    end if;
+    execute format('alter policy %I on public.%I using (public.mag_voor_speler_in(member_id, pool_id))
+                    with check (public.mag_voor_speler_in(member_id, pool_id))', policy, tabel);
+  end loop;
+  raise notice 'ok: een oude policy op antwoorden, jokers of meldingen wordt gemeld';
+
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden <> 'ok' then
+    raise exception 'gezakt: met alles teruggezet zegt de tabel "%"', gevonden;
+  end if;
+  raise notice 'ok: en met alles teruggezet staat hij weer op ok';
+end $$;
