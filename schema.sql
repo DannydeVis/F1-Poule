@@ -639,6 +639,78 @@ as $$
   );
 $$;
 
+-- Wanneer gaat een sessie van een race dicht? Eén plek voor die vraag, want
+-- hij wordt twee keer gesteld: bij het schrijven (poule_antwoord_deadline()
+-- hieronder: daarna mag er niets meer bij) en bij het lezen (antwoord_open():
+-- daarna mogen je medespelers het zien). Liepen die twee uit elkaar, dan kon
+-- iemand de voorspelling van een ander lezen terwijl hij zijn eigen nog kon
+-- aanpassen.
+--
+-- Per sessie zijn eigen deadline. Stond als `case ... else deadline_race`, en
+-- dat betekende dat elke sessie die niet 'quali' heette stilletjes aan de
+-- race-deadline hing -- voor een sprint dus de verkeerde, en zonder dat iemand
+-- het zou merken. 'seizoen' en 'weekend' zijn de eerste sessie van het
+-- weekend, wat die ook is: de seizoenslaag ligt vast zodra er in ronde 1 iets
+-- begint, en een joker zodra zijn weekend begint. `least` slaat lege deadlines
+-- over, dus een weekend zonder sprint werkt gewoon.
+create or replace function public.sessie_deadline(p_race bigint, p_sessie text)
+returns timestamptz
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select case p_sessie
+           when 'quali'   then r.deadline_quali
+           when 'sprint'  then r.deadline_sprint
+           when 'seizoen' then least(r.deadline_sprint, r.deadline_quali, r.deadline_race)
+           when 'weekend' then least(r.deadline_sprint, r.deadline_quali, r.deadline_race)
+           else                r.deadline_race
+         end
+  from public.races r where r.id = p_race;
+$$;
+
+-- Mag iedereen in de poule dit antwoord zien? Pas als de sessie waar het bij
+-- hoort dicht is. Tot dan is een voorspelling van jou alleen: wie de top 10
+-- van een ander kan lezen terwijl zijn eigen nog open staat, kan hem
+-- overnemen. De app liet ze al pas na de deadline zien, maar de database gaf
+-- ze eerder: via de API, met de anon key uit index.html, voor iedereen die
+-- even in de code keek. Zie OVERDRACHT, "Geheim tot de deadline".
+--
+-- Zonder deadline (nog niet bekend) blijft het dicht. Een onbekende vraag of
+-- race ook: coalesce maakt van "weet ik niet" een nee.
+create or replace function public.antwoord_open(p_race bigint, p_vraag text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce((select now() > public.sessie_deadline(p_race, q.sessie)
+                    from public.questions q where q.id = p_vraag), false);
+$$;
+
+-- En een joker: pas zichtbaar als zijn weekend begonnen is. Dat is ook het
+-- moment waarop hij vastligt (poule_joker_bewaken()); daarvoor kun je hem nog
+-- verzetten, en weten waar een ander de zijne neerlegt is dan net zo goed een
+-- voorsprong.
+create or replace function public.joker_open(p_race bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(now() > public.sessie_deadline(p_race, 'weekend'), false);
+$$;
+
+revoke all on function public.sessie_deadline(bigint, text) from public;
+revoke all on function public.antwoord_open(bigint, text)   from public;
+revoke all on function public.joker_open(bigint)            from public;
+grant execute on function public.sessie_deadline(bigint, text) to anon, authenticated;
+grant execute on function public.antwoord_open(bigint, text)   to anon, authenticated;
+grant execute on function public.joker_open(bigint)            to anon, authenticated;
+
 create or replace function public.poule_antwoord_deadline()
 returns trigger
 language plpgsql
@@ -679,23 +751,14 @@ begin
   select q.sessie into sessie_van from public.questions q where q.id = new.question_id;
   if not found then return new; end if;
 
-  -- Per sessie zijn eigen deadline. Stond als `case ... else deadline_race`,
-  -- en dat betekende dat elke sessie die niet 'quali' heette stilletjes aan de
-  -- race-deadline hing -- voor een sprint dus de verkeerde, en zonder dat
-  -- iemand het zou merken.
+  -- Per sessie zijn eigen deadline, uit sessie_deadline(): dezelfde die
+  -- bepaalt wanneer je medespelers het antwoord mogen zien.
   --
   -- De seizoenslaag hangt aan de éérste sessie van de race waar hij op staat.
   -- De app schrijft die antwoorden weg op ronde 1 van het seizoen, dus dit is
   -- precies "voordat er iets gereden is" -- en daarna nooit meer.
-  select case sessie_van
-           when 'quali'   then r.deadline_quali
-           when 'sprint'  then r.deadline_sprint
-           when 'seizoen' then least(r.deadline_sprint, r.deadline_quali, r.deadline_race)
-           else                r.deadline_race
-         end
-    into deadline
-  from public.races r where r.id = new.race_id;
-  if not found then return new; end if;
+  if not exists (select 1 from public.races r where r.id = new.race_id) then return new; end if;
+  deadline := public.sessie_deadline(new.race_id, sessie_van);
 
   -- De seizoenslaag heeft zijn eigen regel, en die is losser dan een deadline.
   --
@@ -1062,17 +1125,43 @@ as $$
                      'profiel',      case when m.user_id is not null and m.user_id = auth.uid()
                                           then m.profiel end) order by m.created_at)
                    from public.pool_members m, poule p where m.pool_id = p.id), '[]'::jsonb),
+    -- De antwoorden van je medespelers pas als hun sessie dicht is; die van
+    -- jezelf (en van de speler zonder account die jouw toestel inschreef)
+    -- altijd. Zie antwoord_open(). Tot 29 september kwamen hier alle
+    -- antwoorden van de poule mee, ook die nog openstonden.
+    --
+    -- Anders dan answers_lezen zonder is_member(): wie de code heeft maar
+    -- (nog) niet meedoet, kijkt mee. De app zegt dat ook ("je kunt hier
+    -- meekijken") tegen wie op een ander toestel een naam kiest die aan een
+    -- ander account hangt, en de stand is zonder de antwoorden die dicht zijn
+    -- niets waard. Met de code kan hij toch meedoen; wat openstaat is ook voor
+    -- hem dicht.
     'antwoorden', coalesce((select jsonb_agg(to_jsonb(a))
-                   from public.answers a, poule p where a.pool_id = p.id), '[]'::jsonb),
+                   from public.answers a, poule p where a.pool_id = p.id
+                    and (public.antwoord_open(a.race_id, a.question_id)
+                         or public.mag_voor_speler(a.member_id))), '[]'::jsonb),
+    -- De rest wel, maar zonder waarde: alleen dát iemand iets inleverde. De
+    -- app zet daar "3 van 4 ingeleverd" en een vinkje per speler mee, en
+    -- vertelt wie er nog niets heeft. Wat hij koos, blijft tot de deadline
+    -- van hem.
+    'ingeleverd', coalesce((select jsonb_agg(jsonb_build_object(
+                     'race_id', a.race_id, 'member_id', a.member_id,
+                     'question_id', a.question_id))
+                   from public.answers a, poule p where a.pool_id = p.id
+                    and not (public.antwoord_open(a.race_id, a.question_id)
+                             or public.mag_voor_speler(a.member_id))), '[]'::jsonb),
     'poulevragen',coalesce((select jsonb_agg(pq.question_id)
                    from public.pool_questions pq, poule p where pq.pool_id = p.id), '[]'::jsonb),
     -- Alleen race_id en member_id: een joker is een feit, geen inhoud. Dat de
     -- jokers van je medespelers meekomen is met opzet -- zonder die rijen
     -- klopt de stand niet, want een joker verdubbelt wat iemand dat weekend
-    -- scoorde.
+    -- scoorde. Maar pas als dat weekend begonnen is, net als in jokers_lezen;
+    -- je eigen altijd.
     'jokers',     coalesce((select jsonb_agg(jsonb_build_object(
                      'race_id', j.race_id, 'member_id', j.member_id))
-                   from public.jokers j, poule p where j.pool_id = p.id), '[]'::jsonb)
+                   from public.jokers j, poule p where j.pool_id = p.id
+                    and (public.joker_open(j.race_id)
+                         or public.mag_voor_speler(j.member_id))), '[]'::jsonb)
   ) end;
 $$;
 
@@ -1467,11 +1556,17 @@ create policy pool_questions_beheren on public.pool_questions
   using (public.mag_beheren(pool_id)) with check (public.mag_beheren(pool_id));
 
 -- ---- de inzendingen zelf ------------------------------------
--- Binnen je eigen poule mag je alles zien: de app laat je na de deadline
--- elkaars top 10 zien en de stand telt iedereen mee. Daarbuiten niets, en
--- dat is het verschil met hoe dit stond.
+-- Binnen je eigen poule zie je elkaars antwoorden, maar pas als de sessie
+-- dicht is: de app laat je na de deadline elkaars top 10 zien en de stand
+-- telt iedereen mee. Daarbuiten niets. Je eigen antwoorden zie je altijd, via
+-- answers_eigen hieronder (`for all` geldt ook voor lezen).
+--
+-- Tot 29 september stond hier alleen is_member(pool_id). Dan kon elk lid de
+-- voorspellingen van de anderen al lezen terwijl hij zijn eigen nog kon
+-- invullen.
 create policy answers_lezen on public.answers
-  for select to anon, authenticated using (public.is_member(pool_id));
+  for select to anon, authenticated
+  using (public.is_member(pool_id) and public.antwoord_open(race_id, question_id));
 -- Schrijven alleen voor je eigen speler. `for all` dekt insert, update én
 -- delete in één keer, en dat is precies wat een upsert nodig heeft: PostgREST
 -- maakt daar insert ... on conflict do update van.
@@ -1482,10 +1577,13 @@ create policy answers_eigen on public.answers
 
 -- ---- jokers -------------------------------------------------
 -- Dezelfde afspraak als bij de antwoorden: binnen je poule zie je ze
--- allemaal (anders klopt de stand niet en weet je niet wie zijn joker waar
--- neerlegt), erbuiten niets. Schrijven alleen voor je eigen speler.
+-- allemaal zodra hun weekend begonnen is (anders klopt de stand niet),
+-- erbuiten niets. Daarvoor kan een joker nog verzetten, en weten waar een
+-- ander de zijne neerlegt is dan een voorsprong. Je eigen jokers zie je
+-- altijd, via jokers_eigen. Schrijven alleen voor je eigen speler.
 create policy jokers_lezen on public.jokers
-  for select to anon, authenticated using (public.is_member(pool_id));
+  for select to anon, authenticated
+  using (public.is_member(pool_id) and public.joker_open(race_id));
 create policy jokers_eigen on public.jokers
   for all to anon, authenticated
   using (public.mag_voor_speler_in(member_id, pool_id))
@@ -2192,6 +2290,26 @@ select 'spelers: niemand gebruikt andermans speler of naam',
                  and qual like '%mag_voor_speler_in(%'
                  and with_check like '%mag_voor_speler_in(%') <> 3
            then 'OUDE POLICIES OP ANTWOORDEN — draai schema.sql opnieuw'
+         else 'ok' end
+union all
+-- Sinds 29 september zie je de voorspellingen en jokers van je medespelers pas
+-- na de deadline, zowel rechtstreeks (de leespolicies) als via
+-- poule_ophalen(). Staat een van de twee nog op de oude manier, dan kan elk
+-- lid de lijsten van de anderen lezen terwijl de zijne nog openstaat.
+select 'voorspellingen geheim tot de deadline',
+       case
+         when (select count(*) from pg_policies
+               where schemaname = 'public'
+                 and (   (tablename = 'answers' and policyname = 'answers_lezen'
+                          and qual like '%is_member(%' and qual like '%antwoord_open(%')
+                      or (tablename = 'jokers' and policyname = 'jokers_lezen'
+                          and qual like '%is_member(%' and qual like '%joker_open(%'))) <> 2
+           then 'LEZEN VOOR DE DEADLINE KAN NOG — draai schema.sql opnieuw'
+         when not exists (
+           select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'poule_ophalen'
+             and p.prosrc like '%antwoord_open(%' and p.prosrc like '%joker_open(%')
+           then 'POULE_OPHALEN GEEFT ALLES — draai schema.sql opnieuw'
          else 'ok' end
 union all
 select 'aantal poules',        (select count(*)::text from public.pools)

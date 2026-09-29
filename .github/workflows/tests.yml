@@ -123,6 +123,17 @@ jobs:
           psql -d identiteit -v ON_ERROR_STOP=1 -f schema.sql
           psql -d identiteit -v ON_ERROR_STOP=1 -f test/identiteit.test.sql
 
+      # Geheim tot de deadline: de voorspellingen en jokers van je medespelers
+      # zie je pas als hun sessie dicht is, rechtstreeks en via
+      # poule_ophalen(); van de rest alleen dát iemand iets inleverde. Per
+      # sessie, op de deadline zelf, en als lid, als vreemde en zonder account.
+      - name: geheim — voorspellingen pas zichtbaar na de deadline
+        run: |
+          createdb geheim
+          psql -d geheim -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d geheim -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d geheim -v ON_ERROR_STOP=1 -f test/geheim.test.sql
+
       # "Verwijder mijn account" moet precies doen wat het scherm belooft, en
       # het verschil tussen de twee smaken is niet cosmetisch: de ene laat de
       # stand van je medespelers heel, de andere niet.

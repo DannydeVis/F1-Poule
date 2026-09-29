@@ -188,13 +188,43 @@ function isLid(poolId) {
   return !!ik && store.pool_members.some((m) => gelijk(m.pool_id, poolId) && gelijk(m.user_id, ik));
 }
 
+// sessie_deadline(), antwoord_open() en joker_open() uit schema.sql. Een
+// antwoord van een medespeler is pas te zien als zijn sessie dicht is, een
+// joker als zijn weekend begonnen is. Zonder deadline, of met een onbekende
+// vraag of race: dicht (NaN is nergens kleiner dan).
+function sessieDeadline(race, sessie) {
+  if (!race) return NaN;
+  const tijd = (k) => Date.parse(race[k] ?? '');
+  if (sessie === 'quali') return tijd('deadline_quali');
+  if (sessie === 'sprint') return tijd('deadline_sprint');
+  if (sessie === 'seizoen' || sessie === 'weekend') {
+    const tijden = ['deadline_sprint', 'deadline_quali', 'deadline_race']
+      .map(tijd).filter((t) => !Number.isNaN(t));
+    return tijden.length ? Math.min(...tijden) : NaN;
+  }
+  return tijd('deadline_race');
+}
+const raceVan = (id) => store.races.find((r) => gelijk(r.id, id));
+function antwoordOpen(rij) {
+  const vraag = (store.questions ?? []).find((q) => q.id === rij.question_id);
+  return !!vraag && Date.now() > sessieDeadline(raceVan(rij.race_id), vraag.sessie);
+}
+const jokerOpen = (rij) => Date.now() > sessieDeadline(raceVan(rij.race_id), 'weekend');
+
 // De leespolicies uit schema.sql, in dezelfde volgorde. Een rij die hier
 // false krijgt bestaat voor deze sessie simpelweg niet -- precies wat RLS
-// doet, en nadrukkelijk geen foutmelding.
+// doet, en nadrukkelijk geen foutmelding. Bij antwoorden en jokers telt ook
+// de policy voor je eigen speler (`for all` geldt ook voor lezen).
 function magLezen(tabel, rij) {
   if (tabel === 'pools')          return !!rij.is_public || isLid(rij.id);
   if (tabel === 'pool_members')   return gelijk(rij.user_id, wieBenIk()) || isLid(rij.pool_id);
-  if (tabel === 'answers' || tabel === 'pool_questions') return isLid(rij.pool_id);
+  if (tabel === 'answers') {
+    return (isLid(rij.pool_id) && antwoordOpen(rij)) || magVoorSpelerIn(rij.member_id, rij.pool_id);
+  }
+  if (tabel === 'jokers') {
+    return (isLid(rij.pool_id) && jokerOpen(rij)) || magVoorSpelerIn(rij.member_id, rij.pool_id);
+  }
+  if (tabel === 'pool_questions') return isLid(rij.pool_id);
   return true;   // races en questions zijn gedeelde gegevens
 }
 
@@ -665,13 +695,20 @@ const functies = {
         profiel_code: m.user_id && gelijk(m.user_id, ik) ? m.profiel_code ?? null : null,
         profiel: m.user_id && gelijk(m.user_id, ik) ? m.profiel ?? null : null,
       }));
+    // De antwoorden van medespelers pas na hun deadline, je eigen altijd; van
+    // de rest alleen dát ze er zijn. Zelfde voor de jokers, zonder de rest.
+    const zichtbaar = (a) => antwoordOpen(a) || magVoorSpeler(a.member_id);
+    const vanPoule = (store.answers ?? []).filter((a) => gelijk(a.pool_id, poule.id));
     return { data: {
       poule: kopie(poule),
       leden: kopie(leden),
-      antwoorden: kopie((store.answers ?? []).filter((a) => gelijk(a.pool_id, poule.id))),
+      antwoorden: kopie(vanPoule.filter(zichtbaar)),
+      ingeleverd: vanPoule.filter((a) => !zichtbaar(a))
+        .map(({ race_id, member_id, question_id }) => ({ race_id, member_id, question_id })),
       poulevragen: (store.pool_questions ?? [])
         .filter((r) => gelijk(r.pool_id, poule.id)).map((r) => r.question_id),
       jokers: (store.jokers ?? []).filter((j) => gelijk(j.pool_id, poule.id))
+        .filter((j) => jokerOpen(j) || magVoorSpeler(j.member_id))
         .map(({ race_id, member_id }) => ({ race_id, member_id })),
     }, error: null };
   },
@@ -988,7 +1025,12 @@ function volgendeFout() {
   return fout ? { data: null, error: fout } : null;
 }
 
+// Hoe vaak elke functie is aangeroepen. test/geheim.test.mjs telt er het
+// opnieuw ophalen na een deadline mee.
+globalThis.__rpcTeller = {};
+
 async function rpc(naam, argumenten) {
+  globalThis.__rpcTeller[naam] = (globalThis.__rpcTeller[naam] ?? 0) + 1;
   const fout = volgendeFout();
   if (fout) return fout;
   const fn = functies[naam];

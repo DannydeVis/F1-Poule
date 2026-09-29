@@ -59,11 +59,22 @@ check('bestaande naam intypen maakt geen tweede speler aan', spelers === 1, `${s
 
 const naVinkjes = await page.$$eval('[data-race]:has(.nm:text-is("Melbourne")) .mk i',
   (n) => n.map((x) => x.textContent + ':' + (x.className || 'uit')));
-check('en de eerdere voorspelling is er nog', naVinkjes[0] === 'Q:aan', naVinkjes.join(' '));
+check('en de eerdere voorspelling staat er nog als ingeleverd', naVinkjes[0] === 'Q:aan', naVinkjes.join(' '));
+check('ook bovenaan: de kwalificatie staat op klaar',
+  await page.isVisible('.hero .sessie.klaar'),
+  await page.$eval('.hero .sessies', (el) => el.innerHTML.replace(/\s+/g, ' ')).catch(() => 'geen .hero'));
 
+// Maar wat erin staat, zie je hier niet. Een leeg localStorage is een nieuw
+// account, en Danny hangt aan het oude: voor de database is dit iemand die
+// "danny" intypte. Zou die de open lijst van Danny te zien krijgen, dan kon
+// iedereen met de code dat. Pas na inloggen met je mailadres ben je hier ook
+// Danny (test/geheim.test.sql). Weg is de voorspelling niet.
 await openRace(page, 'Melbourne');
 const ingevuld = await page.$$eval('.slot.vol', (n) => n.length);
-check('de top 10 staat weer volledig ingevuld', ingevuld === 10, `${ingevuld}/10`);
+check('wat erin staat zie je op een ander toestel pas na inloggen', ingevuld === 0, `${ingevuld}/10`);
+check('en de voorspelling zelf is er nog, heel',
+  await page.evaluate(() => globalThis.__db.answers.length === 1
+    && globalThis.__db.answers[0].waarde.length === 10));
 
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 

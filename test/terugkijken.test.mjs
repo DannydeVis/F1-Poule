@@ -181,6 +181,9 @@ await page.waitForSelector('[data-bekijk]');
 await page.evaluate(() => {
   const r = globalThis.__db.races.find((x) => String(x.id) === '1');
   r.race_result = ['1', '6', '63', '16', '44', '4', '81', '10', '14', '18', '12', '43'];
+  // Een uitslag komt pas na de start; zonder dit geeft de database de
+  // race-antwoorden van Joey nog niet vrij (geheim tot de deadline).
+  r.deadline_race = new Date(Date.now() - 1800e3).toISOString();
   globalThis.__db.answers.push(
     { pool_id: 'pool-1', race_id: 1, member_id: 'lid-2', question_id: 'winnaar', waarde: '1' },
     { pool_id: 'pool-1', race_id: 1, member_id: 'lid-2', question_id: 'teamgenoot_duels', waarde: ['1'] });
