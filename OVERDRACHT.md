@@ -8884,6 +8884,26 @@ Danger Zone → Change visibility). Twee dingen om te weten:
   uitslagen. Dus: eerst de workflows zuiniger (tests alleen bij een PR, niet
   ook bij elke push), dan privé.
 
+**Besluit (29 september): de repository blijft openbaar.** Danny wil er geen
+geld aan uitgeven, en zo kost het niets: GitHub Pages en de Actions-minuten zijn
+gratis voor een openbare repository (GitHub rekende voor de runs van 27 tot 29
+september 0 minuten). De code is beschermd door "alle rechten voorbehouden" in
+README en LICENSE. Privé met een gratis account kan niet zonder dat de site uit
+de lucht gaat (Pages vraagt dan een betaald account), en de 2.000 gratis
+minuten zijn te weinig. Gemeten looptijden:
+
+- Circuitcijfers ongeveer 13 minuten per keer; elke dag plus om de twee uur in
+  het raceweekend is dat zo'n 2.400 minuten per maand;
+- Tests ongeveer 11 minuten per PR, met twee taken tegelijk (de push naar main
+  na de automerge start ze niet opnieuw: een merge met GITHUB_TOKEN start geen
+  nieuwe workflows, dus de regel hierboven over "bij elke push" klopt niet);
+- de sync minder dan een minuut per keer, maar GitHub rekent per taak een hele
+  minuut, dus tot 2.880 minuten als hij echt elk kwartier draait.
+
+Gaat de site geld opleveren, dan is Pro (ongeveer 4 dollar per maand) de weg,
+na eerst de circuitcijfers en de sync zuiniger te zetten. Tot dan: niet
+opnieuw voorstellen.
+
 ---
 
 ## De controletabel wist niets van de bewaking van spelers (29 september)
