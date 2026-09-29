@@ -802,7 +802,10 @@ De policies staan dicht. Wat dat concreet betekent:
   en dat bleek ook voor lezen te gelden. Een vreemde kon daarmee zonder code
   een poule binnenkomen; zie OVERDRACHT, "Niemand gebruikt andermans speler".
   Het getal `spelers zonder account` onderaan de uitvoer van `schema.sql` laat
-  zien hoeveel er nog aan niemand hangen.
+  zien hoeveel er nog aan niemand hangen. De regel `spelers: niemand gebruikt
+  andermans speler of naam` in diezelfde tabel zegt of deze bewaking in je
+  database staat: `ok`, of welk stuk ontbreekt en dat je `schema.sql` opnieuw
+  moet draaien.
 - **Een naam is van één speler per poule.** `poule_meedoen()` weigert een naam
   die al meedoet (hoofdletters en spaties aan de randen tellen niet), een lege
   naam en een naam van meer dan 60 tekens. Een naam veranderen kan niet via de

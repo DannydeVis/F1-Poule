@@ -8884,3 +8884,35 @@ Danger Zone → Change visibility). Twee dingen om te weten:
   uitslagen. Dus: eerst de workflows zuiniger (tests alleen bij een PR, niet
   ook bij elke push), dan privé.
 
+---
+
+## De controletabel wist niets van de bewaking van spelers (29 september)
+
+Danny draaide `schema.sql` opnieuw en stuurde de controletabel. Daaruit viel
+niet op te maken of de bewaking van 28 september (niemand gebruikt andermans
+speler, account of naam) bij hem geland was: die wijziging kwam, net als eerder
+de jokergrens, zonder regel in de tabel. De uitdraai was regel voor regel
+dezelfde als die van vóór de wijziging. Vanuit de sessie is de database van
+Supabase niet te bereiken (het netwerk blokkeert hem), dus ook nameten ging
+niet.
+
+Eén regel erbij, bovenaan bij de andere ja-nee-regels:
+**`spelers: niemand gebruikt andermans speler of naam`**. Die zegt `ok` als
+alles er staat, en anders welk stuk ontbreekt, met "draai schema.sql opnieuw":
+
+- `ZONDER BEWAKING`: de trigger `pool_members_bewaken` ontbreekt, of vuurt
+  niet op update;
+- `OUDE MEEDOEN-POLICY`: de policy `pool_members_meedoen` staat er nog;
+- `APP MAG SPELERS SCHRIJVEN`: anon of authenticated heeft insert, update of
+  delete op de hele tabel `pool_members` (het recht op de drie kolommen
+  `user_id`, `profiel_code` en `profiel` hoort er en telt niet mee);
+- `ZONDER NAAMCONTROLE`: de functie `speler_naam()` ontbreekt;
+- `OUDE POLICIES OP ANTWOORDEN`: `answers_eigen`, `jokers_eigen` of
+  `push_eigen` gebruikt in `using` of `with check` niet
+  `mag_voor_speler_in()`.
+
+Staat de regel er helemaal niet, dan draaide er een `schema.sql` van vóór 29
+september: de tabel wordt elke keer opnieuw gemaakt uit het bestand.
+
+`test/controle.test.sql` §7 haalt elk stuk weg, kijkt of de regel het meldt,
+en zet het terug; acht mutanten op de regel zelf, alle gevangen.
