@@ -1974,6 +1974,28 @@ onder id `over`. De eerste zin is de kernzin en de zin over de maker komt uit
 persoonlijks (waarom je begon, hoe het gratis blijft) wilde je er op 27
 september niet bij; verandert dat, zeg het dan.
 
+**De vergelijking** (`/f1-poule-apps-vergeleken/`, `/en/f1-prediction-games-compared/`)
+staat in `site/paginas.mjs` onder id `vergelijking`. Bovenaan staat dat jij hem
+schreef. Wat er over de andere apps staat, komt van hun eigen site; per feit
+staat de bron in `docs/zoekplan/concurrenten.md`, onderaan. Twee dingen doe je
+zelf:
+
+- **Voordat hij online gaat:** klik de links in die tabel na en kijk of elk feit
+  er nog staat. Claude Code kon de sites zelf niet openen (de netwerkinstelling
+  van zijn omgeving) en las ze via een zoekmachine, alleen van hun eigen
+  domein. Klopt iets niet, haal het dan weg of laat het Claude Code aanpassen.
+- **Elke drie maanden:** opnieuw controleren. `node scripts/maak-site.mjs`
+  waarschuwt vanzelf als de controle meer dan 92 dagen geleden is ("Let op: de
+  feiten op vergelijking ..."). Daarna zet je `gecontroleerd` in
+  `site/paginas.mjs` op de datum van de nieuwe controle; die staat zichtbaar op
+  de pagina. De waarschuwing laat het maken niet zakken.
+
+Wil je de sites zelf door Claude Code laten openen, zet dan in de instellingen
+van de omgeving (het menu van de cloudomgeving bovenin de sessie, dan Edit)
+bij Network access deze domeinen erbij: f1predict.formula1.com,
+fantasy.formula1.com, formula1.com, gppoule.nl, poules.com, superbru.com,
+gridrival.com, kicktipp.de en podiumprophets.com.
+
 **Overal hetzelfde verhaal (GEO).** De kernzin ("Predict the Race is een
 gratis F1-poule voor vriendengroepen: ...") staat per taal in
 `site/teksten.mjs`, met een korte versie en een zin over de maker. Hij staat

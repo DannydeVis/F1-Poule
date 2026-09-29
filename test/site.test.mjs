@@ -295,6 +295,10 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
       nl: ['komen van OpenF1', 'een database bij Supabase', 'onafhankelijk fanproject'],
       en: ['come from OpenF1', 'a Supabase database', 'independent fan project'],
     },
+    vergelijking: {
+      nl: [`${exactApp} punten voor precies goed en ${bijnaApp} bij één plek ernaast`],
+      en: [`${exactApp} points for the exact spot and ${bijnaApp} for one place off`],
+    },
     excel: {
       nl: [`MAX(0;${fMax}-${fStap}*ABS(B2-C2))`, `=ALS(B14=C14;${winnaarApp};0)`, `de winnaar ${winnaarApp} punten waard`],
       en: [`MAX(0,${fMax}-${fStap}*ABS(B2-C2))`, `=IF(B14=C14,${winnaarApp},0)`, `the winner is worth ${winnaarApp} points`],

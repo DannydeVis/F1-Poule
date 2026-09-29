@@ -9092,3 +9092,67 @@ gevangen. Let op bij mutanten in een kopie van de repo: `site.test.mjs` heeft
 `git ls-files` nodig. Zonder `.git` loopt hij vast, en dan lijkt een mutant
 gevangen terwijl de test nooit bij de controle kwam. Dat gebeurde hier eerst;
 met een `git init` in de kopie vingen de juiste controles ze alsnog.
+
+## De vergelijkingspagina (29 september, PR 2 van 2, concept)
+
+Van Danny: de vergelijkingspagina uit het zoekplan (SEO fase 2, AEO 3.2, GEO
+fase 4), NL en EN, met de open vragen uit `site/vragen.mjs`. "Met F1 Predict
+bedoel je het officiële spel van de F1, niet de losse iPhone-app met die naam.
+Controleer elk feit op de eigen site van die app, met datum; wat je niet kunt
+controleren laat je weg."
+
+**De pagina.** `vergelijking` in `site/paginas.mjs`, NL
+`/f1-poule-apps-vergeleken/` en EN `/en/f1-prediction-games-compared/`, met de
+titels uit het plan. Vier secties, precies de vier open vragen per taal:
+welke app bij je groep past (met de tabel), het verschil met F1 Predict, een
+gratis alternatief voor F1 Fantasy, en wanneer iets anders beter past. Die
+vragen staan nu op beantwoord, en `GEPLANDE_PAGINAS` is leeg. De apps volgen
+het plan: in het Nederlands F1 Predict, F1 Fantasy, GP Poule, poules.com,
+Superbru en Excel; in het Engels F1 Predict, F1 Fantasy, Superbru, GridRival,
+Kicktipp, Podium Prophets en een spreadsheet. De zwakke punten van Predict the
+Race staan erin, zoals GEO fase 4 vraagt: geen prijzen, geen app in de stores,
+de app alleen in NL en EN, en jong (sinds september 2026, één maker). Podium
+Prophets telt een top 10 standaard net zo (5, 3, 1); dat staat er eerlijk bij,
+met wat elk van de twee extra heeft.
+
+**Wie het schreef.** Het plan wil "Deze vergelijking is geschreven door de
+maker van Predict the Race." bovenaan, vóór het korte antwoord. De
+antwoordvorm eist dat het korte antwoord direct onder de auteursregel staat.
+Daarom staat de zin ín de auteursregel, als tweede zin (veld `openheid`).
+
+**De feiten over de anderen.** De sites van de andere apps waren vanuit de
+omgeving van Claude Code niet te openen: de netwerkinstelling laat ze niet
+door, ook niet via WebFetch. Wel werkte zoeken met alleen hun eigen domein. Wat
+op de pagina staat, is dus gelezen uit de titels en tekst van hun eigen
+pagina's zoals een zoekmachine die toont, niet uit lijstjes van anderen. Per
+feit staat de bron in `docs/zoekplan/concurrenten.md`, onderaan. Wat zo niet
+te vinden was, staat er niet: hoeveel vragen F1 Predict stelt en hoe het daar
+telt, of je bij GP Poule, poules.com en Superbru een account nodig hebt, of de
+uitslagen daar vanzelf binnenkomen, en de talen van de andere apps. Daarom
+heeft de tabel minder kolommen dan het plan noemde (wat je doet, wat het kost,
+met je eigen groep). De prijs van poules.com komt uit hun blog van januari 2023
+en staat er zonder bedrag. Dit is de reden dat de PR een concept is: Danny
+klikt de links na voordat de pagina online gaat (BEDIENING, hoofdstuk 18).
+
+**De datum van de controle.** `gecontroleerd: '2026-09-29'` op de pagina. Hij
+staat zichtbaar in het bijschrift van de tabel en in de zin eronder
+(`{gecontroleerd}`, in de taal van de pagina). Na 92 dagen waarschuwt
+`maak-site.mjs` ("Let op: de feiten op vergelijking zijn ... dagen geleden
+gecontroleerd"), op dezelfde klok als de datums van de pagina's (`VANDAAG`).
+Het maken zakt er niet op: een test die op datum zakt, blokkeert elke andere
+merge (AEO fase 2.6).
+
+**De generator.** Een nieuwe soort, `vergelijking`: een Article zoals een gids,
+onder "Gidsen" in de voet van de voorpagina, zonder teaser in de blokken, en in
+llms.txt onder een eigen kopje "Comparison". Nieuw in een sectie:
+`appstabel`, met per rij een naam, een link (`url` naar de eigen site, of
+`pagina` naar een pagina van deze site) en de cellen. Op een smal scherm wordt
+elke rij een blok, met de kolomnaam voor elke cel (`data-kop`). Die CSS
+(`APPS_CSS`) komt alleen op een pagina met zo'n tabel, zodat de andere gidsen
+geen nieuwe datum krijgen.
+
+**Tests.** Nieuw: `test/vergelijking.test.mjs`. `site.test.mjs` (de punten uit
+de app op de pagina) en `geo.test.mjs` (het kopje in llms.txt) doen mee; de
+algemene keuring (antwoordvorm, contrast, 360 pixels, links) geldt vanzelf.
+De zin dat Podium Prophets standaard net zo telt, bewaakt de test tegen
+de telling van de app. Drieëntwintig mutanten, alle gevangen.
