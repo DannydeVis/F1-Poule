@@ -29,7 +29,7 @@ export const PRIVACY = {
     omschrijving: 'Wat Predict the Race van je bewaart, waar het staat, wie het ziet en hoe je het weer weg krijgt. Geen advertenties, statistieken alleen met je ja.',
     kop: 'Wat Predict the Race van je weet',
     intro: 'Predict the Race is een gratis F1-voorspelspel voor vriendengroepen. Het bewaart zo weinig mogelijk, en wat het bewaart staat hieronder, in gewone taal.',
-    bijgewerkt: 'Bijgewerkt op 28 september 2026',
+    bijgewerkt: 'Bijgewerkt op 29 september 2026',
     secties: [
       ['Wat er bewaard wordt', [
         'De naam die je in een poule kiest, je voorspellingen en je punten. En een anoniem account: een willekeurig nummer, zodat de database weet welke voorspellingen van jou zijn.',
@@ -39,7 +39,7 @@ export const PRIVACY = {
         'Dan weet Google dat je deze app gebruikt, en krijgt de app je naam en mailadres van Google. Dat gebeurt alleen als je er zelf voor kiest. Koppel je niets, of gebruik je een mailadres, dan komt Google er niet aan te pas.',
       ]],
       ['Wie het ziet', [
-        'Wie in je poule zit ziet je naam en je punten, en na de deadline ook wat je voorspeld hebt. Daarbuiten niemand. Zet de poulebaas de poule op openbaar, dan kan iedereen hem vinden en meedoen.',
+        'Wie de code van je poule heeft, ziet je naam en je punten. Wat je voorspeld hebt, is pas na de deadline te zien; daarvoor geeft de database het aan niemand. Verder ziet niemand iets. Zet de poulebaas de poule op openbaar, dan kan iedereen hem vinden en meedoen.',
         'Deel je je seizoen, dan komt er een pagina met je naam, je punten, je plek en je beste weekend. Niet je poule, niet je medespelers en niet wat iemand heeft ingevuld. Haal je hem weg, dan zijn die gegevens ook weg.',
       ]],
       ['Als je meldingen aanzet', [
@@ -83,7 +83,7 @@ export const PRIVACY = {
     omschrijving: 'What Predict the Race keeps about you, where it lives, who sees it and how to get it removed. No ads, statistics only with your yes.',
     kop: 'What Predict the Race knows about you',
     intro: 'Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.',
-    bijgewerkt: 'Updated on 28 September 2026',
+    bijgewerkt: 'Updated on 29 September 2026',
     secties: [
       ['What is kept', [
         'The name you pick in a pool, your predictions and your points. And an anonymous account: a random number, so the database knows which predictions are yours.',
@@ -93,7 +93,7 @@ export const PRIVACY = {
         'Then Google knows you use this app, and the app gets your name and email address from Google. That only happens if you choose it yourself. Link nothing, or use an email address, and Google is not involved at all.',
       ]],
       ['Who sees it', [
-        'The players in your pool see your name and your points, and after the deadline also what you predicted. Nobody outside it does. If the pool owner makes the pool public, anyone can find it and join.',
+        'Anyone with your pool\'s code sees your name and your points. What you predicted only becomes visible after the deadline; until then the database gives it to no one. Nobody else sees anything. If the pool owner makes the pool public, anyone can find it and join.',
         'If you share your season, there is a page with your name, your points, your position and your best weekend. Not your pool, not your fellow players and not what anyone filled in. Take it down and that data is gone too.',
       ]],
       ['If you turn notifications on', [

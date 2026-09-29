@@ -55,6 +55,12 @@ insert into jokers (pool_id, race_id, member_id) values
   ('dddd1111-0000-0000-0000-000000000001', 902,
    'dddd3333-0000-0000-0000-000000000001');
 
+-- En dan is het weekend voorbij. Vóór de deadline ziet een medespeler de
+-- inzending en de joker van een ander niet (test/geheim.test.sql); hier gaat
+-- het om de muur rond de poule, dus om wat na de deadline wel te zien is.
+update races set deadline_quali = now() - interval '2 days',
+                 deadline_race  = now() - interval '1 day' where id = 902;
+
 do $$
 declare n int;
 declare uit jsonb;

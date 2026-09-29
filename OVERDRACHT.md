@@ -8916,3 +8916,96 @@ september: de tabel wordt elke keer opnieuw gemaakt uit het bestand.
 
 `test/controle.test.sql` §7 haalt elk stuk weg, kijkt of de regel het meldt,
 en zet het terug; acht mutanten op de regel zelf, alle gevangen.
+
+---
+
+## Geheim tot de deadline (29 september)
+
+Het laatste gat uit de veiligheidsronde van 28 september: de voorspellingen van
+je medespelers waren al vóór de deadline te lezen. De app liet ze pas na de
+deadline zien, maar de database gaf ze eerder: `answers_lezen` stond op
+`is_member(pool_id)`, en `poule_ophalen()` gaf alle antwoorden van de poule mee
+aan iedereen met de code (ook de open poule, waarvan de code op de site staat).
+Met de anon key uit `index.html` kon je zo de top 10 van een ander overnemen
+terwijl de jouwe nog openstond. Hetzelfde voor de jokers: waar een ander hem
+neerlegde, zag je voordat dat weekend begon.
+
+**In de database** (`schema.sql`):
+
+- `sessie_deadline(race, sessie)`: wanneer een sessie dichtgaat. Eén plek, want
+  de vraag wordt twee keer gesteld: bij het schrijven (de deadline-trigger
+  gebruikt hem nu ook) en bij het lezen. Liepen die uit elkaar, dan kon iemand
+  een lijst lezen terwijl hij de zijne nog kon aanpassen. `seizoen` en `weekend`
+  zijn de eerste sessie van het weekend.
+- `antwoord_open(race, vraag)` en `joker_open(race)`: is het dicht? Zonder
+  deadline, of met een onbekende vraag of race: nee.
+- `answers_lezen` en `jokers_lezen`: lid én dicht. Je eigen rijen via
+  `answers_eigen` en `jokers_eigen` (`for all` geldt ook voor lezen), dus ook
+  die van de speler zonder account die jouw toestel inschreef.
+- `poule_ophalen()`: `antwoorden` alleen wat dicht is of van jezelf; nieuw
+  `ingeleverd` met van de rest alleen race, speler en vraag (geen waarde, geen
+  tijdstip); `jokers` alleen van begonnen weekenden of van jezelf.
+- Controletabel: de regel `voorspellingen geheim tot de deadline`.
+
+**Keuzes, en waarom:**
+
+- *Wie de code heeft, kijkt mee.* `poule_ophalen()` eist geen lidmaatschap
+  voor wat dicht is. De app zegt tegen wie op een ander toestel een naam kiest
+  die aan een ander account hangt "je kunt hier meekijken", en zonder de
+  antwoorden die dicht zijn staat de stand dan op nul. Met de code kan hij toch
+  meedoen. Wat openstaat is ook voor hem dicht. Rechtstreeks uit de tabellen
+  lezen blijft alleen voor leden. Ik had het lidmaatschap eerst wel geëist, en
+  toen viel `poule-onthouden` om precies daarop.
+- *Dát iemand inleverde mag iedereen weten.* Daar hangen "3 van 4 ingeleverd",
+  de vinkjes per speler en "nog geen top 10: Joey" aan. Het zegt niets over wat
+  iemand koos.
+- *Een joker gaat open met de eerste sessie van zijn weekend.* Dat is ook het
+  moment waarop hij vastligt.
+- *De seizoenslaag gaat open met de eerste sessie van ronde 1.* Wie halverwege
+  instapt, ziet dus de seizoensantwoorden van de anderen voordat hij de zijne
+  invult. Dat was al zo en blijft zo: één schot, maar niet blind.
+- *Op een ander toestel zonder inloggen zie je je eigen open lijst niet.* Voor
+  de database ben je dan iemand die "danny" intypte; zou die de open lijst van
+  Danny krijgen, dan kon iedereen met de code dat. Het vinkje en "klaar"
+  bovenaan zeggen wel dat hij er is (`verborgenIngeleverd()`), en na inloggen
+  met je mailadres staat hij er gewoon.
+
+**In de app** (`app/index.html`):
+
+- `S.ingeleverd` uit `poule_ophalen()`, en `verborgenIngeleverd()` in het
+  knipblok `zoeken` (met `?? []`, want de controle van de stand knipt dat blok
+  los). `ingeleverdVoor()`, `nogNietIngevuld()` en `heeftVoorspeld()` tellen
+  het mee, net als je eigen vinkje in de racelijst en `sessieStatus()`.
+- `verversNaDeadline()` in de tik van dertig seconden: verstreek er sinds het
+  laden een deadline, dan haalt de app de poule opnieuw op. Anders toont hij na
+  de deadline je medespelers als "niets ingevuld", of vult hij automatisch voor
+  ze in. Met een minuut marge (`KLOKMARGE`) voor een toestel waarvan de klok
+  voorloopt op die van de database; daarna houdt het op. Alleen de gegevens,
+  niet opnieuw tekenen: een scherm dat zichzelf opbouwt terwijl iemand typt is
+  erger dan een scherm dat bij de volgende tik klopt.
+- `claimEnHerlaad()`: claimt `herkenMij()` bij het openen een speler van vóór
+  de accounts, dan was die bij het laden nog van niemand en kwam zijn eigen open
+  lijst alleen als "ingeleverd" mee. Dus opnieuw ophalen.
+- "Opslaan, ook in je andere poules" telt `ingeleverd` mee: van een speler van
+  vóór de accounts komt een pole die er al staat alleen zo binnen, en dan hoort
+  die sessie "al ingevuld" te zijn (`ook-elders`, Vrienden).
+
+**Tests.** `test/geheim.test.sql` (nieuw, eigen CI-stap) en
+`test/geheim.test.mjs` (nieuw); `test/controle.test.sql` §8. Aangepast, omdat ze
+lezen vóór de deadline aannamen: `policies.test.sql` en `afscherming.test.sql`
+(nu na de deadline), en `duel-weergave`, `terugkijken` en `poule-onthouden`. De
+eerste twee hadden een uitslag bij een race waarvan de deadline nog moest
+komen, en dat kan niet. `poule-onthouden` legt nu vast dat je op een ander
+toestel je open lijst niet ziet maar wel als ingeleverd. `ook-elders` deed een
+tekstvervanging op een regel in de nabootsing die ik veranderde; die
+vervanging deed daarna stilletjes niets. Vijfendertig mutanten, alle gevangen.
+
+**Privacyverklaring.** Er stond "Wie in je poule zit ziet je naam en je punten,
+en na de deadline ook wat je voorspeld hebt. Daarbuiten niemand." Dat klopte
+niet: wie de code had, zag alles, ook vóór de deadline. Nu: "Wie de code van je
+poule heeft, ziet je naam en je punten. Wat je voorspeld hebt, is pas na de
+deadline te zien; daarvoor geeft de database het aan niemand." (NL en EN,
+bijgewerkt 29 september.)
+
+**Voor Danny:** `schema.sql` opnieuw draaien in de SQL Editor van Supabase. De
+regel `voorspellingen geheim tot de deadline` moet dan `ok` zeggen.

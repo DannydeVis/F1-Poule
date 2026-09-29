@@ -792,6 +792,17 @@ change"). Voor een Nederlandse poule-app is dat op zijn minst verwarrend.
 
 De policies staan dicht. Wat dat concreet betekent:
 
+- **Wat je voorspelt, is geheim tot de deadline.** Je medespelers zien je
+  top 10, je losse vragen en je joker pas als de sessie waar ze bij horen dicht
+  is (een joker: als het weekend begint). Tot dan zien ze alleen dát je iets
+  inleverde: "3 van 4 ingeleverd" en een vinkje. Dat geldt ook voor wie de
+  database rechtstreeks aanspreekt met de anon key; tot 29 september kon dat
+  wel. Wie de poulecode heeft maar niet meedoet, kijkt mee: hij ziet de stand
+  en wat dicht is, net als een speler. Speel je op een ander toestel zonder in
+  te loggen onder een naam die aan een ander account hangt, dan zie je je eigen
+  open lijst daar niet; na inloggen met je mailadres wel. De regel
+  `voorspellingen geheim tot de deadline` in de controletabel onderaan
+  `schema.sql` zegt of dit in je database staat.
 - **Je eigen inzending is van jou.** Zodra je speler aan je account hangt kan
   niemand anders hem nog overschrijven of weggooien — ook niet met de anon key
   uit `index.html`, en die staat daar publiek.

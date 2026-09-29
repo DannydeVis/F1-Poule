@@ -41,7 +41,8 @@ begin
    where uitkomst not in ('ok')
      and controle in ('deadline-trigger op answers', 'vragen in de lijst',
                       'jokeraantal: grens en bewaking',
-                      'spelers: niemand gebruikt andermans speler of naam');
+                      'spelers: niemand gebruikt andermans speler of naam',
+                      'voorspellingen geheim tot de deadline');
   if gevonden is not null then
     raise exception 'gezakt: deze regels zeggen geen ok: %', gevonden;
   end if;
@@ -395,6 +396,77 @@ begin
                     with check (public.mag_voor_speler_in(member_id, pool_id))', policy, tabel);
   end loop;
   raise notice 'ok: een oude policy op antwoorden, jokers of meldingen wordt gemeld';
+
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden <> 'ok' then
+    raise exception 'gezakt: met alles teruggezet zegt de tabel "%"', gevonden;
+  end if;
+  raise notice 'ok: en met alles teruggezet staat hij weer op ok';
+end $$;
+
+-- ============================================================
+--  8. Geheim tot de deadline: ziet de tabel het als het weer open staat
+-- ============================================================
+--
+-- Twee plekken waar de antwoorden naar buiten gaan: de leespolicies en
+-- poule_ophalen(). Elk weggehaald en teruggezet.
+
+do $$
+declare
+  regel constant text := 'voorspellingen geheim tot de deadline';
+  gevonden text;
+begin
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden is distinct from 'ok' then
+    raise exception 'gezakt: vers gedraaid schema zegt "%"', coalesce(gevonden, '(regel ontbreekt)');
+  end if;
+  raise notice 'ok: een vers gedraaid schema meldt het geheim tot de deadline als in orde';
+
+  -- De oude leespolicy: elk lid leest alles.
+  alter policy answers_lezen on public.answers using (public.is_member(pool_id));
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden not like 'LEZEN VOOR DE DEADLINE KAN NOG%' then
+    raise exception 'gezakt: met de oude leespolicy op answers zegt de tabel "%"', gevonden;
+  end if;
+  alter policy answers_lezen on public.answers
+    using (public.is_member(pool_id) and public.antwoord_open(race_id, question_id));
+
+  alter policy jokers_lezen on public.jokers using (public.is_member(pool_id));
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden not like 'LEZEN VOOR DE DEADLINE KAN NOG%' then
+    raise exception 'gezakt: met de oude leespolicy op jokers zegt de tabel "%"', gevonden;
+  end if;
+  -- En een policy die de deadline kent maar het lidmaatschap vergeet, is
+  -- ook niet goed: dan leest iedereen na de deadline alles.
+  alter policy jokers_lezen on public.jokers using (public.joker_open(race_id));
+  select uitkomst into gevonden from public.poule_controle where controle = regel;
+  if gevonden not like 'LEZEN VOOR DE DEADLINE KAN NOG%' then
+    raise exception 'gezakt: zonder is_member op jokers zegt de tabel "%"', gevonden;
+  end if;
+  alter policy jokers_lezen on public.jokers
+    using (public.is_member(pool_id) and public.joker_open(race_id));
+  raise notice 'ok: een oude leespolicy op antwoorden of jokers wordt gemeld';
+
+  -- Een poule_ophalen() die alles meegeeft, of alleen de antwoorden of
+  -- alleen de jokers afschermt.
+  alter function public.poule_ophalen(text, uuid) rename to poule_ophalen_echt;
+  foreach gevonden in array array[
+    $f$ select jsonb_build_object('antwoorden', (select jsonb_agg(to_jsonb(a)) from public.answers a)) $f$,
+    $f$ select jsonb_build_object('antwoorden', (select jsonb_agg(to_jsonb(a)) from public.answers a
+          where public.antwoord_open(a.race_id, a.question_id))) $f$,
+    $f$ select jsonb_build_object('jokers', (select jsonb_agg(to_jsonb(j)) from public.jokers j
+          where public.joker_open(j.race_id))) $f$]
+  loop
+    execute format('create function public.poule_ophalen(p_code text default null, p_id uuid default null)
+      returns jsonb language sql as %L', gevonden);
+    select uitkomst into gevonden from public.poule_controle where controle = regel;
+    if gevonden not like 'POULE_OPHALEN GEEFT ALLES%' then
+      raise exception 'gezakt: met een poule_ophalen die niet alles afschermt zegt de tabel "%"', gevonden;
+    end if;
+    drop function public.poule_ophalen(text, uuid);
+  end loop;
+  alter function public.poule_ophalen_echt(text, uuid) rename to poule_ophalen;
+  raise notice 'ok: een poule_ophalen die antwoorden of jokers meegeeft wordt gemeld';
 
   select uitkomst into gevonden from public.poule_controle where controle = regel;
   if gevonden <> 'ok' then

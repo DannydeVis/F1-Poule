@@ -68,8 +68,8 @@ const { page, jsFouten, stoppen } = await startPagina({
         { pool_id:'pool-3', race_id:1, member_id:'lid-3b', question_id:'race_top10', waarde:${JSON.stringify(ANDERS)} },
         { pool_id:'pool-9', race_id:1, member_id:'lid-9', question_id:'quali_top10', waarde:${JSON.stringify(ANDERS)} },
         { pool_id:'pool-10', race_id:1, member_id:'lid-10', question_id:'quali_top10', waarde:${JSON.stringify(ANDERS)}, laat:true }],`)
-    .replace('antwoorden: kopie((store.answers ?? []).filter((a) => gelijk(a.pool_id, poule.id))),',
-      'antwoorden: kopie((store.answers ?? []).filter((a) => gelijk(a.pool_id, poule.id) && !a.laat)),'),
+    .replace('const vanPoule = (store.answers ?? []).filter((a) => gelijk(a.pool_id, poule.id));',
+      'const vanPoule = (store.answers ?? []).filter((a) => gelijk(a.pool_id, poule.id) && !a.laat);'),
 });
 
 const db = () => page.evaluate(() => JSON.parse(JSON.stringify(globalThis.__db)));

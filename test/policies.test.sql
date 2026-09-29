@@ -53,6 +53,18 @@ insert into answers (pool_id, race_id, member_id, question_id, waarde) values
   ('11111111-0000-0000-0000-000000000001', 901,
    'aaaa1111-0000-0000-0000-000000000001', 'winnaar', '"1"');
 
+-- En een weekend dat al voorbij is, met een antwoord van Anna erin. Ingevuld
+-- toen het nog openstond; daarna schuift de deadline naar het verleden. Dat
+-- antwoord mag Bram lezen, dat op 901 (nog open) niet: zie
+-- test/geheim.test.sql.
+insert into races (id, season, round, name, deadline_quali, deadline_race)
+values (900, 2026, 90, 'Gereden circuit', now() + interval '2 days', now() + interval '3 days');
+insert into answers (pool_id, race_id, member_id, question_id, waarde) values
+  ('11111111-0000-0000-0000-000000000001', 900,
+   'aaaa1111-0000-0000-0000-000000000001', 'winnaar', '"44"');
+update races set deadline_quali = now() - interval '2 days',
+                 deadline_race  = now() - interval '1 day' where id = 900;
+
 \set anna '\'{"sub":"aaaaaaaa-0000-0000-0000-000000000001"}\''
 \set bram '\'{"sub":"bbbbbbbb-0000-0000-0000-000000000002"}\''
 \set chris '\'{"sub":"cccccccc-0000-0000-0000-000000000003"}\''
@@ -98,9 +110,13 @@ begin
   if gelukt then raise exception 'gezakt: Bram vulde een antwoord in namens Anna'; end if;
   raise notice 'ok: Bram kan niets invullen namens Anna';
 
-  -- En het antwoord van Anna staat er nog zoals zij het achterliet.
+  -- En het antwoord van Anna staat er nog zoals zij het achterliet. Bram zelf
+  -- kan dat niet nagaan: de race staat nog open, dus hij ziet het niet. Even
+  -- terug naar de beheerder om te kijken, en dan weer Bram.
+  reset role;
   select count(*) into aantal from answers
-  where member_id = 'aaaa1111-0000-0000-0000-000000000001' and waarde = '"1"';
+  where member_id = 'aaaa1111-0000-0000-0000-000000000001' and race_id = 901 and waarde = '"1"';
+  set local role authenticated;
   if aantal <> 1 then raise exception 'gezakt: het antwoord van Anna is veranderd'; end if;
   raise notice 'ok: het antwoord van Anna is onaangeraakt';
 
@@ -125,10 +141,12 @@ begin
   --  3. Lezen blijft open, en dat is een keuze
   -- ============================================================
   -- De app laat je na de deadline elkaars top 10 zien en telt iedereen mee in
-  -- de stand. Dichtzetten zou die schermen breken.
-  select count(*) into aantal from answers;
-  if aantal < 1 then raise exception 'gezakt: Bram mag de antwoorden van de poule niet lezen'; end if;
-  raise notice 'ok: lezen blijft open, zoals de stand en het terugkijken nodig hebben';
+  -- de stand. Dichtzetten zou die schermen breken. Na de deadline: daarvoor
+  -- is een voorspelling van jou alleen (test/geheim.test.sql).
+  select count(*) into aantal from answers
+  where member_id = 'aaaa1111-0000-0000-0000-000000000001' and race_id = 900;
+  if aantal <> 1 then raise exception 'gezakt: Bram mag de antwoorden van de poule niet lezen'; end if;
+  raise notice 'ok: lezen na de deadline blijft open, zoals de stand en het terugkijken nodig hebben';
 
   -- ============================================================
   --  4. Een speler zonder account: alleen voor het toestel dat hem maakte

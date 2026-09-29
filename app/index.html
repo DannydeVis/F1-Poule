@@ -3581,8 +3581,17 @@ async function herkenMij({ accountEerst = VAN_INLOGLINK } = {}) {
   onthoud(S.poule.id, lid.member_id);
   // Een speler van vóór de login hangt nog aan niemand. Wie hem nu gebruikt
   // krijgt hem, zodat de database straks kan controleren dat hij van jou is.
-  if (!lid.user_id) await claimSpeler(lid.member_id);
+  if (!lid.user_id) await claimEnHerlaad(lid.member_id);
   return true;
+}
+
+// Claimen, en lukt dat, alles opnieuw ophalen. Vóór de claim was deze speler
+// van niemand, en dan geeft poule_ophalen() zijn eigen open antwoorden en
+// jokers niet mee, alleen dát ze er zijn (zie schema.sql). Wat er bij het
+// laden binnenkwam, mist ze dus nog.
+async function claimEnHerlaad(memberId) {
+  if (!await claimSpeler(memberId)) return;
+  try { await laad(); } catch { /* wat er al stond blijft staan */ }
 }
 
 // ============================================================
@@ -4369,6 +4378,8 @@ const S = {
   alleRaces: [], seizoen: null,
   seizoenkeuze: null, seizoenFout: '',   // de seizoenslaag, zolang die openstaat
   antwoorden: [], vragen: [], poulevragen: [], jokers: [],
+  ingeleverd: [],       // open antwoorden van medespelers: alleen dát ze er zijn
+  geladenOp: 0,         // wanneer laad() de poule voor het laatst ophaalde
   race:  null, tab: 'quali',
   keuze: { quali: [], race: [], winnaar: '', pole: '', duels: [],
            snelste_ronde: '', snelste_pitstop: '',
@@ -4420,6 +4431,16 @@ const vindPred = (raceId, memberId) =>
 const vindAntwoord = (raceId, memberId, vraagId) =>
   S.antwoorden.find(a => zelfde(a.race_id, raceId) && zelfde(a.member_id, memberId)
                       && a.question_id === vraagId);
+// Heeft deze speler een van deze vragen ingeleverd voor een sessie die nog
+// openstaat? De database geeft de antwoorden van je medespelers pas na de
+// deadline (poule_ophalen() in schema.sql). Tot dan komt van de rest alleen
+// mee dát het er is, zonder waarde, in S.ingeleverd. Genoeg voor "3 van 4
+// ingeleverd"; wat iemand koos blijft van hem.
+//
+// Met ?? []: de controle van de stand knipt dit blok los uit de app en kent
+// S.ingeleverd niet.
+const verborgenIngeleverd = (raceId, memberId, vragen) => (S.ingeleverd ?? []).some(a =>
+  zelfde(a.race_id, raceId) && zelfde(a.member_id, memberId) && vragen.includes(a.question_id));
 // </knip zoeken>
 
 // Mijn eigen rij uit de spelerslijst. S.ik draagt alleen id en naam, en voor
@@ -4494,6 +4515,32 @@ function tikkenBij() {
   document.querySelectorAll('[data-tot]').forEach(el => {
     el.innerHTML = klokTekst(el.dataset.tot, el.dataset.kort === '1');
   });
+  verversNaDeadline();
+}
+
+// Een deadline die verstreek terwijl de app openstond. De database geeft de
+// antwoorden en jokers van je medespelers pas daarna vrij, dus wat er bij het
+// laden binnenkwam, mist ze nog. Zonder opnieuw ophalen toont de app die
+// spelers dan als "niets ingevuld", of vult hij automatisch voor ze in.
+//
+// Met een minuut marge, voor een toestel waarvan de klok niet gelijk loopt met
+// die van de database: wie vlak na de deadline laadde, haalt het binnen die
+// minuut nog een paar keer op.
+//
+// Alleen de gegevens, niet opnieuw tekenen: een scherm dat zichzelf opbouwt
+// terwijl iemand typt is erger dan een scherm dat bij de volgende tik klopt.
+const KLOKMARGE = 60 * 1000;
+let verversen = null;
+function verversNaDeadline() {
+  if (DEMO || !S.poule || !S.geladenOp || verversen) return;
+  const nu = Date.now();
+  const verstreken = S.alleRaces.some(r =>
+    ['deadline_sprint', 'deadline_quali', 'deadline_race'].some(k => {
+      const t = Date.parse(r[k]);
+      return t <= nu && S.geladenOp < t + KLOKMARGE;
+    }));
+  if (!verstreken) return;
+  verversen = laad().catch(() => {}).finally(() => { verversen = null; });
 }
 function tikken() {
   clearInterval(tikker);
@@ -5282,6 +5329,7 @@ async function laad() {
     S.vragen = demoVragen; S.poulevragen = demoVragen.map(v => v.id);
     S.antwoorden = demoAntwoorden();
     S.jokers = demoJokers;
+    S.ingeleverd = [];
     bouwPreds();
     return;
   }
@@ -5308,8 +5356,10 @@ async function laad() {
   S.vragen = vragen.data ?? [];
   S.leden = inhoud.data.leden ?? [];
   S.antwoorden = inhoud.data.antwoorden ?? [];
+  S.ingeleverd = inhoud.data.ingeleverd ?? [];
   S.poulevragen = inhoud.data.poulevragen ?? [];
   S.jokers = inhoud.data.jokers ?? [];
+  S.geladenOp = Date.now();
   // De poule zelf komt mee, dus een omschrijving die iemand anders net
   // aanpaste staat er meteen goed bij.
   if (inhoud.data.poule) S.poule = inhoud.data.poule;
@@ -5610,6 +5660,7 @@ function weekendWinnaars(race) {
 // het alleen de pole of een paar duels was — anders zou een weekend waarin
 // iemand wél meedeed niet meetellen voor het onderlinge duel.
 const heeftVoorspeld = (r, id) => {
+  if (verborgenIngeleverd(r.id, id, GEBOUWD)) return true;
   const p = vindPred(r.id, id);
   return !!p && GEBOUWD.some(vraag => {
     const kolom = VRAAG_VELD[vraag] ?? vraag;
@@ -5657,7 +5708,8 @@ function weekendOverwinningen() {
 function nogNietIngevuld(race, welk) {
   const kolom = SESSIES[welk].vraag;
   return S.leden.filter(l => !zelfde(l.member_id, S.ik.id))
-                .filter(l => !(vindPred(race.id, l.member_id)?.[kolom]?.length));
+                .filter(l => !(vindPred(race.id, l.member_id)?.[kolom]?.length)
+                          && !verborgenIngeleverd(race.id, l.member_id, [kolom]));
 }
 
 // ---- uitnodigingslink ---------------------------------------
@@ -6198,7 +6250,7 @@ function toonApp() {
 function naarStartscherm() {
   vergeetPoule();
   S.poule = null; S.ik = null; S.races = []; S.leden = []; S.preds = [];
-  S.antwoorden = []; S.poulevragen = []; S.beheer = null; S.beheerFout = '';
+  S.antwoorden = []; S.ingeleverd = []; S.poulevragen = []; S.beheer = null; S.beheerFout = '';
   S.omschrijving = null; S.omschrijvingFout = '';
   S.race = null; S.weergave = 'races';
   render();
@@ -6256,6 +6308,9 @@ function sessieStatus(r, welk) {
   // noemen zou suggereren dat je zelf begonnen was, en "klaar" dat je er iets
   // aan gedaan hebt. Dus krijgt hij zijn eigen woord.
   if (isAuto(mijn, welk)) return { staat: 'auto', teken: '~', naam };
+  // Alleen "ingeleverd", zonder waarde (zie kalenderRij): een top 10 gaat er
+  // alleen heel in, dus dan is hij klaar.
+  if (verborgenIngeleverd(r.id, S.ik.id, [TOP10VRAAG[welk]])) return { staat: 'klaar', teken: '✓', naam };
   const aantal = gevuld(naarPlekken(mijn?.[TOP10VRAAG[welk]]));
   if (aantal === 10) return { staat: 'klaar', teken: '✓', naam };
   if (aantal > 0)    return { staat: 'deels', teken: '·', naam };
@@ -6377,7 +6432,12 @@ function kalenderRij(r, st = raceStand(r)) {
   // Het vinkje zegt "dit heb jij ingevuld". Een automatisch aangevulde lijst
   // is dat niet, dus die laat het vakje leeg — anders zou het scherm je
   // vertellen dat je iets gedaan hebt wat je niet gedaan hebt.
-  const vink = (welk) => !isAuto(mijn, welk) && mijn?.[TOP10VRAAG[welk]]?.length ? 'aan' : '';
+  //
+  // Ook als de database je lijst alleen als "ingeleverd" meegeeft: dan speel
+  // je hier als een speler die aan een ander account hangt, en zie je wat erin
+  // staat pas na inloggen. Weg is hij niet, en dat hoort het vinkje te zeggen.
+  const vink = (welk) => (!isAuto(mijn, welk) && mijn?.[TOP10VRAAG[welk]]?.length)
+    || verborgenIngeleverd(r.id, S.ik.id, [TOP10VRAAG[welk]]) ? 'aan' : '';
   const merk = st.soort === 'klaar' ? `<span class="vlag"></span>`
     : st.soort === 'open' ? `<span class="stip klopt"></span>` : '';
   const won = st.soort === 'klaar' ? weekendWinstTekst(r) : '';
@@ -8198,8 +8258,13 @@ async function zetInPoule(p, race, welk, lijst) {
     const vragen = data.poulevragen ?? [];
     if (!zelfde(data.poule.season ?? SEIZOEN, race.season)
         || (vragen.length && !vragen.includes(vraag))) return { uitkomst: 'doetnietmee' };
-    const ingevuld = (data.antwoorden ?? []).some(a => zelfde(a.race_id, race.id)
-      && zelfde(a.member_id, lid.member_id) && sessieVan(a.question_id) === welk);
+    // Ook wat de database alleen als "ingeleverd" meegeeft: van een speler
+    // van vóór de login, die nog niet van mij is, komen de antwoorden die
+    // openstaan zonder waarde mee. Een pole die er al staat hoort de sessie
+    // net zo goed "al ingevuld" te maken.
+    const ingevuld = [...(data.antwoorden ?? []), ...(data.ingeleverd ?? [])]
+      .some(a => zelfde(a.race_id, race.id)
+        && zelfde(a.member_id, lid.member_id) && sessieVan(a.question_id) === welk);
     if (ingevuld) return { uitkomst: 'stondal' };
     // Een speler van vóór de login hangt nog aan niemand. Openen van die
     // poule zou hem claimen (herkenMij); hier ook, anders mag ik de rij die
@@ -9152,10 +9217,13 @@ function pouleKaart(r, { open = false } = {}) {
 // of een van de losse vragen die erbij horen; een automatisch aangevulde
 // lijst telt niet, net als bij heeftVoorspeld() voor het hele weekend.
 function ingeleverdVoor(r, id, welk) {
-  const p = vindPred(r.id, id);
-  if (!p) return false;
   const vragen = [SESSIES[welk].vraag, ...coureurVragen(welk), ...extraVragen(welk),
     ...(welk === 'race' && vraagActief('teamgenoot_duels') ? ['teamgenoot_duels'] : [])];
+  // Zolang de sessie openstaat, weet de app van een medespeler alleen dát hij
+  // iets inleverde.
+  if (verborgenIngeleverd(r.id, id, vragen)) return true;
+  const p = vindPred(r.id, id);
+  if (!p) return false;
   return vragen.some(v => {
     const kolom = VRAAG_VELD[v] ?? v;
     if (p.auto?.includes(kolom)) return false;
@@ -11433,7 +11501,7 @@ async function hervat() {
       // je nog als jezelf binnenlaat.
       if (uitLid) {
         S.ik = { id: uitLid.member_id, naam: uitLid.display_name };
-        if (!uitLid.user_id) await claimSpeler(uitLid.member_id);
+        if (!uitLid.user_id) await claimEnHerlaad(uitLid.member_id);
       } else {
         await herkenMij();
       }

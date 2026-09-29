@@ -24,6 +24,10 @@ await page.evaluate(() => {
     { member_id: 'lid-2', pool_id: 'pool-1', display_name: 'Joey' });
   const race = globalThis.__db.races.find((r) => String(r.id) === '1');
   race.race_result = ['1', '44', '16'];
+  // Een uitslag komt pas na de start. Staat de deadline nog in de toekomst,
+  // dan krijgt de app de antwoorden van Joey niet (geheim tot de deadline).
+  race.deadline_quali = new Date(Date.now() - 2 * 864e5).toISOString();
+  race.deadline_race = new Date(Date.now() - 864e5).toISOString();
   globalThis.__db.answers.push(
     { pool_id: 'pool-1', race_id: 1, member_id: 'lid-1', question_id: 'winnaar', waarde: '1' },
     { pool_id: 'pool-1', race_id: 1, member_id: 'lid-2', question_id: 'winnaar', waarde: '44' });
