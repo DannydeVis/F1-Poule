@@ -12,8 +12,10 @@
 //   2. Voor elke race uit site/races.mjs met gegevens en een vorige editie een
 //      pagina in NL en EN, op /races/<jaar>/<slug>/ en /en/races/<jaar>/<slug>/.
 //   3. De tijden: elke sessie op volgorde, in UTC en (op de Nederlandse pagina)
-//      in Nederlandse tijd, hier opnieuw uitgerekend; het korte antwoord noemt
-//      de starttijd van de race.
+//      in Nederlandse tijd, hier opnieuw uitgerekend. De vraag erboven is
+//      wanneer het voorspellen sluit ("Wanneer sluit het voorspellen voor de GP
+//      van Singapore?"), niet hoe laat de race begint; het korte antwoord
+//      noemt wanneer de kwalificatie en de race op slot gaan.
 //   4. De top 10 van vorig jaar, race en kwalificatie, zoals in de gegevens;
 //      de uitslag van dit jaar alleen als die er is.
 //   5. De safety cars per jaar zoals in site/data/circuits.json, met een link
@@ -171,6 +173,13 @@ if (!RACEDATA) {
       if (JSON.stringify(rijen.map((x) => x.slice(2))) !== JSON.stringify(verwachtRijen)) fout.tijden.push(`${slug} ${code}: ${JSON.stringify(rijen)}`);
       const kort = ontdoe(tijden.match(/<p class="kort">([\s\S]*?)<\/p>/)?.[1] ?? '');
       if (!kort.includes(tijd(race.start, 'UTC')) || (code === 'nl' && !kort.includes(tijd(race.start, 'Europe/Amsterdam')))) fout.tijden.push(`${slug} ${code}: kort zonder de starttijd`);
+      const kwali = r.sessies.find((s) => s.naam === 'Qualifying');
+      if (kwali && !kort.includes(tijd(kwali.start, code === 'nl' ? 'Europe/Amsterdam' : 'UTC'))) fout.tijden.push(`${slug} ${code}: kort zonder de kwalificatie`);
+      const naamKort = RACES.find((x) => x.slug === slug)?.[code]?.kort;
+      const vraagTijden = ontdoe(tijden.match(/<h2[^>]*>([\s\S]*?)<\/h2>/)?.[1] ?? '');
+      const vraagHoort = code === 'nl' ? `Wanneer sluit het voorspellen voor de ${naamKort}?` : `When do predictions close for the ${naamKort}?`;
+      if (vraagTijden !== vraagHoort) fout.tijden.push(`${slug} ${code}: de vraag is "${vraagTijden}"`);
+      if (code === 'nl' && (/een virtuele meegeteld/.test(html) || !/de virtuele safety car meegeteld/.test(html))) fout.safety.push(`${slug} nl: "een virtuele meegeteld"`);
       // 4. de top 10's
       const top = (lijst) => lijst.map((x) => [String(x.plek), x.naam ?? x.code ?? `#${x.nr}`, x.team ?? '']);
       const vorig = tabellen(sectie(html, ids.vorig)).map((t) => t.rijen);
@@ -211,7 +220,7 @@ if (!RACEDATA) {
       if (t && JSON.stringify(tabellen(t).map((x) => x.rijen)) !== JSON.stringify(trainingen.map((x) => top(x.top)))) fout.training.push(`${slug} ${code}: tabellen`);
     }
   }
-  check('de tijden: elke sessie op volgorde, in UTC en in Nederlandse tijd, en de starttijd van de race in het korte antwoord',
+  check('de tijden: elke sessie op volgorde, in UTC en in Nederlandse tijd, onder de vraag wanneer het voorspellen sluit, met de kwalificatie en de race in het korte antwoord',
     fout.tijden.length === 0, fout.tijden.slice(0, 3).join(' | '));
   check('de top 10 van vorig jaar zoals in de gegevens, de winnaar in de tekst, en de uitslag van dit jaar alleen als die er is',
     fout.top.length === 0, fout.top.slice(0, 3).join(' | '));

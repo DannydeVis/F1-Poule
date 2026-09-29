@@ -55,6 +55,7 @@ export const LLMS = {
     'Someone runs an F1 prediction league in a spreadsheet and wants it easier ({excel}).',
     'Someone wants an F1 game without a budget or transfers: you only predict the order.',
     'Someone wants an F1 prediction league in Dutch (an "F1-poule").',
+    'Someone wants to play but has no group of their own: anyone can join the open league ({openPoule}).',
   ],
   anders: [
     'A fantasy game with a budget and transfers: that is F1 Fantasy, the official Formula 1 fantasy game.',
@@ -175,6 +176,8 @@ export const teksten = {
       meer: 'Lees de hele privacyverklaring',
     },
     faq: {
+      // De tekst van de link naar de open poule, waar een antwoord {openPoule} zegt.
+      openPoule: 'de open poule',
       kop: 'Veelgestelde vragen',
       items: [
         ['Is Predict the Race gratis?', 'Ja. Er is geen abonnement, geen betaalmuur en geen advertentie. Alle functies zijn voor iedereen beschikbaar.'],
@@ -191,6 +194,7 @@ export const teksten = {
         ['Is dit een officiële Formule 1-app?', 'Nee. Predict the Race is een onafhankelijk fanproject en is niet verbonden aan de Formule 1, de FIA of een team.'],
         ['Hoeveel punten kun je per weekend halen?', 'Bij Simpel zijn er per weekend {simpel} punten te verdienen, bij Klassiek {klassiek} en bij Gevorderd {gevorderd}. Op een sprintweekend komt de sprint er nog bij, en de seizoensvragen tellen aan het eind van het seizoen mee. Met een joker telt een heel weekend dubbel.'],
         ['Wat is het verschil met F1 Fantasy?', 'In F1 Fantasy, het officiële fantasyspel van de Formule 1, stel je binnen een budget een team van coureurs en constructeurs samen en scoor je op wat zij in het echt presteren. In Predict the Race voorspel je de volgorde: de top 10 van de kwalificatie en de race, plus losse vragen zoals de winnaar. Er is geen budget en er zijn geen transfers.'],
+        ['Kan ik meedoen zonder eigen groep?', 'Ja. Doe mee met {openPoule}: een poule voor iedereen die geen eigen groep heeft. Je kiest een naam en voorspelt net als in elke andere poule, en in de stand zie je hoe je het doet tegen andere F1-fans. Een eigen poule maken kan daarnaast altijd.'],
       ],
     },
     slot: { kop: 'Lights out. Tijd om te voorspellen.', tekst: 'Maak in een minuut je poule en deel de code met je vrienden.', knop: 'Maak je poule' },
@@ -305,6 +309,7 @@ export const teksten = {
       meer: 'Read the full privacy statement',
     },
     faq: {
+      openPoule: 'the open league',
       kop: 'Frequently asked questions',
       items: [
         ['Is Predict the Race free?', 'Yes. There is no subscription, no paywall and no advertising. Every feature is available to everyone.'],
@@ -321,6 +326,7 @@ export const teksten = {
         ['Is this an official Formula 1 app?', 'No. Predict the Race is an independent fan project and is not affiliated with Formula 1, the FIA or any team.'],
         ['How many points can you score per weekend?', 'On Simple there are {simpel} points to win per weekend, on Classic {klassiek} and on Advanced {gevorderd}. On a sprint weekend the sprint comes on top, and the season questions are settled at the end of the season. A joker doubles a whole weekend.'],
         ['How is this different from F1 Fantasy?', 'In F1 Fantasy, the official Formula 1 fantasy game, you build a team of drivers and constructors within a budget and score on how they perform on track. In Predict the Race you predict the order: the qualifying and race top 10, plus extra questions such as the winner. There is no budget and there are no transfers.'],
+        ['Can I play without my own group?', 'Yes. Join {openPoule}: a league for anyone without a group of their own. You pick a name and predict just like in any other league, and the standings show how you do against other F1 fans. You can always start your own league as well.'],
       ],
     },
     slot: { kop: 'Lights out and away we go.', tekst: 'Set up your league in a minute and share the code with your friends.', knop: 'Start your league' },
@@ -435,6 +441,7 @@ export const teksten = {
       meer: 'Die ganze Datenschutzerklärung lesen (auf Englisch)',
     },
     faq: {
+      openPoule: 'der offenen Tipprunde',
       kop: 'Häufige Fragen',
       items: [
         ['Ist Predict the Race kostenlos?', 'Ja. Es gibt kein Abo, keine Bezahlschranke und keine Werbung. Alle Funktionen stehen allen zur Verfügung.'],
@@ -451,6 +458,7 @@ export const teksten = {
         ['Ist das eine offizielle Formel-1-App?', 'Nein. Predict the Race ist ein unabhängiges Fanprojekt und steht in keiner Verbindung zur Formel 1, zur FIA oder zu einem Team.'],
         ['Wie viele Punkte kann man pro Wochenende holen?', 'Bei Einfach gibt es pro Wochenende {simpel} Punkte zu holen, bei Klassisch {klassiek} und bei Fortgeschritten {gevorderd}. An einem Sprintwochenende kommt der Sprint dazu, und die Saisonfragen zählen am Saisonende. Mit einem Joker zählt ein ganzes Wochenende doppelt.'],
         ['Was ist der Unterschied zu F1 Fantasy?', 'In F1 Fantasy, dem offiziellen Fantasy-Spiel der Formel 1, stellst du innerhalb eines Budgets ein Team aus Fahrern und Konstrukteuren zusammen und punktest mit ihren echten Leistungen. Bei Predict the Race tippst du die Reihenfolge: die Top 10 von Qualifying und Rennen, dazu Zusatzfragen wie den Sieger. Es gibt kein Budget und keine Transfers.'],
+        ['Kann ich ohne eigene Gruppe mitspielen?', 'Ja. Spiel in {openPoule} mit: einer Tipprunde für alle, die keine eigene Gruppe haben. Du wählst einen Namen und tippst wie in jeder anderen Tipprunde, und in der Tabelle siehst du, wie du gegen andere F1-Fans abschneidest. Eine eigene Tipprunde erstellen kannst du jederzeit zusätzlich.'],
       ],
     },
     slot: { kop: 'Lights out. Zeit zu tippen.', tekst: 'Erstelle deine Tipprunde in einer Minute und teile den Code mit deinen Freunden.', knop: 'Tipprunde erstellen' },
@@ -565,6 +573,7 @@ export const teksten = {
       meer: 'Lire toute la politique de confidentialité (en anglais)',
     },
     faq: {
+      openPoule: 'la ligue ouverte',
       kop: 'Questions fréquentes',
       items: [
         ['Predict the Race est-il gratuit ?', 'Oui. Pas d\'abonnement, pas de paiement, pas de publicité. Toutes les fonctions sont accessibles à tous.'],
@@ -581,6 +590,7 @@ export const teksten = {
         ['Est-ce une application officielle de la Formule 1 ?', 'Non. Predict the Race est un projet de fan indépendant, sans lien avec la Formule 1, la FIA ou une écurie.'],
         ['Combien de points peut-on marquer par week-end ?', 'En Simple, il y a {simpel} points à gagner par week-end, en Classique {klassiek} et en Avancé {gevorderd}. Lors d\'un week-end avec sprint, le sprint s\'y ajoute, et les questions de la saison comptent en fin de saison. Avec un joker, tout un week-end compte double.'],
         ['Quelle est la différence avec F1 Fantasy ?', 'Dans F1 Fantasy, le jeu fantasy officiel de la Formule 1, vous composez une équipe de pilotes et d\'écuries avec un budget et marquez selon leurs performances réelles. Dans Predict the Race, vous pronostiquez l\'ordre : le top 10 des qualifications et de la course, plus des questions bonus comme le vainqueur. Il n\'y a ni budget ni transferts.'],
+        ['Puis-je jouer sans mon propre groupe ?', 'Oui. Rejoignez {openPoule} : une ligue pour tous ceux qui n\'ont pas de groupe. Vous choisissez un nom et vous pronostiquez comme dans n\'importe quelle autre ligue, et le classement montre où vous en êtes face à d\'autres fans de F1. Vous pouvez aussi toujours créer votre propre ligue.'],
       ],
     },
     slot: { kop: 'Extinction des feux. À vous de jouer.', tekst: 'Créez votre ligue en une minute et partagez le code avec vos amis.', knop: 'Créer une ligue' },
@@ -695,6 +705,7 @@ export const teksten = {
       meer: 'Leer la política de privacidad completa (en inglés)',
     },
     faq: {
+      openPoule: 'la liga abierta',
       kop: 'Preguntas frecuentes',
       items: [
         ['¿Predict the Race es gratis?', 'Sí. No hay suscripción, ni muro de pago, ni anuncios. Todas las funciones están disponibles para todos.'],
@@ -711,6 +722,7 @@ export const teksten = {
         ['¿Es una app oficial de la Fórmula 1?', 'No. Predict the Race es un proyecto independiente de aficionados y no está vinculado a la Fórmula 1, la FIA ni a ningún equipo.'],
         ['¿Cuántos puntos se pueden sumar por fin de semana?', 'En Sencillo hay {simpel} puntos en juego por fin de semana, en Clásico {klassiek} y en Avanzado {gevorderd}. En un fin de semana con sprint se suma el sprint, y las preguntas de temporada cuentan al final de la temporada. Con un comodín, todo un fin de semana cuenta doble.'],
         ['¿En qué se diferencia de F1 Fantasy?', 'En F1 Fantasy, el juego fantasy oficial de la Fórmula 1, armas un equipo de pilotos y escuderías con un presupuesto y sumas según su rendimiento real. En Predict the Race predices el orden: el top 10 de la clasificación y de la carrera, más preguntas extra como el ganador. No hay presupuesto ni fichajes.'],
+        ['¿Puedo jugar sin un grupo propio?', 'Sí. Únete a {openPoule}: una liga para todos los que no tienen un grupo propio. Eliges un nombre y pronosticas igual que en cualquier otra liga, y la clasificación muestra cómo te va frente a otros fans de la F1. Además, siempre puedes crear tu propia liga.'],
       ],
     },
     slot: { kop: 'Se apagan los semáforos. Te toca.', tekst: 'Crea tu liga en un minuto y comparte el código con tus amigos.', knop: 'Crea tu liga' },
@@ -825,6 +837,7 @@ export const teksten = {
       meer: 'Leggi l’informativa completa sulla privacy (in inglese)',
     },
     faq: {
+      openPoule: 'lega aperta',
       kop: 'Domande frequenti',
       items: [
         ['Predict the Race è gratis?', 'Sì. Niente abbonamento, niente paywall e niente pubblicità. Tutte le funzioni sono disponibili per tutti.'],
@@ -841,6 +854,7 @@ export const teksten = {
         ['È un\'app ufficiale della Formula 1?', 'No. Predict the Race è un progetto indipendente di appassionati e non è collegato alla Formula 1, alla FIA o ad alcuna squadra.'],
         ['Quanti punti si possono fare a weekend?', 'Con Semplice ci sono {simpel} punti in palio a weekend, con Classico {klassiek} e con Avanzato {gevorderd}. Nei weekend con la sprint si aggiunge la sprint, e le domande di stagione contano a fine stagione. Con un jolly un intero weekend vale doppio.'],
         ['Che differenza c\'è con F1 Fantasy?', 'In F1 Fantasy, il gioco fantasy ufficiale della Formula 1, componi una squadra di piloti e scuderie con un budget e fai punti in base alle loro prestazioni reali. In Predict the Race pronostichi l\'ordine: la top 10 di qualifiche e gara, più domande extra come il vincitore. Non ci sono budget né trasferimenti.'],
+        ['Posso giocare senza un gruppo mio?', 'Sì. Unisciti alla {openPoule}: una lega per chi non ha un gruppo tutto suo. Scegli un nome e fai i tuoi pronostici come in qualsiasi altra lega, e la classifica mostra come te la cavi contro altri fan della F1. Puoi sempre creare anche una lega tua.'],
       ],
     },
     slot: { kop: 'Semaforo spento. Tocca a te.', tekst: 'Crea la tua lega in un minuto e condividi il codice con i tuoi amici.', knop: 'Crea la tua lega' },
@@ -955,6 +969,7 @@ export const teksten = {
       meer: 'Ler a política de privacidade completa (em inglês)',
     },
     faq: {
+      openPoule: 'bolão aberto',
       kop: 'Perguntas frequentes',
       items: [
         ['O Predict the Race é grátis?', 'Sim. Não há assinatura, nem paywall, nem anúncios. Todas as funções estão disponíveis para todos.'],
@@ -971,6 +986,7 @@ export const teksten = {
         ['É um app oficial da Fórmula 1?', 'Não. O Predict the Race é um projeto independente de fãs e não tem ligação com a Fórmula 1, a FIA ou qualquer equipe.'],
         ['Quantos pontos dá para fazer por fim de semana?', 'No Simples há {simpel} pontos em jogo por fim de semana, no Clássico {klassiek} e no Avançado {gevorderd}. Em fim de semana com sprint, a sprint entra também, e as perguntas da temporada contam no fim da temporada. Com um coringa, o fim de semana inteiro vale em dobro.'],
         ['Qual é a diferença para o F1 Fantasy?', 'No F1 Fantasy, o jogo fantasy oficial da Fórmula 1, você monta uma equipe de pilotos e construtoras dentro de um orçamento e pontua pelo desempenho real deles. No Predict the Race você palpita a ordem: o top 10 da classificação e da corrida, mais perguntas extras como o vencedor. Não há orçamento nem transferências.'],
+        ['Posso jogar sem um grupo próprio?', 'Sim. Entre no {openPoule}: um bolão para quem não tem um grupo próprio. Você escolhe um nome e faz seus palpites como em qualquer outro bolão, e a classificação mostra como você está contra outros fãs de F1. Você também pode criar seu próprio bolão quando quiser.'],
       ],
     },
     slot: { kop: 'Luzes apagadas. É a sua vez.', tekst: 'Crie seu bolão em um minuto e compartilhe o código com seus amigos.', knop: 'Crie seu bolão' },

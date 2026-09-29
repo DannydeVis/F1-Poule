@@ -277,6 +277,10 @@ export const PAGINAS = [
       voorspeld: ['Verstappen', 'Norris', 'Leclerc', 'Piastri', 'Hamilton', 'Russell', 'Antonelli', 'Alonso', 'Sainz', 'Albon'],
       uitslag: ['Norris', 'Verstappen', 'Leclerc', 'Russell', 'Piastri', 'Hamilton', 'Alonso', 'Antonelli', 'Gasly', 'Hadjar', 'Albon'],
     },
+    // Contrair voorspellen: zoveel spelers vulden de winnaar in en hadden hem
+    // goed. De generator rekent met contrairVoor() uit de app wat dat per
+    // aantal gelijke antwoorden oplevert.
+    contrairvoorbeeld: { spelers: 5, vraag: 'winnaar' },
     talen: {
       nl: {
         pad: 'f1-poule-puntentelling',
@@ -329,10 +333,22 @@ export const PAGINAS = [
             ],
           },
           {
+            id: 'hetzelfde',
+            vraag: 'Wat als iedereen hetzelfde voorspelt?',
+            kort: 'Als iedereen hetzelfde voorspelt, maakt die vraag geen verschil in de stand: iedereen krijgt dezelfde punten, of niemand. Daarom kan de poulebaas in Predict the Race contrair voorspellen aanzetten. Een goed antwoord op een losse vraag telt dan zwaarder naarmate minder spelers hetzelfde zeiden, tot bijna dubbel. De top 10 en de teamgenoot-duels tellen gewoon.',
+            contrairtabel: { bijschrift: 'Wat een goede winnaar oplevert als {contrairSpelers} spelers de vraag invulden',
+              kop: ['Zeiden hetzelfde', 'Telt', 'Punten'], rij: '{zelfde} van de {spelers}' },
+            tekst: [
+              'De app telt hoeveel spelers de vraag zelf invulden, en hoeveel van hen hetzelfde zeiden als jij. Het deel dat iets anders zei, komt er als extra bij. Was je de enige van de {contrairSpelers}, dan telt je goede antwoord {contrairEen} keer, en is een goede winnaar {contrairPunten} punten waard in plaats van {winnaar}. Zei iedereen hetzelfde, dan verandert er niets. De vermenigvuldiger wordt afgerond op één decimaal, zodat het getal op het racescherm ook het getal is waarmee de app rekent.',
+              'Wat de app zelf invulde, telt niet mee: dat antwoord is van niemand, en het zou jouw keuze minder zeldzaam maken dan hij was. Vulde maar één speler de vraag in, dan is er niets zeldzaams aan. En de regel werkt niet terug: hij geldt pas voor weekenden die beginnen nadat de poulebaas hem aanzette.',
+              'De top 10 en de duels doen bewust niet mee. Bij een top 10 zou elke plek een eigen zeldzaamheid krijgen, en dan kan niemand meer navertellen waar zijn punten vandaan komen. Een puntentelling die je niet kunt uitleggen, maakt meer kapot dan een vraag die geen verschil maakt.',
+            ],
+          },
+          {
             id: 'safety-cars',
             vraag: 'Hoe vaak komt de safety car in een race?',
-            kort: 'Van de {scRaces} Formule 1-races sinds {scVanaf} hadden er {scMet} minstens één safety car, een virtuele meegeteld. Gemiddeld kwam de safety car {scGemiddeld} keer per race de baan op, en {rvMet} races werden stilgelegd met een rode vlag. Zo telt Predict the Race ook bij de vraag hoeveel safety cars er komen. Hieronder de cijfers per circuit, tot en met {scTot}.',
-            circuittabel: { bijschrift: 'Per circuit: races sinds {scVanaf}, safety cars (virtuele meegeteld) en races met een rode vlag, tot en met {scTot}',
+            kort: 'Van de {scRaces} Formule 1-races sinds {scVanaf} hadden er {scMet} minstens één safety car, de virtuele safety car meegeteld. Gemiddeld kwam de safety car {scGemiddeld} keer per race de baan op, en {rvMet} races werden stilgelegd met een rode vlag. Zo telt Predict the Race ook bij de vraag hoeveel safety cars er komen. Hieronder de cijfers per circuit, tot en met {scTot}.',
+            circuittabel: { bijschrift: 'Per circuit: races sinds {scVanaf}, safety cars (de virtuele safety car meegeteld) en races met een rode vlag, tot en met {scTot}',
               kop: ['Circuit', 'Races', 'Safety cars', 'Rode vlag'] },
             tekst: [
               'Het vaakst kwam de safety car in {scMeestPlek}: {scMeestAantal} keer in {scMeestRaces} races. Het minst in {scMinstPlek}: {scMinstAantal} keer in {scMinstRaces} races. Alleen circuits met minstens {scMinRaces} races tellen hier mee.',
@@ -409,6 +425,18 @@ export const PAGINAS = [
             vragentabel: true,
             tekst: [
               'How much a weekend is worth depends on the level the league admin picks: {simpel} points on Simple, {klassiek} on Classic and {gevorderd} on Advanced. On sprint weekends the sprint comes on top, and the season questions are settled at the end of the season.',
+            ],
+          },
+          {
+            id: 'same-picks',
+            vraag: 'What if everyone predicts the same thing?',
+            kort: 'If everyone predicts the same thing, that question makes no difference to the standings: everyone gets the same points, or nobody does. For that case the league admin in Predict the Race can switch on contrarian picks. A right answer to an extra question then counts for more the fewer players said the same, up to almost double. The top 10 and the teammate duels score as usual.',
+            contrairtabel: { bijschrift: 'What a right winner is worth when {contrairSpelers} players answered',
+              kop: ['Said the same', 'Counts', 'Points'], rij: '{zelfde} of {spelers}' },
+            tekst: [
+              'The app counts how many players answered the question themselves, and how many of them said the same as you. The share that said something else comes on top. If you were the only one of {contrairSpelers}, your right answer counts {contrairEen} times, and a right winner is worth {contrairPunten} points instead of {winnaar}. If everyone said the same, nothing changes. The multiplier is rounded to one decimal, so the number on the race screen is the number the app scores with.',
+              'Answers the app filled in itself do not count: they belong to nobody, and they would make your pick look less rare than it was. If only one player answered, there is nothing rare about it. And the rule does not work backwards: it only applies to weekends that start after the league admin switched it on.',
+              'The top 10 and the duels are left out on purpose. In a top 10, every position would get its own rarity, and nobody could explain where their points came from. A scoring system you cannot explain does more damage than a question that makes no difference.',
             ],
           },
           {

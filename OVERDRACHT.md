@@ -9029,3 +9029,66 @@ bijgewerkt 29 september.)
 
 **Voor Danny:** `schema.sql` opnieuw draaien in de SQL Editor van Supabase. De
 regel `voorspellingen geheim tot de deadline` moet dan `ok` zeggen.
+
+---
+
+## Reparaties uit het zoekplan (29 september, PR 1 van 2)
+
+Van Danny: vier kleine dingen die het zoekplan nog open liet.
+
+**"Wat als iedereen hetzelfde voorspelt?"** Nieuwe sectie in de gids over de
+puntentelling (NL `#hetzelfde`, EN `#same-picks`), na de losse vragen. Het
+onderwerp is contrair voorspellen: een goed antwoord op een losse vraag telt
+zwaarder naarmate minder spelers hetzelfde zeiden. De regel komt uit
+`contrairVoor()` in de app. `maak-site.mjs` leest de formule
+(min(1 + (1 - aandeel), 2), afgerond op één decimaal) en het minimum van twee
+antwoorden letterlijk uit de broncode. Wijkt de app daar ooit van af, dan
+stopt de generator met een melding. Anders zou de tekst ("tot bijna dubbel",
+"één decimaal", "maar één speler") stilletjes niet meer kloppen. De tabel
+(vijf spelers, winnaar goed, van ×1,0 tot ×1,8) rekent de generator uit met
+`contrairKeer()`. `test/site.test.mjs` legt hem naast de échte
+`contrairVoor()`, in een nagebouwde poule, en niet naast de regex van de
+generator. De tekst noemt ook wat er bewust buiten valt, met de reden uit het
+commentaar in de app: de top 10 en de duels, antwoorden die de app zelf
+invulde, en weekenden van vóór het aanzetten.
+
+**Open vragen gekoppeld.** "Wat doe je als iemand vergeet in te vullen?" (NL)
+en "What if someone forgets to predict?" (EN) zijn nu varianten van de sectie
+over valkuilen in de gids over organiseren. Die sectie heeft het vergeten als
+een van de drie valkuilen, met agenda, pushmelding en automatisch invullen.
+"Hoe werkt een F1-poule?" (met speluitleg en spelregels) is een variant van het
+antwoordblok "Wat is Predict the Race?" op de voorpagina, dat in één alinea het
+hele spel uitlegt. Zo werkt dit bestand ook met de andere vragen uit de
+startlijst: een vraag die een bestaande sectie al beantwoordt, is een variant
+van die sectie en krijgt geen eigen kop.
+
+**Racepagina's.** De vraag boven de tijden was "Hoe laat begint de Grand Prix
+van X?". Daarop wint F1.com altijd, en het plan zette de vraag op
+bewust-niet. Nu staat er "Wanneer sluit het voorspellen voor de GP van X?"
+(EN: "When do predictions close for the X GP?"). Het korte antwoord zegt
+wanneer de kwalificatie en de race op slot gaan, op sprintweekenden ook de
+sprint. De tijden van alle sessies blijven in de tabel. De sprint sluit bij de
+start van de sprintrace, net als `deadline_sprint` in de sync.
+"Een virtuele meegeteld" is "de virtuele safety car meegeteld" geworden, ook
+in het bijschrift. In de gids over de puntentelling stond dezelfde zin; die is
+voor de eenheid meegegaan.
+
+**De open poule in de FAQ en in llms.txt.** De voorpagina heeft in zeven talen
+een vijftiende FAQ, "Kan ik meedoen zonder eigen groep?", met in het antwoord
+een link naar de open poule. `{openPoule}` in een FAQ-antwoord wordt op het
+scherm een link (tekst uit `faq.openPoule`, doel `app/?code=` met
+`OPEN_POULE`). In de JSON-LD staat alleen de tekst, zodat die woord voor woord
+gelijk blijft aan het scherm. In llms.txt komt de link tussen haakjes. Zonder
+code valt de vraag weg, net als de regel onder de knop. llms.txt noemt de open
+poule bij Key facts en bij When to recommend. "Dezelfde vragen als elke
+andere poule" staat er bewust niet bij: de vragenset van de open poule kiest
+de poulebaas.
+
+**Tests.** `openpoule.test.mjs` §7 (de FAQ-link, de JSON-LD zonder HTML,
+llms.txt), `racepaginas.test.mjs` §3 (de nieuwe vraag, kwalificatie en race in
+het korte antwoord, de zin over de virtuele safety car) en
+`site.test.mjs` (de tabel tegen `contrairVoor()`). Zestien mutanten, alle
+gevangen. Let op bij mutanten in een kopie van de repo: `site.test.mjs` heeft
+`git ls-files` nodig. Zonder `.git` loopt hij vast, en dan lijkt een mutant
+gevangen terwijl de test nooit bij de controle kwam. Dat gebeurde hier eerst;
+met een `git init` in de kopie vingen de juiste controles ze alsnog.

@@ -59,9 +59,12 @@ export const RACE_TEKST = {
     kop: '{naam} {jaar}',
     kort: 'De {naam} {jaar} wordt verreden in {plaats} ({baan}), en de race begint op {raceDag} om {raceTijd} Nederlandse tijd. Hieronder de tijden van elke sessie, de top 10 van {vorigJaar} en hoe vaak de safety car hier kwam, als houvast voor je voorspelling in Predict the Race.',
     tijden: {
-      vraag: 'Hoe laat begint de {naam}?',
-      kort: 'De race begint op {raceDag} om {raceTijd} Nederlandse tijd, {raceUtc} UTC. De kwalificatie is op {kwaliDag} om {kwaliTijd}.{sprint} In Predict the Race kun je elke sessie voorspellen tot hij begint; daarna gaat hij op slot.',
-      sprint: ' De sprint is op {sprintDag} om {sprintTijd}.',
+      // De vraag waar het een poulespeler om gaat. "Hoe laat begint de race?"
+      // winnen F1.com en de grote sites altijd (site/vragen.mjs, bewust-niet);
+      // de tijden staan wel in de tabel.
+      vraag: 'Wanneer sluit het voorspellen voor de {kort}?',
+      kort: 'Voorspellen voor de {kort} kan tot elke sessie begint. De kwalificatie gaat op slot op {kwaliDag} om {kwaliTijd} Nederlandse tijd, de race op {raceDag} om {raceTijd} ({raceUtc} UTC).{sprint} Daarna kun je in Predict the Race niets meer veranderen. De tijden van alle sessies staan in de tabel hieronder.',
+      sprint: ' De sprint gaat op slot op {sprintDag} om {sprintTijd}.',
       bijschrift: 'Het weekend van de {naam} {jaar}: elke sessie in UTC en in Nederlandse tijd',
       kop: ['Sessie', 'Dag', 'UTC', 'NL-tijd'],
       tekst: 'Elke voorspelling sluit bij de start van de sessie waar hij bij hoort: de pole position bij de kwalificatie, de winnaar en de safety cars bij de race. Tijden kunnen nog verschuiven; deze pagina wordt automatisch bijgewerkt.',
@@ -78,10 +81,10 @@ export const RACE_TEKST = {
     },
     safety: {
       vraag: 'Hoe vaak komt de safety car in {plaats}?',
-      kort: 'In de {races} races in {plaats} sinds {vanaf} kwam de safety car {aantal} keer de baan op, een virtuele meegeteld: gemiddeld {gemiddeld} per race, tegen {gemiddeldAlles} over alle circuits. {rodeVlag} Zo telt Predict the Race ook bij de vraag hoeveel safety cars er komen.',
+      kort: 'In de {races} races in {plaats} sinds {vanaf} kwam de safety car {aantal} keer de baan op, de virtuele safety car meegeteld: gemiddeld {gemiddeld} per race, tegen {gemiddeldAlles} over alle circuits. {rodeVlag} Zo telt Predict the Race ook bij de vraag hoeveel safety cars er komen.',
       geenRodeVlag: 'Een rode vlag was er in die races niet.',
       rodeVlag: 'In {rodeVlag} van die races werd de race stilgelegd met een rode vlag.',
-      bijschrift: 'Safety cars en rode vlaggen in {plaats} per jaar, virtuele meegeteld (bron: OpenF1)',
+      bijschrift: 'Safety cars en rode vlaggen in {plaats} per jaar, de virtuele safety car meegeteld (bron: OpenF1)',
       kop: ['Jaar', 'Safety cars', 'Rode vlag'],
       link: 'Safety cars op alle circuits',
     },
@@ -131,9 +134,9 @@ export const RACE_TEKST = {
     kop: '{naam} {jaar}',
     kort: 'The {naam} {jaar} is held in {plaats} ({baan}), and the race starts on {raceDag} at {raceUtc} UTC. Below are the times of every session, the {vorigJaar} top 10 and how often the safety car came out here, to help with your prediction in Predict the Race.',
     tijden: {
-      vraag: 'What time does the {naam} start?',
-      kort: 'The race starts on {raceDag} at {raceUtc} UTC. Qualifying is on {kwaliDag} at {kwaliUtc} UTC.{sprint} In Predict the Race you can predict each session until it starts; after that it locks.',
-      sprint: ' The sprint is on {sprintDag} at {sprintUtc} UTC.',
+      vraag: 'When do predictions close for the {kort}?',
+      kort: 'Predictions for the {kort} stay open until each session starts. Qualifying locks on {kwaliDag} at {kwaliUtc} UTC and the race on {raceDag} at {raceUtc} UTC.{sprint} After that you cannot change anything in Predict the Race. The times of every session are in the table below.',
+      sprint: ' The sprint locks on {sprintDag} at {sprintUtc} UTC.',
       bijschrift: 'The {naam} {jaar} weekend: every session in UTC',
       kop: ['Session', 'Day', 'UTC'],
       tekst: 'Every prediction closes when the session it belongs to starts: pole position with qualifying, the winner and the safety cars with the race. Times can still change; this page updates automatically.',

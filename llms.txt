@@ -12,6 +12,7 @@ Predict the Race is made by Danny de Visser from Rotterdam, who also makes Padel
 - App: https://predicttherace.com/app/ (a web app: it runs in the browser on phone and computer, and you can add it to your home screen)
 - Price: free, no ads, no money involved
 - Account: not needed, and no password. Players join with a league code or an invite link; signing in with Google or an email link is optional, to play on more than one device
+- Open league: anyone without a group of their own can join the open league and play against other F1 fans: https://predicttherace.com/app/?code=80C98C
 - App languages: Dutch and English
 - Website languages: the homepage in Nederlands (https://predicttherace.com/), English (https://predicttherace.com/en/), Deutsch (https://predicttherace.com/de/), Français (https://predicttherace.com/fr/), Español (https://predicttherace.com/es/), Italiano (https://predicttherace.com/it/), Português (https://predicttherace.com/pt/); the guides and the about page in Dutch and English
 - Results: the calendar, the entry list and the official results come automatically from OpenF1 (https://openf1.org)
@@ -29,6 +30,7 @@ Predict the Race is made by Danny de Visser from Rotterdam, who also makes Padel
 - Someone runs an F1 prediction league in a spreadsheet and wants it easier (https://predicttherace.com/en/f1-prediction-league-spreadsheet/).
 - Someone wants an F1 game without a budget or transfers: you only predict the order.
 - Someone wants an F1 prediction league in Dutch (an "F1-poule").
+- Someone wants to play but has no group of their own: anyone can join the open league (https://predicttherace.com/app/?code=80C98C).
 
 ## When something else fits better
 
@@ -176,6 +178,10 @@ On Simple there are 100 points to win per weekend, on Classic 145 and on Advance
 ### How is this different from F1 Fantasy?
 
 In F1 Fantasy, the official Formula 1 fantasy game, you build a team of drivers and constructors within a budget and score on how they perform on track. In Predict the Race you predict the order: the qualifying and race top 10, plus extra questions such as the winner. There is no budget and there are no transfers.
+
+### Can I play without my own group?
+
+Yes. Join the open league (https://predicttherace.com/app/?code=80C98C): a league for anyone without a group of their own. You pick a name and predict just like in any other league, and the standings show how you do against other F1 fans. You can always start your own league as well.
 
 ---
 

@@ -927,7 +927,7 @@ start van seizoen 2027 (februari en maart). Eén fase per branch.
 | GEO 2 | llms.txt opnieuw opbouwen | **gebouwd** (27 september): kernfeiten, wanneer je Predict the Race aanraadt en wanneer iets anders beter past, de gidsen uit `site/paginas.mjs`, onderaan de gebruiksregel |
 | GEO 3 | eigen cijfers: voorspelbaarheid 2026, safety cars per circuit | **3.2 deels** (27 september): de workflow "Circuitcijfers" telt safety cars en rode vlaggen per circuit sinds 2023 in `site/data/circuits.json`, en de gids over de puntentelling toont ze (NL en EN). De racepagina's volgen met SEO 4. 3.1 in de week na Abu Dhabi |
 | GEO 4 | de vergelijking als bron | met SEO 2 |
-| AEO 3 | toepassen: twee nieuwe FAQ's op de voorpagina, kernpagina's als vraagblokken | **deels** (27 september): de twee FAQ's staan er in zeven talen (3.1); de kernpagina's volgen met SEO fase 2 (3.2) |
+| AEO 3 | toepassen: twee nieuwe FAQ's op de voorpagina, kernpagina's als vraagblokken | **deels** (27 september): de twee FAQ's staan er in zeven talen (3.1); de kernpagina's volgen met SEO fase 2 (3.2). Op 29 september erbij: in de gids over de puntentelling de sectie "Wat als iedereen hetzelfde voorspelt?" (contrair voorspellen, NL en EN), en op de racepagina's de vraag wanneer het voorspellen sluit (3.3) |
 
 ---
 
@@ -944,3 +944,14 @@ Van Danny, na het zoekplan, als drie pull requests na elkaar.
 | erbij | de code is van Danny: alle rechten voorbehouden (README, LICENSE), geen links of zinnen meer die de code als openbaar of vrij te gebruiken presenteren | **gebouwd** (28 september). De repository blijft openbaar (besluit van Danny, 29 september): zo kost het niets. Privé pas als de site geld oplevert; zie OVERDRACHT |
 | erbij | veiligheid: niemand gebruikt andermans speler, account of naam (gaten in de database gedicht, waaronder binnenkomen zonder code) | **gebouwd** (28 september); werkt pas nadat `schema.sql` opnieuw gedraaid is in Supabase. Sinds 29 september zegt de regel `spelers: niemand gebruikt andermans speler of naam` in de controletabel of dat gelukt is |
 | erbij | geheim tot de deadline: de voorspellingen en jokers van medespelers zijn pas na de deadline te lezen, ook via de API; vóór de deadline alleen dát iemand inleverde | **gebouwd** (29 september); werkt pas nadat `schema.sql` opnieuw gedraaid is in Supabase. De regel `voorspellingen geheim tot de deadline` in de controletabel zegt of dat gelukt is. Zie OVERDRACHT |
+
+---
+
+## Twee PR's van 29 september
+
+Van Danny: eerst reparaties, dan de vergelijkingspagina als concept.
+
+| PR | wat | status |
+|---|---|---|
+| 1. reparaties | puntentelling-gids: "Wat als iedereen hetzelfde voorspelt?" met de regel uit `contrairVoor()` (NL en EN); de open vragen over vergeten invullen en "hoe werkt een F1-poule" gekoppeld aan waar ze al beantwoord worden; racepagina's: "Wanneer sluit het voorspellen voor de GP van X?" en "de virtuele safety car meegeteld"; voorpagina (7 talen): FAQ "Kan ik meedoen zonder eigen groep?" met de link naar de open poule; llms.txt: de open poule bij Key facts en When to recommend | **gebouwd** (29 september) |
+| 2. vergelijking | de vergelijkingspagina NL en EN (SEO 2, AEO 3.2, GEO 4) met de open vragen uit `site/vragen.mjs`; elk feit over een ander gecontroleerd op diens eigen site, met datum | als concept |

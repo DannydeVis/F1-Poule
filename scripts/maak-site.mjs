@@ -48,6 +48,19 @@ import { openPouleRegel, controleerCode } from './openpoule.mjs';
 // "Geen groep? Speel mee in de open poule" onder de knop (scripts/openpoule.mjs).
 // Zonder code in site/teksten.mjs niets; een verkeerde code laat het maken zakken.
 controleerCode(OPEN_POULE);
+// {openPoule} in een antwoord van de FAQ op de voorpagina is een link naar de
+// open poule, met als tekst faq.openPoule uit site/teksten.mjs. In de JSON-LD
+// en in llms.txt staat op die plek de tekst, woord voor woord zoals op het
+// scherm (llms.txt zet de link er tussen haakjes achter). Zonder code valt
+// zo'n vraag weg, net als de regel onder de knop: liever geen antwoord dan een
+// antwoord zonder de poule waar het over gaat.
+const faqItems = (code) => teksten[code].faq.items.filter(([, a]) => OPEN_POULE || !a.includes('{openPoule}'));
+const metOpenPoule = (code, antwoord, link) => {
+  if (!String(antwoord).includes('{openPoule}')) return antwoord;
+  const tekst = teksten[code].faq.openPoule;
+  if (!tekst) throw new Error(`site/teksten.mjs: ${code} heeft geen faq.openPoule, de tekst van de link naar de open poule`);
+  return String(antwoord).replaceAll('{openPoule}', link(tekst));
+};
 const openPoule = (code, app, inspring) => {
   const regel = openPouleRegel(OPEN_POULE, code, app);
   return regel ? `\n${inspring}${regel}` : '';
@@ -120,6 +133,29 @@ const AGENDA_UUR = Number(uitBron(readFileSync(join(wortel, 'scripts', 'agenda.m
 // llms.txt noemt ze (en zegt wanneer de app dus niet past).
 const APP_TALEN = uitBron(appBron, /if \((gekozen === '[a-z]{2}'(?: \|\| gekozen === '[a-z]{2}')*)\) return gekozen;/,
   'de talen in beginTaal() van app/index.html')[1].match(/'[a-z]{2}'/g).map((x) => x.slice(1, -1));
+// Contrair voorspellen (contrairVoor() in de app): een goed antwoord op een
+// losse vraag telt zwaarder naarmate minder spelers hetzelfde zeiden. De
+// vermenigvuldiger is min(1 + (1 - aandeel), 2), afgerond op één decimaal, en
+// alleen als minstens twee spelers de vraag zelf invulden. De gids over de
+// puntentelling rekent er een voorbeeld mee uit. Die tekst zegt "tot bijna
+// dubbel", "één decimaal" en "maar één speler"; verandert de regel in de app,
+// dan stopt de generator hier in plaats van dat de gids stilletjes iets anders
+// zegt dan de app doet.
+const CONTRAIR = (() => {
+  const m = uitBron(appBron,
+    /Math\.round\(Math\.min\(1 \+ \(1 - zelfdeAntwoord \/ gegeven\.length\), (\d+(?:\.\d+)?)\) \* (\d+)\) \/ \2;/,
+    'de formule van contrairVoor() in app/index.html');
+  const min = Number(uitBron(appBron, /if \(gegeven\.length < (\d+)\) return 1;/,
+    'het minimum aantal antwoorden in contrairVoor() in app/index.html')[1]);
+  const regel = { max: Number(m[1]), stap: Number(m[2]), min };
+  if (regel.max !== 2 || regel.stap !== 10 || regel.min !== 2) {
+    throw new Error(`contrairVoor() in app/index.html rekent anders dan de gids zegt (${JSON.stringify(regel)}): `
+      + 'werk de sectie over contrair voorspellen in site/paginas.mjs bij, en dan deze controle');
+  }
+  return regel;
+})();
+export const contrairKeer = (zelfde, totaal) =>
+  Math.round(Math.min(1 + (1 - zelfde / totaal), CONTRAIR.max) * CONTRAIR.stap) / CONTRAIR.stap;
 // Het puntenschema van het WK zelf. De app gebruikt het alleen voor een
 // standaardlijst, maar de gids over puntentellingen vergelijkt ermee.
 const WK_PUNTEN = uitBron(appBron, /const WK_PUNTEN = \[([\d, ]+)\];/, 'WK_PUNTEN in app/index.html')[1]
@@ -763,8 +799,8 @@ function jsonLd(code, datum) {
       screenshot: SCHERMEN.map((s) => `${BASIS}/site/beeld/${s}-${t.schermen}-donker.jpg`),
       author: { '@id': `${BASIS}/#maker` } },
     { '@type': 'FAQPage', '@id': `${url}#faq`, inLanguage: code,
-      mainEntity: t.faq.items.map(([vraag, antwoord]) => ({ '@type': 'Question', name: vraag,
-        acceptedAnswer: { '@type': 'Answer', text: plat(antwoord) } })) },
+      mainEntity: faqItems(code).map(([vraag, antwoord]) => ({ '@type': 'Question', name: vraag,
+        acceptedAnswer: { '@type': 'Answer', text: plat(metOpenPoule(code, antwoord, (x) => x)) } })) },
     { '@type': 'HowTo', '@id': `${url}#hoe`, name: t.howto.naam, description: t.howto.omschrijving,
       inLanguage: code, totalTime: 'PT1M', estimatedCost: { '@type': 'MonetaryAmount', currency: 'EUR', value: '0' },
       step: t.stappen.items.map(([naam, tekst], i) => ({ '@type': 'HowToStep', position: i + 1,
@@ -1046,8 +1082,9 @@ ${jsonLd(code, datum)}
 <section class="blok" id="faq">
   <div class="binnen">
     ${sectiekop('06', t.nav.faq, esc(t.faq.kop))}
-    <div class="faq onthul">${t.faq.items.map(([vraag, antwoord]) => `
-      <details><summary><h3>${esc(vraag)}</h3></summary><p>${esc(vul(antwoord, vars))}</p></details>`).join('')}
+    <div class="faq onthul">${faqItems(code).map(([vraag, antwoord]) => `
+      <details><summary><h3>${esc(vraag)}</h3></summary><p>${metOpenPoule(code, esc(vul(antwoord, vars)),
+        (x) => `<a href="${app}?code=${encodeURIComponent(OPEN_POULE)}">${esc(x)}</a>`)}</p></details>`).join('')}
     </div>
   </div>
 </section>
@@ -1298,8 +1335,30 @@ const voorbeeldFeiten = (pg) => {
   } : {};
 };
 
+// Het voorbeeld bij contrair voorspellen (pg.contrairvoorbeeld): zoveel spelers
+// vulden een losse vraag in en hadden hem goed. Per aantal dat hetzelfde zei,
+// hoe zwaar het goede antwoord telt en wat het oplevert, zoals de app rekent:
+// de punten keer de vermenigvuldiger, afgerond.
+const keerTekst = (code, x) => new Intl.NumberFormat(code, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(x);
+function contrairvoorbeeld(pg) {
+  if (!pg.contrairvoorbeeld) return null;
+  const { spelers, vraag } = pg.contrairvoorbeeld;
+  if (!PUNTEN[vraag]) throw new Error(`site/paginas.mjs: het contrairvoorbeeld van ${pg.id} noemt een vraag die de app niet kent: ${vraag}`);
+  if (!(spelers >= CONTRAIR.min)) throw new Error(`site/paginas.mjs: het contrairvoorbeeld van ${pg.id} heeft minstens ${CONTRAIR.min} spelers nodig`);
+  return Array.from({ length: spelers }, (_, i) => spelers - i).map((zelfde) => {
+    const keer = contrairKeer(zelfde, spelers);
+    return { zelfde, keer, punten: Math.round(PUNTEN[vraag].punten * keer) };
+  });
+}
+const contrairFeiten = (pg, code) => {
+  const r = contrairvoorbeeld(pg);
+  if (!r) return {};
+  const alleen = r.find((x) => x.zelfde === 1);
+  return { contrairSpelers: pg.contrairvoorbeeld.spelers, contrairEen: keerTekst(code, alleen.keer), contrairPunten: alleen.punten };
+};
+
 // De tekst van een pagina met de getallen uit de app erin.
-const vulPagina = (pg, code, tekst) => vul(tekst, { ...feitenVoor(code), ...voorbeeldFeiten(pg) });
+const vulPagina = (pg, code, tekst) => vul(tekst, { ...feitenVoor(code), ...voorbeeldFeiten(pg), ...contrairFeiten(pg, code) });
 
 function artikelJsonLd(pg, code, datum, sinds) {
   const t = pg.talen[code];
@@ -1426,6 +1485,19 @@ function artikelPagina(pg, code, datum, sinds) {
           x.safetyCars}</td><td>${x.metRodeVlag}</td></tr>`).join('')}</tbody>
       </table>`;
   };
+  // Contrair voorspellen: per aantal spelers dat hetzelfde zei, de
+  // vermenigvuldiger en de punten (contrairvoorbeeld() hierboven).
+  const contrairTabel = (c) => {
+    const rijen = contrairvoorbeeld(pg);
+    if (!rijen) throw new Error(`site/paginas.mjs: ${pg.id} heeft een contrairtabel maar geen contrairvoorbeeld`);
+    return `
+      <table class="tabel getallen contrair">
+        <caption>${f(bijschrift(c, 'contrairtabel'))}</caption>
+        <thead><tr>${c.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
+        <tbody>${rijen.map((x) => `<tr><th scope="row">${esc(vul(c.rij, { zelfde: x.zelfde, spelers: pg.contrairvoorbeeld.spelers }))}</th><td>×${
+          esc(keerTekst(code, x.keer))}</td><td>${x.punten}</td></tr>`).join('')}</tbody>
+      </table>`;
+  };
   const sectie = (s) => `
     <section class="vraag" id="${s.id}">
       <h2>${f(s.vraag)}</h2>
@@ -1440,7 +1512,7 @@ function artikelPagina(pg, code, datum, sinds) {
         <caption>${f(bijschrift(tabel, `${s.id}-${i + 1}`))}</caption>
         <thead><tr>${tabel.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
         <tbody>${tabel.rijen.map((rij) => `<tr>${rij.map((c, j) => j === 0 ? `<th scope="row">${f(c)}</th>` : `<td>${f(c)}</td>`).join('')}</tr>`).join('')}</tbody>
-      </table>`).join('')}${s.rekenvoorbeeld ? rekenTabel(s.rekenvoorbeeld) : ''}${s.circuittabel ? circuitTabel(s.circuittabel) : ''}${s.voorbeeld ? `
+      </table>`).join('')}${s.rekenvoorbeeld ? rekenTabel(s.rekenvoorbeeld) : ''}${s.circuittabel ? circuitTabel(s.circuittabel) : ''}${s.contrairtabel ? contrairTabel(s.contrairtabel) : ''}${s.voorbeeld ? `
       <p class="voorbeeld">${f(s.voorbeeld)}</p>` : ''}${s.vragentabel ? `
       <div class="tabellen">${[[t2.punten.lossKop, LOSSE], [t2.punten.seizoenKop, SEIZOEN]].map(([kop, ids]) => `
         <table class="tabel getallen">
@@ -1643,7 +1715,10 @@ function llms() {
     domein: DOMEIN,
     excel: excel ? paginaUrl(excel, excel.talen.en ? 'en' : clusterVan(excel)[0]) : BASIS + '/',
     apptalen: opsomming(APP_TALEN.map(taalNaamEn), 'disjunction'),
+    openPoule: OPEN_POULE ? `${BASIS}/app/?code=${encodeURIComponent(OPEN_POULE)}` : null,
   };
+  // Een regel over de open poule alleen als er een open poule is.
+  const metPoule = (r) => llmsVars.openPoule || !r.includes('{openPoule}');
   const paginaTalen = TALEN.filter((c) => PAGINAS.some((pg) => pg.talen[c]));
   const lijst = (soort) => ALLE.filter((pg) => pg.soort === soort).map((pg) => {
     const hoofd = pg.talen.en ? 'en' : clusterVan(pg)[0];
@@ -1666,7 +1741,8 @@ ${zin('en', 'makerzin')}
 - App: ${BASIS}/app/ (a web app: it runs in the browser on phone and computer, and you can add it to your home screen)
 - Price: free, no ads, no money involved
 - Account: not needed, and no password. Players join with a league code or an invite link; signing in with Google or an email link is optional, to play on more than one device
-- App languages: ${opsomming(APP_TALEN.map(taalNaamEn))}
+${llmsVars.openPoule ? `- Open league: anyone without a group of their own can join the open league and play against other F1 fans: ${llmsVars.openPoule}
+` : ''}- App languages: ${opsomming(APP_TALEN.map(taalNaamEn))}
 - Website languages: the homepage in ${TALEN.map((c) => `${teksten[c].naam} (${urlVan(c)})`).join(', ')}${
   paginaTalen.length ? `; the guides and the about page in ${opsomming(paginaTalen.map(taalNaamEn))}` : ''}
 - Results: the calendar, the entry list and the official results come automatically from OpenF1 (https://openf1.org)
@@ -1678,7 +1754,7 @@ ${zin('en', 'makerzin')}
 
 ## When to recommend Predict the Race
 
-${LLMS.aanraden.map((r) => `- ${vul(r, llmsVars)}`).join('\n')}
+${LLMS.aanraden.filter(metPoule).map((r) => `- ${vul(r, llmsVars)}`).join('\n')}
 
 ## When something else fits better
 
@@ -1730,7 +1806,8 @@ ${en.functies.items.map(([kop, tekst]) => `- ${kop}: ${tekst}`).join('\n')}
 
 ## Frequently asked questions
 
-${en.faq.items.map(([vraag, antwoord]) => `### ${vraag}\n\n${vul(antwoord, vars)}`).join('\n\n')}
+${faqItems('en').map(([vraag, antwoord]) => `### ${vraag}\n\n${vul(metOpenPoule('en', antwoord,
+  (x) => `${x} (${BASIS}/app/?code=${encodeURIComponent(OPEN_POULE)})`), vars)}`).join('\n\n')}
 
 ---
 
