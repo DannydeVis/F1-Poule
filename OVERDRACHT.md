@@ -9093,7 +9093,10 @@ gevangen. Let op bij mutanten in een kopie van de repo: `site.test.mjs` heeft
 gevangen terwijl de test nooit bij de controle kwam. Dat gebeurde hier eerst;
 met een `git init` in de kopie vingen de juiste controles ze alsnog.
 
-## De vergelijkingspagina (29 september, PR 2 van 2, concept)
+## De vergelijkingspagina (29 september, PR 2 van 2)
+
+Als concept geopend; Danny zette hem op klaar en hij is dezelfde dag
+gemerged (PR #181).
 
 Van Danny: de vergelijkingspagina uit het zoekplan (SEO fase 2, AEO 3.2, GEO
 fase 4), NL en EN, met de open vragen uit `site/vragen.mjs`. "Met F1 Predict
