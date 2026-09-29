@@ -9159,3 +9159,22 @@ de app op de pagina) en `geo.test.mjs` (het kopje in llms.txt) doen mee; de
 algemene keuring (antwoordvorm, contrast, 360 pixels, links) geldt vanzelf.
 De zin dat Podium Prophets standaard net zo telt, bewaakt de test tegen
 de telling van de app. Drieëntwintig mutanten, alle gevangen.
+
+## Gratis, ook voor een grote poule op het werk (29 september)
+
+Van Danny: bij Scorito is zakelijk gebruik gratis tot tien deelnemers,
+daarboven kost het een pakket (vanaf 59 euro; op hun eigen site,
+blog.scorito.com, "Consumenten leagues voor zakelijk gebruik", gezien op 29
+september). Bij Predict the Race is een grote werkpoule gewoon gratis. Dat
+klopt: `app/index.html` en `schema.sql` kennen geen maximum aantal spelers per
+poule en geen tarief. Komt er ooit een maximum, pas dan deze zinnen aan.
+
+- Gids organiseren, sectie over werk (NL `#werk`, EN `#at-work`): het korte
+  antwoord zegt "Predict the Race is gratis, ook voor een grote poule op het
+  werk" (EN "free, even for a big league at work"), en er is een punt bij:
+  "Gratis, hoe groot ook" / "Free at any size", geen maximum en geen zakelijk
+  tarief.
+- De pitch van januari (`docs/zoekplan/3-geo.md`, Pitchteksten, NL en EN) heeft
+  dezelfde zin. Scorito staat er bewust niet in: het punt staat op zichzelf.
+  Onder de pitch staat waarom de zin erin staat, met de bron.
+- `docs/zoekplan/concurrenten.md`: het feit over Scorito, met bron en datum.

@@ -16,7 +16,10 @@ Dit bestand staat niet op het domein (`_config.yml` sluit `docs/` uit).
 - gppoule.nl / formule1poule.nl, f1voorspeller.nl, poulef1.nl, f1-spel.net
 - poules.com: poules voor allerlei sporten, voor F1 "Head to Head", "Top 10"
   en "Top 10 Max"; legt uit hoe je een pot afspreekt
-- Scorito GP-spel
+- Scorito GP-spel. Zakelijk gebruik is bij Scorito gratis tot tien
+  deelnemers; daarboven een betaald pakket, vanaf 59 euro (op hun eigen site:
+  blog.scorito.com, "Consumenten leagues voor zakelijk gebruik", en
+  business.scorito.com; gezien op 29 september 2026 via een zoekmachine)
 - pronostiek.com (Vlaams)
 
 ## Engelstalig

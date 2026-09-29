@@ -261,7 +261,8 @@ Ik ben Danny de Visser uit Rotterdam en ik maak Predict the Race
 (predicttherace.com): een gratis F1-poule voor vriendengroepen. Iedereen
 voorspelt de top 10 van kwalificatie en race, de uitslagen komen vanzelf
 binnen, en je doet mee met een poulecode, zonder account. Geen
-advertenties en geen geld.
+advertenties en geen geld. Gratis, ook voor een grote poule op het werk:
+er is geen maximum aantal spelers en geen zakelijk tarief.
 
 Misschien iets voor jullie overzicht van F1-apps, als gratis alternatief
 voor een Excel-poule. Na dit seizoen heb ik ook uitgezocht hoe voorspelbaar
@@ -280,7 +281,8 @@ I'm Danny de Visser from Rotterdam, and I make Predict the Race
 (predicttherace.com): a free F1 prediction game for groups of friends.
 Everyone predicts the top 10 of qualifying and the race, the results come
 in automatically, and you join with a league code, without an account.
-No ads, no money involved.
+No ads, no money involved. Free, even for a big league at work: there is
+no player limit and no business pricing.
 
 It might fit your list of F1 prediction games as a free option for
 friend leagues. After this season I also worked out how predictable 2026
@@ -291,6 +293,14 @@ Danny
 ```
 
 Pas per ontvanger één zin aan: waarom het bij hun lijstje of hun lezers past.
+
+Waarom de zin over werkpoules erin staat: bij Scorito is zakelijk gebruik
+gratis tot tien deelnemers, daarboven kost het een pakket (vanaf 59 euro,
+volgens blog.scorito.com, "Consumenten leagues voor zakelijk gebruik", gezien
+op 29 september 2026). Een grote poule op het werk is bij Predict the Race
+gewoon gratis. Noem Scorito niet in de pitch zelf: het punt staat op zichzelf,
+en een ander afkraken leest slecht. Voor een site die zelf over werkpoules of
+WK-poules schrijft, is dit wel de zin om per ontvanger aan te passen.
 
 ---
 
