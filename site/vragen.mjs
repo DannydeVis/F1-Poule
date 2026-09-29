@@ -39,7 +39,11 @@ export const GEPLANDE_PAGINAS = ['vergelijking'];
 export const VRAGEN = [
   // ================================================================ NL
   // ---- voorpagina ----
-  { vraag: 'Wat is Predict the Race?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#wat', status: 'beantwoord' },
+  // Het antwoordblok legt in één alinea het hele spel uit; daar hoort ook
+  // "hoe werkt een F1-poule?" (speluitleg, spelregels) bij, dat andere
+  // poulesites (f1poule.com, gppoule.nl, poules.com) als kop gebruiken.
+  { vraag: 'Wat is Predict the Race?', taal: 'nl', varianten: ['Hoe werkt een F1-poule?', 'f1 poule speluitleg', 'f1 poule spelregels'],
+    bron: 'zoekresultaat', doel: 'voorpagina#wat', status: 'beantwoord' },
   { vraag: 'Is Predict the Race gratis?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Hoe doe ik mee met een poule?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Moet ik een account aanmaken?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
@@ -57,6 +61,8 @@ export const VRAGEN = [
   // Sinds AEO fase 3.1, in alle zeven talen.
   { vraag: 'Hoeveel punten kun je per weekend halen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Wat is het verschil met F1 Fantasy?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
+  // Met de link naar de open poule (OPEN_POULE in site/teksten.mjs).
+  { vraag: 'Kan ik meedoen zonder eigen groep?', taal: 'nl', varianten: ['open poule'], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
 
   // ---- organiseren ----
   // De vragen uit de startlijst van het plan die een bestaande sectie al
@@ -67,18 +73,13 @@ export const VRAGEN = [
   { vraag: 'Hoeveel vragen laat je meetellen?', taal: 'nl', varianten: ['Wat laat je iedereen voorspellen?'],
     bron: 'hypothese', doel: 'organiseren#vragen', status: 'beantwoord' },
   { vraag: 'Speel je met jokers?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'organiseren#jokers', status: 'beantwoord' },
-  { vraag: 'Waar loopt een F1-poule op stuk?', taal: 'nl', varianten: ['Hoe houd je een F1-poule het hele seizoen spannend?'],
+  { vraag: 'Waar loopt een F1-poule op stuk?', taal: 'nl', varianten: ['Hoe houd je een F1-poule het hele seizoen spannend?',
+    'Wat doe je als iemand vergeet in te vullen?'],
     bron: 'hypothese', doel: 'organiseren#valkuilen', status: 'beantwoord' },
   { vraag: 'Wat regel je voordat het seizoen begint?', taal: 'nl', varianten: ['Checklist voor de poulebaas'],
     bron: 'hypothese', doel: 'organiseren#checklist', status: 'beantwoord' },
-  { vraag: 'Wat doe je als iemand vergeet in te vullen?', taal: 'nl', varianten: [],
-    bron: 'hypothese', doel: 'organiseren#vergeten', status: 'open' },
   { vraag: 'Kan iemand halverwege het seizoen nog instappen?', taal: 'nl', varianten: ['Kun je halverwege het seizoen nog beginnen?'],
     bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
-  // "Speluitleg" en "hoe werkt het?" staan op bijna elke poulesite (f1poule.com,
-  // gppoule.nl, poules.com). Welke sectie het wordt, kiest AEO fase 3.
-  { vraag: 'Hoe werkt een F1-poule?', taal: 'nl', varianten: ['f1 poule speluitleg', 'f1 poule spelregels'],
-    bron: 'zoekresultaat', doel: 'organiseren', status: 'open' },
   { vraag: 'Hoe organiseer je een F1-poule op je werk?', taal: 'nl', varianten: ['f1 poule op het werk', 'f1 poule met collega\'s', 'f1 poule kantoor'],
     bron: 'hypothese', doel: 'organiseren#werk', status: 'beantwoord' },
   { vraag: 'Kan ik in meer dan één poule zitten?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
@@ -101,7 +102,7 @@ export const VRAGEN = [
   // Met de circuitcijfers (zoekplan GEO 3.2).
   { vraag: 'Hoe vaak komt de safety car in een race?', taal: 'nl', varianten: ['hoeveel safety cars per race', 'safety car per circuit'],
     bron: 'hypothese', doel: 'puntentelling#safety-cars', status: 'beantwoord' },
-  { vraag: 'Wat als iedereen hetzelfde voorspelt?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'puntentelling#hetzelfde', status: 'open' },
+  { vraag: 'Wat als iedereen hetzelfde voorspelt?', taal: 'nl', varianten: ['contrair voorspellen'], bron: 'hypothese', doel: 'puntentelling#hetzelfde', status: 'beantwoord' },
   { vraag: 'Kan ik de punten per vraag zelf aanpassen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Telt een coureur buiten de top 10 mee?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Wat krijg je voor een coureur die uitvalt?', taal: 'nl', varianten: ['Krijg je punten als een coureur uitvalt?'],
@@ -166,6 +167,8 @@ export const VRAGEN = [
   { vraag: 'How is this different from F1 Fantasy?', taal: 'en',
     varianten: ['What is the difference between an F1 prediction game and F1 Fantasy?'],
     bron: 'zoekresultaat', doel: 'voorpagina#faq', status: 'beantwoord' },
+  // With the link to the open league (OPEN_POULE in site/teksten.mjs).
+  { vraag: 'Can I play without my own group?', taal: 'en', varianten: ['open league'], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
 
   // ---- organiseren ----
   { vraag: 'How do you set up an F1 prediction league?', taal: 'en', varianten: ['How do you run an F1 prediction league?'],
@@ -173,11 +176,11 @@ export const VRAGEN = [
   { vraag: 'How many questions should count?', taal: 'en', varianten: ['What should everyone predict?'],
     bron: 'hypothese', doel: 'organiseren#questions', status: 'beantwoord' },
   { vraag: 'Should you play with jokers?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'organiseren#jokers', status: 'beantwoord' },
-  { vraag: 'What kills an F1 prediction league?', taal: 'en', varianten: ['How do you keep an F1 league exciting all season?'],
+  { vraag: 'What kills an F1 prediction league?', taal: 'en', varianten: ['How do you keep an F1 league exciting all season?',
+    'What if someone forgets to predict?'],
     bron: 'hypothese', doel: 'organiseren#pitfalls', status: 'beantwoord' },
   { vraag: 'What should you sort out before the season starts?', taal: 'en', varianten: ['A checklist for the league admin'],
     bron: 'hypothese', doel: 'organiseren#checklist', status: 'beantwoord' },
-  { vraag: 'What if someone forgets to predict?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'organiseren#forgetting', status: 'open' },
   { vraag: 'Can someone join halfway through the season?', taal: 'en', varianten: ['Can you start an F1 prediction league mid-season?'],
     bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
   // Stond eerst als FAQ "Does it work for an office league?"; die vraag is nu
@@ -202,7 +205,7 @@ export const VRAGEN = [
   { vraag: 'What does a joker do to your points?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#jokers', status: 'beantwoord' },
   { vraag: 'How often is there a safety car in an F1 race?', taal: 'en', varianten: ['how many safety cars per race', 'safety car statistics by circuit'],
     bron: 'hypothese', doel: 'puntentelling#safety-cars', status: 'beantwoord' },
-  { vraag: 'What if everyone predicts the same thing?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#same-picks', status: 'open' },
+  { vraag: 'What if everyone predicts the same thing?', taal: 'en', varianten: ['contrarian picks'], bron: 'hypothese', doel: 'puntentelling#same-picks', status: 'beantwoord' },
   { vraag: 'Can I change the points per question?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Does a driver outside the top 10 still count?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'What do you get for a driver who retires?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },

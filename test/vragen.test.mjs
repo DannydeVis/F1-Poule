@@ -26,7 +26,7 @@
 //
 // De racepagina's (scripts/racepaginas.mjs) tellen mee voor 2 en 4, maar hun
 // vragen staan niet in de lijst: dat zijn sjablonen uit site/races.mjs, één per
-// race ("Hoe laat begint de Grand Prix van Singapore?"). Die bewaakt
+// race ("Wanneer sluit het voorspellen voor de GP van Singapore?"). Die bewaakt
 // test/racepaginas.test.mjs.
 //
 // Twee vragen gelden als dezelfde als ze na het weglaten van hoofdletters,

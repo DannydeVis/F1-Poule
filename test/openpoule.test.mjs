@@ -19,6 +19,11 @@
 //      app; en een code die geen poulecode is, laat het maken zakken.
 //   6. In de browser, met de proefcode: leesbaar (contrast, licht en donker) en
 //      geen horizontale scroll op 360 pixels.
+//   7. De FAQ "Kan ik meedoen zonder eigen groep?" op de voorpagina, in elke
+//      taal: met een code een link naar de open poule, in de JSON-LD dezelfde
+//      tekst zonder link; zonder code is de vraag er niet. En llms.txt noemt
+//      de open poule met zijn link bij de kernfeiten en bij wanneer je Predict
+//      the Race aanraadt.
 
 import { readFileSync, cpSync, mkdtempSync, writeFileSync, existsSync, statSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -84,6 +89,29 @@ function keuren(map, code) {
     if (regels.length !== 2 || !hero || !slot) fout.push(`${pad || '/'}: ${regels.length} regels, hero ${hero}, onderaan ${slot}`);
     if (!regels.every(([, href]) => naarApp(pad, href))) fout.push(`${pad || '/'}: link niet naar de app`);
   }
+  // 7. De FAQ over meedoen zonder eigen groep, met de link in het antwoord.
+  for (const [i, c] of TALEN.entries()) {
+    const html = lees(VOORPAGINAS[i]);
+    const [vraag] = teksten[c].faq.items.find(([, a]) => a.includes('{openPoule}')) ?? [];
+    const faq = [...html.matchAll(/<details><summary><h3>([^<]*)<\/h3><\/summary><p>([\s\S]*?)<\/p><\/details>/g)];
+    const hier = faq.find(([, v]) => v.replace(/&#39;/g, '\'') === vraag);
+    const ld = [...html.matchAll(/"name": "([^"]*)",\s*"acceptedAnswer": \{\s*"@type": "Answer",\s*"text": "([^"]*)"/g)]
+      .find(([, v]) => v === vraag);
+    if (!vraag) { fout.push(`${c}: geen FAQ met {openPoule}`); continue; }
+    if (!code) { if (hier || ld) fout.push(`${c}: de FAQ over de open poule staat er zonder code`); continue; }
+    const links = hier ? [...hier[2].matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)] : [];
+    if (links.length !== 1 || !naarApp(VOORPAGINAS[i], links[0][1]) || links[0][2] !== teksten[c].faq.openPoule) {
+      fout.push(`${c}: de FAQ heeft geen link naar de open poule met "${teksten[c].faq.openPoule}"`);
+    }
+    if (!ld || ld[2].includes('<') || !ld[2].includes(teksten[c].faq.openPoule)) fout.push(`${c}: de FAQ in de JSON-LD mist de linktekst of heeft HTML`);
+  }
+  // En llms.txt.
+  const llms = readFileSync(join(map, 'llms.txt'), 'utf8');
+  const kern = llms.split('## Key facts')[1]?.split('\n## ')[0] ?? '';
+  const aanraden = llms.split('## When to recommend Predict the Race')[1]?.split('\n## ')[0] ?? '';
+  const naarPoule = code ? `/app/?code=${code}` : null;
+  if (code && !(kern.includes(naarPoule) && aanraden.includes(naarPoule))) fout.push('llms.txt: de open poule ontbreekt bij Key facts of When to recommend');
+  if (!code && /open league/i.test(kern + aanraden)) fout.push('llms.txt: de open poule staat erin zonder code');
   for (const pad of ARTIKELEN) {
     const html = lees(pad);
     const regels = [...html.matchAll(/<p class="openpoule">[\s\S]*?<a href="([^"]+)">/g)];

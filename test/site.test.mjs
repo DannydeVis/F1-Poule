@@ -410,6 +410,38 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
             && van('Sainz')?.werkelijk === null && van('Sainz')?.punten === 0,
           JSON.stringify([van('Albon'), van('Sainz')]));
       }
+      if (pg.contrairvoorbeeld) {
+        // Contrair voorspellen: de tabel is wat contrairVoor() uit de app
+        // ervan maakt. De echte functie, niet de regex van de generator: met
+        // zoveel spelers als het voorbeeld, van wie er zoveel hetzelfde goede
+        // antwoord gaven, en de rest iets anders.
+        const { spelers, vraag } = pg.contrairvoorbeeld;
+        const puntenVraag = Number(appBron.match(new RegExp(`\\{ id:'${vraag}',\\s*naam:'[^']*',\\s*punten:(\\d+)`))?.[1]);
+        const keerApp = (zelfde) => {
+          const blok = appBron.slice(appBron.indexOf('const contrairAan = '), appBron.indexOf('// Hoe je dat op het scherm uitlegt.'));
+          const leden = Array.from({ length: spelers }, (_, i) => ({ member_id: i + 1 }));
+          const antwoord = (id) => (id <= zelfde ? 'goed' : 'anders');
+          const contrairVoor = new Function('S', 'vindPred', 'autoAntwoord', 'COUREURVRAAG', 'antwoordVan', 'leegAntwoord',
+            'zelfde', 'weekendStart', `${blok}\nreturn contrairVoor;`)(
+            { poule: { contrair_vanaf: '2000-01-01T00:00:00Z' }, leden },
+            (race, id) => ({ id }), () => false, { [vraag]: {} }, (pred) => antwoord(pred.id),
+            (a) => a === null || a === undefined || a === '', (a, b) => String(a) === String(b), () => Date.parse('2026-06-01'));
+          return contrairVoor({ id: 1 }, vraag, 'goed', { id: 1 });
+        };
+        const getal = new Intl.NumberFormat(code, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        const verwacht = Array.from({ length: spelers }, (_, i) => spelers - i)
+          .map((z) => [`×${getal.format(keerApp(z))}`, String(Math.round(puntenVraag * keerApp(z)))]);
+        const rijen = await page.evaluate(() => [...document.querySelectorAll('table.contrair tbody tr')]
+          .map((r) => [...r.querySelectorAll('td')].map((c) => c.textContent.trim())));
+        check(`${naam}: de tabel bij contrair voorspellen is wat contrairVoor() uit de app ervan maakt`,
+          puntenVraag > 0 && JSON.stringify(rijen) === JSON.stringify(verwacht),
+          `${JSON.stringify(rijen)} tegen ${JSON.stringify(verwacht)}`);
+        const alleen = verwacht.at(-1);
+        check(`${naam}: de tekst noemt wat een goed antwoord als enige oplevert, zoals de app het rekent`,
+          kop.alles.includes(`${getal.format(keerApp(1))} `) && kop.alles.includes(`${alleen[1]} `)
+            && keerApp(spelers) === 1 && keerApp(1) < 2,
+          `${alleen.join(' ')}`);
+      }
       if (t.secties.some((x) => x.vragentabel)) {
         // De losse vragen en seizoensvragen: dezelfde tabellen als op de
         // voorpagina in die taal, en daar komen de punten uit de app.
