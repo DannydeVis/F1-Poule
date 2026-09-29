@@ -142,10 +142,11 @@ export const PAGINAS = [
           {
             id: 'werk',
             vraag: 'Hoe organiseer je een F1-poule op je werk?',
-            kort: 'Een F1-poule op je werk zet je op zoals elke andere, maar houd de drempel laag: kies Simpel met alleen de twee top 10\'s, deel de code in de chat van je team en speel om de eer. Niemand hoeft een account aan te maken of een app te installeren, want het werkt in de browser op elke telefoon of computer.',
+            kort: 'Een F1-poule op je werk zet je op zoals elke andere, maar houd de drempel laag: kies Simpel met alleen de twee top 10\'s, deel de code in de chat van je team en speel om de eer. Predict the Race is gratis, ook voor een grote poule op het werk. Niemand hoeft een account aan te maken of een app te installeren, want het werkt in de browser op elke telefoon of computer.',
             punten: [
               ['Simpel houdt iedereen erbij', 'Niet elke collega kijkt elke race. Met twee top 10\'s ben je in een minuut klaar, en wie meer wil, kan in een eigen poule met vrienden Gevorderd spelen.'],
               ['Om de eer', 'De app kent geen inleg, pot of prijzen. Er valt dus niets te innen of uit te betalen, en niemand hoeft na te denken over geld op het werk.'],
+              ['Gratis, hoe groot ook', 'Een poule heeft geen maximum aantal spelers en er is geen zakelijk tarief. Doet de hele afdeling of het hele bedrijf mee, dan blijft het gratis.'],
               ['Automatisch invullen aan', 'Wie op vakantie is of een weekend vergeet, krijgt een willekeurige invulling in plaats van nul punten, en haakt niet af.'],
               ['Een omschrijving erbij', 'Zet er iets bij als "met de collega\'s, om de eer". Wie ook een poule met vrienden heeft, ziet bij het wisselen meteen welke het is.'],
             ],
@@ -242,10 +243,11 @@ export const PAGINAS = [
           {
             id: 'at-work',
             vraag: 'How do you run an F1 prediction league at work?',
-            kort: 'Run an office league like any other, but keep it easy to join: pick Simple with just the two top 10s, share the code in your team chat and play for bragging rights. Nobody needs an account or an app store download, because it runs in the browser on any phone or computer.',
+            kort: 'Run an office league like any other, but keep it easy to join: pick Simple with just the two top 10s, share the code in your team chat and play for bragging rights. Predict the Race is free, even for a big league at work. Nobody needs an account or an app store download, because it runs in the browser on any phone or computer.',
             punten: [
               ['Simple keeps everyone in', 'Not every colleague watches every race. Two top 10s take a minute, and the fans can play Advanced in a league of their own with friends.'],
               ['Bragging rights only', 'There is no entry fee, pot or prize in the app. Nothing to collect or pay out, and nobody has to think about money at work.'],
+              ['Free at any size', 'A league has no player limit and there is no business pricing. If the whole department or the whole company joins, it is still free.'],
               ['Switch on auto-fill', 'Whoever is on holiday or forgets a weekend gets a random entry instead of zero points, and does not drop out.'],
               ['Add a description', 'Something like "work league, for glory". Anyone who is also in a league with friends sees at once which one is which when they switch.'],
             ],
