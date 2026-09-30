@@ -875,6 +875,20 @@ const DOORSTUREN = `(function(){try{
     if(k.indexOf('poule:')===0&&k!=='poule:taal')return naar()}
 }catch(e){}})();`;
 
+// Het hoofdmenu bovenaan: de losse pagina's in deze taal (PAGINA_UI.menu in
+// site/paginas.mjs), met de huidige pagina gemarkeerd. Een taal zonder eigen
+// pagina's krijgt null, en de voorpagina dan de sprongen naar zijn blokken.
+function hoofdmenu(code, p, huidig = null) {
+  const menu = PAGINA_UI[code]?.menu;
+  const items = (menu?.items ?? [])
+    .map(([id, tekst]) => ({ id, tekst, t: ALLE.find((x) => x.id === id)?.talen[code] }))
+    .filter((x) => x.t);
+  if (!items.length) return null;
+  return `<nav class="kopnav" aria-label="${esc(menu.naam)}">
+      ${items.map((x) => `<a href="${p}${x.t.pad}/"${x.id === huidig ? ' aria-current="page"' : ''}>${esc(x.tekst)}</a>`).join('')}
+    </nav>`;
+}
+
 function pagina(code, datum) {
   const t = teksten[code];
   const p = voor(code);
@@ -944,9 +958,9 @@ ${jsonLd(code, datum)}
 <header class="kop">
   <div class="binnen">
     <a class="merk" href="${naar(code, code)}" aria-label="Predict the Race"><img class="blok" src="${p}pictogrammen/predicttherace-logo.png" alt="" width="24" height="24"><b>Predict the Race</b></a>
-    <nav class="kopnav" aria-label="${esc(t.nav.hoe)}">
+    ${hoofdmenu(code, p) ?? `<nav class="kopnav" aria-label="${esc(t.nav.hoe)}">
       <a href="#hoe">${esc(t.nav.hoe)}</a><a href="#punten">${esc(t.nav.punten)}</a><a href="#faq">${esc(t.nav.faq)}</a>
-    </nav>
+    </nav>`}
     <details class="taalmenu">
       <summary aria-label="${esc(t.nav.taal)}">${t.kort}</summary>
       <ul>${taalLinks}</ul>
@@ -1264,6 +1278,7 @@ for (const pg of ALLE) for (const code of clusterVan(pg)) {
 }
 
 const ARTIKEL_CSS = `
+  .kopnav a[aria-current="page"]{color:var(--nacht-ink)}
   .artikel{padding:36px 0 64px}
   .artikel .binnen{max-width:760px}
   .artikel .kruimel ol{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0 0 20px;padding:0;font-size:14px;color:var(--ink2)}
@@ -1595,7 +1610,8 @@ ${artikelJsonLd(pg, code, datum, sinds)}
 <body>
 <header class="kop">
   <div class="binnen">
-    <a class="merk" href="${thuis}" aria-label="Predict the Race"><img class="blok" src="${p}pictogrammen/predicttherace-logo.png" alt="" width="24" height="24"><b>Predict the Race</b></a>${cluster.length > 1 ? `
+    <a class="merk" href="${thuis}" aria-label="Predict the Race"><img class="blok" src="${p}pictogrammen/predicttherace-logo.png" alt="" width="24" height="24"><b>Predict the Race</b></a>${
+      (hoofdmenu(code, p, pg.id) ?? '').replace(/^/, '\n    ').replace(/^\n    $/, '')}${cluster.length > 1 ? `
     <details class="taalmenu">
       <summary aria-label="${esc(ui.taal)}">${teksten[code].kort}</summary>
       <ul>${taalLinks}</ul>

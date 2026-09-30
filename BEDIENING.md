@@ -1965,6 +1965,19 @@ onder "Upload artifact" de lijst met alles wat online kwam.
   gaat in `docs/zoekplan/meting.md`. Dat bestand staat er al, leeg; daarna
   één regel per maand.
 
+**Het pictogram en de links onder het zoekresultaat.** Toont Google bij
+predicttherace.com nog het oude pictogram, doe dan de URL-inspectie hierboven
+opnieuw op `https://predicttherace.com/` en `https://predicttherace.com/en/`,
+met "Indexering aanvragen". Google haalt het pictogram op als het de
+voorpagina opnieuw leest; dat kan een paar dagen tot een paar weken duren. De
+links onder het resultaat (sitelinks) kiest Google zelf en ze zijn niet aan te
+vragen. Ze komen vooral uit het hoofdmenu bovenaan: in het Nederlands en het
+Engels Puntentelling, Organiseren, Races en Over, elk een eigen pagina. Dat
+menu staat in `site/paginas.mjs` bij `PAGINA_UI.menu`; een ander item kan,
+zolang het een pagina uit dat bestand of een racepagina is.
+`test/hoofdmenu.test.mjs` zakt als het menu iets anders heeft dan die vier;
+pas die test dan mee aan.
+
 **De datum per pagina.** De sitemap en de voorpagina's geven per pagina aan
 wanneer die voor het laatst veranderde. Dat houdt `site/lastmod.json` bij, en
 `node scripts/maak-site.mjs` zet de datum vanzelf op vandaag als de inhoud van

@@ -9303,4 +9303,50 @@ met een extra policy. Negen mutanten, alle gevangen.
 Security Advisor, Refresh. Verwacht: 0 errors, en bij de waarschuwingen alleen
 nog de functies van de app en de hulpfuncties van de policies, plus de
 wachtwoordcontrole. De regel `policies: alleen die uit schema.sql` hoort `ok`
-te zeggen.
+te zeggen. Gedaan op 29 september (PR #185): 0 errors, 56 waarschuwingen, en
+elke regel van de controletabel op `ok`.
+
+## Het hoofdmenu: losse pagina's in plaats van sprongen (30 september)
+
+Danny zag in Google bij een andere poulesite een rijtje links onder het
+zoekresultaat (sitelinks) en wilde dat ook, plus het eigen app-pictogram in
+plaats van het oude.
+
+**Het pictogram.** De site levert het nieuwe P-pictogram al (`favicon.ico`,
+`pictogrammen/predicttherace-192.png`); Google toont nog het oude blokje
+omdat het de voorpagina sinds de wissel niet opnieuw heeft opgehaald. Dat
+gaat vanzelf, sneller met een indexeringsverzoek in Search Console (zie
+BEDIENING §18). Er hoefde niets aan de code.
+
+**Sitelinks.** Die kiest Google zelf, uit de opbouw van de site en vooral uit
+het hoofdmenu. Dat menu sprong tot nu toe naar blokken op de voorpagina
+(`#hoe`, `#punten`, `#faq`), en daar maakt Google geen sitelinks van. Nu staan
+er in het Nederlands en het Engels vier losse pagina's: Puntentelling,
+Organiseren, Races en Over (Scoring, Run a league, Races, About), op de
+voorpagina en op elke artikelpagina (gidsen, vergelijking, about, racepagina's).
+Op een pagina uit het menu is die pagina gemarkeerd (`aria-current="page"`,
+in de volle tekstkleur in plaats van grijs). De andere vijf talen hebben geen
+eigen pagina's en houden de sprongen.
+
+- Het menu staat per taal in `site/paginas.mjs` bij `PAGINA_UI.menu`: een
+  naam en een lijst `[id, tekst]`; de id is een pagina uit `PAGINAS` of
+  `RACEPAGINAS`. `hoofdmenu()` in `scripts/maak-site.mjs` bouwt hem; een item
+  zonder pagina in die taal valt weg.
+- Net als eerst alleen vanaf 720 pixels breed; smaller staat alleen het merk
+  en de knop in de kop. De links staan wel in de HTML, dus Google ziet ze ook
+  op de mobiele versie.
+- De regel voor de markering staat in `ARTIKEL_CSS`, zodat de voorpagina's
+  van de andere talen niet van inhoud veranderen en hun datum houden.
+
+**Test.** `test/hoofdmenu.test.mjs`, zonder browser: het menu heeft precies
+de vier pagina's; op de voorpagina en elke artikelpagina in NL en EN staan
+ze in die volgorde met de goede tekst en een link die bij de pagina uitkomt;
+alleen de huidige pagina is gemarkeerd; de talen zonder eigen pagina's houden
+`#hoe`, `#punten` en `#faq`. Zes mutanten, alle gevangen. De kop is op 720 tot
+1280 pixels nagekeken: niets overlapt.
+
+**Gezien, apart op te lossen.** Op de voorpagina (alle talen) schuift de
+pagina tussen 720 en ongeveer 850 pixels breed een stukje opzij: de drie
+schermafbeeldingen in het blok met de beelden staan daar al naast elkaar,
+elk minstens 260 pixels plus rand, en passen dan niet. Dat was er al voor
+deze wijziging.
