@@ -9345,8 +9345,27 @@ alleen de huidige pagina is gemarkeerd; de talen zonder eigen pagina's houden
 `#hoe`, `#punten` en `#faq`. Zes mutanten, alle gevangen. De kop is op 720 tot
 1280 pixels nagekeken: niets overlapt.
 
-**Gezien, apart op te lossen.** Op de voorpagina (alle talen) schuift de
-pagina tussen 720 en ongeveer 850 pixels breed een stukje opzij: de drie
+**Gezien, apart opgelost.** Op de voorpagina (alle talen) schoof de pagina
+tussen 720 en ongeveer 850 pixels breed een stukje opzij: de drie
 schermafbeeldingen in het blok met de beelden staan daar al naast elkaar,
-elk minstens 260 pixels plus rand, en passen dan niet. Dat was er al voor
-deze wijziging.
+elk minstens 260 pixels plus rand, en pasten dan niet. Dat was er al voor
+deze wijziging; zie de volgende sectie.
+
+## De beelden op de voorpagina passen weer tussen 720 en 850 pixels (30 september)
+
+Een schermafbeelding in `.beelden` was `min(260px, 70vw)` breed. Vanaf 720
+pixels staan er drie naast elkaar, en drie keer 260 plus rand en tussenruimte
+is meer dan er dan is: de pagina werd 860 breed en schoof opzij. Nu is het
+`min(260px, 70vw, 100%)`: op een breed scherm nog steeds 260, en smaller krimpt
+elk beeld mee met zijn kolom. Alleen die ene regel in de gedeelde CSS; de
+datum van de pagina's verandert er niet door.
+
+`test/site.test.mjs` kijkt nu per taal ook van 480 tot 1280 pixels breed (met
+720, 760, 800 en 850 erbij) of er horizontaal iets te scrollen valt. Met de
+oude regel zakt dat in alle zeven talen. Een mutant die alleen de kolommen
+van het raster aanpaste (`minmax(0, 1fr)`) bleef groen zonder de breedte van
+het beeld; die aanpassing was dus niet nodig en zit er niet in.
+
+Nog gezien, niet opgelost: op 320 pixels (kleiner dan elke telefoon die de
+tests nalopen, die beginnen bij 360) is de Duitse en Franse voorpagina een
+paar pixels te breed door lange woorden (een tabelkop, "pronostiquer").

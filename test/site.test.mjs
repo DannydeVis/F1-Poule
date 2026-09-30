@@ -233,6 +233,15 @@ for (const code of TALEN) {
       return r.width && (r.left < -1 || r.right > document.documentElement.clientWidth + 1 || h.scrollWidth > h.clientWidth + 1); })
     .map((h) => `${h.textContent.trim().slice(0, 30)} ${Math.round(h.getBoundingClientRect().right)}/${document.documentElement.clientWidth}`));
   check(`${code}: en op 360 pixels past elk woord in zijn kop`, teBreed.length === 0, teBreed.join(' | '));
+  // Ook op een tablet of een smal venster: vanaf 720 pixels verandert de
+  // indeling (menu in de kop, beelden naast elkaar), dus juist daar net boven.
+  const scrollt = [];
+  for (const w of [480, 600, 720, 760, 800, 850, 900, 1024, 1280]) {
+    await page.setViewportSize({ width: w, height: 780 });
+    const b = await page.evaluate(() => document.documentElement.scrollWidth);
+    if (b > w) scrollt.push(`${w}: ${b}`);
+  }
+  check(`${code}: van 480 tot 1280 pixels breed geen horizontale scroll`, scrollt.length === 0, scrollt.join(' | '));
 }
 
 check('elke pagina heeft precies dezelfde hreflang-set (wederkerig)', new Set(clusters.values()).size === 1,
