@@ -891,6 +891,10 @@ export const PAGINAS = [
 export const PAGINA_UI = {
   nl: {
     kruimel: 'Kruimelpad',
+    // Het hoofdmenu bovenaan de voorpagina en elke artikelpagina: losse
+    // pagina's, geen sprongen binnen de voorpagina. Google kiest de links
+    // onder een zoekresultaat (sitelinks) graag uit het hoofdmenu.
+    menu: { naam: 'Hoofdmenu', items: [['puntentelling', 'Puntentelling'], ['organiseren', 'Organiseren'], ['races', 'Races'], ['over', 'Over']] },
     door: 'Door {naam}, bijgewerkt op {datum}',
     faq: 'Veelgestelde vragen',
     leesOok: 'Lees ook',
@@ -905,6 +909,7 @@ export const PAGINA_UI = {
   },
   en: {
     kruimel: 'Breadcrumb',
+    menu: { naam: 'Main menu', items: [['puntentelling', 'Scoring'], ['organiseren', 'Run a league'], ['races', 'Races'], ['over', 'About']] },
     door: 'By {naam}, updated {datum}',
     faq: 'Frequently asked questions',
     leesOok: 'Read next',
