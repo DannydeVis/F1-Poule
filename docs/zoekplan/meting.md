@@ -4,6 +4,13 @@ Eén regel per maand, plus de nulmeting. De cijfers komen uit Search Console
 (domeinproperty predicttherace.com), Bing Webmaster Tools, GA4 (alleen wie ja
 zei, dus een ondergrens) en het beheer (nieuwe poules per week, BEDIENING §16).
 
+De regel per maand bij SEO zet de workflow "Zoekcijfers" er zelf neer, elke
+maandag, zodra de sleutel voor Search Console is ingericht (BEDIENING §18,
+"Search Console uitlezen"); een tweede meting in dezelfde maand overschrijft
+die regel. Alles van de laatste meting (zoekopdrachten, pagina's, vragen en per
+pagina of Google hem geïndexeerd heeft) staat in `zoekcijfers.json` hiernaast.
+De nulmeting en de andere tabellen blijven met de hand.
+
 Dit bestand staat niet op het domein: `_config.yml` sluit `docs/` en elk
 `.md`-bestand uit, en `test/site.test.mjs` bewaakt dat.
 
