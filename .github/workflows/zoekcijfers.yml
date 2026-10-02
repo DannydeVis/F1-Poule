@@ -1,0 +1,51 @@
+name: Zoekcijfers
+
+# Hoe predicttherace.com in Google staat, uit Search Console: klikken,
+# vertoningen, zoekopdrachten en per pagina of hij geïndexeerd is. Schrijft
+# docs/zoekplan/zoekcijfers.json en de regel van deze maand in
+# docs/zoekplan/meting.md, en legt die vast als er iets veranderd is. Zie
+# scripts/zoekcijfers.mjs.
+#
+# De sleutel is het GitHub-secret SEARCH_CONSOLE_SLEUTEL: een serviceaccount
+# van Google Cloud dat alleen mag lezen. Zonder dat secret doet de run niets en
+# blijft hij groen; inrichten staat in BEDIENING §18, "Search Console uitlezen".
+#
+# Elke maandag, en met de hand vanuit het Actions-tabblad.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  ophalen:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Uit Search Console
+        env:
+          SEARCH_CONSOLE_SLEUTEL: ${{ secrets.SEARCH_CONSOLE_SLEUTEL }}
+        run: node scripts/zoekcijfers.mjs
+
+      # De pull --rebase is er voor de samenloop dat automerge of de sync net
+      # iets in main zet terwijl deze run bezig is.
+      - name: Vastleggen als er iets veranderd is
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Niets veranderd, niets vast te leggen"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/zoekplan/zoekcijfers.json docs/zoekplan/meting.md
+          git commit -m "Zoekcijfers bijgewerkt"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

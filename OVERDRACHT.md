@@ -9369,3 +9369,55 @@ het beeld; die aanpassing was dus niet nodig en zit er niet in.
 Nog gezien, niet opgelost: op 320 pixels (kleiner dan elke telefoon die de
 tests nalopen, die beginnen bij 360) is de Duitse en Franse voorpagina een
 paar pixels te breed door lange woorden (een tabelkop, "pronostiquer").
+
+## Search Console uitlezen zonder schermafbeeldingen (2 oktober)
+
+Danny stuurde schermafbeeldingen van Search Console (van padel-bracket.com,
+niet van deze site) en vroeg of Claude Code niet zelf kon kijken, "als ik de
+inlog geef". Een wachtwoord geven is geen goed idee: daarmee geef je het hele
+Google-account weg, en Google blokkeert een inlog vanaf een onbekende server
+toch. Nu is er een eigen sleutel die alleen Search Console mag lezen.
+
+**Hoe.** `scripts/zoekcijfers.mjs`, elke maandag via de workflow
+"Zoekcijfers" en met de hand. Het logt in als serviceaccount van Google Cloud
+(een JWT, ondertekend met de sleutel, geruild voor een token van een uur, scope
+`webmasters.readonly`) en haalt over de laatste 28 dagen (tot drie dagen voor
+vandaag, want Search Console loopt achter) op:
+
+- klikken en vertoningen, in totaal en zonder merk (`predict the race`,
+  `predicttherace`). Zonder merk is een ondergrens: Google laat zoekopdrachten
+  die het anoniem houdt weg zodra je op de zoekopdracht filtert;
+- de top 10 zoekopdrachten en de 20 pagina's met de meeste vertoningen;
+- zoekopdrachten die een vraag zijn, met hun pagina (de regex uit `2-aeo.md`);
+- per pagina uit de sitemap of Google hem geïndexeerd heeft, en zo niet
+  waarom (de URL-inspectie). Het rapport Pagina's zelf zit niet in de API; dit
+  komt erop neer, maar dan per pagina.
+
+Het schrijft `docs/zoekplan/zoekcijfers.json` en de regel van de maand in de
+SEO-tabel van `docs/zoekplan/meting.md` (een tweede meting in die maand
+overschrijft hem). De workflow legt alleen die twee bestanden vast. `docs/`
+komt niet op het domein. De repo is wel openbaar, dus de zoekopdrachten zijn
+voor iedereen te lezen; dat stond al zo in het meetplan (de top 10 in
+`meting.md`).
+
+**De sleutel** is het GitHub-secret `SEARCH_CONSOLE_SLEUTEL` (de hele JSON van
+het serviceaccount), net als de andere geheimen nooit in de code. Zonder secret
+doet het script niets en blijft de workflow groen. Inrichten: BEDIENING §18,
+"Search Console uitlezen". Het serviceaccount staat als gebruiker met recht
+Volledig bij de property: de URL-inspectie werkt via de API niet altijd met
+Beperkt, en de scope laat toch alleen lezen toe.
+
+**Kijken vanuit een sessie.** De cijfers staan na elke run in de repo; een
+verse run start je met de knop in Actions (of Claude Code via de GitHub-tools).
+Zelf praat Claude Code niet met Google: de omgeving mag Google niet bereiken,
+een GitHub-runner wel.
+
+**Test.** `test/zoekcijfers.test.mjs`, tegen een nagebootste Google met een
+sleutel die de test zelf maakt: het JWT wordt met de publieke sleutel
+nagerekend. Achttien mutanten (periode, scope, merk, vraagregex, sortering,
+indexering, de regel in `meting.md`, droog, de 403, de property, een token in
+de log, de workflow), alle gevangen.
+
+**Later.** padel-bracket.com kan met hetzelfde serviceaccount: als gebruiker
+toevoegen aan die property en het script een property laten kiezen. Bing heeft
+een eigen API met een sleutel uit Bing Webmaster Tools; nog niet gebouwd.

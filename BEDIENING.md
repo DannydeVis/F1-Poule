@@ -1965,6 +1965,36 @@ onder "Upload artifact" de lijst met alles wat online kwam.
   gaat in `docs/zoekplan/meting.md`. Dat bestand staat er al, leeg; daarna
   één regel per maand.
 
+**Search Console uitlezen (zonder schermafbeeldingen).** De workflow
+"Zoekcijfers" haalt elke maandag de cijfers zelf uit Search Console en zet ze
+in `docs/zoekplan/meting.md` en `docs/zoekplan/zoekcijfers.json`. Claude Code
+kan ze daar lezen, of de workflow met de hand starten. Je wachtwoord is
+daarvoor niet nodig en geef je nooit: de workflow logt in met een eigen sleutel
+die alleen mag lezen. Tot die sleutel er is, doet de workflow niets en blijft
+hij groen. Eenmalig inrichten, het makkelijkst op een laptop:
+
+1. Ga naar `console.cloud.google.com` en log in met het Google-account van
+   Search Console. Maak een project (bovenaan het projectmenu, dan "New
+   project"), bijvoorbeeld `predict-the-race`.
+2. Zoek bovenin naar "Google Search Console API" en klik op "Enable".
+3. Zoek bovenin naar "Service accounts", dan "Create service account". Naam:
+   `zoekcijfers`. Rollen sla je over; klik op "Done".
+4. Klik op het nieuwe account, tabblad "Keys", dan "Add key", "Create new
+   key", JSON. Er komt een bestand binnen. Zegt Google dat sleutels maken uit
+   staat, meld het dan aan Claude Code.
+5. Op GitHub: de repo, Settings, Secrets and variables, Actions, "New
+   repository secret". Naam `SEARCH_CONSOLE_SLEUTEL`, waarde de hele inhoud van
+   dat JSON-bestand. Gooi het bestand daarna weg.
+6. In Search Console: property predicttherace.com, Instellingen, Gebruikers en
+   rechten, Gebruiker toevoegen. Het e-mailadres is dat van het serviceaccount
+   (eindigt op `.iam.gserviceaccount.com`; het staat in Google Cloud en in het
+   bestand bij `client_email`). Recht: Volledig. De URL-inspectie werkt via
+   een sleutel niet altijd met Beperkt, en de sleutel zelf mag toch alleen
+   lezen, dus ook met Volledig verandert hij niets.
+7. Actions, Zoekcijfers, Run workflow. Groen en een commit "Zoekcijfers
+   bijgewerkt" betekent dat het werkt. Rood met 403: het adres staat nog niet
+   als gebruiker bij de property (stap 6).
+
 **Het pictogram en de links onder het zoekresultaat.** Toont Google bij
 predicttherace.com nog het oude pictogram, doe dan de URL-inspectie hierboven
 opnieuw op `https://predicttherace.com/` en `https://predicttherace.com/en/`,
