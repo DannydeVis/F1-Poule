@@ -28,6 +28,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { RACE_JAAR, RACES } from '../site/races.mjs';
 import { haal, wacht, PAUZE_MS, naamVan } from './circuits.mjs';
+import { vanwegeSessie, UITLEG as DICHT_UITLEG } from './openf1-dicht.mjs';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const BESTAND = join('site', 'data', `races-${RACE_JAAR}.json`);
@@ -176,7 +177,14 @@ function verslag(data) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const data = await ophalen();
+  let data;
+  try {
+    data = await ophalen();
+  } catch (e) {
+    if (!vanwegeSessie(e)) throw e;
+    console.log(`${e.message}. ${DICHT_UITLEG}; niets weggeschreven.`);
+    process.exit(0);
+  }
   if (!data.races.length) throw new Error('geen enkele race gevonden; niets weggeschreven');
   verslag(data);
   if (process.env.DROOG) {

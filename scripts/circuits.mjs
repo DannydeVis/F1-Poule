@@ -31,6 +31,7 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { telSafetyCars, hadRodeVlag } from './uitslagen.mjs';
+import { OpenF1Dicht, vanwegeSessie, UITLEG as DICHT_UITLEG } from './openf1-dicht.mjs';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const BESTAND = join('site', 'data', 'circuits.json');
@@ -46,11 +47,15 @@ export const wacht = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Zoals haal() in scripts/verkennen.mjs: bij een 429 even wachten en opnieuw,
 // anders de fout teruggeven in plaats van een lege lijst. Een 404 en een 429
-// zijn twee heel verschillende verhalen. scripts/racedata.mjs gebruikt hem ook.
+// zijn twee heel verschillende verhalen. Een 401 gooit hij: zie hieronder.
+// scripts/racedata.mjs gebruikt hem ook.
 export async function haal(pad, pogingen = 6) {
   for (let i = 0; i < pogingen; i++) {
     const res = await fetch(`${API}/${pad}`);
     if (res.ok) return res.json();
+    // Tijdens een sessie (scripts/openf1-dicht.mjs). Geen "er is niets": dan
+    // zou een run die halverwege dichtgaat races weglaten en dat wegschrijven.
+    if (res.status === 401) throw new OpenF1Dicht(pad);
     if (res.status === 429 && i < pogingen - 1) { await wacht(3000 * (i + 1)); continue; }
     return { fout: `${res.status}` };
   }
@@ -224,7 +229,15 @@ function tabel(data, races) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { races, ontbreekt } = await ophalen();
+  let opgehaald;
+  try {
+    opgehaald = await ophalen();
+  } catch (e) {
+    if (!vanwegeSessie(e)) throw e;
+    console.log(`${e.message}. ${DICHT_UITLEG}; niets weggeschreven.`);
+    process.exit(0);
+  }
+  const { races, ontbreekt } = opgehaald;
   if (!races.length) throw new Error('geen enkele race gevonden; niets weggeschreven');
   const data = cijfers(races, ontbreekt);
   tabel(data, races);

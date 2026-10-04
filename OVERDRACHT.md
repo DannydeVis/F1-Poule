@@ -9421,3 +9421,44 @@ de log, de workflow), alle gevangen.
 **Later.** padel-bracket.com kan met hetzelfde serviceaccount: als gebruiker
 toevoegen aan die property en het script een property laten kiezen. Bing heeft
 een eigen API met een sleutel uit Bing Webmaster Tools; nog niet gebouwd.
+
+## OpenF1 dicht rond een sessie: een 401 is in het weekend geen fout (4 oktober)
+
+Danny zag op zondag 4 oktober een rode run van "Uitslagen synchroniseren"
+(10:39 UTC) en vroeg wat er fout ging. De log: `Mislukt: OpenF1 gaf 401 op
+sessions?year=2026&session_name=Race`. Om 08:31 was "Circuitcijfers" rood
+met "geen enkele race gevonden", vrijwel zeker om dezelfde reden: dat script
+las een 401 toen nog als "er is niets". Rond de race in Kuala Lumpur dus.
+
+**Waarom.** OpenF1 is gratis, behalve tijdens een sessie: van een half uur voor
+de start tot een half uur na het einde mag alleen een betalend account erin
+(https://openf1.org/auth.html). Daarna gaat hij weer open. Danny's handmatige
+run om 11:51 haalde de uitslag van Kuala Lumpur gewoon binnen (race, snelste
+ronde, pitstop, safety cars, rode vlag). Er ging niets verloren.
+
+**Wat er nu anders is.** `scripts/openf1-dicht.mjs` zegt wanneer een 401 geen
+fout is: op een sessiedag (vrijdag, zaterdag of zondag in UTC). Een 401 op een
+andere dag blijft rood; dan wil OpenF1 misschien voortaan altijd een account.
+
+- De sync (`scripts/sync.mjs`): de kalender vraagt alles op voordat hij iets
+  schrijft. Bij een 401 op een sessiedag slaat de run alleen de kalender over
+  en gaat door met de uitslagen en de herinneringen. Die konden al tegen een
+  mislukt verzoek: een 401 daar wordt "nog niets" en de volgende run probeert
+  het opnieuw. Afgelast wordt een race alleen bij een 404, dus een 401 kan dat
+  niet veroorzaken. In het logboek van het beheer staat de run als goed, met
+  de reden erbij.
+- De racepagina's en de circuitcijfers (`haal()` in `scripts/circuits.mjs`, ook
+  gebruikt door `scripts/racedata.mjs`): een 401 gooit nu een fout in plaats
+  van "er is niets" terug te geven. Dat repareert ook een stille fout: ging
+  OpenF1 halverwege een run dicht, dan werden de races van daarna als
+  ontbrekend weggeschreven, en de site daarmee opnieuw gemaakt. Nu staat er
+  dan niets, en is de run groen op een sessiedag.
+
+**Tests.** `racedata.test.mjs` en `circuits.test.mjs`: OpenF1 gaat dicht nadat
+de eerste race al binnen is; niets weggeschreven, groen op zondag, rood op
+woensdag. `circuits.test.mjs` ook: wat een sessiedag is (met een klok ver van
+UTC, zodat een dag op de klok van de runner niet telt) en dat alleen een 401
+zo telt. `jaarwisseling.test.mjs`: de echte sync met KALENDER tegen een dichte
+OpenF1, groen op zondag zonder iets aan de races te veranderen, rood op
+woensdag. De klok is voor de test te zetten met `NU`. Twaalf mutanten, alle
+gevangen.
