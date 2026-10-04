@@ -633,10 +633,14 @@ function pouleDetail(p) {
 const ACCOUNT = { google: 'Google', mail: 'mailadres', anoniem: 'alleen dit toestel',
                   geen: 'geen account', weg: 'account weg' };
 
+// Op volgorde van binnenkomst, de nieuwste bovenaan: zo zie je wie er net bij
+// kwam (Danny, 4 oktober). Een speler zonder datum komt onderaan.
+const opBinnenkomst = (a, b) => (Date.parse(b.aangemaakt ?? '') || 0) - (Date.parse(a.aangemaakt ?? '') || 0);
+
 function spelersTab() {
   const zoek = B.zoekSpeler.toLowerCase();
   const lijst = B.spelers.filter((s) => (!B.filterPoule || s.pool_id === B.filterPoule)
-    && (!zoek || `${s.naam} ${s.poule} ${s.email ?? ''}`.toLowerCase().includes(zoek)));
+    && (!zoek || `${s.naam} ${s.poule} ${s.email ?? ''}`.toLowerCase().includes(zoek))).sort(opBinnenkomst);
   const open = B.spelers.find((s) => s.member_id === B.speler);
   return `
     <h1>Spelers</h1>
@@ -654,7 +658,8 @@ function spelersTab() {
         <thead><tr><th>Speler</th><th>Poule</th><th>Account</th><th class="getal breed">Inzendingen</th><th class="breed">Laatst</th></tr></thead>
         <tbody>${lijst.map((s) => `<tr class="klikbaar" data-speler="${esc(s.member_id)}" aria-selected="${s.member_id === B.speler}" tabindex="0">
           <td><strong>${esc(s.naam)}</strong>${s.poulebaas ? ' <span class="badge">poulebaas</span>' : ''}
-            ${s.email ? `<div class="zacht klein">${esc(s.email)}</div>` : ''}</td>
+            ${s.email ? `<div class="zacht klein">${esc(s.email)}</div>` : ''}
+            ${s.aangemaakt ? `<div class="zacht klein">binnen ${esc(datum(s.aangemaakt))}</div>` : ''}</td>
           <td>${esc(s.poule)}</td>
           <td><span class="badge ${esc(s.account)}">${esc(ACCOUNT[s.account] ?? s.account)}</span></td>
           <td class="getal breed">${getal(s.inzendingen)}</td>

@@ -20,6 +20,10 @@
 //   5. Invullen en bewaren werkt op de sprint-tab net als op de andere twee.
 //   6. Automatisch aanvullen slaat de sprint bewust over.
 //   7. "Maximaal per weekend" laat de sprint erbuiten en noemt hem apart.
+//   8. Een poule die de sprint niet speelt (Simpel of Klassiek) krijgt op een
+//      sprintweekend geen sprint-tab, geen S in de kalender en geen teller
+//      naar de sprint: wat openstaat is de kwalificatie. Gezien bij Danny op
+//      4 oktober, Singapore in de Vrijdagmiddagpoule.
 
 import { maakControle, startPagina, meedoen, kiesTien } from './hulp.mjs';
 
@@ -219,6 +223,85 @@ check('maar de sprint niet: die blijft leeg',
 check('en zegt gewoon dat je niks inleverde',
   (await opTab('sprint')).includes('niks ingevuld'),
   (await opTab('sprint')).slice(0, 120));
+
+// --- 8. een poule die de sprint niet speelt --------------------------------
+// Klassiek: de twee top-tienen, de winnaar, de pole en de snelste ronde. Geen
+// sprint, en ook geen losse vraag die aan de sprint hangt. Melbourne weer als
+// sprintweekend dat nog moet komen.
+await page.evaluate(({ sprint, quali, race }) => {
+  const db = globalThis.__db;
+  const r = db.races.find((x) => x.name === 'Melbourne');
+  Object.assign(r, { deadline_sprint: sprint, deadline_quali: quali, deadline_race: race,
+    sprint_result: null, quali_result: null, race_result: null });
+  db.answers = db.answers.filter((a) => String(a.race_id) !== String(r.id));
+  db.pool_questions = ['quali_top10', 'race_top10', 'winnaar', 'pole', 'snelste_ronde']
+    .map((question_id) => ({ pool_id: 'pool-1', question_id }));
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+}, { sprint: uur(12), quali: uur(24), race: uur(48) });
+await page.reload();
+// Na het herladen staat Suzuka nog open; terug naar de lijst.
+await page.waitForSelector('[data-weergave="races"]');
+await terug();
+check('zonder sprint in de vragenset: in de kalender alleen Q en R, ook op een sprintweekend',
+  JSON.stringify(await merktekens('Melbourne')) === JSON.stringify(['Q', 'R']),
+  (await merktekens('Melbourne')).join(''));
+await openRace('Melbourne');
+check('en op het racescherm geen sprint-tab, alleen de kwalificatie en de race',
+  JSON.stringify(await tabs()) === JSON.stringify(['Kwalificatie', 'Race']), (await tabs()).join(' | '));
+const deadline = (veld) => page.evaluate((v) => globalThis.__db.races.find((x) => x.name === 'Melbourne')[v], veld);
+check('open staat de kwalificatie, met de top 10 om in te vullen en de teller naar de kwalificatie',
+  (await page.getAttribute('.tabs button[data-tab="quali"]', 'aria-selected')) === 'true'
+    && (await page.$('.grid10')) !== null
+    && (await page.getAttribute('.detailkop [data-tot]', 'data-tot')) === await deadline('deadline_quali'),
+  await page.$$eval('.tabs button', (n) => n.map((b) => `${b.dataset.tab}=${b.getAttribute('aria-selected')}`).join(' ')));
+// Op het beginscherm: de grote teller hoort bij wat je nu kunt invullen.
+await terug();
+const heroTot = await page.getAttribute('.hero .klok[data-tot]', 'data-tot').catch(() => null);
+check('en het beginscherm telt af naar de kwalificatie, niet naar de sprint',
+  heroTot === await deadline('deadline_quali'), `${heroTot} · sprint ${await deadline('deadline_sprint')}`);
+
+// Zet de poulebaas de sprint aan, dan is hij er weer.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  db.pool_questions.push({ pool_id: 'pool-1', question_id: 'sprint_top10' });
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await page.waitForSelector('[data-weergave="races"]');
+await terug();
+await openRace('Melbourne');
+check('zet de poulebaas de sprint aan, dan is het sprint-tabblad er weer, vooraan',
+  JSON.stringify(await tabs()) === JSON.stringify(['Sprint', 'Kwalificatie', 'Race']), (await tabs()).join(' | '));
+
+// Een onthouden sprint-tab komt na het herladen niet terug als de poule de
+// sprint niet meer speelt: dan opent de kwalificatie.
+await page.click('.tabs button[data-tab="sprint"]');
+const vragenset = async (ids) => {
+  await page.evaluate((lijst) => {
+    const db = globalThis.__db;
+    db.pool_questions = lijst.map((question_id) => ({ pool_id: 'pool-1', question_id }));
+    sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+  }, ids);
+  await page.reload();
+  await page.waitForSelector('#paneel');
+};
+await vragenset(['quali_top10', 'race_top10']);
+check('een onthouden sprint-tab komt niet terug in een poule zonder sprint: de kwalificatie staat open',
+  JSON.stringify(await tabs()) === JSON.stringify(['Kwalificatie', 'Race'])
+    && (await page.getAttribute('.tabs button[data-tab="quali"]', 'aria-selected')) === 'true',
+  await page.$$eval('.tabs button', (n) => n.map((b) => `${b.dataset.tab}=${b.getAttribute('aria-selected')}`).join(' ')));
+
+// Een losse vraag telt ook: zonder top 10 van de kwalificatie maar met de pole
+// staat de kwalificatie er gewoon.
+await vragenset(['race_top10', 'pole']);
+check('een sessie met alleen een losse vraag (de pole) heeft wel een tabblad',
+  JSON.stringify(await tabs()) === JSON.stringify(['Kwalificatie', 'Race']), (await tabs()).join(' | '));
+
+// Speelt een poule op een weekend helemaal niets (alleen seizoensvragen), dan
+// blijft het zoals het was, in plaats van een racescherm zonder tabbladen.
+await vragenset(['kampioen']);
+check('een poule met alleen seizoensvragen houdt alle tabbladen',
+  JSON.stringify(await tabs()) === JSON.stringify(['Sprint', 'Kwalificatie', 'Race']), (await tabs()).join(' | '));
 
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
