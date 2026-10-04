@@ -9504,3 +9504,30 @@ de teller op het beginscherm naar de kwalificatie), een onthouden sprint-tab
 na herladen, de sprint weer aan, alleen de pole op de kwalificatie, alleen
 seizoensvragen. `test/beheer.test.mjs`: de volgorde, ook gefilterd, en de
 datum. Elf mutanten, alle gevangen.
+
+## Het totaal van een onderdeel groot (4 oktober)
+
+Danny, met drie schermafbeeldingen van Kuala Lumpur: "Ik vind die totaal
+punten nog steeds wat onduidelijk. Moet juist groot zijn aangezien het daar
+allemaal om draait." Sinds "één kop per onderdeel" stond boven elk onderdeel
+"TOP 10 · 20 VAN 50 PUNTEN" als klein grijs kopje, terwijl de punten per
+regel eronder groot en gekleurd waren. Wie keek, las de regels (+1,4 bij elk
+duel) en niet het totaal.
+
+- `onderdeelKop()` zet nu links het onderdeel (en een noot eronder, zoals
+  "3 van 4 goed") en rechts groot het behaalde aantal, met "van 50 punten"
+  klein ernaast. 32 pixels, groter dan de punten per regel (22). Paars als je
+  alles had, groen bij een deel, grijs bij nul. Zonder noot op één regel,
+  met noot twee regels links en het getal ernaast.
+- Als tekst (voor een schermlezer, en voor de tests) staat er nog precies
+  dezelfde zin: "top 10 · 20 van 50 punten · de sprint telt half". De puntjes
+  tussen de delen zijn er wel, maar niet te zien (`alleenlezer`). Daardoor
+  bleven alle bestaande tests op die koppen ongewijzigd groen.
+- In de scorekaart bovenaan, onder het grote getal van de sessie: "146 punten
+  dit weekend", wat het hele weekend oplevert (met joker), zodra er meer dan
+  één sessie meetelt en dat getal anders is dan dat van de sessie.
+
+**Test.** `test/puntenkoppen.test.mjs` §8 en §9: het totaal groter dan de
+punten per regel, rechts (de rechterkant van de tekst, niet van het vak),
+op dezelfde hoogte als de naam, de kleuren, en het weekendtotaal op beide
+tabbladen. Zeven mutanten, alle gevangen.

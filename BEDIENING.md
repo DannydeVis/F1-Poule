@@ -73,6 +73,14 @@ Daaronder de kalender, in twee lijsten: eerst wat er nog komt, daarna wat er
 gereden is (nieuwste eerst), met per gereden race je punten en wie dat weekend
 won.
 
+**Je uitslag op het racescherm.** Bovenaan groot wat de sessie van dat tabblad
+je opleverde, met eronder wat het hele weekend oplevert ("146 punten dit
+weekend"): dat is wat in de stand komt. Daaronder per onderdeel (top 10,
+winnaar, pole, duels enzovoort) links wat het is en rechts groot wat je ervan
+behaalde, van wat erin zat: paars als je alles had, groen bij een deel, grijs
+bij nul. Pas daaronder de regels met de punten per plek of per duel. Sinds
+4 oktober; daarvoor stond het totaal van een onderdeel als klein grijs kopje.
+
 Een weekend is pas gereden als de race er is geweest (of als het weekend na
 de kwalificatie is afgelast). Is alleen de kwalificatie (of de sprint) al
 geweest, dan blijft de race bij wat er nog komt, want die kun je dan meestal

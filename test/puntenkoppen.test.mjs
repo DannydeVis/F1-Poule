@@ -19,6 +19,11 @@
 //      staat er alleen wat je kreeg, met de uitleg erachter.
 //   7. Ook in de inzending van een ander staat een plus voor elk getal dat
 //      punten opleverde, net als in je eigen voorspelling.
+//   8. Het totaal van een onderdeel staat groot (Danny, 4 oktober: "Moet juist
+//      groot zijn aangezien het daar allemaal om draait"): groter dan de punten
+//      per regel, rechts naast de naam van het onderdeel, op dezelfde hoogte.
+//      Paars als je alles had, groen als je iets had, grijs bij nul.
+//   9. Onder het grote getal van de sessie staat wat het hele weekend oplevert.
 
 import { maakControle, startPagina, meedoen, openRace } from './hulp.mjs';
 
@@ -99,6 +104,30 @@ await tab('race');
     return [...(u?.querySelectorAll('.sr') ?? [])].map((r) => ({
       werd: r.querySelector('.werd').textContent.trim(), pts: r.querySelector('.pts').textContent.trim() }));
   });
+  // 8. Groot, rechts, op één hoogte met de naam, en de kleur.
+  const vorm = await page.$$eval('#paneel .okop', (koppen) => koppen.map((k) => {
+    const wat = k.querySelector('.okop-wat').getBoundingClientRect();
+    const som = k.querySelector('.okop-som b');
+    const r = som.getBoundingClientRect();
+    const kader = k.getBoundingClientRect();
+    return { wat: k.querySelector('.okop-wat').textContent, noot: !!k.querySelector('.okop-extra'),
+             groot: parseFloat(getComputedStyle(som).fontSize), kleur: k.querySelector('.okop-som').className,
+             // De rechterkant van de tekst zelf ("van 50 punten"), niet van het vak
+             // eromheen: dat vak kan de hele breedte vullen met het getal links.
+             rechts: kader.right - k.querySelector('.okop-som small').getBoundingClientRect().right,
+             hoogte: Math.abs((wat.top + wat.bottom) / 2 - (r.top + r.bottom) / 2) };
+  }));
+  const regelGroot = Math.max(...await page.$$eval('#paneel .pts', (n) => n.map((e) => parseFloat(getComputedStyle(e).fontSize))));
+  check('het totaal van elk onderdeel is groter dan de punten per regel',
+    vorm.length === 7 && vorm.every((v) => v.groot > regelGroot), `${vorm.map((v) => v.groot).join(',')} tegen ${regelGroot}`);
+  check('en staat rechts, op dezelfde hoogte als de naam van het onderdeel (als er geen noot onder staat)',
+    vorm.every((v) => v.rechts < 2) && vorm.filter((v) => !v.noot).every((v) => v.hoogte < 4),
+    JSON.stringify(vorm.map((v) => [v.wat, Math.round(v.rechts), Math.round(v.hoogte)])));
+  const kleur = (wat) => vorm.find((v) => v.wat === wat)?.kleur ?? '';
+  check('paars bij alles (winnaar), groen bij een deel (safety cars), grijs bij nul (snelste ronde)',
+    /\bv5\b/.test(kleur('winnaar')) && /\bv3\b/.test(kleur('safety cars')) && /\bv0\b/.test(kleur('snelste ronde')),
+    ['winnaar', 'safety cars', 'snelste ronde'].map(kleur).join(' | '));
+
   check('een duel toont punten en geen vinkje: een goed duel is 15 gedeeld door vier',
     duels.length === 4 && duels.every((d) => (d.werd.startsWith('won') ? d.pts === '3,8' : d.pts === '0'))
       && !duels.some((d) => /[✓✗]/.test(d.pts)),
@@ -116,6 +145,18 @@ await tab('quali');
     vind('top 10') === `top 10 · ${som} van 50 punten` && vind('pole') === 'pole · 10 van 10 punten'
       && som + 10 === (await getal()),
     `${vind('top 10')} | ${vind('pole')} | ${await getal()}`);
+}
+
+// ---- 9. wat het hele weekend oplevert ----------------------------------
+{
+  const quali = await getal();
+  await tab('race');
+  const race = await getal();
+  const regel = await tekst('#paneel .score .weekendsom').catch(() => '');
+  check('onder het grote getal: wat het hele weekend oplevert, kwalificatie en race samen',
+    regel === `${quali + race} punten dit weekend`, `${regel} · ${quali} + ${race}`);
+  await tab('quali');
+  check('ook op de kwalificatie', (await tekst('#paneel .score .weekendsom').catch(() => '')) === `${quali + race} punten dit weekend`);
 }
 
 // ---- 5 en 7: de inzending van een ander ------------------------------
