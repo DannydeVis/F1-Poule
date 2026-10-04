@@ -9462,3 +9462,45 @@ zo telt. `jaarwisseling.test.mjs`: de echte sync met KALENDER tegen een dichte
 OpenF1, groen op zondag zonder iets aan de races te veranderen, rood op
 woensdag. De klok is voor de test te zetten met `NU`. Twaalf mutanten, alle
 gevangen.
+
+## Een poule zonder sprint, en de spelers op volgorde van binnenkomst (4 oktober)
+
+Twee dingen van Danny, met schermafbeeldingen.
+
+**"Ik zie de sprint race niet. Die kan ik niet invullen."** In de
+Vrijdagmiddagpoule stond bij Singapore een Sprint-tabblad, open, met alleen de
+poule en een uitgeschakelde knop "Nog niets gekozen". Die poule speelt de
+sprint niet: zijn vragenset is Klassiek (de twee top-tienen, winnaar, pole,
+snelste ronde). Het tabblad kwam er toch, omdat de tabbladen kwamen uit
+`weekendSessies(r)`: alles wat het weekend heeft, los van wat de poule speelt.
+Hetzelfde gold voor de S in de kalender, de teller op het beginscherm (die
+telde af naar de sprint) en "open · nog 10 te kiezen" in de racelijst.
+
+- `gespeeldeSessies(r)` in de app: de sessies van het weekend waarop de poule
+  iets speelt, de top 10 of een losse vraag (de duels horen bij de race). De
+  tabbladen, de tab die opengaat (ook een onthouden tab na herladen), de
+  merktekens in de kalender en `openLijst()` (wat er openstaat, en dus de
+  teller en de racelijst) gebruiken die nu. Speelt een poule op een weekend
+  niets (alleen seizoensvragen), dan blijft alles zoals het was.
+- `weekendSessies()` zelf is niet veranderd: de punten, het automatisch
+  invullen en vooral de joker (die sluit bij de eerste sessie van het weekend,
+  net als de trigger in `schema.sql`) blijven daarop.
+- De herinneringen op je telefoon keken al naar de vragenset van de poule.
+
+Wil Danny de sprint in de Vrijdagmiddagpoule wél spelen: die vragenset ligt
+vast, dus dat kan niet in de app. De SQL om hem toe te voegen staat in
+BEDIENING §6. Er verschuift niets: Singapore is de eerste sprint sinds
+27 september, dus ook automatisch invullen zet nergens achteraf een sprint neer.
+
+**"Kan je de e-mailadressen op volgorde zetten hoe ze binnenkomen."** In het
+beheer, Spelers: de nieuwste speler bovenaan, met onder de naam "binnen" en de
+datum. `beheer_spelers` gaf `aangemaakt` al mee, dus het sorteren gebeurt in
+de pagina en `schema.sql` hoeft niet opnieuw. Een speler zonder datum komt
+onderaan. Ook gefilterd op een poule.
+
+**Tests.** `test/sprintweekend.test.mjs` §8: een poule met Klassiek op een
+sprintweekend (geen sprint-tab, Q en R in de kalender, de kwalificatie open,
+de teller op het beginscherm naar de kwalificatie), een onthouden sprint-tab
+na herladen, de sprint weer aan, alleen de pole op de kwalificatie, alleen
+seizoensvragen. `test/beheer.test.mjs`: de volgorde, ook gefilterd, en de
+datum. Elf mutanten, alle gevangen.

@@ -456,6 +456,26 @@ Poule → beheer alleen-lezen, met een regel eronder:
 Technisch: een veld `questions_locked` op de poule, gezet door de scoringslogica
 zodra de eerste race een uitslag krijgt.
 
+**Een poule zonder sprint.** Simpel en Klassiek spelen de sprint niet mee. Zo'n
+poule krijgt op een sprintweekend geen sprint-tab, geen S in de kalender en
+geen teller naar de sprint: wat openstaat is de kwalificatie (sinds 4 oktober;
+daarvoor stond er een leeg sprint-tabblad). Een sessie met alleen een losse
+vraag, zoals de pole bij de kwalificatie, telt wel als gespeeld.
+
+**De sprint er later toch bij.** Ligt de vragenset vast, dan kan dat niet meer
+in de app. Als beheerder kan het in Supabase, SQL Editor (vervang de naam):
+
+```sql
+insert into public.pool_questions (pool_id, question_id)
+select id, 'sprint_top10' from public.pools where name = 'Vrijdagmiddagpoule'
+on conflict do nothing;
+```
+
+Wie in een eerdere sprint niets voorspelde, houdt daar nul. Eén uitzondering:
+staat automatisch invullen aan, dan krijgt iedereen voor een gemiste sprint van
+na 27 september (`ALLES_VANAF`) alsnog een willekeurige top 10. In 2026 speelt
+dat niet: Singapore is de eerste sprint sinds die datum.
+
 ### 6a. Automatisch invullen bij vergeten
 
 Staat uit. De poulebaas zet hem aan in Poule → beheer, en vanaf dat moment
@@ -1856,7 +1876,9 @@ select id from auth.users where email = 'iemand@voorbeeld.nl';
   openbaar en de poulebaas aanpassen; een poule verwijderen (je tikt eerst de
   naam over; spelers, inzendingen en jokers gaan mee).
 - **Spelers** — alle spelers met hun poule, het soort account (Google,
-  mailadres, alleen dit toestel, geen) en het mailadres als dat er is. Hernoemen,
+  mailadres, alleen dit toestel, geen) en het mailadres als dat er is. Op
+  volgorde van binnenkomst, de nieuwste bovenaan, met onder de naam wanneer
+  iemand binnenkwam (sinds 4 oktober; daarvoor op poule en naam). Hernoemen,
   losmaken van het account (voor iemand op een nieuw toestel die niet had
   gekoppeld) en verwijderen, die laatste twee met twee tikken.
 - **Data** — het logboek van de sync (elke run: wanneer, gelukt of niet, wat er

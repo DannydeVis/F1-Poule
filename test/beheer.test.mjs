@@ -177,11 +177,13 @@ await page.evaluate(() => {
   const beheerder = d.site_beheerders[0];
   d.auth_users.push({ id: 'mailaccount', is_anonymous: false, email: 'sanne@voorbeeld.nl', identities: [{ provider: 'email' }] });
   d.pools.push({ id: 'pool-2', name: 'Kantoorpoule', join_code: 'KNT123', season: 2026, is_public: false, owner_member_id: null });
+  // Met het moment van binnenkomst, door elkaar: de lijst zet ze op volgorde.
+  const geleden = (uren) => new Date(Date.now() - uren * 36e5).toISOString();
   d.pool_members.push(
-    { member_id: 'lid-10', pool_id: 'pool-1', display_name: 'Pieter', user_id: 'tweede-toestel' },
-    { member_id: 'lid-7', pool_id: 'pool-2', display_name: 'Sanne', user_id: 'mailaccount' },
-    { member_id: 'lid-8', pool_id: 'pool-2', display_name: 'Kees', user_id: null },
-    { member_id: 'lid-9', pool_id: 'pool-2', display_name: 'Beheerder', user_id: beheerder });
+    { member_id: 'lid-10', pool_id: 'pool-1', display_name: 'Pieter', user_id: 'tweede-toestel', created_at: geleden(1) },
+    { member_id: 'lid-7', pool_id: 'pool-2', display_name: 'Sanne', user_id: 'mailaccount', created_at: geleden(48) },
+    { member_id: 'lid-8', pool_id: 'pool-2', display_name: 'Kees', user_id: null, created_at: geleden(120) },
+    { member_id: 'lid-9', pool_id: 'pool-2', display_name: 'Beheerder', user_id: beheerder, created_at: geleden(0.2) });
   const r = d.races[0];
   Object.assign(r, { quali_key: 9001, race_key: 9002, country: 'Australia',
     deadline_quali: new Date(Date.now() - 30 * 36e5).toISOString(),
@@ -267,8 +269,20 @@ await page.click('[data-tab="spelers"]');
       && (await soort('lid-10')) === 'alleen dit toestel' && (await soort('lid-8')) === 'geen account',
     [await soort('lid-9'), await soort('lid-7'), await soort('lid-10'), await soort('lid-8')].join(', '));
 }
+{
+  const volgorde = await page.$$eval('[data-speler]', (r) => r.map((x) => x.dataset.speler));
+  const metDatum = volgorde.filter((id) => ['lid-7', 'lid-8', 'lid-9', 'lid-10'].includes(id));
+  check('op volgorde van binnenkomst, de nieuwste bovenaan, en wie geen datum heeft onderaan',
+    volgorde.slice(0, 4).join() === 'lid-9,lid-10,lid-7,lid-8' && metDatum.join() === 'lid-9,lid-10,lid-7,lid-8', volgorde.join(', '));
+  check('met wanneer iemand binnenkwam onder de naam',
+    /binnen \d+ \w+/.test(await tekst('[data-speler="lid-9"] td:first-child')) && !/binnen/.test(await tekst(`[data-speler="${volgorde.at(-1)}"] td:first-child`)),
+    await tekst('[data-speler="lid-9"] td:first-child'));
+}
 await page.selectOption('#filterpoule', 'pool-2');
 check('filteren op poule', (await page.$$eval('[data-speler]', (r) => r.length)) === 3);
+check('ook gefilterd op volgorde van binnenkomst',
+  (await page.$$eval('[data-speler]', (r) => r.map((x) => x.dataset.speler))).join() === 'lid-9,lid-7,lid-8',
+  (await page.$$eval('[data-speler]', (r) => r.map((x) => x.dataset.speler))).join());
 await page.fill('#zoekspeler', 'sanne@');
 check('zoeken op mailadres', (await page.$$eval('[data-speler]', (r) => r.map((x) => x.dataset.speler))).join() === 'lid-7');
 await page.fill('#zoekspeler', '');

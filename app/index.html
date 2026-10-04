@@ -4027,6 +4027,19 @@ const TOP10VRAAG = Object.fromEntries(
   Object.entries(SESSIES).map(([k, v]) => [k, v.vraag]));
 const top10Actief = (welk) => vraagActief(SESSIES[welk].vraag);
 
+// Speelt deze poule op deze sessie iets: de top 10, of een losse vraag die aan
+// die deadline hangt (de duels horen bij de race). Een poule zonder sprintvragen
+// kreeg op een sprintweekend anders een sprinttabblad zonder iets erin, een
+// teller die naar de sprint aftelde en "nog 10 te kiezen" voor iets wat hij
+// niet speelt (Danny, 4 oktober, de Vrijdagmiddagpoule in Singapore). Speelt
+// een poule op een weekend helemaal niets, dan blijft alles zoals het was.
+const sessieGespeeld = (welk) => top10Actief(welk) || coureurVragen(welk).length > 0
+  || extraVragen(welk).length > 0 || (welk === 'race' && vraagActief('teamgenoot_duels'));
+const gespeeldeSessies = (r) => {
+  const gespeeld = weekendSessies(r).filter(sessieGespeeld);
+  return gespeeld.length ? gespeeld : weekendSessies(r);
+};
+
 // Tien vaste plekken met gaten erin, in plaats van een lijst die je alleen
 // achteraan kon aanvullen. Zo kun je P7 invullen zonder eerst P1 tot P6 te
 // doen — je tikt de plek aan die je bedoelt.
@@ -5506,7 +5519,8 @@ function openLijst(r, nu = Date.now()) {
   // sprintkwalificatie op vrijdag, dus de sprint sluit vóór de kwalificatie.
   // Voor een gewoon weekend komt er hetzelfde uit als de twee losse regels
   // die hier stonden, want quali sluit altijd eerder dan de race.
-  return weekendSessies(r)
+  // Alleen wat deze poule speelt: een sprint die hij niet speelt, staat niet open.
+  return gespeeldeSessies(r)
     .map(w => ({ w, t: new Date(r[SESSIES[w].deadline]).getTime() }))
     .filter(x => nu < x.t)
     .sort((a, b) => a.t - b.t)[0]?.w ?? null;
@@ -6451,10 +6465,10 @@ function kalenderRij(r, st = raceStand(r)) {
       ? `<span class="jokervlag" title="${
           T('Je joker ligt hier: dit weekend telt dubbel')}">2×</span>`
       : ''}
-    <span class="mk" title="${esc(weekendSessies(r)
+    <span class="mk" title="${esc(gespeeldeSessies(r)
       .map(w => T('{letter} = {sessie} ingevuld',
                   { letter: SESSIES[w].letter, sessie: T(SESSIES[w].naam) })).join(', '))}">
-      ${weekendSessies(r).map(w =>
+      ${gespeeldeSessies(r).map(w =>
         `<i class="${vink(w)}">${SESSIES[w].letter}</i>`).join('')}</span>
     ${merk}
   </button>${tussenstand(r, st)}`;
@@ -8491,8 +8505,8 @@ function openRace(id, startTab = null) {
               rode_vlag: mijn?.rode_vlag ?? null };
   // Een onthouden tab mag alleen terug als die sessie dit weekend bestaat --
   // anders kom je na een sprintweekend op een lege sprint-tab uit bij een
-  // gewone race.
-  const bestaat = weekendSessies(r);
+  // gewone race -- en als de poule hem speelt.
+  const bestaat = gespeeldeSessies(r);
   S.tab = bestaat.includes(startTab) ? startTab
     : (bestaat.includes(openLijst(r)) ? openLijst(r) : bestaat[0] ?? 'race');
   S.kiesplek = null;
@@ -8540,10 +8554,11 @@ function raceDetailKop() {
         : `<span class="vlag"></span>`}
     </div>
     ${jokerRegel(r)}
-    <!-- Alleen de sessies die dit weekend bestaan: een gewoon weekend krijgt
-         geen sprint-tab, en op een sprintweekend staan er drie. -->
+    <!-- Alleen de sessies die dit weekend bestaan en die de poule speelt: een
+         gewoon weekend krijgt geen sprint-tab, een sprintweekend er drie, en een
+         poule zonder sprintvragen ook dan twee. -->
     <div class="tabs">
-      ${weekendSessies(r).map(w => `<button data-tab="${w}"
+      ${gespeeldeSessies(r).map(w => `<button data-tab="${w}"
         aria-selected="${S.tab === w}">${esc(T(SESSIES[w].tablabel ?? SESSIES[w].naam))}</button>`).join('')}
     </div>
     <div id="paneel" data-intro="paneel|${esc(S.tab)}"></div>`;
