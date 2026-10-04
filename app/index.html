@@ -10471,7 +10471,7 @@ function coureurUitslag(r, mijn, id) {
   // Een losse uitslag die nog niet binnen is: dan valt er ook nog niets over
   // te zeggen, ook niet dat je hem hebt laten liggen.
   if (!werkelijk.length) return v.kolom ? wachtOpUitslag(T(v.label), autoStempel(mijn, id)) : '';
-  if (!gekozen) return onderdeelKop(esc(T(v.label)), 0, punten, ` · ${esc(T(v.mis))}`, { amber: true });
+  if (!gekozen) return vraagKop(esc(T(v.label)), ` · ${esc(T(v.mis))}`, { amber: true });
   const d = drv(r, gekozen);
   const gescoord = Math.round(scoreEerste(gekozen, werkelijk, punten)
     * contrairVoor(r, id, gekozen, mijn));
@@ -10482,7 +10482,7 @@ function coureurUitslag(r, mijn, id) {
     ? T('het werd {wie}', { wie: esc(drv(r, werkelijk[0]).code) })
     : plek === -1 ? T('niet gefinisht') : T('werd P{n}', { n: plek + 1 });
   return `
-    ${onderdeelKop(esc(T(v.label)), gescoord, punten, `${esc(contrairNoot(r, id, gekozen, mijn))}${
+    ${vraagKop(esc(T(v.label)), `${esc(contrairNoot(r, id, gekozen, mijn))}${
       r[v.vlag] ? ` · ${T('handmatig ingevuld')}` : ''}${autoStempel(mijn, id)}`)}
     <div class="sr" style="--team:${esc(d.kleur)}">
       <span class="pos">${v.letter}</span>
@@ -10500,12 +10500,12 @@ function extraUitslag(r, mijn, id) {
   const gekozen = mijn?.[id] ?? null;
   if (leegAntwoord(werkelijk)) return wachtOpUitslag(T(v.label), autoStempel(mijn, id));
   if (leegAntwoord(gekozen)) {
-    return onderdeelKop(esc(T(v.label)), 0, punten, ` · ${esc(T(v.mis))}`, { amber: true });
+    return vraagKop(esc(T(v.label)), ` · ${esc(T(v.mis))}`, { amber: true });
   }
   const gescoord = Math.round(v.score(gekozen, werkelijk, punten)
     * contrairVoor(r, id, gekozen, mijn));
   return `
-    ${onderdeelKop(esc(T(v.label)), gescoord, punten, `${esc(contrairNoot(r, id, gekozen, mijn))}${
+    ${vraagKop(esc(T(v.label)), `${esc(contrairNoot(r, id, gekozen, mijn))}${
       r[v.vlag] ? ` · ${T('handmatig ingevuld')}` : ''}${autoStempel(mijn, id)}`)}
     <div class="sr">
       <span class="pos">${v.letter}</span>
@@ -10539,7 +10539,7 @@ const wachtOpUitslag = (label, extra = '') =>
 // Voorgelezen (en als tekst) staat er nog steeds één zin: "top 10 · 20 van
 // 50 punten · de sprint telt half"; de puntjes ertussen zijn alleen niet te zien.
 function onderdeelKop(wat, behaald, max, extra = '', { amber = false } = {}) {
-  const klasse = behaald >= max && max > 0 ? 'v5' : behaald > 0 ? 'v3' : 'v0';
+  const klasse = somKlasse(behaald, max);
   const achter = behaald > max ? T('punten') : T('van {max} punten', { max });
   const rest = String(extra).replace(/^\s*·\s*/, '');
   return `<div class="label okop${rest ? ' metnoot' : ''}${amber ? ' amber' : ''}">
@@ -10548,6 +10548,14 @@ function onderdeelKop(wat, behaald, max, extra = '', { amber = false } = {}) {
       ? `<span class="okop-extra"><span class="alleenlezer"> · </span>${rest}</span>` : ''}
   </div>`;
 }
+// De kop boven een vraag met één antwoord (pole, winnaar, snelste ronde en
+// pitstop, safety cars, rode vlag): alleen de naam, met de noten erachter.
+// Het totaal is daar altijd het getal van de ene regel eronder, dus stond er
+// twee keer hetzelfde (Danny, 4 oktober: "Het beste is denk ik dat je de
+// punten totaal weergeeft waar het opgeteld moet worden"). Een groot totaal
+// staat alleen boven de top 10 en de duels, waar regels opgeteld worden.
+const vraagKop = (wat, extra = '', { amber = false } = {}) =>
+  `<span class="label${amber ? ' amber' : ''}">${wat}${extra}</span>`;
 // Achter de kop: dit antwoord koos de app, niet de speler.
 const autoStempel = (p, id) => autoAntwoord(p, id) ? ` · ${T('automatisch ingevuld')}` : '';
 // Wat één goed duel oplevert. De duelpunten gaan naar rato van het aantal
@@ -10693,9 +10701,9 @@ function keuzeOverzicht(r, pred, welk) {
       }).join('')}
     </ul>` : `<p class="label" style="margin:0">${T('top 10 · niets ingevuld')}</p>`;
 
-  // Een vraag zonder antwoord: met uitslag de gewone kop (nul van zoveel),
-  // zonder uitslag alleen dat er niets gekozen is.
-  const nietsGekozen = (label, punten, uitslagBinnen) => uitslagBinnen
+  // Een vraag zonder antwoord: dat er niets gekozen is. Bij de duels, waar
+  // opgeteld wordt, met uitslag de gewone kop (nul van zoveel).
+  const nietsGekozen = (label, punten, uitslagBinnen, { som = false } = {}) => som && uitslagBinnen
     ? onderdeelKop(label, 0, punten, ` · ${T('niets gekozen')}`)
     : `<p class="label" style="margin:0">${T('{wat} · niets gekozen', { wat: label })}</p>`;
 
@@ -10714,7 +10722,7 @@ function keuzeOverzicht(r, pred, welk) {
       ? Math.round(scoreEerste(gekozen, uit, punten) * contrairVoor(r, id, gekozen, pred)) : null;
     return `
       ${gescoord === null ? `<span class="label">${esc(T(v.label))}${autoStempel(pred, id)}</span>`
-        : onderdeelKop(esc(T(v.label)), gescoord, punten,
+        : vraagKop(esc(T(v.label)),
             `${esc(contrairNoot(r, id, gekozen, pred))}${autoStempel(pred, id)}`)}
       <div class="sr" style="--team:${esc(d.kleur)}">
         <span class="pos">${v.letter}</span>
@@ -10736,7 +10744,7 @@ function keuzeOverzicht(r, pred, welk) {
       : Math.round(v.score(gekozen, echt, punten) * contrairVoor(r, id, gekozen, pred));
     return `
       ${gescoord === null ? `<span class="label">${esc(T(v.label))}${autoStempel(pred, id)}</span>`
-        : onderdeelKop(esc(T(v.label)), gescoord, punten,
+        : vraagKop(esc(T(v.label)),
             `${esc(contrairNoot(r, id, gekozen, pred))}${autoStempel(pred, id)}`)}
       <div class="sr">
         <span class="pos">${v.letter}</span>
@@ -10752,7 +10760,7 @@ function keuzeOverzicht(r, pred, welk) {
   const duelblok = welk !== 'race' || !vraagActief('teamgenoot_duels') ? '' : (() => {
     const gekozen = pred?.teamgenoot_duels ?? [];
     const punten = puntenVoor('teamgenoot_duels');
-    if (!gekozen.length) return nietsGekozen(T('teamgenoot-duels'), punten, !!werkelijk?.length);
+    if (!gekozen.length) return nietsGekozen(T('teamgenoot-duels'), punten, !!werkelijk?.length, { som: true });
     const alle = teamParen(r.drivers);
     const paren = alle.filter(p => gekozen.some(g => zelfde(g, p.a.nr) || zelfde(g, p.b.nr)));
     if (!paren.length) return '';
