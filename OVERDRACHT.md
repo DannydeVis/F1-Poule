@@ -9588,3 +9588,114 @@ hun naam, hun punten uit de regel eronder (ook in de som tot het grote getal
 en tegen de kaart), een groot totaal alleen boven de top 10 en de duels. In
 `automatisch-invullen`, `pole-en-duels`, `safetycar-en-vlag` en `snelste` de
 verwachte koppen aangepast. Zes mutanten, alle gevangen.
+
+---
+
+## Een rondleiding voor nieuwe spelers (4 oktober)
+
+Danny: "Maak de onboarding wat beter voor nieuwe spelers. Denk aan de 1e keer
+inloggen hoe dat werkt. En het op je thuisscherm zetten. Ook de kunnen
+skippen."
+
+Wat een nieuwe speler tot nu toe zag: poulecode (of de uitnodiging), "Wie ben
+jij?", en dan één scherm "Welkom, wil je koppelen?". Het blok "wat is dit?" en
+het aanbod om de app op je beginscherm te zetten stonden alleen op het
+beginscherm, en wie via een uitnodiging binnenkomt slaat dat scherm over.
+Precies de mensen voor wie ze bedoeld waren, zagen ze dus nooit. En "Nu niet,
+ik speel liever anoniem" stond er zonder `T()`, dus ook in het Engels in het
+Nederlands.
+
+### Wat er nu staat
+
+`koppelVraagScherm()` is `rondleidingScherm()` geworden: hooguit drie stappen,
+elk op een eigen scherm, met de voortgangsbalk van het aanmaken erboven.
+
+- **zo werkt het** (`spelStap`): wat je per race invult, uit de vragenset van
+  déze poule via `vraagActief()` (de sprint met halve punten en het aantal
+  losse vragen alleen als ze meedoen), 5/3/1 per plek, en invullen tot de
+  sessie begint. Valt weg voor wie al in een andere poule speelt of al
+  ingelogd is, en voor wie de poule net zelf maakte (die koos de vragen
+  zelf).
+- **je account** (`accountStap`): Google als de grote knop met het logo, of
+  je mailadres; dezelfde ids als `mailBlok()` onder Profiel, zodat
+  `knoopMail()` ze allebei bedient. Valt weg als je al gekoppeld bent.
+- **op je beginscherm** (`beginschermStap`): de prompt van de browser als
+  knop, of anders de stappen met de hand (`beginschermStappen()`): op een
+  iPhone via Deel, met de tip dat Deel sinds iOS 26 achter de drie puntjes
+  zit, op Android via het menu. Valt weg als de app al als app draait, als
+  het toestel het niet kan (een computer zonder prompt), of als je op het
+  beginscherm al Nu niet koos.
+
+Overslaan staat rechtsboven, in de vorm van de Wissel-knop, en slaat alles
+over. Elke stap met een actie heeft een eigen Nu niet. De melding na afloop
+noemt precies wat je oversloeg en nog kunt doen ("Je account koppelen kan
+later nog, onder Profiel."), en dat staat daar dan ook: het beginscherm-blok
+staat nu ook onder Profiel (`beginschermBlok()`), zonder Nu niet.
+
+De rondleiding staat in `poule:welkom` (als JSON zolang hij loopt, daarna
+`klaar`). Daardoor kom je na de omweg via Google, na de link uit de mail of
+na herladen terug in de stap waar je was; `hervatRondleiding()` in
+`render()`. Na een uur niet meer. Wie het oude koppelscherm al zag
+(`poule:koppelgevraagd`) speelt al mee en krijgt hem niet. De controle
+`isNuVanMij()` voor een gedeeld toestel is gebleven.
+
+Elke stap begint bovenaan (`naarBoven()`). Dat moest in het volgende beeld:
+`herstelFocus()` zet na het tekenen de focus op `.hoofd`, en dat scrolde de
+pagina weer een stukje naar beneden, net genoeg om de melding bovenin de
+poule te verstoppen.
+
+### De valkuil van het beginscherm op een iPhone
+
+Een iPhone geeft een app op het beginscherm een eigen geheugen, los van
+Safari (WebKit doet dat sinds iOS 6 zo, en het is nog steeds zo). Wie in
+Safari meespeelt en de app op zijn beginscherm zet, opent daar een leeg
+toestel: geen poule, geen speler, een nieuw anoniem account. Kiest hij daar
+zijn naam, dan hoort die bij een ander account, en kan hij alleen meekijken.
+
+De rondleiding mocht dat niet erger maken door het beginscherm overal aan te
+prijzen. Daarom:
+
+- de accountstap komt vóór de beginscherm-stap, en zegt op een iPhone dat je
+  hem ook voor de beginschermapp nodig hebt;
+- de beginscherm-stap waarschuwt zonder account met zoveel woorden ("Zonder
+  gekoppeld account ben je daar niet Sanne") en heeft een knop terug naar
+  koppelen; met een account zegt hij "log daar één keer in";
+- het beginscherm van de app zelf (`losVanSafari` in `toonStart()`) zegt op
+  een leeg toestel: speel je al mee in Safari, log dan hieronder in.
+
+En inloggen moest daar ook echt kunnen. Een link uit de mail opent altijd
+Safari, en Google komt na de omweg ook in Safari terug, niet in de app. Dus
+staat er na "Stuur me een inloglink" nu ook een veld voor **de code uit de
+mail** (`inloggenMetCode()`, `verifyOtp` met `type: 'email'`). Lukt het, dan
+zet hij een vlaggetje in sessionStorage en herlaadt hij; `VAN_INLOGLINK`
+leest dat vlaggetje, zodat alles daarna precies zo loopt als na een klik op
+de link (je poules van je account, en je account wint van wat het toestel
+onthield). Een verkeerde of verlopen code krijgt een eigen melding in
+`uitlegAuth()`.
+
+**Daar hoort één handeling van Danny bij:** de code staat standaard niet in
+de mail. In Supabase het sjabloon Magic Link aanvullen met `{{ .Token }}`,
+zie BEDIENING §5b. Tot dan werkt alles zoals het werkte, alleen blijft het
+codeveld leeg.
+
+Niet nagelopen, want hier niet te testen: hoe een echte iPhone met iOS 26 het
+deelmenu precies noemt. De teksten (Deel, Zet op beginscherm, Voeg toe)
+volgen de namen die iOS in het Nederlands gebruikt; dat Deel sinds iOS 26
+achter de drie puntjes zit, komt uit een handleiding voor iOS 26. Eén keer
+op een echte iPhone nalopen is verstandig. Ook niet nagelopen: of Supabase
+bij een met Google gekoppeld account het mailadres invult, zodat zo iemand
+ook met de code kan inloggen. De nabootsing doet dat wel.
+
+### Tests
+
+`test/koppel-vraag.test.mjs` is `test/rondleiding.test.mjs` geworden, met
+71 controles over twaalf verse pagina's: een computer, een iPhone en Android,
+overslaan in elke vorm met de melding en wat er daarna onder Profiel staat,
+de omweg via Google en via de mail, herladen, het verlopen na een uur, het
+oude koppelscherm, het aanmaken van een poule, het naar boven springen, en
+het inloggen met de code in een iPhone-beginschermapp. De nabootsing kreeg
+`verifyOtp()` en `__mail.laatsteCode()`. `naDeClaim()` in `test/hulp.mjs` en
+vier andere tests slaan de rondleiding over in plaats van het koppelscherm;
+`test/poule-aanmaken.test.mjs` doet dat nu ook na Klaar. Achttien
+mutanten, alle gevangen; één pas nadat de test er een geval bij kreeg (wie
+gekoppeld is en alleen het beginscherm overslaat, hoort alleen dat).

@@ -275,6 +275,37 @@ Alleen poules die de poulebaas bewust openbaar heeft gezet staan hierin; zie
 Daarna in alle gevallen: kies jezelf uit de lijst als je er al in staat, of
 maak jezelf aan als nieuwe speler.
 
+**De rondleiding.** Wie voor het eerst een speler claimt, krijgt daarna één
+keer een korte rondleiding, elke stap op een eigen scherm:
+
+| stap | wat er staat | valt weg als |
+|---|---|---|
+| zo werkt het | wat je per race invult, met de vragen van déze poule (de sprint en het aantal losse vragen alleen als die meedoen); 5, 3 of 1 punt per plek; invullen tot de sessie begint, daarna zie je wat de anderen kozen | je al in een andere poule speelt, of al ingelogd bent; en altijd bij een poule die je net zelf maakte |
+| je account | Google (de grote knop met het logo) of je mailadres koppelen | je account al gekoppeld is |
+| op je beginscherm | op Android de knop van de browser, of de weg via het menu; op een iPhone of iPad de drie stappen via Deel | de app al als app draait, het toestel het niet kan (een computer zonder prompt), of je op het beginscherm al Nu niet koos |
+
+Rechtsboven staat altijd **Overslaan** (alles), en elke stap met een actie
+heeft een eigen **Nu niet**. Wat je oversloeg vind je onder Profiel, en de
+melding na afloop zegt dat ook. Blijft er van de drie niets over, dan is er
+geen rondleiding.
+
+Een paar dingen die vastliggen:
+
+- **Eén keer per toestel** (`poule:welkom` in localStorage). Wie het oude
+  koppelscherm al zag (`poule:koppelgevraagd`) speelt al mee en krijgt hem
+  niet.
+- **Account vóór beginscherm.** Een iPhone geeft de app op het beginscherm
+  een eigen geheugen, los van Safari: wie hem daar opent is een leeg
+  toestel. Zonder gekoppeld account is er dan geen weg terug naar je speler.
+  De beginscherm-stap zegt dat op een iPhone met zoveel woorden, met een knop
+  terug naar koppelen.
+- **Na de omweg via Google** (of de link uit de mail, of herladen) sta je
+  terug in de stap waar je was. Na een uur niet meer: dan is het geen
+  rondleiding meer.
+- **Niet op een gedeeld toestel** waar de nieuwe speler niet aan dit account
+  komt te hangen; anders zou "koppel je account" Google aan de verkeerde
+  persoon hangen.
+
 **Via je eigen link** (`?code=...&speler=...`): voor jezelf, niet om te delen.
 De app weet alleen per toestel wie je bent, dus wie op zijn telefoon én op zijn
 laptop meedoet maakt zichzelf twee keer aan en ziet zijn punten over twee
@@ -368,6 +399,29 @@ Geen wachtwoord, met opzet — zie §12. De inloglink bewijst hetzelfde (dat het
 adres van jou is) zonder dat iemand iets kan vergeten, en Google doet het in
 één tik.
 
+**De code uit de mail.** Na "Stuur me een inloglink" staat er ook een veld
+voor de code uit diezelfde mail. Dat is er voor waar de link niet werkt, en
+dat is vooral de app op het beginscherm van een iPhone: een link uit de mail
+opent altijd Safari, en dan log je in Safari in en niet in de app waar je
+zat. Een code tik je in waar je bent.
+
+Daarvoor moet de code wel in de mail staan, en dat doet hij standaard niet.
+**Eén keer instellen in Supabase:** Authentication → Emails → het sjabloon
+**Magic Link**. Zet daar de code bij, naast de link die er al staat,
+bijvoorbeeld:
+
+```html
+<h2>Inloggen bij Predict the Race</h2>
+<p><a href="{{ .ConfirmationURL }}">Log in</a></p>
+<p>Of tik deze code in de app in: <strong>{{ .Token }}</strong></p>
+<p>Je hebt hier niet om gevraagd? Dan kun je deze mail negeren.</p>
+```
+
+Tot dat gebeurd is werkt alles verder gewoon (de link doet het), alleen
+blijft het codeveld leeg voor wie in een iPhone-beginschermapp inlogt. Een
+code is net als de link één keer te gebruiken en verloopt na een uur (de
+instelling *Email OTP Expiration* onder Authentication → Providers → Email).
+
 ---
 
 
@@ -416,7 +470,8 @@ aanbiedt. Er zijn twee wegen, want de browsers zijn het oneens:
 | | wat de speler ziet |
 |---|---|
 | Android / Chrome | een echte knop **Zet op beginscherm** die de installatie start |
-| iPhone / iPad | de instructie *Tik onderin op ⤴ Deel en kies Zet op beginscherm* |
+| Android zonder prompt | twee stappen: *⋮ rechtsboven*, dan *Toevoegen aan startscherm* of *App installeren* |
+| iPhone / iPad | drie stappen: *Tik op ⤴ Deel* (sinds iOS 26 eerst op *•••* naast de adresbalk), *Zet op beginscherm*, *Voeg toe* |
 
 Op Android vangen we `beforeinstallprompt` op, roepen `preventDefault()` (anders
 zet Chrome zijn eigen balk onderin) en bewaren het event, zodat onze eigen knop
@@ -430,7 +485,21 @@ iPad zich sinds iPadOS 13 als een Mac meldt — het aanraakscherm
 Het blok verdwijnt in drie gevallen: de app draait al als app
 (`display-mode: standalone` of `navigator.standalone`), de speler tikte op
 **Nu niet** (`poule:installweg` in localStorage, definitief), of de browser kan
-het niet en het is geen Apple-toestel — dan beloven we niets.
+het niet en het is geen Apple- of Android-toestel — dan beloven we niets.
+
+Hetzelfde aanbod staat op nog twee plekken: als laatste stap van de
+rondleiding (zie §4), want wie via een uitnodiging binnenkomt ziet het
+beginscherm nooit; en onder **Profiel**, voor wie hem in de rondleiding
+oversloeg. Onder Profiel zonder Nu niet: dat is een instellingenscherm, geen
+aanbieding die in de weg staat.
+
+**Let op bij een iPhone.** De app op het beginscherm onthoudt je los van
+Safari. Wie daar zonder gekoppeld account begint, is een leeg toestel; wie
+wél gekoppeld heeft, logt er één keer in. Inloggen met Google of met de link
+uit de mail werkt daar niet goed (allebei komen ze terug in Safari, niet in
+de app), dus is daar de code uit de mail voor, zie §5b. Op een leeg toestel
+zegt het beginscherm van de app dat ook: *Speel je al mee in Safari? Log
+hieronder in.*
 
 `test/beginscherm.test.mjs` legt allebei de wegen vast, plus het wegklikken en
 het manifest zelf.
@@ -765,7 +834,8 @@ niet als de policies dichtgaan.
 ### Je account meenemen (optioneel)
 
 Onder **Profiel** staat "je account meenemen". Daar koppel je **Google** of een
-**mailadres** aan je anonieme account. Op een tweede toestel kies je op het
+**mailadres** aan je anonieme account. Een nieuwe speler krijgt dezelfde keuze
+één keer als tweede stap van de rondleiding (§4). Op een tweede toestel kies je op het
 beginscherm de bijbehorende inlogknop en ben je daar meteen dezelfde speler,
 zonder de poulecode.
 

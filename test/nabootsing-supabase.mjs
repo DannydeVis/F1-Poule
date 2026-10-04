@@ -623,10 +623,28 @@ const auth = {
       }
       return { data: null, error: { message: 'onbekend adres' } };
     }
-    store.otp.push({ code: nieuweSleutel(), user_id: user.id, email,
+    // Dezelfde mail draagt ook een code, als het sjabloon {{ .Token }} heeft
+    // (BEDIENING.md §5b). Zes cijfers, net als bij Supabase.
+    const token = String(100000 + ((Date.now() + ++teller * 7919) % 900000));
+    store.otp.push({ code: nieuweSleutel(), token, user_id: user.id, email,
                      bevestigt: false, terug: options.emailRedirectTo ?? '' });
     bewaren();
     return { data: {}, error: null };
+  },
+  // De code uit die mail intikken in plaats van op de link te klikken. Lukt
+  // het, dan staat de sessie meteen op dit toestel, net als bij Supabase;
+  // de mail is daarna op.
+  async verifyOtp({ email, token, type }) {
+    const wacht = store.otp.find((o) => o.token && o.token === String(token)
+      && gelijk(o.email, email) && !o.bevestigt && type === 'email');
+    const user = wacht && store.auth_users.find((u) => u.id === wacht.user_id);
+    if (!user) {
+      return { data: null, error: { code: 'otp_expired', message: 'Token has expired or is invalid' } };
+    }
+    store.otp = store.otp.filter((o) => o !== wacht);
+    bewaren();
+    const sessie = zetSessie(user);
+    return { data: { session: sessie, user: kopie(user) }, error: null };
   },
   async signOut() {
     try { localStorage.removeItem(SESSIE); } catch { /* niets */ }
@@ -665,6 +683,10 @@ globalThis.__mail = {
     return basis + (basis.includes('?') ? '&' : '?') + 'code=' + laatste.code;
   },
   aantalVerstuurd() { return store.otp.length; },
+  // De code uit de laatste inlogmail, zoals hij in de mail zou staan.
+  laatsteCode() {
+    return [...store.otp].reverse().find((o) => o.token)?.token ?? null;
+  },
   // Met welk Google-account de nabootsing inlogt. Zo kan een test twee
   // verschillende mensen naspelen.
   googleAls(adres) { store.google_als = adres; bewaren(); },

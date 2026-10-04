@@ -429,6 +429,19 @@
 
   /* Het deel-teken van iOS staat middenin een zin, dus het moet op de regel
      meelopen: even hoog als de letters en met de staart op de basislijn. */
+  /* Genummerde stappen: in de rondleiding (zo werkt het) en overal waar staat
+     hoe je de app op je beginscherm zet. Het nummer in een vakje en niet als
+     kale "1." ervoor: dan staan de regels ook bij twee regels tekst netjes
+     onder elkaar. role="list" op de <ol> houdt de opsomming voor een
+     schermlezer een lijst, ook zonder list-style. */
+  .rondlijst{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;
+    gap:14px;counter-reset:rond}
+  .rondlijst li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;
+    align-items:start;counter-increment:rond;font-size:15px;line-height:1.45;color:var(--ink2)}
+  .rondlijst li::before{content:counter(rond);content:counter(rond) / "";display:grid;place-items:center;
+    width:28px;height:28px;border-radius:7px;border:1px solid var(--lijn);
+    font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink)}
+  .rondlijst b{color:var(--ink)}
   .deelicoon{width:1.05em;height:1.05em;vertical-align:-.18em;
     color:var(--ink2);flex:none}
 
@@ -1539,7 +1552,18 @@ const ZIET_ERUIT_ALS_POULECODE = (code) => /^[A-Z0-9]{1,12}$/.test(String(code ?
 // Waarom het uitmaakt: normaal wint wat dit toestel onthouden heeft van wat
 // je account zegt. Maar wie zojuist bewust heeft ingelogd bedoelt het
 // omgekeerde — zie herkenMij().
+//
+// Inloggen met de code uit de mail komt op hetzelfde neer, maar zonder
+// adresbalk: inloggenMetCode() zet dit vlaggetje en herlaadt de pagina. Zo
+// loopt het daarna precies zoals na een klik op de link.
+const NET_INGELOGD = 'poule:netingelogd';
 const VAN_INLOGLINK = (() => {
+  try {
+    if (sessionStorage.getItem(NET_INGELOGD)) {
+      sessionStorage.removeItem(NET_INGELOGD);
+      return true;
+    }
+  } catch { /* zonder sessionStorage blijft alleen de adresbalk over */ }
   try {
     const zoek = new URLSearchParams(location.search);
     const hash = new URLSearchParams(String(location.hash).replace(/^#/, ''));
@@ -1742,6 +1766,24 @@ async function stuurInlogLink(mail) {
   } catch (e) { return { fout: uitlegAuth(e) }; }
 }
 
+// De code uit dezelfde mail, voor waar de link niet werkt. Dat is vooral de
+// app op het beginscherm van een iPhone: die heeft een eigen geheugen, los
+// van Safari, en een link uit de mail opent altijd Safari. Daar log je dan
+// in, en niet in de app waar je zat. Een code tik je in waar je bent.
+//
+// Dit werkt alleen als de code ook in de mail staat: {{ .Token }} in het
+// sjabloon "Magic Link" in Supabase. Zie BEDIENING.md §5b.
+async function inloggenMetCode(mail, code) {
+  if (DEMO || !db) return { fout: T('Inloggen kan niet in demomodus.') };
+  try {
+    const { error } = await db.auth.verifyOtp({ email: mail, token: code, type: 'email' });
+    if (error) return { fout: uitlegAuth(error) };
+  } catch (e) { return { fout: uitlegAuth(e) }; }
+  try { sessionStorage.setItem(NET_INGELOGD, '1'); } catch { /* dan als gewone herlaadactie */ }
+  location.reload();
+  return { fout: '' };
+}
+
 // Welke poules horen bij dit account? Na het inloggen op een nieuw toestel is
 // dit het enige wat je poules terugvindt — localStorage is daar leeg, en de
 // poulecode opnieuw moeten opvragen is precies de drempel die we weghalen.
@@ -1768,6 +1810,11 @@ function uitlegAuth(error) {
   if (code === 'otp_disabled' || /signups not allowed/i.test(bericht)) {
     return T('Bij dat mailadres hoort nog geen account. Koppel het eerst onder '
          + 'Poule, op het toestel waar je al meespeelt.');
+  }
+  // Een code die niet klopt of te oud is. Supabase zegt allebei met
+  // dezelfde zin, dus wij ook.
+  if (code === 'otp_expired' || /token has expired or is invalid|otp.*(expired|invalid)/i.test(bericht)) {
+    return T('Die code klopt niet of is verlopen. Vraag een nieuwe mail aan.');
   }
   if (/rate.?limit|only request this after|too many/i.test(bericht) || /rate_limit/.test(code)) {
     return T('Er is net al een mail verstuurd. Wacht een minuutje en probeer het opnieuw.');
@@ -1949,11 +1996,31 @@ const ENGELS = Object.fromEntries([
    + 'Vul hierboven de poulecode in om bij een andere poule te komen.',
    'You are already signed in, as <b>{wie}</b>. '
    + 'Enter a pool code above to go to a different pool.'],
-  ['We hebben een mail gestuurd naar '
-   + '<b>{adres}</b>. Klik op de link erin, dan sta je hier meteen in je '
-   + 'eigen poules.',
-   'We have sent an email to <b>{adres}</b>. Click the link in it and you '
-   + 'will land straight in your own pools.'],
+  ['We hebben een mail gestuurd naar <b>{adres}</b>. Klik op de link erin, of '
+   + 'tik hieronder de code uit de mail in.',
+   'We have sent an email to <b>{adres}</b>. Click the link in it, or type the '
+   + 'code from the email below.'],
+  ['We hebben een mail gestuurd naar <b>{adres}</b>. Tik hieronder de code uit '
+   + 'die mail in. De link in de mail opent Safari, en niet deze app.',
+   'We have sent an email to <b>{adres}</b>. Type the code from that email '
+   + 'below. The link in the email opens Safari, not this app.'],
+  ['code uit de mail',
+   'code from the email'],
+  ['Inloggen met de code',
+   'Sign in with the code'],
+  ['Ander mailadres of een nieuwe mail',
+   'Other email address or a new email'],
+  ['Tik de code uit de mail in, alleen de cijfers.',
+   'Type the code from the email, digits only.'],
+  ['Die code klopt niet of is verlopen. Vraag een nieuwe mail aan.',
+   'That code is wrong or has expired. Ask for a new email.'],
+  ['Speel je al mee in '
+   + 'Safari? Een iPhone onthoudt je in deze app los daarvan. Log hieronder in met '
+   + 'je gekoppelde account, dan ben je hier meteen jezelf. Met je mailadres krijg '
+   + 'je een code die je hier intikt.',
+   'Already playing in Safari? An iPhone remembers you separately in this app. '
+   + 'Sign in below with your linked account and you are yourself here straight '
+   + 'away. With your email address you get a code to type in here.'],
   ['Inloggen met Google',
    'Sign in with Google'],
   ['inloggen',
@@ -1995,10 +2062,111 @@ const ENGELS = Object.fromEntries([
    'Add to home screen'],
   ['Nu niet',
    'Not now'],
-  ['Tik onderin op {deel} <b>Deel</b> en kies '
-   + '<b>Zet op beginscherm</b>.',
-   'Tap {deel} <b>Share</b> at the bottom and choose '
-   + '<b>Add to Home Screen</b>.'],
+  ['Tik op {deel} <b>Deel</b>. Zie je dat niet, tik dan eerst op '
+   + '<b>•••</b> naast de adresbalk.',
+   'Tap {deel} <b>Share</b>. Cannot see it? Tap <b>•••</b> next to the '
+   + 'address bar first.'],
+  ['Kies <b>Zet op beginscherm</b>. Staat het er niet tussen, scroll '
+   + 'dan omlaag.',
+   'Choose <b>Add to Home Screen</b>. Not in the list? Scroll down.'],
+  ['Tik op <b>Voeg toe</b>.',
+   'Tap <b>Add</b>.'],
+  ['Tik op <b>⋮</b> rechtsboven in je browser.',
+   'Tap <b>⋮</b> at the top right of your browser.'],
+  ['Kies <b>Toevoegen aan startscherm</b> of <b>App installeren</b>.',
+   'Choose <b>Add to Home screen</b> or <b>Install app</b>.'],
+  ['Een iPhone onthoudt je in de app op je beginscherm los van Safari. Open hem '
+   + 'daarna en log daar één keer in.',
+   'An iPhone remembers you separately from Safari in the app on your home '
+   + 'screen. Open it afterwards and sign in there once.'],
+  ['Een iPhone onthoudt je in de app op je beginscherm los van Safari. Koppel '
+   + 'daarom eerst je account hierboven, anders ben je daar niet {naam}.',
+   'An iPhone remembers you separately from Safari in the app on your home '
+   + 'screen. So link your account above first, or you will not be {naam} there.'],
+
+  // ---- de rondleiding voor een nieuwe speler ------------------
+  ['stap {n} van {totaal}',
+   'step {n} of {totaal}'],
+  ['Zo werkt {poule}.',
+   'This is how {poule} works.'],
+  ['Voorspel elk weekend',
+   'Predict every weekend'],
+  ['Per race vul je de top 10 van de kwalificatie en van de race in.',
+   'For every race you fill in the top 10 of qualifying and of the race.'],
+  ['Per race vul je de top 10 van de race in.',
+   'For every race you fill in the top 10 of the race.'],
+  ['Per race vul je de top 10 van de kwalificatie in.',
+   'For every race you fill in the top 10 of qualifying.'],
+  ['Per race beantwoord je de vragen van deze poule.',
+   'For every race you answer the questions of this pool.'],
+  ['Op een sprintweekend komt de sprint erbij, voor halve punten.',
+   'On a sprint weekend the sprint is added, for half points.'],
+  ['Daarnaast is er één losse vraag.',
+   'On top of that there is one extra question.'],
+  ['Daarnaast zijn er {n} losse vragen.',
+   'On top of that there are {n} extra questions.'],
+  ['Punten per plek',
+   'Points per position'],
+  ['Per coureur in je top 10: '
+   + '<b>5</b> punten als hij precies op jouw plek eindigt, <b>3</b> bij één plek '
+   + 'ernaast en <b>1</b> bij twee plekken.',
+   'For each driver in your top 10: <b>5</b> points if they finish exactly where '
+   + 'you put them, <b>3</b> for one place off and <b>1</b> for two places.'],
+  ['Op tijd invullen',
+   'Fill in on time'],
+  ['Invullen en wijzigen kan tot de '
+   + 'sessie begint. Daarna zie je wat de anderen kozen, en de uitslag komt vanzelf '
+   + 'binnen.',
+   'You can fill in and change your picks until the session starts. After that '
+   + 'you see what the others chose, and the result comes in by itself.'],
+  ['Gekoppeld',
+   'Linked'],
+  ['Je account hangt aan <b>{wie}</b>. Op een '
+   + 'ander toestel log je daarmee in, en dan ben je daar meteen weer {naam}.',
+   'Your account is linked to <b>{wie}</b>. Sign in with it on another device '
+   + 'and you are {naam} there straight away.'],
+  ['Koppel je account',
+   'Link your account'],
+  ['Je speelt nu als <b>{naam}</b> op dit toestel. '
+   + 'Koppel Google of je mailadres, dan log je op elk ander toestel in als {naam}. '
+   + 'Ook als deze browser ooit wordt leeggemaakt.',
+   'You are playing as <b>{naam}</b> on this device. Link Google or your email '
+   + 'address and you can sign in as {naam} on any other device. Even if this '
+   + 'browser ever gets cleared.'],
+  ['Op een '
+   + 'iPhone of iPad heb je het ook nodig voor de app op je beginscherm: die onthoudt '
+   + 'je los van Safari.',
+   'On an iPhone or iPad you also need it for the app on your home screen: that '
+   + 'one remembers you separately from Safari.'],
+  ['We hebben een mail gestuurd naar <b>{adres}</b>. Klik op de '
+   + 'link erin om het koppelen af te maken. Je kunt hier gewoon verder.',
+   'We have sent an email to <b>{adres}</b>. Click the link in it to finish '
+   + 'linking. You can carry on here.'],
+  ['Koppelen met Google',
+   'Link with Google'],
+  ['Zet hem op je beginscherm',
+   'Put it on your home screen'],
+  ['Dan open je Predict the Race met één tik, als '
+   + 'een app: eigen tegel, eigen venster, geen adresbalk.',
+   'Then you open Predict the Race with one tap, like an app: its own tile, its '
+   + 'own window, no address bar.'],
+  ['Open hem daarna vanaf je beginscherm en log daar één keer '
+   + 'in. Een iPhone onthoudt je in die app los van Safari.',
+   'Then open it from your home screen and sign in there once. An iPhone '
+   + 'remembers you separately from Safari in that app.'],
+  ['Let op: een iPhone onthoudt je in de app op je beginscherm '
+   + 'los van Safari. Zonder gekoppeld account ben je daar niet {naam}.',
+   'Note: an iPhone remembers you separately from Safari in the app on your home '
+   + 'screen. Without a linked account you will not be {naam} there.'],
+  ['Eerst je account koppelen',
+   'Link your account first'],
+  ['Je account koppelen en de app op je beginscherm zetten kan later nog, onder Profiel.',
+   'You can still link your account and add the app to your home screen later, '
+   + 'under Profile.'],
+  ['Je account koppelen kan later nog, onder Profiel.',
+   'You can still link your account later, under Profile.'],
+  ['De app op je beginscherm zetten kan later nog, onder Profiel.',
+   'You can still add the app to your home screen later, under Profile.'],
 
   // ---- de schil: navigatie en kop ------------------------------
   ['Races',
@@ -3385,9 +3553,6 @@ const ENGELS = Object.fromEntries([
    'back'],
   ['Welkom,',
    'Welcome,'],
-  ['Je speelt al mee — dit is '
-   + 'de enige keer dat we dit vragen.',
-   'You are already playing — this is the only time we ask.'],
   ['{n} punt',
    '{n} point'],
   ['demo',
@@ -4454,6 +4619,7 @@ const S = {
   bekijk: null,         // member_id van de speler wiens inzending je inkijkt
   weergave: 'races', fout: '', melding: '', linkCode: '', linkFout: '',
   maak: null,           // het aanmaakscherm, zolang dat openstaat
+  rondleiding: null,    // de welkomstrondleiding voor een nieuwe speler, zolang die openstaat
   beheer: null,         // gewijzigde vragenset, zolang die nog niet bewaard is
   beheerFout: '',
   omschrijving: null,   // getypte omschrijving, zolang die nog niet bewaard is
@@ -6046,6 +6212,7 @@ function render() {
     if (S.maak)   { maakPagina(); return; }
     if (!S.poule) { toonStart(); return; }
     if (!S.ik)    { kiesSpeler(); return; }
+    if (hervatRondleiding()) { rondleidingScherm(); return; }
     telBezoek('app');
     toonApp();
   } catch (fout) {
@@ -6279,6 +6446,7 @@ function toonApp() {
   knoopSeizoenslaag();
   knoopJokerZetten();
   knoopMail();
+  knoopInstall(() => render());
   knoopMelding();
   knoopTaal();
   knoopTaalKeuze();
@@ -7045,6 +7213,7 @@ function profielPagina() {
       { naam: esc(S.ik.naam) })}</p>
     ${taalBlok()}
     ${mailBlok()}
+    ${beginschermBlok()}
     ${meldingBlok()}
     ${verhaalBlok()}
     ${deelBlok()}
@@ -10809,38 +10978,60 @@ function keuzeOverzicht(r, pred, welk) {
 }
 
 // ============================================================
-//  Eén keer gevraagd: wil je koppelen?
+//  Welkom: een korte rondleiding voor wie net meedoet
 //
-//  "Ik denk wel dat als mensen de app openen voor de 1e keer, dat moeten ze
-//  de keuze krijgen of ze willen inloggen of niet." Tot nu toe stond die
-//  keuze verstopt op het Poule-tabblad — precies het scherm dat iemand die
-//  net drie tikken verder is (poulecode, naam, klaar) nog nooit gezien
-//  heeft. Zonder dit ontdekt iemand het bestaan van een reservesleutel pas
-//  nadat hij hem nodig had, en dat is precies andersom.
+//  "Maak de onboarding wat beter voor nieuwe spelers. Denk aan de 1e keer
+//  inloggen hoe dat werkt. En het op je thuisscherm zetten. Ook de kunnen
+//  skippen." (4 oktober)
 //
-//  Verschijnt daarom precies één keer: direct nadat iemand voor het eerst
-//  een speler claimt, vóór het eerste scherm van de poule. Nooit meer
-//  daarna, ook niet in een tweede poule op hetzelfde toestel —
-//  magKoppelVraagTonen() hieronder onthoudt dat met dezelfde localStorage-
-//  aanpak als de rest van dit bestand. En nadrukkelijk geen verplichting:
-//  "nu niet" is een net zo grote knop als koppelen, en komt op precies
-//  hetzelfde scherm uit als koppelen zou hebben gedaan.
+//  Hiervoor stond hier één scherm, eenmalig na de eerste claim: wil je
+//  koppelen? Dat bleef staan als stap, maar het was het enige wat een nieuwe
+//  speler te zien kreeg. Wie via een uitnodiging binnenkomt slaat het
+//  beginscherm over, en daarmee ook "wat is dit?" en het blok "op je
+//  beginscherm". Precies de mensen voor wie die twee bedoeld waren zagen ze
+//  dus nooit.
+//
+//  Nu zijn het hooguit drie stappen, elk op een eigen scherm:
+//
+//    spel         zo werkt het, met de vragen van déze poule
+//    account      Google of je mailadres koppelen (stond er al)
+//    beginscherm  de app op je beginscherm, per toestel uitgelegd
+//
+//  Een stap die niets toevoegt valt weg: wie al gekoppeld is krijgt geen
+//  account-stap, een toestel dat de app niet kan installeren (of hem al als
+//  app draait) geen beginscherm-stap, en wie al in een andere poule speelt
+//  of al ingelogd is hoeft niet opnieuw te horen hoe het spel werkt. Blijft
+//  er niets over, dan is er geen rondleiding.
+//
+//  Overslaan kan altijd: rechtsboven staat Overslaan (alles), en elke stap
+//  met een actie heeft een eigen Nu niet. Wat je oversloeg staat daarna
+//  onder Profiel, en dat zegt de melding ook.
+//
+//  De volgorde account vóór beginscherm is niet willekeurig. Een iPhone geeft
+//  de app op het beginscherm een eigen geheugen, los van Safari: wie hem daar
+//  opent is een leeg toestel. Zonder gekoppeld account is er dan geen weg
+//  terug naar je speler, en dat moet je weten vóórdat je hem erop zet.
+//
+//  Eén keer per toestel (poule:welkom). Wie het oude koppelscherm al zag
+//  (poule:koppelgevraagd) is geen nieuwe speler en krijgt hem ook niet.
 // ============================================================
 
 const KOPPELGEVRAAGD = 'poule:koppelgevraagd';
+const WELKOM = 'poule:welkom';
 
-// Heeft het nog zin om dit te vragen? Al gekoppeld, of al eens gevraagd (wat
-// er ook uit kwam): dan is er niets meer te winnen, en nog een keer vragen
-// is geen hulp meer maar nagging.
-function magKoppelVraagTonen() {
-  return !DEMO && !!mijnUid && !kanTerugkomen() && !lees(KOPPELGEVRAAGD);
+// Wie halverwege naar Google gaat, of de pagina herlaadt, komt terug in de
+// stap waar hij was. Maar niet dagen later: dan is het geen rondleiding meer.
+const RONDLEIDING_GELDIG = 60 * 60 * 1000;
+
+function magRondleiding() {
+  return !DEMO && !!mijnUid && !lees(WELKOM) && !lees(KOPPELGEVRAAGD);
 }
 
 // Is déze speler, ná de claimpoging, echt van dit account? Niet vanzelfsprekend:
 // één account mag maar één speler per poule hebben, dus wie zijn telefoon
 // doorgeeft aan een tweede speler ziet die speler wél aangemaakt worden, maar
 // zonder dat hij aan mijnUid komt te hangen (claimSpeler() raakt dan niets).
-// Zonder deze controle zou de koppel-vraag na zo'n aanmelding "Welkom Joey"
+// Zonder deze controle zou de rondleiding na zo'n aanmelding "Welkom Joey"
 // zeggen en vervolgens Google aan Danny's account hangen — het account van
 // wie toevallig het toestel vasthield, niet van wie er net bij kwam.
 function isNuVanMij(memberId) {
@@ -10848,32 +11039,229 @@ function isNuVanMij(memberId) {
   return !!lid?.user_id && zelfde(lid.user_id, mijnUid);
 }
 
-function koppelVraagScherm() {
-  schrijf(KOPPELGEVRAAGD, '1');
+// Na een verse claim (bron 'claim') of het aanmaken van een poule (bron
+// 'maak'). Wie een poule aanmaakt koos net zelf de vragen; die hoeft niet
+// uitgelegd te krijgen hoe het spel werkt. Geeft true als er een
+// rondleiding klaarstaat; de aanroeper tekent daarna gewoon opnieuw.
+function startRondleiding(bron) {
+  if (!magRondleiding()) return false;
+  const terugkerend = kanTerugkomen() || mijnPoules().length > 1;
+  const stappen = [];
+  if (bron === 'claim' && !terugkerend) stappen.push('spel');
+  if (!kanTerugkomen()) stappen.push('account');
+  if (beginschermKan() && !lees(INSTALLWEG)) stappen.push('beginscherm');
+  if (!stappen.length) return false;
+  S.rondleiding = { pool: S.poule.id, stappen, stap: stappen[0],
+                    overgeslagen: [], sinds: Date.now() };
+  schrijf(WELKOM, JSON.stringify(S.rondleiding));
+  return true;
+}
+
+// Staat er een rondleiding open voor deze poule? Na een herlaadactie staat
+// hij alleen nog in localStorage.
+function hervatRondleiding() {
+  if (S.rondleiding) return S.rondleiding;
+  if (!S.poule || !S.ik) return null;
+  let r = null;
+  try { r = JSON.parse(lees(WELKOM) ?? 'null'); } catch { r = null; }
+  if (!r || !Array.isArray(r.stappen) || !r.stappen.includes(r.stap)) return null;
+  if (!zelfde(r.pool, S.poule.id)) return null;
+  if (!(Date.now() - r.sinds < RONDLEIDING_GELDIG)) { schrijf(WELKOM, 'klaar'); return null; }
+  S.rondleiding = r;
+  return r;
+}
+
+function rondleidingVerder({ overgeslagen = false } = {}) {
+  const r = S.rondleiding;
+  if (overgeslagen && !r.overgeslagen.includes(r.stap)) r.overgeslagen.push(r.stap);
+  const i = r.stappen.indexOf(r.stap);
+  if (i + 1 >= r.stappen.length) { rondleidingKlaar(); return; }
+  r.stap = r.stappen[i + 1];
+  schrijf(WELKOM, JSON.stringify(r));
+  naarBoven();
+}
+
+// Een stap is een nieuw scherm, en een nieuw scherm begint bovenaan. De knop
+// waarmee je verder ging stond onderaan; zonder dit begon de volgende stap
+// halverwege, en zag je in de poule de melding bovenin niet. Pas in het
+// volgende beeld: herstelFocus() zet na het tekenen de focus op .hoofd, en
+// dat scrolt de pagina zelf nog een stukje mee.
+function naarBoven() {
+  render();
+  requestAnimationFrame(() => { try { window.scrollTo(0, 0); } catch { /* niets */ } });
+}
+
+// Klaar, of alles overgeslagen. Wat er dan nog open staat, staat onder
+// Profiel; dat één keer zeggen is beter dan het later te laten zoeken.
+function rondleidingKlaar({ alles = false } = {}) {
+  const r = S.rondleiding;
+  S.rondleiding = null;
+  schrijf(WELKOM, 'klaar');
+  const rest = alles ? r.stappen.slice(r.stappen.indexOf(r.stap)) : r.overgeslagen;
+  const account = rest.includes('account') && !kanTerugkomen();
+  const scherm = rest.includes('beginscherm') && beginschermKan();
+  S.melding = account && scherm
+    ? T('Je account koppelen en de app op je beginscherm zetten kan later nog, onder Profiel.')
+    : account ? T('Je account koppelen kan later nog, onder Profiel.')
+    : scherm ? T('De app op je beginscherm zetten kan later nog, onder Profiel.')
+    : '';
+  naarBoven();
+}
+
+function rondleidingScherm() {
+  const r = S.rondleiding;
+  const n = r.stappen.indexOf(r.stap) + 1;
+  const laatste = n === r.stappen.length;
+  const verder = laatste ? T('Naar de poule') : T('Volgende');
   app.innerHTML = `
-    <div class="toegang"><div class="kaart" data-intro="kaart|koppelen"><div class="baan"></div>
+    <div class="toegang"><div class="kaart" data-intro="kaart|rondleiding"><div class="baan"></div>
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
           <span class="naam">Predict the Race</span>
-          <span class="code">${esc(S.poule.join_code ?? S.poule.name)}</span>
+          <button class="wisselknop" id="rondleidingweg" type="button">${T('Overslaan')}</button>
         </div>
-        <div>
-          <h1 class="middel">${T('Welkom,')}<br>${esc(S.ik.naam)}</h1>
-          <p class="zacht" style="margin:12px 0 0">${T('Je speelt al mee — dit is '
-            + 'de enige keer dat we dit vragen.')}</p>
-        </div>
+        ${r.stappen.length > 1 ? `<div class="stappen" aria-hidden="true">${r.stappen.map((_, i) =>
+          `<span class="stap ${i < n ? 'aan' : ''}"></span>`).join('')}</div>` : ''}
         ${S.melding ? `<div class="meldingbalk"><div class="melding" data-intro="melding|${
           esc(S.melding)}">${esc(S.melding)}</div></div>` : ''}
-        ${mailBlok()}
-        <div class="scheiding"></div>
-        <button class="knop spook" id="koppelnunniet" style="min-height:56px">
-          Nu niet, ik speel liever anoniem</button>
+        <div class="stapinhoud" data-intro="rondleiding|${r.stap}" data-rondleiding="${r.stap}">
+          ${r.stappen.length > 1 ? `<span class="label">${
+            T('stap {n} van {totaal}', { n, totaal: r.stappen.length })}</span>` : ''}
+          ${r.stap === 'spel' ? spelStap(verder)
+            : r.stap === 'account' ? accountStap(verder)
+            : beginschermStap(verder)}
+        </div>
       </div>
     </div></div>`;
   S.melding = '';
+
+  app.querySelector('#rondleidingweg').onclick = () => rondleidingKlaar({ alles: true });
+  const door = app.querySelector('#rondverder');
+  if (door) door.onclick = () => rondleidingVerder();
+  const nunniet = app.querySelector('#rondnunniet');
+  if (nunniet) nunniet.onclick = () => rondleidingVerder({ overgeslagen: true });
+  const koppel = app.querySelector('#rondkoppel');
+  if (koppel) koppel.onclick = () => { r.stap = 'account'; schrijf(WELKOM, JSON.stringify(r)); naarBoven(); };
+  // De prompt van de browser beslist zelf; wie hem wegklikt heeft de stap
+  // net zo goed overgeslagen.
+  knoopInstall((uitkomst) => rondleidingVerder({ overgeslagen: uitkomst === 'dismissed' }));
   knoopMail();
-  app.querySelector('#koppelnunniet').onclick = () => render();
+}
+
+// ---- stap 1: zo werkt het -----------------------------------
+// Uit de vragenset van deze poule, niet uit een vaste tekst: een poule met
+// alleen de twee top-tienen hoort geen losse vragen beloofd te krijgen.
+const TOPTIENEN = ['quali_top10', 'race_top10', 'sprint_top10'];
+
+function spelStap(verder) {
+  const kwali = vraagActief('quali_top10');
+  const race = vraagActief('race_top10');
+  const los = GEBOUWD.filter(id => vraagActief(id) && !TOPTIENEN.includes(id)
+                                   && sessieVan(id) !== 'seizoen').length;
+  const top10 = kwali || race;
+  const wat = [
+    kwali && race ? T('Per race vul je de top 10 van de kwalificatie en van de race in.')
+      : race ? T('Per race vul je de top 10 van de race in.')
+      : kwali ? T('Per race vul je de top 10 van de kwalificatie in.')
+      : T('Per race beantwoord je de vragen van deze poule.'),
+    top10 && vraagActief(SPRINTVRAAG) ? T('Op een sprintweekend komt de sprint erbij, voor halve punten.') : '',
+    top10 && los === 1 ? T('Daarnaast is er één losse vraag.')
+      : top10 && los > 1 ? T('Daarnaast zijn er {n} losse vragen.', { n: los }) : '',
+  ].filter(Boolean).join(' ');
+  return `
+    <h1 class="middel smalkop">${T('Welkom,')}<br>${esc(S.ik.naam)}</h1>
+    <p class="zacht" style="margin:-8px 0 0">${T('Zo werkt {poule}.',
+      { poule: `<b>${esc(S.poule.name)}</b>` })}</p>
+    <ol class="rondlijst" role="list">
+      <li><span><b>${T('Voorspel elk weekend')}</b><br>${wat}</span></li>
+      ${top10 ? `<li><span><b>${T('Punten per plek')}</b><br>${T('Per coureur in je top 10: '
+        + '<b>5</b> punten als hij precies op jouw plek eindigt, <b>3</b> bij één plek '
+        + 'ernaast en <b>1</b> bij twee plekken.')}</span></li>` : ''}
+      <li><span><b>${T('Op tijd invullen')}</b><br>${T('Invullen en wijzigen kan tot de '
+        + 'sessie begint. Daarna zie je wat de anderen kozen, en de uitslag komt vanzelf '
+        + 'binnen.')}</span></li>
+    </ol>
+    <button class="knop primair" id="rondverder">${verder}</button>`;
+}
+
+// ---- stap 2: je account -------------------------------------
+// Dezelfde knoppen en dezelfde ids als in mailBlok() onder Profiel, zodat
+// knoopMail() ze allebei bedient. Alleen de Google-knop is hier de grote,
+// herkenbare van het beginscherm: dit is het moment waarop iemand beslist.
+function accountStap(verder) {
+  const naam = esc(S.ik.naam);
+  const door = `<button class="knop primair" id="rondverder">${verder}</button>`;
+  if (kanTerugkomen()) {
+    const via = mijnGoogle() ? 'Google' : T('je mailadres');
+    return `
+      <h1 class="middel">${T('Gekoppeld')}</h1>
+      <p class="zacht" style="margin:0">${T('Je account hangt aan <b>{wie}</b>. Op een '
+        + 'ander toestel log je daarmee in, en dan ben je daar meteen weer {naam}.',
+        { wie: esc(googleMail() ?? via), naam })}</p>
+      ${door}`;
+  }
+  const kop = `
+    <h1 class="middel">${T('Koppel je account')}</h1>
+    <p class="zacht" style="margin:0">${T('Je speelt nu als <b>{naam}</b> op dit toestel. '
+      + 'Koppel Google of je mailadres, dan log je op elk ander toestel in als {naam}. '
+      + 'Ook als deze browser ooit wordt leeggemaakt.', { naam })}</p>
+    ${isApple() && !alGeinstalleerd() ? `<p class="zacht" style="margin:0">${T('Op een '
+      + 'iPhone of iPad heb je het ook nodig voor de app op je beginscherm: die onthoudt '
+      + 'je los van Safari.')}</p>` : ''}`;
+  const wacht = mijnWachtendeMail() || S.mail.gestuurd;
+  if (wacht) {
+    return `${kop}
+      <div class="uitleg">${T('We hebben een mail gestuurd naar <b>{adres}</b>. Klik op de '
+        + 'link erin om het koppelen af te maken. Je kunt hier gewoon verder.',
+        { adres: esc(wacht) })}</div>
+      <button class="knop klein" id="mailopnieuw">${T('Stuur de mail opnieuw')}</button>
+      <p class="err" id="mailfout">${esc(S.mail.fout)}</p>
+      ${door}`;
+  }
+  const mail = S.mail.open
+    ? `<input class="veld" id="mailveld" type="email" inputmode="email"
+         aria-label="${T('je mailadres')}" placeholder="${T('jij@voorbeeld.nl')}"
+         autocomplete="email" spellcheck="false">
+       <button class="knop spook" id="mailstuur">${T('Stuur me de link')}</button>
+       <p class="zacht" style="margin:0;font-size:13px">${T('We sturen je één mail met een '
+         + 'link erin. Verder gebruiken we je adres nergens voor.')}</p>`
+    : `<button class="knop spook" id="mailopen">${T('Liever met een mailadres')}</button>`;
+  return `${kop}
+    <div class="veldblok">
+      <button class="knop google" id="googlekoppel">${GOOGLE_G}${T('Koppelen met Google')}</button>
+      ${mail}
+      <p class="err" id="mailfout">${esc(S.mail.fout)}</p>
+    </div>
+    <button class="knop klein" id="rondnunniet">${T('Nu niet')}</button>`;
+}
+
+// ---- stap 3: op je beginscherm ------------------------------
+function beginschermStap(verder) {
+  const kop = `
+    <h1 class="middel">${T('Zet hem op je beginscherm')}</h1>
+    <p class="zacht" style="margin:0">${T('Dan open je Predict the Race met één tik, als '
+      + 'een app: eigen tegel, eigen venster, geen adresbalk.')}</p>`;
+  if (installPrompt) {
+    return `${kop}
+      <button class="knop primair" id="installeer">${T('Zet op beginscherm')}</button>
+      <button class="knop klein" id="rondnunniet">${T('Nu niet')}</button>`;
+  }
+  // Op een iPhone eerst de valkuil, dan pas de knop verder: wie zonder
+  // account de app op zijn beginscherm zet, is daar niemand.
+  const iphone = !isApple() ? ''
+    : kanTerugkomen()
+      ? `<div class="uitleg">${T('Open hem daarna vanaf je beginscherm en log daar één keer '
+          + 'in. Een iPhone onthoudt je in die app los van Safari.')}</div>`
+      : `<div class="uitleg">${T('Let op: een iPhone onthoudt je in de app op je beginscherm '
+          + 'los van Safari. Zonder gekoppeld account ben je daar niet {naam}.',
+          { naam: esc(S.ik.naam) })}</div>
+         ${S.rondleiding.stappen.includes('account') ? `<button class="knop spook" id="rondkoppel">${
+           T('Eerst je account koppelen')}</button>` : ''}`;
+  return `${kop}
+    ${beginschermStappen()}
+    ${iphone}
+    <button class="knop primair" id="rondverder">${verder}</button>`;
 }
 
 // ============================================================
@@ -10951,9 +11339,7 @@ function kiesSpeler() {
       // isNuVanMij() en niet eersteKeer: een gedeeld toestel kan deze speler
       // aanmaken zonder hem te claimen (één account, één speler per poule),
       // en dan is er niets om over te koppelen.
-      if (eersteKeer && isNuVanMij(lid.member_id) && magKoppelVraagTonen()) {
-        koppelVraagScherm(); return;
-      }
+      if (eersteKeer && isNuVanMij(lid.member_id)) startRondleiding('claim');
       render();
     } catch (e) { toonFout(e.message); }
   });
@@ -10982,8 +11368,10 @@ function kiesSpeler() {
         : T('Welkom terug, {naam}.', { naam: bestaand.display_name });
       try {
         await laad();
-        if (eersteKeer && isNuVanMij(bestaand.member_id) && magKoppelVraagTonen()) {
-          koppelVraagScherm(); return;
+        // "Welkom terug" en dan een rondleiding die met "Welkom" begint is
+        // één welkom te veel.
+        if (eersteKeer && isNuVanMij(bestaand.member_id) && startRondleiding('claim')) {
+          S.melding = '';
         }
         render();
       }
@@ -11002,14 +11390,12 @@ function kiesSpeler() {
     onthoud(S.poule.id, data.member_id);
     try {
       await laad();
-      // Ook hier: pas de vraag stellen als deze gloednieuwe speler ook echt
+      // Ook hier: pas de rondleiding als deze gloednieuwe speler ook echt
       // van dit account is. Op een gedeeld toestel waar al iemand anders
       // speelt lukt claimSpeler() niet — één account, één speler per poule
-      // — en dan zou "wil je koppelen" Google aan de verkeerde persoon
+      // — en dan zou "koppel je account" Google aan de verkeerde persoon
       // hangen.
-      if (isNuVanMij(data.member_id) && magKoppelVraagTonen()) {
-        koppelVraagScherm(); return;
-      }
+      if (isNuVanMij(data.member_id)) startRondleiding('claim');
       render();
     }
     catch (e) { app.querySelector('#f').textContent = e.message; }
@@ -11181,6 +11567,9 @@ function maakKnoppen(m) {
     onthoudPoule(S.poule.id); onthoudInLijst(S.poule); onthoud(S.poule.id, S.ik.id);
     S.maak = null; S.weergave = 'races'; S.race = null;
     try { await laad(); } catch (e) { toonFout(e.message); }
+    // Wie net een poule maakte is ook een nieuwe speler, en als poulebaas
+    // de laatste die zijn account kwijt wil raken.
+    startRondleiding('maak');
     render();
   };
 }
@@ -11267,6 +11656,11 @@ function openbarePoulesBlok() {
 // Android geeft de browser ons een echte prompt; op een iPhone of iPad bestaat
 // die API niet en is de enige weg Deel → "Zet op beginscherm". Daar moet je
 // mensen dus met zoveel woorden naartoe wijzen.
+//
+// Het staat op drie plekken: onderaan het beginscherm (voor een leeg
+// toestel), als laatste stap van de rondleiding (voor wie via een
+// uitnodiging binnenkomt en het beginscherm dus nooit ziet), en onder
+// Profiel (voor later, als je hem in de rondleiding oversloeg).
 const INSTALLWEG = 'poule:installweg';
 
 // De prompt van de browser, als hij hem aanbiedt. Hij komt één keer langs en
@@ -11280,6 +11674,15 @@ const alGeinstalleerd = () =>
 // hem verraadt.
 const isApple = () => /iPhone|iPad|iPod/.test(navigator.userAgent)
   || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = () => /Android/i.test(navigator.userAgent);
+
+// Kan dit toestel de app op zijn beginscherm zetten, en staat hij er nog niet?
+// Een prompt van de browser zegt ja; een iPhone of een Android-telefoon
+// zonder prompt (Firefox, Samsung Internet, of Chrome die nog twijfelt) kan
+// het met de hand, dus daar leggen we het uit. Een computer zonder prompt
+// krijgt niets: daar beloven we liever niets dan iets wat niet bestaat.
+const beginschermKan = () => !DEMO && !alGeinstalleerd()
+  && (!!installPrompt || isApple() || isAndroid());
 
 // Het deel-teken van iOS, inline. Een instructie die naar een knop verwijst
 // die je niet laat zien is een halve instructie.
@@ -11290,11 +11693,48 @@ const DEEL_ICOON = `<svg class="deelicoon" viewBox="0 0 24 24" fill="none"
   <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>
 </svg>`;
 
+// Wat je met de hand doet, als genummerde stappen. Sinds iOS 26 zit Deel in
+// Safari achter de drie puntjes naast de adresbalk; op een iPad en in
+// oudere versies staat hij los. De eerste stap noemt allebei, want welke
+// versie iemand heeft weten we niet en hoeft hij ook niet te weten.
+function beginschermStappen() {
+  if (isApple()) return `<ol class="rondlijst" role="list">
+    <li><span>${T('Tik op {deel} <b>Deel</b>. Zie je dat niet, tik dan eerst op '
+      + '<b>•••</b> naast de adresbalk.', { deel: DEEL_ICOON })}</span></li>
+    <li><span>${T('Kies <b>Zet op beginscherm</b>. Staat het er niet tussen, scroll '
+      + 'dan omlaag.')}</span></li>
+    <li><span>${T('Tik op <b>Voeg toe</b>.')}</span></li>
+  </ol>`;
+  return `<ol class="rondlijst" role="list">
+    <li><span>${T('Tik op <b>⋮</b> rechtsboven in je browser.')}</span></li>
+    <li><span>${T('Kies <b>Toevoegen aan startscherm</b> of <b>App installeren</b>.')}</span></li>
+  </ol>`;
+}
+
+// De knop die de prompt van de browser afvuurt, op welk scherm hij ook
+// staat. `daarna` krijgt mee wat de speler koos ('accepted' of 'dismissed',
+// of niets als de browser het niet zegt).
+function knoopInstall(daarna) {
+  const knop = app.querySelector('#installeer');
+  if (!knop) return;
+  knop.onclick = async () => {
+    knop.disabled = true;
+    const vraag = installPrompt;
+    // Een prompt gaat maar één keer op. Ook als de speler hem wegklikt is hij
+    // op, dus hem meteen loslaten in plaats van een knop laten staan die het
+    // een tweede keer niet meer doet.
+    installPrompt = null;
+    let uitkomst = null;
+    try {
+      await vraag.prompt();
+      uitkomst = (await vraag.userChoice)?.outcome ?? null;
+    } catch { /* de browser beslist, wij niet */ }
+    daarna(uitkomst);
+  };
+}
+
 function installBlok() {
-  if (DEMO || alGeinstalleerd() || lees(INSTALLWEG)) return '';
-  // Geen prompt en geen Apple: dan kan deze browser het niet, of hij heeft
-  // nog niet laten weten dat het kan. Dan maar niets beloven.
-  if (!installPrompt && !isApple()) return '';
+  if (!beginschermKan() || lees(INSTALLWEG)) return '';
   const kop = `<div class="scheiding"></div>
     <div class="veldblok">
       <span class="label">${T('op je beginscherm')}</span>
@@ -11307,10 +11747,29 @@ function installBlok() {
     </div>`;
   }
   return `${kop}
-      <p class="zacht" style="margin:0">${T('Tik onderin op {deel} <b>Deel</b> en kies '
-        + '<b>Zet op beginscherm</b>.', { deel: DEEL_ICOON })}</p>
+      ${beginschermStappen()}
       <button class="knop klein" id="installweg">${T('Nu niet')}</button>
     </div>`;
+}
+
+// Onder Profiel: hetzelfde aanbod, maar zonder Nu niet. Dit is een
+// instellingenscherm en geen aanbieding die in de weg staat; wie hem hier
+// niet wil lezen, scrolt eroverheen.
+function beginschermBlok() {
+  if (!beginschermKan()) return '';
+  return `<div class="scheiding"></div>
+    <span class="label" data-beginscherm>${T('op je beginscherm')}</span>
+    <p class="zacht" style="margin:0">${T('Zet Predict the Race op je beginscherm, dan '
+      + 'opent hij als een app: eigen tegel, eigen venster, geen adresbalk.')}</p>
+    ${installPrompt
+      ? `<button class="knop klein" id="installeer">${T('Zet op beginscherm')}</button>`
+      : beginschermStappen()}
+    ${isApple() ? `<p class="zacht" style="margin:0;font-size:13px">${kanTerugkomen()
+      ? T('Een iPhone onthoudt je in de app op je beginscherm los van Safari. Open hem '
+        + 'daarna en log daar één keer in.')
+      : T('Een iPhone onthoudt je in de app op je beginscherm los van Safari. Koppel '
+        + 'daarom eerst je account hierboven, anders ben je daar niet {naam}.',
+        { naam: esc(S.ik?.naam ?? '') })}</p>` : ''}`;
 }
 
 addEventListener('beforeinstallprompt', (ev) => {
@@ -11318,10 +11777,12 @@ addEventListener('beforeinstallprompt', (ev) => {
   // op het moment dat de speler er iets aan heeft.
   ev.preventDefault();
   installPrompt = ev;
-  // Alleen opnieuw tekenen als het beginscherm nu openstaat. Dit kan ook
-  // binnenkomen terwijl iemand een poule aan het aanmaken is, en dan zou een
-  // toonStart() dat scherm onder zijn handen vandaan trekken.
+  // Alleen opnieuw tekenen als er nu een scherm openstaat dat de knop kan
+  // tonen. Dit kan ook binnenkomen terwijl iemand een poule aan het aanmaken
+  // is, en dan zou opnieuw tekenen dat scherm onder zijn handen vandaan
+  // trekken.
   if (app.querySelector('#code')) toonStart();
+  else if (app.querySelector('[data-rondleiding="beginscherm"], [data-beginscherm]')) render();
 });
 
 function watIsDitBlok() {
@@ -11384,12 +11845,24 @@ function inlogBlok() {
           { wie: esc(googleMail() ?? via) })}</p>
       </div>`;
   }
+  // Na het versturen: de link, en de code voor waar de link niet werkt. In
+  // de app op het beginscherm van een iPhone is dat altijd zo (zie
+  // inloggenMetCode), en daar zeggen we het dan ook.
   if (S.inlog.gestuurd) {
+    const adres = esc(S.inlog.gestuurd);
     return `<div class="scheiding"></div>
       <div class="veldblok">
-        <p class="zacht" style="margin:0">${T('We hebben een mail gestuurd naar '
-          + '<b>{adres}</b>. Klik op de link erin, dan sta je hier meteen in je '
-          + 'eigen poules.', { adres: esc(S.inlog.gestuurd) })}</p>
+        <p class="zacht" style="margin:0">${isApple() && alGeinstalleerd()
+          ? T('We hebben een mail gestuurd naar <b>{adres}</b>. Tik hieronder de code uit '
+            + 'die mail in. De link in de mail opent Safari, en niet deze app.', { adres })
+          : T('We hebben een mail gestuurd naar <b>{adres}</b>. Klik op de link erin, of '
+            + 'tik hieronder de code uit de mail in.', { adres })}</p>
+        <label class="label" for="inlogcode">${T('code uit de mail')}</label>
+        <input class="veld code" id="inlogcode" inputmode="numeric" autocomplete="one-time-code"
+          maxlength="10" placeholder="123456" spellcheck="false">
+        <button class="knop spook" id="inlogcodeknop">${T('Inloggen met de code')}</button>
+        <button class="knop klein" id="inlogopnieuw">${T('Ander mailadres of een nieuwe mail')}</button>
+        <p class="err" id="inlogfout">${esc(S.inlog.fout)}</p>
       </div>`;
   }
   // De Google-knop blijft ook staan zodra het mailveld openklapt: anders is
@@ -11432,6 +11905,22 @@ function knoopInlog() {
     if (uit.fout) { google.disabled = false; S.inlog = { ...S.inlog, fout: uit.fout }; toonStart(); }
   };
 
+  const codeKnop = app.querySelector('#inlogcodeknop');
+  if (codeKnop) codeKnop.onclick = async () => {
+    const veld = app.querySelector('#inlogcode');
+    const code = String(veld?.value ?? '').replace(/\s+/g, '');
+    const fout = (t) => { const p = app.querySelector('#inlogfout'); if (p) p.textContent = t; };
+    if (!/^\d{6,10}$/.test(code)) { fout(T('Tik de code uit de mail in, alleen de cijfers.')); return; }
+    codeKnop.disabled = true;
+    const uit = await inloggenMetCode(S.inlog.gestuurd, code);
+    // Bij succes herlaadt de pagina al; alleen een fout komt hier terug.
+    if (uit.fout) { codeKnop.disabled = false; fout(uit.fout); }
+  };
+  const codeVeld = app.querySelector('#inlogcode');
+  if (codeVeld) codeVeld.onkeydown = (ev) => { if (ev.key === 'Enter') codeKnop?.click(); };
+  const opnieuw = app.querySelector('#inlogopnieuw');
+  if (opnieuw) opnieuw.onclick = () => { S.inlog = { open: true, fout: '', gestuurd: '' }; toonStart(); };
+
   const knop = app.querySelector('#inlogstuur');
   if (!knop) return;
   knop.onclick = async () => {
@@ -11451,6 +11940,11 @@ function toonStart() {
   // Je poules van dit toestel bovenaan: wie er al bij hoort hoeft de code niet
   // opnieuw in te tikken, en wie in meer dan één poule zit kiest hier welke.
   const bekend = mijnPoules();
+  // De app op het beginscherm van een iPhone begint leeg, ook voor wie in
+  // Safari allang meespeelt: hij heeft een eigen geheugen. Wie dat niet weet
+  // tikt de poulecode in, kiest zijn naam, en krijgt dan te horen dat die
+  // naam bij een ander toestel hoort. Daarom hier eerst: log in.
+  const losVanSafari = isApple() && alGeinstalleerd() && !bekend.length && !kanTerugkomen();
   app.innerHTML = `
     <div class="toegang"><div class="kaart" data-intro="kaart|start"><div class="baan"></div>
       <div class="kaart-in">
@@ -11467,6 +11961,10 @@ function toonStart() {
             ? T('Kies er een, of tik de code van een andere poule in.')
             : T('Je hebt alleen de code van je poule nodig. Geen wachtwoord.')}</p>
         </div>
+        ${losVanSafari ? `<div class="uitleg" id="losvansafari">${T('Speel je al mee in '
+          + 'Safari? Een iPhone onthoudt je in deze app los daarvan. Log hieronder in met '
+          + 'je gekoppelde account, dan ben je hier meteen jezelf. Met je mailadres krijg '
+          + 'je een code die je hier intikt.')}</div>` : ''}
         ${bekend.length ? `<div class="veldblok">
           <span class="label">${T('jouw poules')}</span>
           ${bekend.map(pouleKnop).join('')}
@@ -11506,17 +12004,7 @@ function toonStart() {
   knoopInlog();
   knoopTaal();
 
-  const installeer = app.querySelector('#installeer');
-  if (installeer) installeer.onclick = async () => {
-    installeer.disabled = true;
-    const vraag = installPrompt;
-    // Een prompt gaat maar één keer op. Ook als de speler hem wegklikt is hij
-    // op, dus hem meteen loslaten in plaats van een knop laten staan die het
-    // een tweede keer niet meer doet.
-    installPrompt = null;
-    try { await vraag.prompt(); } catch { /* de browser beslist, wij niet */ }
-    toonStart();
-  };
+  knoopInstall(() => toonStart());
 
   const installweg = app.querySelector('#installweg');
   if (installweg) installweg.onclick = () => { schrijf(INSTALLWEG, '1'); toonStart(); };
