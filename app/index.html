@@ -1099,6 +1099,23 @@
   .okop .okop-som{grid-area:som;align-self:center;display:flex;align-items:baseline;gap:6px;
     letter-spacing:0;text-transform:none;white-space:nowrap}
   .okop .okop-som b{font-family:var(--cond);font-size:32px;font-weight:700;line-height:1}
+  /* Punten per onderdeel: per regel de naam, een balkje en het getal. De
+     kleur van balkje en getal zegt hetzelfde als bij de koppen eronder. */
+  .puntensom{display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+  .puntensom b{font-family:var(--cond);font-size:22px;font-weight:700;line-height:1}
+  .puntensom small{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink3)}
+  .tegelkop .puntensom b{font-size:32px}
+  .onderdelen{list-style:none;margin:0;padding:0 18px 8px;display:flex;flex-direction:column}
+  .onderdelen li{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(36px,1fr) 84px;
+    align-items:center;gap:12px;min-height:42px;border-top:1px solid var(--lijn)}
+  /* Als een .label, maar niet die klasse: de koppen van de onderdelen
+     eronder zijn .label, en dit is een overzicht ervan, geen kop. */
+  .onderdelen .onaam{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink3)}
+  .onderdelen li .puntensom{justify-content:flex-end}
+  .balkje{height:6px;border-radius:3px;background:var(--gedempt);overflow:hidden}
+  .balkje i{display:block;height:100%;border-radius:3px;background:currentColor}
   .okop .okop-som small{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--ink3)}
 
@@ -2263,6 +2280,10 @@ const ENGELS = Object.fromEntries([
    'of {max} points'],
   ['{n} punten dit weekend',
    '{n} points this weekend'],
+  ['Punten per onderdeel',
+   'Points per category'],
+  ['van {max}',
+   'of {max}'],
   ['niets gekozen',
    'nothing picked'],
 
@@ -4072,38 +4093,51 @@ const compleet = (lijst) => gevuld(lijst) === 10;
 // De winnaar heeft om historische redenen een andere veldnaam dan zijn vraag.
 const antwoordVan = (p, id) => id === 'winnaar' ? p?.race_winnaar : p?.[id];
 
-// Wat één speler op één tab scoort: de top 10 plus de losse vragen die aan
-// dezelfde deadline hangen. Staat hier één keer, zodat "jouw punten", "de
-// rest" en de stand nooit uit elkaar kunnen lopen.
-const scoreTab = (p, race, welk) => {
+// Wat één speler op één tab scoort, per onderdeel: de top 10, de losse vragen
+// die aan dezelfde deadline hangen en (bij de race) de duels. Elk onderdeel met
+// wat het opleverde (`behaald`), wat erin zat (`max`), of de poule het speelt
+// (`actief`) en of de uitslag er al is (`binnen`). `wat` is de Nederlandse
+// naam, nog niet vertaald: dit blok wordt ook zonder T() uitgeknipt (zie
+// scripts/knipsel.mjs). scoreTab() is hier de som
+// van, en het overzicht "Punten per onderdeel" leest hetzelfde lijstje: zo
+// kunnen "jouw punten", "de rest", de stand en dat overzicht nooit uit elkaar
+// lopen.
+const onderdelenTab = (p, race, welk) => {
   const S_ = SESSIES[welk];
   // De halve punten van een sprint gelden voor de top 10, want dat is wat er
   // korter is. De losse vragen eronder hangen aan hun eigen puntenaantal uit
   // de vragenlijst en worden niet nog eens geschaald.
-  const lijst = Math.round(
-    scoreLijst(p?.[S_.vraag] ?? [], race[S_.uitslag] ?? []).totaal * (S_.weging ?? 1));
-  // De teamgenoot-duels hangen aan de race-uitslag en horen dus alleen bij de
-  // race, niet bij de kwalificatie en niet bij de sprint.
-  const duels = welk !== 'race' ? 0
-    : scoreDuels(p?.teamgenoot_duels ?? [], race.race_result ?? [],
-                 teamParen(race.drivers), puntenVoor('teamgenoot_duels'));
+  const uit = [{ id: S_.vraag, wat: 'top 10', max: puntenVoor(S_.vraag),
+    actief: top10Actief(welk), binnen: !!race[S_.uitslag]?.length,
+    behaald: Math.round(scoreLijst(p?.[S_.vraag] ?? [], race[S_.uitslag] ?? []).totaal * (S_.weging ?? 1)) }];
   // De losse vragen gaan door de contrair-vermenigvuldiger, als die aanstaat.
   // De top 10 en de duels niet -- zie contrairVoor() voor waarom.
-  const los = coureurVragen(welk).reduce((n, id) => {
+  for (const id of coureurVragen(welk)) {
     const antwoord = antwoordVan(p, id);
-    return n + Math.round(
-      scoreEerste(antwoord, COUREURVRAAG[id].uitslag(race), puntenVoor(id))
-      * contrairVoor(race, id, antwoord, p));
-  }, 0);
-  const extra = extraVragen(welk).reduce((n, id) => {
+    const werkelijk = COUREURVRAAG[id].uitslag(race);
+    uit.push({ id, wat: COUREURVRAAG[id].label, max: puntenVoor(id), actief: true,
+      binnen: werkelijk.length > 0,
+      behaald: Math.round(scoreEerste(antwoord, werkelijk, puntenVoor(id)) * contrairVoor(race, id, antwoord, p)) });
+  }
+  for (const id of extraVragen(welk)) {
     const v = EXTRAVRAAG[id];
     const antwoord = p?.[id] ?? null;
-    return n + Math.round(
-      v.score(antwoord, race[v.kolom] ?? null, puntenVoor(id))
-      * contrairVoor(race, id, antwoord, p));
-  }, 0);
-  return lijst + duels + los + extra;
+    uit.push({ id, wat: v.label, max: puntenVoor(id), actief: true,
+      binnen: !leegAntwoord(race[v.kolom]),
+      behaald: Math.round(v.score(antwoord, race[v.kolom] ?? null, puntenVoor(id)) * contrairVoor(race, id, antwoord, p)) });
+  }
+  // De teamgenoot-duels hangen aan de race-uitslag en horen dus alleen bij de
+  // race, niet bij de kwalificatie en niet bij de sprint.
+  if (welk === 'race') {
+    uit.push({ id: 'teamgenoot_duels', wat: 'teamgenoot-duels', max: puntenVoor('teamgenoot_duels'),
+      actief: vraagActief('teamgenoot_duels'),
+      binnen: !!race.race_result?.length && teamParen(race.drivers).length > 0,
+      behaald: scoreDuels(p?.teamgenoot_duels ?? [], race.race_result ?? [],
+                          teamParen(race.drivers), puntenVoor('teamgenoot_duels')) });
+  }
+  return uit;
 };
+const scoreTab = (p, race, welk) => onderdelenTab(p, race, welk).reduce((n, o) => n + o.behaald, 0);
 
 // ---- contrair: zeldzaam goed antwoorden telt zwaarder --------
 //
@@ -9185,8 +9219,39 @@ function uitslagWeergave(r, werkelijk) {
       </ul>` : `<p class="zacht tegelleeg">${T('geen top 10 ingevuld')}</p>`}
       ${losse.trim() ? `<div class="tegelvoet">${losse}</div>` : ''}
     </section>`;
-  return `${noot}${score}${tweeKolommen({
+  return `${noot}${score}${onderdelenKaart(r, mijn)}${tweeKolommen({
     hoofd: voorspelling, zij: `${pouleKaart(r)}${bijnaGoedBlok(r, regels)}${weekendVoet(r)}` })}`;
+}
+
+// Punten per onderdeel, in één oogopslag: per onderdeel een balkje en wat je
+// behaalde van wat erin zat, met bovenaan het totaal. Danny, 4 oktober, bij
+// een voorbeeld: "Die categorie optie. Is dat leuk? Maar dan meer in stijl wat
+// we nu hebben." Leest onderdelenTab(), dezelfde lijst als scoreTab(), dus het
+// totaal hier is altijd je punten van deze sessie (zonder joker; de scorekaart
+// erboven zegt wat de joker ervan maakt). Alleen wat de poule speelt en waar de
+// uitslag al van is, en pas vanaf twee onderdelen: met één is de kop boven
+// je voorspelling al het hele verhaal.
+const somKlasse = (behaald, max) => behaald >= max && max > 0 ? 'v5' : behaald > 0 ? 'v3' : 'v0';
+function onderdelenKaart(r, mijn) {
+  const rijen = onderdelenTab(mijn, r, S.tab).filter(o => o.actief && o.binnen);
+  if (rijen.length < 2) return '';
+  const behaald = rijen.reduce((n, o) => n + o.behaald, 0);
+  const max = rijen.reduce((n, o) => n + o.max, 0);
+  return `
+    <section class="tegel onderdelenkaart">
+      <div class="tegelkop"><h2>${T('Punten per onderdeel')}</h2>
+        <span class="puntensom ${somKlasse(behaald, max)}"><b>${behaald}</b> <small>${
+          T('van {max} punten', { max })}</small></span></div>
+      <ul class="onderdelen">
+        ${rijen.map(o => `<li data-onderdeel="${esc(o.id)}">
+          <span class="onaam">${esc(T(o.wat))}</span>
+          <span class="balkje ${somKlasse(o.behaald, o.max)}" aria-hidden="true"><i style="width:${
+            Math.min(100, Math.round(100 * o.behaald / (o.max || 1)))}%"></i></span>
+          <span class="puntensom ${somKlasse(o.behaald, o.max)}"><b>${o.behaald}</b> <small>${
+            T('van {max}', { max: o.max })}</small></span>
+        </li>`).join('')}
+      </ul>
+    </section>`;
 }
 
 // "Max VERSTAPPEN" (zo levert OpenF1 het) of "Max Verstappen" wordt
