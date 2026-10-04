@@ -9531,3 +9531,36 @@ duel) en niet het totaal.
 punten per regel, rechts (de rechterkant van de tekst, niet van het vak),
 op dezelfde hoogte als de naam, de kleuren, en het weekendtotaal op beide
 tabbladen. Zeven mutanten, alle gevangen.
+
+## Punten per onderdeel (4 oktober)
+
+Danny stuurde een voorbeeld van een uitslagscherm met een kaart "Punten per
+categorie" (per categorie een balk en "20 / 50") en vroeg: "Die categorie
+optie. Is dat leuk? Maar dan meer in stijl wat we nu hebben."
+
+**Wat er staat.** Op het racescherm, tussen je punten en je voorspelling, een
+tegel "Punten per onderdeel": per onderdeel (top 10, pole, winnaar, snelste
+ronde en pitstop, safety cars, rode vlag, duels) de naam, een balkje en wat je
+behaalde van wat erin zat, met erboven het totaal ("102 van 142 punten"). In
+de stijl van de rest: de naam in de kleine letters van een kop, het getal in
+de smalle letter, en balkje en getal paars bij alles, groen bij een deel,
+grijs bij nul, net als de koppen eronder. Alleen onderdelen die de poule
+speelt en waarvan de uitslag er is (de snelste pitstop komt soms later); pas
+vanaf twee onderdelen, want bij Simpel zegt de kop boven de top 10 het al.
+Het totaal is zonder joker; de scorekaart erboven zegt wat de joker ervan maakt.
+
+**Eén rekensom.** `scoreTab()` telde per sessie de top 10, de losse vragen en
+de duels in één keer op. Nu is er `onderdelenTab()`: dezelfde berekening,
+maar als lijstje per onderdeel (met `behaald`, `max`, `actief`, `binnen`), en
+`scoreTab()` is de som daarvan. De kaart leest hetzelfde lijstje, dus het
+overzicht en de stand kunnen niet uit elkaar lopen. Het blok staat in
+`<knip vragen>` en wordt ook zonder `T()` uitgeknipt (scripts/knipsel.mjs);
+daarom staat in het lijstje de Nederlandse naam en vertaalt de kaart pas bij
+het tonen.
+
+**Test.** `test/puntenkoppen.test.mjs` §10: de onderdelen en hun punten gelijk
+aan de koppen eronder, het totaal gelijk aan het grote getal, de balkjes, de
+kleuren, de plek, de contrair-vermenigvuldiger, geen onderdeel zonder uitslag,
+geen kaart bij Simpel, en op 320 en 390 pixels niets dat eraf valt. Tien
+mutanten, alle gevangen (een kaart zonder contrair ook door
+`test/contrair.test.mjs`).

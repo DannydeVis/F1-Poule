@@ -24,6 +24,12 @@
 //      per regel, rechts naast de naam van het onderdeel, op dezelfde hoogte.
 //      Paars als je alles had, groen als je iets had, grijs bij nul.
 //   9. Onder het grote getal van de sessie staat wat het hele weekend oplevert.
+//  10. "Punten per onderdeel" (Danny, 4 oktober, bij een voorbeeld): per
+//      onderdeel een balkje en wat je behaalde van wat erin zat, dezelfde
+//      getallen als de koppen eronder, met het totaal erboven gelijk aan het
+//      grote getal. Alleen onderdelen met een uitslag die de poule speelt, en
+//      niet bij één onderdeel. De balkjes beginnen op één lijn en op een smalle
+//      telefoon valt er niets af.
 
 import { maakControle, startPagina, meedoen, openRace } from './hulp.mjs';
 
@@ -159,6 +165,65 @@ await tab('quali');
   check('ook op de kwalificatie', (await tekst('#paneel .score .weekendsom').catch(() => '')) === `${quali + race} punten dit weekend`);
 }
 
+// ---- 10. punten per onderdeel ------------------------------------------
+const overzicht = () => page.$$eval('.onderdelenkaart', (k) => k.map((kaart) => ({
+  totaal: kaart.querySelector('.tegelkop .puntensom').textContent.replace(/\s+/g, ' ').trim(),
+  rijen: [...kaart.querySelectorAll('.onderdelen li')].map((li) => ({
+    wat: li.querySelector('.onaam').textContent.trim(),
+    b: Number(li.querySelector('.puntensom b').textContent),
+    max: Number(li.querySelector('.puntensom small').textContent.replace(/\D/g, '')),
+    breedte: li.querySelector('.balkje i').style.width,
+    kleur: li.querySelector('.balkje').className.replace('balkje', '').trim(),
+  })),
+}))[0] ?? null);
+await tab('race');
+{
+  const o = await overzicht();
+  const koppen10 = Object.fromEntries((await koppen()).filter((k) => / van \d+ punten/.test(k))
+    .map((k) => [k.split(' · ')[0], behaald(k)]));
+  const wat = o?.rijen.map((r) => r.wat).join(', ');
+  check('op de race een overzicht van alle onderdelen, in de volgorde van de koppen eronder',
+    wat === 'top 10, winnaar, snelste ronde, snelste pitstop, safety cars, rode vlag, teamgenoot-duels', wat);
+  check('met per onderdeel dezelfde punten als de kop eronder, en wat erin zat',
+    !!o && o.rijen.every((r) => r.b === koppen10[r.wat]) && o.rijen.map((r) => r.max).join() === '50,25,10,10,12,20,15',
+    JSON.stringify(o?.rijen.map((r) => [r.wat, r.b, r.max, koppen10[r.wat]])));
+  const som = o?.rijen.reduce((n, r) => n + r.b, 0);
+  check('en erboven het totaal: het grote getal, van alles wat erin zat',
+    o?.totaal === `${await getal()} van 142 punten` && som === (await getal()), `${o?.totaal} · som ${som}`);
+  check('het balkje is wat je behaalde van wat erin zat',
+    !!o && o.rijen.every((r) => r.breedte === `${Math.min(100, Math.round(100 * r.b / r.max))}%`),
+    JSON.stringify(o?.rijen.map((r) => [r.wat, r.breedte])));
+  const kleur = (w) => o?.rijen.find((r) => r.wat === w)?.kleur;
+  check('in dezelfde kleuren: paars bij alles, groen bij een deel, grijs bij nul',
+    kleur('winnaar') === 'v5' && kleur('safety cars') === 'v3' && kleur('snelste ronde') === 'v0',
+    ['winnaar', 'safety cars', 'snelste ronde'].map(kleur).join(' | '));
+  check('het overzicht staat tussen je punten en je voorspelling',
+    await page.evaluate(() => {
+      const [a, b, c] = ['.scorekaart', '.onderdelenkaart', '.voorspelkaart'].map((k) => document.querySelector(k));
+      return !!(a && b && c) && (a.compareDocumentPosition(b) & 4) > 0 && (b.compareDocumentPosition(c) & 4) > 0;
+    }));
+  // Op een smalle telefoon: niets dat eraf valt, en de balkjes op één lijn.
+  for (const breedte of [320, 390]) {
+    await page.setViewportSize({ width: breedte, height: 800 });
+    const vorm = await page.evaluate(() => {
+      const kaart = document.querySelector('.onderdelenkaart').getBoundingClientRect();
+      return { scroll: document.documentElement.scrollWidth,
+        past: [...document.querySelectorAll('.onderdelen .puntensom')].every((x) => x.scrollWidth <= x.clientWidth + 1
+          && x.getBoundingClientRect().right <= kaart.right - 10),
+        balkjes: new Set([...document.querySelectorAll('.onderdelen .balkje')].map((b) => Math.round(b.getBoundingClientRect().left))).size };
+    });
+    check(`op ${breedte} pixels past alles, en de balkjes beginnen op één lijn`,
+      vorm.scroll <= breedte && vorm.past && vorm.balkjes === 1, JSON.stringify(vorm));
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+}
+await tab('quali');
+{
+  const o = await overzicht();
+  check('op de kwalificatie de top 10 en de pole', o?.rijen.map((r) => r.wat).join(', ') === 'top 10, pole'
+    && o?.totaal === `${await getal()} van 60 punten`, JSON.stringify(o));
+}
+
 // ---- 5 en 7: de inzending van een ander ------------------------------
 await tab('race');
 await page.click('[data-bekijk="lid-2"]');
@@ -224,7 +289,40 @@ await tab('race');
   const kop = (await koppen()).find((x) => x.startsWith('winnaar')) ?? '';
   check('meer dan erin zat: alleen wat je kreeg, met de vermenigvuldiger erachter',
     kop === 'winnaar · 38 punten · ×1,5 (je was de enige)', kop);
+  const o = await overzicht();
+  const w = o?.rijen.find((r) => r.wat === 'winnaar');
+  check('ook in het overzicht: 38 van 25, een vol balkje, en het totaal blijft het grote getal',
+    w?.b === 38 && w?.max === 25 && w?.breedte === '100%' && w?.kleur === 'v5'
+      && o?.totaal.startsWith(`${await getal()} van`), JSON.stringify(o));
 }
+
+// ---- 10, vervolg: wat er niet in het overzicht hoort ---------------------
+// Een onderdeel zonder uitslag (de snelste pitstop komt later) telt niet mee,
+// ook niet in wat erin zat. En een poule die per sessie maar één onderdeel
+// speelt (Simpel) krijgt geen overzicht: de kop boven de top 10 zegt het al.
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  db.races[0].fastest_pitstop = null;
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await openRace(page, 'Melbourne');
+await tab('race');
+{
+  const o = await overzicht();
+  check('een onderdeel zonder uitslag staat er niet in, en telt niet mee in wat erin zat',
+    !!o && !o.rijen.some((r) => r.wat === 'snelste pitstop') && /van 132 punten$/.test(o.totaal), JSON.stringify(o));
+}
+await page.evaluate(() => {
+  const db = globalThis.__db;
+  db.pool_questions = [{ pool_id: 'pool-1', question_id: 'quali_top10' }, { pool_id: 'pool-1', question_id: 'race_top10' }];
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+});
+await page.reload();
+await openRace(page, 'Melbourne');
+await tab('race');
+check('met maar één onderdeel (Simpel) geen overzicht', (await page.$('.onderdelenkaart')) === null
+  && (await page.$('.voorspelkaart')) !== null);
 
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 

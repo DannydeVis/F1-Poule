@@ -75,7 +75,10 @@ won.
 
 **Je uitslag op het racescherm.** Bovenaan groot wat de sessie van dat tabblad
 je opleverde, met eronder wat het hele weekend oplevert ("146 punten dit
-weekend"): dat is wat in de stand komt. Daaronder per onderdeel (top 10,
+weekend"): dat is wat in de stand komt. Daaronder **Punten per onderdeel**:
+per onderdeel een balkje en wat je behaalde van wat erin zat, met erboven het
+totaal (alleen onderdelen waarvan de uitslag er is, en pas vanaf twee
+onderdelen). Daaronder per onderdeel (top 10,
 winnaar, pole, duels enzovoort) links wat het is en rechts groot wat je ervan
 behaalde, van wat erin zat: paars als je alles had, groen bij een deel, grijs
 bij nul. Pas daaronder de regels met de punten per plek of per duel. Sinds
