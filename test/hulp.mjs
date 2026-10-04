@@ -160,19 +160,22 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
   };
 }
 
-// Ná een [data-lid]- of #maak-klik die zou moeten uitkomen in de poule.
+// Ná een [data-lid]-, #maak- of #klaar-klik die zou moeten uitkomen in de
+// poule.
 //
-// Een verse claim laat de app sinds koppelVraagScherm() eenmalig vragen of je
-// wilt koppelen; een claim die al bestond niet (bijvoorbeeld dezelfde naam
-// twee keer, of nog een speler op hetzelfde toestel die aan niemand komt te
-// hangen). Vandaar op allebei wachten en alleen wegklikken als hij er ook
-// echt is — één plek voor deze naad, in plaats van in elk testbestand apart.
+// Een verse claim (en een net aangemaakte poule) start sinds
+// rondleidingScherm() eenmalig een korte rondleiding; een claim die al
+// bestond niet (bijvoorbeeld dezelfde naam twee keer, of nog een speler op
+// hetzelfde toestel die aan niemand komt te hangen). Vandaar op allebei
+// wachten en alleen overslaan als hij er ook echt is — één plek voor deze
+// naad, in plaats van in elk testbestand apart. test/rondleiding.test.mjs
+// loopt de rondleiding zelf na.
 export async function naDeClaim(page) {
   await Promise.race([
-    page.waitForSelector('#koppelnunniet'),
+    page.waitForSelector('#rondleidingweg'),
     page.waitForSelector('[data-race]'),
   ]);
-  if (await page.$('#koppelnunniet')) await page.click('#koppelnunniet');
+  if (await page.$('#rondleidingweg')) await page.click('#rondleidingweg');
   await page.waitForSelector('[data-race]');
 }
 

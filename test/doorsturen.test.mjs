@@ -166,8 +166,8 @@ async function landt(pad, { voorafAan } = {}) {
   await page.goto(url + 'app/?code=RTM026');
   await page.waitForSelector('[data-lid]');
   await page.click('[data-lid]');
-  await Promise.race([page.waitForSelector('#koppelnunniet'), page.waitForSelector('[data-race]')]);
-  if (await page.$('#koppelnunniet')) await page.click('#koppelnunniet');
+  await Promise.race([page.waitForSelector('#rondleidingweg'), page.waitForSelector('[data-race]')]);
+  if (await page.$('#rondleidingweg')) await page.click('#rondleidingweg');
   await page.waitForSelector('[data-race]');
   await page.click('[data-weergave="poule"]');
   await page.waitForSelector('#agendalink');
@@ -192,8 +192,8 @@ async function naarDeVoorpagina({ taal = 'nl', iphone = false } = {}) {
   await page.goto(url + 'app/?code=RTM026');
   await page.waitForSelector('[data-lid]');
   await page.click('[data-lid]');
-  await Promise.race([page.waitForSelector('#koppelnunniet'), page.waitForSelector('[data-race]')]);
-  if (await page.$('#koppelnunniet')) await page.click('#koppelnunniet');
+  await Promise.race([page.waitForSelector('#rondleidingweg'), page.waitForSelector('[data-race]')]);
+  if (await page.$('#rondleidingweg')) await page.click('#rondleidingweg');
   await page.waitForSelector('[data-race]');
   await page.click('[data-weergave="profiel"]');
   if (!(await page.waitForSelector('#voorpagina', { timeout: 5000 }).catch(() => null))) {

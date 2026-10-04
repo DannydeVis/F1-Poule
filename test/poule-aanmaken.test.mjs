@@ -6,7 +6,7 @@
 // moment waarop iedereen hem nog rustig kan bekijken. Wat hier misgaat merk
 // je pas een half seizoen later.
 
-import { maakControle, startPagina } from './hulp.mjs';
+import { maakControle, startPagina, naDeClaim } from './hulp.mjs';
 
 const { check, afronden } = maakControle('poule aanmaken');
 
@@ -198,7 +198,7 @@ check('alleen de gekozen vragen zijn vastgelegd',
 
 // --- en dan de poule in ----------------------------------------------------
 await page.click('#klaar');
-await page.waitForSelector('[data-race]');
+await naDeClaim(page);
 check('na klaar sta je in je eigen poule', (await page.$('#code')) === null);
 
 // De vragen die deze poule niet koos horen ook niet gevraagd te worden.

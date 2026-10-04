@@ -85,14 +85,14 @@ if (await page.$('#code')) {
 await page.waitForSelector('[data-lid], [data-race]');
 if (await page.$('[data-lid]')) {
   await page.click('[data-lid]:has(.nm:text-is("Danny"))');
-  // Account verwijderen wist ook poule:koppelgevraagd (zie
-  // vergeetMijOpDitToestel()) — met opzet, want na een nieuw account is de
-  // koppel-vraag weer relevant. Dus kan hij hier opnieuw verschijnen.
+  // Account verwijderen wist ook poule:welkom (zie vergeetMijOpDitToestel())
+  // — met opzet, want na een nieuw account is de rondleiding, met de
+  // koppelstap, weer relevant. Dus kan hij hier opnieuw verschijnen.
   await Promise.race([
-    page.waitForSelector('#koppelnunniet'),
+    page.waitForSelector('#rondleidingweg'),
     page.waitForSelector('[data-race], .speler'),
   ]);
-  if (await page.$('#koppelnunniet')) await page.click('#koppelnunniet');
+  if (await page.$('#rondleidingweg')) await page.click('#rondleidingweg');
 }
 await page.waitForSelector('[data-race], .speler');
 check('na het verwijderen kun je jezelf gewoon weer aanwijzen',

@@ -57,8 +57,8 @@ await page.fill('#code', 'NW2027');
 await page.click('#mee');
 await page.waitForSelector('[data-lid]');
 await page.click('[data-lid]');
-await page.waitForSelector('[data-race], #koppelnunniet');
-if (await page.$('#koppelnunniet')) await page.click('#koppelnunniet');
+await page.waitForSelector('[data-race], #rondleidingweg');
+if (await page.$('#rondleidingweg')) await page.click('#rondleidingweg');
 await page.waitForSelector('[data-race]');
 
 const namen2027 = await page.$$eval('[data-race] .nm', (n) => n.map((e) => e.textContent.trim()));
