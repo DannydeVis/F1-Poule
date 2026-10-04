@@ -677,6 +677,8 @@
   /* Onder je punten op het racescherm: hoe de joker het getal verdubbelde. */
   .jokersom{font-family:var(--mono);font-size:11px;letter-spacing:.08em;
     text-transform:uppercase;color:var(--groen)}
+  /* Eronder: wat het hele weekend oplevert, het getal dat in de stand komt. */
+  .weekendsom{font-size:15px;font-weight:700;color:var(--ink)}
   /* Halverwege het weekend, onder de rij van die race: wat je al pakte. Hangt
      aan de rij erboven (dezelfde rand links) en springt in tot onder de naam. */
   .tussenstand{display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -1083,6 +1085,22 @@
   .inzending{display:contents}
   /* De kop boven je top 10, net als boven elk ander onderdeel. */
   .onderdeel{padding:0 18px 10px}
+  /* De kop van een onderdeel: links wat het is (en een noot eronder), rechts
+     groot wat je ervan behaalde. Het grootste getal van het onderdeel, groter
+     dan de punten per regel: daar draait het om. */
+  .okop{display:grid;grid-template-columns:1fr auto;grid-template-areas:"wat som";
+    align-items:center;column-gap:12px;row-gap:2px}
+  .okop .okop-wat{grid-area:wat}
+  /* Met een noot eronder ("3 van 4 goed") twee regels links, het getal ernaast. */
+  .okop.metnoot{grid-template-areas:"wat som" "extra som"}
+  .okop.metnoot .okop-wat{align-self:end}
+  .okop.metnoot .okop-extra{align-self:start}
+  .okop .okop-extra{grid-area:extra;letter-spacing:.1em;font-size:10px}
+  .okop .okop-som{grid-area:som;align-self:center;display:flex;align-items:baseline;gap:6px;
+    letter-spacing:0;text-transform:none;white-space:nowrap}
+  .okop .okop-som b{font-family:var(--cond);font-size:32px;font-weight:700;line-height:1}
+  .okop .okop-som small{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink3)}
 
   /* De poule: iedereen met een rondje met zijn eerste letter, jij gemarkeerd. */
   .poulelijst{display:flex;flex-direction:column;border-top:1px solid var(--lijn)}
@@ -2241,12 +2259,13 @@ const ENGELS = Object.fromEntries([
    'which team finishes fourth in the constructors?'],
   ['vierde team',
    'fourth team'],
-  ['{wat} · {behaald} van {max} punten',
-   '{wat} · {behaald} of {max} points'],
+  ['van {max} punten',
+   'of {max} points'],
+  ['{n} punten dit weekend',
+   '{n} points this weekend'],
   ['niets gekozen',
    'nothing picked'],
-  ['{wat} · {n} punten',
-   '{wat} · {n} points'],
+
   ['{wat} · niets gekozen',
    '{wat} · nothing picked'],
   ['het werd {wie}',
@@ -9120,6 +9139,11 @@ function uitslagWeergave(r, werkelijk) {
   // Met de joker telt dit weekend dubbel. Het grote getal is dan wat je
   // echt krijgt, en de regel eronder zegt hoe het zo komt.
   const joker = heeftJoker(r.id, S.ik.id);
+  // Het grote getal is deze sessie. Wat het hele weekend oplevert (wat in de
+  // stand komt) staat eronder, zodra er meer dan één sessie meetelt.
+  const weekend = scoreWeekend(mijn, r);
+  const weekendRegel = gespeeldeSessies(r).length > 1 && weekend !== scoreTabMetJoker(mijn, r, S.tab)
+    ? `<span class="weekendsom">${T('{n} punten dit weekend', { n: weekend })}</span>` : '';
   const score = `
     <div class="score scorekaart">
       <b class="getal">${scoreTabMetJoker(mijn, r, S.tab)}</b>
@@ -9129,6 +9153,7 @@ function uitslagWeergave(r, werkelijk) {
           ? T('{n} van {totaal} exact voorspeld', { n: exact, totaal: regels.length })
           : T('geen top 10 ingevuld')}</span>
         ${joker ? `<span class="jokersom">${T('{n} × 2 met je joker', { n: scoreTab(mijn, r, S.tab) })}</span>` : ''}
+        ${weekendRegel}
       </span>
       <span class="ruit" aria-hidden="true"></span>
     </div>`;
@@ -10442,11 +10467,21 @@ const wachtOpUitslag = (label, extra = '') =>
 // vraag waard was, bij de duels wat je behaalde, en bij de top 10 niets.
 // Meer dan erin zat kan ook, door de contrair-vermenigvuldiger; dan staat er
 // alleen wat je kreeg, en de noot erachter zegt waarom.
+//
+// Het totaal staat groot rechts, want daar draait het om (Danny, 4 oktober:
+// "Moet juist groot zijn"). Eerst stond het als klein grijs kopje boven
+// regels met grote getallen, en dan lees je de regels en niet het totaal.
+// Voorgelezen (en als tekst) staat er nog steeds één zin: "top 10 · 20 van
+// 50 punten · de sprint telt half"; de puntjes ertussen zijn alleen niet te zien.
 function onderdeelKop(wat, behaald, max, extra = '', { amber = false } = {}) {
-  const punten = behaald > max
-    ? T('{wat} · {n} punten', { wat, n: behaald })
-    : T('{wat} · {behaald} van {max} punten', { wat, behaald, max });
-  return `<span class="label${amber ? ' amber' : ''}">${punten}${extra}</span>`;
+  const klasse = behaald >= max && max > 0 ? 'v5' : behaald > 0 ? 'v3' : 'v0';
+  const achter = behaald > max ? T('punten') : T('van {max} punten', { max });
+  const rest = String(extra).replace(/^\s*·\s*/, '');
+  return `<div class="label okop${rest ? ' metnoot' : ''}${amber ? ' amber' : ''}">
+    <span class="okop-wat">${wat}</span><span class="alleenlezer"> · </span><span
+      class="okop-som ${klasse}"><b>${behaald}</b> <small>${achter}</small></span>${rest
+      ? `<span class="okop-extra"><span class="alleenlezer"> · </span>${rest}</span>` : ''}
+  </div>`;
 }
 // Achter de kop: dit antwoord koos de app, niet de speler.
 const autoStempel = (p, id) => autoAntwoord(p, id) ? ` · ${T('automatisch ingevuld')}` : '';
