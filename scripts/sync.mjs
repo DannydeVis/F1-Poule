@@ -35,6 +35,7 @@ import { maakAgenda } from './agenda.mjs';
 import { wieKrijgtEenSeintje } from './herinneringen.mjs';
 import { stuur as stuurPush } from './push.mjs';
 import { seizoenPlan, agendaSeizoenen, lijstKanWachten } from './seizoenen.mjs';
+import { OpenF1Dicht, vanwegeSessie, UITLEG as DICHT_UITLEG } from './openf1-dicht.mjs';
 
 const API = process.env.OPENF1_URL?.replace(/\/+$/, '') ?? 'https://api.openf1.org/v1';
 const REST = `${SUPABASE_URL}/rest/v1`;
@@ -65,6 +66,8 @@ async function openf1(pad, pogingen = 6) {
   for (let i = 0; i < pogingen; i++) {
     const res = await fetch(`${API}/${pad}`);
     if (res.ok) return res.json();
+    // Tijdens een sessie: zie scripts/openf1-dicht.mjs.
+    if (res.status === 401) throw new OpenF1Dicht(pad);
     if (res.status === 429 && i < pogingen - 1) {
       const pauze = 3000 * (i + 1);
       console.log(`  rate limit, ${pauze / 1000}s wachten`);
@@ -755,7 +758,18 @@ try {
     ? [...new Set([...plan.uitslagen, ...plan.kalender])]
     : plan.kalender;
   let nieuw = 0;
-  for (const jaar of kalenders) nieuw += await kalender(jaar);
+  for (const jaar of kalenders) {
+    // kalender() vraagt alles op voordat hij iets schrijft, dus een 401
+    // halverwege laat niets half achter. Op een sessiedag gaat de run dan door
+    // met de uitslagen en de herinneringen; die kunnen elk zelf tegen een 401.
+    try {
+      nieuw += await kalender(jaar);
+    } catch (e) {
+      if (!vanwegeSessie(e)) throw e;
+      console.log(`Kalender ${jaar} niet bijgewerkt: ${e.message}. ${DICHT_UITLEG}`);
+      noteer(`Kalender ${jaar} niet bijgewerkt: ${DICHT_UITLEG}`);
+    }
+  }
   if (nieuw) {
     alle = await haalAlleRaces() ?? [];
     plan = seizoenPlan(alle, Date.now(), { vast: VAST_SEIZOEN });

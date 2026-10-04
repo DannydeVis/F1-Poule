@@ -1053,6 +1053,16 @@ verkennen*), eventueel met een `session_key`. Die laat zien of OpenF1 de race
 niet heeft (404) of dat we te snel vroegen (429). Dat verschil is belangrijk —
 een 429 lost zichzelf op, een 404 niet.
 
+**Een 401 rond een sessie.** Tijdens een sessie, van een half uur voor de
+start tot een half uur na het einde, is OpenF1 alleen open voor betalende
+accounts; de rest krijgt 401. Dat gaat vanzelf over, en de volgende run haalt
+alles op. Op vrijdag, zaterdag en zondag (UTC) blijven de sync en de
+racepagina's (workflow "Circuitcijfers") daarom groen bij een 401, met een
+regel in de log. De sync slaat dan alleen de kalender over, de racepagina's
+en de circuitcijfers schrijven niets weg. Een 401 op een andere dag laat de
+run wel zakken: dan is er iets anders aan de hand, bijvoorbeeld dat OpenF1
+voortaan altijd een account wil. Zie je dat, zeg het tegen Claude Code.
+
 **De app zegt het zelf.** Staat er een race een week na zijn deadline nog
 zonder uitslag en zonder streep, dan verschijnt er onder de seizoensvragen op
 de standpagina een amberen regel met zijn naam erin:

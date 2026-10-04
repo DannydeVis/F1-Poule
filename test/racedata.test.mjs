@@ -19,8 +19,11 @@
 //   5. De workflow haalt het elke dag op, in het weekend elke twee uur (zonder
 //      de circuitcijfers), en op een pull request alleen in de log.
 //   6. Staat site/data/races-<jaar>.json er, dan klopt hij met site/races.mjs.
+//   7. Gaat OpenF1 halverwege dicht (401, tijdens een sessie): niets
+//      weggeschreven, ook niet de races die al binnen waren. Op een sessiedag
+//      (vrijdag tot en met zondag) is de run groen, op een andere dag rood.
 
-import { readFileSync, existsSync, mkdtempSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, mkdtempSync, statSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer } from 'node:http';
@@ -116,10 +119,16 @@ const s = (key, meeting, naam, start, uren = 1) => ({ session_key: key, meeting_
     s(9500 + r.circuit, 900 + r.circuit, 'Race', '2025-10-05T12:00:00Z', 2)];
   const meetings = { 10: 'Singapore Grand Prix', 20: 'United States Grand Prix', 30: 'Mexico City Grand Prix', 50: 'Las Vegas Grand Prix' };
   const gevraagd = [];
+  // Na zoveel verzoeken gaat OpenF1 dicht, zoals tijdens een sessie (null: nooit).
+  let dichtNa = null;
   const server = createServer((req, res) => {
     const u = new URL(req.url, 'http://x');
     const q = Object.fromEntries(u.searchParams);
     gevraagd.push(u.pathname + u.search);
+    if (dichtNa !== null && gevraagd.length > dichtNa) {
+      res.writeHead(401, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({ detail: 'Live F1 session in progress' }));
+    }
     let body = null;
     if (u.pathname === '/sessions') body = (Number(q.year) === RACE_JAAR ? dit : Number(q.year) === RACE_JAAR - 1 ? vorig : {})[q.circuit_key] ?? [];
     if (u.pathname === '/meetings') body = [{ meeting_key: Number(q.meeting_key), meeting_name: meetings[q.meeting_key] ?? `Meeting ${q.meeting_key}`,
@@ -178,6 +187,21 @@ const s = (key, meeting, naam, start, uren = 1) => ({ session_key: key, meeting_
   const droog = await draai({ DROOG: '1' });
   check('DROOG schrijft niets weg', droog.code === 0 && /DROOG: niets weggeschreven/.test(droog.uit)
     && statSync(join(map, 'races.json')).mtimeMs === voor);
+
+  // 7. OpenF1 gaat dicht na Singapore: die race is dan al helemaal binnen.
+  rmSync(join(map, 'races.json'));
+  gevraagd.length = 0;
+  dichtNa = 9;
+  const zondag = await draai({ NU: '2026-10-04T10:39:00Z' });
+  const binnen = gevraagd.slice(0, 9).filter((x) => x.includes('session_result')).length;
+  check('gaat OpenF1 halverwege dicht op een sessiedag, dan is de run groen en schrijft hij niets, ook niet de races die al binnen waren',
+    binnen >= 2 && zondag.code === 0 && /OpenF1 gaf 401/.test(zondag.uit) && /niets weggeschreven/.test(zondag.uit)
+      && !existsSync(join(map, 'races.json')), `${binnen} · ${zondag.code} · ${zondag.uit.trim().slice(-200)}`);
+  gevraagd.length = 0;
+  const woensdag = await draai({ NU: '2026-10-07T10:39:00Z' });
+  check('op een andere dag is een 401 iets anders: dan zakt de run, en ook dan staat er niets',
+    woensdag.code === 1 && /OpenF1 gaf 401/.test(woensdag.uit) && !existsSync(join(map, 'races.json')),
+    `${woensdag.code} · ${woensdag.uit.trim().slice(-200)}`);
   server.close();
 }
 

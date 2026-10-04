@@ -134,6 +134,8 @@ function postgrest(req, res, tabel, zoek, body) {
 
 function openf1(res, pad, zoek) {
   wereld.verzoeken.push(`${pad}?${zoek}`);
+  // Tijdens een sessie laat OpenF1 alleen betalende accounts toe.
+  if (wereld.dicht) { res.writeHead(401, { 'Content-Type': 'application/json' }); return res.end('{"detail":"Live F1 session in progress"}'); }
   const stuur = (data) => { res.writeHead(200, { 'Content-Type': 'application/json' });
                             res.end(JSON.stringify(data)); };
   const niet = () => { res.writeHead(404); res.end('[]'); };
@@ -355,6 +357,28 @@ for (const s of wereld.sessies) {
   wereld.sync_runs = bewaard;
   check('zonder tabel voor het logboek draait de sync gewoon door',
     zonder === 0 && /Logboek niet weggeschreven/.test(log), log.slice(-300));
+}
+
+// ---- OpenF1 dicht tijdens een sessie (scripts/openf1-dicht.mjs) -------------------
+// Zondag 4 oktober 2026 werd de dagelijkse ronde (met KALENDER) rood op een
+// 401 rond de race. Op een sessiedag hoort dat geen fout te zijn: de kalender
+// wacht tot de volgende run, en de rest gaat door.
+{
+  wereld.dicht = true;
+  const voor = JSON.stringify(wereld.races);
+  const zondag = await sync({ KALENDER: 'true', NU: '2026-10-04T10:39:00Z' });
+  const regel = wereld.sync_runs.at(-1);
+  check('dicht op een zondag: de kalender wacht, de sync gaat door en blijft groen',
+    zondag.code === 0 && /Kalender \d+ niet bijgewerkt: OpenF1 gaf 401/.test(zondag.log) && /Uitslagen \d+ controleren|Geen seizoen waar nog iets na te kijken valt/.test(zondag.log),
+    zondag.log.slice(-400));
+  check('in het logboek zonder fout, met de reden', regel?.ok === true && !regel?.fouten
+    && /niet bijgewerkt: OpenF1 is tijdens een sessie alleen open voor betalende accounts/.test(regel?.samenvatting ?? ''), JSON.stringify(regel));
+  check('en er verandert niets aan de races: geen uitslag weg, niets afgelast', JSON.stringify(wereld.races) === voor, 'races veranderd');
+  const woensdag = await sync({ KALENDER: 'true', NU: '2026-10-07T10:39:00Z' });
+  check('dicht op een woensdag is iets anders: dan zakt de sync, met de fout in het logboek',
+    woensdag.code === 1 && /OpenF1 gaf 401/.test(woensdag.log) && wereld.sync_runs.at(-1)?.ok === false,
+    woensdag.log.slice(-300));
+  wereld.dicht = false;
 }
 
 server.close();

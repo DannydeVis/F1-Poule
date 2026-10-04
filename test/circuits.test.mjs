@@ -30,6 +30,9 @@
 //      het meeste en het minste per race, hier opnieuw uitgerekend).
 //  10. Pole en winnaar per race: poleWon alleen als ze er allebei zijn, en per
 //      circuit en in totaal alleen die races geteld.
+//  11. Gaat OpenF1 halverwege dicht (401, tijdens een sessie), dan telt het
+//      script niets en schrijft het niets; op een sessiedag (vrijdag tot en met
+//      zondag) is de run groen, op een andere dag rood.
 
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -224,9 +227,15 @@ check('tussen twee verzoeken minstens een derde seconde (drie per seconde)', WAC
     { driver_number: 4, first_name: 'Lando', last_name: 'Norris' }, { driver_number: 81, full_name: 'Oscar PIASTRI' },
     { driver_number: 16, first_name: 'Charles', last_name: 'Leclerc' }];
   const gevraagd = [];
+  // Na zoveel verzoeken gaat OpenF1 dicht, zoals tijdens een sessie (null: nooit).
+  let dichtNa = null;
   const server = createServer((req, res) => {
     const u = new URL(req.url, 'http://x');
     gevraagd.push(u.pathname + u.search);
+    if (dichtNa !== null && gevraagd.length > dichtNa) {
+      res.writeHead(401, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({ detail: 'Live F1 session in progress' }));
+    }
     let body = null;
     if (u.pathname === '/sessions' && u.searchParams.get('session_name') === 'Race') body = SESSIES[u.searchParams.get('year')] ?? [];
     if (u.pathname === '/sessions' && u.searchParams.get('session_name') === 'Qualifying') body = QUALI[u.searchParams.get('year')] ?? [];
@@ -239,14 +248,31 @@ check('tussen twee verzoeken minstens een derde seconde (drie per seconde)', WAC
   await new Promise((klaar) => server.listen(0, '127.0.0.1', klaar));
   const OPENF1_URL = `http://127.0.0.1:${server.address().port}`;
   const voor = existsSync(join(wortel, BESTAND)) ? statSync(join(wortel, BESTAND)).mtimeMs : null;
-  const { code, uit } = await new Promise((klaar) => {
-    const p = spawn(process.execPath, [join(wortel, 'scripts', 'circuits.mjs')], { env: { ...process.env, OPENF1_URL, DROOG: '1' } });
+  const draai = (extra = {}) => new Promise((klaar) => {
+    const p = spawn(process.execPath, [join(wortel, 'scripts', 'circuits.mjs')], { env: { ...process.env, OPENF1_URL, DROOG: '1', ...extra } });
     let tekst = '';
     p.stdout.on('data', (d) => { tekst += d; });
     p.stderr.on('data', (d) => { tekst += d; });
     p.on('close', (c) => klaar({ code: c, uit: tekst }));
   });
+  const { code, uit } = await draai();
+
+  // 11. OpenF1 gaat dicht na de eerste race van 2023 (berichten en podium binnen).
+  const alles = [...gevraagd];
+  gevraagd.length = 0;
+  dichtNa = 6;
+  const zondag = await draai({ NU: '2026-10-04T10:39:00Z' });
+  gevraagd.length = 0;
+  const woensdag = await draai({ NU: '2026-10-07T10:39:00Z' });
+  dichtNa = null;
+  gevraagd.length = 0;
+  gevraagd.push(...alles);
   server.close();
+  check('gaat OpenF1 halverwege dicht op een sessiedag, dan telt het script niets, schrijft het niets en is de run groen',
+    zondag.code === 0 && /OpenF1 gaf 401/.test(zondag.uit) && /niets weggeschreven/.test(zondag.uit) && !/=== per race/.test(zondag.uit),
+    `${zondag.code} · ${zondag.uit.trim().slice(-200)}`);
+  check('op een andere dag zakt de run', woensdag.code === 1 && /OpenF1 gaf 401/.test(woensdag.uit) && !/=== per race/.test(woensdag.uit),
+    `${woensdag.code} · ${woensdag.uit.trim().slice(-200)}`);
   const jaren = gevraagd.filter((x) => x.startsWith('/sessions') && /session_name=Race/.test(x)).map((x) => new URLSearchParams(x.split('?')[1]).get('year'));
   check('elk seizoen vanaf 2023 tot en met dit jaar, alleen de races (session_name=Race)',
     code === 0 && jaren.join() === Array.from({ length: ditJaar - VANAF + 1 }, (_, i) => VANAF + i).join(), `${code} · ${jaren.join()}`);
@@ -317,6 +343,23 @@ check('tussen twee verzoeken minstens een derde seconde (drie per seconde)', WAC
       secties.length === Object.keys(gids.talen).length && fout.length === 0,
       fout.join(' | ') || `${d.circuits.length} circuits, meest ${meest.locatie}, minst ${minst.locatie}`);
   }
+}
+
+// ---- 11. wanneer een 401 van OpenF1 geen fout is (scripts/openf1-dicht.mjs) ----------------------
+{
+  const { opSessiedag, vanwegeSessie, OpenF1Dicht } = await import('../scripts/openf1-dicht.mjs');
+  // Ver van UTC, zodat een dag op de klok van de runner niet als UTC telt.
+  const tz = process.env.TZ;
+  process.env.TZ = 'Pacific/Kiritimati';
+  const dagen = ['2026-10-01T12:00:00Z', '2026-10-02T00:00:00Z', '2026-10-03T12:00:00Z', '2026-10-04T23:59:59Z', '2026-10-05T00:00:00Z', '2026-10-06T12:00:00Z']
+    .map((t) => `${t.slice(5, 16)} ${opSessiedag(t) ? 'ja' : 'nee'}`);
+  process.env.TZ = tz ?? '';
+  if (tz === undefined) delete process.env.TZ;
+  check('een sessiedag is vrijdag, zaterdag of zondag in UTC, tot en met de laatste seconde van zondag',
+    dagen.join() === '10-01T12:00 nee,10-02T00:00 ja,10-03T12:00 ja,10-04T23:59 ja,10-05T00:00 nee,10-06T12:00 nee', dagen.join(' | '));
+  check('alleen een 401 van OpenF1 op een sessiedag laat een run groen eindigen',
+    vanwegeSessie(new OpenF1Dicht('sessions'), '2026-10-04T10:39:00Z') && !vanwegeSessie(new OpenF1Dicht('sessions'), '2026-10-07T10:39:00Z')
+      && !vanwegeSessie(new Error('OpenF1 gaf 500 op sessions'), '2026-10-04T10:39:00Z'), 'zie scripts/openf1-dicht.mjs');
 }
 
 process.exit(afronden() ? 0 : 1);
