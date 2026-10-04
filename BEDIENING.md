@@ -78,11 +78,14 @@ je opleverde, met eronder wat het hele weekend oplevert ("146 punten dit
 weekend"): dat is wat in de stand komt. Daaronder **Punten per onderdeel**:
 per onderdeel een balkje en wat je behaalde van wat erin zat, met erboven het
 totaal (alleen onderdelen waarvan de uitslag er is, en pas vanaf twee
-onderdelen). Daaronder per onderdeel (top 10,
-winnaar, pole, duels enzovoort) links wat het is en rechts groot wat je ervan
-behaalde, van wat erin zat: paars als je alles had, groen bij een deel, grijs
-bij nul. Pas daaronder de regels met de punten per plek of per duel. Sinds
-4 oktober; daarvoor stond het totaal van een onderdeel als klein grijs kopje.
+onderdelen). Daaronder je voorspelling. Boven de
+top 10 en de duels, waar regels opgeteld worden, links de naam en rechts groot
+wat je ervan behaalde, van wat erin zat: paars als je alles had, groen bij een
+deel, grijs bij nul. Een vraag met één antwoord (pole, winnaar, snelste ronde
+en pitstop, safety cars, rode vlag) heeft alleen zijn naam als kop; de punten
+staan in de regel eronder, want een totaal zou daar hetzelfde getal zijn.
+Sinds 4 oktober; daarvoor stond boven elk onderdeel een klein grijs kopje met
+het totaal.
 
 Een weekend is pas gereden als de race er is geweest (of als het weekend na
 de kwalificatie is afgelast). Is alleen de kwalificatie (of de sprint) al

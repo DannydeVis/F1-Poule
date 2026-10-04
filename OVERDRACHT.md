@@ -9564,3 +9564,27 @@ kleuren, de plek, de contrair-vermenigvuldiger, geen onderdeel zonder uitslag,
 geen kaart bij Simpel, en op 320 en 390 pixels niets dat eraf valt. Tien
 mutanten, alle gevangen (een kaart zonder contrair ook door
 `test/contrair.test.mjs`).
+
+## Een totaal alleen waar opgeteld wordt (4 oktober)
+
+Danny, na de grote totalen: "Deze totaal punten kan toch nooit anders zijn
+dan het maximaal. Het beste is denk ik dat je de punten totaal weergeeft waar
+het opgeteld moet worden." Boven een vraag met één antwoord (winnaar, pole,
+snelste ronde en pitstop, safety cars, rode vlag) stond groot "25 van 25",
+terwijl de ene regel eronder "+25" zei: twee keer hetzelfde getal.
+
+- `vraagKop()` voor die vragen: alleen de naam, met de noten erachter
+  (de contrair-vermenigvuldiger, "automatisch ingevuld", "handmatig
+  ingevuld", "geen winnaar gekozen"). De punten staan in de regel eronder.
+- `onderdeelKop()`, met het grote totaal, alleen nog boven de top 10 en de
+  duels: daar worden regels opgeteld. De duels zonder keuze houden hun kop
+  met "0 van 15 punten · niets gekozen".
+- In de inzending van een ander hetzelfde (`nietsGekozen` kreeg `som`).
+- De kaart "Punten per onderdeel" bovenaan blijft zoals hij is: dat is het
+  overzicht, met alle onderdelen.
+
+**Tests.** `test/puntenkoppen.test.mjs` bijgewerkt: de losse vragen alleen met
+hun naam, hun punten uit de regel eronder (ook in de som tot het grote getal
+en tegen de kaart), een groot totaal alleen boven de top 10 en de duels. In
+`automatisch-invullen`, `pole-en-duels`, `safetycar-en-vlag` en `snelste` de
+verwachte koppen aangepast. Zes mutanten, alle gevangen.

@@ -246,7 +246,7 @@ await page.waitForSelector('#inkijkterug');
   check('bij een speler die zijn lijst wél invulde staat niet dat hij zelf niets inleverde',
     !bij.includes('zelf niets in') && kop.some((k) => /^top 10 · \d+ van 50 punten$/.test(k)), kop.join(' | '));
   check('maar de losse vragen die hij liet liggen zijn aangevuld, en zeggen dat ook',
-    kop.some((k) => /^winnaar · \d+ (van 25 )?punten.* · automatisch ingevuld$/.test(k))
+    kop.includes('winnaar · automatisch ingevuld')
       && kop.some((k) => /^teamgenoot-duels · \d+ van 15 punten · \d+ van \d+ goed · automatisch ingevuld$/.test(k)),
     kop.join(' | '));
 }
@@ -274,7 +274,7 @@ const losseKoppen = async (w) => {
     zonder.length === 0, zonder.join(', ') || race.join(' | '));
   const quali = await losseKoppen('quali');
   check('en de pole op de kwalificatie',
-    quali.some((k) => /^pole · \d+ van 10 punten · automatisch ingevuld$/.test(k)), quali.join(' | '));
+    quali.includes('pole · automatisch ingevuld'), quali.join(' | '));
   const regels = await page.$$eval('#paneel .sr', (n) => n.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
   await page.reload();
   await page.waitForSelector('.shell');
@@ -300,12 +300,12 @@ await page.waitForSelector('.shell');
 {
   const eigen = await losseKoppen('race');
   check('een automatisch gekozen winnaar krijgt geen vermenigvuldiger',
-    eigen.some((k) => /^winnaar · \d+ van 25 punten · automatisch ingevuld$/.test(k)), eigen.join(' | '));
+    eigen.includes('winnaar · automatisch ingevuld'), eigen.join(' | '));
   await page.click('[data-bekijk="lid-3"]');
   await page.waitForSelector('#inkijkterug');
   const casper = await page.$$eval('#paneel .label', (n) => n.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
   check('en telt niet mee als iemand anders hetzelfde koos: alleen wat spelers zelf kozen',
-    casper.includes('winnaar · 38 punten · ×1,5 (je was de enige)'), casper.join(' | '));
+    casper.includes('winnaar · ×1,5 (je was de enige)'), casper.join(' | '));
   await page.click('#inkijkterug');
 }
 await page.evaluate(() => {
@@ -379,7 +379,7 @@ await page.waitForSelector('.shell');
     return page.$$eval('#paneel .label', (n) => n.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
   })();
   check('en krijgt geen losse vragen erbij: die worden pas sinds 27 september aangevuld',
-    shanghaiRace.includes('winnaar · 0 van 25 punten · geen winnaar gekozen')
+    shanghaiRace.includes('winnaar · geen winnaar gekozen')
       && !shanghaiRace.some((k) => k.startsWith('winnaar') && k.includes('automatisch')),
     shanghaiRace.join(' | '));
   check('en een race van erna blijft willekeurig, en hetzelfde als eerder',
