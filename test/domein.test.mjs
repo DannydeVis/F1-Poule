@@ -78,8 +78,11 @@ check('er zijn bestanden om na te lopen', geserveerd.includes('app/index.html')
 // plaatje. De rest van de app moet het blijven uitrekenen.
 const DEELTAG = /<meta (?:property="og:[^"]+"|name="twitter:[^"]+") content="[^"]*">\n?/g;
 {
+  // Een mailadres op het domein (het contactadres in de privacyverklaring) is
+  // geen link en hoeft niet uitgerekend te worden; dat mag er dus staan.
+  const MAILADRES = new RegExp(`[\\w.+-]+@${basis.host.replace(/\./g, '\\.')}`, 'g');
   const vast = ['app/index.html', 'sw.js', 'manifest.webmanifest']
-    .filter((f) => lees(f).replace(DEELTAG, '').includes(basis.host));
+    .filter((f) => lees(f).replace(DEELTAG, '').replace(MAILADRES, '').includes(basis.host));
   check('de app, de service worker en het manifest noemen geen vast domein (buiten de deeltags)',
     vast.length === 0, vast.join(', '));
 }
