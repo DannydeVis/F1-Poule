@@ -2,12 +2,12 @@
   "bron": "OpenF1 (https://openf1.org): race_control, en session_result en drivers voor pole en winnaar",
   "regel": "Een virtuele safety car telt mee, net als in de app (telSafetyCars en hadRodeVlag in scripts/uitslagen.mjs).",
   "vanaf": 2023,
-  "tot": "2026-09-26",
-  "races": 85,
-  "metSafetyCar": 58,
+  "tot": "2026-10-04",
+  "races": 86,
+  "metSafetyCar": 59,
   "metRodeVlag": 11,
-  "metPole": 85,
-  "poleGewonnen": 53,
+  "metPole": 86,
+  "poleGewonnen": 54,
   "ontbreekt": [
     {
       "jaar": 2023,
@@ -433,6 +433,36 @@
             "naam": "Oscar Piastri"
           },
           "poleWon": false
+        }
+      ]
+    },
+    {
+      "circuit": 12,
+      "naam": "Kuala Lumpur",
+      "locatie": "Kuala Lumpur",
+      "land": "Bahrain",
+      "races": 1,
+      "metSafetyCar": 1,
+      "safetyCars": 4,
+      "metRodeVlag": 0,
+      "metPole": 1,
+      "poleGewonnen": 1,
+      "perRace": [
+        {
+          "jaar": 2026,
+          "datum": "2026-10-04",
+          "sessie": 11731,
+          "safetyCars": 4,
+          "rodeVlag": false,
+          "pole": {
+            "nr": "3",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "3",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": true
         }
       ]
     },
