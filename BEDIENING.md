@@ -406,9 +406,12 @@ opent altijd Safari, en dan log je in Safari in en niet in de app waar je
 zat. Een code tik je in waar je bent.
 
 Daarvoor moet de code wel in de mail staan, en dat doet hij standaard niet.
-**Eén keer instellen in Supabase:** Authentication → Emails → het sjabloon
-**Magic Link**. Zet daar de code bij, naast de link die er al staat,
-bijvoorbeeld:
+En het sjabloon aanpassen kan pas met een **eigen mailserver (SMTP)**: zonder
+staat er in Supabase "Set up custom SMTP to edit templates", en mailt
+Supabase bovendien alleen naar het eigen team (zie §7). Dus eerst §7, punt 2.
+Daarna **één keer in Supabase:** Authentication → Emails → **Magic link or
+OTP**, bij Body op **Source**. Zet daar de code bij, naast de link die er al
+staat, bijvoorbeeld:
 
 ```html
 <h2>Inloggen bij Predict the Race</h2>
@@ -881,16 +884,29 @@ vergeet je zeker één keer:
    URLs*: zet daar de url van de app in (nu
    `https://predicttherace.com/**`, zie §15). Staat hij er niet, dan negeert
    Supabase de terugkeerlink en komt iedereen op de Site URL uit.
-2. **Eigen SMTP instellen** — of niet, nu Google er is. De ingebouwde
-   mailservice van Supabase stuurt maar een paar mails per uur en is
-   uitdrukkelijk niet voor productie. Zolang Google de hoofdweg is en de mail
-   de uitzondering, red je het waarschijnlijk zonder eigen mailleverancier.
-   Merk je dat mensen klagen dat de mail niet aankomt, dan hoort er alsnog een
-   eigen leverancier (Resend, Postmark, SendGrid) onder.
+2. **Eigen SMTP instellen. Dit is nodig.** Zonder eigen mailserver stuurt
+   Supabase alleen mail naar mensen in je eigen Supabase-team, en hooguit 2
+   per uur. Een gewone speler die een mailadres wil koppelen of met zijn
+   mailadres wil inloggen krijgt dan geen mail maar een foutmelding; de app
+   vertaalt die naar "Met een mailadres lukt het nu nog niet ... Gebruik
+   Google". Ook het sjabloon aanpassen (de code erin, §5b, en Nederlandse
+   teksten) kan pas met een eigen mailserver. Resend is gratis tot 100 mails
+   per dag en 3.000 per maand:
+   1. Maak een account op resend.com. Domains → Add domain →
+      `predicttherace.com`. Zet de DNS-records die Resend laat zien bij de
+      partij waar je het domein kocht, en wacht tot er *Verified* staat.
+   2. API Keys → Create, met alleen *Sending access*. Die sleutel is geheim:
+      alleen in Supabase plakken, nooit in de code of in een chat.
+   3. Supabase: Authentication → Emails → **Set up SMTP** (of SMTP Settings).
+      Custom SMTP aan; afzender `noreply@predicttherace.com`, naam
+      `Predict the Race`; host `smtp.resend.com`, poort `465`, gebruikersnaam
+      `resend`, wachtwoord de sleutel uit stap 2. Opslaan.
+   4. Daarna het sjabloon Magic link or OTP aanvullen, zie §5b.
 
 En kijk één keer wat er daadwerkelijk in de mailbox belandt: onder Authentication
 → Emails staan de sjablonen, en die zijn Engels en generiek ("Confirm your email
-change"). Voor een Nederlandse poule-app is dat op zijn minst verwarrend.
+change"). Voor een Nederlandse poule-app is dat op zijn minst verwarrend. Ook
+die zijn pas aan te passen met een eigen mailserver (punt 2).
 
 ### Wat de database nu wél afdwingt
 

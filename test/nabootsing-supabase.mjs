@@ -90,6 +90,12 @@ store.otp ??= [];
 store.jokers ??= [];
 store.push_abonnementen ??= [];
 store.google_als ??= 'danny@gmail.voorbeeld';
+// Supabase zonder eigen mailserver: dan gaat er alleen mail naar het eigen
+// team, en krijgt iedereen anders een fout. Een test zet dit aan met
+// __mail.alleenTeam(true).
+store.alleen_team ??= false;
+const nietToegestaan = (email) => ({ data: null, error: { code: 'email_address_not_authorized',
+  message: `Email address "${email}" cannot be used as it is not authorized` } });
 // Elke keer dat er naar Google gestuurd werd: waarheen terug, en met welke
 // prompt. Blijft staan als de link al gebruikt is (otp ruimt zichzelf op).
 store.naar_google ??= [];
@@ -603,6 +609,7 @@ const auth = {
       return { data: null, error: { code: 'email_exists',
         message: 'A user with this email address has already been registered' } };
     }
+    if (store.alleen_team) return nietToegestaan(email);
     const user = store.auth_users.find((u) => u.id === sessie.user.id);
     user.new_email = email;
     store.otp.push({ code: nieuweSleutel(), user_id: user.id, email,
@@ -623,6 +630,7 @@ const auth = {
       }
       return { data: null, error: { message: 'onbekend adres' } };
     }
+    if (store.alleen_team) return nietToegestaan(email);
     // Dezelfde mail draagt ook een code, als het sjabloon {{ .Token }} heeft
     // (BEDIENING.md §5b). Zes cijfers, net als bij Supabase.
     const token = String(100000 + ((Date.now() + ++teller * 7919) % 900000));
@@ -690,6 +698,7 @@ globalThis.__mail = {
   // Met welk Google-account de nabootsing inlogt. Zo kan een test twee
   // verschillende mensen naspelen.
   googleAls(adres) { store.google_als = adres; bewaren(); },
+  alleenTeam(aan) { store.alleen_team = !!aan; bewaren(); },
 };
 
 // ------------------------------------------------------------

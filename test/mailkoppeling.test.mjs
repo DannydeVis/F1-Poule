@@ -58,6 +58,17 @@ await page.waitForSelector('#mailfout');
 check('een adres dat geen adres is krijgt daar antwoord op',
   (await tekst('#mailfout')).includes('geldig mailadres'), await tekst('#mailfout'));
 
+// Supabase zonder eigen mailserver mailt alleen het eigen team. Dan zegt
+// de app dat het niet aan het adres ligt, en wat je wel kunt.
+await page.evaluate(() => globalThis.__mail.alleenTeam(true));
+await page.fill('#mailveld', 'danny@voorbeeld.nl');
+await page.click('#mailstuur');
+await page.waitForFunction(() => document.querySelector('#mailfout')?.textContent.includes('nog niet'));
+check('mailt Supabase alleen het eigen team, dan zegt de app dat in gewone taal',
+  (await tekst('#mailfout')).includes('Met een mailadres lukt het nu nog niet')
+    && (await tekst('#mailfout')).includes('Gebruik Google'), await tekst('#mailfout'));
+await page.evaluate(() => globalThis.__mail.alleenTeam(false));
+
 await page.fill('#mailveld', 'danny@voorbeeld.nl');
 await page.click('#mailstuur');
 await page.waitForSelector('#mailopnieuw');

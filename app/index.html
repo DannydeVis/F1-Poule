@@ -1811,6 +1811,15 @@ function uitlegAuth(error) {
     return T('Bij dat mailadres hoort nog geen account. Koppel het eerst onder '
          + 'Poule, op het toestel waar je al meespeelt.');
   }
+  // Zonder eigen mailserver (SMTP) mailt Supabase alleen naar leden van het
+  // eigen Supabase-team; iedereen anders krijgt deze fout in plaats van een
+  // mail. Dat is iets voor de beheerder (BEDIENING.md §7), niet voor de
+  // speler, maar die moet wel weten dat het aan het adres niet ligt en wat
+  // hij dan wel kan.
+  if (code === 'email_address_not_authorized' || /not authorized/i.test(bericht)) {
+    return T('Met een mailadres lukt het nu nog niet: de app kan nog niet naar iedereen '
+         + 'mailen. Gebruik Google, of laat het de beheerder weten.');
+  }
   // Een code die niet klopt of te oud is. Supabase zegt allebei met
   // dezelfde zin, dus wij ook.
   if (code === 'otp_expired' || /token has expired or is invalid|otp.*(expired|invalid)/i.test(bericht)) {
@@ -2014,6 +2023,10 @@ const ENGELS = Object.fromEntries([
    'Type the code from the email, digits only.'],
   ['Die code klopt niet of is verlopen. Vraag een nieuwe mail aan.',
    'That code is wrong or has expired. Ask for a new email.'],
+  ['Met een mailadres lukt het nu nog niet: de app kan nog niet naar iedereen '
+   + 'mailen. Gebruik Google, of laat het de beheerder weten.',
+   'Email does not work yet: the app cannot email everyone yet. Use Google, or '
+   + 'let the administrator know.'],
   ['Speel je al mee in '
    + 'Safari? Een iPhone onthoudt je in deze app los daarvan. Log hieronder in met '
    + 'je gekoppelde account, dan ben je hier meteen jezelf. Met je mailadres krijg '

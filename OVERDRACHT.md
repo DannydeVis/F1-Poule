@@ -9699,3 +9699,24 @@ vier andere tests slaan de rondleiding over in plaats van het koppelscherm;
 `test/poule-aanmaken.test.mjs` doet dat nu ook na Klaar. Achttien
 mutanten, alle gevangen; één pas nadat de test er een geval bij kreeg (wie
 gekoppeld is en alleen het beginscherm overslaat, hoort alleen dat).
+
+### Achteraf: het sjabloon vraagt om een eigen mailserver (5 oktober)
+
+Danny wilde de code in de mail zetten en kreeg in Supabase "Set up custom SMTP
+to edit templates". Zonder eigen mailserver gebruikt Supabase de vaste
+sjablonen, en sinds september 2024 mailt het dan ook alleen naar het eigen
+Supabase-team, hooguit 2 per uur. Voor een gewone speler werkte koppelen of
+inloggen met een mailadres dus niet: Supabase geeft dan de fout
+`email_address_not_authorized`, en die stond in het Engels op het scherm.
+
+- `uitlegAuth()` vertaalt die fout nu: "Met een mailadres lukt het nu nog
+  niet: de app kan nog niet naar iedereen mailen. Gebruik Google, of laat
+  het de beheerder weten."
+- De nabootsing kan het naspelen (`__mail.alleenTeam(true)`), en
+  `test/mailkoppeling.test.mjs` kijkt naar de melding. Eén mutant (de regel
+  weg), gevangen.
+- BEDIENING §7, punt 2 zegt nu dat een eigen mailserver nodig is, met de
+  stappen voor Resend; §5b verwijst ernaar.
+
+Wat Danny doet: Resend inrichten en daarna het sjabloon aanvullen (BEDIENING
+§7 en §5b).
