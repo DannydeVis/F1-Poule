@@ -19,7 +19,7 @@
 
 // Waar iemand terecht kan met een vraag over zijn gegevens. Staat ook in de
 // app (PRIVACY_CONTACT); de test houdt die twee gelijk.
-export const CONTACT = 'devisser.danny@gmail.com';
+export const CONTACT = 'contact@predicttherace.com';
 export const PRIVACY_BIJGEWERKT = '2026-09-24';
 
 export const PRIVACY = {

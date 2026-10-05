@@ -1548,9 +1548,11 @@ een verschillende dienst noemen.
 1. ~~**Een contactadres.**~~ Ingevuld: `PRIVACY_CONTACT` in `app/index.html`
    en `CONTACT` in `site/privacy.mjs`, en de test houdt die twee gelijk. Het
    adres is publiek: het staat op de site en in deze openbare repo, dus
-   spamfilters krijgen er werk aan. Een eigen adres op het domein
-   (`privacy@predicttherace.com`, bij TransIP als doorsturing naar je eigen
-   mail) kan later: dan verander je die twee regels.
+   spamfilters krijgen er werk aan. Sinds 5 oktober is het
+   `contact@predicttherace.com` in plaats van je eigen Gmail. **Die
+   mailbox moet bestaan** (of doorsturen naar je eigen mail): aanmaken bij
+   TransIP, onder E-mail beheren. `test/domein.test.mjs` laat een mailadres
+   op het domein in de app toe; een link met het domein erin blijft verboden.
 2. **Waar de database staat.** De verklaring zegt "in een database bij
    Supabase". In welke regio dat is, staat in je Supabase-dashboard
    (Settings → General). Voor Nederlandse gebruikers is dat het vermelden
@@ -1916,8 +1918,9 @@ het beheer kijkt bij elke keer inloggen of het account het beheeradres heeft.
 
 ### Binnenkomen, op elk toestel
 
-Het beheeradres is `devisser.danny@gmail.com` (het contactadres uit de
-privacyverklaring, in `schema.sql` in `beheer_adres()`). Daarmee inloggen is op
+Het beheeradres is `devisser.danny@gmail.com` (je eigen Google-account, in
+`schema.sql` in `beheer_adres()`; niet hetzelfde als het publieke
+contactadres `contact@predicttherace.com`). Daarmee inloggen is op
 elk toestel hetzelfde:
 
 1. Ga naar **predicttherace.com/beheer/**.

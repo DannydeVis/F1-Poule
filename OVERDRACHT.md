@@ -9720,3 +9720,21 @@ inloggen met een mailadres dus niet: Supabase geeft dan de fout
 
 Wat Danny doet: Resend inrichten en daarna het sjabloon aanvullen (BEDIENING
 §7 en §5b).
+
+## Het contactadres op het eigen domein (5 oktober)
+
+Danny: "overal staat denk ik nog mijn persoonlijke email adres. maar laten we
+dat veranderen in de ...@predicttherace.com". Het publieke contactadres
+(`PRIVACY_CONTACT` in de app, `CONTACT` in `site/privacy.mjs`, en daarmee de
+privacypagina's NL en EN) is nu `contact@predicttherace.com`. Het
+beheeradres in `beheer_adres()` blijft Danny's Gmail: dat is het
+Google-account waarmee hij het beheer opent, en dat staat nergens op de site.
+
+`test/domein.test.mjs` verbood elke vermelding van het domein in de app
+(buiten de deeltags), zodat links uitgerekend worden. Een mailadres is geen
+link, dus dat mag nu; een mutant met een echte link naar het domein wordt
+nog steeds gevangen.
+
+Wat Danny doet: de mailbox (of doorsturing) `contact@predicttherace.com`
+aanmaken bij TransIP.
+
