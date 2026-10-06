@@ -412,27 +412,21 @@ Supabase bovendien alleen naar het eigen team (zie §7). Dus eerst §7, punt 2.
 Daarna **één keer in Supabase**, onder Authentication → Emails, telkens bij
 Body op **Source**. Supabase heeft één sjabloon per soort mail, voor iedereen
 dezelfde taal; de app speelt in het Nederlands en het Engels, dus staan de
-mails voorlopig in het Engels (Danny, 6 oktober). Twee sjablonen doen ertoe:
+mails voorlopig in het Engels (Danny, 6 oktober). Twee sjablonen doen ertoe.
 
-**Magic link or OTP** (inloggen met je mailadres), onderwerp
-`Sign in to Predict the Race`:
+De opgemaakte versies (logo, rode streep, rode knop, de code in een vakje, in
+de kleuren van de app) staan in de repo; kopieer de inhoud van het bestand en
+plak hem bij Source:
 
-```html
-<h2>Sign in to Predict the Race</h2>
-<p><a href="{{ .ConfirmationURL }}">Sign in</a></p>
-<p>Or type this code in the app: <strong>{{ .Token }}</strong></p>
-<p>Didn't ask for this? You can ignore this email.</p>
-```
+| Sjabloon | Onderwerp | Bestand |
+|---|---|---|
+| **Magic link or OTP** (inloggen met je mailadres) | `Sign in to Predict the Race` | `docs/mail/inloggen.html` |
+| **Change email address** (een mailadres koppelen) | `Confirm your email address for Predict the Race` | `docs/mail/mailadres-koppelen.html` |
 
-**Change email address** (een mailadres koppelen), onderwerp
-`Confirm your email address for Predict the Race`:
-
-```html
-<h2>Confirm your email address</h2>
-<p>Click the link below to link {{ .NewEmail }} to your Predict the Race account.</p>
-<p><a href="{{ .ConfirmationURL }}">Confirm email address</a></p>
-<p>Didn't ask for this? You can ignore this email.</p>
-```
+Opgebouwd met tabellen en inline stijlen, want zo leest elk mailprogramma het;
+het logo komt van `predicttherace.com/pictogrammen/`. De voorvertoning in
+Supabase laat `{{ .Token }}` letterlijk staan; in de echte mail staan daar de
+cijfers. `docs/` staat niet op de site (`_config.yml`).
 
 De andere sjablonen (Confirm signup, Invite user, Reset password,
 Reauthentication) gebruikt de app niet. Wil je later elke speler een mail in
