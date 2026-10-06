@@ -9751,3 +9751,10 @@ Eén ding om te onthouden: "Jouw webadres doorsturen" bij TransIP gaat over de
 website, niet over mail. Ingevuld stuurt het predicttherace.com door naar dat
 adres; het stond even op een mailadres en is weer leeg.
 
+De mails zelf kregen daarna een opmaak in de stijl van de app (Danny: "Kunnen
+die niet mooier maken met een logo en achtergrond enzo"): de lichte
+achtergrond, een witte kaart met de rode streep, het logo en de naam, een
+grote rode knop en de code groot in een vakje. Tabellen en inline stijlen,
+omdat mailprogramma's geen stylesheet lezen. Ze staan in `docs/mail/`; Danny
+plakt ze in Supabase (BEDIENING §5b).
+
