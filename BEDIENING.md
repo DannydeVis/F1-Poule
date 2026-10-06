@@ -409,16 +409,36 @@ Daarvoor moet de code wel in de mail staan, en dat doet hij standaard niet.
 En het sjabloon aanpassen kan pas met een **eigen mailserver (SMTP)**: zonder
 staat er in Supabase "Set up custom SMTP to edit templates", en mailt
 Supabase bovendien alleen naar het eigen team (zie §7). Dus eerst §7, punt 2.
-Daarna **één keer in Supabase:** Authentication → Emails → **Magic link or
-OTP**, bij Body op **Source**. Zet daar de code bij, naast de link die er al
-staat, bijvoorbeeld:
+Daarna **één keer in Supabase**, onder Authentication → Emails, telkens bij
+Body op **Source**. Supabase heeft één sjabloon per soort mail, voor iedereen
+dezelfde taal; de app speelt in het Nederlands en het Engels, dus staan de
+mails voorlopig in het Engels (Danny, 6 oktober). Twee sjablonen doen ertoe:
+
+**Magic link or OTP** (inloggen met je mailadres), onderwerp
+`Sign in to Predict the Race`:
 
 ```html
-<h2>Inloggen bij Predict the Race</h2>
-<p><a href="{{ .ConfirmationURL }}">Log in</a></p>
-<p>Of tik deze code in de app in: <strong>{{ .Token }}</strong></p>
-<p>Je hebt hier niet om gevraagd? Dan kun je deze mail negeren.</p>
+<h2>Sign in to Predict the Race</h2>
+<p><a href="{{ .ConfirmationURL }}">Sign in</a></p>
+<p>Or type this code in the app: <strong>{{ .Token }}</strong></p>
+<p>Didn't ask for this? You can ignore this email.</p>
 ```
+
+**Change email address** (een mailadres koppelen), onderwerp
+`Confirm your email address for Predict the Race`:
+
+```html
+<h2>Confirm your email address</h2>
+<p>Click the link below to link {{ .NewEmail }} to your Predict the Race account.</p>
+<p><a href="{{ .ConfirmationURL }}">Confirm email address</a></p>
+<p>Didn't ask for this? You can ignore this email.</p>
+```
+
+De andere sjablonen (Confirm signup, Invite user, Reset password,
+Reauthentication) gebruikt de app niet. Wil je later elke speler een mail in
+zijn eigen taal, dan moet de app de taal bij het account bewaren
+(`user_metadata`) en kiest het sjabloon daarop met `{{ if }}`; dat is een
+kleine aanpassing in de app.
 
 Tot dat gebeurd is werkt alles verder gewoon (de link doet het), alleen
 blijft het codeveld leeg voor wie in een iPhone-beginschermapp inlogt. Een
@@ -901,7 +921,11 @@ vergeet je zeker één keer:
       Custom SMTP aan; afzender `noreply@predicttherace.com`, naam
       `Predict the Race`; host `smtp.resend.com`, poort `465`, gebruikersnaam
       `resend`, wachtwoord de sleutel uit stap 2. Opslaan.
-   4. Daarna het sjabloon Magic link or OTP aanvullen, zie §5b.
+   4. Daarna de sjablonen Magic link or OTP en Change email address, zie §5b.
+   De afzender is `noreply@predicttherace.com`. Resend staat in de regio
+   Ireland (eu-west-1); de DNS-regels van Resend (`resend._domainkey`,
+   `send`, `rsend`) staan bij TransIP naast die voor TransIP-mail (MX en SPF
+   op `@`) en die voor de site. Daar niets van weghalen.
 
 En kijk één keer wat er daadwerkelijk in de mailbox belandt: onder Authentication
 → Emails staan de sjablonen, en die zijn Engels en generiek ("Confirm your email

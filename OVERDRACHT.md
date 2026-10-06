@@ -9738,3 +9738,16 @@ nog steeds gevangen.
 Wat Danny doet: de mailbox (of doorsturing) `contact@predicttherace.com`
 aanmaken bij TransIP.
 
+### Ingericht (6 oktober)
+
+De mailbox `contact@predicttherace.com` staat bij TransIP en ontvangt; daarvoor
+kwamen MX, SPF en één DKIM-regel (`transip-A._domainkey`) bij in de DNS (de
+B- en C-regel stonden er al). Resend is ingericht met het domein, regio
+Ireland, en zijn eigen regels (`resend._domainkey`, `send`, `rsend`). De
+mails van Supabase staan voorlopig in het Engels: één sjabloon per soort, en
+de app speelt in twee talen. De teksten staan in BEDIENING §5b.
+
+Eén ding om te onthouden: "Jouw webadres doorsturen" bij TransIP gaat over de
+website, niet over mail. Ingevuld stuurt het predicttherace.com door naar dat
+adres; het stond even op een mailadres en is weer leeg.
+
