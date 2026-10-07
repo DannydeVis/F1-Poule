@@ -376,9 +376,13 @@ lijst over al je toestellen vraagt om een login; zie OVERDRACHT.md.
 
 Onder het codeveld staat een blok **inloggen**: een Google-knop met het
 officiële logo en gewone schrijfwijze, en daaronder "Inloggen met je
-mailadres" (een inloglink, geen wachtwoord). Beide zijn er alleen voor wie
-zijn account al gekoppeld heeft; wie dat niet heeft, tikt gewoon zijn
-poulecode in.
+mailadres" (een inloglink en een code, geen wachtwoord). Hoort het adres al
+bij een account, dan log je daarmee in. Hoort het nergens bij, dan maakt het
+een account (sinds 7 oktober; Danny: "Kan toch gewoon eerst een
+account/profiel aanmaken en dan een poule"), en daarna doe je mee met een
+poule of maak je er een. Speel je op dat toestel al mee, dan komt een nieuw
+adres aan dát account, zodat je spelers meegaan. Google maakte al een account
+als dat er nog niet was.
 
 Twee dingen liggen hier vast, en ze werken tegen elkaar in:
 
@@ -412,7 +416,7 @@ Supabase bovendien alleen naar het eigen team (zie §7). Dus eerst §7, punt 2.
 Daarna **één keer in Supabase**, onder Authentication → Emails, telkens bij
 Body op **Source**. Supabase heeft één sjabloon per soort mail, voor iedereen
 dezelfde taal; de app speelt in het Nederlands en het Engels, dus staan de
-mails voorlopig in het Engels (Danny, 6 oktober). Twee sjablonen doen ertoe.
+mails voorlopig in het Engels (Danny, 6 oktober). Drie sjablonen doen ertoe.
 
 De opgemaakte versies (logo, rode streep, rode knop, de code in een vakje, in
 de kleuren van de app) staan in de repo; kopieer de inhoud van het bestand en
@@ -422,14 +426,16 @@ plak hem bij Source:
 |---|---|---|
 | **Magic link or OTP** (inloggen met je mailadres) | `Sign in to Predict the Race` | `docs/mail/inloggen.html` |
 | **Change email address** (een mailadres koppelen) | `Confirm your email address for Predict the Race` | `docs/mail/mailadres-koppelen.html` |
+| **Confirm signup** (een nieuw account met je mailadres) | `Welcome to Predict the Race` | `docs/mail/account-maken.html` |
 
 Opgebouwd met tabellen en inline stijlen, want zo leest elk mailprogramma het;
 het logo komt van `predicttherace.com/pictogrammen/`. De voorvertoning in
 Supabase laat `{{ .Token }}` letterlijk staan; in de echte mail staan daar de
 cijfers. `docs/` staat niet op de site (`_config.yml`).
 
-De andere sjablonen (Confirm signup, Invite user, Reset password,
-Reauthentication) gebruikt de app niet. Wil je later elke speler een mail in
+Confirm signup is wat Supabase stuurt als iemand met een nieuw adres inlogt;
+daar staat dus ook de code in. De andere sjablonen (Invite user, Reset
+password, Reauthentication) gebruikt de app niet. Wil je later elke speler een mail in
 zijn eigen taal, dan moet de app de taal bij het account bewaren
 (`user_metadata`) en kiest het sjabloon daarop met `{{ if }}`; dat is een
 kleine aanpassing in de app.
@@ -872,9 +878,11 @@ Drie dingen die daarbij horen:
 - **"Gestuurd" is niet "gekoppeld".** Tot iemand op de link in de mail klikt
   staat het adres in `new_email` en is er niets veranderd. Het scherm zegt dat
   ook zo.
-- **Een onbekend adres maakt geen account aan** (`shouldCreateUser: false`).
-  Anders levert één typfout je een leeg account op waarin al je voorspellingen
-  verdwenen lijken.
+- **Eerst inloggen, dan pas een account maken.** De app vraagt eerst met
+  `shouldCreateUser: false`, zodat een bekend adres altijd bij zijn eigen
+  account uitkomt en nooit een tweede krijgt. Pas als het adres nergens bij
+  hoort, maakt hij een account (of koppelt hij het adres aan wie je op dit
+  toestel al bent). Een typfout kost niets: de mail komt dan nergens aan.
 - **Na het inloggen wint je account** van de speler die dit toestel toevallig
   onthield. Inloggen is een uitspraak: je bedoelt jezelf.
 

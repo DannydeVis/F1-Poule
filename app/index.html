@@ -1749,12 +1749,25 @@ async function koppelMail(mail) {
   } catch (e) { return { fout: uitlegAuth(e) }; }
 }
 
-// Inloggen op een toestel waar je account nog niet staat.
+// Inloggen op een toestel waar je account nog niet staat, of een account
+// maken.
 //
-// `shouldCreateUser: false` is hier belangrijk. Standaard maakt Supabase een
-// nieuw account aan bij een onbekend adres, en dan levert één typfout je een
-// leeg account op waarin al je voorspellingen verdwenen lijken. Beter een
-// melding dat dat adres nog nergens bij hoort.
+// Eerst als inloggen (`shouldCreateUser: false`): hoort het adres al bij een
+// account, dan krijg je dat account, en nooit per ongeluk een tweede.
+//
+// Hoort het nergens bij, dan was het eerst een foutmelding ("koppel het
+// eerst op het toestel waar je al meespeelt"). Danny: "Kan toch gewoon eerst
+// een account/profiel aanmaken en dan een poule". Nu dus:
+//
+//   - speel je op dit toestel al mee (een anoniem account), dan komt het
+//     adres aan dát account, zodat je spelers meegaan (koppelMail);
+//   - anders maakt Supabase een nieuw account met dit adres, en doe je
+//     daarna mee met een poule of maak je er een.
+//
+// Een typfout kost zo niets: de mail komt dan nergens aan, en zonder klik op
+// de link of de code is er niets gekoppeld of ingelogd.
+//
+// `soort` zegt welke van de drie het werd, want het scherm zegt het erbij.
 async function stuurInlogLink(mail) {
   if (DEMO || !db) return { fout: T('Inloggen kan niet in demomodus.') };
   try {
@@ -1762,7 +1775,21 @@ async function stuurInlogLink(mail) {
       email: mail,
       options: { shouldCreateUser: false, emailRedirectTo: inlogTerugLink() },
     });
-    return { fout: error ? uitlegAuth(error) : '' };
+    if (!error) return { fout: '', soort: 'inloggen' };
+    const onbekend = error.code === 'otp_disabled' || /signups not allowed/i.test(String(error.message ?? ''));
+    if (!onbekend) return { fout: uitlegAuth(error) };
+  } catch (e) { return { fout: uitlegAuth(e) }; }
+
+  if (mijnUid && !kanTerugkomen()) {
+    const uit = await koppelMail(mail);
+    return uit.fout ? uit : { fout: '', soort: 'koppelen' };
+  }
+  try {
+    const { error } = await db.auth.signInWithOtp({
+      email: mail,
+      options: { shouldCreateUser: true, emailRedirectTo: inlogTerugLink() },
+    });
+    return error ? { fout: uitlegAuth(error) } : { fout: '', soort: 'nieuw' };
   } catch (e) { return { fout: uitlegAuth(e) }; }
 }
 
@@ -1809,7 +1836,7 @@ function uitlegAuth(error) {
   }
   if (code === 'otp_disabled' || /signups not allowed/i.test(bericht)) {
     return T('Bij dat mailadres hoort nog geen account. Koppel het eerst onder '
-         + 'Poule, op het toestel waar je al meespeelt.');
+         + 'Profiel, op het toestel waar je al meespeelt.');
   }
   // Zonder eigen mailserver (SMTP) mailt Supabase alleen naar leden van het
   // eigen Supabase-team; iedereen anders krijgt deze fout in plaats van een
@@ -2041,8 +2068,21 @@ const ENGELS = Object.fromEntries([
   ['Inloggen met je mailadres',
    'Sign in with your email address'],
   ['Speelde je al mee op een '
-   + 'ander toestel? Dan hoef je de poulecode niet.',
-   'Already playing on another device? Then you do not need the pool code.'],
+   + 'ander toestel? Dan hoef je de poulecode niet. Nog geen account? Dan maak je '
+   + 'er hier een, en kies je daarna je poule.',
+   'Already playing on another device? Then you do not need the pool code. No '
+   + 'account yet? Create one here, then pick your pool.'],
+  ['Aan <b>{adres}</b> '
+   + 'hing nog geen account, dus maken we er een. Daarna doe je mee met een poule of '
+   + 'maak je er zelf een.',
+   'There was no account for <b>{adres}</b> yet, so we are creating one. After '
+   + 'that you join a pool or create your own.'],
+  ['Aan <b>{adres}</b> hing nog geen account. We '
+   + 'koppelen het aan wie je op dit toestel al bent, zodat je spelers meegaan. Klik '
+   + 'op de link in de mail om het af te maken.',
+   'There was no account for <b>{adres}</b> yet. We are linking it to who you '
+   + 'already are on this device, so your players come along. Click the link in '
+   + 'the email to finish.'],
   ['jij@voorbeeld.nl',
    'you@example.com'],
   ['Stuur me een inloglink',
@@ -2352,8 +2392,8 @@ const ENGELS = Object.fromEntries([
    'That email address already belongs to an account. Choose "Sign in with '
    + 'your email address" on the start screen to open that account here.'],
   ['Bij dat mailadres hoort nog geen account. Koppel het eerst onder '
-   + 'Poule, op het toestel waar je al meespeelt.',
-   'There is no account for that email address yet. Link it first under Pool, '
+   + 'Profiel, op het toestel waar je al meespeelt.',
+   'There is no account for that email address yet. Link it first under Profile, '
    + 'on the device where you already play.'],
   ['Er is net al een mail verstuurd. Wacht een minuutje en probeer het opnieuw.',
    'An email was just sent. Wait a minute and try again.'],
@@ -11861,10 +11901,22 @@ function inlogBlok() {
   // Na het versturen: de link, en de code voor waar de link niet werkt. In
   // de app op het beginscherm van een iPhone is dat altijd zo (zie
   // inloggenMetCode), en daar zeggen we het dan ook.
+  if (S.inlog.gestuurd && S.inlog.soort === 'koppelen') {
+    return `<div class="scheiding"></div>
+      <div class="veldblok">
+        <p class="zacht" style="margin:0">${T('Aan <b>{adres}</b> hing nog geen account. We '
+          + 'koppelen het aan wie je op dit toestel al bent, zodat je spelers meegaan. Klik '
+          + 'op de link in de mail om het af te maken.', { adres: esc(S.inlog.gestuurd) })}</p>
+        <button class="knop klein" id="inlogopnieuw">${T('Ander mailadres of een nieuwe mail')}</button>
+      </div>`;
+  }
   if (S.inlog.gestuurd) {
     const adres = esc(S.inlog.gestuurd);
     return `<div class="scheiding"></div>
       <div class="veldblok">
+        ${S.inlog.soort === 'nieuw' ? `<p class="zacht" style="margin:0">${T('Aan <b>{adres}</b> '
+          + 'hing nog geen account, dus maken we er een. Daarna doe je mee met een poule of '
+          + 'maak je er zelf een.', { adres })}</p>` : ''}
         <p class="zacht" style="margin:0">${isApple() && alGeinstalleerd()
           ? T('We hebben een mail gestuurd naar <b>{adres}</b>. Tik hieronder de code uit '
             + 'die mail in. De link in de mail opent Safari, en niet deze app.', { adres })
@@ -11890,7 +11942,8 @@ function inlogBlok() {
         ${google}
         <button class="knop spook" id="inlogopen">${T('Inloggen met je mailadres')}</button>
         <p class="zacht" style="margin:0;font-size:13px">${T('Speelde je al mee op een '
-          + 'ander toestel? Dan hoef je de poulecode niet.')}</p>
+          + 'ander toestel? Dan hoef je de poulecode niet. Nog geen account? Dan maak je '
+          + 'er hier een, en kies je daarna je poule.')}</p>
         <p class="err" id="inlogfout">${esc(S.inlog.fout)}</p>
       </div>`;
   }
@@ -11943,7 +11996,8 @@ function knoopInlog() {
     knop.disabled = true;
     const uit = await stuurInlogLink(mail);
     knop.disabled = false;
-    S.inlog = { open: !!uit.fout, fout: uit.fout, gestuurd: uit.fout ? '' : mail };
+    S.inlog = { open: !!uit.fout, fout: uit.fout, gestuurd: uit.fout ? '' : mail,
+                soort: uit.soort ?? '' };
     toonStart();
   };
 }

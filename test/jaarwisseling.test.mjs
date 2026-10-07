@@ -226,8 +226,12 @@ for (const r of wereld.races) {
     vroeg('year=2027').length === 1, vroeg('year=2027').join(' '));
   check('er komt niets in de database', jaren() === '2026', jaren());
   const ics = readFileSync(agenda, 'utf8');
+  // Geen datum in 2027 en geen race uit 2027. Niet "nergens 2027": de
+  // tijden in deze test lopen met de klok mee, en om 19:20:27 staat er
+  // T192027Z in een tijdstempel. Precies dat liet deze controle een keer
+  // vallen (7 oktober).
   check('de agenda houdt 2026 en krijgt geen leeg of verzonnen 2027',
-    ics.includes('Circuit 2026-4') && !ics.includes('2027'));
+    ics.includes('Circuit 2026-4') && !/2027\d{4}T/.test(ics) && !ics.includes('Circuit 2027'));
   check('de log zegt waarom', /nog geen races voor 2027/.test(log), log.slice(-300));
 }
 
