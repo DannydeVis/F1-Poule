@@ -69,6 +69,18 @@ check('en de kop zegt dat ze nog open staan',
   (await tekst('.seizoenslaag .label')).includes('nog in te vullen'),
   await tekst('.seizoenslaag .label'));
 
+// Danny, bij het aantal winnaars: "geeft hij een telefoonnummer weer". Een
+// iPhone raadt aan de tekst van het label wat voor veld het is, en "Tel
+// alleen races" las hij als telefoon. Dus: geen woord in een label dat naar
+// een telefoon klinkt, en het getalveld vraagt niet om automatisch invullen.
+const labels = await page.$$eval('[data-seizoenvraag]', (n) =>
+  n.map((e) => (e.closest('label')?.textContent ?? '').replace(/\s+/g, ' ').trim()));
+const telefoonachtig = labels.filter((t) => /\b(tel|telefoon|phone|mobiel|gsm)\b/i.test(t));
+check('geen label klinkt als een telefoonveld',
+  labels.length === 4 && telefoonachtig.length === 0, telefoonachtig.join(' | '));
+check('en het getalveld vraagt niet om automatisch invullen',
+  (await page.getAttribute('[data-seizoenvraag="winnaars"]', 'autocomplete')) === 'off');
+
 // Verstappen kampioen, McLaren de titel, acht verschillende winnaars, Aston
 // vierde. De eerste twee kloppen straks, de andere twee niet.
 await page.selectOption('[data-seizoenvraag="kampioen"]', '1');

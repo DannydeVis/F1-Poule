@@ -9814,3 +9814,59 @@ soms niets. De drie controles die direct na het openen lezen wachten nu eerst
 op de taalknop, die alleen op een getekend beginscherm staat. Nagespeeld met
 een nabootsing die anderhalve seconde wacht: de oude test zakt dan op alle
 drie, de nieuwe slaagt.
+
+---
+
+## De mail in Ongewenst, en een telefoonnummer bij een getal (7 oktober)
+
+Danny testte de mails en stuurde drie dingen terug: de mail komt aan maar in
+Outlook bij Ongewenst; bij "hoeveel verschillende coureurs winnen er een race?"
+biedt zijn iPhone telefoonnummers aan; en een melding van Google Search
+Console over pagina's die niet in Google staan.
+
+**De knop in de mail wijst nu naar de app.** Tot nu toe stond er
+`{{ .ConfirmationURL }}` in de sjablonen, een adres op supabase.co, in een
+mail van predicttherace.com. Dat oogt voor een spamfilter verdacht. En
+Outlook opent links vooraf om ze te controleren: een link die bij openen al
+inlogt, is dan op voordat de speler erop tikt ("die code klopt niet of is
+verlopen"). Nu staat er
+`https://predicttherace.com/app/?token_hash={{ .TokenHash }}&type=email` (bij
+koppelen `type=email_change`), en de app wisselt die sleutel zelf in met
+`verifyOtp({ token_hash, type })`. Een vooraf geopende link doet zo niets,
+want er draait geen app die hem inwisselt. Het werkt ook in een andere
+browser dan waar de mail werd aangevraagd.
+
+In de app: `MAILLINK` leest de twee parameters bij het laden (alleen `email`
+en `email_change`, de soorten die de app verstuurt); bij de start wisselt
+`inloggenMetMaillink()` hem in vóór `bestaandeSessie()`, zodat die de nieuwe
+sessie vindt. De adresbalk gaat eerst leeg, want de link werkt één keer. Lukt
+het niet, dan zegt de app "Die link is al gebruikt of verlopen" (in de poule
+als melding, op het beginscherm in de foutregel) en wordt `VAN_INLOGLINK`
+weer false; daarom is dat nu een `let`. De oude weg (`?code=` of
+`#access_token`, via supabase-js zelf) blijft werken voor mails die nog met
+het oude sjabloon zijn verstuurd.
+
+De sjablonen kregen ook een onzichtbare eerste regel tekst. Een
+mailprogramma toont de eerste tekst als voorvertoning, en dat was het adres
+van het logo. En een stijlregel voor Apple Mail, dat de code als
+telefoonnummer zag en blauw onderstreepte. Danny plakt de drie bestanden
+opnieuw in Supabase, en zet een DMARC-regel in de DNS (BEDIENING §7, punt 5).
+
+**Het telefoonnummer.** Een iPhone raadt aan de tekst van het label wat voor
+veld het is, en de uitleg begon met "Tel alleen races". Die is nu "Alleen
+races, geen sprints." (EN "Races only, not sprints."), en het getalveld heeft
+`autocomplete="off"`.
+
+**Search Console.** "Uitgesloten door tag noindex" zijn de app, de
+beheerpagina en de 404-pagina: die staan er met opzet niet in. "Pagina met
+omleiding" zijn `http://` naar `https://`, `www.` naar zonder, en `/app` naar
+`/app/`. Niets aan te doen.
+
+**Tests.** `test/maillink.test.mjs` (25): de sjablonen hebben de juiste link
+en het juiste type, geen `ConfirmationURL` meer, en een voorvertoning vóór het
+logo; koppelen, inloggen op een leeg toestel en een nieuw account met de
+link; een gebruikte link zegt dat, in de poule en op het beginscherm; een
+onbekende soort doet niets. De nabootsing kent nu `token_hash` bij
+`verifyOtp` en `__mail.laatsteMaillink()`. `test/seizoenslaag.test.mjs` kreeg
+twee controles: geen label dat naar een telefoon klinkt, en het getalveld
+zonder automatisch invullen. Tien mutanten, alle gevangen.

@@ -428,6 +428,21 @@ plak hem bij Source:
 | **Change email address** (een mailadres koppelen) | `Confirm your email address for Predict the Race` | `docs/mail/mailadres-koppelen.html` |
 | **Confirm signup** (een nieuw account met je mailadres) | `Welcome to Predict the Race` | `docs/mail/account-maken.html` |
 
+**De knop gaat naar de app, niet naar Supabase** (sinds 7 oktober). In alle
+drie staat `https://predicttherace.com/app/?token_hash={{ .TokenHash }}&type=…`
+in plaats van `{{ .ConfirmationURL }}`, en de app wisselt die sleutel zelf in.
+Twee redenen: een knop naar supabase.co in een mail van predicttherace.com
+oogt voor een spamfilter verdacht (Danny's mail kwam in Outlook bij
+Ongewenst), en Outlook opent links vooraf om ze te controleren, waarmee een
+gewone inloglink al op was voordat iemand erop tikte. Deze link doet pas iets
+als de app hem opent. Het type is `email` bij inloggen en een nieuw account,
+`email_change` bij koppelen; `test/maillink.test.mjs` controleert dat de
+bestanden en de app het daarover eens zijn. Bovenaan elk bestand staat ook
+een onzichtbare regel tekst: dat is wat een mailprogramma als voorvertoning
+toont, en zonder die regel was dat het adres van het logo. **Na een wijziging
+in `docs/mail/` plak je het bestand opnieuw in Supabase**; de app zelf
+verandert vanzelf mee, de sjablonen niet.
+
 Opgebouwd met tabellen en inline stijlen, want zo leest elk mailprogramma het;
 het logo komt van `predicttherace.com/pictogrammen/`. De voorvertoning in
 Supabase laat `{{ .Token }}` letterlijk staan; in de echte mail staan daar de
@@ -923,16 +938,21 @@ vergeet je zeker één keer:
       Custom SMTP aan; afzender `noreply@predicttherace.com`, naam
       `Predict the Race`; host `smtp.resend.com`, poort `465`, gebruikersnaam
       `resend`, wachtwoord de sleutel uit stap 2. Opslaan.
-   4. Daarna de sjablonen Magic link or OTP en Change email address, zie §5b.
+   4. Daarna de drie sjablonen, zie §5b.
+   5. **Niet in Ongewenst.** Bij TransIP onder DNS een regel erbij: naam
+      `_dmarc`, type `TXT`, waarde `v=DMARC1; p=none;`. Daarmee zegt het
+      domein dat ongetekende mail niet van hem is, en Outlook en Gmail
+      wegen dat mee. En bij Resend, onder Domains → predicttherace.com, staan
+      *Click tracking* en *Open tracking* uit: tracking herschrijft de links
+      in de mail, en dat vinden spamfilters verdacht.
    De afzender is `noreply@predicttherace.com`. Resend staat in de regio
    Ireland (eu-west-1); de DNS-regels van Resend (`resend._domainkey`,
    `send`, `rsend`) staan bij TransIP naast die voor TransIP-mail (MX en SPF
    op `@`) en die voor de site. Daar niets van weghalen.
 
-En kijk één keer wat er daadwerkelijk in de mailbox belandt: onder Authentication
-→ Emails staan de sjablonen, en die zijn Engels en generiek ("Confirm your email
-change"). Voor een Nederlandse poule-app is dat op zijn minst verwarrend. Ook
-die zijn pas aan te passen met een eigen mailserver (punt 2).
+Komt een mail toch bij Ongewenst, dan helpt "Geen ongewenste e-mail" in dat
+mailprogramma voor die ene mailbox. Voor de rest groeit het vertrouwen in een
+nieuw domein met elke mail die goed aankomt.
 
 ### Wat de database nu wél afdwingt
 
