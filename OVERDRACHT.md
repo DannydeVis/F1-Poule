@@ -9849,8 +9849,13 @@ het oude sjabloon zijn verstuurd.
 De sjablonen kregen ook een onzichtbare eerste regel tekst. Een
 mailprogramma toont de eerste tekst als voorvertoning, en dat was het adres
 van het logo. En een stijlregel voor Apple Mail, dat de code als
-telefoonnummer zag en blauw onderstreepte. Danny plakt de drie bestanden
-opnieuw in Supabase, en zet een DMARC-regel in de DNS (BEDIENING §7, punt 5).
+telefoonnummer zag en blauw onderstreepte. Danny plakte de drie bestanden
+opnieuw in Supabase (7 oktober, met het onderwerp "Confirm your email address
+for Predict the Race" bij Change email address). De DMARC-regel bleek er al te
+staan ("Dit exacte record bestaat al" bij TransIP), en bij Resend bestaat geen
+tracking-domein, dus staat tracking uit. Let op: de voorvertoning in Supabase
+toont het logo als kapot plaatje, omdat hij geen plaatjes van buiten laadt; in
+de echte mail staat het er wel.
 
 **Het telefoonnummer.** Een iPhone raadt aan de tekst van het label wat voor
 veld het is, en de uitleg begon met "Tel alleen races". Die is nu "Alleen
