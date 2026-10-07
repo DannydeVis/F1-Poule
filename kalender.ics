@@ -42,6 +42,40 @@ DESCRIPTION:Race Melbourne: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713105@f1-poule
+DTSTAMP:20270313T110000Z
+DTSTART:20270313T110000Z
+DTEND:20270313T120000Z
+SUMMARY:Kwalificatie Bahrain — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Bahrain\, Bahrain
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Bahrain: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713105@f1-poule
+DTSTAMP:20270314T110000Z
+DTSTART:20270314T110000Z
+DTEND:20270314T120000Z
+SUMMARY:Race Bahrain — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Bahrain\, Bahrain
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Bahrain: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11245@f1-poule
 DTSTAMP:20260314T070000Z
 DTSTART:20260314T070000Z
@@ -73,6 +107,40 @@ BEGIN:VALARM
 ACTION:DISPLAY
 TRIGGER:-PT1H
 DESCRIPTION:Race Shanghai: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713115@f1-poule
+DTSTAMP:20270320T110000Z
+DTSTART:20270320T110000Z
+DTEND:20270320T120000Z
+SUMMARY:Kwalificatie Jeddah — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Jeddah\, Saudi Arabia
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Jeddah: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713115@f1-poule
+DTSTAMP:20270321T110000Z
+DTSTART:20270321T110000Z
+DTEND:20270321T120000Z
+SUMMARY:Race Jeddah — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Jeddah\, Saudi Arabia
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Jeddah: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
@@ -110,6 +178,40 @@ DESCRIPTION:Race Suzuka: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713125@f1-poule
+DTSTAMP:20270403T040000Z
+DTSTART:20270403T040000Z
+DTEND:20270403T050000Z
+SUMMARY:Kwalificatie Melbourne — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Melbourne\, Australia
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Melbourne: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713125@f1-poule
+DTSTAMP:20270404T040000Z
+DTSTART:20270404T040000Z
+DTEND:20270404T050000Z
+SUMMARY:Race Melbourne — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Melbourne\, Australia
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Melbourne: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11261@f1-poule
 DTSTAMP:20260411T160000Z
 DTSTART:20260411T160000Z
@@ -141,6 +243,40 @@ BEGIN:VALARM
 ACTION:DISPLAY
 TRIGGER:-PT1H
 DESCRIPTION:Race Sakhir: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713135@f1-poule
+DTSTAMP:20270410T050000Z
+DTSTART:20270410T050000Z
+DTEND:20270410T060000Z
+SUMMARY:Kwalificatie Suzuka — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Suzuka\, Japan
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Suzuka: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713135@f1-poule
+DTSTAMP:20270411T050000Z
+DTSTART:20270411T050000Z
+DTEND:20270411T060000Z
+SUMMARY:Race Suzuka — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Suzuka\, Japan
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Suzuka: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
@@ -178,6 +314,40 @@ DESCRIPTION:Race Jeddah: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713145@f1-poule
+DTSTAMP:20270417T060000Z
+DTSTART:20270417T060000Z
+DTEND:20270417T070000Z
+SUMMARY:Kwalificatie Shanghai — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Shanghai\, China
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Shanghai: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713145@f1-poule
+DTSTAMP:20270418T060000Z
+DTSTART:20270418T060000Z
+DTEND:20270418T070000Z
+SUMMARY:Race Shanghai — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Shanghai\, China
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Shanghai: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11280@f1-poule
 DTSTAMP:20260502T200000Z
 DTSTART:20260502T200000Z
@@ -199,6 +369,40 @@ UID:race-11280@f1-poule
 DTSTAMP:20260503T170000Z
 DTSTART:20260503T170000Z
 DTEND:20260503T180000Z
+SUMMARY:Race Miami Gardens — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Miami Gardens\, United States
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Miami Gardens: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713155@f1-poule
+DTSTAMP:20270501T200000Z
+DTSTART:20270501T200000Z
+DTEND:20270501T210000Z
+SUMMARY:Kwalificatie Miami Gardens — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Miami Gardens\, United States
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Miami Gardens: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713155@f1-poule
+DTSTAMP:20270502T200000Z
+DTSTART:20270502T200000Z
+DTEND:20270502T210000Z
 SUMMARY:Race Miami Gardens — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
  .\n\nhttps://predicttherace.com/app/
@@ -246,6 +450,40 @@ DESCRIPTION:Race Montréal: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713165@f1-poule
+DTSTAMP:20270522T200000Z
+DTSTART:20270522T200000Z
+DTEND:20270522T210000Z
+SUMMARY:Kwalificatie Montréal — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Montréal\, Canada
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Montréal: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713165@f1-poule
+DTSTAMP:20270523T200000Z
+DTSTART:20270523T200000Z
+DTEND:20270523T210000Z
+SUMMARY:Race Montréal — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Montréal\, Canada
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Montréal: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11299@f1-poule
 DTSTAMP:20260606T140000Z
 DTSTART:20260606T140000Z
@@ -267,6 +505,40 @@ UID:race-11299@f1-poule
 DTSTAMP:20260607T130000Z
 DTSTART:20260607T130000Z
 DTEND:20260607T140000Z
+SUMMARY:Race Monte Carlo — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Monte Carlo\, Monaco
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Monte Carlo: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713175@f1-poule
+DTSTAMP:20270605T130000Z
+DTSTART:20270605T130000Z
+DTEND:20270605T140000Z
+SUMMARY:Kwalificatie Monte Carlo — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Monte Carlo\, Monaco
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Monte Carlo: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713175@f1-poule
+DTSTAMP:20270606T130000Z
+DTSTART:20270606T130000Z
+DTEND:20270606T140000Z
 SUMMARY:Race Monte Carlo — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
  .\n\nhttps://predicttherace.com/app/
@@ -314,6 +586,40 @@ DESCRIPTION:Race Barcelona: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713185@f1-poule
+DTSTAMP:20270619T140000Z
+DTSTART:20270619T140000Z
+DTEND:20270619T150000Z
+SUMMARY:Kwalificatie Portimão — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Portimão\, Portugal
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Portimão: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713185@f1-poule
+DTSTAMP:20270620T140000Z
+DTSTART:20270620T140000Z
+DTEND:20270620T150000Z
+SUMMARY:Race Portimão — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Portimão\, Portugal
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Portimão: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11315@f1-poule
 DTSTAMP:20260627T140000Z
 DTSTART:20260627T140000Z
@@ -345,6 +651,40 @@ BEGIN:VALARM
 ACTION:DISPLAY
 TRIGGER:-PT1H
 DESCRIPTION:Race Spielberg: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713195@f1-poule
+DTSTAMP:20270703T140000Z
+DTSTART:20270703T140000Z
+DTEND:20270703T150000Z
+SUMMARY:Kwalificatie Silverstone — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Silverstone\, United Kingdom
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Silverstone: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713195@f1-poule
+DTSTAMP:20270704T140000Z
+DTSTART:20270704T140000Z
+DTEND:20270704T150000Z
+SUMMARY:Race Silverstone — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Silverstone\, United Kingdom
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Silverstone: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
@@ -382,6 +722,40 @@ DESCRIPTION:Race Silverstone: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713205@f1-poule
+DTSTAMP:20270710T130000Z
+DTSTART:20270710T130000Z
+DTEND:20270710T140000Z
+SUMMARY:Kwalificatie Spielberg — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Spielberg\, Austria
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Spielberg: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713205@f1-poule
+DTSTAMP:20270711T130000Z
+DTSTART:20270711T130000Z
+DTEND:20270711T140000Z
+SUMMARY:Race Spielberg — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Spielberg\, Austria
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Spielberg: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11334@f1-poule
 DTSTAMP:20260718T140000Z
 DTSTART:20260718T140000Z
@@ -403,6 +777,40 @@ UID:race-11334@f1-poule
 DTSTAMP:20260719T130000Z
 DTSTART:20260719T130000Z
 DTEND:20260719T140000Z
+SUMMARY:Race Spa-Francorchamps — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Spa-Francorchamps\, Belgium
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Spa-Francorchamps: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713215@f1-poule
+DTSTAMP:20270724T130000Z
+DTSTART:20270724T130000Z
+DTEND:20270724T140000Z
+SUMMARY:Kwalificatie Spa-Francorchamps — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Spa-Francorchamps\, Belgium
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Spa-Francorchamps: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713215@f1-poule
+DTSTAMP:20270725T130000Z
+DTSTART:20270725T130000Z
+DTEND:20270725T140000Z
 SUMMARY:Race Spa-Francorchamps — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
  .\n\nhttps://predicttherace.com/app/
@@ -450,6 +858,40 @@ DESCRIPTION:Race Budapest: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713225@f1-poule
+DTSTAMP:20270731T130000Z
+DTSTART:20270731T130000Z
+DTEND:20270731T140000Z
+SUMMARY:Kwalificatie Budapest — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Budapest\, Hungary
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Budapest: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713225@f1-poule
+DTSTAMP:20270801T130000Z
+DTSTART:20270801T130000Z
+DTEND:20270801T140000Z
+SUMMARY:Race Budapest — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Budapest\, Hungary
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Budapest: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11353@f1-poule
 DTSTAMP:20260822T140000Z
 DTSTART:20260822T140000Z
@@ -481,6 +923,40 @@ BEGIN:VALARM
 ACTION:DISPLAY
 TRIGGER:-PT1H
 DESCRIPTION:Race Zandvoort: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713235@f1-poule
+DTSTAMP:20270904T130000Z
+DTSTART:20270904T130000Z
+DTEND:20270904T140000Z
+SUMMARY:Kwalificatie Monza — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Monza\, Italy
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Monza: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713235@f1-poule
+DTSTAMP:20270905T130000Z
+DTSTART:20270905T130000Z
+DTEND:20270905T140000Z
+SUMMARY:Race Monza — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Monza\, Italy
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Monza: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
@@ -518,6 +994,40 @@ DESCRIPTION:Race Monza: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713245@f1-poule
+DTSTAMP:20270911T130000Z
+DTSTART:20270911T130000Z
+DTEND:20270911T140000Z
+SUMMARY:Kwalificatie Madrid — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Madrid\, Spain
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Madrid: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713245@f1-poule
+DTSTAMP:20270912T130000Z
+DTSTART:20270912T130000Z
+DTEND:20270912T140000Z
+SUMMARY:Race Madrid — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Madrid\, Spain
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Madrid: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11369@f1-poule
 DTSTAMP:20260912T140000Z
 DTSTART:20260912T140000Z
@@ -549,6 +1059,40 @@ BEGIN:VALARM
 ACTION:DISPLAY
 TRIGGER:-PT1H
 DESCRIPTION:Race Madrid: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713255@f1-poule
+DTSTAMP:20270925T100000Z
+DTSTART:20270925T100000Z
+DTEND:20270925T110000Z
+SUMMARY:Kwalificatie Baku — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Baku\, Azerbaijan
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Baku: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713255@f1-poule
+DTSTAMP:20270926T100000Z
+DTSTART:20270926T100000Z
+DTEND:20270926T110000Z
+SUMMARY:Race Baku — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Baku\, Azerbaijan
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Baku: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
@@ -586,6 +1130,40 @@ DESCRIPTION:Race Baku: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713265@f1-poule
+DTSTAMP:20271002T110000Z
+DTSTART:20271002T110000Z
+DTEND:20271002T120000Z
+SUMMARY:Kwalificatie Istanbul — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Istanbul\, Turkey
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Istanbul: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713265@f1-poule
+DTSTAMP:20271003T110000Z
+DTSTART:20271003T110000Z
+DTEND:20271003T120000Z
+SUMMARY:Race Istanbul — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Istanbul\, Turkey
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Istanbul: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11731@f1-poule
 DTSTAMP:20261003T080000Z
 DTSTART:20261003T080000Z
@@ -617,6 +1195,40 @@ BEGIN:VALARM
 ACTION:DISPLAY
 TRIGGER:-PT1H
 DESCRIPTION:Race Kuala Lumpur: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713275@f1-poule
+DTSTAMP:20271009T060000Z
+DTSTART:20271009T060000Z
+DTEND:20271009T070000Z
+SUMMARY:Kwalificatie Marina Bay — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Marina Bay\, Singapore
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Marina Bay: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713275@f1-poule
+DTSTAMP:20271010T060000Z
+DTSTART:20271010T060000Z
+DTEND:20271010T070000Z
+SUMMARY:Race Marina Bay — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Marina Bay\, Singapore
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Marina Bay: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
@@ -654,6 +1266,40 @@ DESCRIPTION:Race Marina Bay: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713285@f1-poule
+DTSTAMP:20271023T210000Z
+DTSTART:20271023T210000Z
+DTEND:20271023T220000Z
+SUMMARY:Kwalificatie Austin — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Austin\, United States
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Austin: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713285@f1-poule
+DTSTAMP:20271024T210000Z
+DTSTART:20271024T210000Z
+DTEND:20271024T220000Z
+SUMMARY:Race Austin — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Austin\, United States
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Austin: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11396@f1-poule
 DTSTAMP:20261024T210000Z
 DTSTART:20261024T210000Z
@@ -685,6 +1331,40 @@ BEGIN:VALARM
 ACTION:DISPLAY
 TRIGGER:-PT1H
 DESCRIPTION:Race Austin: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713295@f1-poule
+DTSTAMP:20271030T210000Z
+DTSTART:20271030T210000Z
+DTEND:20271030T220000Z
+SUMMARY:Kwalificatie Mexico City — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Mexico City\, Mexico
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Mexico City: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713295@f1-poule
+DTSTAMP:20271031T210000Z
+DTSTART:20271031T210000Z
+DTEND:20271031T220000Z
+SUMMARY:Race Mexico City — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Mexico City\, Mexico
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Mexico City: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
@@ -722,6 +1402,40 @@ DESCRIPTION:Race Mexico City: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713305@f1-poule
+DTSTAMP:20271106T180000Z
+DTSTART:20271106T180000Z
+DTEND:20271106T190000Z
+SUMMARY:Kwalificatie São Paulo — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:São Paulo\, Brazil
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie São Paulo: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713305@f1-poule
+DTSTAMP:20271107T180000Z
+DTSTART:20271107T180000Z
+DTEND:20271107T190000Z
+SUMMARY:Race São Paulo — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:São Paulo\, Brazil
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race São Paulo: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11412@f1-poule
 DTSTAMP:20261107T180000Z
 DTSTART:20261107T180000Z
@@ -753,6 +1467,40 @@ BEGIN:VALARM
 ACTION:DISPLAY
 TRIGGER:-PT1H
 DESCRIPTION:Race São Paulo: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713315@f1-poule
+DTSTAMP:20271119T230000Z
+DTSTART:20271119T230000Z
+DTEND:20271120T000000Z
+SUMMARY:Kwalificatie Las Vegas — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Las Vegas\, United States
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Las Vegas: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713315@f1-poule
+DTSTAMP:20271120T230000Z
+DTSTART:20271120T230000Z
+DTEND:20271121T000000Z
+SUMMARY:Race Las Vegas — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Las Vegas\, United States
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Las Vegas: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
@@ -790,6 +1538,40 @@ DESCRIPTION:Race Las Vegas: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:quali-92713325@f1-poule
+DTSTAMP:20271204T110000Z
+DTSTART:20271204T110000Z
+DTEND:20271204T120000Z
+SUMMARY:Kwalificatie Lusail — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Lusail\, Qatar
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Lusail: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713325@f1-poule
+DTSTAMP:20271205T110000Z
+DTSTART:20271205T110000Z
+DTEND:20271205T120000Z
+SUMMARY:Race Lusail — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Lusail\, Qatar
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Lusail: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:quali-11428@f1-poule
 DTSTAMP:20261128T180000Z
 DTSTART:20261128T180000Z
@@ -821,6 +1603,40 @@ BEGIN:VALARM
 ACTION:DISPLAY
 TRIGGER:-PT1H
 DESCRIPTION:Race Lusail: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:quali-92713335@f1-poule
+DTSTAMP:20271211T100000Z
+DTSTART:20271211T100000Z
+DTEND:20271211T110000Z
+SUMMARY:Kwalificatie Yas Marina — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
+ wijzigen.\n\nhttps://predicttherace.com/app/
+LOCATION:Yas Marina\, United Arab Emirates
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Kwalificatie Yas Marina: nog een uur om in te vullen
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:race-92713335@f1-poule
+DTSTAMP:20271212T100000Z
+DTSTART:20271212T100000Z
+DTEND:20271212T110000Z
+SUMMARY:Race Yas Marina — invullen sluit
+DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
+ .\n\nhttps://predicttherace.com/app/
+LOCATION:Yas Marina\, United Arab Emirates
+URL:https://predicttherace.com/app/
+STATUS:CONFIRMED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Race Yas Marina: nog een uur om in te vullen
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
