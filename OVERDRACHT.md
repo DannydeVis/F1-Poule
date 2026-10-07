@@ -9788,7 +9788,8 @@ Supabase het aanmaken weigert.
 
 Supabase stuurt een nieuw account niet de mail "Magic link" maar "Confirm
 signup". Die kreeg dezelfde opmaak, met de code: `docs/mail/account-maken.html`.
-Danny plakt hem in Supabase (BEDIENING §5b).
+Danny plakte hem in Supabase (BEDIENING §5b), en Resend draait sinds die dag op
+een nieuwe sleutel.
 
 **Tests.** `test/mailkoppeling.test.mjs`: een nieuw adres op een leeg toestel
 maakt een account met code, het account van Danny blijft er één; een nieuw
@@ -9804,3 +9805,12 @@ de klok mee: om 19:20:27 staat er `T192027Z` in een tijdstempel. Nu kijkt hij
 naar een datum in 2027 (`2027` gevolgd door maand, dag en `T`) en naar een
 race uit 2027; een tijdstempel als dat valt er niet meer onder.
 
+
+Daarna zakte `test/talen.test.mjs` één keer in de volle suite, op "een
+Nederlandse browser krijgt Nederlands", met een leeg scherm als uitleg.
+`#app` is leeg tot het script het beginscherm getekend heeft, en
+`page.goto()` wacht daar niet op; op een drukke machine las de controle dus
+soms niets. De drie controles die direct na het openen lezen wachten nu eerst
+op de taalknop, die alleen op een getekend beginscherm staat. Nagespeeld met
+een nabootsing die anderhalve seconde wacht: de oude test zakt dan op alle
+drie, de nieuwe slaagt.
