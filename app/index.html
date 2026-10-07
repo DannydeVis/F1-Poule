@@ -1557,7 +1557,29 @@ const ZIET_ERUIT_ALS_POULECODE = (code) => /^[A-Z0-9]{1,12}$/.test(String(code ?
 // adresbalk: inloggenMetCode() zet dit vlaggetje en herlaadt de pagina. Zo
 // loopt het daarna precies zoals na een klik op de link.
 const NET_INGELOGD = 'poule:netingelogd';
-const VAN_INLOGLINK = (() => {
+
+// De link uit onze eigen mails (docs/mail/). Die wijst niet naar Supabase
+// maar naar deze app, met `?token_hash=…&type=…`, en pas de app wisselt hem
+// in (inloggenMetMaillink()). Twee redenen. Een link naar het eigen domein
+// oogt voor een spamfilter als wat hij is, en een link naar supabase.co in
+// een mail van ons eigen domein niet. En Outlook opent links vooraf om ze
+// te controleren: een link die bij openen al inlogt, is dan op voordat de
+// speler erop tikt. Deze doet pas iets als de app hem echt inwisselt.
+//
+// Alleen de twee soorten die de app verstuurt: `email` (inloggen, en een
+// nieuw account) en `email_change` (een mailadres koppelen).
+const MAILLINK = (() => {
+  try {
+    const zoek = new URLSearchParams(location.search);
+    const sleutel = zoek.get('token_hash'), soort = zoek.get('type');
+    return sleutel && ['email', 'email_change'].includes(soort) ? { sleutel, soort } : null;
+  } catch { return null; }
+})();
+
+// `let` en geen `const`: een maillink die bij het inwisselen niet blijkt te
+// werken, maakt dit bij de start weer false (zie hieronder bij Start).
+let VAN_INLOGLINK = (() => {
+  if (MAILLINK) return true;
   try {
     if (sessionStorage.getItem(NET_INGELOGD)) {
       sessionStorage.removeItem(NET_INGELOGD);
@@ -1791,6 +1813,21 @@ async function stuurInlogLink(mail) {
     });
     return error ? { fout: uitlegAuth(error) } : { fout: '', soort: 'nieuw' };
   } catch (e) { return { fout: uitlegAuth(e) }; }
+}
+
+// De link uit de mail inwisselen. De adresbalk eerst leeg: de link werkt
+// één keer, en een herlaadactie hoort hem niet nog eens te proberen. Geeft
+// een foutmelding terug, of '' als het gelukt is; de sessie staat dan al op
+// dit toestel en bestaandeSessie() vindt hem.
+async function inloggenMetMaillink({ sleutel, soort }) {
+  vergeetLinkCode();
+  try {
+    const { error } = await db.auth.verifyOtp({ token_hash: sleutel, type: soort });
+    if (!error) return '';
+    return error.code === 'otp_expired' || /expired|invalid/i.test(String(error.message ?? ''))
+      ? T('Die link is al gebruikt of verlopen. Vraag een nieuwe mail aan.')
+      : uitlegAuth(error);
+  } catch (e) { return uitlegAuth(e); }
 }
 
 // De code uit dezelfde mail, voor waar de link niet werkt. Dat is vooral de
@@ -2050,6 +2087,8 @@ const ENGELS = Object.fromEntries([
    'Type the code from the email, digits only.'],
   ['Die code klopt niet of is verlopen. Vraag een nieuwe mail aan.',
    'That code is wrong or has expired. Ask for a new email.'],
+  ['Die link is al gebruikt of verlopen. Vraag een nieuwe mail aan.',
+   'That link has already been used or has expired. Ask for a new email.'],
   ['Met een mailadres lukt het nu nog niet: de app kan nog niet naar iedereen '
    + 'mailen. Gebruik Google, of laat het de beheerder weten.',
    'Email does not work yet: the app cannot email everyone yet. Use Google, or '
@@ -2491,8 +2530,8 @@ const ENGELS = Object.fromEntries([
    'different winners'],
   ['geen aantal ingevuld',
    'no number filled in'],
-  ['Tel alleen races, geen sprints.',
-   'Count races only, not sprints.'],
+  ['Alleen races, geen sprints.',
+   'Races only, not sprints.'],
   ['welk team wordt vierde bij de constructeurs?',
    'which team finishes fourth in the constructors?'],
   ['vierde team',
@@ -4156,7 +4195,9 @@ const SEIZOENVRAAG = {
   winnaars: {
     soort:'getal', kop:'hoeveel verschillende coureurs winnen er een race?',
     label:'verschillende winnaars', mis:'geen aantal ingevuld',
-    uitleg:'Tel alleen races, geen sprints.',
+    // Niet "Tel alleen races": de uitleg staat in het label van het veld, en
+    // een iPhone leest "Tel" als telefoon en biedt dan je telefoonnummers aan.
+    uitleg:'Alleen races, geen sprints.',
     toon: (w) => `${w} verschillende winnaar${w === 1 ? '' : 's'}`,
     score: (g, w, p) => scoreGetal(g, w, p),
   },
@@ -7062,7 +7103,7 @@ function seizoenslaagBlok() {
           ${keuzes !== null
             ? `<select data-seizoenvraag="${esc(id)}">
                  <option value="">${T('— kies —')}</option>${keuzes}</select>`
-            : `<input type="number" min="1" max="24" inputmode="numeric"
+            : `<input type="number" min="1" max="24" inputmode="numeric" autocomplete="off"
                  data-seizoenvraag="${esc(id)}" value="${esc(gekozen)}">`}
           <span class="ptn">${puntenVoor(id)}</span>
         </label>`;
@@ -12133,6 +12174,13 @@ if (DEMO) {
   // inloglink laat werken — getSession() wacht tot supabase-js de sleutel uit
   // de adresbalk heeft omgezet, en pas daarna haalt hervat() diezelfde
   // adresbalk leeg.
+  //
+  // Een link uit onze eigen mail wisselt de app zelf in, en dat moet eerder:
+  // bestaandeSessie() hoort de sessie te vinden die daaruit komt.
+  if (MAILLINK) {
+    const fout = await inloggenMetMaillink(MAILLINK);
+    if (fout) { S.melding = fout; VAN_INLOGLINK = false; }
+  }
   await bestaandeSessie();
   // Kom je net binnen via een inloglink, dan is dit toestel leeg: geen poules,
   // geen speler. Wat je account weet is dan het enige wat je bij je poule

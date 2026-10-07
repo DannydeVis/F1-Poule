@@ -532,6 +532,9 @@ inlogUitAdresbalk();
 // Een sleutel die er niet uitziet als een poulecode, zoals Supabase hem maakt.
 let teller = 0;
 const nieuweSleutel = () => `pkce-${Date.now().toString(36)}-${++teller}-abcdefghijklmnop`;
+// En de {{ .TokenHash }} uit dezelfde mail: wat de link in onze eigen
+// sjablonen (docs/mail/) meegeeft, en wat de app met verifyOtp inwisselt.
+const nieuweHash = () => `th${Date.now().toString(36)}${++teller}0123456789abcdef`;
 
 const auth = {
   async getSession() { return { data: { session: huidigeSessie() }, error: null }; },
@@ -612,7 +615,7 @@ const auth = {
     if (store.alleen_team) return nietToegestaan(email);
     const user = store.auth_users.find((u) => u.id === sessie.user.id);
     user.new_email = email;
-    store.otp.push({ code: nieuweSleutel(), user_id: user.id, email,
+    store.otp.push({ code: nieuweSleutel(), hash: nieuweHash(), user_id: user.id, email,
                      bevestigt: true, terug: opties.emailRedirectTo ?? '' });
     bewaren();
     zetSessie(user);
@@ -643,7 +646,7 @@ const auth = {
     // Dezelfde mail draagt ook een code, als het sjabloon {{ .Token }} heeft
     // (BEDIENING.md §5b). Zes cijfers, net als bij Supabase.
     const token = String(100000 + ((Date.now() + ++teller * 7919) % 900000));
-    store.otp.push({ code: nieuweSleutel(), token, user_id: user.id, email,
+    store.otp.push({ code: nieuweSleutel(), hash: nieuweHash(), token, user_id: user.id, email,
                      bevestigt: false, terug: options.emailRedirectTo ?? '' });
     bewaren();
     return { data: {}, error: null };
@@ -651,7 +654,29 @@ const auth = {
   // De code uit die mail intikken in plaats van op de link te klikken. Lukt
   // het, dan staat de sessie meteen op dit toestel, net als bij Supabase;
   // de mail is daarna op.
-  async verifyOtp({ email, token, type }) {
+  //
+  // Of de link uit onze eigen sjablonen: dan komt {{ .TokenHash }} binnen als
+  // token_hash, met als type `email` (inloggen of een nieuw account) of
+  // `email_change` (een mailadres koppelen; die maakt het adres definitief,
+  // net als de bevestigingslink).
+  async verifyOtp({ email, token, type, token_hash }) {
+    if (token_hash) {
+      const wacht = store.otp.find((o) => o.hash && o.hash === String(token_hash)
+        && type === (o.bevestigt ? 'email_change' : 'email'));
+      const user = wacht && store.auth_users.find((u) => u.id === wacht.user_id);
+      if (!user) {
+        return { data: null, error: { code: 'otp_expired', message: 'Email link is invalid or has expired' } };
+      }
+      if (wacht.bevestigt) {
+        user.email = wacht.email;
+        user.new_email = null;
+        user.is_anonymous = false;
+      }
+      store.otp = store.otp.filter((o) => o !== wacht);
+      bewaren();
+      const sessie = zetSessie(user);
+      return { data: { session: sessie, user: kopie(user) }, error: null };
+    }
     const wacht = store.otp.find((o) => o.token && o.token === String(token)
       && gelijk(o.email, email) && !o.bevestigt && type === 'email');
     const user = wacht && store.auth_users.find((u) => u.id === wacht.user_id);
@@ -698,6 +723,16 @@ globalThis.__mail = {
       }
     }
     return basis + (basis.includes('?') ? '&' : '?') + 'code=' + laatste.code;
+  },
+  // De link zoals onze eigen sjablonen hem maken (docs/mail/): naar de app,
+  // met de token_hash en het type erin. In het echt staat daar
+  // https://predicttherace.com/app/; hier het adres van de testserver.
+  laatsteMaillink() {
+    const laatste = [...store.otp].reverse().find((o) => o.hash);
+    if (!laatste) return null;
+    const basis = laatste.terug || (location.origin + location.pathname);
+    return basis + (basis.includes('?') ? '&' : '?') + 'token_hash=' + laatste.hash
+      + '&type=' + (laatste.bevestigt ? 'email_change' : 'email');
   },
   aantalVerstuurd() { return store.otp.length; },
   // De code uit de laatste inlogmail, zoals hij in de mail zou staan.
