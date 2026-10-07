@@ -622,13 +622,22 @@ const auth = {
   // Een inloglink naar een bestaand account. shouldCreateUser:false betekent
   // dat een onbekend adres een fout geeft in plaats van een leeg account.
   async signInWithOtp({ email, options = {} }) {
-    const user = store.auth_users.find((u) => gelijk(u.email, email));
+    let user = store.auth_users.find((u) => gelijk(u.email, email));
     if (!user) {
       if (options.shouldCreateUser === false) {
         return { data: null, error: { code: 'otp_disabled',
           message: 'Signups not allowed for otp' } };
       }
-      return { data: null, error: { message: 'onbekend adres' } };
+      // Een nieuw account met dit adres, zoals Supabase bij shouldCreateUser
+      // (het standaard): de mail die dan gaat is "Confirm signup", met
+      // dezelfde link en code.
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email ?? ''))) {
+        return { data: null, error: { code: 'validation_failed', message: 'Unable to validate email address: invalid format' } };
+      }
+      if (store.alleen_team) return nietToegestaan(email);
+      user = { id: 'account-' + (store.auth_users.length + 1), is_anonymous: false,
+               email, new_email: null, identities: [{ provider: 'email', identity_data: { email } }] };
+      store.auth_users.push(user);
     }
     if (store.alleen_team) return nietToegestaan(email);
     // Dezelfde mail draagt ook een code, als het sjabloon {{ .Token }} heeft

@@ -108,13 +108,22 @@ check('een leeg toestel begint gewoon bij de poulecode',
 
 await page.click('#inlogopen');
 await page.waitForSelector('#inlogveld');
-await page.fill('#inlogveld', 'onbekend@voorbeeld.nl');
+// Een adres dat nergens bij hoort, op een leeg toestel: dan maken we een
+// account (Danny: "Kan toch gewoon eerst een account/profiel aanmaken en dan
+// een poule"). Het bestaande account van Danny raakt dat niet.
+await page.fill('#inlogveld', 'nieuw@voorbeeld.nl');
 await page.click('#inlogstuur');
-await page.waitForSelector('#inlogfout');
-check('een adres dat nergens bij hoort maakt geen nieuw leeg account aan',
-  (await tekst('#inlogfout')).includes('nog geen account')
-    && (await accounts()).length === 1,
-  await tekst('#inlogfout'));
+await page.waitForSelector('#inlogopnieuw');
+check('een nieuw adres op een leeg toestel maakt een account, en het scherm zegt dat',
+  (await tekst('#app')).includes('hing nog geen account, dus maken we er een')
+    && (await accounts()).some((u) => u.email === 'nieuw@voorbeeld.nl'),
+  await tekst('#app'));
+check('met een code om in te tikken, net als bij inloggen',
+  (await page.$('#inlogcode')) !== null);
+check('en het account van Danny blijft wat het was',
+  (await accounts()).filter((u) => u.email === 'danny@voorbeeld.nl').length === 1);
+await page.click('#inlogopnieuw');
+await page.waitForSelector('#inlogveld');
 
 await page.fill('#inlogveld', 'danny@voorbeeld.nl');
 await page.click('#inlogstuur');
@@ -129,7 +138,8 @@ await page.waitForSelector('[data-weergave], #code');
 const inGepoule = (await page.$('[data-race]')) !== null;
 check('de inloglink brengt je meteen in je poule, zonder poulecode', inGepoule,
   inGepoule ? '' : (await page.$('#code') ? 'nog op het codescherm' : 'onbekend scherm'));
-check('er is geen tweede account bijgekomen', (await accounts()).length === 1);
+check('er is voor Danny geen tweede account bijgekomen',
+  (await accounts()).filter((u) => u.email === 'danny@voorbeeld.nl').length === 1);
 
 await page.click('[data-weergave="poule"]');
 await page.waitForSelector('.speler.zelf');
@@ -138,7 +148,7 @@ check('en je bent daar dezelfde speler als op je eerste toestel',
 check('zonder dat er een tweede speler is aangemaakt',
   (await page.evaluate(() => globalThis.__db.pool_members.length)) === 1);
 check('en die speler hangt nog steeds aan hetzelfde account',
-  (await speler('Danny')).user_id === (await accounts())[0].id);
+  (await speler('Danny')).user_id === (await accounts()).find((u) => u.email === 'danny@voorbeeld.nl').id);
 
 // --- het account wint van wat dit toestel toevallig wist -------------------
 // Speelde je op dit toestel eerder als iemand anders mee, dan is inloggen een
@@ -172,4 +182,69 @@ check('na het inloggen ben je jezelf, niet de speler die dit toestel onthield',
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
 await stoppen();
+
+// --- eerst een account, dan een poule ---------------------------------------
+// Een leeg toestel, een nieuw adres, de code uit de mail, en daarna zelf een
+// poule maken. De poule hangt dan aan dat account, en de rondleiding vraagt
+// niet meer om te koppelen.
+{
+  const { page, jsFouten, stoppen } = await startPagina();
+  await page.waitForSelector('#inlogopen');
+  await page.click('#inlogopen');
+  await page.fill('#inlogveld', 'femke@voorbeeld.nl');
+  await page.click('#inlogstuur');
+  await page.waitForSelector('#inlogcode');
+  await page.fill('#inlogcode', await page.evaluate(() => globalThis.__mail.laatsteCode()));
+  await page.click('#inlogcodeknop');
+  await page.waitForSelector('#code');
+  await page.waitForFunction(() => document.querySelector('#app')?.textContent.includes('Je bent al ingelogd'));
+  check('met de code van een nieuw account sta je ingelogd op het beginscherm, klaar voor een poule',
+    (await page.textContent('#app')).includes('femke@voorbeeld.nl'));
+
+  await page.click('#nieuw');
+  await page.fill('#pnaam', 'Femkes poule');
+  await page.click('#verder');
+  await page.fill('#snaam', 'Femke');
+  await page.click('#verder');
+  await page.waitForSelector('[data-preset]');
+  await page.click('#verder');
+  await page.waitForSelector('#klaar');
+  await page.click('#klaar');
+  await page.waitForSelector('[data-race], [data-rondleiding]');
+  check('wie al een account heeft krijgt na het aanmaken geen koppelstap',
+    (await page.$('[data-rondleiding="account"]')) === null);
+  const [lid, acc] = await page.evaluate(() => [
+    globalThis.__db.pool_members.find((l) => l.display_name === 'Femke'),
+    globalThis.__db.auth_users.find((u) => u.email === 'femke@voorbeeld.nl')]);
+  check('en de nieuwe poule hangt aan dat account', lid?.user_id === acc?.id, JSON.stringify(lid));
+  check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
+  await stoppen();
+}
+
+// --- al meespelen op dit toestel, en dan een nieuw adres -------------------
+// Dan komt het adres aan het account dat er al is, zodat de speler meegaat,
+// in plaats van een tweede, leeg account.
+{
+  const { page, jsFouten, stoppen } = await startPagina();
+  await page.waitForSelector('#code');
+  await page.fill('#code', 'RTM026');
+  await page.click('#mee');
+  await page.waitForSelector('[data-lid]');
+  await page.click('[data-lid]:has(.nm:text-is("Danny"))');
+  await naDeClaim(page);
+  await page.click('#anderePoule');
+  await page.waitForSelector('#inlogopen');
+  await page.click('#inlogopen');
+  await page.fill('#inlogveld', 'danny.nieuw@voorbeeld.nl');
+  await page.click('#inlogstuur');
+  await page.waitForSelector('#inlogopnieuw');
+  check('wie op dit toestel al meespeelt, koppelt een nieuw adres aan zichzelf',
+    (await page.textContent('#app')).includes('We koppelen het aan wie je op dit toestel al bent'));
+  const accs = await page.evaluate(() => globalThis.__db.auth_users);
+  check('en er komt geen tweede account bij; het adres wacht op de klik in de mail',
+    accs.length === 1 && accs[0].new_email === 'danny.nieuw@voorbeeld.nl', JSON.stringify(accs));
+  check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
+  await stoppen();
+}
+
 process.exit(afronden() ? 0 : 1);

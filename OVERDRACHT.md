@@ -9758,3 +9758,49 @@ grote rode knop en de code groot in een vakje. Tabellen en inline stijlen,
 omdat mailprogramma's geen stylesheet lezen. Ze staan in `docs/mail/`; Danny
 plakt ze in Supabase (BEDIENING §5b).
 
+---
+
+## Eerst een account, dan een poule (7 oktober)
+
+Danny probeerde in te loggen met een mailadres dat nog nergens bij hoorde en
+kreeg "Bij dat mailadres hoort nog geen account. Koppel het eerst onder
+Poule, op het toestel waar je al meespeelt." Zijn reactie: "Waarom is dit?
+Kan toch gewoon eerst een account/profiel aanmaken en dan een poule".
+
+Dat was zo gebouwd tegen typfouten (`shouldCreateUser: false`). Maar Google
+maakte al gewoon een account, en een typfout kost bij mail ook niets: de mail
+komt dan nergens aan. `stuurInlogLink()` doet nu drie dingen, in deze
+volgorde:
+
+1. inloggen als het adres al bij een account hoort (eerst met
+   `shouldCreateUser: false`, zodat een bestaand account nooit een tweede
+   krijgt);
+2. speelt dit toestel al mee (een anoniem account), dan het adres aan dát
+   account koppelen (`koppelMail()`), zodat de spelers meegaan;
+3. anders een nieuw account met dit adres (`shouldCreateUser: true`).
+
+Het scherm zegt welke het werd. Bij een nieuw account staat de code erbij,
+zoals bij inloggen; bij koppelen alleen de link, want die mail heeft geen
+code. Daarna staat op het beginscherm "Je bent al ingelogd" en kies je een
+poule; de rondleiding vraagt dan niet meer om te koppelen. De oude melding
+(nu met "onder Profiel" in plaats van "onder Poule") komt alleen nog voor als
+Supabase het aanmaken weigert.
+
+Supabase stuurt een nieuw account niet de mail "Magic link" maar "Confirm
+signup". Die kreeg dezelfde opmaak, met de code: `docs/mail/account-maken.html`.
+Danny plakt hem in Supabase (BEDIENING §5b).
+
+**Tests.** `test/mailkoppeling.test.mjs`: een nieuw adres op een leeg toestel
+maakt een account met code, het account van Danny blijft er één; een nieuw
+account met de code en dan zelf een poule maken, zonder koppelstap, en de
+poule hangt aan dat account; wie al meespeelt koppelt een nieuw adres aan
+zichzelf en krijgt geen tweede account. De nabootsing maakt bij
+`shouldCreateUser` een account aan. Twee mutanten, beide gevangen.
+
+Ernaast: `test/jaarwisseling.test.mjs` viel in de volle suite één keer op "de
+agenda houdt 2026 en krijgt geen leeg of verzonnen 2027". De controle eiste
+dat er nergens "2027" in de agenda stond, maar de tijden in die test lopen met
+de klok mee: om 19:20:27 staat er `T192027Z` in een tijdstempel. Nu kijkt hij
+naar een datum in 2027 (`2027` gevolgd door maand, dag en `T`) en naar een
+race uit 2027; een tijdstempel als dat valt er niet meer onder.
+
