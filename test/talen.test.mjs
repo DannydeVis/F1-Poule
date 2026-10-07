@@ -28,6 +28,12 @@ const { check, afronden } = maakControle('Nederlands en Engels');
 const tekst = async (page, kies) =>
   (await page.textContent(kies)).replace(/\s+/g, ' ').trim();
 
+// #app is leeg tot het script het beginscherm getekend heeft, en page.goto()
+// wacht daar niet op. Op een drukke machine (de volle suite) las de eerste
+// controle dus soms een leeg scherm. De taalknop staat alleen op een getekend
+// beginscherm.
+const beginscherm = (page) => page.waitForSelector('#taalknop');
+
 // --- 1. de woordenlijst zelf ----------------------------------------------
 // Deze vier controles lezen index.html als tekst. Ze hebben geen browser
 // nodig, en ze vangen precies de fouten die je bij honderden regels met de
@@ -113,6 +119,7 @@ check('alleen woorden die in beide talen hetzelfde zijn, staan er gelijk in',
 // wat navigator.language zegt. Playwright start standaard op en-US.
 {
   const { page, stoppen } = await startPagina({ taal: null });
+  await beginscherm(page);
   check('een Engelse browser krijgt Engels',
     (await tekst(page, '#app')).includes('your pool'),
     (await tekst(page, '#app')).slice(0, 60));
@@ -129,6 +136,7 @@ check('alleen woorden die in beide talen hetzelfde zijn, staan er gelijk in',
       Object.defineProperty(navigator, 'language', { get: () => 'nl-NL' });
     }),
   });
+  await beginscherm(page);
   check('een Nederlandse browser krijgt Nederlands',
     (await tekst(page, '#app')).includes('met je poule'),
     (await tekst(page, '#app')).slice(0, 60));
@@ -147,6 +155,7 @@ const { page, jsFouten, stoppen } = await startPagina({
     Object.defineProperty(navigator, 'language', { get: () => 'nl-NL' });
   }),
 });
+await beginscherm(page);
 
 check('het beginscherm staat in het Nederlands',
   (await tekst(page, '#app')).includes('met je poule'));
