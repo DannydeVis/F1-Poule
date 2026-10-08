@@ -3191,6 +3191,36 @@ const ENGELS = Object.fromEntries([
    + 'predictions and your points.'],
   ['Een vraag erover? {adres}',
    'Questions about it? {adres}'],
+  ['Iets werkt niet in Predict the Race',
+   'Something is not working in Predict the Race'],
+  ['Een idee voor Predict the Race',
+   'An idea for Predict the Race'],
+  ['Een vraag over Predict the Race',
+   'A question about Predict the Race'],
+  ['Wat ging er mis?',
+   'What went wrong?'],
+  ['Wat deed je net daarvoor?',
+   'What were you doing just before?'],
+  ['Browser',
+   'Browser'],
+  ['Op het beginscherm',
+   'On the home screen'],
+  ['Taal',
+   'Language'],
+  ['contact',
+   'contact'],
+  ['Werkt er iets niet, heb je een idee, of een vraag? Mail het ons, we lezen '
+   + 'alles. Het adres is {adres}.',
+   'Something not working, an idea, or a question? Email us, we read everything. '
+   + 'The address is {adres}.'],
+  ['Iets werkt niet',
+   'Something is not working'],
+  ['Een idee of feedback',
+   'An idea or feedback'],
+  ['Een vraag',
+   'A question'],
+  ['Een vraag, een idee of iets stuk? Mail {adres}.',
+   'A question, an idea or something broken? Email {adres}.'],
   ['over Predict the Race',
    'about Predict the Race'],
   ['Hoe het spel werkt, de punten en de veelgestelde vragen staan op de voorpagina.',
@@ -7313,6 +7343,7 @@ function profielPagina() {
     ${deelBlok()}
     ${eigenLinkBlok()}
     ${uitlogBlok()}
+    ${contactBlok()}
     ${privacyBlok()}
     ${voorpaginaBlok()}
     ${siteBeheerBlok()}`;
@@ -10703,6 +10734,55 @@ function speelVerhaal(race) {
   frame = requestAnimationFrame(tik);
 }
 
+// ---- contact, feedback en bugs ------------------------------
+// Danny: "Gooi er een contact/feedback/bug ergens bij. Zodat mensen mij
+// kunnen contacten". Gewoon een mail naar het contactadres, met een
+// onderwerp dat al zegt waar het over gaat. Geen formulier en geen tabel in
+// de database: een mail komt aan in een mailbox die Danny toch al leest, en
+// je kunt erop antwoorden.
+//
+// Bij een bug staat er alvast wat in de mail wat de speler zelf niet weet
+// maar wat het oplossen scheelt: welke browser, en of de app op het
+// beginscherm staat. Wie dat niet wil delen, haalt het weg voor het
+// versturen; het staat er zichtbaar in.
+function contactMail(soort) {
+  const onderwerp = {
+    bug: T('Iets werkt niet in Predict the Race'),
+    idee: T('Een idee voor Predict the Race'),
+    vraag: T('Een vraag over Predict the Race'),
+  }[soort];
+  let tekst = '';
+  if (soort === 'bug') {
+    tekst = `${T('Wat ging er mis?')}\n\n\n${T('Wat deed je net daarvoor?')}\n\n\n`
+      + `----\n${T('Browser')}: ${navigator.userAgent}\n`
+      + `${T('Op het beginscherm')}: ${alGeinstalleerd() ? T('ja') : T('nee')}\n`
+      + `${T('Taal')}: ${TAAL}`;
+  }
+  return `mailto:${PRIVACY_CONTACT}?subject=${encodeURIComponent(onderwerp)}`
+    + (tekst ? `&body=${encodeURIComponent(tekst)}` : '');
+}
+
+function contactBlok() {
+  if (!PRIVACY_CONTACT) return '';
+  return `<div class="scheiding"></div>
+    <span class="label" data-contact>${T('contact')}</span>
+    <p class="zacht" style="margin:0">${T('Werkt er iets niet, heb je een idee, of '
+      + 'een vraag? Mail het ons, we lezen alles. Het adres is {adres}.',
+      { adres: `<b>${esc(PRIVACY_CONTACT)}</b>` })}</p>
+    <a class="knop klein" data-contactmail="bug" href="${esc(contactMail('bug'))}">${T('Iets werkt niet')}</a>
+    <a class="knop klein" data-contactmail="idee" href="${esc(contactMail('idee'))}">${T('Een idee of feedback')}</a>
+    <a class="knop klein" data-contactmail="vraag" href="${esc(contactMail('vraag'))}">${T('Een vraag')}</a>`;
+}
+
+// Op het beginscherm één regel: wie nog nergens meedoet heeft geen Profiel,
+// maar kan net zo goed een vraag hebben.
+function contactRegel() {
+  if (!PRIVACY_CONTACT) return '';
+  return `<p class="zacht" data-contactregel style="margin:0;font-size:13px">${
+    T('Een vraag, een idee of iets stuk? Mail {adres}.', { adres:
+      `<a href="${esc(contactMail('vraag'))}">${esc(PRIVACY_CONTACT)}</a>` })}</p>`;
+}
+
 // ---- het weekend afspelen: aan of uit -----------------------
 function verhaalBlok() {
   const aan = verhaalAan();
@@ -12095,6 +12175,7 @@ function toonStart() {
         ${openbarePoulesBlok()}
         ${watIsDitBlok()}
         ${installBlok()}
+        ${contactRegel()}
         <p class="err" id="f">${esc(S.linkFout)}</p>
       </div>
     </div></div>`;
