@@ -64,6 +64,37 @@ const bekend = await page.evaluate(() => JSON.parse(localStorage.getItem('poule:
 check('de poule zelf blijft in het lijstje van bekende poules staan',
   bekend.some((p) => p.join_code === 'RTM026'), JSON.stringify(bekend));
 
+// Danny (8 oktober): "maak hier ook een kruisje zodat je kan terug gaan".
+// Wie via de poulenaam op het beginscherm komt, ziet rechtsboven een kruisje
+// dat terugbrengt naar de poule waar hij was.
+const kruis = await page.$('#terugNaarPoule');
+check('op het beginscherm staat een kruisje terug naar je poule',
+  kruis !== null && (await kruis.getAttribute('aria-label')) === 'Terug naar Vrijdagmiddagpoule',
+  kruis ? await kruis.getAttribute('aria-label') : '(geen kruisje)');
+const maat = await kruis?.boundingBox();
+check('van 44 bij 44, om met je duim te raken',
+  Math.round(maat?.width) === 44 && Math.round(maat?.height) === 44, JSON.stringify(maat));
+const passen = [];
+for (const breedte of [390, 360]) {
+  await page.setViewportSize({ width: breedte, height: 800 });
+  await page.waitForTimeout(80);
+  passen.push([breedte, await page.$eval('.toegang .merk .naam', (n) => n.scrollWidth <= n.clientWidth)]);
+}
+await page.setViewportSize({ width: 390, height: 844 });
+check('"Predict the Race" past er met het kruisje nog naast, ook op 360 pixel',
+  passen.every(([, ja]) => ja), JSON.stringify(passen));
+await kruis?.click();
+await page.waitForSelector('[data-race]');
+check('tikken brengt je terug in je poule, zonder kiezen of code',
+  (await page.textContent('.merk #anderePoule')).includes('Vrijdagmiddagpoule'));
+
+// Wie de app gewoon opent, kwam nergens vandaan: dan geen kruisje.
+await page.evaluate(() => localStorage.removeItem('poule:laatste'));
+await page.reload();
+await page.waitForSelector('#code');
+check('wie de app opent zonder uit een poule te komen, ziet geen kruisje',
+  (await page.$('#terugNaarPoule')) === null);
+
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
 await stoppen();

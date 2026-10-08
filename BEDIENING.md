@@ -1599,8 +1599,8 @@ een verschillende dienst noemen.
    mailbox moet bestaan** (of doorsturen naar je eigen mail): aanmaken bij
    TransIP, onder E-mail beheren. `test/domein.test.mjs` laat een mailadres
    op het domein in de app toe; een link met het domein erin blijft verboden.
-   Sinds 8 oktober komen daar ook bugs, ideeën en vragen binnen: onder
-   Profiel staat een blok **contact** met drie knoppen (Iets werkt niet, Een
+   Sinds 8 oktober komen daar ook bugs, ideeën en vragen binnen: bovenaan
+   Profiel (direct na de taal) staat een blok **contact** met drie knoppen (Iets werkt niet, Een
    idee of feedback, Een vraag), en op het beginscherm een regel met het
    adres. Elke knop opent een mail met een eigen onderwerp, dus in je
    mailbox zie je meteen wat het is. Een bugmail heeft er al de browser, of
