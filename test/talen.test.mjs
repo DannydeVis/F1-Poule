@@ -202,7 +202,10 @@ check('de racelijst staat in het Engels',
 
 await page.click('[data-weergave="stand"]');
 await page.waitForSelector('.strij');
-check('de stand ook', (await tekst(page, '#app')).includes('Switch'),
+// De knop naar je andere poules is sinds 8 oktober de poulenaam zelf, met
+// een pijltje; wat hij doet staat in zijn label.
+check('de stand ook', (await tekst(page, '#app')).includes('for you and your friends')
+    && (await page.getAttribute('#anderePoule', 'aria-label')).startsWith('Switch pool'),
   (await tekst(page, '#app')).slice(0, 80));
 
 await page.click('[data-weergave="races"]');

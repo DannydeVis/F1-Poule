@@ -407,7 +407,17 @@
     transition:color .18s}
   .merk .themaknop:hover{color:var(--ink)}
   .merk .merkpoule{margin-right:-8px}
-  .merk .themaknop + .wisselknop{margin-left:0}
+  /* De poulenaam is zelf de knop naar je andere poules, met een pijltje
+     erachter zoals bij elke keuzelijst. Danny: "Rechtsboven staat wissel.
+     Beetje onduidelijk." Dat was een grijs woordje in kleine monoletters; een
+     naam met een pijltje herkent iedereen als "tik hier voor de andere". */
+  .merk .poulewissel{display:flex;align-items:center;gap:4px;min-width:0;
+    flex:0 1 auto;background:none;border:0;padding:0;margin:0;min-height:44px;
+    color:var(--ink);cursor:pointer;text-align:left;font:inherit}
+  .merk .poulewissel svg{width:20px;height:20px;flex:none;color:var(--ink3);
+    transition:color .18s,transform .18s}
+  .merk .poulewissel:hover svg{color:var(--ink);transform:translateY(1px)}
+  .merk .poulewissel .merkpoule{margin-right:0}
   /* Op de smalste telefoons (een iPhone SE en kleiner) past zo'n naam er naast
      de twee knoppen net niet meer op 24 pixel. */
   @media (max-width:389px){ .merk .merkpoule{font-size:22px} }
@@ -1374,8 +1384,15 @@
        mag hier ook: een merkblok hoeft niet het luidste op het scherm te
        zijn, en de ondertitel eronder maakt er een lockup van. */
     .zijbalk .merknaam{display:block;font-size:16px;letter-spacing:.04em;
-      flex:1;min-width:0}
-    .zijbalk .merkpoule{display:none}
+      flex:1 1 calc(100% - 38px);min-width:0}
+    /* De poulekeuze krijgt op een breed scherm een eigen regel onder het
+       merk, over de volle breedte en met een rand: dan staat er welke poule
+       open is, en zie je dat je daar een andere kiest. */
+    .zijbalk .poulewissel{order:4;flex:1 1 100%;justify-content:space-between;
+      border:1px solid var(--lijn);border-radius:10px;padding:0 10px 0 14px;
+      margin-top:6px}
+    .zijbalk .poulewissel:hover{border-color:var(--ink3)}
+    .zijbalk .poulewissel .merkpoule{font-size:17px}
     /* Een eigen regel over de volle breedte. Naast de wisselknop bleef er
        121 pixel over en daar past hij niet in; dan zou hij afgekapt worden
        en dat is erger dan geen ondertitel. */
@@ -2271,8 +2288,8 @@ const ENGELS = Object.fromEntries([
    'Profile'],
   ['Wissel van poule',
    'Switch pool'],
-  ['Wissel',
-   'Switch'],
+  ['Wissel van poule (nu {naam})',
+   'Switch pool (now {naam})'],
   ['seizoen {jaar} · {n} {spelers}',
    'season {jaar} · {n} {spelers}'],
   ['speler',
@@ -6424,6 +6441,11 @@ DONKER_TOESTEL.addEventListener?.('change', () => {
   if (!document.documentElement.dataset.thema) werkThemaknopBij();
 });
 
+// Het pijltje achter de poulenaam: hier kun je kiezen.
+const KEUZE_PIJL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M6 9l6 6 6-6"/></svg>`;
+
 function toonApp() {
   onthoudScherm();
   const detail = S.weergave === 'races' && !!S.race;
@@ -6438,10 +6460,10 @@ function toonApp() {
         <div class="merk">
           <span class="blok"></span>
           <span class="naam merknaam">Predict the Race</span>
-          <span class="naam merkpoule">${esc(S.poule.name)}</span>
+          <button class="poulewissel" id="anderePoule" type="button"
+            title="${T('Wissel van poule')}" aria-label="${T('Wissel van poule (nu {naam})',
+            { naam: esc(S.poule.name) })}"><span class="naam merkpoule">${esc(S.poule.name)}</span>${KEUZE_PIJL}</button>
           ${themaknop()}
-          <button class="wisselknop" id="anderePoule" type="button"
-            title="${T('Wissel van poule')}">${T('Wissel')}</button>
           <span class="merkregel">${T('voor jou en je vrienden')}</span>
         </div>
         <nav class="nav">
