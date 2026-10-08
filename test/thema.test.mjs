@@ -24,7 +24,7 @@ const knop = (page) => page.$eval('#themaknop', (b) => {
   const r = b.getBoundingClientRect();
   const wissel = document.querySelector('#anderePoule').getBoundingClientRect();
   return { naam: b.getAttribute('aria-label'), b: Math.round(r.width), h: Math.round(r.height),
-           zon: !!b.querySelector('circle'), naastWissel: Math.abs(r.top - wissel.top) < 2 && r.right <= wissel.left };
+           zon: !!b.querySelector('circle'), naastWissel: Math.abs(r.top - wissel.top) < 2 && r.left >= wissel.right };
 }).catch(() => null);
 
 // ---- een toestel in het donker ---------------------------------------------
@@ -34,7 +34,7 @@ const knop = (page) => page.$eval('#themaknop', (b) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   await meedoen(page);
   const k = await knop(page);
-  check('naast Wissel staat een knop van 44 bij 44', k?.b === 44 && k.h >= 44 && k.naastWissel, JSON.stringify(k));
+  check('naast de poulenaam staat een knop van 44 bij 44', k?.b === 44 && k.h >= 44 && k.naastWissel, JSON.stringify(k));
   check('in het donker een zon, om naar licht te gaan', k?.zon && k.naam === 'Lichte modus', JSON.stringify(k));
   check('het toestel staat donker, dus de app ook', (await achtergrond(page)) === DONKER, await achtergrond(page));
   // De knop mag de poulenaam niet wegduwen: "Vrijdagmiddagpoule" paste er

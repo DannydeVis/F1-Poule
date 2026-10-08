@@ -20,6 +20,28 @@ await meedoen(page);
 check('op het racesoverzicht staat de knop in de zijbalk',
   (await page.$('.merk #anderePoule')) !== null);
 
+// Danny (8 oktober): "Rechtsboven staat wissel. Beetje onduidelijk." Nu is
+// de poulenaam zelf de knop, met een pijltje erachter, zoals een keuzelijst.
+// Op een telefoon is dat de naam bovenin; op een breed scherm een eigen
+// regel met een rand.
+const kop = async () => page.$eval('#anderePoule', (b) => ({
+  naam: b.querySelector('.merkpoule')?.textContent.trim(),
+  pijl: !!b.querySelector('svg path'),
+  label: b.getAttribute('aria-label'),
+  zichtbaar: b.getBoundingClientRect().width > 0 && getComputedStyle(b.querySelector('.merkpoule')).display !== 'none',
+  past: b.querySelector('.merkpoule').scrollWidth <= b.querySelector('.merkpoule').clientWidth,
+}));
+for (const breedte of [390, 1280]) {
+  await page.setViewportSize({ width: breedte, height: 800 });
+  await page.waitForTimeout(80);
+  const k = await kop();
+  check(`op ${breedte} pixel is de poulenaam zelf de knop, met een pijltje`,
+    k.naam === 'Vrijdagmiddagpoule' && k.pijl && k.zichtbaar && k.past, JSON.stringify(k));
+  check(`en zegt zijn label wat hij doet (${breedte})`,
+    k.label === 'Wissel van poule (nu Vrijdagmiddagpoule)', k.label);
+}
+await page.setViewportSize({ width: 390, height: 844 });
+
 await page.click('[data-weergave="stand"]');
 await page.waitForSelector('[data-weergave="stand"][aria-current="true"]');
 check('en ook op de standpagina, die hem eerder helemaal niet had',

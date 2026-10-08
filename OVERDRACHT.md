@@ -9900,3 +9900,28 @@ knop staat altijd onder Profiel, dus die zei niets.
 knoppen met hun adres, onderwerp en tekst, het adres leesbaar, en in het
 Engels. `test/talen.test.mjs` kreeg `contact` en `Browser` bij de woorden die
 in beide talen gelijk mogen zijn. Vijf mutanten, alle gevangen.
+
+---
+
+## De poulenaam is de knop naar je andere poules (8 oktober)
+
+Danny: "Rechtsboven staat wissel. Beetje onduidelijk denk ik. Moet duidelijker
+zijn om van poule te wisselen." Het was een grijs woordje in kleine
+monoletters naast de zon/maan. Een duidelijke knop met tekst ("Poules" met een
+pictogram) paste op een telefoon niet naast "Vrijdagmiddagpoule"; die naam
+werd dan afgekapt vanaf 390 pixel.
+
+Daarom is de poulenaam zelf de knop (`#anderePoule`, klasse `poulewissel`),
+met een pijltje erachter (`KEUZE_PIJL`), zoals je dat kent van een keuzelijst
+of het wisselen van werkruimte in andere apps. Dat neemt minder ruimte dan
+naam plus knop, dus de naam past nu op elke telefoon. De zon/maan staat
+rechts ervan. Op een breed scherm (vanaf 960 pixel) staat in de zijbalk
+"Predict the Race" bovenaan, de ondertitel met de zon/maan eronder, en dan de
+poulekeuze als eigen regel met een rand. Het label zegt "Wissel van poule (nu
+Vrijdagmiddagpoule)", voor schermlezers. De knop doet hetzelfde als eerst:
+naar het beginscherm met je poules.
+
+**Tests.** `test/poule-wisselen.test.mjs` kreeg vier controles (naam met
+pijltje en label, op 390 en op 1280 pixel); `test/thema.test.mjs` verwacht de
+zon/maan nu rechts van de naam; `test/talen.test.mjs` leest het Engelse label.
+Twee mutanten, beide gevangen.
