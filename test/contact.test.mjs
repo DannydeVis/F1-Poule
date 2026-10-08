@@ -35,6 +35,17 @@ await naDeClaim(page);
 await page.click('[data-weergave="profiel"]');
 await page.waitForSelector('[data-contact]');
 
+// Danny (8 oktober): "Ik zie nergens in de app de feedback knop." Hij stond
+// onderaan Profiel, onder uitloggen. Nu bovenaan, direct na de taal.
+const volgorde = await page.evaluate(() => {
+  const c = document.querySelector('[data-contact]');
+  const later = document.querySelector('#mailopen, #uitloggen, [data-beginscherm]');
+  return { contact: Math.round(c.getBoundingClientRect().top),
+           later: later ? Math.round(later.getBoundingClientRect().top) : null };
+});
+check('het contactblok staat bovenaan Profiel, voor het account en uitloggen',
+  volgorde.later !== null && volgorde.contact < volgorde.later, JSON.stringify(volgorde));
+
 const knoppen = await page.$$eval('[data-contactmail]', (n) =>
   n.map((a) => [a.dataset.contactmail, a.getAttribute('href'), a.textContent.trim()]));
 check('onder Profiel staan drie knoppen: iets werkt niet, een idee, een vraag',

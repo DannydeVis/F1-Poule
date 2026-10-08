@@ -724,6 +724,17 @@
     border-radius:6px;padding:0 8px;min-height:32px;min-width:44px;
     transition:border-color .18s,color .18s}
   .taalknop:hover{border-color:var(--accent);color:var(--ink)}
+  .sluitknop{flex:none;width:44px;height:44px;margin-right:-10px;display:grid;
+    place-items:center;border-radius:8px;color:var(--ink2);transition:color .18s}
+  .sluitknop:hover{color:var(--ink)}
+  .sluitknop svg{width:22px;height:22px}
+  /* Met het kruisje erbij past "Predict the Race" niet meer naast het jaartal
+     en de taalknop; het jaartal is dan het minst nodig. */
+  .merk:has(.sluitknop) .code{display:none}
+  .merk:has(.sluitknop) .taalknop{margin-left:auto}
+  /* Op een smalle telefoon (360 pixel) werd "Predict the Race" op het
+     beginscherm al afgekapt; 21 pixel past er net naast. */
+  @media (max-width:389px){ .toegang .merk .naam{font-size:21px} }
 
   .seizoenbalk select{font-family:var(--mono);font-size:14px;color:var(--ink);
     background:var(--paneel);border:1px solid var(--lijn);border-radius:8px;
@@ -2288,6 +2299,8 @@ const ENGELS = Object.fromEntries([
    'Profile'],
   ['Wissel van poule',
    'Switch pool'],
+  ['Terug naar {naam}',
+   'Back to {naam}'],
   ['Wissel van poule (nu {naam})',
    'Switch pool (now {naam})'],
   ['seizoen {jaar} · {n} {spelers}',
@@ -3826,6 +3839,20 @@ function zetTaal(taal) {
 
 // De knop om te wisselen. Klein en rechtsboven: wie hem nodig heeft zoekt hem,
 // en wie hem niet nodig heeft moet er geen last van hebben.
+// Het kruisje rechtsboven op het beginscherm, alleen als je er vanuit een
+// poule kwam (via de poulenaam bovenin) en die poule nog in je lijstje staat.
+// Het brengt je terug waar je was, zonder te kiezen of iets in te tikken.
+const SLUIT_ICOON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+  <path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>`;
+function terugKnop(bekend) {
+  const t = S.terugNaar;
+  if (!t || !bekend.some(p => zelfde(p.id, t.id))) return '';
+  return `<button class="sluitknop" id="terugNaarPoule" type="button"
+    aria-label="${T('Terug naar {naam}', { naam: esc(t.naam) })}"
+    title="${T('Terug naar {naam}', { naam: esc(t.naam) })}">${SLUIT_ICOON}</button>`;
+}
+
 const taalKnop = () => `
   <button class="taalknop" id="taalknop" lang="${TAAL === 'nl' ? 'en' : 'nl'}"
     aria-label="${TAAL === 'nl' ? 'Switch to English' : 'Schakel over naar Nederlands'}"
@@ -6629,6 +6656,9 @@ function toonApp() {
 // je nu in" vergeten. Het lijstje met al je poules blijft staan, anders raak
 // je ze kwijt door één keer te kijken.
 function naarStartscherm() {
+  // Waar je vandaan kwam, voor het kruisje op het beginscherm: Danny "maak
+  // hier ook een kruisje zodat je kan terug gaan".
+  S.terugNaar = S.poule ? { id: S.poule.id, naam: S.poule.name } : null;
   vergeetPoule();
   S.poule = null; S.ik = null; S.races = []; S.leden = []; S.preds = [];
   S.antwoorden = []; S.ingeleverd = []; S.poulevragen = []; S.beheer = null; S.beheerFout = '';
@@ -7358,6 +7388,7 @@ function profielPagina() {
     <p class="zacht" style="margin:-10px 0 0">${T('Je speelt hier als <b>{naam}</b>.',
       { naam: esc(S.ik.naam) })}</p>
     ${taalBlok()}
+    ${contactBlok()}
     ${mailBlok()}
     ${beginschermBlok()}
     ${meldingBlok()}
@@ -7365,7 +7396,6 @@ function profielPagina() {
     ${deelBlok()}
     ${eigenLinkBlok()}
     ${uitlogBlok()}
-    ${contactBlok()}
     ${privacyBlok()}
     ${voorpaginaBlok()}
     ${siteBeheerBlok()}`;
@@ -12163,6 +12193,7 @@ function toonStart() {
           <span class="naam">Predict the Race</span>
           <span class="code">${seizoen()}</span>
           ${taalKnop()}
+          ${terugKnop(bekend)}
         </div>
         <div>
           <h1 class="groot">${bekend.length
@@ -12203,6 +12234,13 @@ function toonStart() {
     </div></div>`;
 
   S.linkCode = ''; S.linkFout = '';
+  const terug = app.querySelector('#terugNaarPoule');
+  if (terug) terug.onclick = () => {
+    terug.disabled = true;
+    const id = S.terugNaar.id;
+    S.terugNaar = null;
+    naarPoule(id);
+  };
   const fout = (t) => { app.querySelector('#f').textContent = t; };
   if (S.melding) { fout(S.melding); S.melding = ''; }
 

@@ -9925,3 +9925,30 @@ naar het beginscherm met je poules.
 pijltje en label, op 390 en op 1280 pixel); `test/thema.test.mjs` verwacht de
 zon/maan nu rechts van de naam; `test/talen.test.mjs` leest het Engelse label.
 Twee mutanten, beide gevangen.
+
+---
+
+## Contact bovenaan Profiel, en een kruisje terug (8 oktober)
+
+Danny: "Ik zie nergens in de app de feedback knop. En maak hier ook een
+kruisje zodat je kan terug gaan" (bij het beginscherm na een tik op de
+poulenaam).
+
+**Contact.** Het blok stond onderaan Profiel, onder uitloggen; daar scrolt
+niemand heen. Nu staat het bovenaan, direct na de taalkeuze en voor het
+account. De regel op het beginscherm blijft waar hij was.
+
+**Het kruisje.** `naarStartscherm()` onthoudt nu in `S.terugNaar` uit welke
+poule je kwam. Staat die nog in `mijnPoules()`, dan zet `terugKnop()` een
+kruisje van 44 bij 44 rechtsboven in de kaart (`#terugNaarPoule`, label
+"Terug naar Vrijdagmiddagpoule"). Tikken gaat met `naarPoule()` terug, zonder
+kiezen of code. Wie de app gewoon opent kwam nergens vandaan en ziet geen
+kruisje. Met het kruisje erbij wijkt het jaartal (CSS `:has`), anders paste
+"Predict the Race" niet. Op een telefoon van 360 pixel werd die naam op het
+beginscherm ook zonder kruisje al afgekapt; onder 390 pixel is hij nu 21 in
+plaats van 24 pixel.
+
+**Tests.** `test/poule-wisselen.test.mjs` (16): het kruisje, zijn maat, terug
+in de poule, geen kruisje na gewoon openen, en de naam past op 390 en 360.
+`test/contact.test.mjs` (12): het blok staat boven het account. Vier
+mutanten, alle gevangen.
