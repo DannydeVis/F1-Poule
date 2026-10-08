@@ -1599,6 +1599,13 @@ een verschillende dienst noemen.
    mailbox moet bestaan** (of doorsturen naar je eigen mail): aanmaken bij
    TransIP, onder E-mail beheren. `test/domein.test.mjs` laat een mailadres
    op het domein in de app toe; een link met het domein erin blijft verboden.
+   Sinds 8 oktober komen daar ook bugs, ideeën en vragen binnen: onder
+   Profiel staat een blok **contact** met drie knoppen (Iets werkt niet, Een
+   idee of feedback, Een vraag), en op het beginscherm een regel met het
+   adres. Elke knop opent een mail met een eigen onderwerp, dus in je
+   mailbox zie je meteen wat het is. Een bugmail heeft er al de browser, of
+   de app op het beginscherm staat, en de taal in. Het is gewoon mail: geen
+   formulier, niets in de database, en je antwoordt vanuit je mailbox.
 2. **Waar de database staat.** De verklaring zegt "in een database bij
    Supabase". In welke regio dat is, staat in je Supabase-dashboard
    (Settings → General). Voor Nederlandse gebruikers is dat het vermelden

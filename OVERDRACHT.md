@@ -9875,3 +9875,28 @@ onbekende soort doet niets. De nabootsing kent nu `token_hash` bij
 `verifyOtp` en `__mail.laatsteMaillink()`. `test/seizoenslaag.test.mjs` kreeg
 twee controles: geen label dat naar een telefoon klinkt, en het getalveld
 zonder automatisch invullen. Tien mutanten, alle gevangen.
+
+---
+
+## Contact, feedback en bugs (8 oktober)
+
+Danny: "Gooi er een contact/feedback/bug ergens bij. Zodat mensen mij kunnen
+contacten." Onder Profiel staat nu een blok **contact** (tussen uitloggen en
+de privacyverklaring) met drie knoppen: Iets werkt niet, Een idee of
+feedback, Een vraag. Elk is een `mailto:` naar `PRIVACY_CONTACT` met een eigen
+onderwerp ("Iets werkt niet in Predict the Race" enzovoort, in de taal van de
+app), zodat Danny in zijn mailbox meteen ziet wat het is. Op het beginscherm
+staat één regel met het adres, voor wie nog geen Profiel heeft.
+
+Bewust gewone mail en geen formulier: er komt niets in de database, er is
+geen spam-beveiliging nodig, en Danny antwoordt gewoon vanuit de mailbox die
+hij al heeft. De bugmail (`contactMail('bug')`) zet er al in wat de speler
+zelf niet weet: de browser (`navigator.userAgent`), of de app op het
+beginscherm staat, en de taal. Dat staat zichtbaar in de mail; wie het niet
+wil delen haalt het weg. Een regel "welk scherm" zat er eerst in, maar de
+knop staat altijd onder Profiel, dus die zei niets.
+
+**Tests.** `test/contact.test.mjs` (11): de regel op het beginscherm, de drie
+knoppen met hun adres, onderwerp en tekst, het adres leesbaar, en in het
+Engels. `test/talen.test.mjs` kreeg `contact` en `Browser` bij de woorden die
+in beide talen gelijk mogen zijn. Vijf mutanten, alle gevangen.
