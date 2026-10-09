@@ -10,10 +10,17 @@ name: Circuitcijfers
 #
 # Elke dag en met de hand vanuit het Actions-tabblad. Elke dag, omdat een
 # racepagina de tijden van het weekend toont en de FIA die soms verschuift.
-# Van vrijdag tot en met zondag ook elke twee uur, maar dan alleen de
-# racepagina's: de top 10 van een vrije training staat er dan kort nadat hij
-# gereden is. De circuitcijfers veranderen pas na een race, dus die blijven
+# Van vrijdag tot en met zondag ook elk uur, maar dan alleen de racepagina's:
+# de top 10 van een vrije training staat er dan kort nadat hij gereden is. Elk
+# uur en niet om de twee uur (9 oktober, Singapore): GitHub slaat geplande
+# runs geregeld over, en tijdens een sessie geeft OpenF1 een gratis account
+# niets (401). Tussen de eerste en de tweede training kwam er zo geen enkele
+# run doorheen. De circuitcijfers veranderen pas na een race, dus die blijven
 # een keer per dag.
+#
+# De racedata gaat vóór de circuitcijfers: die tellen acht minuten, en een run
+# met de hand liep daardoor de volgende sessie in voordat hij aan de
+# racepagina's toekwam.
 # Schrijft de twee bestanden en legt ze vast als er iets veranderd is. Daarna
 # ook de site opnieuw, zodat de nieuwe cijfers meteen op de pagina's staan en
 # `maak-site --controle` in de tests groen blijft.
@@ -28,7 +35,7 @@ on:
     - cron: '41 5 * * *'
     # Het weekend. Dezelfde tekst staat hieronder bij "Tellen": daar wordt
     # deze tijd overgeslagen.
-    - cron: '23 */2 * * 5,6,0'
+    - cron: '23 */1 * * 5,6,0'
   pull_request:
     paths:
       - 'scripts/circuits.mjs'
@@ -49,15 +56,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Tellen met de regels van de app
-        if: github.event.schedule != '23 */2 * * 5,6,0'
-        env:
-          DROOG: ${{ github.event_name == 'pull_request' && '1' || '' }}
-        run: node scripts/circuits.mjs
       - name: De racepagina's, tijden en uitslagen
         env:
           DROOG: ${{ github.event_name == 'pull_request' && '1' || '' }}
         run: node scripts/racedata.mjs
+      - name: Tellen met de regels van de app
+        if: github.event.schedule != '23 */1 * * 5,6,0'
+        env:
+          DROOG: ${{ github.event_name == 'pull_request' && '1' || '' }}
+        run: node scripts/circuits.mjs
 
       # De pull --rebase is er voor de samenloop dat automerge of de sync net
       # iets in main zet terwijl deze run bezig is.

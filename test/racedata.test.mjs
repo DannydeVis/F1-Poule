@@ -214,10 +214,15 @@ const s = (key, meeting, naam, start, uren = 1) => ({ session_key: key, meeting_
   // In het weekend vaker, voor de vrije trainingen; dan alleen de racedata.
   const weekend = wf.match(/- cron: '(\d+ \*\/(\d+) \* \* ([\d,]+))'/);
   const stap = (naam) => wf.split('- name: ')[wf.split('- name: ').findIndex((x) => x.startsWith(naam))] ?? '';
-  check('in het weekend (vrijdag tot en met zondag) om de hoogstens drie uur, en dan niet de circuitcijfers, wel de racedata',
-    weekend && Number(weekend[2]) <= 3 && weekend[3].split(',').sort().join() === '0,5,6'
+  // Elk uur sinds 9 oktober: GitHub slaat geplande runs over, en tijdens een
+  // sessie geeft OpenF1 niets. Om de twee uur kwam er in Singapore tussen de
+  // eerste en de tweede training geen enkele run doorheen.
+  check('in het weekend (vrijdag tot en met zondag) elk uur, en dan niet de circuitcijfers, wel de racedata',
+    weekend && Number(weekend[2]) === 1 && weekend[3].split(',').sort().join() === '0,5,6'
       && stap('Tellen').includes(`if: github.event.schedule != '${weekend?.[1]}'`) && !/\bif:/.test(stap('De racepagina')),
     weekend?.[1] ?? 'geen weekendschema');
+  check('de racedata komt vóór de circuitcijfers, die acht minuten tellen',
+    wf.indexOf('run: node scripts/racedata.mjs') < wf.indexOf('run: node scripts/circuits.mjs'));
 }
 
 // ---- 6. het bestand zelf, zodra de workflow het geschreven heeft --------------------------------
