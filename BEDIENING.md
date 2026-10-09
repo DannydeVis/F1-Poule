@@ -2274,8 +2274,12 @@ Circuitcijfers → Run workflow. De gids over de puntentelling toont de cijfers
 staan de nieuwe cijfers er vanzelf op. Dezelfde workflow haalt ook de tijden en
 uitslagen op voor de racepagina's (`site/data/races-2026.json`); welke races
 dat zijn, staat in `site/races.mjs`. In het raceweekend (vrijdag tot en met
-zondag) draait hij ook elke twee uur, maar dan alleen voor de racepagina's: zo
-staat de top 10 van een vrije training er kort na afloop.
+zondag) draait hij ook elk uur, maar dan alleen voor de racepagina's: zo
+staat de top 10 van een vrije training er kort na afloop. Tijdens een sessie
+geeft OpenF1 een gratis account niets (401); een run die dan valt schrijft
+niets weg en de volgende haalt het op. Staat een training er een paar uur na
+afloop nog niet, start dan onder Actions, Circuitcijfers, **Run workflow**, maar
+niet terwijl er een sessie bezig is.
 
 **De racepagina's.** Een pilot met de laatste zeven races van 2026, in het
 Nederlands (`/races/2026/singapore/` enzovoort) en het Engels

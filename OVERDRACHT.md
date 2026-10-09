@@ -8679,7 +8679,7 @@ elke training in het korte antwoord en per training een tabel, tot de uitslag
 van de race er staat. Een training zonder uitslag laat hij weg.
 
 **Vaker in het weekend.** De workflow "Circuitcijfers" draait van vrijdag tot en
-met zondag ook elke twee uur (`23 */2 * * 5,6,0`), maar dan alleen de
+met zondag ook elke twee uur (`23 */2 * * 5,6,0`; sinds 9 oktober elk uur), maar dan alleen de
 racedata; de circuitcijfers veranderen pas na een race en blijven een keer per
 dag. Zo staat een training er hoogstens twee uur en een half na afloop.
 
@@ -9952,3 +9952,28 @@ plaats van 24 pixel.
 in de poule, geen kruisje na gewoon openen, en de naam past op 390 en 360.
 `test/contact.test.mjs` (12): het blok staat boven het account. Vier
 mutanten, alle gevangen.
+
+---
+
+## De vrije training van Singapore kwam niet op de pagina (9 oktober)
+
+Danny, vrijdag rond 13:30: "Wie was het snelst in de vrije trainingen" stond
+niet op `/races/2026/singapore/`, ook niet na de workflow. Wat er gebeurde:
+
+- De eerste vrije training liep van 08:30 tot 09:30 UTC, de tweede begon om
+  12:00. De runs om de twee uur (`23 */2 * * 5,6,0`) had GitHub die ochtend
+  allemaal overgeslagen; de laatste run was de dagelijkse van 06:18, vóór de
+  training. Geplande runs zijn bij GitHub een poging, geen belofte, en vorig
+  weekend kwam ook maar een deel door.
+- Een run met de hand (11:51) telde eerst acht minuten circuitcijfers en kwam
+  pas om 12:00 aan de racedata toe. Toen liep de tweede training en gaf
+  OpenF1 een 401: tijdens een sessie alleen voor betalende accounts. Het
+  script schrijft dan bewust niets weg (zie 4 oktober).
+
+Aanpassing in `.github/workflows/circuits.yml`: in het weekend elk uur
+(`23 */1 * * 5,6,0`), en de racedata als eerste stap, vóór de circuitcijfers.
+Een weekendrun doet alleen de racedata en duurt een minuut. De top 10 van de
+eerste en de tweede training komt binnen met de eerste run na 13:00 UTC.
+
+**Tests.** `test/racedata.test.mjs` (25) eist nu elk uur in het weekend en de
+racedata vóór de circuitcijfers. Twee mutanten, beide gevangen.
