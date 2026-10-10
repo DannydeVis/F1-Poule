@@ -192,7 +192,81 @@
           }
         ]
       },
-      "uitslag": null,
+      "uitslag": {
+        "kwalificatie": [
+          {
+            "plek": 1,
+            "nr": "3",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 2,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 3,
+            "nr": "44",
+            "code": "HAM",
+            "naam": "Lewis Hamilton",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 4,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 5,
+            "nr": "1",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 6,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 7,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 8,
+            "nr": "10",
+            "code": "GAS",
+            "naam": "Pierre Gasly",
+            "team": "Alpine"
+          },
+          {
+            "plek": 9,
+            "nr": "30",
+            "code": "LAW",
+            "naam": "Liam Lawson",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 10,
+            "nr": "41",
+            "code": "LIN",
+            "naam": "Arvid Lindblad",
+            "team": "Racing Bulls"
+          }
+        ],
+        "race": null
+      },
       "vrijeTrainingen": [
         {
           "naam": "Practice 1",
