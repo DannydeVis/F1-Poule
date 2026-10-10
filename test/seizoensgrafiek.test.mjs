@@ -66,6 +66,8 @@ await zet([false, false, true], 0);
 await naarStand();
 check('en in je eentje ook niet, want dan is er geen positie om te volgen',
   (await page.$('.grafiek')) === null);
+check('en in je eentje ook geen seizoensrecords: er valt niemand te verslaan',
+  (await page.$('[data-record]')) === null);
 
 // ---- en dan wel ---------------------------------------------------
 await zet([false, false, true, true, true], 3);
@@ -76,9 +78,42 @@ check('vanaf drie races met medespelers verschijnt hij', await page.isVisible('.
 const punten = await page.$$eval('.grafiek svg circle', (n) => n.length);
 check('met één punt per gereden race', punten === 5, `${punten} punten`);
 
-const pad = await page.$eval('.grafiek svg path', (e) => e.getAttribute('d'));
+const pad = await page.$eval('.grafiek svg path.jij', (e) => e.getAttribute('d'));
 check('en een lijn die die punten verbindt',
   (pad.match(/L/g) ?? []).length === 4, pad);
+
+// Feedbackrapport 10 oktober: "per race laten zien wie er is gestegen of
+// gedaald". Elke medespeler een eigen grijze lijn achter de jouwe.
+const anderen = await page.$$eval('.grafiek svg path.ander', (n) => n.map((e) => ({
+  lid: e.dataset.lid, stappen: (e.getAttribute('d').match(/L/g) ?? []).length,
+  naam: e.querySelector('title')?.textContent })));
+check('elke medespeler heeft een eigen lijn, over dezelfde races',
+  anderen.length === 3 && anderen.every((a) => a.stappen === 4 && /^Mede\d$/.test(a.naam)),
+  JSON.stringify(anderen));
+check('en jouw lijn ligt erboven, als laatste getekend',
+  await page.$eval('.grafiek svg', (svg) => {
+    const paden = [...svg.querySelectorAll('path')];
+    return paden[paden.length - 1].classList.contains('jij');
+  }));
+check('de grafiek heet nu "het seizoen", met een regel die de kleuren uitlegt',
+  (await page.textContent('.grafiek')).includes('Jouw lijn in kleur'));
+
+// ---- seizoensrecords ---------------------------------------------
+// Danny had drie van de vijf races goed (twee lijsten per race), de anderen
+// de andere twee. Een omgekeerde lijst heeft geen enkele plek exact.
+const records = await page.$$eval('[data-record]', (n) => Object.fromEntries(n.map((e) =>
+  [e.dataset.record, { tekst: e.querySelector('.nm').textContent.replace(/\s+/g, ' ').trim(),
+                       waarde: e.querySelector('.t').textContent.trim(),
+                       mij: e.classList.contains('winnaar') }])));
+check('vaakst P1 goed: Danny, 6 keer (drie races, kwalificatie en race)',
+  records.p1?.tekst.includes('Danny') && records.p1.waarde === '6×' && records.p1.mij,
+  JSON.stringify(records.p1));
+check('meeste exacte plekken: Danny, 60',
+  records.exact?.tekst.includes('Danny') && records.exact.waarde === '60×', JSON.stringify(records.exact));
+check('beste weekend: iedereen had er een foutloos, dus alle vier, zonder één race te noemen',
+  ['Danny', 'Mede0', 'Mede1', 'Mede2'].every((n) => records.weekend?.tekst.includes(n))
+    && !/Circuit/.test(records.weekend?.waarde ?? '') && /punten$/.test(records.weekend?.waarde ?? ''),
+  JSON.stringify(records.weekend));
 
 // ---- de getallen eronder zijn het echte antwoord -------------------
 // De lijn is een plaatje; de getallen maken er informatie van, en ze zijn ook
@@ -107,6 +142,26 @@ check('wie altijd op dezelfde plek stond krijgt niet twee keer hetzelfde getal',
 const alt = await page.$eval('.grafiek svg', (e) => e.getAttribute('aria-label'));
 check('de grafiek heeft een beschrijving voor wie hem niet ziet',
   /positie per race/i.test(alt ?? ''), String(alt));
+
+// P1 en exacte plekken zijn verschillende records. Danny heeft alleen P1
+// goed (de rest één plek opgeschoven), Mede0 alles behalve P1 en P2 (die
+// omgedraaid).
+await page.evaluate((UIT) => {
+  const db = globalThis.__db;
+  const alleenP1 = [UIT[0], ...UIT.slice(2), UIT[1]];
+  const zonderP1 = [UIT[1], UIT[0], ...UIT.slice(2)];
+  db.answers = db.answers.filter((a) => a.member_id === 'lid-1' || a.member_id === 'lid-m0');
+  db.pool_members = db.pool_members.filter((m) => ['lid-1', 'lid-m0'].includes(m.member_id));
+  for (const a of db.answers) a.waarde = a.member_id === 'lid-1' ? alleenP1 : zonderP1;
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+}, UIT);
+await naarStand();
+const apart = await page.$$eval('[data-record]', (n) => Object.fromEntries(n.map((e) =>
+  [e.dataset.record, e.querySelector('.nm').textContent.replace(/\s+/g, ' ').trim() + ' = ' + e.querySelector('.t').textContent.trim()])));
+check('vaakst P1 goed telt alleen de eerste plek: Danny 8× (vier races, twee lijsten)',
+  /Danny/.test(apart.p1 ?? '') && !/Mede0/.test(apart.p1 ?? '') && /8×$/.test(apart.p1 ?? ''), JSON.stringify(apart));
+check('meeste exacte plekken: Mede0, 8 per lijst, 64×',
+  /Mede0/.test(apart.exact ?? '') && !/Danny/.test(apart.exact ?? '') && /64×$/.test(apart.exact ?? ''), JSON.stringify(apart));
 
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 

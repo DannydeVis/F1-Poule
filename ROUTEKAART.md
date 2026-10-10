@@ -975,4 +975,54 @@ Van Danny: eerst reparaties, dan de vergelijkingspagina als concept.
 | erbij | Danny: "Gooi er een contact/feedback/bug ergens bij. Zodat mensen mij kunnen contacten." Onder Profiel een blok contact met drie knoppen (Iets werkt niet, Een idee of feedback, Een vraag) die een mail openen naar `contact@predicttherace.com`, elk met een eigen onderwerp; de bugmail heeft de browser, het beginscherm en de taal er al in. Op het beginscherm een regel met het adres | **gemerged** (8 oktober, PR #203) |
 | erbij | Danny: "Rechtsboven staat wissel. Beetje onduidelijk denk ik. Moet duidelijker zijn om van poule te wisselen." De poulenaam bovenin is nu zelf de knop, met een pijltje erachter zoals een keuzelijst; het losse grijze "Wissel" is weg. Op een breed scherm een eigen regel met de poulenaam, een rand en het pijltje | **gemerged** (8 oktober, PR #204) |
 | erbij | Danny: "Ik zie nergens in de app de feedback knop. En maak hier ook een kruisje zodat je kan terug gaan." Het contactblok staat nu bovenaan Profiel (direct na de taal) in plaats van onderaan. Wie via de poulenaam op het beginscherm komt, ziet rechtsboven een kruisje terug naar die poule; het jaartal wijkt dan, en op een smalle telefoon is "Predict the Race" iets kleiner zodat hij niet meer afgekapt wordt | **gemerged** (8 oktober, PR #205) |
-| erbij | Danny: de top 10 van de vrije training stond vrijdagmiddag niet op de Singapore-pagina. GitHub had tussen de eerste en de tweede training geen enkele run van om de twee uur uitgevoerd, en een run met de hand liep na acht minuten circuitcijfers de tweede training in, waarin OpenF1 een gratis account niets geeft. Nu in het weekend elk uur, en de racedata vóór de circuitcijfers | **gebouwd** (9 oktober) |
+| erbij | Danny: de top 10 van de vrije training stond vrijdagmiddag niet op de Singapore-pagina. GitHub had tussen de eerste en de tweede training geen enkele run van om de twee uur uitgevoerd, en een run met de hand liep na acht minuten circuitcijfers de tweede training in, waarin OpenF1 een gratis account niets geeft. Nu in het weekend elk uur, en de racedata vóór de circuitcijfers | **gemerged** (9 oktober, PR #206) |
+| erbij | Uit het feedbackrapport (10 oktober): de seizoensgrafiek met de hele poule (iedereen een grijze lijn, jij in kleur) en seizoensrecords (vaakst P1 goed, meeste exacte plekken, beste weekend; bij gelijke stand alle houders) | **gebouwd** (10 oktober) |
+
+## Uit het feedbackrapport van 10 oktober
+
+Danny kreeg een rapport over de app. Het meeste stond er al in (geen dubbele
+coureur, deadlines uit de database, een statusregel tot de uitslag binnen is,
+de stand als lijst, de stand als tekst, plaatje en story, automatisch invullen
+bij vergeten). Gebouwd: de grafiek met de hele poule en de seizoensrecords.
+
+Nog te doen, in deze volgorde:
+
+| wat | stand |
+|---|---|
+| het groepsapp-bericht na een weekend: het podium en de grootste stijger | open |
+| een lege poule (alleen jij): een duidelijke knop om de code te delen | open |
+| de korte puntenuitleg op het beginscherm in de kleuren van de app (paars, groen, geel) | open |
+
+## Wereldwijd (Danny, 10 oktober)
+
+"Let op dat ik niet per se op Nederland focus maar wereldwijd. De betaling moet
+wereldwijd gedaan kunnen worden. Net als de vindbaarheid." Dat geldt voor alles
+hieronder en voor wat er verder bijkomt.
+
+| wat | stand |
+|---|---|
+| nieuwe content eerst in het Engels, Nederlands ernaast | afspraak |
+| de app zelf in meer talen dan NL en EN (de vertaaltabel `T()` is er al op ingericht; de voorpagina heeft er al zeven) | open |
+| de gidsen en racepagina's ook in DE, FR, ES, IT en PT | open |
+
+## Premium, later
+
+Eerst de gratis app goed; daarna premium in twee stappen.
+
+1. **Een eigen profiel voor de poule** (bedrijven of grote groepen): eigen logo,
+   eigen kleur, een sponsorregel met link, in de kop, op het deelplaatje en in
+   de uitnodiging. Eerst door Danny met de hand aan te zetten in het beheer,
+   zonder betaling. Afdwingen in de database (regels in `schema.sql`), niet
+   alleen in de app: de code is openbaar. Logo's in Supabase Storage, met een
+   maximale grootte.
+2. **Betalen, wereldwijd**: via een Merchant of Record (Paddle of Lemon
+   Squeezy), die de btw, sales tax en GST per land en de facturen regelt.
+   Stripe is goedkoper maar laat de belasting per land bij Danny. Na betaling
+   zet een webhook (Supabase Edge Function) `premium tot <datum>` op de
+   poule. Wat Danny eerst regelt: een KvK-inschrijving, voorwaarden en een
+   aanvulling op de privacyverklaring. Prijsidee: € 2,99 per poule per
+   seizoen.
+
+Laat liggen: white-label op eigen domein, een survival-modus en een
+knock-outtoernooi (veel werk voor weinig spelers). Een vrijwillige "Buy me a
+coffee"-link kan altijd; dat is aan Danny.
