@@ -210,8 +210,10 @@ await page.waitForFunction(() => window.__klembord.length >= 2);
   check('het plaatje kan ook naar het klembord, voor WhatsApp Web',
     klembord[0]?.soort === 'plaatje' && klembord[0].types.includes('image/png'), JSON.stringify(klembord[0]));
   check('en de tekst van vroeger kan nog steeds',
-    klembord[1]?.soort === 'tekst' && klembord[1].t.startsWith('🏁 Shanghai, uitslag poule'), klembord[1]?.t.split('\n')[0]);
-  check('ook daarin gelijke punten, gelijke plek', /\n1\. Fatima/.test(klembord[1]?.t ?? '')
+    klembord[1]?.soort === 'tekst' && klembord[1].t.startsWith('🏁 Shanghai, uitslag Vrijdagmiddagpoule'), klembord[1]?.t.split('\n')[0]);
+  // Het podium met medailles (zie groepsapp.test.mjs); gedeeld eerste is
+  // allebei goud, en wie gedeeld zevende is heeft geen medaille maar een plek.
+  check('ook daarin gelijke punten, gelijke plek', /\n🥇 Fatima/.test(klembord[1]?.t ?? '')
     && /\n7\. Anouk/.test(klembord[1]?.t ?? ''), klembord[1]?.t.split('\n').slice(2, 4).join(' / '));
 }
 

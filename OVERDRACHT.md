@@ -10013,3 +10013,41 @@ Squeezy) en meer talen voor app, gidsen en racepagina's.
 lijn bovenop, de uitlegregel, de drie records, P1 en exact los van elkaar, een
 gelijke stand, en geen records in je eentje. Vier mutanten, alle gevangen
 (waarvan één pas nadat er een situatie bij kwam met alleen P1 goed).
+
+---
+
+## Het groepsapp-bericht, een lege poule en de kleuren (10 oktober)
+
+De laatste drie punten uit het feedbackrapport.
+
+- **Het groepsapp-bericht.** `groepsappTekst(race)` (de tekst onder Deel de
+  uitslag) zet een medaille voor het podium in plaats van het plekgetal,
+  volgens `gedeeldePlekken`: gedeeld eerste is twee keer goud en wie daarna
+  komt is derde, dus brons. Daaronder de grootste stijger in de stand
+  (`grootsteStijger(race)`, uit `standNaWeekend`): "Danny (P3 → P1)", bij
+  gelijk stijgen allemaal. Na het eerste weekend of als niemand steeg staat er
+  geen stijger. De kop, de stijger en de seizoensregel zijn nu vertaald, net
+  als `uitnodigingsTekst()` ("Doe mee met {poule}:").
+- **Een poule met alleen jou.** `legePouleBlok()` staat in `racesPagina`
+  boven de weekendkaart zolang `S.leden` één speler heeft: de code en de knop
+  "Deel de code in je groepsapp". `knoopLegePoule()` deelt de uitnodiging via
+  het deelmenu van het toestel; is dat er niet, dan naar het klembord, en lukt
+  ook dat niet, dan komt de tekst in een veld om zelf te selecteren. De knop
+  is een spookknop: de primaire knop op dat scherm blijft die van de
+  weekendkaart.
+- **De kleuren in de puntenuitleg.** `kleurPunten()` maakt van `<b>5</b>`,
+  `<b>3</b>` en `<b>1</b>` een blokje met de klasse `v5`, `v3` of `v1`, de
+  kleuren van de punten op het racescherm. Na `T()`, dus ook in het Engels. Op
+  het beginscherm, de stand en de poulepagina. Het blokje staat op `--paneel`
+  met een rand in de eigen kleur: op een tint van die kleur over het grijs van
+  de uitleg haalden groen en geel in licht de 4.5:1 niet
+  (`test/toegankelijkheid.test.mjs`).
+
+**Tests.** `test/groepsapp.test.mjs` (22): de kleuren (drie, gelijk aan het
+racescherm, ook in het Engels en op de poulepagina), de medailles bij een
+gedeelde plek, de stijger (gelijk gestegen, niet na het eerste weekend, niet
+als niemand steeg), de seizoensregel als laatste, het blok boven de
+weekendkaart en alleen in je eentje, delen met en zonder deelmenu, en het
+bericht in het Engels. `test/uitslag-delen.test.mjs` verwacht de nieuwe kop en
+de medaille. Tien mutanten, alle gevangen (de plek van het blok pas nadat de
+test tegen de weekendkaart meet in plaats van tegen de kalender).

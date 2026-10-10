@@ -976,7 +976,8 @@ Van Danny: eerst reparaties, dan de vergelijkingspagina als concept.
 | erbij | Danny: "Rechtsboven staat wissel. Beetje onduidelijk denk ik. Moet duidelijker zijn om van poule te wisselen." De poulenaam bovenin is nu zelf de knop, met een pijltje erachter zoals een keuzelijst; het losse grijze "Wissel" is weg. Op een breed scherm een eigen regel met de poulenaam, een rand en het pijltje | **gemerged** (8 oktober, PR #204) |
 | erbij | Danny: "Ik zie nergens in de app de feedback knop. En maak hier ook een kruisje zodat je kan terug gaan." Het contactblok staat nu bovenaan Profiel (direct na de taal) in plaats van onderaan. Wie via de poulenaam op het beginscherm komt, ziet rechtsboven een kruisje terug naar die poule; het jaartal wijkt dan, en op een smalle telefoon is "Predict the Race" iets kleiner zodat hij niet meer afgekapt wordt | **gemerged** (8 oktober, PR #205) |
 | erbij | Danny: de top 10 van de vrije training stond vrijdagmiddag niet op de Singapore-pagina. GitHub had tussen de eerste en de tweede training geen enkele run van om de twee uur uitgevoerd, en een run met de hand liep na acht minuten circuitcijfers de tweede training in, waarin OpenF1 een gratis account niets geeft. Nu in het weekend elk uur, en de racedata vóór de circuitcijfers | **gemerged** (9 oktober, PR #206) |
-| erbij | Uit het feedbackrapport (10 oktober): de seizoensgrafiek met de hele poule (iedereen een grijze lijn, jij in kleur) en seizoensrecords (vaakst P1 goed, meeste exacte plekken, beste weekend; bij gelijke stand alle houders) | **gebouwd** (10 oktober) |
+| erbij | Uit het feedbackrapport (10 oktober): de seizoensgrafiek met de hele poule (iedereen een grijze lijn, jij in kleur) en seizoensrecords (vaakst P1 goed, meeste exacte plekken, beste weekend; bij gelijke stand alle houders) | **gemerged** (10 oktober, PR #207) |
+| erbij | Uit het feedbackrapport (10 oktober): de tekst van Deel de uitslag met medailles voor het podium en de grootste stijger in de stand (van welke naar welke plek); een poule met alleen jou krijgt boven de weekendkaart de code en een knop om hem in je groepsapp te delen; de 5, 3 en 1 in de puntenuitleg in de kleuren van het racescherm | **gebouwd** (10 oktober) |
 
 ## Uit het feedbackrapport van 10 oktober
 
@@ -985,13 +986,11 @@ coureur, deadlines uit de database, een statusregel tot de uitslag binnen is,
 de stand als lijst, de stand als tekst, plaatje en story, automatisch invullen
 bij vergeten). Gebouwd: de grafiek met de hele poule en de seizoensrecords.
 
-Nog te doen, in deze volgorde:
-
 | wat | stand |
 |---|---|
-| het groepsapp-bericht na een weekend: het podium en de grootste stijger | open |
-| een lege poule (alleen jij): een duidelijke knop om de code te delen | open |
-| de korte puntenuitleg op het beginscherm in de kleuren van de app (paars, groen, geel) | open |
+| het groepsapp-bericht na een weekend: het podium en de grootste stijger | **gebouwd** (10 oktober) |
+| een lege poule (alleen jij): een duidelijke knop om de code te delen | **gebouwd** (10 oktober) |
+| de korte puntenuitleg op het beginscherm in de kleuren van de app (paars, groen, geel) | **gebouwd** (10 oktober), ook op de stand en de poulepagina |
 
 ## Wereldwijd (Danny, 10 oktober)
 

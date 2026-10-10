@@ -1220,6 +1220,17 @@
      blijft ernaast staan — kleur alleen is voor wie groen en geel niet uit
      elkaar houdt geen informatie. */
   .v5{color:var(--paars)} .v3{color:var(--groen)} .v1{color:var(--amber)} .v0{color:var(--ink3)}
+  /* Dezelfde kleuren als blokje in de puntenuitleg, zie kleurPunten(). Op
+     het paneel en niet op een tint van de eigen kleur: op het grijs van de
+     uitleg haalden groen en geel de 4.5:1 niet (3.8 en 3.7), op wit wel. */
+  .uitleg .pt{display:inline-block;min-width:1.5em;padding:0 5px;border-radius:4px;
+    text-align:center;background:var(--paneel);
+    border:1px solid color-mix(in srgb, currentColor 45%, transparent)}
+  .uitleg .pt.v5{color:var(--paars)} .uitleg .pt.v3{color:var(--groen)} .uitleg .pt.v1{color:var(--amber)}
+  /* Een poule met alleen jou: de code en één knop om hem te delen. */
+  .legepoule{display:flex;flex-direction:column;gap:12px;padding:16px;
+    border:1px solid var(--lijn);border-left:3px solid var(--accent);background:var(--eigen)}
+  .legepoule .knop svg{vertical-align:-3px;margin-right:8px}
   .rest{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px 0 13px;
     background:transparent;border-left:3px solid transparent}
   .rest .nm{font-size:15px;font-weight:600;letter-spacing:.01em;
@@ -3609,6 +3620,26 @@ const ENGELS = Object.fromEntries([
    '{n} points, {race}'],
   ['{a} en {b}',
    '{a} and {b}'],
+
+  // ---- groepsapp-bericht en een lege poule ----------------------
+  ['uitslag {poule}',
+   '{poule} results'],
+  ['Grootste stijger: {wie}',
+   'Biggest climber: {wie}'],
+  ['Seizoen: {stand}',
+   'Season: {stand}'],
+  ['Doe mee met {poule}:',
+   'Join {poule}:'],
+  ['nog alleen jij',
+   'just you so far'],
+  ['Een poule is pas leuk met meer mensen. '
+   + 'Stuur de code naar je groepsapp, dan doen je vrienden met één tik mee.',
+   'A pool is more fun with more people. Send the code to your group chat and '
+   + 'your friends join with one tap.'],
+  ['Deel de code in je groepsapp',
+   'Share the code in your group chat'],
+  ['Gekopieerd, plak hem in je groepsapp',
+   'Copied, paste it in your group chat'],
   ['Je positie per race: van {eerste} bij {race} naar {nu} nu.',
    'Your position per race: from {eerste} at {race} to {nu} now.'],
   ['Zonder toestemming kan er geen melding komen.',
@@ -6176,7 +6207,7 @@ const linkBasis = () => location.origin && location.origin !== 'null'
   : String(location.href).split('?')[0];
 
 function uitnodigingsTekst(poule = S.poule) {
-  return `Doe mee met ${poule.name}:\n${linkBasis()}?code=${poule.join_code}`;
+  return `${T('Doe mee met {poule}:', { poule: poule.name })}\n${linkBasis()}?code=${poule.join_code}`;
 }
 
 // Je eigen link, om jezelf mee te nemen naar een ander toestel. Bewust geen
@@ -6335,16 +6366,35 @@ const HANDVLAG = Object.fromEntries(
 // De poule leeft in de groepsapp, niet in de app. Zonder een knop die de
 // uitslag als tekst klaarzet moet iemand actief de site openen om te zien
 // hoe het ging, en dat doet niemand na race vier nog uit zichzelf.
+//
+// Het podium krijgt medailles, want dat is waar de groep naar kijkt. Daaronder
+// de grootste stijger in de stand: "Danny van P6 naar P3" is waar het gesprek
+// over gaat, niet wie er vierde werd. Uit het feedbackrapport van 10 oktober.
+const MEDAILLE = ['🥇', '🥈', '🥉'];
 
 function groepsappTekst(race) {
   const rijen = weekendUitslag(race);
   if (!rijen?.length) return '';
-  const breed = Math.max(...rijen.map(r => String(r.naam).length));
   const seizoen = standRijen();
   const plekken = gedeeldePlekken(rijen);
-  return `🏁 ${race.name}, uitslag poule\n\n`
-    + rijen.map((r, i) => `${plekken[i]}. ${String(r.naam).padEnd(breed + 2)}${r.punten}`).join('\n')
-    + `\n\nSeizoen: ${seizoen.map(r => `${r.naam} ${r.punten}`).join(', ')}`;
+  const stijger = grootsteStijger(race);
+  return `🏁 ${race.name}, ${T('uitslag {poule}', { poule: S.poule?.name ?? '' })}\n\n`
+    + rijen.map((r, i) => `${MEDAILLE[plekken[i] - 1] ?? `${plekken[i]}.`} ${r.naam}  ${r.punten}`).join('\n')
+    + (stijger ? `\n\n📈 ${T('Grootste stijger: {wie}', { wie: stijger })}` : '')
+    + `\n\n🏆 ${T('Seizoen: {stand}', { stand: seizoen.map(r => `${r.naam} ${r.punten}`).join(', ') })}`;
+}
+
+// Wie er in de stand het meest omhoog ging door dit weekend, met van welke
+// naar welke plek. Gelijk gestegen zijn ze allebei genoemd. Leeg als niemand
+// steeg, of als dit het eerste weekend was (dan valt er niets te vergelijken).
+function grootsteStijger(race) {
+  const stand = standNaWeekend(race);
+  const meest = Math.max(0, ...stand.map(r => r.wissel));
+  if (!meest) return '';
+  const namen = stand.filter(r => r.wissel === meest)
+    .map(r => `${r.naam} (P${r.plek + r.wissel} → P${r.plek})`);
+  return namen.length === 1 ? namen[0]
+    : T('{a} en {b}', { a: namen.slice(0, -1).join(', '), b: namen.at(-1) });
 }
 
 async function naarKlembord(tekst) {
@@ -6623,6 +6673,7 @@ function toonApp() {
     render();
   });
   knoopUitnodiging(app);
+  knoopLegePoule();
   knoopBeheer();
   knoopOmschrijving();
   knoopOpenbaar();
@@ -6709,11 +6760,54 @@ function racesPagina(volgend) {
         + 'opnieuw invullen. Sta opslag voor deze site toe, of gebruik geen '
         + 'privévenster.')}</div>` : ''}
     ${seizoenBalk()}
+    ${legePouleBlok()}
     ${volgend ? hero(volgend) : ''}
     <span class="label">${T('kalender')}</span>
     <div class="kalender">${komend.map(x => kalenderRij(x.r, x.st)).join('') || leeg}</div>
     ${gereden.length ? `<span class="label">${T('gereden')}</span>
       <div class="kalender">${gereden.map(x => kalenderRij(x.r, x.st)).join('')}</div>` : ''}`;
+}
+
+// ---- een poule met alleen jou -------------------------------
+// Net een poule gemaakt, en dan sta je alleen in de stand. De code stond wel
+// op de poulepagina, maar wie dat niet weet ziet een kalender en verder niets.
+// Bovenaan dus één blok met één knop: deel de code. Met het deelmenu van het
+// toestel (meteen WhatsApp); kan dat niet, dan naar het klembord. Uit het
+// feedbackrapport van 10 oktober.
+function legePouleBlok() {
+  if (S.leden.length > 1 || !S.poule?.join_code) return '';
+  return `<div class="legepoule" data-lege-poule>
+    <span class="label">${T('nog alleen jij')}</span>
+    <p class="zacht" style="margin:0">${T('Een poule is pas leuk met meer mensen. '
+      + 'Stuur de code naar je groepsapp, dan doen je vrienden met één tik mee.')}</p>
+    <div class="veld code" style="display:grid;place-items:center">${esc(S.poule.join_code)}</div>
+    <button class="knop spook" id="deelcode">${DEELICOON}${T('Deel de code in je groepsapp')}</button>
+    <textarea class="veld tekstblok hide" id="deelcodeveld" readonly rows="3"
+      aria-label="${T('Uitnodiging om zelf te kopiëren')}"></textarea>
+  </div>`;
+}
+
+function knoopLegePoule() {
+  const knop = app.querySelector('#deelcode');
+  if (!knop) return;
+  knop.onclick = async () => {
+    const tekst = uitnodigingsTekst();
+    if (navigator.share) {
+      try { await navigator.share({ text: tekst }); return; }
+      catch (e) { if (e?.name === 'AbortError') return; }
+    }
+    const was = knop.innerHTML;
+    if (await naarKlembord(tekst)) {
+      knop.textContent = T('Gekopieerd, plak hem in je groepsapp');
+      setTimeout(() => { if (knop.isConnected) knop.innerHTML = was; }, 2400);
+    } else {
+      const veld = app.querySelector('#deelcodeveld');
+      knop.textContent = T('Kopiëren lukt niet, selecteer hem zelf');
+      veld.value = tekst;
+      veld.classList.remove('hide');
+      veld.select();
+    }
+  };
 }
 
 // ---- de weekendkaart ----------------------------------------
@@ -6993,9 +7087,9 @@ function standPagina(rijen) {
     ${seizoensGrafiek()}
     ${terugblikBlok()}
     ${duelLijst()}
-    <div class="uitleg">${T('Punten per plek: <b>5</b> exact, <b>3</b> één plek '
+    <div class="uitleg">${kleurPunten(T('Punten per plek: <b>5</b> exact, <b>3</b> één plek '
       + 'ernaast, <b>1</b> twee plekken ernaast. Wie een weekend de meeste punten '
-      + 'pakt wint dat weekend, ook al sta je in het seizoen achter.')}</div>`;
+      + 'pakt wint dat weekend, ook al sta je in het seizoen achter.'))}</div>`;
 }
 
 // ---- terugblik: je blinde vlek en het zwaarste weekend --------
@@ -7431,8 +7525,8 @@ function poulePagina(rijen) {
     <span class="label">${T('spelers')}</span>
     ${rijen.length ? `<div class="groep">${rijen.map((r, i) => spelerRij(r, i)).join('')}</div>`
       : `<p class="zacht" style="margin:0">${T('Nog niemand meegedaan.')}</p>`}
-    <div class="uitleg">${T('Punten per plek: <b>5</b> exact, <b>3</b> één plek '
-      + 'ernaast, <b>1</b> twee plekken ernaast.')}</div>
+    <div class="uitleg">${kleurPunten(T('Punten per plek: <b>5</b> exact, <b>3</b> één plek '
+      + 'ernaast, <b>1</b> twee plekken ernaast.'))}</div>
     ${agendaBlok()}
     ${beheerKop()}
     ${omschrijvingBlok()}
@@ -12095,6 +12189,12 @@ addEventListener('beforeinstallprompt', (ev) => {
   else if (app.querySelector('[data-rondleiding="beginscherm"], [data-beginscherm]')) render();
 });
 
+// De 5, 3 en 1 in de uitleg in dezelfde kleuren als op het racescherm:
+// paars exact, groen één ernaast, geel twee ernaast. Wie de kleuren hier één
+// keer ziet, leest de uitslag daarna zonder uitleg. Na T(), zodat het Engels
+// ze ook krijgt.
+const kleurPunten = (html) => html.replace(/<b>([531])<\/b>/g, '<b class="pt v$1">$1</b>');
+
 function watIsDitBlok() {
   if (mijnPoules().length) return '';
   return `
@@ -12111,9 +12211,9 @@ function watIsDitBlok() {
       <p class="zacht" style="margin:0">${T('Voor elke race voorspel je de '
         + '<b>top 10 van de kwalificatie</b> en de <b>top 10 van de race</b>, plus '
         + 'een paar losse vragen: wie wint, wie pakt pole, hoeveel safety cars.')}</p>
-      <div class="uitleg">${T('Punten per plek: <b>5</b> exact, <b>3</b> één plek '
+      <div class="uitleg">${kleurPunten(T('Punten per plek: <b>5</b> exact, <b>3</b> één plek '
         + 'ernaast, <b>1</b> twee plekken ernaast. De uitslagen komen vanzelf '
-        + 'binnen, dus niemand hoeft ze bij te houden.')}</div>
+        + 'binnen, dus niemand hoeft ze bij te houden.'))}</div>
       <p class="zacht" style="margin:0">${T('Gratis, geen wachtwoord, en er zit geen '
         + 'geld in — geen inleg, geen pot, geen prijzen. Je speelt om de eer.')}</p>
     </div>`;
