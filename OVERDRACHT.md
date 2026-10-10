@@ -9977,3 +9977,39 @@ eerste en de tweede training komt binnen met de eerste run na 13:00 UTC.
 
 **Tests.** `test/racedata.test.mjs` (25) eist nu elk uur in het weekend en de
 racedata vóór de circuitcijfers. Twee mutanten, beide gevangen.
+
+---
+
+## Het feedbackrapport, en het seizoen van de hele poule (10 oktober)
+
+Danny stuurde een rapport over de app ("Predict the Race, volledig rapport")
+en vroeg wat we ermee kunnen. Het meeste stond er al in: een coureur kan niet
+twee keer in je top 10 (hij is uitgegrijsd), de aftelklok rekent vanaf de
+sessiestart uit de database (de sync werkt die elke dag bij), tot de uitslag
+binnen is staat er "{sessie} is afgelopen", de stand is een lijst en geen
+brede tabel, de stand bestaat al als tekst, plaatje en story, en automatisch
+invullen bij vergeten bestaat ook.
+
+Gebouwd:
+
+- **De grafiek met de hele poule.** `seizoensGrafiek()` tekent nu voor elke
+  medespeler een dunne grijze lijn (`path.ander`, met de naam in `<title>`)
+  achter jouw lijn in kleur (`path.jij`, als laatste getekend zodat hij
+  bovenop ligt). Het label is "het seizoen", met een regel die de kleuren
+  uitlegt. De drempels zijn gebleven: vanaf drie races en met medespelers.
+- **Seizoensrecords.** `seizoensRecords()` op de standpagina, onder de
+  weekendoverwinningen: vaakst P1 goed (de eerste plek van elke lijst,
+  kwalificatie, sprint en race apart), meeste exacte plekken, en het beste
+  weekend (`scoreWeekend`). Bij een gelijke stand alle houders, en dan bij het
+  beste weekend geen race, want ze kunnen het in verschillende weekenden
+  hebben gehaald. `mijnSessies()` neemt daarvoor een speler mee
+  (`mijnSessies(id)`).
+
+Wereldwijd en premium staan als plan op de routekaart: Danny wil niet per se
+op Nederland richten, dus betalen via een Merchant of Record (Paddle of Lemon
+Squeezy) en meer talen voor app, gidsen en racepagina's.
+
+**Tests.** `test/seizoensgrafiek.test.mjs` (21): de lijnen van de anderen, jouw
+lijn bovenop, de uitlegregel, de drie records, P1 en exact los van elkaar, een
+gelijke stand, en geen records in je eentje. Vier mutanten, alle gevangen
+(waarvan één pas nadat er een situatie bij kwam met alleen P1 goed).

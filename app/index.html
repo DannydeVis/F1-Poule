@@ -3593,8 +3593,22 @@ const ENGELS = Object.fromEntries([
    'Copied'],
 
   // ---- grafiek, beheer, delen, seizoenbalk, duels --------------
-  ['jouw seizoen',
-   'your season'],
+  ['het seizoen',
+   'the season'],
+  ['Jouw lijn in kleur, je medespelers in grijs. Bovenaan is eerste.',
+   'Your line in colour, the others in grey. The top is first place.'],
+  ['seizoensrecords',
+   'season records'],
+  ['vaakst P1 goed',
+   'most P1s right'],
+  ['meeste exacte plekken',
+   'most exact places'],
+  ['beste weekend',
+   'best weekend'],
+  ['{n} punten, {race}',
+   '{n} points, {race}'],
+  ['{a} en {b}',
+   '{a} and {b}'],
   ['Je positie per race: van {eerste} bij {race} naar {nu} nu.',
    'Your position per race: from {eerste} at {race} to {nu} now.'],
   ['Zonder toestemming kan er geen melding komen.',
@@ -6975,6 +6989,7 @@ function standPagina(rijen) {
       DEELICOON}${T('Deel de stand')}</button>` : ''}
     ${seizoenslaagBlok()}
     ${weekendRanglijst()}
+    ${seizoensRecords()}
     ${seizoensGrafiek()}
     ${terugblikBlok()}
     ${duelLijst()}
@@ -6995,10 +7010,10 @@ function standPagina(rijen) {
 // Alle top 10-lijsten die ik heb ingeleverd en waar een uitslag bij hoort. De
 // kwalificatie en de race tellen als aparte lijsten: het zijn twee
 // voorspellingen, en je kunt in de ene scherper zijn dan in de andere.
-function mijnSessies() {
+function mijnSessies(id = S.ik.id) {
   const uit = [];
   for (const r of S.races) {
-    const p = vindPred(r.id, S.ik.id);
+    const p = vindPred(r.id, id);
     if (!p) continue;
     for (const w of weekendSessies(r)) {
       const werkelijk = r[SESSIES[w].uitslag], voorspeld = p[SESSIES[w].vraag];
@@ -7041,10 +7056,10 @@ function seizoensGrafiek() {
   if (gescoord.length < 3) return '';
 
   const totaal = S.leden.length;
-  const punten = gescoord.map(r => {
-    const rijen = standRijen(r.round + 1);
-    return { ronde: r.round, naam: r.name, plek: plekVan(rijen, S.ik.id) };
-  }).filter(p => p.plek > 0);
+  const standen = gescoord.map(r => ({ r, rijen: standRijen(r.round + 1) }));
+  const punten = standen.map(({ r, rijen }) =>
+    ({ ronde: r.round, naam: r.name, plek: plekVan(rijen, S.ik.id) }))
+    .filter(p => p.plek > 0);
   if (punten.length < 3) return '';
 
   const B = 300, H = 90, pad = 6;
@@ -7054,18 +7069,31 @@ function seizoensGrafiek() {
   const y = (plek) => totaal < 2 ? H / 2
     : pad + ((plek - 1) / (totaal - 1)) * (H - 2 * pad);
   const lijn = punten.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(p.plek).toFixed(1)}`).join(' ');
+  // De rest van de poule als dunne grijze lijnen erachter. Uit het
+  // feedbackrapport van 10 oktober: "een seizoensgrafiek die per race laat
+  // zien wie er is gestegen of gedaald". Jouw lijn blijft de enige in kleur,
+  // anders is het bij acht spelers een bord spaghetti.
+  const anderen = S.leden.filter(l => !zelfde(l.member_id, S.ik.id)).map(l => {
+    const pl = standen.map(({ rijen }) => plekVan(rijen, l.member_id));
+    if (pl.some(p => !p)) return '';
+    return `<path class="ander" data-lid="${esc(l.member_id)}" d="${pl.map((p, i) =>
+      `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(p).toFixed(1)}`).join(' ')}" fill="none"
+      stroke="var(--ink3)" stroke-opacity=".45" stroke-width="1.2" stroke-linejoin="round"
+      vector-effect="non-scaling-stroke"><title>${esc(l.display_name)}</title></path>`;
+  }).join('');
   const beste = Math.min(...punten.map(p => p.plek));
   const slechtste = Math.max(...punten.map(p => p.plek));
   const nu = punten[punten.length - 1].plek;
 
   return `
     <div class="scheiding"></div>
-    <span class="label">${T('jouw seizoen')}</span>
+    <span class="label">${T('het seizoen')}</span>
     <div class="grafiek">
       <svg viewBox="0 0 ${B} ${H}" preserveAspectRatio="none" role="img"
         aria-label="${T('Je positie per race: van {eerste} bij {race} naar {nu} nu.',
           { eerste: rang(punten[0].plek), race: esc(punten[0].naam), nu: rang(nu) })}">
-        <path d="${lijn}" fill="none" stroke="var(--accent)" stroke-width="2"
+        ${anderen}
+        <path class="jij" d="${lijn}" fill="none" stroke="var(--accent)" stroke-width="2"
           stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
         ${punten.map((p, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(p.plek).toFixed(1)}"
           r="${i === punten.length - 1 ? 3.5 : 2}" fill="var(--accent)"/>`).join('')}
@@ -7080,6 +7108,8 @@ function seizoensGrafiek() {
         ${beste === slechtste ? '' : `<span><b>${rang(slechtste)}</b><i>${T('slechtste')}</i></span>`}
         <span><b>${rang(nu)}</b><i>${T('nu')}</i></span>
       </div>
+      ${anderen ? `<p class="zacht" style="margin:0;font-size:13px">${
+        T('Jouw lijn in kleur, je medespelers in grijs. Bovenaan is eerste.')}</p>` : ''}
     </div>`;
 }
 
@@ -7131,6 +7161,60 @@ function terugblikBlok() {
     <div class="bijna">
       <ul class="bijnalijst">${regels.map(r => `<li>${r}</li>`).join('')}</ul>
     </div>`;
+}
+
+// ---- seizoensrecords ------------------------------------------
+// Uit het feedbackrapport van 10 oktober ("Hall of Fame"): wie zat het vaakst
+// goed op P1, wie had de meeste exacte plekken, en wie had het beste weekend.
+// Alles uit de lijsten die er al zijn; per record de houder of houders, want
+// bij een gelijke stand is het niet eerlijk er één uit te pikken. Alleen met
+// medespelers, en alleen een record dat iemand ook echt heeft (een 0 is geen
+// record).
+function seizoensRecords() {
+  if (!S.ik || S.leden.length < 2) return '';
+  const spelers = S.leden.map(l => {
+    const sessies = mijnSessies(l.member_id);
+    let p1 = 0, exact = 0;
+    for (const { voorspeld, werkelijk } of sessies) {
+      if (voorspeld[0] != null && zelfde(voorspeld[0], werkelijk[0])) p1++;
+      voorspeld.forEach((nr, i) => { if (nr != null && zelfde(nr, werkelijk[i])) exact++; });
+    }
+    let weekend = null;
+    for (const r of S.races.filter(heeftUitslag)) {
+      if (!heeftVoorspeld(r, l.member_id)) continue;
+      const pt = scoreWeekend(vindPred(r.id, l.member_id), r);
+      if (!weekend || pt > weekend.punten) weekend = { punten: pt, race: r.name };
+    }
+    return { id: l.member_id, naam: l.display_name, p1, exact, weekend };
+  });
+  const houders = (waarde) => {
+    const beste = Math.max(...spelers.map(waarde));
+    if (!(beste > 0)) return null;
+    return { beste, wie: spelers.filter(x => waarde(x) === beste) };
+  };
+  const namen = (wie) => {
+    const n = wie.map(x => esc(x.naam) + (zelfde(x.id, S.ik.id) ? ` <span class="jij">${T('jij')}</span>` : ''));
+    return n.length === 1 ? n[0] : T('{a} en {b}', { a: n.slice(0, -1).join(', '), b: n[n.length - 1] });
+  };
+  const regels = [];
+  const p1 = houders(x => x.p1);
+  if (p1) regels.push({ soort: 'p1', kop: T('vaakst P1 goed'), wie: p1.wie, waarde: `${p1.beste}×` });
+  const ex = houders(x => x.exact);
+  if (ex) regels.push({ soort: 'exact', kop: T('meeste exacte plekken'), wie: ex.wie, waarde: `${ex.beste}×` });
+  const wk = houders(x => x.weekend?.punten ?? 0);
+  if (wk) regels.push({ soort: 'weekend', kop: T('beste weekend'), wie: wk.wie,
+    // Bij een gelijke stand in verschillende weekenden is er geen één race
+    // om te noemen; dan alleen de punten.
+    waarde: wk.wie.length === 1
+      ? T('{n} punten, {race}', { n: wk.beste, race: esc(wk.wie[0].weekend.race) })
+      : T('{n} punten', { n: wk.beste }) });
+  if (!regels.length) return '';
+  return `<span class="label">${T('seizoensrecords')}</span>
+    <div class="groep">${regels.map(r => `<div class="rest${r.wie.some(x => zelfde(x.id, S.ik.id)) ? ' winnaar' : ''}"
+      data-record="${r.soort}">
+      <span class="nm"><span class="zacht" style="display:block;font-size:13px">${r.kop}</span>${namen(r.wie)}</span>
+      <span class="t">${r.waarde}</span>
+    </div>`).join('')}</div>`;
 }
 
 // De tweede ranglijst: los van het seizoen valt er elk weekend iets te winnen.
