@@ -1233,9 +1233,9 @@ END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:quali-11388@f1-poule
-DTSTAMP:20261010T130000Z
-DTSTART:20261010T130000Z
-DTEND:20261010T140000Z
+DTSTAMP:20261010T133000Z
+DTSTART:20261010T133000Z
+DTEND:20261010T143000Z
 SUMMARY:Kwalificatie Marina Bay — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
  wijzigen.\n\nhttps://predicttherace.com/app/
