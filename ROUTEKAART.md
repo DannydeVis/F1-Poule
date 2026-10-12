@@ -977,7 +977,8 @@ Van Danny: eerst reparaties, dan de vergelijkingspagina als concept.
 | erbij | Danny: "Ik zie nergens in de app de feedback knop. En maak hier ook een kruisje zodat je kan terug gaan." Het contactblok staat nu bovenaan Profiel (direct na de taal) in plaats van onderaan. Wie via de poulenaam op het beginscherm komt, ziet rechtsboven een kruisje terug naar die poule; het jaartal wijkt dan, en op een smalle telefoon is "Predict the Race" iets kleiner zodat hij niet meer afgekapt wordt | **gemerged** (8 oktober, PR #205) |
 | erbij | Danny: de top 10 van de vrije training stond vrijdagmiddag niet op de Singapore-pagina. GitHub had tussen de eerste en de tweede training geen enkele run van om de twee uur uitgevoerd, en een run met de hand liep na acht minuten circuitcijfers de tweede training in, waarin OpenF1 een gratis account niets geeft. Nu in het weekend elk uur, en de racedata vóór de circuitcijfers | **gemerged** (9 oktober, PR #206) |
 | erbij | Uit het feedbackrapport (10 oktober): de seizoensgrafiek met de hele poule (iedereen een grijze lijn, jij in kleur) en seizoensrecords (vaakst P1 goed, meeste exacte plekken, beste weekend; bij gelijke stand alle houders) | **gemerged** (10 oktober, PR #207) |
-| erbij | Uit het feedbackrapport (10 oktober): de tekst van Deel de uitslag met medailles voor het podium en de grootste stijger in de stand (van welke naar welke plek); een poule met alleen jou krijgt boven de weekendkaart de code en een knop om hem in je groepsapp te delen; de 5, 3 en 1 in de puntenuitleg in de kleuren van het racescherm | **gebouwd** (10 oktober) |
+| erbij | Uit het feedbackrapport (10 oktober): de tekst van Deel de uitslag met medailles voor het podium en de grootste stijger in de stand (van welke naar welke plek); een poule met alleen jou krijgt boven de weekendkaart de code en een knop om hem in je groepsapp te delen; de 5, 3 en 1 in de puntenuitleg in de kleuren van het racescherm | **gemerged** (10 oktober, PR #208) |
+| erbij | Danny: "de weekend winnaar ... vind ik nog wat laag in zichtbaarheid. Als ik op een weekend druk die helemaal klaar is zie ik weinig bragging rights." Een afgelopen weekend krijgt bovenaan, boven de tabbladen, een podium: de winnaar groot (of "Jij wint dit weekend"), de eerste drie als treden in de volgorde twee, een, drie, jouw plek als je er niet op staat, en de grootste stijger. Onderaan staat de winnaar dan niet nog een keer | **gebouwd** (12 oktober) |
 
 ## Uit het feedbackrapport van 10 oktober
 
@@ -988,9 +989,9 @@ bij vergeten). Gebouwd: de grafiek met de hele poule en de seizoensrecords.
 
 | wat | stand |
 |---|---|
-| het groepsapp-bericht na een weekend: het podium en de grootste stijger | **gebouwd** (10 oktober) |
-| een lege poule (alleen jij): een duidelijke knop om de code te delen | **gebouwd** (10 oktober) |
-| de korte puntenuitleg op het beginscherm in de kleuren van de app (paars, groen, geel) | **gebouwd** (10 oktober), ook op de stand en de poulepagina |
+| het groepsapp-bericht na een weekend: het podium en de grootste stijger | **gemerged** (10 oktober, PR #208) |
+| een lege poule (alleen jij): een duidelijke knop om de code te delen | **gemerged** (10 oktober, PR #208) |
+| de korte puntenuitleg op het beginscherm in de kleuren van de app (paars, groen, geel) | **gemerged** (10 oktober, PR #208), ook op de stand en de poulepagina |
 
 ## Wereldwijd (Danny, 10 oktober)
 
