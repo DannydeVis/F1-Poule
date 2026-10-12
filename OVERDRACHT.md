@@ -10121,3 +10121,41 @@ pagina's geïndexeerd zijn.
 **Tests.** Twee checks in `test/site.test.mjs` (het jaar, het zinsdeel), twee
 mutanten, allebei gevangen.
 
+---
+
+## Trekken om te verversen (12 oktober)
+
+Danny: "Maak een pull to refresh. Ik moet nu steeds de app opnieuw afsluiten
+en openen voor een refresh." De app op het beginscherm heeft geen adresbalk;
+een telefoon houdt hem op de achtergrond open, en dan zie je bij terugkomen de
+stand van uren geleden.
+
+- **Het gebaar** (bij `verversNaDeadline()` in de app): `touchstart`,
+  `touchmove` en `touchend` op het document, passief. Het begint alleen als
+  de app als app draait (`alGeinstalleerd()`), er een poule en een speler
+  zijn, de pagina en elk vak onder je vinger bovenaan staan (`bovenaan()`),
+  en er geen venster (`[role="dialog"]`) of invulscherm (`#opslaan`) open is.
+  In Safari en Chrome trekt de browser zelf al; daar doet de app niets, anders
+  verversen er twee tegelijk. De trekker (`#trekker`, buiten `#app`, zodat
+  `render()` hem niet weghaalt) komt half zo ver mee als je vinger, tot 96
+  pixels; vanaf 64 ververst loslaten. Een paar pixels trillen of opzij breekt
+  het gebaar niet af; omhoog of duidelijk opzij wel.
+- **Verversen** (`verversPoule()`): eerst een HEAD-verzoek naar de app zelf
+  (`versieOnline()`, de ETag of Last-Modified). Is die anders dan bij het
+  starten (`appVersie`), dan `location.reload()`: er staat een nieuwe versie
+  online, en `herstelScherm()` brengt je terug waar je was. Anders `laad()`,
+  de open race opnieuw koppelen aan de nieuwe gegevens (`S.race`; zonder dat
+  staat er na verversen de oude uitslag) en `render()`. Is er intussen een
+  venster of het invulscherm opengegaan, dan niet tekenen.
+- **Terugkomen**: bij `visibilitychange` naar zichtbaar, als `S.geladenOp`
+  ouder is dan een minuut, hetzelfde `verversPoule()`.
+
+**Tests.** `test/verversen.test.mjs` (16), met nagemaakte TouchEvents en een
+nagemaakte ETag: een kort stukje ververst niet, ver genoeg wel (een nieuwe
+speler uit de nabootsing staat daarna in de stand), niet gescrold, een open
+race krijgt de nieuwe uitslag, niet met het deelplaatje open, niet op het
+invulscherm (je keuze blijft staan), terugkomen na een minuut wel en meteen
+niet, een nieuwe versie herlaadt en daarna niet nog eens, en in de browser
+niets. Twaalf mutanten, alle gevangen (die met het venster pas nadat de test
+na het openen weer naar boven scrolt).
+
