@@ -2,12 +2,12 @@
   "bron": "OpenF1 (https://openf1.org): race_control, en session_result en drivers voor pole en winnaar",
   "regel": "Een virtuele safety car telt mee, net als in de app (telSafetyCars en hadRodeVlag in scripts/uitslagen.mjs).",
   "vanaf": 2023,
-  "tot": "2026-10-04",
-  "races": 86,
-  "metSafetyCar": 59,
+  "tot": "2026-10-11",
+  "races": 87,
+  "metSafetyCar": 60,
   "metRodeVlag": 11,
-  "metPole": 86,
-  "poleGewonnen": 54,
+  "metPole": 87,
+  "poleGewonnen": 55,
   "ontbreekt": [
     {
       "jaar": 2023,
@@ -625,12 +625,12 @@
       "naam": "Singapore",
       "locatie": "Marina Bay",
       "land": "Singapore",
-      "races": 3,
-      "metSafetyCar": 1,
-      "safetyCars": 2,
+      "races": 4,
+      "metSafetyCar": 2,
+      "safetyCars": 4,
       "metRodeVlag": 0,
-      "metPole": 3,
-      "poleGewonnen": 3,
+      "metPole": 4,
+      "poleGewonnen": 4,
       "perRace": [
         {
           "jaar": 2023,
@@ -677,6 +677,22 @@
           "winnaar": {
             "nr": "63",
             "naam": "George Russell"
+          },
+          "poleWon": true
+        },
+        {
+          "jaar": 2026,
+          "datum": "2026-10-11",
+          "sessie": 11388,
+          "safetyCars": 2,
+          "rodeVlag": false,
+          "pole": {
+            "nr": "3",
+            "naam": "Max Verstappen"
+          },
+          "winnaar": {
+            "nr": "3",
+            "naam": "Max Verstappen"
           },
           "poleWon": true
         }
