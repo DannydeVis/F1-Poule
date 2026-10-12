@@ -10086,3 +10086,38 @@ jij wint, gedeeld eerste, niet na alleen de kwalificatie, niet in je eentje,
 en in het Engels. Dertien mutanten, alle gevangen (die met wie niets
 inleverde pas na de poule van drie).
 
+---
+
+## Gevonden worden op "race prediction game" (12 oktober)
+
+Danny zag in het AI-antwoord van Google op "race predicting game" F1 Predict,
+P1Predict en de MyPaddock Race Predictor van Red Bull, en niet Predict the
+Race; op "predicttherace" aan elkaar wel. De site zelf was al in orde (de
+Engelse voorpagina heet "Free F1 prediction game for friends", x-default is
+Engels, er is een vergelijking). Zulke antwoorden putten uit pagina's die al
+hoog staan en elders genoemd worden, en het domein is een paar weken oud.
+
+Op de site:
+
+- De vergelijking heet nu "Best F1 prediction games 2026" (kop "The best F1
+  prediction games of 2026, compared"), in het Nederlands "Beste
+  F1-poule-apps van 2026". Het adres is gebleven, zodat wat al geïndexeerd
+  is blijft werken. `test/site.test.mjs` eist dat het jaar in titel en kop
+  het jaar van `gecontroleerd` is: wie de andere apps opnieuw controleert,
+  werkt de titel mee bij.
+- "race prediction game" staat in de korte samenvatting van de Engelse
+  vergelijking ("also called race prediction games", ook als feit in
+  `test/site.test.mjs`) en in de ondertitel van de Engelse voorpagina ("The
+  free F1 race prediction game").
+
+Wat alleen Danny kan doen, en wat het meeste uitmaakt: genoemd worden. De app
+op AlternativeTo zetten (als alternatief voor F1 Predict en F1 Fantasy), een
+lancering op Product Hunt, F1-subreddits en Discords waar dat mag (r/formula1
+is streng met zelfpromotie), schrijvers van "best F1 prediction games"-lijstjes
+mailen, Bing Webmaster Tools (ChatGPT en Copilot zoeken via Bing; IndexNow
+meldt nieuwe pagina's al), en in Search Console nakijken of de Engelse
+pagina's geïndexeerd zijn.
+
+**Tests.** Twee checks in `test/site.test.mjs` (het jaar, het zinsdeel), twee
+mutanten, allebei gevangen.
+

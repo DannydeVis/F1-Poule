@@ -240,7 +240,7 @@ Titelvoorstellen (allemaal 30 tot 65 tekens):
 | puntentelling | Puntentelling voor een F1-poule \| Predict the Race | F1 prediction scoring systems explained \| Predict the Race |
 | excel | F1-poule bijhouden in Excel \| Predict the Race | F1 prediction league spreadsheet \| Predict the Race |
 | over | Over Predict the Race: wie het maakt en waarom | About Predict the Race: who makes it and why |
-| vergelijking | F1-poule-apps vergeleken \| Predict the Race | F1 prediction games compared \| Predict the Race |
+| vergelijking | Beste F1-poule-apps van 2026 \| Predict the Race | Best F1 prediction games 2026 \| Predict the Race |
 
 Vanaf januari 2027: zet "2027" in titel en kop van organiseren en puntentelling, en werk de inhoud echt bij (niet alleen het jaartal). Geen aparte jaarpagina's.
 

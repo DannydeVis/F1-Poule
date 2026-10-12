@@ -217,7 +217,7 @@ export const teksten = {
     hero: {
       boven: 'Free F1 prediction game',
       kop: ['Predict the grid.', 'Beat your friends.'],
-      sub: 'The free F1 prediction game for you and your friends. Predict the top 10 every race weekend, the results come in by themselves, and the standings are one tap away from your group chat.',
+      sub: 'The free F1 race prediction game for you and your friends. Predict the top 10 every race weekend, the results come in by themselves, and the standings are one tap away from your group chat.',
       knop: 'Start your league',
       codeLabel: 'Got a code?', codeKnop: 'Join',
       openPoule: { vraag: 'No group?', link: 'Join the open league' },

@@ -657,9 +657,9 @@ export const PAGINAS = [
     talen: {
       nl: {
         pad: 'f1-poule-apps-vergeleken',
-        titel: 'F1-poule-apps vergeleken | Predict the Race',
+        titel: 'Beste F1-poule-apps van 2026 | Predict the Race',
         omschrijving: 'Predict the Race naast F1 Predict, F1 Fantasy, GP Poule, poules.com, Superbru en Excel: wat je voorspelt, wat het kost en wanneer iets anders beter past.',
-        kop: 'F1-poule-apps vergeleken',
+        kop: 'De beste F1-poule-apps van 2026, vergeleken',
         openheid: 'Deze vergelijking is geschreven door de maker van Predict the Race.',
         kort: 'F1-poule-apps verschillen vooral in wat je doet: in F1 Fantasy stel je een team samen, in F1 Predict, GP Poule, poules.com, Superbru en Predict the Race voorspel je de uitslag. Daarna verschillen ze in wat het kost en of er prijzen zijn. Predict the Race is gratis en zonder account, maar heeft geen prijzen en geen app in de stores.',
         secties: [
@@ -727,11 +727,11 @@ export const PAGINAS = [
       },
       en: {
         pad: 'en/f1-prediction-games-compared',
-        titel: 'F1 prediction games compared | Predict the Race',
+        titel: 'Best F1 prediction games 2026 | Predict the Race',
         omschrijving: 'Predict the Race next to F1 Predict, F1 Fantasy, Superbru, GridRival, Kicktipp, Podium Prophets and a spreadsheet: what you do, what it costs, what fits.',
-        kop: 'F1 prediction games compared',
+        kop: 'The best F1 prediction games of 2026, compared',
         openheid: 'This comparison was written by the maker of Predict the Race.',
-        kort: 'F1 prediction games come in two kinds. In F1 Fantasy and GridRival you build a team within a budget; in F1 Predict, Superbru, Kicktipp, Podium Prophets and Predict the Race you predict the results. Beyond that they differ in price, prizes and how much you predict. Predict the Race is free and needs no account, but has no prizes and no app in the stores.',
+        kort: 'F1 prediction games, also called race prediction games, come in two kinds. In F1 Fantasy and GridRival you build a team within a budget; in F1 Predict, Superbru, Kicktipp, Podium Prophets and Predict the Race you predict the results. Beyond that they differ in price, prizes and how much you predict. Predict the Race is free and needs no account, but has no prizes and no app in the stores.',
         secties: [
           {
             id: 'which',
