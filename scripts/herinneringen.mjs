@@ -28,8 +28,9 @@ export const SESSIEVOLGORDE = ['sprint', 'quali', 'race'];
 // De app vertaalt zichzelf in de browser met een woordenlijst van vierhonderd
 // zinnen. Een push komt hiervandaan, zonder browser, en gaat over precies
 // zeven zinnen -- dus staat die handvol hier, en niet een tweede kopie van de
-// hele lijst. `taal` komt uit de kolom op push_abonnementen; alles wat geen
-// 'en' is krijgt Nederlands, want dat is de brontaal.
+// hele lijst. `taal` komt uit de kolom op push_abonnementen: de taal van de
+// app op dat toestel. Een waarde die hier niet staat (een oud abonnement, een
+// kapotte waarde) krijgt Nederlands, de brontaal.
 const WOORDEN = {
   nl: {
     sprint: 'sprint', quali: 'kwalificatie', race: 'race',
@@ -45,8 +46,43 @@ const WOORDEN = {
     titel: (race, sessie, wanneer) => `${race}: ${sessie} closes ${wanneer}`,
     tekst: 'You have not filled anything in here yet.',
   },
+  de: {
+    sprint: 'Sprint', quali: 'Qualifying', race: 'Rennen',
+    meteen: 'gleich', half: 'in einer halben Stunde', uur: 'in einer Stunde',
+    uren: (n) => `in ${n} Stunden`,
+    titel: (race, sessie, wanneer) => `${race}: ${sessie} schließt ${wanneer}`,
+    tekst: 'Du hast hier noch nichts getippt.',
+  },
+  fr: {
+    sprint: 'sprint', quali: 'qualifications', race: 'course',
+    meteen: 'dans un instant', half: 'dans une demi-heure', uur: 'dans une heure',
+    uren: (n) => `dans ${n} heures`,
+    titel: (race, sessie, wanneer) => `${race} : ${sessie}, clôture ${wanneer}`,
+    tekst: 'Vous n\u2019avez encore rien pronostiqué ici.',
+  },
+  es: {
+    sprint: 'sprint', quali: 'clasificación', race: 'carrera',
+    meteen: 'en un momento', half: 'en media hora', uur: 'en una hora',
+    uren: (n) => `en ${n} horas`,
+    titel: (race, sessie, wanneer) => `${race}: ${sessie} cierra ${wanneer}`,
+    tekst: 'Todavía no has hecho tu predicción aquí.',
+  },
+  it: {
+    sprint: 'sprint', quali: 'qualifiche', race: 'gara',
+    meteen: 'a momenti', half: 'tra mezz\u2019ora', uur: 'tra un\u2019ora',
+    uren: (n) => `tra ${n} ore`,
+    titel: (race, sessie, wanneer) => `${race}: ${sessie}, chiusura ${wanneer}`,
+    tekst: 'Non hai ancora inserito nulla qui.',
+  },
+  pt: {
+    sprint: 'sprint', quali: 'classificação', race: 'corrida',
+    meteen: 'em instantes', half: 'em meia hora', uur: 'em uma hora',
+    uren: (n) => `em ${n} horas`,
+    titel: (race, sessie, wanneer) => `${race}: ${sessie} fecha ${wanneer}`,
+    tekst: 'Você ainda não deu seu palpite aqui.',
+  },
 };
-export const woorden = (taal) => WOORDEN[taal === 'en' ? 'en' : 'nl'];
+export const woorden = (taal) => WOORDEN[taal] ?? WOORDEN.nl;
 
 // Drie uur. Lang genoeg om er nog iets aan te doen, kort genoeg dat het over
 // vandaag gaat. De sync draait elk uur, dus binnen dit venster valt elke

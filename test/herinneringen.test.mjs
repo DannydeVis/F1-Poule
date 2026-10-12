@@ -152,7 +152,16 @@ check('zonder taal valt hij terug op Nederlands',
   roep({ races: [race(2)], abonnementen: [danny] })[0]?.bericht.tekst
     === 'Je hebt hier nog niets ingevuld.');
 check('en een taal die niet bestaat ook',
-  roep({ races: [race(2)], abonnementen: [{ ...danny, taal: 'fr' }] })[0]?.bericht.titel
+  roep({ races: [race(2)], abonnementen: [{ ...danny, taal: 'xx' }] })[0]?.bericht.titel
     === 'Suzuka: kwalificatie sluit over 2 uur');
+
+// Sinds de app ook Duits, Frans, Spaans, Italiaans en Portugees spreekt
+// (app/talen/), komt een melding ook in die talen.
+const inTaal = (taal) => roep({ races: [race(2)], abonnementen: [{ ...danny, taal }] })[0]?.bericht;
+check('in het Duits', inTaal('de')?.titel === 'Suzuka: Qualifying schließt in 2 Stunden'
+  && inTaal('de')?.tekst === 'Du hast hier noch nichts getippt.', JSON.stringify(inTaal('de')));
+check('en in het Frans, Spaans, Italiaans en Portugees, elk anders',
+  new Set(['fr', 'es', 'it', 'pt', 'nl', 'en', 'de'].map((t) => inTaal(t)?.titel)).size === 7,
+  ['fr', 'es', 'it', 'pt'].map((t) => inTaal(t)?.titel).join(' | '));
 
 process.exit(afronden() ? 0 : 1);

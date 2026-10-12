@@ -724,6 +724,18 @@
     border-radius:6px;padding:0 8px;min-height:32px;min-width:44px;
     transition:border-color .18s,color .18s}
   .taalknop:hover{border-color:var(--accent);color:var(--ink)}
+  /* Het lijstje met talen onder de taalknop. */
+  .taalkeuze{position:relative;margin-left:auto;display:flex}
+  .taalkeuze .taalknop{margin-left:0}
+  .taalmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:40;display:flex;flex-direction:column;
+    min-width:160px;padding:6px;background:var(--paneel);border:1px solid var(--lijn);border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.18)}
+  .taalmenu[hidden]{display:none}
+  .taalmenu button{text-align:left;padding:0 12px;min-height:44px;border-radius:6px;font-size:15px}
+  .taalmenu button:hover{background:var(--zweef)}
+  .taalmenu button[aria-checked="true"]{font-weight:700;color:var(--accent-tekst)}
+  .taalrij{display:flex;flex-wrap:wrap;gap:8px}
+  .taalrij .knop{width:auto}
   .sluitknop{flex:none;width:44px;height:44px;margin-right:-10px;display:grid;
     place-items:center;border-radius:8px;color:var(--ink2);transition:color .18s}
   .sluitknop:hover{color:var(--ink)}
@@ -731,7 +743,7 @@
   /* Met het kruisje erbij past "Predict the Race" niet meer naast het jaartal
      en de taalknop; het jaartal is dan het minst nodig. */
   .merk:has(.sluitknop) .code{display:none}
-  .merk:has(.sluitknop) .taalknop{margin-left:auto}
+  .merk:has(.sluitknop) .taalkeuze{margin-left:auto}
   /* Op een smalle telefoon (360 pixel) werd "Predict the Race" op het
      beginscherm al afgekapt; 21 pixel past er net naast. */
   @media (max-width:389px){ .toegang .merk .naam{font-size:21px} }
@@ -3072,9 +3084,9 @@ const ENGELS = Object.fromEntries([
    'You play here as <b>{naam}</b>.'],
   ['taal',
    'language'],
-  ['De app kiest zelf Nederlands of Engels '
-   + 'op basis van je browser. Hier zet je hem vast.',
-   'The app picks Dutch or English from your browser. Here you can fix it.'],
+  ['De app kiest zelf een taal op basis van '
+   + 'je browser. Hier zet je hem vast.',
+   'The app picks a language from your browser. Here you can fix it.'],
 
   // ---- je account meenemen -------------------------------------
   ['je account meenemen',
@@ -3680,6 +3692,10 @@ const ENGELS = Object.fromEntries([
    'Copied, paste it in your group chat'],
 
   // ---- het weekendpodium ---------------------------------------
+  ['Taal: {naam}. Kies een andere taal',
+   'Language: {naam}. Choose another language'],
+  ['Die taal kon niet geladen worden. Probeer het zo nog eens.',
+   'That language could not be loaded. Try again in a moment.'],
   ['Bijwerken…',
    'Updating…'],
   ['Laat los om bij te werken',
@@ -3882,19 +3898,55 @@ const ENGELS = Object.fromEntries([
 
 const TAALSLEUTEL = 'poule:taal';
 
-// Wat de browser zegt telt alleen als niemand zelf iets gekozen heeft. Een
-// telefoon die op Nederlands staat krijgt Nederlands; al het andere krijgt
-// Engels, want dat is de tweede taal die iedereen hier kan lezen.
+// De talen van de app, elk in zijn eigen taal, en hoe een datum en een getal
+// daar geschreven worden. Nederlands is de brontaal (de sleutels van T()),
+// Engels staat hierboven in ENGELS. De andere talen staan elk in een eigen
+// bestand, app/talen/<code>.json, met dezelfde Nederlandse zinnen als sleutel:
+// zo laadt een speler alleen zijn eigen taal en wordt de app voor niemand
+// zwaarder. Danny (10 oktober): "Let op dat ik niet perse op Nederland focus
+// maar wereldwijd." Portugees is Braziliaans, net als op de site.
+const TALEN = {
+  nl: { naam: 'Nederlands', streek: 'nl-NL' },
+  en: { naam: 'English', streek: 'en-GB' },
+  de: { naam: 'Deutsch', streek: 'de-DE' },
+  fr: { naam: 'Français', streek: 'fr-FR' },
+  es: { naam: 'Español', streek: 'es-ES' },
+  it: { naam: 'Italiano', streek: 'it-IT' },
+  pt: { naam: 'Português', streek: 'pt-BR' },
+};
+const isTaal = (code) => Object.hasOwn(TALEN, code);
+
+// Wat de browser zegt telt alleen als niemand zelf iets gekozen heeft. De
+// eerste taal uit de voorkeuren van het toestel die de app kent, wint; kent
+// hij er geen, dan Engels, want dat is de tweede taal die de meeste mensen
+// kunnen lezen.
 function beginTaal() {
   const gekozen = lees(TAALSLEUTEL);
-  if (gekozen === 'nl' || gekozen === 'en') return gekozen;
+  if (isTaal(gekozen)) return gekozen;
   try {
-    const van = navigator.languages?.[0] ?? navigator.language ?? 'nl';
-    return String(van).toLowerCase().startsWith('nl') ? 'nl' : 'en';
+    const voorkeur = navigator.languages?.length ? navigator.languages : [navigator.language ?? 'nl'];
+    for (const v of voorkeur) {
+      const code = String(v).toLowerCase().slice(0, 2);
+      if (isTaal(code)) return code;
+    }
+    return 'en';
   } catch { return 'nl'; }
 }
 
 let TAAL = beginTaal();
+
+// De vertalingen die er al zijn. Een taalbestand komt er pas bij als iemand
+// die taal kiest (laadTaal); Nederlands heeft er geen nodig.
+const VERTALING = { en: ENGELS };
+async function laadTaal(taal) {
+  if (taal === 'nl' || VERTALING[taal]) return true;
+  try {
+    const antwoord = await fetch(`talen/${taal}.json`);
+    if (!antwoord.ok) return false;
+    VERTALING[taal] = await antwoord.json();
+    return true;
+  } catch { return false; }
+}
 
 // Het lang-attribuut op <html> hoort mee te veranderen. Het staat in de
 // broncode op "nl" omdat een pagina die nog niets weet ergens mee moet
@@ -3914,14 +3966,23 @@ zetPaginaTaal();
  *   T('nog {n} te kiezen', { n: 3 })
  */
 function T(nl, vars) {
-  const uit = (TAAL === 'en' && ENGELS[nl]) || nl;
+  // Ontbreekt een zin in een taalbestand, dan liever Engels dan Nederlands:
+  // wie Duits leest, leest eerder Engels dan Nederlands.
+  const uit = TAAL === 'nl' ? nl : (VERTALING[TAAL]?.[nl] ?? ENGELS[nl] ?? nl);
   return vars
     ? uit.replace(/\{(\w+)\}/g, (heel, naam) => naam in vars ? String(vars[naam]) : heel)
     : uit;
 }
 
-function zetTaal(taal) {
-  if (taal !== 'nl' && taal !== 'en') return;
+async function zetTaal(taal) {
+  if (!isTaal(taal)) return;
+  // Lukt het laden niet (geen verbinding), dan blijft alles zoals het was,
+  // met een regel waarom.
+  if (!(await laadTaal(taal))) {
+    S.melding = T('Die taal kon niet geladen worden. Probeer het zo nog eens.');
+    if (S.poule && S.ik) render(); else toonStart();
+    return;
+  }
   TAAL = taal;
   schrijf(TAALSLEUTEL, taal);
   zetPaginaTaal();
@@ -3950,15 +4011,44 @@ function terugKnop(bekend) {
     title="${T('Terug naar {naam}', { naam: esc(t.naam) })}">${SLUIT_ICOON}</button>`;
 }
 
+// Met twee talen was dit een knop die naar de andere wisselde. Met zeven is
+// het een knop met de taal van nu, die een lijstje openklapt; elke taal staat
+// daarin in zijn eigen taal, want wie zijn taal zoekt, leest de andere niet.
 const taalKnop = () => `
-  <button class="taalknop" id="taalknop" lang="${TAAL === 'nl' ? 'en' : 'nl'}"
-    aria-label="${TAAL === 'nl' ? 'Switch to English' : 'Schakel over naar Nederlands'}"
-    >${TAAL === 'nl' ? 'EN' : 'NL'}</button>`;
+  <span class="taalkeuze">
+    <button class="taalknop" id="taalknop" type="button" aria-haspopup="true" aria-expanded="false"
+      aria-label="${T('Taal: {naam}. Kies een andere taal', { naam: TALEN[TAAL].naam })}"
+      >${TAAL.toUpperCase()}</button>
+    <span class="taalmenu" id="taalmenu" role="menu" hidden>${Object.entries(TALEN).map(([code, t]) =>
+      `<button type="button" role="menuitemradio" aria-checked="${code === TAAL}" lang="${code}"
+        data-taal="${code}">${esc(t.naam)}</button>`).join('')}</span>
+  </span>`;
 
 function knoopTaal() {
   const knop = app.querySelector('#taalknop');
-  if (knop) knop.onclick = () => zetTaal(TAAL === 'nl' ? 'en' : 'nl');
+  const menu = app.querySelector('#taalmenu');
+  if (!knop || !menu) return;
+  const open = (ja) => {
+    menu.hidden = !ja;
+    knop.setAttribute('aria-expanded', String(ja));
+    if (ja) menu.querySelector('[aria-checked="true"]')?.focus();
+  };
+  knop.onclick = (e) => { e.stopPropagation(); open(menu.hidden); };
+  menu.querySelectorAll('[data-taal]').forEach(b => b.onclick = () => {
+    open(false);
+    if (b.dataset.taal !== TAAL) zetTaal(b.dataset.taal);
+  });
+  menu.onkeydown = (e) => { if (e.key === 'Escape') { open(false); knop.focus(); } };
 }
+// Ernaast tikken sluit het lijstje weer. Eén keer voor de hele pagina, niet bij
+// elke keer tekenen opnieuw.
+document.addEventListener('click', (e) => {
+  const menu = document.querySelector('#taalmenu');
+  if (menu && !menu.hidden && !menu.contains(e.target)) {
+    menu.hidden = true;
+    document.querySelector('#taalknop')?.setAttribute('aria-expanded', 'false');
+  }
+});
 
 const sleutel = (poolId) => `poule:${poolId}:mijn_id`;
 const mijnId  = (poolId) => lees(sleutel(poolId));
@@ -5175,7 +5265,7 @@ document.addEventListener('visibilitychange', () => {
 // Engels scherm is net zo raar als "Sat 14:00" in een Nederlands scherm.
 // en-GB en niet en-US, want dit is een Europese sport op een 24-uursklok --
 // "2:00 pm" bij een kwalificatie zou niemand hier helpen.
-const streek = () => TAAL === 'en' ? 'en-GB' : 'nl-NL';
+const streek = () => TALEN[TAAL]?.streek ?? 'en-GB';
 
 const sluitTekst = (iso) => new Date(iso)
   .toLocaleString(streek(), { weekday:'short', hour:'2-digit', minute:'2-digit' });
@@ -7043,7 +7133,12 @@ function mijnPositie() {
 const puntenTekst = (n) => n === 1 ? T('{n} punt', { n }) : T('{n} punten', { n });
 
 const rang = (n) => {
-  if (TAAL !== 'en') return `${n}e`;
+  // 4e, 4., 4e (1er), 4.º, 4º: elke taal schrijft een plek anders.
+  if (TAAL === 'nl') return `${n}e`;
+  if (TAAL === 'de') return `${n}.`;
+  if (TAAL === 'fr') return n === 1 ? '1er' : `${n}e`;
+  if (TAAL === 'es' || TAAL === 'pt') return `${n}.º`;
+  if (TAAL === 'it') return `${n}º`;
   const laatste = n % 10, tientallen = n % 100;
   if (tientallen >= 11 && tientallen <= 13) return `${n}th`;
   return `${n}${({ 1: 'st', 2: 'nd', 3: 'rd' })[laatste] ?? 'th'}`;
@@ -7783,7 +7878,7 @@ function vraagOfBeheerder() {
 // de punten, de vragen) moet ook voor hem bereikbaar blijven. Via deze link
 // lukt dat: het doorstuurscriptje op / laat iedereen staan die van een eigen
 // pagina komt, ook in een app op het beginscherm van een iPhone.
-const voorpagina = () => new URL(TAAL === 'en' ? '../en/' : '../', linkBasis()).href;
+const voorpagina = () => new URL(TAAL === 'nl' ? '../' : `../${TAAL}/`, linkBasis()).href;
 function voorpaginaBlok() {
   return `<div class="scheiding"></div>
     <span class="label">${T('over Predict the Race')}</span>
@@ -8118,14 +8213,11 @@ function taalBlok() {
   return `
     <div class="scheiding"></div>
     <span class="label">${T('taal')}</span>
-    <p class="zacht" style="margin:0">${T('De app kiest zelf Nederlands of Engels '
-      + 'op basis van je browser. Hier zet je hem vast.')}</p>
-    <div style="display:flex;gap:8px">
-      <button class="knop klein" data-taal="nl" ${TAAL === 'nl' ? 'disabled' : ''}
-        >Nederlands</button>
-      <button class="knop klein" data-taal="en" ${TAAL === 'en' ? 'disabled' : ''}
-        >English</button>
-    </div>`;
+    <p class="zacht" style="margin:0">${T('De app kiest zelf een taal op basis van '
+      + 'je browser. Hier zet je hem vast.')}</p>
+    <div class="taalrij">${Object.entries(TALEN).map(([code, t]) =>
+      `<button class="knop klein" data-taal="${code}" lang="${code}" ${TAAL === code ? 'disabled' : ''}
+        >${esc(t.naam)}</button>`).join('')}</div>`;
 }
 
 function deelBlok() {
@@ -8476,7 +8568,8 @@ function privacyBlok() {
 // De privacypagina van de site, één map boven de app (zie agendaLink() voor
 // waarom via new URL). Engels alleen als de app Engels praat; de site heeft de
 // verklaring in dezelfde twee talen als de app.
-const privacyPagina = () => new URL(TAAL === 'en' ? '../en/privacy/' : '../privacy/', linkBasis()).href;
+// De privacyverklaring is er in het Nederlands en het Engels.
+const privacyPagina = () => new URL(TAAL === 'nl' ? '../privacy/' : '../en/privacy/', linkBasis()).href;
 
 // De twee manieren om weg te gaan. Het verschil is niet cosmetisch, dus het
 // staat er ook zo: de eerste laat de poule van je medespelers heel, de tweede
@@ -12714,6 +12807,11 @@ function toonStart() {
 // glimp van iets anders tegen. En de adresbalk opschonen kan niet wachten
 // tot toonStart() dat toch al doet — DEMO slaat toonStart() soms over, en
 // een herlaadactie zou anders dezelfde oude fout opnieuw laten zien.
+// De taal eerst: alles hieronder tekent tekst. Een taal uit een eigen bestand
+// (zie TALEN) moet binnen zijn voordat er iets op het scherm komt. Lukt dat
+// niet, dan Engels, dat zit in de app zelf.
+if (!(await laadTaal(TAAL))) { TAAL = 'en'; zetPaginaTaal(); }
+
 if (OAUTH_FOUT_UIT_LINK) {
   S.melding = uitlegAuth(OAUTH_FOUT_UIT_LINK);
   vergeetLinkCode();

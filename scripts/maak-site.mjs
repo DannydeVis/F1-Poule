@@ -132,10 +132,10 @@ const VENSTER = Number(uitBron(readFileSync(join(wortel, 'scripts', 'herinnering
   /export const VENSTER_UREN = (\d+);/, 'VENSTER_UREN in scripts/herinneringen.mjs')[1]);
 const AGENDA_UUR = Number(uitBron(readFileSync(join(wortel, 'scripts', 'agenda.mjs'), 'utf8'),
   /'TRIGGER:-PT(\d+)H'/, 'de melding in scripts/agenda.mjs')[1]);
-// De talen van de app: wat beginTaal() in app/index.html als keuze aanneemt.
+// De talen van de app: de sleutels van TALEN in app/index.html, in die volgorde.
 // llms.txt noemt ze (en zegt wanneer de app dus niet past).
-const APP_TALEN = uitBron(appBron, /if \((gekozen === '[a-z]{2}'(?: \|\| gekozen === '[a-z]{2}')*)\) return gekozen;/,
-  'de talen in beginTaal() van app/index.html')[1].match(/'[a-z]{2}'/g).map((x) => x.slice(1, -1));
+const APP_TALEN = [...uitBron(appBron, /const TALEN = \{([\s\S]*?)\n\};/, 'TALEN in app/index.html')[1]
+  .matchAll(/^\s*([a-z]{2}): \{/gm)].map(([, c]) => c);
 // Contrair voorspellen (contrairVoor() in de app): een goed antwoord op een
 // losse vraag telt zwaarder naarmate minder spelers hetzelfde zeiden. De
 // vermenigvuldiger is min(1 + (1 - aandeel), 2), afgerond op één decimaal, en
