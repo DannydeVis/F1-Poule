@@ -10051,3 +10051,38 @@ weekendkaart en alleen in je eentje, delen met en zonder deelmenu, en het
 bericht in het Engels. `test/uitslag-delen.test.mjs` verwacht de nieuwe kop en
 de medaille. Tien mutanten, alle gevangen (de plek van het blok pas nadat de
 test tegen de weekendkaart meet in plaats van tegen de kalender).
+
+---
+
+## Het weekendpodium (12 oktober)
+
+Danny: "de weekend winnaar zie ik goed als de story komt enz. Maar ik vind het
+nog wat laag in zichtbaarheid. Als ik op een weekend druk die bijvoorbeeld
+helemaal klaar is zie ik weinig bragging rights." De weekendwinnaar stond in
+`weekendVoet()`, onderaan het racescherm, onder je hele voorspelling.
+
+- **`weekendPodium(r)`** staat in `raceDetailKop()`, onder de jokerregel en
+  boven de tabbladen: het hoort bij het hele weekend, niet bij één sessie. Het
+  verschijnt zodra het weekend voorbij is (`weekendVoorbij`) en de poule meer
+  dan één speler heeft. De kop is de winnaar (of "Jij wint dit weekend", "Jij
+  deelt de winst"), met zijn punten van het weekend. Daaronder drie treden in
+  de volgorde twee, een, drie, de eerste het hoogst en in het accent. Sta je
+  er niet op, dan een regel met je plek ("Jij werd 4e van 4, met 0 punten.");
+  sta je erop, dan "jij" op je trede. Als laatste de grootste stijger
+  (`grootsteStijger`, uit het groepsapp-bericht).
+- **`podiumTreden(r)`** volgt dezelfde regel als `weekendWinnaars()`: wie niets
+  inleverde staat er niet op, ook niet met een automatisch ingevulde lijst, en
+  telt ook niet mee in "van n". Gelijke punten delen een trede
+  (`gedeeldePlekken`), dus na twee keer eerste komt de derde trede.
+- **`weekendVoet()`** laat de winnaar weg zodra er een podium staat; de knoppen
+  (Speel het weekend af, Deel de uitslag) blijven onderaan. Tijdens een lopend
+  weekend staat de winnaar daar nog zoals voorheen.
+
+**Tests.** `test/weekendpodium.test.mjs` (24): bovenaan en op een telefoon in
+beeld, de kop, de volgorde en hoogte van de treden, naam en punten per trede,
+wie niets inleverde (ook in een poule van drie waar anders een trede vrij
+was), je plek, de stijger, geen dubbele winnaar onderaan, jij op het podium,
+jij wint, gedeeld eerste, niet na alleen de kwalificatie, niet in je eentje,
+en in het Engels. Dertien mutanten, alle gevangen (die met wie niets
+inleverde pas na de poule van drie).
+

@@ -1050,6 +1050,28 @@
   .tegelleeg{margin:0;padding:0 18px 16px}
   .tegelknoppen{display:flex;flex-direction:column;gap:10px;padding:14px 16px 16px}
   .tegel > .strip{border:0;border-radius:0;background:transparent}
+  /* Het weekendpodium bovenaan een afgelopen weekend (weekendPodium). De
+     winnaar groot, daaronder drie treden in de volgorde twee, een, drie. */
+  .podiumtegel{border-left:3px solid var(--accent);background:var(--paneel)}
+  .podiumkop{display:flex;flex-direction:column;gap:4px;padding:16px 18px 6px}
+  .podiumwinnaar{margin:0;font-family:var(--cond);font-size:34px;font-weight:700;
+    line-height:1;color:var(--ink);overflow-wrap:anywhere}
+  .podium{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;align-items:end;
+    gap:8px;padding:12px 18px 0}
+  .trede{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;text-align:center}
+  .trede .tnaam{font-weight:600;font-size:14px;max-width:100%;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .trede .tpunten{font-family:var(--mono);font-size:11px;color:var(--ink2)}
+  .trede .tblok{display:grid;place-items:center;width:100%;margin-top:6px;
+    border-radius:8px 8px 0 0;background:var(--paneel2);color:var(--ink2)}
+  .trede .tblok b{font-family:var(--cond);font-size:28px;font-weight:700}
+  .trede.p1 .tblok{height:76px;background:var(--accent);color:var(--accent-ink)}
+  .trede.p2 .tblok{height:56px}
+  .trede.p3 .tblok{height:42px}
+  .trede.mij .tnaam{color:var(--accent-tekst)}
+  .podiumik,.podiumstijger{margin:0;padding:12px 18px 0;font-size:14px;color:var(--ink2)}
+  .podiumtegel > :last-child{padding-bottom:16px}
+  .podiumtegel > .podium:last-child{padding-bottom:0}
   /* Wat onderaan een kaart hangt: de losse vragen onder je top 10. */
   .tegelvoet{display:flex;flex-direction:column;gap:10px;padding:14px 16px 16px;
     border-top:1px solid var(--lijn);background:var(--zweef)}
@@ -3640,6 +3662,14 @@ const ENGELS = Object.fromEntries([
    'Share the code in your group chat'],
   ['Gekopieerd, plak hem in je groepsapp',
    'Copied, paste it in your group chat'],
+
+  // ---- het weekendpodium ---------------------------------------
+  ['Jij wint dit weekend',
+   'You win this weekend'],
+  ['Jij deelt de winst',
+   'You share the win'],
+  ['Jij werd {plek} van {n}, met {punten} punten.',
+   'You finished {plek} of {n}, with {punten} points.'],
   ['Je positie per race: van {eerste} bij {race} naar {nu} nu.',
    'Your position per race: from {eerste} at {race} to {nu} now.'],
   ['Zonder toestemming kan er geen melding komen.',
@@ -9131,6 +9161,7 @@ function raceDetailKop() {
         : `<span class="vlag"></span>`}
     </div>
     ${jokerRegel(r)}
+    ${weekendPodium(r)}
     <!-- Alleen de sessies die dit weekend bestaan en die de poule speelt: een
          gewoon weekend krijgt geen sprint-tab, een sprintweekend er drie, en een
          poule zonder sprintvragen ook dan twee. -->
@@ -9906,7 +9937,9 @@ const SPEELICOON = `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden=
   fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>`;
 
 function weekendVoet(r) {
-  const winnaars = S.leden.length > 1 ? weekendWinnaars(r) : [];
+  // Is het weekend voorbij, dan staat de winnaar groot bovenaan (zie
+  // weekendPodium); hier dan alleen nog de knoppen.
+  const winnaars = S.leden.length > 1 && !podiumTreden(r).length ? weekendWinnaars(r) : [];
   const ik = winnaars.some(w => w.mij);
   return `
     <section class="tegel weekendkaart">
@@ -9923,6 +9956,61 @@ function weekendVoet(r) {
         <button class="knop spook" data-deel="${esc(r.id)}">${DEELICOON}${T('Deel de uitslag')}</button>
       </div>
     </section>`;
+}
+
+// ---- het weekendpodium --------------------------------------
+// Danny (12 oktober): "de weekend winnaar ... vind ik nog wat laag in
+// zichtbaarheid. Als ik op een weekend druk die helemaal klaar is zie ik
+// weinig bragging rights." De winnaar stond onderaan, onder je hele
+// voorspelling. Nu staat een afgelopen weekend bovenaan als podium: de
+// winnaar groot, de eerste drie als treden (twee, een, drie, zoals op het
+// echte podium), jouw plek als je er niet op staat, en de grootste stijger.
+//
+// Dezelfde regel als weekendWinnaars(): wie niets inleverde staat er niet op,
+// ook niet als de automatische lijst goed uitpakte. Gelijke punten delen een
+// trede (gedeeldePlekken), dus twee keer eerste betekent geen tweede.
+function podiumTreden(r) {
+  if (S.leden.length < 2 || !weekendVoorbij(r)) return [];
+  const rijen = (weekendUitslag(r) ?? []).filter(x => x.zelfgedaan);
+  const plekken = gedeeldePlekken(rijen);
+  return [1, 2, 3]
+    .map(plek => ({ plek, wie: rijen.filter((_, i) => plekken[i] === plek) }))
+    .filter(t => t.wie.length);
+}
+
+function weekendPodium(r) {
+  const treden = podiumTreden(r);
+  if (!treden.length) return '';
+  const winnaars = treden[0].wie;
+  const ikWon = winnaars.some(w => w.mij);
+  const kop = !ikWon ? esc(opsomming(winnaars.map(w => w.naam)))
+    : winnaars.length === 1 ? T('Jij wint dit weekend') : T('Jij deelt de winst');
+  const trede = (t) => {
+    const mij = t.wie.some(w => w.mij);
+    return `<div class="trede p${t.plek}${mij ? ' mij' : ''}" data-trede="${t.plek}">
+      <span class="tnaam">${esc(opsomming(t.wie.map(w => w.naam)))}${
+        mij ? ` <span class="jij">${T('jij')}</span>` : ''}</span>
+      <span class="tpunten">${T('{n} punten', { n: t.wie[0].punten })}</span>
+      <span class="tblok"><b>${t.plek}</b></span>
+    </div>`;
+  };
+  // Op het echte podium staat de winnaar in het midden.
+  const volgorde = [2, 1, 3].map(p => treden.find(t => t.plek === p)).filter(Boolean);
+  const alle = (weekendUitslag(r) ?? []).filter(x => x.zelfgedaan);
+  const mijnPlek = plekVan(alle, S.ik.id);
+  const mijnRegel = mijnPlek > 3 ? `<p class="podiumik" data-mijn-plek>${T('Jij werd {plek} van {n}, met {punten} punten.', {
+    plek: rang(mijnPlek), n: alle.length, punten: alle.find(x => x.mij).punten })}</p>` : '';
+  const stijger = grootsteStijger(r);
+  return `<section class="tegel podiumtegel" data-podium>
+    <div class="podiumkop">
+      <span class="label">${T('weekendwinnaar')}</span>
+      <h2 class="podiumwinnaar">${kop}</h2>
+      <span class="tegelsub">${T('{n} punten dit weekend', { n: winnaars[0].punten })}</span>
+    </div>
+    <div class="podium">${volgorde.map(trede).join('')}</div>
+    ${mijnRegel}
+    ${stijger ? `<p class="podiumstijger" data-stijger>${T('Grootste stijger: {wie}', { wie: esc(stijger) })}</p>` : ''}
+  </section>`;
 }
 
 // ---- de uitslag als plaatje ---------------------------------
