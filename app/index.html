@@ -1245,6 +1245,22 @@
   /* Dezelfde kleuren als blokje in de puntenuitleg, zie kleurPunten(). Op
      het paneel en niet op een tint van de eigen kleur: op het grijs van de
      uitleg haalden groen en geel de 4.5:1 niet (3.8 en 3.7), op wit wel. */
+  /* Trekken om te verversen (verversPoule): een rondje met een pijl dat
+     meekomt met je vinger, en een woord eronder. Onder de statusbalk van de
+     telefoon, boven alles. */
+  #trekker{position:fixed;left:50%;top:calc(env(safe-area-inset-top) - 44px);z-index:60;
+    display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;
+    transform:translate(-50%, var(--trek, 0px));opacity:0;transition:opacity .15s}
+  #trekker[data-stand="trekken"],#trekker[data-stand="klaar"],#trekker[data-stand="bezig"]{opacity:1}
+  #trekker .trekrond{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;
+    background:var(--paneel);border:1px solid var(--lijn);color:var(--ink2);
+    box-shadow:0 4px 14px rgba(0,0,0,.12);transition:transform .15s}
+  #trekker[data-stand="klaar"] .trekrond{transform:rotate(180deg);color:var(--accent)}
+  #trekker[data-stand="bezig"] .trekrond{animation:draai .8s linear infinite;color:var(--accent)}
+  #trekker .trektekst{font-size:12px;font-weight:600;color:var(--ink2);
+    background:var(--paneel);border:1px solid var(--lijn);border-radius:999px;padding:2px 10px}
+  #trekker .trektekst:empty{display:none}
+  @keyframes draai{to{transform:rotate(360deg)}}
   .uitleg .pt{display:inline-block;min-width:1.5em;padding:0 5px;border-radius:4px;
     text-align:center;background:var(--paneel);
     border:1px solid color-mix(in srgb, currentColor 45%, transparent)}
@@ -3664,6 +3680,12 @@ const ENGELS = Object.fromEntries([
    'Copied, paste it in your group chat'],
 
   // ---- het weekendpodium ---------------------------------------
+  ['Bijwerken…',
+   'Updating…'],
+  ['Laat los om bij te werken',
+   'Release to update'],
+  ['Trek om bij te werken',
+   'Pull to update'],
   ['Jij wint dit weekend',
    'You win this weekend'],
   ['Jij deelt de winst',
@@ -5021,6 +5043,133 @@ function tikken() {
   clearInterval(tikker);
   tikker = setInterval(tikkenBij, 30000);
 }
+
+// ---- trekken om te verversen --------------------------------
+// Danny (12 oktober): "Maak een pull to refresh. Ik moet nu steeds de app
+// opnieuw afsluiten en openen voor een refresh." De app op het beginscherm
+// heeft geen adresbalk en geen knop om te herladen; een telefoon houdt hem op
+// de achtergrond open, en dan zie je bij terugkomen de stand van uren geleden.
+//
+// Twee dingen. Bovenaan de pagina naar beneden trekken haalt de poule opnieuw
+// op en tekent het scherm waar je was opnieuw. En wie terugkomt in de app na
+// meer dan een minuut, krijgt dat vanzelf.
+//
+// Alleen in de app op het beginscherm: in Safari en Chrome trekt de browser
+// zelf al, en dan zouden er twee tegelijk verversen. Niet als er een venster
+// open is (het keuzeblad, het deelplaatje, het verhaal), en niet op het
+// invulscherm: daar staan keuzes die nog niet opgeslagen zijn, en opnieuw
+// tekenen zou ze weggooien.
+//
+// Staat er intussen een nieuwe versie van de app online, dan herlaadt hij in
+// plaats daarvan de hele pagina. Dat zie je aan de ETag van de app zelf, met
+// een HEAD-verzoek: dat kost geen 600 kilobyte. Na het herladen brengt
+// herstelScherm() je terug op het scherm waar je was.
+const TREK = { drempel: 64, max: 96, terugNa: 60 * 1000 };
+let trek = null;
+let trekBezig = false;
+let appVersie = null;
+
+async function versieOnline() {
+  if (DEMO) return null;
+  try {
+    const antwoord = await fetch(location.pathname, { method: 'HEAD', cache: 'no-store' });
+    return antwoord.ok ? (antwoord.headers.get('etag') ?? antwoord.headers.get('last-modified')) : null;
+  } catch { return null; }
+}
+
+const verversKan = () => !!S.poule && !!S.ik && !trekBezig
+  && !document.querySelector('[role="dialog"], #opslaan');
+
+function trekker() {
+  let el = document.querySelector('#trekker');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'trekker';
+    el.setAttribute('role', 'status');
+    el.innerHTML = `<span class="trekrond" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"
+      fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 5v14M6 13l6 6 6-6"/></svg></span><span class="trektekst"></span>`;
+    document.body.append(el);
+  }
+  return el;
+}
+
+function zetTrek(afstand, stand = afstand >= TREK.drempel ? 'klaar' : 'trekken') {
+  const el = trekker();
+  el.dataset.stand = afstand > 0 || stand === 'bezig' ? stand : '';
+  el.style.setProperty('--trek', `${afstand}px`);
+  el.querySelector('.trektekst').textContent = !el.dataset.stand ? ''
+    : stand === 'bezig' ? T('Bijwerken…')
+    : stand === 'klaar' ? T('Laat los om bij te werken') : T('Trek om bij te werken');
+}
+
+async function verversPoule() {
+  if (!verversKan()) return;
+  trekBezig = true;
+  zetTrek(TREK.drempel, 'bezig');
+  try {
+    const nieuw = await versieOnline();
+    if (appVersie && nieuw && nieuw !== appVersie) { location.reload(); return; }
+    await laad();
+    // laad() vervangt de races; de open race hoort de nieuwe te zijn, anders
+    // staat er na het verversen nog de uitslag van daarvoor.
+    if (S.race) S.race = S.races.find(r => zelfde(r.id, S.race.id)) ?? null;
+    // Is er intussen een venster of het invulscherm opengegaan, dan niet
+    // opnieuw tekenen: de nieuwe gegevens staan er bij de volgende tik.
+    if (document.querySelector('[role="dialog"], #opslaan')) return;
+    render();
+  } catch (e) {
+    S.melding = e.message;
+    render();
+  } finally {
+    trekBezig = false;
+    zetTrek(0);
+  }
+}
+
+// Of de pagina, of het vak waarin je aanraakt, al naar beneden gescrold is.
+// Dan is naar beneden vegen gewoon terug omhoog scrollen.
+function bovenaan(doel) {
+  if ((window.scrollY || document.documentElement.scrollTop) > 0) return false;
+  for (let el = doel; el && el !== document.body; el = el.parentElement) {
+    if (el.scrollTop > 0) return false;
+  }
+  return true;
+}
+
+document.addEventListener('touchstart', (e) => {
+  trek = null;
+  if (e.touches.length !== 1 || !alGeinstalleerd() || !verversKan() || !bovenaan(e.target)) return;
+  trek = { x: e.touches[0].clientX, y: e.touches[0].clientY, afstand: 0 };
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if (!trek) return;
+  const dy = e.touches[0].clientY - trek.y, dx = e.touches[0].clientX - trek.x;
+  // Opzij vegen (een rij met tabbladen) of omhoog is geen verversen. Een
+  // vinger trilt een paar pixels; dat telt nog niet mee.
+  if (dy < -8 || (Math.abs(dx) > 8 && Math.abs(dx) > dy)) { trek = null; zetTrek(0); return; }
+  if (dy <= 0) return;
+  // Half zo ver als je vinger, en niet verder dan het maximum: zo voelt het
+  // als een veer, zoals de browser het zelf doet.
+  trek.afstand = Math.min(TREK.max, dy / 2);
+  zetTrek(trek.afstand);
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+  if (!trek) return;
+  const ver = trek.afstand >= TREK.drempel;
+  trek = null;
+  if (ver) verversPoule(); else zetTrek(0);
+});
+document.addEventListener('touchcancel', () => { trek = null; zetTrek(0); });
+
+// Terug in de app na een tijdje weg: dan vanzelf. Alleen als de gegevens
+// ouder zijn dan een minuut, anders ververst hij bij elke blik op een melding.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || DEMO || !S.geladenOp) return;
+  if (Date.now() - S.geladenOp > TREK.terugNa) verversPoule();
+});
 
 // De datumnotatie hoort bij de taal, niet bij de code: "za 14:00" in een
 // Engels scherm is net zo raar als "Sat 14:00" in een Nederlands scherm.
@@ -12590,6 +12739,10 @@ if (DEMO) {
   //
   // Een link uit onze eigen mail wisselt de app zelf in, en dat moet eerder:
   // bestaandeSessie() hoort de sessie te vinden die daaruit komt.
+  // Welke versie van de app dit is, om bij het verversen te zien of er een
+  // nieuwe online staat (zie verversPoule). Zonder await: het wachten op de
+  // poule hoort hier niet op te wachten.
+  versieOnline().then(v => { appVersie = v; });
   if (MAILLINK) {
     const fout = await inloggenMetMaillink(MAILLINK);
     if (fout) { S.melding = fout; VAN_INLOGLINK = false; }

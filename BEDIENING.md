@@ -202,6 +202,15 @@ gaat vanaf predicttherace.com meteen de app in. Deze knop is de weg terug naar
 de voorpagina, in de taal van de app, en daar blijf je dan ook, ook in een app
 op het beginscherm van een iPhone.
 
+**Verversen.** In de app op het beginscherm trek je bovenaan het scherm naar
+beneden ("Trek om bij te werken", dan "Laat los om bij te werken"): de poule
+wordt opnieuw opgehaald en je blijft op het scherm waar je was. Staat er
+intussen een nieuwe versie van de app online, dan laadt hij die meteen. Kom je
+na meer dan een minuut terug in de app, dan gebeurt het vanzelf. Afsluiten en
+opnieuw openen hoeft dus niet meer. Niet op het invulscherm, zolang je keuzes
+nog niet opgeslagen zijn. In Safari of Chrome zelf trek je zoals altijd: dan
+herlaadt de browser de pagina.
+
 ---
 
 ## 3. Poule aanmaken: vier stappen
