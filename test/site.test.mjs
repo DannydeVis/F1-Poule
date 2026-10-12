@@ -306,7 +306,8 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
     },
     vergelijking: {
       nl: [`${exactApp} punten voor precies goed en ${bijnaApp} bij één plek ernaast`],
-      en: [`${exactApp} points for the exact spot and ${bijnaApp} for one place off`],
+      // "race prediction game" is hoe mensen ook zoeken (Danny, 12 oktober).
+      en: [`${exactApp} points for the exact spot and ${bijnaApp} for one place off`, 'also called race prediction games'],
     },
     excel: {
       nl: [`MAX(0;${fMax}-${fStap}*ABS(B2-C2))`, `=ALS(B14=C14;${winnaarApp};0)`, `de winnaar ${winnaarApp} punten waard`],
@@ -400,6 +401,13 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
       if (!race && !races) check(`${naam}: de getallen over de app komen uit de app`,
         feiten?.length > 0 && feiten.every((z) => kop.alles.includes(z)),
         feiten ? feiten.filter((z) => !kop.alles.includes(z)).join(' | ') : 'geen FEITEN voor deze gids');
+      // De vergelijking heet "beste ... van 2026" (Danny, 12 oktober: gevonden
+      // worden op zoekopdrachten als "best F1 prediction games"). Dat jaar
+      // hoort het jaar te zijn waarin de andere apps gecontroleerd zijn; wie
+      // de controle overdoet, moet de titel dus ook bijwerken.
+      if (pg.gecontroleerd) check(`${naam}: het jaar in de titel en de kop is het jaar van de controle`,
+        kop.titel.includes(pg.gecontroleerd.slice(0, 4)) && t.kop.includes(pg.gecontroleerd.slice(0, 4)),
+        `${kop.titel} · ${t.kop} · ${pg.gecontroleerd}`);
       if (pg.rekenvoorbeeld) {
         // Het rekenvoorbeeld is wat de app ervan maakt, regel voor regel, met
         // het totaal eronder.
