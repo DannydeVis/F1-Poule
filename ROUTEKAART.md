@@ -980,7 +980,8 @@ Van Danny: eerst reparaties, dan de vergelijkingspagina als concept.
 | erbij | Uit het feedbackrapport (10 oktober): de tekst van Deel de uitslag met medailles voor het podium en de grootste stijger in de stand (van welke naar welke plek); een poule met alleen jou krijgt boven de weekendkaart de code en een knop om hem in je groepsapp te delen; de 5, 3 en 1 in de puntenuitleg in de kleuren van het racescherm | **gemerged** (10 oktober, PR #208) |
 | erbij | Danny: "de weekend winnaar ... vind ik nog wat laag in zichtbaarheid. Als ik op een weekend druk die helemaal klaar is zie ik weinig bragging rights." Een afgelopen weekend krijgt bovenaan, boven de tabbladen, een podium: de winnaar groot (of "Jij wint dit weekend"), de eerste drie als treden in de volgorde twee, een, drie, jouw plek als je er niet op staat, en de grootste stijger. Onderaan staat de winnaar dan niet nog een keer | **gemerged** (12 oktober, PR #209) |
 | erbij | Danny: in het AI-antwoord van Google op "race predicting game" staan F1 Predict, P1Predict en de Red Bull-predictor, wij niet. De vergelijkingspagina heet nu "Best F1 prediction games 2026" (NL "Beste F1-poule-apps van 2026"), en "race prediction game" staat op de Engelse voorpagina en in de vergelijking. De rest moet van buiten komen: genoemd worden in lijstjes, op Reddit en forums, AlternativeTo, Product Hunt, Bing Webmaster Tools (zie OVERDRACHT) | **gemerged** (12 oktober, PR #210) |
-| erbij | Danny: "Maak een pull to refresh. Ik moet nu steeds de app opnieuw afsluiten en openen voor een refresh." In de app op het beginscherm bovenaan naar beneden trekken haalt de poule opnieuw op, op het scherm waar je was; met een nieuwe versie online herlaadt de pagina. Terug in de app na meer dan een minuut gebeurt het vanzelf. Niet op het invulscherm en niet met een venster open | **gebouwd** (12 oktober) |
+| erbij | Danny: "Maak een pull to refresh. Ik moet nu steeds de app opnieuw afsluiten en openen voor een refresh." In de app op het beginscherm bovenaan naar beneden trekken haalt de poule opnieuw op, op het scherm waar je was; met een nieuwe versie online herlaadt de pagina. Terug in de app na meer dan een minuut gebeurt het vanzelf. Niet op het invulscherm en niet met een venster open | **gemerged** (12 oktober, PR #211) |
+| erbij | De app in zeven talen (Danny, 10 oktober: "niet per se op Nederland focussen maar wereldwijd"): Duits, Frans, Spaans, Italiaans en Portugees, elk in een eigen bestand in `app/talen/` dat de app pas ophaalt als iemand die taal kiest. Een taalmenu op het beginscherm, zeven knoppen onder Profiel, datums en plekken per taal, de herinneringen ook vertaald. De site zegt nu overal dat de app er in zeven talen is | **gebouwd** (12 oktober) |
 
 ## Uit het feedbackrapport van 10 oktober
 
@@ -1004,7 +1005,9 @@ hieronder en voor wat er verder bijkomt.
 | wat | stand |
 |---|---|
 | nieuwe content eerst in het Engels, Nederlands ernaast | afspraak |
-| de app zelf in meer talen dan NL en EN (de vertaaltabel `T()` is er al op ingericht; de voorpagina heeft er al zeven) | open |
+| de app zelf in meer talen dan NL en EN (de vertaaltabel `T()` is er al op ingericht; de voorpagina heeft er al zeven) | **gebouwd** (12 oktober): Duits, Frans, Spaans, Italiaans en Portugees, elk in `app/talen/`; ook de herinneringen |
+| de plaatjes van de app op de voorpagina in DE, FR, ES, IT en PT (nu Engels, `schermen: 'en'` in `site/teksten.mjs`) | open |
+| de mails van Supabase per taal (nu één Engels sjabloon voor iedereen) | open |
 | de gidsen en racepagina's ook in DE, FR, ES, IT en PT | open |
 
 ## Premium, later

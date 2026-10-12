@@ -1,0 +1,15 @@
+import { startPagina, meedoen } from './hulp.mjs';
+const uit = process.argv[2]; const taal = process.argv[3] ?? 'de';
+const { page, stoppen, jsFouten } = await startPagina({ taal });
+await page.setViewportSize({ width: 360, height: 800 });
+await page.waitForSelector('#code');
+await page.screenshot({ path: `${uit}/${taal}-start.png` });
+await page.click('#taalknop'); await page.waitForTimeout(200);
+await page.screenshot({ path: `${uit}/${taal}-menu.png`, clip: { x: 0, y: 0, width: 360, height: 420 } });
+await page.keyboard.press('Escape');
+await meedoen(page);
+await page.screenshot({ path: `${uit}/${taal}-races.png` });
+await page.click('[data-weergave="profiel"]'); await page.waitForTimeout(300);
+await page.screenshot({ path: `${uit}/${taal}-profiel.png`, fullPage: true });
+console.log('fouten', jsFouten);
+await stoppen();

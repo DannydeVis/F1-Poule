@@ -162,10 +162,10 @@ const graaf = (html) => [...html.matchAll(/<script type="application\/ld\+json">
     volgorde.every((k, i) => plek(k) >= 0 && (i === 0 || plek(k) > plek(volgorde[i - 1]))), kopjes.join(' / '));
 
   const blok = (kop) => llms.split(`\n## ${kop}\n`)[1]?.split('\n## ')[0] ?? '';
-  // De talen van de app haalt de test zelf uit app/index.html: wat beginTaal() aanneemt.
+  // De talen van de app haalt de test zelf uit app/index.html: de sleutels van TALEN.
   const bron = lees('app/index.html');
-  const appTalen = (bron.match(/function beginTaal\(\) \{[\s\S]*?if \(([^)]*)\) return gekozen;/)?.[1] ?? '')
-    .match(/'[a-z]{2}'/g)?.map((x) => x.slice(1, -1)) ?? [];
+  const appTalen = [...(bron.match(/const TALEN = \{([\s\S]*?)\n\};/)?.[1] ?? '')
+    .matchAll(/^\s*([a-z]{2}): \{/gm)].map(([, c]) => c);
   const naam = (c) => new Intl.DisplayNames('en', { type: 'language' }).of(c);
   const feiten = blok('Key facts');
   const over = PAGINAS.find((pg) => pg.id === 'over');

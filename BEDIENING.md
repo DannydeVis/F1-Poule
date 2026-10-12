@@ -424,8 +424,8 @@ staat er in Supabase "Set up custom SMTP to edit templates", en mailt
 Supabase bovendien alleen naar het eigen team (zie §7). Dus eerst §7, punt 2.
 Daarna **één keer in Supabase**, onder Authentication → Emails, telkens bij
 Body op **Source**. Supabase heeft één sjabloon per soort mail, voor iedereen
-dezelfde taal; de app speelt in het Nederlands en het Engels, dus staan de
-mails voorlopig in het Engels (Danny, 6 oktober). Drie sjablonen doen ertoe.
+dezelfde taal; de app speelt in zeven talen, dus staan de mails voorlopig in
+het Engels (Danny, 6 oktober). Drie sjablonen doen ertoe.
 
 De opgemaakte versies (logo, rode streep, rode knop, de code in een vakje, in
 de kleuren van de app) staan in de repo; kopieer de inhoud van het bestand en
@@ -1474,26 +1474,36 @@ Drie dingen om te weten:
 
 ---
 
-## 11e. Nederlands of Engels
+## 11e. De taal van de app
 
-De app spreekt twee talen. Welke je krijgt bepaalt de app zelf zolang jij niets
-kiest: staat je telefoon of browser op Nederlands, dan krijg je Nederlands; al
-het andere krijgt Engels.
+De app spreekt zeven talen: Nederlands, Engels, Duits, Frans, Spaans,
+Italiaans en Portugees (het Braziliaanse, net als de site). Welke je krijgt
+bepaalt de app zelf zolang jij niets kiest: de eerste taal uit de instellingen
+van je telefoon of browser die de app kent. Kent hij er geen, dan Engels.
 
 Wil je iets anders, dan zijn er twee plekken:
 
-- **Op het beginscherm** staat rechtsboven een klein knopje, `EN` of `NL`.
-- **In de app** staat het onder **Profiel**, bij "taal". Dat is de plek die je
-  nodig hebt zodra je eenmaal in een poule zit, want dat beginscherm zie je dan
-  niet meer.
+- **Op het beginscherm** staat rechtsboven een klein knopje met de taal van nu
+  (`NL`, `EN`, `DE`...). Tik erop en er klapt een lijstje open met alle zeven,
+  elk in zijn eigen taal.
+- **In de app** staat het onder **Profiel**, bij "taal", als zeven knoppen. Dat
+  is de plek die je nodig hebt zodra je eenmaal in een poule zit, want dat
+  beginscherm zie je dan niet meer.
+
+Nederlands en Engels zitten in de app zelf. De andere vijf staan elk in een
+eigen bestand (`app/talen/`) dat de app pas ophaalt als iemand die taal kiest.
+Lukt dat ophalen niet, dan blijft alles in de vorige taal (bij het openen:
+Engels) met een regel waarom.
 
 Je keuze staat op dít toestel. Op je telefoon en je laptop kies je dus apart,
 net als bij het lijstje met je andere poules.
 
-Wat wél meeverandert naast de tekst: de datums ("za 14:00" wordt "Sat 14:00"),
-de aftelklok ("3d 4u" wordt "3d 4h") en het decimaalteken (×1,8 wordt ×1.8). De
-Engelse notatie is de Britse, dus de klok blijft op 24 uur — dit is een
-Europese sport.
+Wat wél meeverandert naast de tekst: de datums ("za 14:00" wordt "Sat 14:00"
+of "Sa., 14:00"), de aftelklok ("3d 4u" wordt "3d 4h"), het decimaalteken
+(×1,8 wordt in het Engels ×1.8) en hoe een plek geschreven wordt (4e, 4th, 4.,
+4e, 4.º, 4º). De Engelse notatie is de Britse, dus de klok blijft op 24 uur.
+Ook de herinneringen komen in de taal van het toestel. De mails van Supabase
+niet: die hebben één sjabloon voor iedereen (zie §5b).
 
 Wat niet meevertaalt: de namen die uit de database komen. De poulenaam die
 iemand zelf heeft ingetypt blijft staan zoals hij is, en de racenamen komen van

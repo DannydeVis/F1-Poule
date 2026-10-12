@@ -19,7 +19,7 @@ await meedoen(page);
 // Danny en vier medespelers, Melbourne en Shanghai gereden. Elke speler krijgt
 // per race een van vijf lijsten; `schuif` draait die rond, zodat telkens een
 // ander wint. `zonder` levert in Shanghai niets in.
-const zet = (schuif, { zonder = null, quali = false } = {}) => page.evaluate(({ UIT, schuif, zonder, quali }) => {
+const zet = (schuif, { zonder = null, quali = false } = {}, pg = page) => pg.evaluate(({ UIT, schuif, zonder, quali }) => {
   const db = globalThis.__db;
   db.pool_members = db.pool_members.filter((m) => m.member_id === 'lid-1');
   ['Michael', 'Fatima', 'Bram', 'Lotte'].forEach((n, i) => db.pool_members.push(
@@ -44,7 +44,7 @@ const zet = (schuif, { zonder = null, quali = false } = {}) => page.evaluate(({ 
   sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
 }, { UIT, schuif, zonder, quali });
 
-const lees = () => page.evaluate(() => {
+const lees = (pg = page) => pg.evaluate(() => {
   const p = document.querySelector('[data-podium]');
   if (!p) return null;
   const tekst = (s) => p.querySelector(s)?.textContent.replace(/\s+/g, ' ').trim() ?? null;
@@ -63,7 +63,7 @@ const lees = () => page.evaluate(() => {
     voetDeel: document.querySelector('#paneel [data-deel]') !== null,
   };
 });
-const open = async () => { await page.reload(); await openRace(page, 'Shanghai'); await page.waitForSelector('.tabs'); };
+const open = async (pg = page) => { await pg.reload(); await openRace(pg, 'Shanghai'); await pg.waitForSelector('.tabs'); };
 
 // ---- iemand anders wint, jij staat er niet op --------------------------------------
 // Lotte levert in Shanghai niets in, dus het podium gaat over vier spelers.
@@ -184,6 +184,22 @@ await stoppen();
   check('in het Engels: "You win this weekend" en "weekend winner"',
     t.includes('You win this weekend') && t.toLowerCase().includes('weekend winner'), t);
   check('geen javascriptfouten in het Engels', jsFouten.length === 0, jsFouten.join(' | '));
+  await stoppen();
+}
+
+// ---- en in het Duits ---------------------------------------------------------------
+// De plek schrijft elke taal anders: 4e, 4th, 4. (zie rang() in de app).
+{
+  const { page: de, jsFouten, stoppen } = await startPagina({ taal: 'de' });
+  await de.setViewportSize({ width: 390, height: 844 });
+  await meedoen(de);
+  await zet(1, { zonder: 'lid-m3' }, de);
+  await open(de);
+  const p = await lees(de);
+  check('in het Duits: "Du wurdest 4. von 4" en "Wochenendsieger"',
+    p?.ik === 'Du wurdest 4. von 4, mit 0 Punkten.'
+      && (await de.textContent('[data-podium] .label')).trim().toLowerCase() === 'wochenendsieger', p?.ik);
+  check('geen javascriptfouten in het Duits', jsFouten.length === 0, jsFouten.join(' | '));
   await stoppen();
 }
 

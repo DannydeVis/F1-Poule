@@ -3,7 +3,7 @@
 
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
-import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -89,6 +89,11 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
   writeFileSync(join(map, 'index.html'),
     nabootsen(readFileSync(indexPad ?? join(wortel, 'app', 'index.html'), 'utf8'), 'index.html'));
   writeFileSync(join(map, 'nabootsing-supabase.mjs'), nabootsing);
+  // De taalbestanden (app/talen/), die de app naast zich ophaalt.
+  mkdirSync(join(map, 'talen'));
+  for (const f of readdirSync(join(wortel, 'app', 'talen'))) {
+    writeFileSync(join(map, 'talen', f), readFileSync(join(wortel, 'app', 'talen', f)));
+  }
   // De beheerpagina staat er ook, op /beheer/, met dezelfde nabootsing: dezelfde
   // herkomst als de app, dus dezelfde sessie en dezelfde "database", net als op
   // de echte site. Een test gaat erheen met page.goto(url + 'beheer/').

@@ -76,8 +76,8 @@ const OPENHEID = {
 };
 // De talen waarin de app er echt is: dezelfde regel als in maak-site.mjs.
 const appBron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
-const appTalen = [...appBron.match(/if \((gekozen === '[a-z]{2}'(?: \|\| gekozen === '[a-z]{2}')*)\) return gekozen;/)[1]
-  .matchAll(/'([a-z]{2})'/g)].map(([, c]) => c);
+const appTalen = [...appBron.match(/const TALEN = \{([\s\S]*?)\n\};/)[1]
+  .matchAll(/^\s*([a-z]{2}): \{/gm)].map(([, c]) => c);
 const ZWAK = {
   nl: ['geen prijzen', 'App Store of Google Play', `sinds ${LLMS.online.toLowerCase()}`],
   en: ['no prizes', 'App Store or Google Play', `since ${LLMS.online}`],

@@ -10159,3 +10159,64 @@ niet, een nieuwe versie herlaadt en daarna niet nog eens, en in de browser
 niets. Twaalf mutanten, alle gevangen (die met het venster pas nadat de test
 na het openen weer naar boven scrolt).
 
+---
+
+## De app in zeven talen (12 oktober)
+
+Danny (10 oktober): "Let op dat ik niet perse op Nederland focus maar wereld
+wijd." Op de routekaart stond "de app zelf in meer talen dan NL en EN". Nu:
+Nederlands, Engels, Duits, Frans, Spaans, Italiaans en Portugees (Braziliaans,
+net als de site).
+
+**Hoe het werkt** (bij `TALEN` in de app):
+
+- `TALEN` noemt de zeven talen, elk met zijn naam in die taal en zijn
+  `streek` (de locale voor datums: `de-DE`, `pt-BR` enzovoort).
+  `scripts/maak-site.mjs` (llms.txt) en twee tests (`geo`, `vergelijking`)
+  lezen de talen van de app uit die tabel; voorheen uit een regel in
+  `beginTaal()`.
+- Nederlands is de brontaal (de sleutels van `T()`), Engels staat in `ENGELS`
+  in de app. De andere vijf staan elk in `app/talen/<code>.json`: dezelfde
+  Nederlandse zinnen als sleutel, de vertaling als waarde. `laadTaal()` haalt
+  er een op als iemand die taal kiest of de browser hem vraagt, vóór het eerste
+  scherm (bovenaan "Start"). Lukt dat niet, dan Engels.
+- `T()` zoekt eerst in de gekozen taal, dan in het Engels, dan Nederlands: een
+  zin die nog niet in een taalbestand staat wordt Engels.
+- `beginTaal()` loopt de voorkeuren van de browser af en neemt de eerste taal
+  die de app kent; geen enkele, dan Engels.
+- Het beginscherm heeft een taalmenu (`#taalknop` met de code van nu, en
+  `#taalmenu` met de zeven talen als `menuitemradio`); Profiel heeft zeven
+  knoppen (`taalBlok()`). `zetTaal()` is async: eerst laden, dan wisselen.
+- `rang()` schrijft een plek per taal (4e, 4th, 4., 1er/4e, 4.º, 4º), `streek()`
+  komt uit `TALEN`, de link naar de voorpagina gaat naar `../<taal>/` (de
+  voorpagina bestaat in alle zeven), de privacyverklaring naar het Engels voor
+  alles behalve Nederlands.
+- De herinneringen (`scripts/herinneringen.mjs`, `WOORDEN`) hebben de zeven
+  zinnetjes nu in alle zeven talen; een onbekende waarde blijft Nederlands.
+
+**De vertalingen** zijn gemaakt in dezelfde termen als de voorpagina in die
+taal: Tipprunde en tippen (de), ligue en pronostics met "vous" (fr), liga en
+predicciones (es), lega en pronostici (it), bolão en palpites met "você" (pt).
+Geen gedachtestreepjes. Een nieuwe zin in de app hoort in alle vijf bestanden
+te komen; `test/talen.test.mjs` zakt anders ("elke zin uit de app staat erin").
+
+**Op de site**: de FAQ "In welke talen is de app er?" in alle zeven talen, de
+vergelijking ("Een andere taal" en de korte samenvatting) en llms.txt zeggen nu
+dat de app er in zeven talen is.
+
+**Nog niet**: de plaatjes van de app op de voorpagina in de vijf nieuwe talen
+(nu Engels), en de mails van Supabase (één sjabloon voor iedereen, Engels).
+Allebei op de routekaart.
+
+**Tests.** `test/talen.test.mjs` (79): elk taalbestand volledig en zonder
+extra's, dezelfde plaatshouders en tags, geen kopie van het Engels, geen
+gedachtestreepjes; de browserkeuze (ook de tweede voorkeur, en Engels als er
+geen past); het taalmenu (zeven talen elk in zijn eigen taal, de huidige
+aangevinkt, ernaast tikken sluit); Duits kiezen onder Profiel, ook na
+herladen, met Duitse weekdagen en de Duitse voorpagina; elke taal op het
+beginscherm uit zijn eigen bestand; een ontbrekende zin wordt Engels; een
+taalbestand dat niet laadt geeft Engels en een melding.
+`test/weekendpodium.test.mjs`: "Du wurdest 4. von 4" in het Duits.
+`test/herinneringen.test.mjs`: de melding in het Duits en in de vier andere
+talen. Twaalf mutanten, alle gevangen.
+

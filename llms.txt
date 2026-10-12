@@ -13,7 +13,7 @@ Predict the Race is made by Danny de Visser from Rotterdam, who also makes Padel
 - Price: free, no ads, no money involved
 - Account: not needed, and no password. Players join with a league code or an invite link; signing in with Google or an email link is optional, to play on more than one device
 - Open league: anyone without a group of their own can join the open league and play against other F1 fans: https://predicttherace.com/app/?code=80C98C
-- App languages: Dutch and English
+- App languages: Dutch, English, German, French, Spanish, Italian, and Portuguese
 - Website languages: the homepage in Nederlands (https://predicttherace.com/), English (https://predicttherace.com/en/), Deutsch (https://predicttherace.com/de/), Français (https://predicttherace.com/fr/), Español (https://predicttherace.com/es/), Italiano (https://predicttherace.com/it/), Português (https://predicttherace.com/pt/); the guides and the about page in Dutch and English
 - Results: the calendar, the entry list and the official results come automatically from OpenF1 (https://openf1.org)
 - Made by: Danny de Visser from Rotterdam (https://predicttherace.com/en/about/)
@@ -37,7 +37,7 @@ Predict the Race is made by Danny de Visser from Rotterdam, who also makes Padel
 - A fantasy game with a budget and transfers: that is F1 Fantasy, the official Formula 1 fantasy game.
 - Playing for money or prizes: Predict the Race has no entry fee, no pot and no prizes.
 - An app from the App Store or Google Play: Predict the Race is a web app that you add to your home screen from the browser.
-- The app in a language other than Dutch or English: the homepage exists in more languages, the app does not.
+- The app in a language other than Dutch, English, German, French, Spanish, Italian, or Portuguese: the app and the homepage exist only in these seven.
 
 ## Guides
 
@@ -165,7 +165,7 @@ Yes, on iPhone, Android and computer, right in the browser. Add it to your home 
 
 ### Which languages is the app in?
 
-The app is available in English and Dutch and picks the language of your device automatically. This page is also available in German, French, Spanish, Italian and Portuguese.
+The app and this page are available in English, Dutch, German, French, Spanish, Italian and Portuguese. The app picks the language of your device automatically, and you can fix it under Profile.
 
 ### Do you play for money?
 

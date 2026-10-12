@@ -1,4 +1,9 @@
-// De app in twee talen.
+// De app in zeven talen.
+//
+// Sinds 12 oktober (Danny: "niet per se op Nederland focussen maar
+// wereldwijd") ook Duits, Frans, Spaans, Italiaans en Portugees. Die staan elk
+// in een eigen bestand, app/talen/<code>.json, met dezelfde Nederlandse zinnen
+// als sleutel; de app laadt alleen de taal die je kiest.
 //
 // Het ontwerp in één zin: de Nederlandse zin ís de sleutel. T('Wis alles')
 // zoekt die zin op in ENGELS en geeft hem onvertaald terug als hij er niet in
@@ -17,13 +22,16 @@
 //   3. De knop wisselt echt de hele app om, ook diep in een racepagina.
 //   4. De woordenlijst is heel: geen dubbele sleutels, geen lege vertaling,
 //      en elke {plaatshouder} in het Nederlands komt terug in het Engels.
+//   5. Elk taalbestand heeft precies dezelfde zinnen als de Engelse lijst,
+//      met dezelfde plaatshouders en dezelfde tags, en is geen kopie van het
+//      Engels.
 
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { maakControle, startPagina, meedoen, wortel } from './hulp.mjs';
 
-const { check, afronden } = maakControle('Nederlands en Engels');
+const { check, afronden } = maakControle('de app in zeven talen');
 
 const tekst = async (page, kies) =>
   (await page.textContent(kies)).replace(/\s+/g, ' ').trim();
@@ -117,6 +125,34 @@ check('alleen woorden die in beide talen hetzelfde zijn, staan er gelijk in',
     wezen.length === 0, wezen.slice(0, 5).join(' | '));
 }
 
+// --- 1b. de taalbestanden ---------------------------------------------------
+// De sleutels staan in ENGELS; een taalbestand hoort er precies die te hebben.
+// Een zin die erbij komt in de app en vergeten wordt in een taalbestand, wordt
+// daar Engels (zie T()), en hier een rode regel.
+const ANDERE = ['de', 'fr', 'es', 'it', 'pt'];
+const engels = new Map(paren);
+const tagsVan = (zin) => [...zin.matchAll(/<\/?(\w+)/g)].map((m) => m[0]).sort().join(',');
+for (const code of ANDERE) {
+  const bestand = JSON.parse(readFileSync(join(wortel, 'app', 'talen', `${code}.json`), 'utf8'));
+  const sleutels = Object.keys(bestand);
+  const mist = paren.map(([nl]) => nl).filter((nl) => !(nl in bestand));
+  const over = sleutels.filter((nl) => !engels.has(nl));
+  check(`${code}: elke zin uit de app staat erin, en niets anders`,
+    mist.length === 0 && over.length === 0, [...mist.slice(0, 2), ...over.slice(0, 2)].join(' | '));
+  const scheefT = sleutels.filter((nl) => houders(nl) !== houders(bestand[nl]) || tagsVan(nl) !== tagsVan(bestand[nl]));
+  check(`${code}: dezelfde {plaatshouders} en tags als het Nederlands`, scheefT.length === 0,
+    scheefT.slice(0, 2).map((nl) => bestand[nl]).join(' | '));
+  const leegT = sleutels.filter((nl) => !String(bestand[nl]).trim());
+  check(`${code}: geen lege vertaling`, leegT.length === 0, leegT.slice(0, 3).join(' | '));
+  // Een paar woorden zijn in elke taal hetzelfde (Sprint, pole, top 10); een
+  // geplakt Engels bestand zou er honderden hebben.
+  const alsEngels = sleutels.filter((nl) => bestand[nl] === engels.get(nl));
+  check(`${code}: geen kopie van het Engels (hooguit 30 zinnen gelijk)`, alsEngels.length <= 30,
+    `${alsEngels.length}: ${alsEngels.slice(0, 5).join(' | ')}`);
+  const streep = sleutels.filter((nl) => /[\u2013\u2014]/.test(bestand[nl]));
+  check(`${code}: geen gedachtestreepjes`, streep.length === 0, streep.slice(0, 2).map((nl) => bestand[nl]).join(' | '));
+}
+
 // --- 2. de browser kiest, als jij niets kiest -----------------------------
 // taal: null slaat het init-script van hulp.mjs over, dus hier telt alleen
 // wat navigator.language zegt. Playwright start standaard op en-US.
@@ -146,6 +182,24 @@ check('alleen woorden die in beide talen hetzelfde zijn, staan er gelijk in',
   await stoppen();
 }
 
+// Een Franse telefoon krijgt Frans. Staat de eerste taal er niet bij, dan telt
+// de volgende uit de voorkeuren; kent de app er geen, dan Engels.
+for (const [voorkeur, verwacht] of [[['fr-FR', 'fr'], 'fr'], [['ja-JP', 'it-IT'], 'it'], [['ja-JP'], 'en']]) {
+  const { page, stoppen } = await startPagina({
+    taal: null,
+    voorafAan: (p) => p.addInitScript((v) => {
+      Object.defineProperty(navigator, 'languages', { get: () => v });
+      Object.defineProperty(navigator, 'language', { get: () => v[0] });
+    }, voorkeur),
+  });
+  await beginscherm(page);
+  check(`een browser op ${voorkeur.join(', ')} krijgt ${verwacht}`,
+    (await page.getAttribute('html', 'lang')) === verwacht
+      && (await page.textContent('#taalknop')).trim() === verwacht.toUpperCase(),
+    `${await page.getAttribute('html', 'lang')} · ${await page.textContent('#taalknop')}`);
+  await stoppen();
+}
+
 // --- 3. de knop op het beginscherm ----------------------------------------
 // Bewust zonder het init-script van hulp.mjs (dat zet localStorage bij élke
 // navigatie, ook na een reload, en zou de keuze hieronder dus steeds weer
@@ -162,10 +216,12 @@ await beginscherm(page);
 
 check('het beginscherm staat in het Nederlands',
   (await tekst(page, '#app')).includes('met je poule'));
-check('en er staat een knop om over te schakelen',
-  (await page.textContent('#taalknop')).trim() === 'EN');
-check('met een label dat in de andere taal geschreven is',
-  (await page.getAttribute('#taalknop', 'aria-label')) === 'Switch to English');
+// Met twee talen wisselde de knop naar de andere. Met zeven toont hij de taal
+// van nu en klapt hij een lijstje open.
+check('er staat een taalknop met de taal van nu',
+  (await page.textContent('#taalknop')).trim() === 'NL'
+    && (await page.getAttribute('#taalknop', 'aria-label')) === 'Taal: Nederlands. Kies een andere taal'
+    && (await page.getAttribute('#taalknop', 'aria-expanded')) === 'false');
 // Een schermlezer kiest op dit attribuut zijn stem en zijn uitspraakregels.
 // Staat het op "nl" terwijl er Engels staat, dan leest hij Engelse zinnen met
 // een Nederlandse tong — onverstaanbaar, en niet te zien aan het scherm.
@@ -173,13 +229,27 @@ check('<html lang> staat op de taal die er staat',
   (await page.getAttribute('html', 'lang')) === 'nl');
 
 await page.click('#taalknop');
-await page.waitForSelector('#taalknop:text-is("NL")');
+await page.waitForSelector('#taalmenu:not([hidden])');
+const menu = await page.$$eval('#taalmenu [data-taal]', (n) =>
+  n.map((b) => [b.dataset.taal, b.lang, b.textContent.trim(), b.getAttribute('aria-checked')]));
+check('een tik opent een lijstje met de zeven talen, elk in zijn eigen taal',
+  menu.map(([c, , naam]) => `${c}:${naam}`).join() === 'nl:Nederlands,en:English,de:Deutsch,fr:Français,es:Español,it:Italiano,pt:Português'
+    && menu.every(([c, lang]) => c === lang), JSON.stringify(menu));
+check('met de taal van nu aangevinkt',
+  menu.filter(([, , , aan]) => aan === 'true').map(([c]) => c).join() === 'nl'
+    && (await page.getAttribute('#taalknop', 'aria-expanded')) === 'true');
+await page.mouse.click(5, 400);
+check('ernaast tikken sluit het lijstje', await page.isHidden('#taalmenu'));
 
-check('één tik zet het hele beginscherm in het Engels',
+await page.click('#taalknop');
+await page.click('#taalmenu [data-taal="en"]');
+await page.waitForSelector('#taalknop:text-is("EN")');
+
+check('English kiezen zet het hele beginscherm in het Engels',
   (await tekst(page, '#app')).includes('your pool'),
   (await tekst(page, '#app')).slice(0, 70));
-check('en de knop biedt nu de weg terug',
-  (await page.getAttribute('#taalknop', 'aria-label')) === 'Schakel over naar Nederlands');
+check('en het label van de knop is mee vertaald',
+  (await page.getAttribute('#taalknop', 'aria-label')) === 'Language: English. Choose another language');
 check('en <html lang> is meegegaan',
   (await page.getAttribute('html', 'lang')) === 'en');
 
@@ -244,8 +314,8 @@ check('en het invulscherm van een race', /Save|Clear everything|tap to pick/i.te
 // een poule zit komt daar nooit meer langs.
 await page.click('[data-weergave="profiel"]');
 await page.waitForSelector('[data-taal="nl"]');
-check('op het profiel staat een taalkeuze met twee knoppen',
-  (await page.$$('[data-taal]')).length === 2);
+check('op het profiel staat een taalkeuze met zeven knoppen',
+  (await page.$$('[data-taal]')).length === 7);
 check('en de huidige taal is niet aanklikbaar',
   (await page.getAttribute('[data-taal="en"]', 'disabled')) !== null);
 
@@ -258,6 +328,33 @@ check('en de opgeslagen keuze is meegegaan',
   (await page.evaluate(() => localStorage.getItem('poule:taal'))) === 'nl');
 check('en <html lang> staat weer op nl',
   (await page.getAttribute('html', 'lang')) === 'nl');
+
+// Duits, vanuit Profiel: het taalbestand wordt opgehaald en de hele app gaat om.
+await page.click('[data-taal="de"]');
+await page.waitForSelector('[data-taal="de"][disabled]');
+check('Duits kiezen zet de app in het Duits',
+  (await tekst(page, '#app')).includes('Die App wählt die Sprache nach deinem Browser')
+    && (await page.textContent('[data-weergave="stand"]')).trim() === 'Tabelle'
+    && (await page.getAttribute('html', 'lang')) === 'de',
+  (await tekst(page, '#app')).slice(0, 80));
+// De weg naar de voorpagina gaat naar de Duitse voorpagina, niet de Nederlandse.
+check('en de link naar de voorpagina gaat naar de Duitse', (await page.getAttribute('#voorpagina', 'href')).endsWith('/de/'),
+  await page.getAttribute('#voorpagina', 'href'));
+await page.reload();
+await page.waitForSelector('[data-weergave]');
+check('en dat blijft na herladen', (await page.textContent('[data-weergave="stand"]')).trim() === 'Tabelle');
+// Datums volgen de taal: "schließt Di., 20:59" en niet "sluit di 20:59".
+await page.click('[data-weergave="races"]');
+await page.waitForSelector('[data-race]');
+{
+  const alles = (await tekst(page, '#app'));
+  check('de weekdagen staan in het Duits', /\b(Mo|Di|Mi|Do|Fr|Sa|So)\., \d\d:\d\d/.test(alles)
+    && !/\b(ma|di|wo|do|vr|za|zo) \d\d:/.test(alles), alles.match(/.{0,20}\d\d:\d\d/)?.[0] ?? alles.slice(0, 60));
+}
+await page.click('[data-weergave="profiel"]');
+await page.waitForSelector('[data-taal="nl"]');
+await page.click('[data-taal="nl"]');
+await page.waitForSelector('[data-taal="nl"][disabled]');
 
 // --- 6. staat er nog tekst buiten T() om? ---------------------------------
 // De vangnet-test. Alles hierboven controleert wat er wél vertaald is; dit
@@ -314,8 +411,9 @@ check('en <html lang> staat weer op nl',
   }
   kaal = kaal.replace(/<!--[\s\S]*?-->/g, gum);
 
-  // Alleen de merknaam en de twee taalnamen horen onvertaald op het scherm.
-  const MAG_ONVERTAALD = new Set(['Predict the Race', 'Nederlands', 'English']);
+  // Alleen de merknaam hoort onvertaald op het scherm. (De taalnamen staan in
+  // TALEN, elk in zijn eigen taal, en komen niet als losse tekst in een tag.)
+  const MAG_ONVERTAALD = new Set(['Predict the Race']);
   const gaten = [];
   let inBlok = false;
   for (const [nr, regel] of kaal.split('\n').entries()) {
@@ -350,4 +448,60 @@ check('het scherm is nooit leeg, hoe de vertaling ook uitpakt', terugval);
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 
 await stoppen();
+
+// --- 8. elke taal op het beginscherm ----------------------------------------
+// De kop van het beginscherm komt uit het taalbestand zelf, dus dit test dat
+// het bestand geladen en gebruikt wordt, niet een vertaling die hier nog eens
+// staat.
+for (const code of ANDERE) {
+  const bestand = JSON.parse(readFileSync(join(wortel, 'app', 'talen', `${code}.json`), 'utf8'));
+  const { page, jsFouten, stoppen } = await startPagina({ taal: code });
+  await beginscherm(page);
+  const kop = bestand['Doe mee<br>met je poule'].replace(/<br>/g, '');
+  check(`${code}: het beginscherm komt uit het taalbestand, met <html lang="${code}">`,
+    (await tekst(page, 'h1')) === kop && (await page.getAttribute('html', 'lang')) === code,
+    `${await tekst(page, 'h1')} · ${kop}`);
+  check(`${code}: zonder javascriptfouten`, jsFouten.length === 0, jsFouten.join(' | '));
+  await stoppen();
+}
+
+// --- 8b. een zin die in een taalbestand ontbreekt, wordt Engels ---------------
+// Komt er in de app een zin bij die nog niet vertaald is, dan liever Engels
+// dan Nederlands: wie Duits leest, leest eerder Engels.
+{
+  const bestand = JSON.parse(readFileSync(join(wortel, 'app', 'talen', 'de.json'), 'utf8'));
+  delete bestand['Doe mee<br>met je poule'];
+  const { page, stoppen } = await startPagina({
+    taal: 'de',
+    voorafAan: (p) => p.route('**/talen/de.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(bestand) })),
+  });
+  await beginscherm(page);
+  check('een ontbrekende Duitse zin staat er in het Engels, de rest in het Duits',
+    (await tekst(page, 'h1')) === 'Joinyour pool' && (await tekst(page, '#app')).includes('Rundencode'),
+    `${await tekst(page, 'h1')} · ${(await tekst(page, '#app')).slice(0, 80)}`);
+  await stoppen();
+}
+
+// --- 9. lukt het laden niet, dan Engels ---------------------------------------
+// Geen verbinding op het moment dat het Duitse bestand opgehaald moet worden:
+// dan liever Engels, dat in de app zelf zit, dan een leeg of half scherm.
+{
+  const { page, jsFouten, stoppen } = await startPagina({
+    taal: 'de',
+    voorafAan: (p) => p.route('**/talen/de.json', (r) => r.abort()),
+  });
+  await beginscherm(page);
+  check('kan het taalbestand niet geladen worden, dan staat de app in het Engels',
+    (await tekst(page, '#app')).includes('your pool') && (await page.getAttribute('html', 'lang')) === 'en',
+    (await tekst(page, '#app')).slice(0, 60));
+  // En kiezen in het menu meldt het, in plaats van niets te doen.
+  await page.click('#taalknop');
+  await page.click('#taalmenu [data-taal="de"]');
+  await page.waitForFunction(() => document.querySelector('#f')?.textContent.trim());
+  check('en Deutsch kiezen zegt dat het laden niet lukte',
+    (await tekst(page, '#f')).includes('That language could not be loaded'), await tekst(page, '#f'));
+  check('zonder javascriptfouten', jsFouten.length === 0, jsFouten.join(' | '));
+  await stoppen();
+}
+
 process.exit(afronden() ? 0 : 1);
