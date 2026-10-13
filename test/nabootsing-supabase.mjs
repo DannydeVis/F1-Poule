@@ -1021,6 +1021,14 @@ Object.assign(functies, {
     if ('beschrijving' in p_wijziging) p.beschrijving = String(p_wijziging.beschrijving ?? '').trim() || null;
     if ('is_public' in p_wijziging) p.is_public = !!p_wijziging.is_public;
     if ('owner_member_id' in p_wijziging) p.owner_member_id = baas;
+    // Zet een test globalThis.__zonderPremium, dan doet dit alsof schema.sql
+    // in Supabase nog van voor premium is: de sleutel valt stil weg en de rij
+    // komt terug zonder premiumkolommen (test/beheer.test.mjs).
+    if (globalThis.__zonderPremium) {
+      bewaren();
+      const { premium_tot, merk_kleur, merk_logo, sponsor_tekst, sponsor_url, ...oud } = kopie(p);
+      return { data: oud, error: null };
+    }
     if ('premium_tot' in p_wijziging) p.premium_tot = p_wijziging.premium_tot || null;
     bewaren();
     return { data: kopie(p), error: null };

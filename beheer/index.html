@@ -90,6 +90,10 @@
     background:var(--paneel);color:var(--ink)}
   .veld::placeholder{color:var(--ink3)}
   select.veld{padding-right:8px}
+  /* iOS tekent een datumveld anders breder dan de kaart. */
+  input[type="date"].veld{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;
+    text-align:left;line-height:42px}
+  input[type="date"].veld::-webkit-date-and-time-value{text-align:left}
 
   /* ---- kop en tabbladen ------------------------------------------------ */
   .kop{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--lijn);
@@ -456,13 +460,16 @@ async function laadAlles() {
 
 // Na een wijziging: melding tonen en opnieuw laden, zodat alles klopt.
 async function doe(werk, melding) {
+  let fout = '';
   try {
     await werk();
-    B.melding = melding; B.fout = '';
   } catch (e) {
-    B.melding = ''; B.fout = e.message;
+    fout = e.message;
   }
+  B.melding = fout ? '' : melding;
   await laadAlles();
+  // Opnieuw laden wist de fout van het laden; die van de wijziging blijft staan.
+  if (fout) { B.fout = fout; render(); }
 }
 
 // ---- tekenen ---------------------------------------------------------------
@@ -989,12 +996,17 @@ const knopen = {
     form.onsubmit = (ev) => {
       ev.preventDefault();
       const f = new FormData(form);
-      doe(() => rpc('beheer_poule_bijwerken', { p_pool: p.id, p_wijziging: {
-        name: f.get('name'), beschrijving: f.get('beschrijving'),
-        owner_member_id: f.get('owner_member_id') || null, is_public: f.get('is_public') === 'on',
-        // Tot en met die dag: het einde van de dag in UTC.
-        premium_tot: f.get('premium_tot') ? `${f.get('premium_tot')}T23:59:59Z` : '' } }),
-      `${f.get('name')} is bijgewerkt.`);
+      // Tot en met die dag: het einde van de dag in UTC.
+      const tot = f.get('premium_tot') ? `${f.get('premium_tot')}T23:59:59Z` : '';
+      doe(async () => {
+        const uit = await rpc('beheer_poule_bijwerken', { p_pool: p.id, p_wijziging: {
+          name: f.get('name'), beschrijving: f.get('beschrijving'),
+          owner_member_id: f.get('owner_member_id') || null, is_public: f.get('is_public') === 'on',
+          premium_tot: tot } });
+        // Een database van voor premium laat de datum stil liggen: zeg dat dan.
+        if (tot && !uit?.premium_tot) throw new Error('De rest is opgeslagen, maar premium staat nog niet '
+          + 'in de database. Laad schema.sql opnieuw in de SQL Editor van Supabase (BEDIENING.md, 19).');
+      }, `${f.get('name')} is bijgewerkt.`);
     };
     vak.querySelector('[data-spelers-van]').onclick = () => {
       B.tab = 'spelers'; B.filterPoule = p.id; B.speler = null; render();
