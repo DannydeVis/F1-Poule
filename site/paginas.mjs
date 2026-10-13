@@ -1622,6 +1622,401 @@ export const PAGINAS = [
           ['faq', 'Frequently asked questions about the app'],
         ],
       },
+      de: {
+        pad: 'de/f1-tippspiel-excel',
+        titel: 'F1-Tippspiel in Excel auswerten | Predict the Race',
+        omschrijving: 'Ein F1-Tippspiel in Excel oder Google Tabellen auswerten: welche Spalten du brauchst, die Formel für die Punkte pro Platz und wo es in einer Saison hakt.',
+        kop: 'Ein F1-Tippspiel in Excel auswerten',
+        kort: 'Ein F1-Tippspiel lässt sich gut in Excel auswerten. Pro Spieler brauchst du vier Spalten und eine Formel, die die Punkte pro Fahrer berechnet. Die Arbeit steckt nicht in der Formel, sondern in der Pflege: an jedem Rennwochenende das ganze Ergebnis abtippen, Strafen nachträglich einarbeiten und dafür sorgen, dass alle rechtzeitig tippen.',
+        teaser: 'Lieber selbst in Excel auswerten? Die Spalten und die Formel',
+        secties: [
+          {
+            id: 'spalten',
+            vraag: 'Welche Spalten brauchst du?',
+            kort: 'Für ein F1-Tippspiel in Excel brauchst du pro Spieler und pro Session vier Spalten: den Fahrer, den getippten Platz, den echten Platz und die Punkte. Leg pro Rennen ein Tabellenblatt mit so einem Block pro Spieler an, dazu ein Blatt mit den Gesamtpunkten.',
+            tabel: {
+              bijschrift: 'Die vier Spalten pro Spieler, mit einer Beispielzeile',
+              kop: ['Spalte', 'Was hineinkommt', 'Beispiel'],
+              rijen: [
+                ['A', 'Der Fahrer', 'Verstappen'],
+                ['B', 'Der getippte Platz, 1 bis 10', '1'],
+                ['C', 'Der echte Platz, leer ohne Wertung', '2'],
+                ['D', 'Die Punkte, mit der Formel unten', '{bijna}'],
+              ],
+            },
+            tekst: [
+              'In Zeile 1 stehen die Überschriften, die zehn Fahrer in den Zeilen 2 bis 11. Setz die Blöcke der Spieler nebeneinander; kopierst du den Block für den nächsten Spieler, wandern die Formeln mit.',
+            ],
+          },
+          {
+            id: 'formel',
+            vraag: 'Welche Formel berechnet die Punkte?',
+            kort: 'Die Formel für die Punkte ist {formule}, in D2 und dann nach unten gezogen bis D11. Sie gibt {exact} Punkte für den genauen Platz, {formStap} weniger für jeden Platz daneben und nie weniger als null, also dieselben Punkte wie Predict the Race.',
+            formules: [
+              ['Deutsches Excel', '{formule}'],
+              ['Die Summe der Session, in D12', '=SUMME(D2:D11)'],
+            ],
+            tekst: [
+              'Das ist dieselbe Rechnung wie in Predict the Race: {exact} Punkte für den genauen Platz, {bijna} bei einem Platz daneben, {twee} bei zwei Plätzen daneben und ab drei Plätzen nichts.',
+              'Der WENN-Teil ist für eine leere Zelle da. Ohne ihn rechnet Excel mit Platz 0, und ein Spieler kann Punkte für einen Fahrer bekommen, der im Ergebnis keinen Platz hatte.',
+              'Die Semikolons gelten für ein Excel mit Komma als Dezimalzeichen, wie im deutschen Sprachraum. Nutzt dein Excel den Punkt, werden daraus Kommas.',
+            ],
+          },
+          {
+            id: 'ausserhalb-top-10',
+            vraag: 'Was machst du mit Fahrern außerhalb der Top 10?',
+            kort: 'Einen Fahrer außerhalb der Top 10 trägst du einfach mit seinem echten Platz ein. Tippt ein Spieler jemanden auf P10 und der wird Elfter, ist das ein Platz daneben, also {bijna} Punkte. Nur bei einem Fahrer ohne Platz im offiziellen Ergebnis bleibt die Zelle leer; er bringt nichts.',
+            tekst: [
+              'Darum brauchst du das ganze Ergebnis, nicht nur die Top 10. Kein Platz heißt zum Beispiel: nicht gewertet oder disqualifiziert.',
+            ],
+          },
+          {
+            id: 'probleme',
+            vraag: 'Wo hakt es mit Excel?',
+            kort: 'Ein Excel-Tippspiel scheitert selten an der Formel, aber fast immer an der Pflege. Nach ein paar Rennen macht eine Person die ganze Arbeit: jedes Ergebnis abtippen, Strafen nachträglich einarbeiten, Deadlines im Blick behalten und die Tabelle herumschicken, jedes Wochenende aufs Neue.',
+            punten: [
+              ['Jedes Ergebnis abtippen', 'Das ganze Ergebnis von Qualifying und Rennen, an jedem Rennwochenende. Eine vertauschte Zeile, und die Tabelle stimmt nicht mehr, ohne dass es jemand merkt.'],
+              ['Strafen nach dem Rennen', 'Eine Zeitstrafe nach dem Zieleinlauf verschiebt das Ergebnis. Dann musst du zurück in dieses Blatt und alles neu prüfen.'],
+              ['Deadlines', 'Wer hat seine Top 10 vor dem Start geschickt? In der Gruppe ist "ich hatte es schon getippt" nicht zu prüfen, und eine Liste, die nach dem Start kommt, sorgt für Streit.'],
+              ['Die Tabelle auf dem Handy', 'Eine geteilte Tabelle geht, aber auf dem Handy sind vier Spalten pro Spieler kaum zu lesen.'],
+            ],
+          },
+          {
+            id: 'ohne-tabelle',
+            vraag: 'Geht es auch ohne Tabelle?',
+            kort: 'Ja, ein F1-Tippspiel geht auch ohne Tabelle. Predict the Race rechnet die Punkte genauso, holt aber nach jedem Qualifying und jedem Rennen selbst das offizielle Ergebnis. Tipps schließen mit dem Start der Session, also kann niemand nachträglich noch etwas ändern.',
+            tekst: [
+              'Ändert eine Strafe das Ergebnis kurz nach dem Rennen, rechnet die App neu. Und die Tabelle steht auf jedem Handy, mit allen, die aufgestiegen oder abgerutscht sind.',
+              'Es ist kostenlos und niemand braucht ein Konto. Du teilst die Tipprunde mit einem Code in der Gruppe.',
+            ],
+          },
+        ],
+        faq: [
+          ['Funktioniert das auch in Google Tabellen?', 'Ja, mit denselben Spalten und derselben Rechnung. Gibt die Formel einen Fehler, nimm die englischen Namen, die Google Tabellen immer versteht: IF statt WENN und SUM statt SUMME. Mit deutscher Spracheinstellung trennst du weiterhin mit Semikolons.'],
+          ['Wie zähle ich den Sieger und die Pole-Position mit?', 'Mit einer eigenen Zeile pro Frage: richtig gibt Punkte, falsch nichts. Steht der getippte Sieger in B14 und der echte in C14, gibt =WENN(B14=C14;{winnaar};0) die Punkte. In Predict the Race ist der Sieger {winnaar} Punkte wert und die Pole-Position {pole}; diese Zahlen kannst du übernehmen.'],
+          ['Wie setze ich Spieler mit gleich vielen Punkten auf denselben Platz?', 'Mit RANG auf dem Blatt mit den Gesamtpunkten. Stehen zehn Spieler in B2 bis B11, gibt =RANG(B2;B$2:B$11) Spielern mit gleich vielen Punkten denselben Platz: 1, 2, 2, 4. So zählt auch Predict the Race.'],
+        ],
+        leesOok: [
+          ['hoe', 'So funktioniert Predict the Race'],
+          ['faq', 'Häufige Fragen zur App'],
+        ],
+      },
+      fr: {
+        pad: 'fr/pronostics-f1-excel',
+        titel: 'Gérer des pronostics F1 sur Excel | Predict the Race',
+        omschrijving: 'Gérer une ligue de pronostics F1 sur Excel ou Google Sheets : les colonnes nécessaires, la formule des points par place et ce qui coince en cours de saison.',
+        kop: 'Gérer des pronostics F1 sur Excel',
+        kort: 'Une ligue de pronostics F1 se gère très bien sur Excel. Il faut quatre colonnes par joueur et une seule formule qui calcule les points de chaque pilote. Le travail n\'est pas dans la formule mais dans le suivi : recopier tout le résultat à chaque week-end de course, corriger après les pénalités et s\'assurer que chacun pronostique à temps.',
+        teaser: 'Plutôt sur Excel ? Les colonnes et la formule',
+        secties: [
+          {
+            id: 'colonnes',
+            vraag: 'De quelles colonnes avez-vous besoin ?',
+            kort: 'Pour des pronostics F1 sur Excel, il faut quatre colonnes par joueur et par séance : le pilote, la place pronostiquée, la place réelle et les points. Créez un onglet par course avec un bloc de ce type par joueur, et un onglet pour les totaux.',
+            tabel: {
+              bijschrift: 'Les quatre colonnes par joueur, avec une ligne d\'exemple',
+              kop: ['Colonne', 'Contenu', 'Exemple'],
+              rijen: [
+                ['A', 'Le pilote', 'Verstappen'],
+                ['B', 'La place prévue, de 1 à 10', '1'],
+                ['C', 'La vraie place, vide si non classé', '2'],
+                ['D', 'Les points, selon la formule', '{bijna}'],
+              ],
+            },
+            tekst: [
+              'La ligne 1 contient les en-têtes et les dix pilotes vont des lignes 2 à 11. Placez les blocs des joueurs côte à côte ; si vous copiez le bloc pour le joueur suivant, les formules suivent.',
+            ],
+          },
+          {
+            id: 'formule',
+            vraag: 'Quelle formule calcule les points ?',
+            kort: 'La formule des points est {formule}, en D2, puis recopiée vers le bas jusqu\'à D11. Elle donne {exact} points pour la place exacte, {formStap} de moins par place d\'écart et jamais moins de zéro : les mêmes points que Predict the Race.',
+            formules: [
+              ['Excel en français', '{formule}'],
+              ['Le total de la séance, en D12', '=SOMME(D2:D11)'],
+            ],
+            tekst: [
+              'C\'est le même calcul que dans Predict the Race : {exact} points pour la place exacte, {bijna} à une place près, {twee} à deux places près, et rien à partir de trois places.',
+              'La partie SI sert pour une cellule vide. Sans elle, Excel compte la place 0 et un joueur peut marquer des points pour un pilote qui n\'avait aucune place au classement.',
+              'Les points-virgules valent pour un Excel où la virgule sert de séparateur décimal, comme en France. Si votre Excel utilise le point, ils deviennent des virgules.',
+            ],
+          },
+          {
+            id: 'hors-top-10',
+            vraag: 'Que faire des pilotes hors du top 10 ?',
+            kort: 'Un pilote hors du top 10 se note simplement avec sa vraie place. Si un joueur met quelqu\'un en P10 et qu\'il finit onzième, c\'est une place d\'écart, donc {bijna} points. Ne laissez la cellule vide que pour un pilote sans place au classement officiel ; il ne rapporte rien.',
+            tekst: [
+              'C\'est pour cela qu\'il faut le résultat complet, pas seulement le top 10. Pas de place veut dire, par exemple, non classé ou disqualifié.',
+            ],
+          },
+          {
+            id: 'problemes',
+            vraag: 'Où ça coince avec Excel ?',
+            kort: 'Une ligue sur Excel coince rarement à cause de la formule, et presque toujours à cause du suivi. Après quelques courses, une seule personne fait tout le travail : recopier chaque résultat, corriger après les pénalités, surveiller les échéances et envoyer le classement, chaque week-end.',
+            punten: [
+              ['Recopier chaque résultat', 'Le résultat complet des qualifications et de la course, à chaque week-end de course. Deux lignes inversées et le classement est faux, sans que personne ne le remarque.'],
+              ['Les pénalités après l\'arrivée', 'Une pénalité en temps après l\'arrivée modifie le résultat. Il faut alors revenir à cet onglet et tout revérifier.'],
+              ['Les échéances', 'Qui a envoyé son top 10 avant le départ ? Dans le groupe, « je l\'avais déjà tapé » est invérifiable, et une liste qui arrive après le départ lance la dispute.'],
+              ['Le classement sur téléphone', 'Un tableur partagé, c\'est possible, mais sur un téléphone quatre colonnes par joueur se lisent mal.'],
+            ],
+          },
+          {
+            id: 'sans-tableur',
+            vraag: 'Peut-on se passer de tableur ?',
+            kort: 'Oui, une ligue de pronostics F1 peut se passer de tableur. Predict the Race compte les points de la même façon, mais récupère lui-même le résultat officiel après chaque qualification et chaque course. Les pronostics ferment au début de la séance, donc personne ne peut rien changer après coup.',
+            tekst: [
+              'Si une pénalité modifie le résultat peu après la course, l\'appli recalcule. Et le classement est sur le téléphone de chacun, avec ceux qui montent et ceux qui descendent.',
+              'C\'est gratuit et personne n\'a besoin de compte. Vous partagez la ligue avec un code dans le groupe.',
+            ],
+          },
+        ],
+        faq: [
+          ['Est-ce que ça marche dans Google Sheets ?', 'Oui, avec les mêmes colonnes et le même calcul. Si la formule renvoie une erreur, utilisez les noms anglais, que Google Sheets comprend toujours : IF au lieu de SI et SUM au lieu de SOMME. Avec des paramètres français, gardez les points-virgules.'],
+          ['Comment compter le vainqueur et la pole position ?', 'Avec une ligne par question : juste rapporte des points, faux ne rapporte rien. Avec le vainqueur pronostiqué en B14 et le vrai en C14, =SI(B14=C14;{winnaar};0) donne les points. Dans Predict the Race, le vainqueur vaut {winnaar} points et la pole position {pole} ; vous pouvez reprendre ces chiffres.'],
+          ['Comment mettre à la même place des joueurs à égalité de points ?', 'Avec RANG dans l\'onglet des totaux. Avec dix joueurs en B2 à B11, =RANG(B2;B$2:B$11) donne la même place aux joueurs à égalité : 1, 2, 2, 4. Predict the Race classe de la même façon.'],
+        ],
+        leesOok: [
+          ['hoe', 'Comment fonctionne Predict the Race'],
+          ['faq', 'Questions fréquentes sur l\'appli'],
+        ],
+      },
+      es: {
+        pad: 'es/porra-f1-excel',
+        titel: 'Cómo llevar una porra de F1 en Excel | Predict the Race',
+        omschrijving: 'Cómo llevar una porra de F1 en Excel o Google Sheets: qué columnas necesitas, la fórmula de los puntos por posición y dónde falla a lo largo de la temporada.',
+        kop: 'Cómo llevar una porra de F1 en Excel',
+        kort: 'Una porra de F1 se lleva bien en Excel. Necesitas cuatro columnas por jugador y una fórmula que calcule los puntos de cada piloto. El trabajo no está en la fórmula sino en el mantenimiento: copiar el resultado completo cada fin de semana de carrera, corregirlo tras las sanciones y asegurarte de que todos predicen a tiempo.',
+        teaser: '¿Prefieres Excel? Las columnas y la fórmula',
+        secties: [
+          {
+            id: 'columnas',
+            vraag: '¿Qué columnas necesitas?',
+            kort: 'Para una porra de F1 en Excel necesitas cuatro columnas por jugador y por sesión: el piloto, la posición que predijo el jugador, la posición real y los puntos. Haz una pestaña por carrera con un bloque así por jugador, y una pestaña con los totales.',
+            tabel: {
+              bijschrift: 'Las cuatro columnas por jugador, con una fila de ejemplo',
+              kop: ['Columna', 'Qué va', 'Ejemplo'],
+              rijen: [
+                ['A', 'El piloto', 'Verstappen'],
+                ['B', 'La posición predicha, de 1 a 10', '1'],
+                ['C', 'La posición real, vacía si no se clasificó', '2'],
+                ['D', 'Los puntos, con la fórmula de abajo', '{bijna}'],
+              ],
+            },
+            tekst: [
+              'En la fila 1 van los encabezados y los diez pilotos en las filas 2 a 11. Pon los bloques de los jugadores uno al lado del otro; si copias el bloque para el siguiente jugador, las fórmulas se mueven con él.',
+            ],
+          },
+          {
+            id: 'formula',
+            vraag: '¿Qué fórmula calcula los puntos?',
+            kort: 'La fórmula de los puntos es {formule}, en D2 y arrastrada hasta D11. Da {exact} puntos por la posición exacta, {formStap} menos por cada posición de diferencia y nunca menos de cero: los mismos puntos que da Predict the Race.',
+            formules: [
+              ['Excel en español', '{formule}'],
+              ['El total de la sesión, en D12', '=SUMA(D2:D11)'],
+            ],
+            tekst: [
+              'Es la misma cuenta que usa Predict the Race: {exact} puntos por la posición exacta, {bijna} por una de diferencia, {twee} por dos, y nada a partir de tres.',
+              'La parte SI está para una celda vacía. Sin ella, Excel cuenta la posición 0 y un jugador puede sumar puntos por un piloto que no tuvo posición en el resultado.',
+              'Los puntos y comas valen para un Excel que usa la coma decimal, como en España. Si tu Excel usa el punto decimal, como en México, se convierten en comas.',
+            ],
+          },
+          {
+            id: 'fuera-top-10',
+            vraag: '¿Qué haces con los pilotos fuera del top 10?',
+            kort: 'Un piloto fuera del top 10 se anota con su posición real, como cualquier otro. Si un jugador pone a alguien en P10 y termina undécimo, es una posición de diferencia, así que {bijna} puntos. Deja la celda vacía solo para un piloto sin posición en la clasificación oficial; ese no suma nada.',
+            tekst: [
+              'Por eso necesitas el resultado completo, no solo el top 10. Sin posición significa, por ejemplo, no clasificado o descalificado.',
+            ],
+          },
+          {
+            id: 'problemas',
+            vraag: '¿Dónde falla Excel?',
+            kort: 'Una porra en Excel rara vez falla por la fórmula, y casi siempre por el mantenimiento. A las pocas carreras, una sola persona hace todo el trabajo: copiar cada resultado, corregirlo tras las sanciones, vigilar los plazos y mandar la clasificación, cada fin de semana.',
+            punten: [
+              ['Copiar cada resultado', 'El resultado completo de la clasificación y la carrera, cada fin de semana de carrera. Intercambia dos filas y la clasificación está mal, sin que nadie se dé cuenta.'],
+              ['Sanciones tras la bandera', 'Una sanción de tiempo después de la meta cambia el resultado. Entonces toca volver a esa pestaña y revisarlo todo.'],
+              ['Plazos', '¿Quién mandó su top 10 antes de la salida? En el grupo, "ya lo había escrito" no se puede comprobar, y una lista que llega después de la salida acaba en discusión.'],
+              ['La clasificación en el móvil', 'Se puede compartir la hoja, pero en un móvil cuatro columnas por jugador apenas se leen.'],
+            ],
+          },
+          {
+            id: 'sin-hoja',
+            vraag: '¿Se puede hacer sin hoja de cálculo?',
+            kort: 'Sí, una porra de F1 funciona sin hoja de cálculo. Predict the Race puntúa igual, pero trae él mismo el resultado oficial después de cada clasificación y cada carrera. Las predicciones se cierran al empezar la sesión, así que nadie puede cambiar nada después.',
+            tekst: [
+              'Si una sanción cambia el resultado poco después de la carrera, la app vuelve a calcular. Y la clasificación está en el móvil de todos, con quién sube y quién baja.',
+              'Es gratis y nadie necesita cuenta. Compartes la porra con un código en el grupo.',
+            ],
+          },
+        ],
+        faq: [
+          ['¿Funciona en Google Sheets?', 'Sí, con las mismas columnas y la misma cuenta. Si la fórmula da error, usa los nombres en inglés, que Google Sheets entiende siempre: IF en lugar de SI y SUM en lugar de SUMA. Con la configuración regional de España, sigue separando con punto y coma.'],
+          ['¿Cómo cuento el ganador y la pole position?', 'Con una fila por pregunta: acertar da puntos, fallar no da nada. Con el ganador predicho en B14 y el real en C14, =SI(B14=C14;{winnaar};0) da los puntos. En Predict the Race el ganador vale {winnaar} puntos y la pole position {pole}; puedes usar esas cifras.'],
+          ['¿Cómo pongo en la misma posición a jugadores empatados a puntos?', 'Con JERARQUIA en la pestaña de los totales. Con diez jugadores en B2 a B11, =JERARQUIA(B2;B$2:B$11) da la misma posición a los empatados: 1, 2, 2, 4. Predict the Race ordena igual.'],
+        ],
+        leesOok: [
+          ['hoe', 'Cómo funciona Predict the Race'],
+          ['faq', 'Preguntas frecuentes sobre la app'],
+        ],
+      },
+      it: {
+        pad: 'it/pronostici-f1-excel',
+        titel: 'Gestire i pronostici F1 su Excel | Predict the Race',
+        omschrijving: 'Gestire una lega di pronostici F1 su Excel o Fogli Google: le colonne che servono, la formula dei punti per posizione e dove si inceppa durante la stagione.',
+        kop: 'Gestire i pronostici F1 su Excel',
+        kort: 'Una lega di pronostici F1 si gestisce bene su Excel. Servono quattro colonne per giocatore e una formula che calcola i punti di ogni pilota. Il lavoro non sta nella formula ma nella gestione: ricopiare tutto il risultato a ogni weekend di gara, correggerlo dopo le penalità e far sì che tutti pronostichino in tempo.',
+        teaser: 'Preferisci Excel? Le colonne e la formula',
+        secties: [
+          {
+            id: 'colonne',
+            vraag: 'Quali colonne servono?',
+            kort: 'Per i pronostici F1 su Excel servono quattro colonne per giocatore e per sessione: il pilota, la posizione pronosticata, la posizione reale e i punti. Crea un foglio per gara con un blocco del genere per ogni giocatore, più un foglio con i totali.',
+            tabel: {
+              bijschrift: 'Le quattro colonne per giocatore, con una riga di esempio',
+              kop: ['Colonna', 'Cosa contiene', 'Esempio'],
+              rijen: [
+                ['A', 'Il pilota', 'Verstappen'],
+                ['B', 'Posizione prevista, da 1 a 10', '1'],
+                ['C', 'Posizione reale, vuota se non in classifica', '2'],
+                ['D', 'I punti, con la formula', '{bijna}'],
+              ],
+            },
+            tekst: [
+              'Nella riga 1 vanno le intestazioni, i dieci piloti nelle righe da 2 a 11. Metti i blocchi dei giocatori uno accanto all\'altro; se copi il blocco per il giocatore successivo, le formule si spostano da sole.',
+            ],
+          },
+          {
+            id: 'formula',
+            vraag: 'Quale formula calcola i punti?',
+            kort: 'La formula dei punti è {formule}, in D2 e poi trascinata fino a D11. Dà {exact} punti per la posizione esatta, {formStap} in meno per ogni posizione di scarto e mai meno di zero: gli stessi punti di Predict the Race.',
+            formules: [
+              ['Excel in italiano', '{formule}'],
+              ['Il totale della sessione, in D12', '=SOMMA(D2:D11)'],
+            ],
+            tekst: [
+              'È lo stesso calcolo di Predict the Race: {exact} punti per la posizione esatta, {bijna} per una posizione di scarto, {twee} per due, e niente da tre in su.',
+              'La parte SE serve per una cella vuota. Senza, Excel conta la posizione 0 e un giocatore può prendere punti per un pilota che non aveva una posizione nel risultato.',
+              'In italiano ABS si chiama ASS. I punti e virgola valgono per un Excel con la virgola come separatore decimale, come in Italia; se il tuo Excel usa il punto, diventano virgole.',
+            ],
+          },
+          {
+            id: 'fuori-top-10',
+            vraag: 'Cosa fai con i piloti fuori dalla top 10?',
+            kort: 'Un pilota fuori dalla top 10 si segna con la sua posizione reale, come gli altri. Se un giocatore mette qualcuno in P10 e lui arriva undicesimo, è una posizione di scarto, quindi {bijna} punti. Lascia la cella vuota solo per un pilota senza posizione nella classifica ufficiale; non vale niente.',
+            tekst: [
+              'Per questo serve il risultato completo, non solo la top 10. Nessuna posizione vuol dire, per esempio, non classificato o squalificato.',
+            ],
+          },
+          {
+            id: 'problemi',
+            vraag: 'Dove si inceppa Excel?',
+            kort: 'Una lega su Excel si inceppa raramente per la formula, e quasi sempre per la gestione. Dopo qualche gara una sola persona fa tutto il lavoro: ricopiare ogni risultato, correggerlo dopo le penalità, controllare le scadenze e mandare la classifica, ogni weekend.',
+            punten: [
+              ['Ricopiare ogni risultato', 'Il risultato completo di qualifiche e gara, a ogni weekend di gara. Due righe scambiate e la classifica è sbagliata, senza che nessuno se ne accorga.'],
+              ['Penalità dopo la bandiera', 'Una penalità di tempo dopo il traguardo cambia il risultato. Allora devi tornare a quel foglio e ricontrollare tutto.'],
+              ['Scadenze', 'Chi ha mandato la sua top 10 prima del via? Nel gruppo "l\'avevo già scritto" non si può verificare, e una lista che arriva dopo il via fa litigare.'],
+              ['La classifica sul telefono', 'Un foglio condiviso si può fare, ma sul telefono quattro colonne per giocatore si leggono a fatica.'],
+            ],
+          },
+          {
+            id: 'senza-foglio',
+            vraag: 'Si può fare senza foglio di calcolo?',
+            kort: 'Sì, una lega di pronostici F1 funziona anche senza foglio di calcolo. Predict the Race conta i punti allo stesso modo, ma recupera da solo il risultato ufficiale dopo ogni qualifica e ogni gara. I pronostici si chiudono all\'inizio della sessione, quindi nessuno può cambiare niente dopo.',
+            tekst: [
+              'Se una penalità cambia il risultato poco dopo la gara, l\'app ricalcola. E la classifica è sul telefono di tutti, con chi sale e chi scende.',
+              'È gratis e nessuno ha bisogno di un account. Condividi la lega con un codice nel gruppo.',
+            ],
+          },
+        ],
+        faq: [
+          ['Funziona anche in Fogli Google?', 'Sì, con le stesse colonne e lo stesso calcolo. Se la formula dà errore, usa i nomi inglesi, che Fogli Google capisce sempre: IF al posto di SE, ABS al posto di ASS e SUM al posto di SOMMA. Con le impostazioni italiane continua a separare con il punto e virgola.'],
+          ['Come conto il vincitore e la pole position?', 'Con una riga per domanda: giusto vale punti, sbagliato niente. Con il vincitore pronosticato in B14 e quello vero in C14, =SE(B14=C14;{winnaar};0) dà i punti. In Predict the Race il vincitore vale {winnaar} punti e la pole position {pole}; puoi riprendere questi numeri.'],
+          ['Come metto alla stessa posizione i giocatori a pari punti?', 'Con RANGO nel foglio dei totali. Con dieci giocatori da B2 a B11, =RANGO(B2;B$2:B$11) dà la stessa posizione ai giocatori a pari punti: 1, 2, 2, 4. Predict the Race ordina allo stesso modo.'],
+        ],
+        leesOok: [
+          ['hoe', 'Come funziona Predict the Race'],
+          ['faq', 'Domande frequenti sull\'app'],
+        ],
+      },
+      pt: {
+        pad: 'pt/bolao-f1-excel',
+        titel: 'Como fazer um bolão de F1 no Excel | Predict the Race',
+        omschrijving: 'Como fazer um bolão de F1 no Excel ou no Planilhas Google: as colunas necessárias, a fórmula dos pontos por posição e onde a planilha complica na temporada.',
+        kop: 'Como fazer um bolão de F1 no Excel',
+        kort: 'Um bolão de F1 funciona bem no Excel. Você precisa de quatro colunas por jogador e de uma fórmula que calcula os pontos de cada piloto. O trabalho não está na fórmula, mas na manutenção: digitar o resultado inteiro a cada fim de semana de corrida, corrigir depois das punições e garantir que todos palpitem a tempo.',
+        teaser: 'Prefere o Excel? As colunas e a fórmula',
+        secties: [
+          {
+            id: 'colunas',
+            vraag: 'De quais colunas você precisa?',
+            kort: 'Para um bolão de F1 no Excel, você precisa de quatro colunas por jogador e por sessão: o piloto, a posição do palpite, a posição real e os pontos. Faça uma aba por corrida com um bloco assim para cada jogador, e uma aba com os totais.',
+            tabel: {
+              bijschrift: 'As quatro colunas por jogador, com uma linha de exemplo',
+              kop: ['Coluna', 'O que vai nela', 'Exemplo'],
+              rijen: [
+                ['A', 'O piloto', 'Verstappen'],
+                ['B', 'A posição do palpite, de 1 a 10', '1'],
+                ['C', 'A posição real, vazia se não classificado', '2'],
+                ['D', 'Os pontos, com a fórmula abaixo', '{bijna}'],
+              ],
+            },
+            tekst: [
+              'Na linha 1 ficam os cabeçalhos, e os dez pilotos nas linhas 2 a 11. Coloque os blocos dos jogadores lado a lado; ao copiar o bloco para o próximo jogador, as fórmulas acompanham.',
+            ],
+          },
+          {
+            id: 'formula',
+            vraag: 'Qual fórmula calcula os pontos?',
+            kort: 'A fórmula dos pontos é {formule}, em D2 e depois arrastada até D11. Ela dá {exact} pontos pela posição exata, {formStap} a menos por posição de diferença e nunca menos que zero: os mesmos pontos do Predict the Race.',
+            formules: [
+              ['Excel em português', '{formule}'],
+              ['O total da sessão, em D12', '=SOMA(D2:D11)'],
+            ],
+            tekst: [
+              'É a mesma conta do Predict the Race: {exact} pontos pela posição exata, {bijna} por uma posição de diferença, {twee} por duas, e nada a partir de três.',
+              'A parte SE existe para uma célula vazia. Sem ela, o Excel conta a posição 0 e um jogador pode ganhar pontos por um piloto que não teve posição no resultado.',
+              'Em português, MAX se chama MÁXIMO. Os pontos e vírgulas valem para um Excel com vírgula decimal, como no Brasil e em Portugal; se o seu Excel usa ponto, eles viram vírgulas.',
+            ],
+          },
+          {
+            id: 'fora-top-10',
+            vraag: 'E os pilotos fora do top 10?',
+            kort: 'Um piloto fora do top 10 entra com a posição real, como qualquer outro. Se um jogador coloca alguém em P10 e ele termina em décimo primeiro, é uma posição de diferença, então {bijna} pontos. Deixe a célula vazia só para um piloto sem posição na classificação oficial; ele não vale nada.',
+            tekst: [
+              'Por isso você precisa do resultado completo, não só do top 10. Sem posição quer dizer, por exemplo, não classificado ou desclassificado.',
+            ],
+          },
+          {
+            id: 'problemas',
+            vraag: 'Onde a planilha complica?',
+            kort: 'Um bolão no Excel raramente dá errado por causa da fórmula, e quase sempre por causa da manutenção. Depois de algumas corridas, uma só pessoa faz todo o trabalho: digitar cada resultado, corrigir depois das punições, cuidar dos prazos e mandar a classificação, todo fim de semana.',
+            punten: [
+              ['Digitar cada resultado', 'O resultado completo da classificação e da corrida, a cada fim de semana de corrida. Duas linhas trocadas e a classificação fica errada, sem ninguém perceber.'],
+              ['Punições depois da bandeirada', 'Uma punição de tempo depois da chegada muda o resultado. Aí você volta naquela aba e confere tudo de novo.'],
+              ['Prazos', 'Quem mandou o top 10 antes da largada? No grupo, "eu já tinha digitado" não dá para conferir, e uma lista que chega depois da largada vira briga.'],
+              ['A classificação no celular', 'Dá para compartilhar a planilha, mas no celular quatro colunas por jogador mal se leem.'],
+            ],
+          },
+          {
+            id: 'sem-planilha',
+            vraag: 'Dá para fazer sem planilha?',
+            kort: 'Sim, um bolão de F1 funciona sem planilha. O Predict the Race conta os pontos do mesmo jeito, mas busca sozinho o resultado oficial depois de cada classificação e de cada corrida. Os palpites fecham no início da sessão, então ninguém consegue mudar nada depois.',
+            tekst: [
+              'Se uma punição muda o resultado pouco depois da corrida, o app recalcula. E a classificação fica no celular de todo mundo, com quem subiu e quem caiu.',
+              'É grátis e ninguém precisa de conta. Você compartilha o bolão com um código no grupo.',
+            ],
+          },
+        ],
+        faq: [
+          ['Funciona no Planilhas Google?', 'Sim, com as mesmas colunas e a mesma conta. Se a fórmula der erro, use os nomes em inglês, que o Planilhas Google sempre entende: IF no lugar de SE, MAX no lugar de MÁXIMO e SUM no lugar de SOMA. Com a configuração do Brasil, continue separando com ponto e vírgula.'],
+          ['Como conto o vencedor e a pole position?', 'Com uma linha por pergunta: acerto vale pontos, erro não vale nada. Com o vencedor do palpite em B14 e o real em C14, =SE(B14=C14;{winnaar};0) dá os pontos. No Predict the Race o vencedor vale {winnaar} pontos e a pole position {pole}; você pode usar esses números.'],
+          ['Como coloco na mesma posição jogadores empatados em pontos?', 'Com ORDEM na aba dos totais. Com dez jogadores de B2 a B11, =ORDEM(B2;B$2:B$11) dá a mesma posição aos empatados: 1, 2, 2, 4. O Predict the Race classifica do mesmo jeito.'],
+        ],
+        leesOok: [
+          ['hoe', 'Como funciona o Predict the Race'],
+          ['faq', 'Perguntas frequentes sobre o app'],
+        ],
+      },
     },
   },
   // De vergelijking met andere apps (zoekplan SEO fase 2, AEO 3.2, GEO fase 4).

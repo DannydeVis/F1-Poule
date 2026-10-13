@@ -10440,3 +10440,29 @@ oude `beheer_poule_bijwerken` slaat een onbekende sleutel stil over.
 - **Test**: `test/beheer.test.mjs` (73). Mutanten: zonder de controle en met
   de oude `doe()` faalt de nieuwe check.
 
+## De excel-gids in alle zeven talen (13 oktober)
+
+De laatste gids die nog alleen NL en EN was (ROUTEKAART, meer talen). Nieuwe
+pagina's: `de/f1-tippspiel-excel`, `fr/pronostics-f1-excel`,
+`es/porra-f1-excel`, `it/pronostici-f1-excel` en `pt/bolao-f1-excel`. Elke
+voorpagina heeft nu ook de teaser bij de punten.
+
+- **De formule per taal.** Excel vertaalt de functienamen, dus
+  `scripts/maak-site.mjs` maakt `{formule}` per taal uit `EXCEL_NAMEN`: ALS,
+  IF, WENN, SI, SE; in het Italiaans heet ABS ASS, in het Portugees MAX
+  MÁXIMO; alleen Engels scheidt met komma's. De getallen komen zoals altijd uit
+  `scoreLijst()`. `{formuleNL}` en `{formuleEN}` blijven bestaan.
+- **Wereldwijd**: elke taal noemt wat te doen als Excel de punt als
+  decimaalteken gebruikt (Spaans noemt Mexico), en de FAQ zegt dat Google
+  Sheets de Engelse namen altijd begrijpt.
+- **Rangorde** heet RANG, RANG, JERARQUIA, RANGO en ORDEM; de som SUMME,
+  SOMME, SUMA, SOMMA en SOMA.
+- `site/vragen.mjs`: de koppen en FAQ's van de gids in de vijf talen.
+- llms.txt noemt de excel-gids nu bij de gidsen in zeven talen.
+- De tabel met kolommen paste in het Frans en Italiaans niet op 360 pixels:
+  kortere cellen.
+
+**Tests.** `test/site.test.mjs`: per taal de formule letterlijk (FEITEN) en de
+rekencheck vertaalt WENN, SI, SE, ASS en MÁXIMO terug naar het Engels en legt
+de formule voor elke voorspelde plek en elke uitslag naast de app.
+
