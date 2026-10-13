@@ -2381,8 +2381,22 @@ zijn dan wel opgeslagen. Laad schema.sql en sla de datum opnieuw op.
 2. Open het beheer → Poules → zoek de poule op naam of code → klik erop.
 3. Vul bij "Premium tot en met" een datum in, bijvoorbeeld het einde van het
    seizoen → Opslaan. In de lijst staat er "premium" achter de naam.
-4. De poulebaas ziet nu onder Poule het blok "eigen profiel": logo kiezen,
-   kleur kiezen, sponsorregel en link invullen, Profiel opslaan.
+4. De poulebaas ziet nu onder Poule (niet onder Profiel: dat is je eigen
+   speler) het blok "eigen profiel": logo kiezen, kleur kiezen, sponsorregel
+   en link invullen, Profiel opslaan.
+
+### Waar je het ziet
+
+- Op een telefoon: het logo in de bovenbalk, op de plek van de P; de sponsor
+  ("mogelijk gemaakt door ...") in een balk eronder; de streep bovenaan in de
+  kleur. Op een breed scherm staan logo en sponsor in de kop.
+- Bij "Wie ben jij?", als iemand met de uitnodigingslink binnenkomt.
+- In de uitnodiging die je kopieert of deelt: een regel met de sponsor.
+- Op beide deelplaatjes (Bericht en Story): de schuine strepen in de kleur, en
+  onderaan het logo met "mogelijk gemaakt door" en de sponsor.
+
+Zie je niets? Ververs de app (op de iPhone: de app helemaal sluiten en weer
+openen), en kijk of de datum in het beheer nog in de toekomst ligt.
 
 Uitzetten: het datumveld leegmaken en opslaan. Na de datum gaat het vanzelf
 uit: het profiel is dan nergens meer te zien, en de poulebaas kan geen nieuw

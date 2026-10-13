@@ -382,6 +382,12 @@
     background:#fff;padding:4px;border:1px solid var(--lijn)}
   .poulelogo.groot{width:64px;height:64px;border-radius:14px;padding:6px}
   .sponsorregel{font-size:12px;color:var(--ink2);line-height:1.4}
+  /* Op een telefoon is er geen kop (.kop staat uit): daar staat het logo van
+     de poule in de bovenbalk, op de plek van de P, en de sponsor in een eigen
+     balk onder de baan. Op een breed scherm staan ze in de kop. */
+  .merk .poulelogo.klein{width:34px;height:34px;border-radius:8px;padding:3px}
+  .merk .blok.metlogo{display:none}
+  .sponsorbalk{padding:8px 16px;border-bottom:1px solid var(--lijn);background:var(--paneel)}
   .sponsorregel a{color:var(--ink);font-weight:600;text-decoration:underline;text-underline-offset:2px}
   .merkkop{display:flex;align-items:center;gap:14px}
   .profielvoorbeeld{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;
@@ -1458,6 +1464,8 @@
        hoort -- en kleiner dan de 24px van de toegangsschermen, want "Predict
        the Race" is langer dan waar die maat op berekend was. */
     .merk{flex-wrap:wrap;row-gap:6px}
+    .merk .poulelogo.klein, .sponsorbalk{display:none}
+    .merk .blok.metlogo{display:block}
     /* "Predict the Race" past niet naast het blok én de wisselknop. De knop
        zakt daarom naar de tweede regel, naast de ondertitel -- dan houdt de
        naam 180 pixel over en past hij op één regel. Dat is beter dan hem
@@ -6526,7 +6534,10 @@ const linkBasis = () => location.origin && location.origin !== 'null'
   : String(location.href).split('?')[0];
 
 function uitnodigingsTekst(poule = S.poule) {
-  return `${T('Doe mee met {poule}:', { poule: poule.name })}\n${linkBasis()}?code=${poule.join_code}`;
+  // Premium: de sponsor staat ook in de uitnodiging (ROUTEKAART, premium).
+  const sponsor = premiumActief(poule) && poule.sponsor_tekst
+    ? `\n${T('mogelijk gemaakt door {sponsor}', { sponsor: poule.sponsor_tekst })}` : '';
+  return `${T('Doe mee met {poule}:', { poule: poule.name })}\n${linkBasis()}?code=${poule.join_code}${sponsor}`;
 }
 
 // Je eigen link, om jezelf mee te nemen naar een ander toestel. Bewust geen
@@ -6926,7 +6937,7 @@ function toonApp() {
     <div class="shell${detail ? ' detail' : ''}">
       <aside class="zijbalk">
         <div class="merk">
-          <span class="blok"></span>
+          <span class="blok${logoUrl() ? ' metlogo' : ''}"></span>${poulelogoImg('klein')}
           <span class="naam merknaam">Predict the Race</span>
           <button class="poulewissel" id="anderePoule" type="button"
             title="${T('Wissel van poule')}" aria-label="${T('Wissel van poule (nu {naam})',
@@ -6959,6 +6970,7 @@ function toonApp() {
 
       <main class="hoofd" tabindex="-1">
         ${merkbaan()}
+        ${sponsorRegel() ? `<div class="sponsorbalk">${sponsorRegel()}</div>` : ''}
         <div class="kop">
           ${poulelogoImg()}
           <div class="koptekst">
@@ -10626,7 +10638,13 @@ async function deelDoek(tekst, maat = DEELMAAT) {
   if (logo) x.drawImage(logo, rand, y, 52, 52);
   else { x.fillStyle = K.accent; x.fillRect(rand, y + 6, 40, 40); }
   schrijf('PREDICT THE RACE', rand + 68, y + 38, { font: `700 34px ${L.cond}`, spatie: 2 });
-  return { doek, x, schrijf, label, K, L, b, h, rand, breed: b - 2 * rand, voet: maat.voet ?? h - 56, poulelogo };
+  // Met een logo of sponsor is de voet hoger: de inhoud stopt eerder (voet),
+  // de voet zelf blijft onderaan (onder).
+  const onder = maat.voet ?? h - 56;
+  const sponsor = premiumActief() && S.poule?.sponsor_tekst ? S.poule.sponsor_tekst : null;
+  const merk = !!(poulelogo || sponsor);
+  return { doek, x, schrijf, label, K, L, b, h, rand, breed: b - 2 * rand,
+    voet: onder - (merk && maat !== STORYMAAT ? 30 : 0), onder, poulelogo, sponsor, strepen };
 }
 
 // De grote kop (een race, of de naam van de poule) zo groot als hij in twee
@@ -10719,33 +10737,42 @@ function deelLijst(d, rijen, y, onder) {
 
 // Voet: waar dit vandaan komt, en een geblokte vlag. Het adres staat nergens
 // vast in de app (zie test/domein.test.mjs): het komt uit de adresbalk.
+// Premium: het logo van de poule en "mogelijk gemaakt door" met de sponsor,
+// vanaf links (of, uitlijnen 'right', tot aan rechts). `onder` is de onderkant
+// van het logo; de twee regels tekst staan er rechts naast (of links ervan).
+// Geeft terug hoe breed het werd.
+function deelMerk(d, px, onder, hoog, maxBreed, uitlijnen = 'left') {
+  const { x, schrijf, label, K, L, poulelogo, sponsor } = d;
+  const br = poulelogo ? Math.min(hoog * 3, Math.round(poulelogo.width / poulelogo.height * hoog) || hoog) : 0;
+  const rechts = uitlijnen === 'right';
+  if (poulelogo) x.drawImage(poulelogo, rechts ? px - br : px, onder - hoog, br, hoog);
+  if (!sponsor) return br;
+  const tx = rechts ? px - (br ? br + 20 : 0) : px + (br ? br + 20 : 0);
+  const ruimte = maxBreed - (br ? br + 20 : 0);
+  const naamMaat = Math.round(hoog * 0.6);
+  label(T('mogelijk gemaakt door {sponsor}', { sponsor: '' }).trim(), tx, onder - naamMaat - 8, K.ink3, uitlijnen);
+  x.font = `600 ${naamMaat}px ${L.cond}`;
+  schrijf(pasIn(x, sponsor, ruimte), tx, onder - 2, { font: `600 ${naamMaat}px ${L.cond}`, uitlijnen });
+  return br + 20 + Math.min(ruimte, x.measureText(sponsor).width);
+}
+
 function deelVoet(d) {
-  const { x, label, K, b, rand, breed, voet, poulelogo } = d;
+  const { x, label, K, b, rand, breed, voet, onder, poulelogo, sponsor } = d;
   x.fillStyle = K.lijn; x.fillRect(rand, voet - 38, breed, 2);
   // Premium: links het logo en de sponsor, het adres schuift naar rechts.
-  const tekst = premiumActief() && S.poule.sponsor_tekst ? S.poule.sponsor_tekst : null;
-  if (poulelogo || tekst) {
-    let px = rand;
-    if (poulelogo) {
-      const hoog = 44, br = Math.min(132, Math.round(poulelogo.width / poulelogo.height * hoog) || hoog);
-      x.drawImage(poulelogo, px, voet - hoog + 8, br, hoog);
-      px += br + 16;
-    }
-    if (tekst) {
-      x.font = `400 24px ${d.L.mono}`;
-      label(pasIn(x, tekst, breed / 2 - (px - rand)), px, voet, K.ink);
-    }
-    label(location.host || 'Predict the Race', b - rand - 6 * 12 - 20, voet, K.ink2, 'right');
-  } else label(location.host || 'Predict the Race', rand, voet, K.ink2);
+  if (poulelogo || sponsor) {
+    deelMerk(d, rand, onder + 6, 60, breed * 0.6);
+    label(location.host || 'Predict the Race', b - rand - 6 * 12 - 20, onder, K.ink2, 'right');
+  } else label(location.host || 'Predict the Race', rand, onder, K.ink2);
   const vak = 12;
   for (let rij = 0; rij < 2; rij++) {
     for (let k = 0; k < 6; k++) {
       x.fillStyle = (rij + k) % 2 ? K.ink : K.bg;
-      x.fillRect(b - rand - 6 * vak + k * vak, voet - 2 * vak + 2 + rij * vak, vak, vak);
+      x.fillRect(b - rand - 6 * vak + k * vak, onder - 2 * vak + 2 + rij * vak, vak, vak);
     }
   }
   x.strokeStyle = K.ink; x.lineWidth = 1;
-  x.strokeRect(b - rand - 6 * vak + 0.5, voet - 2 * vak + 2.5, 6 * vak - 1, 2 * vak - 1);
+  x.strokeRect(b - rand - 6 * vak + 0.5, onder - 2 * vak + 2.5, 6 * vak - 1, 2 * vak - 1);
 }
 
 // De uitslag van één weekend.
@@ -10880,7 +10907,7 @@ function storyVersiering(d, groot) {
     x.font = `700 760px ${L.cond}`;
     x.fillText(String(groot), b + 40, 1180);
   }
-  x.globalAlpha = 0.9; x.fillStyle = K.accent;
+  x.globalAlpha = 0.9; x.fillStyle = d.strepen ?? K.accent;
   x.beginPath(); x.moveTo(0, h - 250); x.lineTo(0, h - 170); x.lineTo(170, h); x.lineTo(250, h); x.closePath(); x.fill();
   x.globalAlpha = 0.35;
   x.beginPath(); x.moveTo(0, h - 140); x.lineTo(0, h - 110); x.lineTo(110, h); x.lineTo(140, h); x.closePath(); x.fill();
@@ -10980,9 +11007,11 @@ function storyRaak(d, race, onder) {
 }
 
 function storyVoet(d) {
-  const { x, label, K, b, rand, breed, voet } = d;
+  const { x, label, K, b, rand, breed, voet, poulelogo, sponsor } = d;
   x.fillStyle = K.lijn; x.fillRect(rand, voet - 44, breed, 2);
   label(T('voorspel mee op {adres}', { adres: location.host || 'Predict the Race' }), rand, voet, K.ink2);
+  // Premium: onder de voet, rechts (links onderin staan de strepen).
+  if (poulelogo || sponsor) deelMerk(d, b - rand, voet + 190, 110, breed - 260, 'right');
   const vak = 14;
   for (let rij = 0; rij < 2; rij++) {
     for (let k = 0; k < 6; k++) {

@@ -10493,3 +10493,38 @@ opslag komt. `test/premium.test.sql` en `test/controle.test.sql`: de nieuwe
 regel zegt ok, en ziet een ontbrekende trigger of opslagregel. Mutanten: zonder
 verkleinen en met 1024 pixels faalt de check.
 
+## Premium ook zichtbaar op een telefoon, in de story en de uitnodiging (13 oktober)
+
+Danny: "ik zie er echt helemaal niks van. Met delen niet enz." De gegevens
+stonden goed in de database (premium tot 14 oktober, kleur, logo, sponsor),
+maar:
+
+- **Op een telefoon** staat `.kop` uit, en juist daar stonden het logo en de
+  sponsorregel. Alleen de baan van 5 pixels in de kleur was te zien. De tests
+  draaiden op 1280 pixels breed. Nu: het logo van de poule in de bovenbalk op
+  de plek van de P (`.merk .poulelogo.klein`, `.blok.metlogo` verborgen) en
+  een `.sponsorbalk` onder de baan. Vanaf 960 pixels niet, want daar staan ze
+  in de kop.
+- **De story** (9:16) had geen logo en geen sponsor, en de strepen linksonder
+  bleven rood. Nu `deelMerk()` rechtsonder (logo 110 hoog, "mogelijk gemaakt
+  door" en de sponsor groot) en de strepen in `d.strepen`.
+- **Het bericht**: logo 60 in plaats van 44 hoog, met "mogelijk gemaakt door"
+  boven de naam; de inhoud stopt 30 pixels eerder (`d.voet`), de voet zelf
+  staat op `d.onder`.
+- **De uitnodiging** (`uitnodigingsTekst`) krijgt een regel "mogelijk gemaakt
+  door ..." (ROUTEKAART: "in de kop, op het deelplaatje en in de uitnodiging").
+
+Het plan (ROUTEKAART, premium stap 1) is daarmee helemaal: logo, kleur,
+sponsorregel met link; in de kop (breed en telefoon), bij "Wie ben jij?", in de
+uitnodiging en op beide deelplaatjes; afgedwongen in schema.sql; logo's in
+Storage met een grens; met de hand aan te zetten in het beheer. Stap 2
+(betalen) wacht op Danny.
+
+Niet na te gaan vanuit hier: of Supabase Storage het logo met CORS geeft (de
+proxy laat de container niet bij supabase.co). Zonder CORS staat het logo niet
+op het deelplaatje (de rest wel); in de app zelf wel.
+
+**Tests.** `test/premium.test.mjs` (31): telefoon en breed scherm, de
+uitnodiging, de story. Vier mutanten gevangen (geen logo in de story, rode
+strepen, geen sponsorbalk, geen sponsor in de uitnodiging).
+
