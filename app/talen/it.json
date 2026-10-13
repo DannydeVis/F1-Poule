@@ -696,7 +696,7 @@
  "eigen profiel": "profilo della lega",
  "Premium tot {datum}. Het logo, de kleur en de sponsorregel staan in de app, op het deelplaatje en bij de uitnodiging.": "Premium fino al {datum}. Il logo, il colore e la riga dello sponsor compaiono nell'app, nell'immagine da condividere e nell'invito.",
  "nog geen sponsorregel": "ancora nessuna riga per lo sponsor",
- "logo (png, jpg of webp, hoogstens 200 kB)": "logo (png, jpg o webp, al massimo 200 kB)",
+ "logo (een groot plaatje maakt de app vanzelf kleiner)": "logo (l'app rimpicciolisce da sola un'immagine grande)",
  "kleur": "colore",
  "sponsorregel": "riga dello sponsor",
  "Bakkerij Jansen": "Panificio Rossi",
@@ -705,8 +705,7 @@
  "Profiel weghalen": "Rimuovi il profilo",
  "Een link hoort bij een sponsorregel: vul ook de tekst in.": "Un link va con una riga dello sponsor: compila anche il testo.",
  "De link moet met https:// beginnen, zonder spaties.": "Il link deve iniziare con https://, senza spazi.",
- "Het logo moet een png, jpg of webp zijn.": "Il logo deve essere un png, jpg o webp.",
- "Het logo is groter dan 200 kB. Maak hem kleiner en probeer het opnieuw.": "Il logo supera i 200 kB. Rimpiccioliscilo e riprova.",
+ "De app kan dit plaatje niet lezen. Kies een png, jpg of webp.": "L'app non riesce a leggere questa immagine. Scegli un png, jpg o webp.",
  "Het profiel van de poule is opgeslagen.": "Il profilo della lega è salvato.",
  "Het profiel van de poule is weggehaald.": "Il profilo della lega è stato rimosso."
 }

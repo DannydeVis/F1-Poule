@@ -2487,6 +2487,25 @@ select 'policies: alleen die uit schema.sql',
           'questions.questions_lezen',
           'races.races_lezen'] as namen) v
 union all
+-- Premium (13 oktober): de vijf kolommen op pools, de bewaking erop, en de
+-- vier regels van de bucket poulelogo in Storage. Zonder Storage (een kale
+-- PostgreSQL) alleen de kolommen en de bewaking.
+select 'premium: kolommen, bewaking en logo-opslag',
+       case
+         when (select count(*) from information_schema.columns
+               where table_schema = 'public' and table_name = 'pools'
+                 and column_name in ('premium_tot', 'merk_kleur', 'merk_logo', 'sponsor_tekst', 'sponsor_url')) <> 5
+           then 'KOLOMMEN ONTBREKEN: draai schema.sql opnieuw'
+         when not exists (select 1 from pg_trigger
+                          where tgrelid = 'public.pools'::regclass and tgname = 'pools_profiel_bewaken')
+           then 'BEWAKING ONTBREEKT: draai schema.sql opnieuw'
+         when to_regclass('storage.objects') is not null
+          and (select count(*) from pg_policies
+               where schemaname = 'storage' and tablename = 'objects'
+                 and policyname in ('poulelogo_zetten', 'poulelogo_vervangen', 'poulelogo_weghalen', 'poulelogo_lezen')) <> 4
+           then 'LOGO-OPSLAG ONTBREEKT: draai schema.sql opnieuw'
+         else 'ok' end
+union all
 select 'aantal poules',        (select count(*)::text from public.pools)
 union all
 select 'aantal spelers',       (select count(*)::text from public.pool_members)

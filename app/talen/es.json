@@ -696,7 +696,7 @@
  "eigen profiel": "perfil de la liga",
  "Premium tot {datum}. Het logo, de kleur en de sponsorregel staan in de app, op het deelplaatje en bij de uitnodiging.": "Premium hasta el {datum}. El logo, el color y la línea del patrocinador aparecen en la app, en la imagen para compartir y en la invitación.",
  "nog geen sponsorregel": "todavía no hay línea del patrocinador",
- "logo (png, jpg of webp, hoogstens 200 kB)": "logo (png, jpg o webp, 200 kB como máximo)",
+ "logo (een groot plaatje maakt de app vanzelf kleiner)": "logo (la app reduce sola una imagen grande)",
  "kleur": "color",
  "sponsorregel": "línea del patrocinador",
  "Bakkerij Jansen": "Panadería García",
@@ -705,8 +705,7 @@
  "Profiel weghalen": "Quitar el perfil",
  "Een link hoort bij een sponsorregel: vul ook de tekst in.": "Un enlace va con una línea del patrocinador: rellena también el texto.",
  "De link moet met https:// beginnen, zonder spaties.": "El enlace tiene que empezar por https://, sin espacios.",
- "Het logo moet een png, jpg of webp zijn.": "El logo tiene que ser un png, jpg o webp.",
- "Het logo is groter dan 200 kB. Maak hem kleiner en probeer het opnieuw.": "El logo pesa más de 200 kB. Hazlo más pequeño y vuelve a intentarlo.",
+ "De app kan dit plaatje niet lezen. Kies een png, jpg of webp.": "La app no puede leer esta imagen. Elige un png, jpg o webp.",
  "Het profiel van de poule is opgeslagen.": "El perfil de la liga está guardado.",
  "Het profiel van de poule is weggehaald.": "El perfil de la liga se ha quitado."
 }

@@ -10466,3 +10466,30 @@ voorpagina heeft nu ook de teaser bij de punten.
 rekencheck vertaalt WENN, SI, SE, ASS en MÁXIMO terug naar het Engels en legt
 de formule voor elke voorspelde plek en elke uitslag naast de app.
 
+## Een groot logo maakt de app zelf kleiner (13 oktober)
+
+Danny: "200 kB is misschien wat weinig?" Voor wat je ziet niet (het logo staat
+hoogstens 64 pixels groot in de app en 44 hoog op het deelplaatje), maar een
+foto van een telefoon is al snel een paar MB. Die werd geweigerd.
+
+- **App** (`verkleinLogo()`): een plaatje dat groter is dan 512 pixels,
+  zwaarder dan 200 kB of geen png, jpg of webp (een iPhone-foto) tekent de app
+  op een canvas van hoogstens 512 pixels en slaat het op als webp; maakt de
+  browser geen webp, dan png, en anders jpg op wit. Past het nog niet, dan
+  384 en 256 pixels. Een kleine png, jpg of webp gaat zoals hij is. Wat de
+  browser niet kan lezen: "De app kan dit plaatje niet lezen."
+- Het bestandsveld accepteert nu elk plaatje (`image/*`). De bucket blijft
+  op 200 kB en png, jpeg of webp: dat is de grens die de database bewaakt, en
+  de app komt daar nu altijd onder.
+- **Controletabel** onderaan schema.sql: een regel "premium: kolommen,
+  bewaking en logo-opslag" (de vijf kolommen, de trigger en de vier regels op
+  `storage.objects`).
+- Twee teksten anders in alle zeven talen (het label en de foutmelding); de
+  melding over 200 kB en "moet een png, jpg of webp zijn" zijn weg.
+
+**Tests.** `test/premium.test.mjs` (26): een bestand dat geen plaatje is,
+en een foto van 2400 bij 1600 die als webp van 512 bij 341 onder 200 kB in de
+opslag komt. `test/premium.test.sql` en `test/controle.test.sql`: de nieuwe
+regel zegt ok, en ziet een ontbrekende trigger of opslagregel. Mutanten: zonder
+verkleinen en met 1024 pixels faalt de check.
+

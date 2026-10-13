@@ -696,7 +696,7 @@
  "eigen profiel": "perfil do bolão",
  "Premium tot {datum}. Het logo, de kleur en de sponsorregel staan in de app, op het deelplaatje en bij de uitnodiging.": "Premium até {datum}. O logo, a cor e a linha do patrocinador aparecem no app, na imagem para compartilhar e no convite.",
  "nog geen sponsorregel": "ainda sem linha do patrocinador",
- "logo (png, jpg of webp, hoogstens 200 kB)": "logo (png, jpg ou webp, no máximo 200 kB)",
+ "logo (een groot plaatje maakt de app vanzelf kleiner)": "logo (o app diminui sozinho uma imagem grande)",
  "kleur": "cor",
  "sponsorregel": "linha do patrocinador",
  "Bakkerij Jansen": "Padaria Silva",
@@ -705,8 +705,7 @@
  "Profiel weghalen": "Remover o perfil",
  "Een link hoort bij een sponsorregel: vul ook de tekst in.": "Um link vai junto com uma linha do patrocinador: preencha também o texto.",
  "De link moet met https:// beginnen, zonder spaties.": "O link precisa começar com https://, sem espaços.",
- "Het logo moet een png, jpg of webp zijn.": "O logo precisa ser png, jpg ou webp.",
- "Het logo is groter dan 200 kB. Maak hem kleiner en probeer het opnieuw.": "O logo tem mais de 200 kB. Diminua e tente de novo.",
+ "De app kan dit plaatje niet lezen. Kies een png, jpg of webp.": "O app não consegue ler esta imagem. Escolha um png, jpg ou webp.",
  "Het profiel van de poule is opgeslagen.": "O perfil do bolão foi salvo.",
  "Het profiel van de poule is weggehaald.": "O perfil do bolão foi removido."
 }

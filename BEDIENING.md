@@ -2366,7 +2366,9 @@ regels (openbaar, hoogstens 200 kB, png, jpeg of webp). Niets met de hand in
 Storage of bij Policies aanmaken: dat doet schema.sql, en een tweede keer
 draaien kan altijd.
 
-Nalopen: Storage → Buckets → `poulelogo` staat er, met "Public" aan.
+Nalopen: Storage → Buckets → `poulelogo` staat er, met "Public" aan. Of kijk
+in de controletabel onderaan: "premium: kolommen, bewaking en logo-opslag"
+zegt ok.
 
 Vergeten? Dan verdwijnt de datum na Opslaan, en zegt het beheer in een rode
 regel "premium staat nog niet in de database". Naam, beschrijving en de rest
@@ -2388,7 +2390,11 @@ logo of nieuwe kleur meer zetten (weghalen kan wel).
 
 ### Wat de regels zijn
 
-- Een logo is png, jpg of webp en hoogstens 200 kB. Svg niet: daar kan script
+- Elk plaatje kan, ook een foto van een paar MB of een iPhone-foto: de app
+  maakt hem zelf kleiner, hoogstens 512 pixels, als webp (of png of jpg).
+  Groter hoeft niet: in de app staat het logo hoogstens 64 pixels groot, op
+  het deelplaatje 44 hoog. Wat in de opslag komt is png, jpg of webp en
+  hoogstens 200 kB; dat bewaakt de bucket zelf. Svg niet: daar kan script
   in. Logo's staan in Storage in een map per poule, en alleen de poulebaas van
   die poule kan er iets in zetten of weghalen, zolang premium loopt.
 - Een sponsorlink begint met `https://`; een link zonder tekst kan niet.

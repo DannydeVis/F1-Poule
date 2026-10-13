@@ -91,7 +91,7 @@ check('een link zonder tekst ook', (await fout()).includes('vul ook de tekst in'
 await page.fill('#profieltekst', 'Bakkerij Jansen');
 await page.setInputFiles('#profiellogo', { name: 'logo.png', mimeType: 'image/png', buffer: Buffer.alloc(210 * 1024, 1) });
 await bewaar();
-check('een logo boven 200 kB wordt geweigerd', (await fout()).includes('200 kB'), await fout());
+check('een bestand dat geen plaatje is wordt geweigerd, met uitleg', (await fout()).includes('kan dit plaatje niet lezen'), await fout());
 await page.setInputFiles('#profiellogo', { name: 'logo.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') });
 await bewaar();
 check('en een svg ook', (await fout()).includes('png, jpg of webp'), await fout());
@@ -223,6 +223,40 @@ await page.waitForSelector('.deelvenster img');
   check('en de schuine strepen in de kleur van de poule', telling.blauw > 2000, JSON.stringify(telling));
 }
 await page.keyboard.press('Escape');
+
+// Een grote foto (veel meer dan 200 kB, 2400 bij 1600): de app maakt hem zelf
+// kleiner, hoogstens 512 pixels, als webp onder de grens van de bucket.
+{
+  await page.reload();
+  await naarPoule();
+  const foto = Buffer.from(await page.evaluate(() => {
+    const c = document.createElement('canvas'); c.width = 2400; c.height = 1600;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 2400, 1600); g.addColorStop(0, '#d04020'); g.addColorStop(1, '#2040d0');
+    x.fillStyle = g; x.fillRect(0, 0, 2400, 1600);
+    const d = x.getImageData(0, 0, 2400, 1600);
+    for (let i = 0; i < d.data.length; i += 4) { const r = (Math.random() - 0.5) * 24; d.data[i] += r; d.data[i + 1] += r; d.data[i + 2] += r; }
+    x.putImageData(d, 0, 0);
+    return c.toDataURL('image/png').split(',')[1];
+  }), 'base64');
+  await page.setInputFiles('#profiellogo', { name: 'foto.png', mimeType: 'image/png', buffer: foto });
+  await page.click('#profielBewaren');
+  // Opgeslagen, of een fout (dan faalt de check hieronder met de reden).
+  await page.waitForFunction(() => document.querySelector('.melding')?.textContent.includes('opgeslagen')
+    || document.querySelector('#profielfout')?.textContent.trim(), null, { timeout: 15000 }).catch(() => {});
+  const d = await lees();
+  const pad = d.pools[0].merk_logo ?? '';
+  const url = d.opslag?.[pad] ?? '';
+  const maat = await page.evaluate((src) => new Promise((klaar) => {
+    const b = new Image(); b.onload = () => klaar([b.naturalWidth, b.naturalHeight]); b.onerror = () => klaar([0, 0]); b.src = src;
+  }), url);
+  const bytes = Buffer.from(url.split(',')[1] ?? '', 'base64').length;
+  check('een grote foto maakt de app zelf kleiner: webp, hoogstens 512 pixels en onder 200 kB',
+    foto.length > 204800 && /^pool-1\/logo-\d+\.webp$/.test(pad) && url.startsWith('data:image/webp')
+      && maat[0] === 512 && maat[1] === 341 && bytes > 0 && bytes <= 204800,
+    `${foto.length} bytes in · ${pad} · ${maat.join('x')} · ${bytes} bytes uit · ${(await page.textContent('#profielfout').catch(() => '')).trim()}`);
+  check('en het vorige logo is weg uit de opslag', Object.keys(d.opslag ?? {}).length === 1, Object.keys(d.opslag ?? {}).join(', '));
+}
 
 // ---- 7. weghalen, en premium voorbij --------------------------------------------------
 await naarPoule();
