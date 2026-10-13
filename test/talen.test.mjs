@@ -102,6 +102,8 @@ const MAG_GELIJK = new Set([
   // Het contactblok onder Profiel: het label en de regel over je browser in
   // een bugmail heten in het Engels hetzelfde.
   'contact', 'Browser',
+  // Het label boven het beheer van de teams (premium).
+  'teams',
 ]);
 const zelfde = paren.filter(([nl, en]) => nl === en).map(([nl]) => nl);
 check('alleen woorden die in beide talen hetzelfde zijn, staan er gelijk in',

@@ -797,6 +797,7 @@ const functies = {
         member_id: m.member_id, display_name: m.display_name, user_id: m.user_id,
         profiel_code: m.user_id && gelijk(m.user_id, ik) ? m.profiel_code ?? null : null,
         profiel: m.user_id && gelijk(m.user_id, ik) ? m.profiel ?? null : null,
+        team_id: m.team_id ?? null,
       }));
     // De antwoorden van medespelers pas na hun deadline, je eigen altijd; van
     // de rest alleen dát ze er zijn. Zelfde voor de jokers, zonder de rest.
@@ -813,7 +814,63 @@ const functies = {
       jokers: (store.jokers ?? []).filter((j) => gelijk(j.pool_id, poule.id))
         .filter((j) => jokerOpen(j) || magVoorSpeler(j.member_id))
         .map(({ race_id, member_id }) => ({ race_id, member_id })),
+      teams: (store.pool_teams ?? []).filter((t) => gelijk(t.pool_id, poule.id))
+        .map(({ id, naam }) => ({ id, naam })),
     }, error: null };
+  },
+
+  // Teams (premium), met de regels van schema.sql (test/teams.test.sql).
+  poule_team_opslaan({ p_pool, p_team = null, p_naam } = {}) {
+    const fout = (message) => ({ data: null, error: { code: 'P0001', message } });
+    if (!magBeheren(p_pool)) return fout('alleen de poulebaas maakt teams');
+    const poule = store.pools.find((p) => gelijk(p.id, p_pool));
+    if (!(poule?.premium_tot && Date.parse(poule.premium_tot) > Date.now())) return fout('teams kunnen alleen met premium');
+    const naam = String(p_naam ?? '').trim();
+    if (naam.length < 1 || naam.length > 30) return fout('een team heeft een naam van 1 tot 30 tekens');
+    store.pool_teams ??= [];
+    const vanPoule = store.pool_teams.filter((t) => gelijk(t.pool_id, p_pool));
+    if (vanPoule.some((t) => !gelijk(t.id, p_team) && t.naam.toLowerCase() === naam.toLowerCase())) {
+      return fout('er is al een team met die naam');
+    }
+    if (!p_team) {
+      if (vanPoule.length >= 20) return fout('een poule heeft hoogstens 20 teams');
+      const team = { id: `team-${store.pool_teams.length + 1}-${Date.now()}`, pool_id: p_pool, naam };
+      store.pool_teams.push(team);
+      bewaren();
+      return { data: team.id, error: null };
+    }
+    const team = vanPoule.find((t) => gelijk(t.id, p_team));
+    if (!team) return fout('dat team bestaat niet');
+    team.naam = naam;
+    bewaren();
+    return { data: team.id, error: null };
+  },
+
+  poule_team_weghalen({ p_team } = {}) {
+    const team = (store.pool_teams ?? []).find((t) => gelijk(t.id, p_team));
+    if (!team) return { data: null, error: { code: 'P0001', message: 'dat team bestaat niet' } };
+    if (!magBeheren(team.pool_id)) return { data: null, error: { code: 'P0001', message: 'alleen de poulebaas haalt een team weg' } };
+    store.pool_teams = store.pool_teams.filter((t) => t !== team);
+    for (const m of store.pool_members) if (gelijk(m.team_id, p_team)) m.team_id = null;
+    bewaren();
+    return { data: null, error: null };
+  },
+
+  poule_team_kiezen({ p_member, p_team = null } = {}) {
+    const fout = (message) => ({ data: null, error: { code: 'P0001', message } });
+    const lid = store.pool_members.find((m) => gelijk(m.member_id, p_member));
+    if (!lid) return fout('die speler bestaat niet');
+    if (!(magVoorSpelerIn(p_member, lid.pool_id) || magBeheren(lid.pool_id))) return fout('je kiest alleen je eigen team');
+    if (p_team) {
+      const poule = store.pools.find((p) => gelijk(p.id, lid.pool_id));
+      if (!(poule?.premium_tot && Date.parse(poule.premium_tot) > Date.now())) return fout('teams kunnen alleen met premium');
+      if (!(store.pool_teams ?? []).some((t) => gelijk(t.id, p_team) && gelijk(t.pool_id, lid.pool_id))) {
+        return fout('dat team hoort niet bij deze poule');
+      }
+    }
+    lid.team_id = p_team || null;
+    bewaren();
+    return { data: null, error: null };
   },
 
   publiek_profiel({ p_code } = {}) {

@@ -2385,6 +2385,22 @@ zijn dan wel opgeslagen. Laad schema.sql en sla de datum opnieuw op.
    speler) het blok "eigen profiel": logo kiezen, kleur kiezen, sponsorregel
    en link invullen, Profiel opslaan.
 
+### Teams
+
+Met premium kan de poulebaas teams maken: afdelingen, clubs of families tegen
+elkaar.
+
+1. Onder Poule, in het blok "teams": een naam intikken → Team toevoegen
+   (hoogstens 20, elk een andere naam). Hernoemen: de naam aanpassen →
+   Opslaan. Weghalen: het kruisje; de spelers zijn dan zonder team.
+2. Daaronder, bij "wie zit waar", zet je iedereen in een team. Of laat het aan
+   de spelers: die kiezen zelf onder Profiel, bij "jouw team".
+3. Onder Stand staat dan de teamstand: het gemiddelde per speler, zodat een
+   groot team niet vanzelf wint. Teams zonder spelers staan er niet in.
+
+Is premium voorbij, dan zijn de teams nergens meer te zien (ze blijven wel
+bewaard, en zijn terug zodra premium weer loopt).
+
 ### Waar je het ziet
 
 - Op een telefoon: het logo in de bovenbalk, op de plek van de P; de sponsor

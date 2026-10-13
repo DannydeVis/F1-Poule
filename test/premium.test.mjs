@@ -64,7 +64,7 @@ await naarPoule();
   const uitleg = await page.$eval('[data-premium-uitleg]', (p) => ({ tekst: p.textContent.replace(/\s+/g, ' ').trim(),
     mail: p.querySelector('a[href^="mailto:"]')?.getAttribute('href') })).catch(() => null);
   check('zonder premium: de poulebaas leest wat het is en hoe hij eraan komt',
-    uitleg?.tekst.includes('Met premium krijgt hij een eigen logo') && uitleg.mail?.startsWith('mailto:contact@predicttherace.com'),
+    uitleg?.tekst.includes('Met premium krijgt hij teams die tegen elkaar spelen, een eigen logo') && uitleg.mail?.startsWith('mailto:contact@predicttherace.com'),
     JSON.stringify(uitleg));
   check('en ziet geen velden, en nergens een logo of sponsorregel',
     !(await page.$('#profiellogo')) && !(await page.$('[data-poulelogo]')) && !(await page.$('[data-sponsor]')));
@@ -356,7 +356,7 @@ await stoppen();
   await en.click('[data-weergave="poule"]');
   await en.waitForSelector('[data-premium-uitleg]');
   const t = (await en.textContent('[data-premium-uitleg]')).replace(/\s+/g, ' ');
-  check('in het Engels: de uitleg in het Engels', t.includes('With premium it gets its own logo'), t);
+  check('in het Engels: de uitleg in het Engels', t.includes('With premium it gets teams that play against each other, its own logo'), t);
   check('geen javascriptfouten in het Engels', fouten.length === 0, fouten.join(' | '));
   await stop();
 }
