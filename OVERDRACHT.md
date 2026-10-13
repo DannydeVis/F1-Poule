@@ -10528,3 +10528,39 @@ op het deelplaatje (de rest wel); in de app zelf wel.
 uitnodiging, de story. Vier mutanten gevangen (geen logo in de story, rode
 strepen, geen sponsorbalk, geen sponsor in de uitnodiging).
 
+## Premium uitbreiden, deel 1: teams binnen een poule (13 oktober)
+
+Danny vond logo, kleur en sponsor "leuk, maar niet zo interessant" en wil
+alles uit het voorstel: teams, eigen vragen, tussenklassementen met prijzen,
+een seizoensoverzicht (gratis) en een paar kleine dingen. Het plan staat in de
+ROUTEKAART onder premium; dit is het eerste.
+
+**Database** (`schema.sql`):
+- `pool_teams` (id, pool_id, naam 1 tot 30 tekens, uniek per poule zonder op
+  hoofdletters te letten) en `pool_members.team_id` (on delete set null).
+- Geen policy en geen grant op `pool_teams`, en `team_id` staat niet in de
+  grant op pool_members: alles gaat via `poule_team_opslaan(pool, team, naam)`
+  (poulebaas, premium, hoogstens 20), `poule_team_weghalen(team)` (poulebaas,
+  ook na premium) en `poule_team_kiezen(speler, team)` (je eigen speler, of de
+  poulebaas voor iedereen; een team alleen met premium en uit deze poule; geen
+  team altijd).
+- `poule_ophalen` geeft `teams` en per lid `team_id`.
+- De controletabel: de premiumregel zegt "TEAMS ONTBREKEN" als pool_teams of
+  de functies er niet zijn. reset.sql gooit pool_teams weg.
+
+**App**: `teamsBlok()` onder Poule (poulebaas: maken, hernoemen, weghalen, wie
+zit waar), `mijnTeamBlok()` onder Profiel, `teamStand()` onder de stand
+(gemiddeld per speler, gelijke plek bij gelijk gemiddelde, teams zonder
+spelers niet). Alles alleen als `premiumActief()`. De uitleg voor een poulebaas
+zonder premium noemt nu eerst de teams. 15 teksten in zeven talen.
+
+**Nabootsing**: `pool_teams` en de drie functies met dezelfde regels.
+
+**Tests.** `test/teams.test.sql` (22, eigen CI-stap) en `test/teams.test.mjs`
+(17). Mutanten: vijf in de app (totaal in plaats van gemiddelde, zonder
+premium, lege teams, plek zonder gelijkspel, beheer voor iedereen) en drie in
+de database (zonder premium, kiezen voor een ander, team uit een andere
+poule), allemaal gevangen.
+
+**Na het mergen:** schema.sql opnieuw laden in Supabase.
+

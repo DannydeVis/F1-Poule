@@ -232,6 +232,16 @@ jobs:
           psql -d premium -v ON_ERROR_STOP=1 -f schema.sql
           psql -d premium -v ON_ERROR_STOP=1 -f test/premium.test.sql
 
+      # Teams binnen een poule (premium): maken en hernoemen alleen de
+      # poulebaas met premium, kiezen voor je eigen speler (of als poulebaas
+      # voor iedereen), en niets rechtstreeks in de tabel.
+      - name: teams — teams binnen een poule
+        run: |
+          createdb teams
+          psql -d teams -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d teams -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d teams -v ON_ERROR_STOP=1 -f test/teams.test.sql
+
       # De afscherming uit fase 0: met de publieke anon key mag je alleen zien
       # wat bij een poule hoort waar je zelf in zit. Deze test zet een tweede
       # poule neer waar de speler niets mee te maken heeft, en controleert

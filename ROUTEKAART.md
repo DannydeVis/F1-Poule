@@ -1036,6 +1036,18 @@ Eerst de gratis app goed; daarna premium in twee stappen.
    aanvulling op de privacyverklaring. Prijsidee: € 2,99 per poule per
    seizoen.
 
+**Premium uitbreiden** (Danny, 13 oktober: "Ja ik wil alles"). Logo, kleur en
+sponsor alleen is voor een vriendengroep niet genoeg; premium moet het spel
+zelf leuker maken. Elk in een eigen PR, alles afgedwongen in schema.sql:
+
+| wat | stand |
+|---|---|
+| teams binnen een poule: de poulebaas maakt teams, iedereen kiest zijn team, een teamstand op gemiddelde per speler | **gebouwd** (13 oktober), BEDIENING §19 |
+| eigen vragen van de poulebaas: per weekend een eigen bonusvraag met vaste punten; de poulebaas vult de uitkomst in | open |
+| tussenklassementen en prijzen: een winnaar per periode naast de seizoenswinnaar, prijzen als tekst (geen geld) | open |
+| seizoensoverzicht à la Wrapped: deelbare plaatjes aan het eind van het seizoen, gratis voor iedereen (het is reclame) | open |
+| klein: de stand als PDF/CSV, een kant-en-klare samenvatting per race, een herinnerknop voor wie nog niet invulde | open |
+
 Laat liggen: white-label op eigen domein, een survival-modus en een
 knock-outtoernooi (veel werk voor weinig spelers). Een vrijwillige "Buy me a
 coffee"-link kan altijd; dat is aan Danny.

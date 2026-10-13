@@ -388,6 +388,12 @@
   .merk .poulelogo.klein{width:34px;height:34px;border-radius:8px;padding:3px}
   .merk .blok.metlogo{display:none}
   .sponsorbalk{padding:8px 16px;border-bottom:1px solid var(--lijn);background:var(--paneel)}
+  .teamstand{display:flex;flex-direction:column;gap:8px}
+  .teamregel{display:flex;gap:8px;align-items:center}
+  .teamregel .veld{flex:1;min-width:0}
+  .teamregel .knop{width:auto;flex:none}
+  .teamkeuze{display:flex;align-items:center;gap:10px}
+  .teamkeuze .veld{width:auto;max-width:55%;margin-left:auto}
   .sponsorregel a{color:var(--ink);font-weight:600;text-decoration:underline;text-underline-offset:2px}
   .merkkop{display:flex;align-items:center;gap:14px}
   .profielvoorbeeld{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;
@@ -3916,12 +3922,40 @@ const ENGELS = Object.fromEntries([
    'Are you sure? Tap again. You will pick your name in the pool again afterwards.'],
   ['Er ging iets mis op de achtergrond. Het scherm klopt misschien niet meer.',
    'Something went wrong in the background. This screen may no longer be right.'],  // Premium: het eigen profiel van een poule (13 oktober).
+  ['teams',
+   'teams'],
+  ['Teamstand',
+   'Team standings'],
+  ['gemiddeld per speler, zodat een groot team niet vanzelf wint',
+   'average per player, so a big team does not win just by being big'],
+  ['gemiddeld',
+   'average'],
+  ['jouw team',
+   'your team'],
+  ['geen team',
+   'no team'],
+  ['Kies je team; de teamstand staat bij de stand.',
+   'Choose your team; the team standings are with the standings.'],
+  ['Afdelingen, clubs of families tegen elkaar. Maak de teams; iedereen kiest zelf zijn team onder Profiel, of jij zet ze erin.',
+   'Departments, clubs or families against each other. Create the teams; everyone picks their own team under Profile, or you put them in.'],
+  ['naam van een nieuw team',
+   'name of a new team'],
+  ['Team toevoegen',
+   'Add team'],
+  ['naam van team {naam}',
+   'name of team {naam}'],
+  ['Team {naam} weghalen',
+   'Remove team {naam}'],
+  ['wie zit waar',
+   'who is in which team'],
+  ['team van {naam}',
+   'team of {naam}'],
+  ['Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.',
+   'A league for your company, club or society? With premium it gets teams that play against each other, its own logo, its own colour and a sponsor line with a link. Email {adres} to turn it on.'],
   ['mogelijk gemaakt door {sponsor}',
    'brought to you by {sponsor}'],
   ['eigen logo en kleur',
    'your own logo and colour'],
-  ['Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij een eigen logo, een eigen kleur en een regel over de sponsor met een link: in de app, op het deelplaatje en bij de uitnodiging. Mail {adres} om het aan te zetten.',
-   'A league for your company, club or association? With premium it gets its own logo, its own colour and a sponsor line with a link: in the app, on the share image and on the invite. Email {adres} to switch it on.'],
   ['eigen profiel',
    'league profile'],
   ['Premium tot {datum}. Het logo, de kleur en de sponsorregel staan in de app, op het deelplaatje en bij de uitnodiging.',
@@ -6131,6 +6165,7 @@ async function laad() {
   S.ingeleverd = inhoud.data.ingeleverd ?? [];
   S.poulevragen = inhoud.data.poulevragen ?? [];
   S.jokers = inhoud.data.jokers ?? [];
+  S.teams = inhoud.data.teams ?? [];
   S.geladenOp = Date.now();
   // De poule zelf komt mee, dus een omschrijving die iemand anders net
   // aanpaste staat er meteen goed bij.
@@ -7068,6 +7103,7 @@ function toonApp() {
   knoopBeheer();
   knoopOmschrijving();
   knoopProfiel();
+  knoopTeams();
   knoopOpenbaar();
   knoopAutofill();
   knoopJokers();
@@ -7478,6 +7514,7 @@ function standPagina(rijen) {
       : `<p class="zacht" style="margin:0">${T('Nog niemand meegedaan.')}</p>`}
     ${rijen.length && gereden() ? `<button class="knop spook" data-deel-stand>${
       DEELICOON}${T('Deel de stand')}</button>` : ''}
+    ${teamStand(rijen)}
     ${seizoenslaagBlok()}
     ${weekendRanglijst()}
     ${seizoensRecords()}
@@ -7928,6 +7965,7 @@ function poulePagina(rijen) {
     ${beheerKop()}
     ${omschrijvingBlok()}
     ${profielBlok()}
+    ${teamsBlok()}
     ${openbaarBlok()}
     ${autofillBlok()}
     ${jokersBlok()}
@@ -7964,6 +8002,7 @@ function profielPagina() {
     <p class="zacht" style="margin:-10px 0 0">${T('Je speelt hier als <b>{naam}</b>.',
       { naam: esc(S.ik.naam) })}</p>
     ${taalBlok()}
+    ${mijnTeamBlok()}
     ${contactBlok()}
     ${mailBlok()}
     ${beginschermBlok()}
@@ -8899,9 +8938,9 @@ function profielBlok() {
     <div class="scheiding"></div>
     <span class="label">${T('eigen logo en kleur')}</span>
     <p class="zacht" style="margin:0" data-premium-uitleg>${T('Een poule voor je bedrijf, club of '
-      + 'vereniging? Met premium krijgt hij een eigen logo, een eigen kleur en een regel over de '
-      + 'sponsor met een link: in de app, op het deelplaatje en bij de uitnodiging. Mail {adres} '
-      + 'om het aan te zetten.', { adres: mail })}</p>`;
+      + 'vereniging? Met premium krijgt hij teams die tegen elkaar spelen, een eigen logo, een eigen '
+      + 'kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.',
+      { adres: mail })}</p>`;
   }
   const P = S.profiel ?? {};
   const kleur = P.kleur ?? S.poule.merk_kleur ?? '#ee4d33';
@@ -8934,6 +8973,147 @@ function profielBlok() {
         ? `<button class="knop klein" id="profielWeg">${T('Profiel weghalen')}</button>` : ''}
     </div>
     <p class="err" id="profielfout">${esc(S.profielFout)}</p>`;
+}
+
+// ---- teams (premium) -------------------------------------------
+// Afdelingen, clubs of families tegen elkaar. De poulebaas maakt de teams
+// (teamsBlok, onder Poule), iedereen kiest zijn eigen team (mijnTeamBlok,
+// onder Profiel), en bij de stand staat de teamstand (teamStand). Wie wat mag
+// staat in schema.sql (poule_team_opslaan, poule_team_kiezen,
+// poule_team_weghalen); zonder premium is er niets van te zien.
+const teamsActief = () => premiumActief() && (S.teams ?? []).length > 0;
+const teamVan = (memberId) => S.leden.find(l => zelfde(l.member_id, memberId))?.team_id ?? null;
+
+// Gemiddeld per speler, zodat een team met twintig man niet vanzelf wint van
+// een team met vijf. Alleen teams met spelers; gelijk gemiddelde, gelijke plek.
+function teamRijen(rijen) {
+  if (!teamsActief()) return [];
+  return S.teams.map(t => {
+    const leden = rijen.filter(r => zelfde(teamVan(r.id), t.id));
+    const totaal = leden.reduce((n, r) => n + r.punten, 0);
+    return { id: t.id, naam: t.naam, spelers: leden.length, totaal,
+             gemiddeld: leden.length ? totaal / leden.length : 0,
+             mij: zelfde(teamVan(S.ik.id), t.id) };
+  }).filter(t => t.spelers > 0)
+    .sort((a, b) => b.gemiddeld - a.gemiddeld || String(a.naam).localeCompare(String(b.naam)));
+}
+
+function teamStand(rijen) {
+  const teams = teamRijen(rijen);
+  if (!teams.length) return '';
+  return `
+    <div class="teamstand" data-teamstand>
+      <span class="label">${T('Teamstand')}</span>
+      <p class="zacht klein" style="margin:0">${T('gemiddeld per speler, zodat een groot team niet vanzelf wint')}</p>
+      <div class="groep">${teams.map(t => {
+        const plek = teams.findIndex(x => x.gemiddeld === t.gemiddeld) + 1;
+        return `<div class="strij ${t.mij ? 'zelf' : ''}" data-team="${esc(t.id)}">
+          <span class="p">${plek}</span>
+          <span class="nm">${esc(t.naam)}</span>
+          <span class="voor">${t.spelers} ${T(t.spelers === 1 ? 'speler' : 'spelers')}</span>
+          <span class="t">${komma(t.gemiddeld)}</span>
+        </div>`; }).join('')}</div>
+    </div>`;
+}
+
+// Onder Profiel: je eigen team kiezen.
+function mijnTeamBlok() {
+  if (!teamsActief()) return '';
+  const nu = teamVan(S.ik.id);
+  return `
+    <div class="scheiding"></div>
+    <label class="label" for="mijnteam">${T('jouw team')}</label>
+    <select class="veld" id="mijnteam">
+      <option value="">${T('geen team')}</option>
+      ${S.teams.map(t => `<option value="${esc(t.id)}"${zelfde(nu, t.id) ? ' selected' : ''}>${esc(t.naam)}</option>`).join('')}
+    </select>
+    <p class="zacht klein" style="margin:0">${T('Kies je team; de teamstand staat bij de stand.')}</p>
+    <p class="err" id="mijnteamfout">${esc(S.teamFout ?? '')}</p>`;
+}
+
+// Onder Poule, voor de poulebaas: teams maken, hernoemen, weghalen, en
+// iedereen in een team zetten.
+function teamsBlok() {
+  if (!magBeheren() || !premiumActief()) return '';
+  const teams = S.teams ?? [];
+  const keuze = (memberId) => `<option value="">${T('geen team')}</option>${teams.map(t =>
+    `<option value="${esc(t.id)}"${zelfde(teamVan(memberId), t.id) ? ' selected' : ''}>${esc(t.naam)}</option>`).join('')}`;
+  return `
+    <div class="scheiding"></div>
+    <span class="label">${T('teams')}</span>
+    <p class="zacht" style="margin:0">${T('Afdelingen, clubs of families tegen elkaar. Maak de teams; '
+      + 'iedereen kiest zelf zijn team onder Profiel, of jij zet ze erin.')}</p>
+    ${teams.map(t => `<div class="teamregel" data-teamregel="${esc(t.id)}">
+      <input class="veld" maxlength="30" autocomplete="off" value="${esc(t.naam)}"
+        aria-label="${T('naam van team {naam}', { naam: esc(t.naam) })}">
+      <button class="knop klein" type="button" data-team-bewaar>${T('Opslaan')}</button>
+      <button class="knop klein" type="button" data-team-weg aria-label="${
+        T('Team {naam} weghalen', { naam: esc(t.naam) })}">×</button>
+    </div>`).join('')}
+    ${teams.length < 20 ? `<div class="teamregel">
+      <input class="veld" id="nieuwteam" maxlength="30" autocomplete="off"
+        placeholder="${T('naam van een nieuw team')}" aria-label="${T('naam van een nieuw team')}">
+      <button class="knop klein" type="button" id="teamErbij">${T('Team toevoegen')}</button>
+    </div>` : ''}
+    ${teams.length && S.leden.length ? `<span class="label">${T('wie zit waar')}</span>
+      <div class="groep">${S.leden.map(l => `<label class="rij teamkeuze">
+        <span class="nm">${esc(l.display_name)}</span>
+        <select class="veld" data-team-van="${esc(l.member_id)}"
+          aria-label="${T('team van {naam}', { naam: esc(l.display_name) })}">${keuze(l.member_id)}</select>
+      </label>`).join('')}</div>` : ''}
+    <p class="err" id="teamsfout">${esc(S.teamFout ?? '')}</p>`;
+}
+
+async function teamActie(werk) {
+  S.teamFout = '';
+  try {
+    if (!DEMO) {
+      const { data, error } = await werk();
+      if (error) throw new Error(uitleg(error));
+      return data;
+    }
+  } catch (e) { S.teamFout = e.message; render(); return undefined; }
+  return null;
+}
+
+function knoopTeams() {
+  const zetTeam = async (memberId, teamId) => {
+    const uit = await teamActie(() => db.rpc('poule_team_kiezen', { p_member: memberId, p_team: teamId || null }));
+    if (uit === undefined) return;
+    const lid = S.leden.find(l => zelfde(l.member_id, memberId));
+    if (lid) lid.team_id = teamId || null;
+    render();
+  };
+  const mijn = app.querySelector('#mijnteam');
+  if (mijn) mijn.onchange = () => zetTeam(S.ik.id, mijn.value);
+  app.querySelectorAll('[data-team-van]').forEach(k => k.onchange = () => zetTeam(k.dataset.teamVan, k.value));
+  const erbij = app.querySelector('#teamErbij');
+  if (erbij) erbij.onclick = async () => {
+    const naam = schoon(app.querySelector('#nieuwteam').value);
+    if (!naam) return;
+    const id = await teamActie(() => db.rpc('poule_team_opslaan', { p_pool: S.poule.id, p_team: null, p_naam: naam }));
+    if (id === undefined) return;
+    S.teams = [...(S.teams ?? []), { id: id ?? `demo-${Date.now()}`, naam }];
+    render();
+  };
+  app.querySelectorAll('[data-teamregel]').forEach(regel => {
+    const id = regel.dataset.teamregel;
+    const bewaar = regel.querySelector('[data-team-bewaar]');
+    const weg = regel.querySelector('[data-team-weg]');
+    if (bewaar) bewaar.onclick = async () => {
+      const naam = schoon(regel.querySelector('input').value);
+      if (!naam) return;
+      if (await teamActie(() => db.rpc('poule_team_opslaan', { p_pool: S.poule.id, p_team: id, p_naam: naam })) === undefined) return;
+      S.teams = S.teams.map(t => (zelfde(t.id, id) ? { ...t, naam } : t));
+      render();
+    };
+    if (weg) weg.onclick = async () => {
+      if (await teamActie(() => db.rpc('poule_team_weghalen', { p_team: id })) === undefined) return;
+      S.teams = S.teams.filter(t => !zelfde(t.id, id));
+      for (const l of S.leden) if (zelfde(l.team_id, id)) l.team_id = null;
+      render();
+    };
+  });
 }
 
 // Dezelfde regel als pools_sponsor_url in schema.sql.

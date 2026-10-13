@@ -234,10 +234,31 @@ alter table public.pools         add constraint pools_sponsor_url
   check (sponsor_url is null or (sponsor_tekst is not null and char_length(sponsor_url) <= 300
          and sponsor_url ~ '^https://[A-Za-z0-9.-]+([/?#][^[:space:]<>"''`]*)?$'));
 
+-- Premium: teams binnen een poule (13 oktober). Afdelingen, clubs of families
+-- tegen elkaar: naast de stand van de spelers een teamstand. De poulebaas maakt
+-- de teams, een speler kiest zijn eigen team (en de poulebaas mag dat voor
+-- iedereen). Schrijven gaat alleen via de functies poule_team_opslaan(),
+-- poule_team_weghalen() en poule_team_kiezen(); lezen via poule_ophalen().
+-- Daarom geen policy en geen grant op deze tabel.
+create table if not exists public.pool_teams (
+  id         uuid primary key default gen_random_uuid(),
+  pool_id    uuid not null references public.pools(id) on delete cascade,
+  naam       text not null,
+  created_at timestamptz not null default now()
+);
+alter table public.pool_teams drop constraint if exists pool_teams_naam;
+alter table public.pool_teams  add constraint pool_teams_naam
+  check (char_length(btrim(naam)) between 1 and 30);
+create unique index if not exists pool_teams_uniek on public.pool_teams (pool_id, lower(btrim(naam)));
+
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
 alter table public.pool_members add column if not exists created_at   timestamptz not null default now();
 alter table public.pool_members add column if not exists user_id      uuid;
+-- Het team van een speler (premium). Gaat het team weg, dan is de speler
+-- gewoon weer zonder team.
+alter table public.pool_members add column if not exists team_id      uuid
+  references public.pool_teams(id) on delete set null;
 -- Welk account deze speler aanmaakte. Alleen van belang zolang hij van niemand
 -- is: dan mag dat account (het gedeelde toestel waarop hij werd ingeschreven)
 -- nog voor hem invullen, en verder niemand. Zie mag_voor_speler(). Niet te
@@ -1157,6 +1178,96 @@ $$;
 revoke all on function public.mag_logo_zetten(text) from public;
 grant execute on function public.mag_logo_zetten(text) to anon, authenticated;
 
+-- ---- teams (premium) -----------------------------------------
+-- Een team maken of hernoemen: alleen de poulebaas, alleen zolang premium
+-- loopt, een naam van 1 tot 30 tekens, hoogstens 20 teams, en geen twee teams
+-- met dezelfde naam. p_team leeg is een nieuw team. Geeft het id terug.
+create or replace function public.poule_team_opslaan(p_pool uuid, p_team uuid, p_naam text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_naam text := btrim(coalesce(p_naam, ''));
+  v_id   uuid;
+begin
+  if not public.mag_beheren(p_pool) then
+    raise exception 'alleen de poulebaas maakt teams';
+  end if;
+  if not exists (select 1 from public.pools where id = p_pool and premium_tot > now()) then
+    raise exception 'teams kunnen alleen met premium';
+  end if;
+  if char_length(v_naam) not between 1 and 30 then
+    raise exception 'een team heeft een naam van 1 tot 30 tekens';
+  end if;
+  if p_team is null then
+    if (select count(*) from public.pool_teams where pool_id = p_pool) >= 20 then
+      raise exception 'een poule heeft hoogstens 20 teams';
+    end if;
+    insert into public.pool_teams (pool_id, naam) values (p_pool, v_naam) returning id into v_id;
+  else
+    update public.pool_teams set naam = v_naam
+     where id = p_team and pool_id = p_pool returning id into v_id;
+    if v_id is null then raise exception 'dat team bestaat niet'; end if;
+  end if;
+  return v_id;
+exception when unique_violation then
+  raise exception 'er is al een team met die naam';
+end $$;
+
+-- Een team weghalen: alleen de poulebaas, ook als premium voorbij is. De
+-- spelers van dat team zijn daarna zonder team (on delete set null).
+create or replace function public.poule_team_weghalen(p_team uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_pool uuid;
+begin
+  select pool_id into v_pool from public.pool_teams where id = p_team;
+  if v_pool is null then raise exception 'dat team bestaat niet'; end if;
+  if not public.mag_beheren(v_pool) then
+    raise exception 'alleen de poulebaas haalt een team weg';
+  end if;
+  delete from public.pool_teams where id = p_team;
+end $$;
+
+-- Een team kiezen: voor je eigen speler, of als poulebaas voor iedereen in je
+-- poule. Een team kiezen kan alleen met premium en alleen uit deze poule;
+-- geen team (p_team leeg) kan altijd.
+create or replace function public.poule_team_kiezen(p_member uuid, p_team uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_pool uuid;
+begin
+  select pool_id into v_pool from public.pool_members where member_id = p_member;
+  if v_pool is null then raise exception 'die speler bestaat niet'; end if;
+  if not (public.mag_voor_speler_in(p_member, v_pool) or public.mag_beheren(v_pool)) then
+    raise exception 'je kiest alleen je eigen team';
+  end if;
+  if p_team is not null then
+    if not exists (select 1 from public.pools where id = v_pool and premium_tot > now()) then
+      raise exception 'teams kunnen alleen met premium';
+    end if;
+    if not exists (select 1 from public.pool_teams where id = p_team and pool_id = v_pool) then
+      raise exception 'dat team hoort niet bij deze poule';
+    end if;
+  end if;
+  update public.pool_members set team_id = p_team where member_id = p_member;
+end $$;
+
+revoke all on function public.poule_team_opslaan(uuid, uuid, text) from public;
+revoke all on function public.poule_team_weghalen(uuid)            from public;
+revoke all on function public.poule_team_kiezen(uuid, uuid)        from public;
+grant execute on function public.poule_team_opslaan(uuid, uuid, text) to anon, authenticated;
+grant execute on function public.poule_team_weghalen(uuid)            to anon, authenticated;
+grant execute on function public.poule_team_kiezen(uuid, uuid)        to anon, authenticated;
+
 -- ------------------------------------------------------------
 --  Een poule ophalen zonder de hele tabel open te zetten
 --
@@ -1208,7 +1319,8 @@ as $$
                      'profiel_code', case when m.user_id is not null and m.user_id = auth.uid()
                                           then m.profiel_code end,
                      'profiel',      case when m.user_id is not null and m.user_id = auth.uid()
-                                          then m.profiel end) order by m.created_at)
+                                          then m.profiel end,
+                     'team_id',      m.team_id) order by m.created_at)
                    from public.pool_members m, poule p where m.pool_id = p.id), '[]'::jsonb),
     -- De antwoorden van je medespelers pas als hun sessie dicht is; die van
     -- jezelf (en van de speler zonder account die jouw toestel inschreef)
@@ -1246,7 +1358,11 @@ as $$
                      'race_id', j.race_id, 'member_id', j.member_id))
                    from public.jokers j, poule p where j.pool_id = p.id
                     and (public.joker_open(j.race_id)
-                         or public.mag_voor_speler(j.member_id))), '[]'::jsonb)
+                         or public.mag_voor_speler(j.member_id))), '[]'::jsonb),
+    -- De teams (premium); wie in welk team zit staat bij de leden.
+    'teams',      coalesce((select jsonb_agg(jsonb_build_object('id', t.id, 'naam', t.naam)
+                     order by t.created_at, t.naam)
+                   from public.pool_teams t, poule p where t.pool_id = p.id), '[]'::jsonb)
   ) end;
 $$;
 
@@ -1542,6 +1658,8 @@ alter table public.pool_questions enable row level security;
 alter table public.answers        enable row level security;
 alter table public.jokers         enable row level security;
 alter table public.push_abonnementen enable row level security;
+alter table public.pool_teams     enable row level security;
+revoke all on public.pool_teams from anon, authenticated;
 
 -- Eerst élke policy in public weg, ook die dit bestand niet kent, en daarna
 -- alleen de policies hieronder terug. Tot 29 september stond hier een lijst
@@ -2487,8 +2605,9 @@ select 'policies: alleen die uit schema.sql',
           'questions.questions_lezen',
           'races.races_lezen'] as namen) v
 union all
--- Premium (13 oktober): de vijf kolommen op pools, de bewaking erop, en de
--- vier regels van de bucket poulelogo in Storage. Zonder Storage (een kale
+-- Premium (13 oktober): de vijf kolommen op pools, de bewaking erop, de teams
+-- (pool_teams en de functies erbij), en de vier regels van de bucket
+-- poulelogo in Storage. Zonder Storage (een kale
 -- PostgreSQL) alleen de kolommen en de bewaking.
 select 'premium: kolommen, bewaking en logo-opslag',
        case
@@ -2499,6 +2618,9 @@ select 'premium: kolommen, bewaking en logo-opslag',
          when not exists (select 1 from pg_trigger
                           where tgrelid = 'public.pools'::regclass and tgname = 'pools_profiel_bewaken')
            then 'BEWAKING ONTBREEKT: draai schema.sql opnieuw'
+         when to_regclass('public.pool_teams') is null
+           or not exists (select 1 from pg_proc where proname = 'poule_team_kiezen')
+           then 'TEAMS ONTBREKEN: draai schema.sql opnieuw'
          when to_regclass('storage.objects') is not null
           and (select count(*) from pg_policies
                where schemaname = 'storage' and tablename = 'objects'
