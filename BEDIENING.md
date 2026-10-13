@@ -2368,6 +2368,10 @@ draaien kan altijd.
 
 Nalopen: Storage → Buckets → `poulelogo` staat er, met "Public" aan.
 
+Vergeten? Dan verdwijnt de datum na Opslaan, en zegt het beheer in een rode
+regel "premium staat nog niet in de database". Naam, beschrijving en de rest
+zijn dan wel opgeslagen. Laad schema.sql en sla de datum opnieuw op.
+
 ### Een poule premium maken
 
 1. Iemand mailt naar contact@predicttherace.com (de poulebaas ziet onder Poule

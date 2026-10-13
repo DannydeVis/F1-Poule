@@ -10417,3 +10417,26 @@ SQL-test als eigen stap.
 aanvulling op de privacyverklaring (een logo en een sponsorregel zijn geen
 persoonsgegevens, maar betalen wel).
 
+## Premium-datum verdween na Opslaan (13 oktober)
+
+Danny zette in het beheer een datum bij "Premium tot en met", tikte Opslaan
+en de datum was weer weg. Oorzaak: `schema.sql` was na PR #216 nog niet
+opnieuw in Supabase geladen (nagekeken: `pools` had geen `premium_tot`). De
+oude `beheer_poule_bijwerken` slaat een onbekende sleutel stil over.
+
+- **Beheer**: na Opslaan met een datum kijkt het of de poule die datum
+  terugstuurt. Zo niet: een rode regel "De rest is opgeslagen, maar premium
+  staat nog niet in de database. Laad schema.sql opnieuw ..." (BEDIENING §19).
+- **Fouten bleven onzichtbaar**: `doe()` zette de fout, maar `laadAlles()`
+  wiste hem daarna weer. Nu houdt `doe()` de fout van de wijziging vast en
+  zet hem terug na het opnieuw laden. Dat gold voor elke wijziging in het
+  beheer, niet alleen premium.
+- **Datumveld**: op de iPhone was het veld breder dan de kaart. Nu
+  `appearance:none`, `min-width:0`, `max-width:100%` en de tekst links.
+  Chromium tekent dat niet na, dus de test (op 360 px binnen de kaart) is
+  alleen een vangnet.
+- **Nabootsing**: `globalThis.__zonderPremium` laat `beheer_poule_bijwerken`
+  doen als een database van voor premium.
+- **Test**: `test/beheer.test.mjs` (73). Mutanten: zonder de controle en met
+  de oude `doe()` faalt de nieuwe check.
+

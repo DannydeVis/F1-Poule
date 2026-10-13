@@ -269,6 +269,22 @@ await page.waitForSelector('.melding');
   await page.click('#pouleform button[type="submit"]');
   await page.waitForFunction(() => !document.querySelector('[data-premium-badge]'));
   check('en weer uit met een leeg veld', !(await db()).pools.find((x) => x.id === 'pool-2').premium_tot);
+  // Staat schema.sql in Supabase nog van voor premium, dan valt de datum
+  // stil weg. Het beheer zegt dan wat er moet gebeuren.
+  await page.evaluate(() => { globalThis.__zonderPremium = true; });
+  await page.fill('#pouleform [name="premium_tot"]', datum);
+  await page.click('#pouleform button[type="submit"]');
+  await page.waitForSelector('.melding.fout', { timeout: 5000 }).catch(() => {});
+  const fout = (await page.$('.melding.fout')) ? await tekst('.melding.fout') : '';
+  check('database zonder premium: een duidelijke fout in plaats van stil niets', fout.includes('schema.sql')
+    && fout.includes('premium staat nog niet') && !(await page.$('[data-premium-badge]')), fout);
+  await page.evaluate(() => { globalThis.__zonderPremium = false; });
+  // Het datumveld past in de kaart, ook op een smal scherm.
+  await page.setViewportSize({ width: 360, height: 800 });
+  const [veld, kaart] = await page.$$eval(['#pouleform [name="premium_tot"]', '#pouleform'].join(','),
+    (els) => els.map((e) => e.getBoundingClientRect().right));
+  check('het datumveld steekt niet buiten de kaart', veld <= kaart + 0.5, `${veld} > ${kaart}`);
+  await page.setViewportSize({ width: 1366, height: 900 });
 }
 await page.click('#pouledetail details summary');
 check('verwijderen kan pas als je de naam overtikt', await page.isDisabled('#pouleweg'));

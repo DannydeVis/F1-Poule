@@ -1022,8 +1022,9 @@ Eerst de gratis app goed; daarna premium in twee stappen.
    de uitnodiging. Eerst door Danny met de hand aan te zetten in het beheer,
    zonder betaling. Afdwingen in de database (regels in `schema.sql`), niet
    alleen in de app: de code is openbaar. Logo's in Supabase Storage, met een
-   maximale grootte. **Gebouwd** (13 oktober): zie BEDIENING §19. Na het
-   mergen moet `schema.sql` één keer opnieuw in Supabase.
+   maximale grootte. **Gemerged** (13 oktober, PR #216): zie BEDIENING §19.
+   `schema.sql` moet één keer opnieuw in Supabase; zolang dat niet is gebeurd
+   zegt het beheer dat bij Opslaan (PR erna).
 2. **Betalen, wereldwijd**: via een Merchant of Record (Paddle of Lemon
    Squeezy), die de btw, sales tax en GST per land en de facturen regelt.
    Stripe is goedkoper maar laat de belasting per land bij Danny. Na betaling
