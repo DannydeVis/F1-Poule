@@ -280,6 +280,33 @@ alter table public.pool_eigen_vragen  add constraint pool_eigen_vragen_uitkomst
   check (uitkomst is null or uitkomst = any(opties));
 create index if not exists pool_eigen_vragen_poule on public.pool_eigen_vragen (pool_id, race_id);
 
+-- Premium: tussenklassementen met prijzen (13 oktober). De poulebaas deelt
+-- een seizoen op in periodes ("Voorjaar": ronde 1 tot en met 8), elk met een
+-- eigen klassement en eventueel een prijs als tekst ("Kratje bier"). Geen
+-- geld: de app regelt geen inleg en geen uitbetaling. Een prijs voor de
+-- seizoenswinnaar is een periode over alle rondes. Hoogstens 10 per seizoen.
+-- Alleen via periode_opslaan() en periode_weghalen(); lezen via
+-- poule_ophalen(). Geen policy en geen grant op deze tabel.
+create table if not exists public.pool_periodes (
+  id         uuid primary key default gen_random_uuid(),
+  pool_id    uuid not null references public.pools(id) on delete cascade,
+  seizoen    int not null,
+  naam       text not null,
+  van_ronde  int not null,
+  tot_ronde  int not null,
+  prijs      text,
+  created_at timestamptz not null default now()
+);
+alter table public.pool_periodes drop constraint if exists pool_periodes_naam;
+alter table public.pool_periodes  add constraint pool_periodes_naam
+  check (char_length(btrim(naam)) between 1 and 40);
+alter table public.pool_periodes drop constraint if exists pool_periodes_rondes;
+alter table public.pool_periodes  add constraint pool_periodes_rondes
+  check (van_ronde between 1 and 40 and tot_ronde between van_ronde and 40);
+alter table public.pool_periodes drop constraint if exists pool_periodes_prijs;
+alter table public.pool_periodes  add constraint pool_periodes_prijs
+  check (prijs is null or char_length(btrim(prijs)) between 1 and 80);
+
 create table if not exists public.pool_eigen_antwoorden (
   vraag_id   uuid not null references public.pool_eigen_vragen(id) on delete cascade,
   -- De foreign key naar pool_members staat verderop (pool_eigen_antwoorden_member_fk):
@@ -1449,6 +1476,74 @@ begin
   on conflict (vraag_id, member_id) do update set keuze = excluded.keuze;
 end $$;
 
+-- ---- tussenklassementen (premium) --------------------------------
+-- Een periode zetten of aanpassen: alleen de poulebaas, alleen met premium.
+-- Een naam van 1 tot 40 tekens, rondes van 1 tot 40 met van <= tot, een prijs
+-- van hoogstens 80 tekens (leeg is geen prijs), hoogstens 10 per seizoen.
+-- p_periode leeg is een nieuwe periode.
+create or replace function public.periode_opslaan(p_pool uuid, p_periode uuid, p_seizoen int, p_naam text,
+                                                  p_van int, p_tot int, p_prijs text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_naam  text := btrim(coalesce(p_naam, ''));
+  v_prijs text := nullif(btrim(coalesce(p_prijs, '')), '');
+  v_id    uuid;
+begin
+  if not public.mag_beheren(p_pool) then
+    raise exception 'alleen de poulebaas maakt een tussenklassement';
+  end if;
+  if not exists (select 1 from public.pools where id = p_pool and premium_tot > now()) then
+    raise exception 'tussenklassementen kunnen alleen met premium';
+  end if;
+  if char_length(v_naam) not between 1 and 40 then
+    raise exception 'een tussenklassement heeft een naam van 1 tot 40 tekens';
+  end if;
+  if p_van is null or p_tot is null or p_van not between 1 and 40 or p_tot not between p_van and 40 then
+    raise exception 'kies een eerste en een laatste ronde, de eerste niet na de laatste';
+  end if;
+  if char_length(coalesce(v_prijs, '')) > 80 then
+    raise exception 'een prijs heeft hoogstens 80 tekens';
+  end if;
+  if p_periode is null then
+    if (select count(*) from public.pool_periodes where pool_id = p_pool and seizoen = p_seizoen) >= 10 then
+      raise exception 'hoogstens 10 tussenklassementen per seizoen';
+    end if;
+    insert into public.pool_periodes (pool_id, seizoen, naam, van_ronde, tot_ronde, prijs)
+    values (p_pool, p_seizoen, v_naam, p_van, p_tot, v_prijs) returning id into v_id;
+  else
+    update public.pool_periodes set naam = v_naam, van_ronde = p_van, tot_ronde = p_tot, prijs = v_prijs
+     where id = p_periode and pool_id = p_pool returning id into v_id;
+    if v_id is null then raise exception 'dat tussenklassement bestaat niet'; end if;
+  end if;
+  return v_id;
+end $$;
+
+-- Weghalen: alleen de poulebaas, ook na premium.
+create or replace function public.periode_weghalen(p_periode uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_pool uuid;
+begin
+  select pool_id into v_pool from public.pool_periodes where id = p_periode;
+  if v_pool is null then raise exception 'dat tussenklassement bestaat niet'; end if;
+  if not public.mag_beheren(v_pool) then
+    raise exception 'alleen de poulebaas haalt een tussenklassement weg';
+  end if;
+  delete from public.pool_periodes where id = p_periode;
+end $$;
+
+revoke all on function public.periode_opslaan(uuid, uuid, int, text, int, int, text) from public;
+revoke all on function public.periode_weghalen(uuid) from public;
+grant execute on function public.periode_opslaan(uuid, uuid, int, text, int, int, text) to anon, authenticated;
+grant execute on function public.periode_weghalen(uuid) to anon, authenticated;
+
 revoke all on function public.eigen_vraag_opslaan(uuid, bigint, uuid, text, text[]) from public;
 revoke all on function public.eigen_vraag_weghalen(uuid)                         from public;
 revoke all on function public.eigen_vraag_uitkomst(uuid, text)                    from public;
@@ -1555,6 +1650,11 @@ as $$
                    from public.pool_teams t, poule p where t.pool_id = p.id), '[]'::jsonb),
     -- De eigen vragen (premium), en de antwoorden erop: die van jezelf altijd,
     -- die van je medespelers pas als de race begonnen is (net als de rest).
+    -- De tussenklassementen (premium); de stand per periode rekent de app.
+    'periodes',   coalesce((select jsonb_agg(jsonb_build_object('id', x.id, 'seizoen', x.seizoen,
+                     'naam', x.naam, 'van_ronde', x.van_ronde, 'tot_ronde', x.tot_ronde, 'prijs', x.prijs)
+                     order by x.seizoen, x.van_ronde, x.tot_ronde, x.naam)
+                   from public.pool_periodes x, poule p where x.pool_id = p.id), '[]'::jsonb),
     'eigenvragen', coalesce((select jsonb_agg(jsonb_build_object('id', v.id, 'race_id', v.race_id,
                      'vraag', v.vraag, 'opties', to_jsonb(v.opties), 'uitkomst', v.uitkomst)
                      order by v.created_at, v.vraag)
@@ -1863,6 +1963,8 @@ alter table public.jokers         enable row level security;
 alter table public.push_abonnementen enable row level security;
 alter table public.pool_teams     enable row level security;
 revoke all on public.pool_teams from anon, authenticated;
+alter table public.pool_periodes         enable row level security;
+revoke all on public.pool_periodes from anon, authenticated;
 alter table public.pool_eigen_vragen     enable row level security;
 alter table public.pool_eigen_antwoorden enable row level security;
 revoke all on public.pool_eigen_vragen     from anon, authenticated;
@@ -2831,6 +2933,9 @@ select 'premium: kolommen, bewaking en logo-opslag',
          when to_regclass('public.pool_eigen_vragen') is null
            or not exists (select 1 from pg_proc where proname = 'eigen_antwoord_geven')
            then 'EIGEN VRAGEN ONTBREKEN: draai schema.sql opnieuw'
+         when to_regclass('public.pool_periodes') is null
+           or not exists (select 1 from pg_proc where proname = 'periode_opslaan')
+           then 'TUSSENKLASSEMENTEN ONTBREKEN: draai schema.sql opnieuw'
          when to_regclass('storage.objects') is not null
           and (select count(*) from pg_policies
                where schemaname = 'storage' and tablename = 'objects'

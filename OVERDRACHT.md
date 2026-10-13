@@ -10598,3 +10598,28 @@ gevangen.
 
 **Na het mergen:** schema.sql opnieuw laden in Supabase.
 
+## Premium uitbreiden, deel 3: tussenklassementen met prijzen (13 oktober)
+
+**Database** (`schema.sql`): `pool_periodes` (pool, seizoen, naam 1 tot 40,
+van_ronde en tot_ronde 1 tot 40, prijs hoogstens 80 tekens of leeg). Geen
+policy en geen grant; via `periode_opslaan` (poulebaas, premium, hoogstens 10
+per seizoen) en `periode_weghalen` (poulebaas, ook na premium).
+`poule_ophalen` geeft `periodes`. De controletabel meldt
+"TUSSENKLASSEMENTEN ONTBREKEN".
+
+**App**: `periodesBlok()` onder de stand (per periode van het bekeken seizoen:
+nog niet begonnen, bezig met de top 3 en jezelf, of afgelopen met de winnaar
+en de prijs; afgelopen is: elke race van de periode heeft een uitslag of is
+afgelast). `periodeStand()` telt `scoreWeekend()` over alleen die rondes, dus
+met eigen vragen en jokers. `periodesBeheer()` onder Poule voor de poulebaas
+(naam, van, tot en met, prijs). De uitleg voor een poulebaas zonder premium
+noemt nu teams, eigen vragen en tussenklassementen. 18 teksten in zeven talen.
+
+**Tests.** `test/periodes.test.sql` (17, eigen CI-stap) en
+`test/periodes.test.mjs` (15). Mutanten: vier in de app (alle rondes in
+plaats van de periode, afgelopen na één race, één winnaar bij gelijkspel,
+zonder premium) en drie in de database (zonder premium, meer dan 10,
+weghalen door een speler), allemaal gevangen.
+
+**Na het mergen:** schema.sql opnieuw laden in Supabase.
+

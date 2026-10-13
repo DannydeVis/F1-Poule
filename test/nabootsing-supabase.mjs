@@ -822,6 +822,8 @@ const functies = {
         .map(({ race_id, member_id }) => ({ race_id, member_id })),
       teams: (store.pool_teams ?? []).filter((t) => gelijk(t.pool_id, poule.id))
         .map(({ id, naam }) => ({ id, naam })),
+      periodes: (store.pool_periodes ?? []).filter((x) => gelijk(x.pool_id, poule.id))
+        .map(({ id, seizoen, naam, van_ronde, tot_ronde, prijs }) => ({ id, seizoen, naam, van_ronde, tot_ronde, prijs: prijs ?? null })),
       eigenvragen: (store.pool_eigen_vragen ?? []).filter((v) => gelijk(v.pool_id, poule.id))
         .map(({ id, race_id, vraag, opties, uitkomst }) => ({ id, race_id, vraag, opties: [...opties], uitkomst: uitkomst ?? null })),
       eigenantwoorden: (store.pool_eigen_antwoorden ?? []).filter((a) => {
@@ -829,6 +831,47 @@ const functies = {
         return v && gelijk(v.pool_id, poule.id) && (!eigenVraagOpen(v.race_id) || magVoorSpeler(a.member_id));
       }).map(({ vraag_id, member_id, keuze }) => ({ vraag_id, member_id, keuze })),
     }, error: null };
+  },
+
+  // Tussenklassementen (premium), met de regels van schema.sql (test/periodes.test.sql).
+  periode_opslaan({ p_pool, p_periode = null, p_seizoen, p_naam, p_van, p_tot, p_prijs } = {}) {
+    const fout = (message) => ({ data: null, error: { code: 'P0001', message } });
+    if (!magBeheren(p_pool)) return fout('alleen de poulebaas maakt een tussenklassement');
+    const poule = store.pools.find((p) => gelijk(p.id, p_pool));
+    if (!(poule?.premium_tot && Date.parse(poule.premium_tot) > Date.now())) return fout('tussenklassementen kunnen alleen met premium');
+    const naam = String(p_naam ?? '').trim();
+    if (naam.length < 1 || naam.length > 40) return fout('een tussenklassement heeft een naam van 1 tot 40 tekens');
+    const van = Number(p_van), tot = Number(p_tot);
+    if (!Number.isInteger(van) || !Number.isInteger(tot) || van < 1 || van > 40 || tot < van || tot > 40) {
+      return fout('kies een eerste en een laatste ronde, de eerste niet na de laatste');
+    }
+    const prijs = String(p_prijs ?? '').trim() || null;
+    if (prijs && prijs.length > 80) return fout('een prijs heeft hoogstens 80 tekens');
+    store.pool_periodes ??= [];
+    if (!p_periode) {
+      if (store.pool_periodes.filter((x) => gelijk(x.pool_id, p_pool) && Number(x.seizoen) === Number(p_seizoen)).length >= 10) {
+        return fout('hoogstens 10 tussenklassementen per seizoen');
+      }
+      const x = { id: `periode-${store.pool_periodes.length + 1}-${Date.now()}`, pool_id: p_pool, seizoen: Number(p_seizoen),
+        naam, van_ronde: van, tot_ronde: tot, prijs };
+      store.pool_periodes.push(x);
+      bewaren();
+      return { data: x.id, error: null };
+    }
+    const x = store.pool_periodes.find((y) => gelijk(y.id, p_periode) && gelijk(y.pool_id, p_pool));
+    if (!x) return fout('dat tussenklassement bestaat niet');
+    Object.assign(x, { naam, van_ronde: van, tot_ronde: tot, prijs });
+    bewaren();
+    return { data: x.id, error: null };
+  },
+
+  periode_weghalen({ p_periode } = {}) {
+    const x = (store.pool_periodes ?? []).find((y) => gelijk(y.id, p_periode));
+    if (!x) return { data: null, error: { code: 'P0001', message: 'dat tussenklassement bestaat niet' } };
+    if (!magBeheren(x.pool_id)) return { data: null, error: { code: 'P0001', message: 'alleen de poulebaas haalt een tussenklassement weg' } };
+    store.pool_periodes = store.pool_periodes.filter((y) => y !== x);
+    bewaren();
+    return { data: null, error: null };
   },
 
   // Eigen vragen (premium), met de regels van schema.sql (test/eigen-vragen.test.sql).

@@ -389,6 +389,15 @@
   .merk .blok.metlogo{display:none}
   .sponsorbalk{padding:8px 16px;border-bottom:1px solid var(--lijn);background:var(--paneel)}
   .teamstand{display:flex;flex-direction:column;gap:8px}
+  .periodes{display:flex;flex-direction:column;gap:12px}
+  .periode{display:flex;flex-direction:column;gap:8px}
+  .periodekop{display:flex;align-items:baseline;gap:8px}
+  .periodekop b{flex:1;min-width:0}
+  .periodewinnaar{margin:0;font-weight:600}
+  .periodeform{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--lijn);border-radius:12px}
+  .periodekeuze{display:flex;gap:8px}
+  .periodekeuze label{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .periodeform .knop{width:auto}
   .eigenvragen{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--lijn);
     border-radius:14px;background:var(--paneel)}
   .eigenvraag{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--lijn)}
@@ -3960,8 +3969,6 @@ const ENGELS = Object.fromEntries([
    'who is in which team'],
   ['team van {naam}',
    'team of {naam}'],
-  ['Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.',
-   'A league for your company, club or society? With premium it gets teams that play against each other, its own logo, its own colour and a sponsor line with a link. Email {adres} to turn it on.'],
   ['vragen van de poulebaas',
    'questions from the owner'],
   ['{punten} punten per goed antwoord, tot de start van de race',
@@ -3990,6 +3997,38 @@ const ENGELS = Object.fromEntries([
    'outcome of "{vraag}"'],
   ['Zet een eigen vraag bij dit weekend, met 2 tot 6 antwoorden om uit te kiezen.',
    'Add your own question to this weekend, with 2 to 6 answers to choose from.'],
+  ['Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met prijzen, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.',
+   'A league for your company, club or society? With premium it gets teams that play against each other, its own questions every weekend, interim standings with prizes, its own logo, its own colour and a sponsor line with a link. Email {adres} to turn it on.'],
+  ['tussenklassementen',
+   'interim standings'],
+  ['ronde {van} tot en met {tot}',
+   'round {van} to {tot}'],
+  ['prijs: {prijs}',
+   'prize: {prijs}'],
+  ['{naam} wint',
+   '{naam} wins'],
+  ['bezig',
+   'in progress'],
+  ['begint in ronde {ronde}',
+   'starts in round {ronde}'],
+  ['Deel het seizoen op in periodes met een eigen winnaar, en zet er een prijs bij als je wilt. Geld regelt de app niet.',
+   'Split the season into periods with their own winner, and add a prize if you like. The app does not handle money.'],
+  ['Voorjaar',
+   'Spring'],
+  ['naam van het tussenklassement',
+   'name of the interim standings'],
+  ['prijs (mag leeg)',
+   'prize (optional)'],
+  ['Kratje bier',
+   'A crate of beer'],
+  ['van',
+   'from'],
+  ['tot en met',
+   'to'],
+  ['Tussenklassement toevoegen',
+   'Add interim standings'],
+  ['Tussenklassement {naam} weghalen',
+   'Remove interim standings {naam}'],
   ['mogelijk gemaakt door {sponsor}',
    'brought to you by {sponsor}'],
   ['eigen logo en kleur',
@@ -6233,6 +6272,7 @@ async function laad() {
   S.poulevragen = inhoud.data.poulevragen ?? [];
   S.jokers = inhoud.data.jokers ?? [];
   S.teams = inhoud.data.teams ?? [];
+  S.periodes = inhoud.data.periodes ?? [];
   S.eigenVragen = inhoud.data.eigenvragen ?? [];
   S.eigenAntwoorden = inhoud.data.eigenantwoorden ?? [];
   S.geladenOp = Date.now();
@@ -7173,6 +7213,7 @@ function toonApp() {
   knoopOmschrijving();
   knoopProfiel();
   knoopTeams();
+  knoopPeriodes();
   knoopOpenbaar();
   knoopAutofill();
   knoopJokers();
@@ -7585,6 +7626,7 @@ function standPagina(rijen) {
     ${rijen.length && gereden() ? `<button class="knop spook" data-deel-stand>${
       DEELICOON}${T('Deel de stand')}</button>` : ''}
     ${teamStand(rijen)}
+    ${periodesBlok()}
     ${seizoenslaagBlok()}
     ${weekendRanglijst()}
     ${seizoensRecords()}
@@ -8036,6 +8078,7 @@ function poulePagina(rijen) {
     ${omschrijvingBlok()}
     ${profielBlok()}
     ${teamsBlok()}
+    ${periodesBeheer()}
     ${openbaarBlok()}
     ${autofillBlok()}
     ${jokersBlok()}
@@ -9008,9 +9051,9 @@ function profielBlok() {
     <div class="scheiding"></div>
     <span class="label">${T('eigen logo en kleur')}</span>
     <p class="zacht" style="margin:0" data-premium-uitleg>${T('Een poule voor je bedrijf, club of '
-      + 'vereniging? Met premium krijgt hij teams die tegen elkaar spelen, een eigen logo, een eigen '
-      + 'kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.',
-      { adres: mail })}</p>`;
+      + 'vereniging? Met premium krijgt hij teams die tegen elkaar spelen, eigen vragen per weekend, '
+      + 'tussenklassementen met prijzen, een eigen logo, een eigen kleur en een regel over de sponsor met '
+      + 'een link. Mail {adres} om het aan te zetten.', { adres: mail })}</p>`;
   }
   const P = S.profiel ?? {};
   const kleur = P.kleur ?? S.poule.merk_kleur ?? '#ee4d33';
@@ -9181,6 +9224,125 @@ function knoopTeams() {
       if (await teamActie(() => db.rpc('poule_team_weghalen', { p_team: id })) === undefined) return;
       S.teams = S.teams.filter(t => !zelfde(t.id, id));
       for (const l of S.leden) if (zelfde(l.team_id, id)) l.team_id = null;
+      render();
+    };
+  });
+}
+
+// ---- tussenklassementen (premium) --------------------------------
+// De poulebaas deelt een seizoen op in periodes met een eigen klassement en
+// eventueel een prijs als tekst (periodesBeheer, onder Poule). Onder de stand
+// staat per periode wie er leidt, of wie er won (periodesBlok). De punten zijn
+// dezelfde weekendpunten als in de stand, alleen van de rondes van die
+// periode. Wie wat mag staat in schema.sql (periode_opslaan, periode_weghalen).
+const periodesVan = (jaar) => premiumActief()
+  ? (S.periodes ?? []).filter(x => zelfde(x.seizoen, jaar)) : [];
+function periodeStand(x) {
+  const races = S.races.filter(r => r.round >= x.van_ronde && r.round <= x.tot_ronde);
+  const rijen = S.leden.map(l => ({
+    id: l.member_id, naam: l.display_name, mij: zelfde(l.member_id, S.ik.id),
+    punten: races.filter(heeftUitslag).reduce((n, r) => n + scoreWeekend(vindPred(r.id, l.member_id), r), 0),
+  })).sort((a, b) => b.punten - a.punten || String(a.naam).localeCompare(String(b.naam)));
+  const gestart = races.some(heeftUitslag);
+  const klaar = races.length > 0 && races.every(r => heeftUitslag(r) || afgelastEnLeeg(r));
+  return { rijen, gestart, klaar };
+}
+
+function periodesBlok() {
+  const lijst = periodesVan(seizoen());
+  if (!lijst.length) return '';
+  return `
+    <div class="periodes" data-periodes>
+      <span class="label">${T('tussenklassementen')}</span>
+      ${lijst.map(x => {
+        const { rijen, gestart, klaar } = periodeStand(x);
+        const top = rijen[0]?.punten ?? 0;
+        const winnaars = klaar && top > 0 ? rijen.filter(r => r.punten === top) : [];
+        const toon = rijen.slice(0, 3);
+        const ik = rijen.find(r => r.mij);
+        if (ik && !toon.includes(ik)) toon.push(ik);
+        return `<div class="periode" data-periode="${esc(x.id)}">
+          <div class="periodekop"><b>${esc(x.naam)}</b>
+            <span class="mono zacht">${!gestart ? T('begint in ronde {ronde}', { ronde: x.van_ronde })
+              : klaar ? T('afgelopen') : T('bezig')}</span></div>
+          <p class="zacht klein" style="margin:0">${T('ronde {van} tot en met {tot}', { van: x.van_ronde, tot: x.tot_ronde })}${
+            x.prijs ? ` · ${T('prijs: {prijs}', { prijs: esc(x.prijs) })}` : ''}</p>
+          ${winnaars.length ? `<p class="periodewinnaar" data-periodewinnaar>🏆 ${
+            T('{naam} wint', { naam: esc(winnaars.map(w => w.naam).join(', ')) })}${x.prijs ? `: ${esc(x.prijs)}` : ''}</p>` : ''}
+          ${gestart ? `<div class="groep">${toon.map(r => `<div class="strij ${r.mij ? 'zelf' : ''}">
+            <span class="p">${plekVan(rijen, r.id)}</span>
+            <span class="nm">${esc(r.naam)}</span>
+            <span class="t">${r.punten}</span>
+          </div>`).join('')}</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// Onder Poule, voor de poulebaas.
+function periodesBeheer() {
+  if (!magBeheren() || !premiumActief()) return '';
+  const jaar = pouleSeizoen();
+  const races = S.alleRaces.filter(r => zelfde(r.season, jaar)).sort((a, b) => a.round - b.round);
+  const rondes = (gekozen) => races.map(r => `<option value="${r.round}"${Number(gekozen) === r.round ? ' selected' : ''}>${
+    r.round}. ${esc(r.name)}</option>`).join('');
+  const regel = (x) => `<div class="periodeform" ${x ? `data-periodeform="${esc(x.id)}"` : 'id="nieuweperiode"'}>
+      <input class="veld" data-p-naam maxlength="40" autocomplete="off" value="${esc(x?.naam ?? '')}"
+        placeholder="${T('Voorjaar')}" aria-label="${T('naam van het tussenklassement')}">
+      <div class="periodekeuze">
+        <label><span class="label">${T('van')}</span><select class="veld" data-p-van>${rondes(x?.van_ronde ?? races[0]?.round)}</select></label>
+        <label><span class="label">${T('tot en met')}</span><select class="veld" data-p-tot>${rondes(x?.tot_ronde ?? races.at(-1)?.round)}</select></label>
+      </div>
+      <input class="veld" data-p-prijs maxlength="80" autocomplete="off" value="${esc(x?.prijs ?? '')}"
+        placeholder="${T('Kratje bier')}" aria-label="${T('prijs (mag leeg)')}">
+      <div style="display:flex;gap:8px">
+        <button class="knop klein" type="button" data-p-bewaar>${x ? T('Opslaan') : T('Tussenklassement toevoegen')}</button>
+        ${x ? `<button class="knop klein" type="button" data-p-weg aria-label="${
+          T('Tussenklassement {naam} weghalen', { naam: esc(x.naam) })}">×</button>` : ''}
+      </div>
+    </div>`;
+  const lijst = (S.periodes ?? []).filter(x => zelfde(x.seizoen, jaar));
+  return `
+    <div class="scheiding"></div>
+    <span class="label">${T('tussenklassementen')}</span>
+    <p class="zacht" style="margin:0">${T('Deel het seizoen op in periodes met een eigen winnaar, en zet er '
+      + 'een prijs bij als je wilt. Geld regelt de app niet.')}</p>
+    ${lijst.map(regel).join('')}
+    ${lijst.length < 10 && races.length ? regel(null) : ''}
+    <p class="err" id="periodefout">${esc(S.periodeFout ?? '')}</p>`;
+}
+
+function knoopPeriodes() {
+  const jaar = pouleSeizoen();
+  const actie = async (werk) => {
+    S.periodeFout = '';
+    try {
+      if (!DEMO) {
+        const { data, error } = await werk();
+        if (error) throw new Error(uitleg(error));
+        return data;
+      }
+    } catch (e) { S.periodeFout = e.message; render(); return undefined; }
+    return null;
+  };
+  app.querySelectorAll('[data-periodeform], #nieuweperiode').forEach(f => {
+    const id = f.dataset.periodeform ?? null;
+    const lees = () => ({ naam: schoon(f.querySelector('[data-p-naam]').value),
+      van: Number(f.querySelector('[data-p-van]').value), tot: Number(f.querySelector('[data-p-tot]').value),
+      prijs: schoon(f.querySelector('[data-p-prijs]').value) || null });
+    f.querySelector('[data-p-bewaar]').onclick = async () => {
+      const w = lees();
+      const nieuw = await actie(() => db.rpc('periode_opslaan', { p_pool: S.poule.id, p_periode: id, p_seizoen: jaar,
+        p_naam: w.naam, p_van: w.van, p_tot: w.tot, p_prijs: w.prijs }));
+      if (nieuw === undefined) return;
+      const rij = { id: id ?? nieuw ?? `demo-${Date.now()}`, seizoen: jaar, naam: w.naam, van_ronde: w.van, tot_ronde: w.tot, prijs: w.prijs };
+      S.periodes = id ? S.periodes.map(x => (zelfde(x.id, id) ? rij : x)) : [...(S.periodes ?? []), rij];
+      render();
+    };
+    const weg = f.querySelector('[data-p-weg]');
+    if (weg) weg.onclick = async () => {
+      if (await actie(() => db.rpc('periode_weghalen', { p_periode: id })) === undefined) return;
+      S.periodes = S.periodes.filter(x => !zelfde(x.id, id));
       render();
     };
   });
