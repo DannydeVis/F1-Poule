@@ -3675,6 +3675,33 @@ const ENGELS = Object.fromEntries([
   ['Overslaan', 'Skip'],
   ['Tik rechts voor verder, links voor terug. Vasthouden pauzeert.',
    'Tap right for next, left for back. Hold to pause.'],
+  // Het seizoen als verhaal.
+  ['Bekijk je seizoen {jaar}', 'See your {jaar} season'],
+  ['jouw seizoen', 'your season'],
+  ['Het seizoen zit erop. Je punten, je beste weekend en je coureur op een rij, en een plaatje om te delen.',
+   'The season is over. Your points, your best weekend and your driver in a row, and an image to share.'],
+  ['{jaar} zit erop', '{jaar} is a wrap'],
+  ['Zo ging jouw seizoen.', 'This was your season.'],
+  ['punten, uit {n} van de {totaal} weekenden', 'points, from {n} of the {totaal} weekends'],
+  ['gemiddeld {n} per weekend', '{n} per weekend on average'],
+  ['eindstand', 'final standings'],
+  ['Kampioen!', 'Champion!'],
+  ['{plek} van {n}', '{plek} of {n}'],
+  ['jouw beste weekend', 'your best weekend'],
+  ['jouw coureur', 'your driver'],
+  ['{n} keer zette je deze coureur precies op de goede plek.',
+   '{n} times you put this driver in exactly the right spot.'],
+  ['weekenden gewonnen', 'weekends won'],
+  ['weekendzeges', 'weekend wins'],
+  ['keer P1 goed', 'times P1 right'],
+  ['weekenden ingeleverd', 'weekends submitted'],
+  ['in cijfers', 'in numbers'],
+  ['Tot volgend seizoen', 'See you next season'],
+  ['Deel je seizoen', 'Share your season'],
+  ['Jouw seizoen {jaar}', 'Your {jaar} season'],
+  ['Mijn seizoen {jaar} in {poule}', 'My {jaar} season in {poule}'],
+  ['{plek} van {n}, {punten} punten', '{plek} of {n}, {punten} points'],
+  ['Jouw seizoen {jaar} in {poule}: {n} punten', 'Your {jaar} season in {poule}: {n} points'],
   ['Speel het weekend af', 'Replay the weekend'],
   ['het weekend afspelen', 'replay the weekend'],
   ['Als de uitslag binnen is, speelt de app je weekend één keer af: je punten, wie er won '
@@ -7231,6 +7258,7 @@ function toonApp() {
   knoopDelen();
   const standKnop = app.querySelector('[data-deel-stand]');
   if (standKnop) standKnop.onclick = () => openDeelvenster(standDelen(), standKnop);
+  app.querySelectorAll('[data-seizoenverhaal]').forEach(knop => knop.onclick = speelSeizoen);
   // Of meldingen aanstaan is een asynchrone vraag aan de browser. Eén keer
   // stellen zodra het profielscherm open is, en dan opnieuw tekenen met het
   // antwoord. S.push blijft daarna gevuld, dus dit loopt niet rond.
@@ -7625,6 +7653,7 @@ function standPagina(rijen) {
       : `<p class="zacht" style="margin:0">${T('Nog niemand meegedaan.')}</p>`}
     ${rijen.length && gereden() ? `<button class="knop spook" data-deel-stand>${
       DEELICOON}${T('Deel de stand')}</button>` : ''}
+    ${seizoenVerhaalBlok()}
     ${teamStand(rijen)}
     ${periodesBlok()}
     ${seizoenslaagBlok()}
@@ -9583,6 +9612,7 @@ function seizoenRondBlok() {
           + 'wat erbij hoort.', vars)
         : T('Alle races van {jaar} zijn gereden. Zodra de poulebaas doorschuift naar '
           + '{volgend} staat hier de nieuwe kalender.', vars)}</p>
+    ${seizoenVerhaalKnop().replace('knop primair', 'knop spook')}
     ${nu && magBeheren() ? `<button class="knop primair" id="doorschuiven">${
       T('Begin aan {jaar}', { jaar: vars.volgend })}</button>` : ''}
   </div>`;
@@ -11459,7 +11489,14 @@ function storyCijfers(d, y, cijfers) {
     const kx = rand + i * kolom;
     d.x.fillStyle = K.lijn; d.x.fillRect(kx, y, kolom - 28, 3);
     schrijf(String(c.getal), kx, y + 96, { font: `700 88px ${L.cond}`, kleur: c.kleur ?? K.ink });
-    label(c.wat, kx, y + 138, K.ink3);
+    // Een label dat niet in zijn kolom past wordt ingekort, anders loopt het
+    // over het volgende heen (een lange vertaling). Twee pixels per teken
+    // voor de letterafstand van label().
+    d.x.font = `400 24px ${L.mono}`;
+    const past = (t) => d.x.measureText(t).width + 2 * t.length <= kolom - 28;
+    let wat = String(c.wat).toUpperCase();
+    if (!past(wat)) { while (wat.length > 1 && !past(`${wat}…`)) wat = wat.slice(0, -1); wat = `${wat.trimEnd()}…`; }
+    label(wat, kx, y + 138, K.ink3);
   });
   return y + 138;
 }
@@ -11684,6 +11721,7 @@ async function openDeelvenster(stuk, knop) {
   let vorm = 'bericht';
   if (stuk.story) {
     try { if (localStorage.getItem(DEELVORM) === 'story') vorm = 'story'; } catch { /* dan een bericht */ }
+    if (stuk.voorkeur) vorm = stuk.voorkeur;
   }
   const maak = async (v) => {
     try { return await naarBlob(await (v === 'story' ? stuk.story() : stuk.teken())); } catch { return null; }
@@ -11876,6 +11914,7 @@ function kijkNaarVerhaal() {
   if (document.querySelector('.verhaal, [role="dialog"]')) return;
   const r = verhaalKandidaat();
   if (r) speelVerhaal(r);
+  else if (seizoenKandidaat()) speelSeizoen();
 }
 
 const vertraging = (ms) => `style="animation-delay:${Math.round(ms)}ms"`;
@@ -11999,7 +12038,27 @@ function speelVerhaal(race) {
   // Gezien zodra hij opent, niet pas als hij af is: wie hem wegtikt wil hem
   // niet bij de volgende keer openen alsnog krijgen.
   if (S.poule && S.ik) schrijf(verhaalSleutel(S.poule.id, S.ik.id), String(race.id));
-  const dias = verhaalDias(race);
+  speelReeks({
+    dias: verhaalDias(race),
+    label: T('{race}: jouw weekend', { race: race.name }),
+    naSluiten: () => openRace(race.id, 'race'),
+    knoop: (dia, sluit) => {
+      const uitslag = dia.querySelector('[data-verhaal-uitslag]');
+      if (uitslag) { uitslag.onclick = () => sluit(true); uitslag.focus(); }
+      const deel = dia.querySelector('[data-verhaal-deel]');
+      if (deel) deel.onclick = () => {
+        sluit(true);
+        openDeelvenster(uitslagDelen(race), app.querySelector(`[data-deel="${CSS.escape(String(race.id))}"]`));
+      };
+    },
+  });
+}
+
+// De schermen afspelen: de balkjes, tikken, vasthouden, de pijltjes en
+// Escape. Voor het weekend en voor het seizoen. `naSluiten` loopt bij
+// Overslaan, Escape en een knop die sluit(true) roept; `knoop` hangt de
+// knoppen van een scherm op.
+function speelReeks({ dias, label, naSluiten, knoop: knoopDia }) {
   const rustig = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const el = document.createElement('div');
@@ -12007,7 +12066,7 @@ function speelVerhaal(race) {
   el.tabIndex = -1;
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
-  el.setAttribute('aria-label', T('{race}: jouw weekend', { race: race.name }));
+  el.setAttribute('aria-label', label);
   el.innerHTML = `
     <div class="verhaal-in">
       <div class="verhaal-balkjes" aria-hidden="true">${dias.map(() => '<span><i></i></span>').join('')}</div>
@@ -12046,22 +12105,16 @@ function speelVerhaal(race) {
     balkjes[nr].style.width = `${Math.min(100, (verstreken / duur) * 100)}%`;
     if (verstreken >= duur) toon(nr + 1);
   };
-  const sluit = (naarUitslag) => {
+  const sluit = (verder) => {
     cancelAnimationFrame(frame);
     window.removeEventListener('keydown', toets, true);
     el.remove();
-    if (naarUitslag) openRace(race.id, 'race');
+    if (verder) naSluiten?.();
   };
   const knoop = () => {
-    const uitslag = dia.querySelector('[data-verhaal-uitslag]');
-    if (uitslag) { uitslag.onclick = () => sluit(true); uitslag.focus(); }
     const opnieuw = dia.querySelector('[data-verhaal-opnieuw]');
     if (opnieuw) opnieuw.onclick = () => toon(0);
-    const deel = dia.querySelector('[data-verhaal-deel]');
-    if (deel) deel.onclick = () => {
-      sluit(true);
-      openDeelvenster(uitslagDelen(race), app.querySelector(`[data-deel="${CSS.escape(String(race.id))}"]`));
-    };
+    knoopDia?.(dia, sluit);
   };
   el.querySelector('[data-verhaal-sla]').onclick = () => sluit(true);
 
@@ -12100,6 +12153,250 @@ function speelVerhaal(race) {
   toon(0);
   frame = requestAnimationFrame(tik);
 }
+
+// ============================================================
+//  Het seizoen als verhaal
+// ============================================================
+// Aan het eind van het jaar, zoals Spotify Wrapped: je punten, je eindplek,
+// je beste weekend, de coureur die je het vaakst precies goed had, en een
+// paar cijfers. Gratis, voor iedereen die meespeelde. Dezelfde schermen als
+// het weekend (speelReeks), en een staand deelplaatje "jouw seizoen".
+//
+// Hij speelt één keer vanzelf af, op het overzicht, zodra het seizoen dat de
+// poule speelt erop zit (elke race een uitslag of afgelast) en de laatste
+// race niet langer dan SEIZOEN_RECENT geleden is. Daarna staat er een knop
+// onder de stand, en onder "seizoen rond" op het overzicht. Ook voor een
+// afgelopen jaar dat je via de keuzelijst bekijkt. Uitzetten gaat met
+// dezelfde instelling als het weekend.
+const SEIZOEN_RECENT = 60 * 864e5;
+const seizoenSleutel = (poolId, memberId) => `poule:${poolId}:${memberId}:seizoenverhaal`;
+
+// Wat er in het overzicht staat, voor één speler, over het bekeken seizoen.
+// Null als die geen enkel gereden weekend inleverde: dan is er niets te
+// vertellen.
+function seizoenOverzicht(id = S.ik?.id) {
+  if (!id) return null;
+  const gescoord = S.races.filter(heeftUitslag).sort((a, b) => a.round - b.round);
+  const meegedaan = gescoord.filter(r => heeftVoorspeld(r, id));
+  if (!meegedaan.length) return null;
+  const samen = S.leden.length > 1;
+  const rijen = standRijen();
+  const ik = rijen.find(r => zelfde(r.id, id));
+
+  // Het beste weekend: de meeste punten, bij gelijkspel het eerste.
+  let beste = null;
+  for (const r of meegedaan) {
+    const punten = scoreWeekend(vindPred(r.id, id), r);
+    if (!beste || punten > beste.punten) beste = { race: r, punten, joker: heeftJoker(r.id, id) };
+  }
+
+  // Precies goed en P1 goed, over alle top 10's; per coureur geteld.
+  let exact = 0, p1 = 0;
+  const perCoureur = new Map();
+  for (const { voorspeld, werkelijk } of mijnSessies(id)) {
+    if (voorspeld[0] != null && zelfde(voorspeld[0], werkelijk[0])) p1++;
+    voorspeld.forEach((nr, i) => {
+      if (nr == null || !zelfde(nr, werkelijk[i])) return;
+      exact++;
+      perCoureur.set(String(nr), (perCoureur.get(String(nr)) ?? 0) + 1);
+    });
+  }
+  // De coureur die je het vaakst precies goed had; bij gelijkspel op naam,
+  // zodat het elke keer dezelfde is.
+  const coureur = [...perCoureur.entries()]
+    .map(([nr, keer]) => ({ ...coureurOveral(nr), nr, keer }))
+    .sort((a, b) => b.keer - a.keer || String(a.naam).localeCompare(String(b.naam)))[0] ?? null;
+
+  const weekendpunten = meegedaan.reduce((n, r) => n + scoreWeekend(vindPred(r.id, id), r), 0);
+  return {
+    jaar: S.races[0]?.season ?? seizoen(),
+    samen,
+    punten: ik?.punten ?? 0,
+    plek: samen ? plekVan(rijen, id) : 0,
+    spelers: rijen.length,
+    meegedaan: meegedaan.length,
+    weekenden: gescoord.length,
+    gemiddeld: weekendpunten / meegedaan.length,
+    beste,
+    exact,
+    p1,
+    coureur,
+    zeges: samen ? gescoord.filter(r => weekendWinnaars(r).some(w => zelfde(w.id, id))).length : 0,
+  };
+}
+
+// Het blok onder de stand, en de knop onder "seizoen rond".
+const seizoenVerhaalKnop = () => seizoenKlaar() && seizoenOverzicht()
+  ? `<button class="knop primair" data-seizoenverhaal>${T('Bekijk je seizoen {jaar}', { jaar: seizoen() })}</button>`
+  : '';
+function seizoenVerhaalBlok() {
+  const knop = seizoenVerhaalKnop();
+  if (!knop) return '';
+  return `<div class="scheiding"></div>
+    <span class="label">${T('jouw seizoen')}</span>
+    <p class="zacht" style="margin:0">${T('Het seizoen zit erop. Je punten, je beste weekend en je coureur op een rij, en een plaatje om te delen.')}</p>
+    ${knop}`;
+}
+
+function seizoenKandidaat(nu = Date.now()) {
+  if (!S.poule || !S.ik || !verhaalAan()) return false;
+  if (seizoen() !== pouleSeizoen() || !seizoenKlaar() || !seizoenOverzicht()) return false;
+  const laatste = Math.max(...S.races.map(r => Date.parse(r.deadline_race)).filter(Number.isFinite));
+  if (!(nu - laatste < SEIZOEN_RECENT)) return false;
+  return !zelfde(lees(seizoenSleutel(S.poule.id, S.ik.id)), seizoen());
+}
+
+function seizoenDias() {
+  const o = seizoenOverzicht();
+  const dias = [];
+  const poule = esc(S.poule?.name ?? '');
+
+  dias.push({ soort: 'start', duur: 4200, html: `
+    <div class="verhaal-lampen" aria-hidden="true">${[0, 1, 2, 3, 4].map(i =>
+      `<span style="--i:${i}"></span>`).join('')}</div>
+    <span class="verhaal-label vh-op" ${vertraging(2100)}>${T('seizoen {jaar}', { jaar: o.jaar })} · ${poule}</span>
+    <h2 class="verhaal-groot vh-op" ${vertraging(2200)}>${T('{jaar} zit erop', { jaar: o.jaar })}</h2>
+    <p class="verhaal-zin vh-op" ${vertraging(2400)}>${T('Zo ging jouw seizoen.')}</p>` });
+
+  dias.push({ soort: 'punten', duur: 4800, html: `
+    <span class="verhaal-label">${T('jouw seizoen')}</span>
+    <b class="verhaal-getal" data-tel="${o.punten}">${o.punten}</b>
+    <p class="verhaal-zin">${T('punten, uit {n} van de {totaal} weekenden', { n: o.meegedaan, totaal: o.weekenden })}</p>
+    <p class="verhaal-zin vh-op" ${vertraging(900)}>${T('gemiddeld {n} per weekend', { n: komma(o.gemiddeld) })}</p>` });
+
+  if (o.samen) {
+    const rijen = standRijen();
+    const plekken = gedeeldePlekken(rijen);
+    let toon = rijen.map((r, i) => ({ ...r, plek: plekken[i] }));
+    const mijn = toon.findIndex(r => r.mij);
+    if (toon.length > 6) toon = mijn >= 5 ? [...toon.slice(0, 5), toon[mijn]] : toon.slice(0, 6);
+    dias.push({ soort: 'eindstand', duur: 5600, html: `
+      <span class="verhaal-label">${T('eindstand')}</span>
+      <h2 class="verhaal-kop vh-op">${o.plek === 1 ? T('Kampioen!') : T('{plek} van {n}', { plek: rang(o.plek), n: o.spelers })}</h2>
+      <ol class="verhaal-lijst">${toon.map((r, i) => `
+        <li class="vh-op${r.mij ? ' mij' : ''}${r.plek === 1 ? ' winnaar' : ''}" ${vertraging(400 + i * 120)}>
+          <span class="p">${r.plek}</span><span class="nm">${esc(r.naam)}</span><b>${r.punten}</b></li>`).join('')}
+      </ol>` });
+  }
+
+  dias.push({ soort: 'beste', duur: 4800, html: `
+    <span class="verhaal-label">${T('jouw beste weekend')}</span>
+    <b class="verhaal-getal" data-tel="${o.beste.punten}">${o.beste.punten}</b>
+    <h2 class="verhaal-kop vh-op" ${vertraging(500)}>${esc(o.beste.race.name)}</h2>
+    <p class="verhaal-zin vh-op" ${vertraging(800)}>${T('ronde {n}', { n: o.beste.race.round })}${
+      o.beste.joker ? `, ${T('met je joker: alles dubbel')}` : ''}</p>` });
+
+  if (o.coureur) dias.push({ soort: 'coureur', duur: 4800, html: `
+    <span class="verhaal-label">${T('jouw coureur')}</span>
+    <h2 class="verhaal-groot vh-op" style="border-left:8px solid ${esc(o.coureur.kleur || 'var(--accent)')};padding-left:14px">${
+      esc(o.coureur.naam)}</h2>
+    <p class="verhaal-zin vh-op" ${vertraging(500)}>${T('{n} keer zette je deze coureur precies op de goede plek.', { n: o.coureur.keer })}</p>` });
+
+  const cijfers = [
+    ...(o.samen ? [[T('weekenden gewonnen'), o.zeges]] : []),
+    [T('precies goed'), o.exact],
+    [T('keer P1 goed'), o.p1],
+    [T('weekenden ingeleverd'), `${o.meegedaan}/${o.weekenden}`],
+  ];
+  dias.push({ soort: 'cijfers', duur: 5200, html: `
+    <span class="verhaal-label">${T('in cijfers')}</span>
+    <ol class="verhaal-lijst">${cijfers.map(([wat, n], i) => `
+      <li class="vh-op" ${vertraging(300 + i * 160)}><span class="nm">${wat}</span><b>${n}</b></li>`).join('')}
+    </ol>` });
+
+  dias.push({ soort: 'einde', duur: 0, html: `
+    <span class="verhaal-label">${T('seizoen {jaar}', { jaar: o.jaar })} · ${poule}</span>
+    <h2 class="verhaal-groot">${T('Tot volgend seizoen')}</h2>
+    <div class="verhaal-acties">
+      <button class="knop primair" data-verhaal-seizoendeel>${DEELICOON}${T('Deel je seizoen')}</button>
+      <button class="knop spook" data-verhaal-klaar>${T('Sluiten')}</button>
+      <button class="knop klein" data-verhaal-opnieuw>${T('Nog een keer')}</button>
+    </div>` });
+  return dias;
+}
+
+function speelSeizoen() {
+  if (document.querySelector('.verhaal') || !seizoenOverzicht()) return;
+  if (S.poule && S.ik) schrijf(seizoenSleutel(S.poule.id, S.ik.id), String(seizoen()));
+  speelReeks({
+    dias: seizoenDias(),
+    label: T('Jouw seizoen {jaar}', { jaar: seizoen() }),
+    knoop: (dia, sluit) => {
+      const klaar = dia.querySelector('[data-verhaal-klaar]');
+      if (klaar) klaar.onclick = () => sluit(false);
+      const deel = dia.querySelector('[data-verhaal-seizoendeel]');
+      if (deel) { deel.focus(); deel.onclick = () => { sluit(false); openDeelvenster(seizoenDelen(), null); }; }
+    },
+  });
+}
+
+// De story: staand, over jou.
+async function tekenStorySeizoen() {
+  const o = seizoenOverzicht();
+  if (!o) return null;
+  const d = await deelDoek(`${S.poule?.name ?? ''}${o.jaar}${o.beste.race.name}${o.coureur?.naam ?? ''}KAMPIOEN`, STORYMAAT);
+  const { x, schrijf, label, K, L, rand, breed } = d;
+  storyVersiering(d, String(o.jaar).slice(-2));
+
+  // Van onder naar boven: het beste weekend en je coureur, elk een label en
+  // een regel. Het grote getal neemt wat er dan over is.
+  const onder = d.voet - 70;
+  const regels = [[T('jouw beste weekend'), `${o.beste.race.name} · ${T('{n} ptn', { n: o.beste.punten })}`, null]];
+  if (o.coureur) regels.push([T('jouw coureur'), `${o.coureur.naam} · ${o.coureur.keer}×`, o.coureur.kleur]);
+  const grens = onder - regels.length * 130 - 40;
+  let y = 400;
+  label(T('seizoen {jaar}', { jaar: o.jaar }), rand, y);
+  y = storyKop(d, S.poule?.name ?? T('Stand'), y);
+  y += 84;
+  label(T('jouw seizoen'), rand, y, K.accent);
+  const hoog = Math.max(160, Math.min(300, grens - y - 90 - 138 - 40));
+  y += hoog;
+  storyGetal(d, y, o.punten, T('ptn'), o.plek === 1
+    ? { tekst: T('Kampioen!').toUpperCase(), kleur: K.accent, inkt: K.bg } : null, hoog);
+  y += 90;
+  storyCijfers(d, y, [
+    ...(o.samen ? [{ getal: rang(o.plek), wat: T('van {n}', { n: o.spelers }) },
+                   { getal: o.zeges, wat: T('weekendzeges') }] : []),
+    { getal: o.exact, wat: T('precies goed') },
+  ]);
+  regels.forEach(([wat, tekst, kleur], i) => {
+    const ry = onder - (regels.length - 1 - i) * 130;
+    label(wat, rand, ry - 62, K.ink3);
+    if (kleur) { x.fillStyle = kleur; x.fillRect(rand, ry - 44, 8, 52); }
+    x.font = `700 56px ${L.cond}`;
+    schrijf(pasIn(x, tekst, breed - (kleur ? 28 : 0)), rand + (kleur ? 28 : 0), ry, { font: `700 56px ${L.cond}` });
+  });
+  storyVoet(d);
+  return d.doek;
+}
+
+// Het seizoen als tekst, voor wie geen plaatje kan delen.
+function seizoenTekst() {
+  const o = seizoenOverzicht();
+  if (!o) return '';
+  return [
+    `🏁 ${T('Mijn seizoen {jaar} in {poule}', { jaar: o.jaar, poule: S.poule?.name ?? '' })}`,
+    o.samen ? T('{plek} van {n}, {punten} punten', { plek: rang(o.plek), n: o.spelers, punten: o.punten })
+      : T('{n} punten', { n: o.punten }),
+    `${T('jouw beste weekend')}: ${o.beste.race.name} (${T('{n} ptn', { n: o.beste.punten })})`,
+    ...(o.coureur ? [`${T('jouw coureur')}: ${o.coureur.naam} (${o.coureur.keer}× ${T('precies goed')})`] : []),
+  ].join('\n');
+}
+
+// Bericht is de eindstand van de hele poule, voor de groepsapp; Story is
+// jouw seizoen. Het venster begint bij de story: daar gaat het hier om.
+const seizoenDelen = () => ({
+  kop: T('Deel je seizoen'),
+  voorkeur: 'story',
+  teken: tekenStandplaatje,
+  story: tekenStorySeizoen,
+  storyAlt: () => T('Jouw seizoen {jaar} in {poule}: {n} punten',
+    { jaar: seizoen(), poule: S.poule?.name ?? '', n: seizoenOverzicht()?.punten ?? 0 }),
+  naam: deelBestandsnaam(`seizoen ${seizoen()} ${S.poule?.name ?? ''}`),
+  titel: S.poule?.name ?? T('Stand'),
+  alt: T('Stand van {poule} na {n} races', { poule: S.poule?.name ?? '', n: gereden() }),
+  tekst: seizoenTekst,
+});
 
 // ---- contact, feedback en bugs ------------------------------
 // Danny: "Gooi er een contact/feedback/bug ergens bij. Zodat mensen mij

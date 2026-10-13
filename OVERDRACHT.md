@@ -10623,3 +10623,34 @@ weghalen door een speler), allemaal gevangen.
 
 **Na het mergen:** schema.sql opnieuw laden in Supabase.
 
+## Het seizoen als verhaal (Wrapped), gratis (13 oktober)
+
+**App.** `speelVerhaal()` is opgesplitst: het afspelen (balkjes, tikken,
+vasthouden, pijltjes, Escape) zit nu in `speelReeks({ dias, label, naSluiten,
+knoop })`, en het weekend en het seizoen gebruiken het allebei.
+`seizoenOverzicht(id)` rekent over het bekeken seizoen: punten (uit
+`standRijen()`, dus met de seizoensvragen), plek, weekenden ingeleverd,
+gemiddelde, beste weekend (bij gelijkspel het eerste), precies goed, P1 goed,
+de coureur die je het vaakst precies goed had (bij gelijkspel op naam), en
+weekendzeges. `seizoenDias()` maakt de schermen, `speelSeizoen()` speelt ze
+af. `seizoenKandidaat()` beslist over vanzelf afspelen: het seizoen dat de
+poule speelt, `seizoenKlaar()`, zelf iets ingeleverd, de laatste race minder
+dan `SEIZOEN_RECENT` (60 dagen) geleden, nog niet gezien op dit toestel
+(`poule:<pool>:<speler>:seizoenverhaal`), en `verhaalAan()`. De knop
+(`seizoenVerhaalKnop()`) staat onder de stand en onder "seizoen rond".
+
+**Delen.** `seizoenDelen()` met `voorkeur: 'story'` (nieuw in
+`openDeelvenster`: het venster begint dan op de story). De story is
+`tekenStorySeizoen()`; Bericht is gewoon `tekenStandplaatje()`. In
+`storyCijfers()` wordt een label dat niet in zijn kolom past nu ingekort met
+een beletselteken (een lange vertaling liep over de volgende kolom).
+
+**Teksten.** 24 nieuwe, in zeven talen.
+
+**Tests.** `test/seizoen-verhaal.test.mjs` (34). Acht mutanten in de app
+(de instelling genegeerd, het laatste weekend als beste, de coureur
+omgekeerd, niet één keer, de knop tijdens het seizoen, weekendzeges ook
+alleen, 60 dagen genegeerd, het venster niet op de story), allemaal gevangen.
+
+**Geen database-wijziging.**
+

@@ -161,6 +161,24 @@ Wanneer hij vanzelf komt:
 Onder elke uitslag staat **Speel het weekend af** om hem opnieuw te zien. In
 Profiel zet je het vanzelf afspelen uit.
 
+**Het seizoen als verhaal.** Gratis, voor iedereen die meespeelde. Zit het
+seizoen erop (elke race een uitslag of afgelast), dan speelt de app het
+seizoen één keer af, zoals Spotify Wrapped: het jaar, je punten (met het
+gemiddelde per weekend), de eindstand, je beste weekend, je coureur (die je
+het vaakst precies op de goede plek zette), en de cijfers: weekendzeges,
+precies goed, P1 goed en hoeveel weekenden je inleverde. Wie alleen speelt
+krijgt geen eindstand en geen weekendzeges. Aan het eind staat **Deel je
+seizoen**: het deelvenster opent op de story (staand, over jou: je punten, je
+plek, je beste weekend en je coureur); onder Bericht staat de eindstand van de
+poule voor de groepsapp.
+
+Wanneer hij vanzelf komt: alleen bij het seizoen dat de poule speelt, tot 60
+dagen na de laatste race, één keer per toestel, alleen op het overzicht, en
+niet als je in Profiel het vanzelf afspelen uitzette (dezelfde instelling als
+het weekend). Daarna staat **Bekijk je seizoen** onder de stand en onder
+"seizoen rond" op het overzicht, ook voor een afgelopen jaar dat je via de
+keuzelijst bekijkt.
+
 ### Stand
 Op één scherm, gescheiden door koppen:
 - **Seizoensstand.** Per speler de plek, de punten, en het verschil met de
