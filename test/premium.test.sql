@@ -259,4 +259,20 @@ begin
   raise notice 'ok: het beheer zet premium ook weer uit';
 end $$;
 
+-- De controletabel onderaan schema.sql zegt ok, en ziet het als de bewaking
+-- of een regel van de opslag ontbreekt.
+do $$
+declare uitkomst text;
+begin
+  select c.uitkomst into uitkomst from public.poule_controle c where c.controle = 'premium: kolommen, bewaking en logo-opslag';
+  if uitkomst is distinct from 'ok' then raise exception 'gezakt: de controletabel zegt % over premium', uitkomst; end if;
+  drop policy poulelogo_lezen on storage.objects;
+  select c.uitkomst into uitkomst from public.poule_controle c where c.controle = 'premium: kolommen, bewaking en logo-opslag';
+  if uitkomst not like 'LOGO-OPSLAG ONTBREEKT%' then raise exception 'gezakt: zonder een regel van de opslag zegt de controle %', uitkomst; end if;
+  drop trigger pools_profiel_bewaken on public.pools;
+  select c.uitkomst into uitkomst from public.poule_controle c where c.controle = 'premium: kolommen, bewaking en logo-opslag';
+  if uitkomst not like 'BEWAKING ONTBREEKT%' then raise exception 'gezakt: zonder de bewaking zegt de controle %', uitkomst; end if;
+  raise notice 'ok: de controletabel zegt ok over premium, en ziet een ontbrekende bewaking of opslagregel';
+end $$;
+
 do $$ begin raise notice 'ok: premium.test.sql helemaal geslaagd'; end $$;

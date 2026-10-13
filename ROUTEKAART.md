@@ -1011,7 +1011,7 @@ hieronder en voor wat er verder bijkomt.
 | de mails van Supabase per taal (nu één Engels sjabloon voor iedereen) | open |
 | de racepagina's ook in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #214): alle zeven racepagina's en het overzicht in alle zeven talen, met de tijden ook in de tijd van dat land (Duitsland, Frankrijk, Spanje, Italië, Brazilië) |
 | de gidsen organiseren en puntentelling ook in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #215): elke voorpagina heeft nu het menu met de gidsen en de races |
-| de gids excel ook in DE, FR, ES, IT en PT | **gebouwd** (13 oktober): de formule per taal met de functienamen van Excel in die taal (WENN, SI, SE; in het Italiaans ASS voor ABS, in het Portugees MÁXIMO voor MAX) en puntkomma's |
+| de gids excel ook in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #218): de formule per taal met de functienamen van Excel in die taal (WENN, SI, SE; in het Italiaans ASS voor ABS, in het Portugees MÁXIMO voor MAX) en puntkomma's |
 
 ## Premium, later
 

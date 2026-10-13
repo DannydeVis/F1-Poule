@@ -3920,8 +3920,8 @@ const ENGELS = Object.fromEntries([
    'Premium until {datum}. The logo, the colour and the sponsor line appear in the app, on the share image and on the invite.'],
   ['nog geen sponsorregel',
    'no sponsor line yet'],
-  ['logo (png, jpg of webp, hoogstens 200 kB)',
-   'logo (png, jpg or webp, 200 kB at most)'],
+  ['logo (een groot plaatje maakt de app vanzelf kleiner)',
+   'logo (the app shrinks a large image by itself)'],
   ['kleur',
    'colour'],
   ['sponsorregel',
@@ -3938,10 +3938,8 @@ const ENGELS = Object.fromEntries([
    'A link belongs to a sponsor line: fill in the text as well.'],
   ['De link moet met https:// beginnen, zonder spaties.',
    'The link has to start with https://, without spaces.'],
-  ['Het logo moet een png, jpg of webp zijn.',
-   'The logo has to be a png, jpg or webp.'],
-  ['Het logo is groter dan 200 kB. Maak hem kleiner en probeer het opnieuw.',
-   'The logo is larger than 200 kB. Make it smaller and try again.'],
+  ['De app kan dit plaatje niet lezen. Kies een png, jpg of webp.',
+   'The app cannot read this image. Choose a png, jpg or webp.'],
   ['Het profiel van de poule is opgeslagen.',
    'The league profile has been saved.'],
   ['Het profiel van de poule is weggehaald.',
@@ -6864,6 +6862,36 @@ DONKER_TOESTEL.addEventListener?.('change', () => {
 const premiumActief = (p = S.poule) => !!p?.premium_tot && Date.parse(p.premium_tot) > Date.now();
 const LOGO_MAX = 200 * 1024;
 const LOGO_SOORTEN = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
+// Een logo staat hoogstens 64 pixels groot in de app en 44 hoog op het
+// deelplaatje: 512 pixels is ruim. Een groter plaatje, zwaarder dan LOGO_MAX
+// of in een ander formaat (een foto van een paar MB, een iPhone-foto) maakt
+// de app zelf kleiner: als webp, of als png of jpg waar de browser geen webp
+// maakt. Een kleine png, jpg of webp gaat zoals hij is. null: niet te lezen.
+const LOGO_PIXELS = 512;
+async function verkleinLogo(bestand) {
+  let beeld;
+  try { beeld = await createImageBitmap(bestand); } catch { return null; }
+  const grootste = Math.max(beeld.width, beeld.height);
+  if (LOGO_SOORTEN[bestand.type] && bestand.size <= LOGO_MAX && grootste <= LOGO_PIXELS) return bestand;
+  for (const maat of [LOGO_PIXELS, 384, 256]) {
+    const s = Math.min(1, maat / grootste);
+    const doek = document.createElement('canvas');
+    doek.width = Math.max(1, Math.round(beeld.width * s));
+    doek.height = Math.max(1, Math.round(beeld.height * s));
+    const x = doek.getContext('2d');
+    for (const [soort, kwaliteit] of [['image/webp', 0.9], ['image/png'], ['image/jpeg', 0.9]]) {
+      // Een jpg kent geen doorzichtig: dan een witte achtergrond.
+      x.clearRect(0, 0, doek.width, doek.height);
+      if (soort === 'image/jpeg') { x.fillStyle = '#fff'; x.fillRect(0, 0, doek.width, doek.height); }
+      x.drawImage(beeld, 0, 0, doek.width, doek.height);
+      const blob = await new Promise((klaar) => doek.toBlob(klaar, soort, kwaliteit));
+      if (blob?.type === soort && blob.size <= LOGO_MAX) {
+        return new File([blob], `logo.${LOGO_SOORTEN[soort]}`, { type: soort });
+      }
+    }
+  }
+  return null;
+}
 function logoUrl(p = S.poule) {
   if (!premiumActief(p) || !p.merk_logo || !db?.storage) return null;
   return db.storage.from('poulelogo').getPublicUrl(p.merk_logo).data?.publicUrl ?? null;
@@ -8878,8 +8906,8 @@ function profielBlok() {
       <div><strong>${esc(S.poule.name)}</strong><br>${sponsorRegel()
         || `<span class="sponsorregel">${T('nog geen sponsorregel')}</span>`}</div>
     </div>
-    <label class="label" for="profiellogo">${T('logo (png, jpg of webp, hoogstens 200 kB)')}</label>
-    <input class="veld" id="profiellogo" type="file" accept="image/png,image/jpeg,image/webp">
+    <label class="label" for="profiellogo">${T('logo (een groot plaatje maakt de app vanzelf kleiner)')}</label>
+    <input class="veld" id="profiellogo" type="file" accept="image/*">
     <label class="label" for="profielkleur">${T('kleur')}</label>
     <input class="kleurveld" id="profielkleur" type="color" value="${esc(kleur)}">
     <label class="label" for="profieltekst">${T('sponsorregel')}</label>
@@ -8915,11 +8943,11 @@ function knoopProfiel() {
     const kleur = veld('#profielkleur').value.toLowerCase();
     const tekst = schoon(veld('#profieltekst').value);
     const url = schoon(veld('#profielurl').value);
-    const bestand = veld('#profiellogo').files?.[0] ?? null;
+    const gekozen = veld('#profiellogo').files?.[0] ?? null;
+    const bestand = gekozen ? await verkleinLogo(gekozen) : null;
     S.profielFout = url && !tekst ? T('Een link hoort bij een sponsorregel: vul ook de tekst in.')
       : url && !SPONSOR_URL.test(url) ? T('De link moet met https:// beginnen, zonder spaties.')
-      : bestand && !LOGO_SOORTEN[bestand.type] ? T('Het logo moet een png, jpg of webp zijn.')
-      : bestand && bestand.size > LOGO_MAX ? T('Het logo is groter dan 200 kB. Maak hem kleiner en probeer het opnieuw.')
+      : gekozen && !bestand ? T('De app kan dit plaatje niet lezen. Kies een png, jpg of webp.')
       : '';
     if (S.profielFout) { render(); return; }
     bewaren.disabled = true;

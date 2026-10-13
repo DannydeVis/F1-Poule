@@ -66,7 +66,8 @@ begin
      and controle in ('deadline-trigger op answers', 'vragen in de lijst',
                       'jokeraantal: grens en bewaking',
                       'spelers: niemand gebruikt andermans speler of naam',
-                      'voorspellingen geheim tot de deadline');
+                      'voorspellingen geheim tot de deadline',
+                      'premium: kolommen, bewaking en logo-opslag');
   if gevonden is not null then
     raise exception 'gezakt: deze regels zeggen geen ok: %', gevonden;
   end if;
