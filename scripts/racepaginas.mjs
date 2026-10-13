@@ -21,6 +21,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { RACE_JAAR, RACES, RACE_TEKST } from '../site/races.mjs';
+import { TALEN } from '../site/teksten.mjs';
+import { PAGINAS } from '../site/paginas.mjs';
 import { uitersten } from './circuits.mjs';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -30,7 +32,12 @@ const lees = (pad) => (existsSync(join(wortel, pad)) ? JSON.parse(readFileSync(j
 // staan voor de generator.
 const vul = (tekst, v) => String(tekst).replace(/\{(\w+)\}/g, (heel, k) => (k in v ? String(v[k]) : heel));
 
-export const NL_TIJD = 'Europe/Amsterdam';
+// De talen van de racepagina's: elke taal met teksten in site/races.mjs, in de
+// volgorde van de voorpagina.
+export const RACE_TALEN = TALEN.filter((c) => RACE_TEKST[c]);
+// De tijd van het land naast UTC: de tijdzone van de taal, behalve als dat UTC
+// zelf is (Engels).
+export const lokaleZone = (code) => (RACE_TEKST[code].tijdzone === 'UTC' ? null : RACE_TEKST[code].tijdzone);
 /** 14:00: uur en minuut in een tijdzone. */
 export const tijd = (iso, zone) => new Intl.DateTimeFormat('nl', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone })
   .format(new Date(iso));
@@ -46,10 +53,10 @@ const coureur = (x) => x.naam ?? x.code ?? `#${x.nr}`;
 const metTeam = (x) => (x.team ? `${coureur(x)} (${x.team})` : coureur(x));
 
 // "George Russell (Mercedes) won ... voor Max Verstappen en Lando Norris."
-function winnaarZin(T, top, naam, jaar) {
+function winnaarZin(T, top, namen, jaar) {
   const [w, t2, t3] = top.race;
   const pole = top.kwalificatie?.[0];
-  const v = { winnaar: coureur(w), team: w.team ?? '', tweede: coureur(t2), derde: coureur(t3), naam, jaar };
+  const v = { ...namen, winnaar: coureur(w), team: w.team ?? '', tweede: coureur(t2), derde: coureur(t3), jaar };
   if (pole && pole.nr === w.nr) return vul(T.uitslag.poleWinnaar, v);
   return vul(T.uitslag.kort, { ...v, pole: pole ? vul(T.uitslag.pole, { pole: coureur(pole) }) : '' });
 }
@@ -62,10 +69,20 @@ function topTabellen(T, top, jaar) {
   ];
 }
 
-const IDS = {
+// De ankers per taal. safety-cars en pole zijn overal hetzelfde: zo heten ze
+// ook in de gids over de puntentelling.
+export const RACE_IDS = {
   nl: { tijden: 'tijden', training: 'vrije-trainingen', uitslag: 'uitslag', vorig: 'vorig-jaar', safety: 'safety-cars', pole: 'pole' },
   en: { tijden: 'times', training: 'practice', uitslag: 'result', vorig: 'last-year', safety: 'safety-cars', pole: 'pole' },
+  de: { tijden: 'zeiten', training: 'freies-training', uitslag: 'ergebnis', vorig: 'vorjahr', safety: 'safety-cars', pole: 'pole' },
+  fr: { tijden: 'horaires', training: 'essais-libres', uitslag: 'resultat', vorig: 'annee-derniere', safety: 'safety-cars', pole: 'pole' },
+  es: { tijden: 'horarios', training: 'libres', uitslag: 'resultado', vorig: 'ano-pasado', safety: 'safety-cars', pole: 'pole' },
+  it: { tijden: 'orari', training: 'prove-libere', uitslag: 'risultato', vorig: 'anno-scorso', safety: 'safety-cars', pole: 'pole' },
+  pt: { tijden: 'horarios', training: 'treinos-livres', uitslag: 'resultado', vorig: 'ano-passado', safety: 'safety-cars', pole: 'pole' },
 };
+// De link naar de tabel van alle circuits alleen in een taal waarin de gids
+// over de puntentelling er is.
+const puntentellingIn = (code) => !!PAGINAS.find((pg) => pg.id === 'puntentelling')?.talen[code];
 
 // Races waarvan pole en winnaar allebei bekend zijn (poleWon ja of nee). Een
 // ouder circuits.json zonder die velden geeft een lege lijst: dan geen sectie.
@@ -79,24 +96,25 @@ export function racePagina(cfg, r, circuits) {
   const sprint = r.sessies.find((s) => s.naam === 'Sprint');
   const circuit = circuits?.circuits.find((c) => c.circuit === cfg.circuit);
   const talen = {};
-  for (const code of ['nl', 'en']) {
+  for (const code of RACE_TALEN) {
     const T = RACE_TEKST[code];
     const zone = T.tijdzone;
-    const naam = code === 'nl' ? cfg.nl.naam : r.naam;
+    const lokaal = lokaleZone(code);
+    const naam = cfg[code].naam ?? r.naam;
     const v = {
-      naam, kort: cfg[code].kort, plaats: cfg[code].plaats, baan: cfg.baan, jaar: RACE_JAAR, vorigJaar: r.vorige.jaar,
-      raceDag: dag(race.start, code, zone), raceTijd: tijd(race.start, NL_TIJD), raceUtc: tijd(race.start, 'UTC'),
-      kwaliDag: kwali ? dag(kwali.start, code, zone) : '', kwaliTijd: kwali ? tijd(kwali.start, NL_TIJD) : '', kwaliUtc: kwali ? tijd(kwali.start, 'UTC') : '',
-      sprintDag: sprint ? dag(sprint.start, code, zone) : '', sprintTijd: sprint ? tijd(sprint.start, NL_TIJD) : '', sprintUtc: sprint ? tijd(sprint.start, 'UTC') : '',
+      naam, kort: cfg[code].kort, plaats: cfg[code].plaats, in: cfg[code].in ?? cfg[code].plaats, baan: cfg.baan, jaar: RACE_JAAR, vorigJaar: r.vorige.jaar,
+      raceDag: dag(race.start, code, zone), raceTijd: tijd(race.start, zone), raceUtc: tijd(race.start, 'UTC'),
+      kwaliDag: kwali ? dag(kwali.start, code, zone) : '', kwaliTijd: kwali ? tijd(kwali.start, zone) : '', kwaliUtc: kwali ? tijd(kwali.start, 'UTC') : '',
+      sprintDag: sprint ? dag(sprint.start, code, zone) : '', sprintTijd: sprint ? tijd(sprint.start, zone) : '', sprintUtc: sprint ? tijd(sprint.start, 'UTC') : '',
     };
-    const ids = IDS[code];
+    const ids = RACE_IDS[code];
     const secties = [{
       id: ids.tijden,
       vraag: vul(T.tijden.vraag, v),
       kort: vul(T.tijden.kort, { ...v, sprint: sprint ? vul(T.tijden.sprint, v) : '' }),
       tabel: { bijschrift: vul(T.tijden.bijschrift, v), kop: T.tijden.kop, klasse: 'compact',
         rijen: r.sessies.map((s) => [T.sessies[s.naam] ?? s.naam, dagKort(s.start, code, zone), tijd(s.start, 'UTC'),
-          ...(code === 'nl' ? [tijd(s.start, NL_TIJD)] : [])]) },
+          ...(lokaal ? [tijd(s.start, lokaal)] : [])]) },
       tekst: [T.tijden.tekst],
     }];
     // De vrije trainingen alleen tijdens het weekend: zodra er een is, tot de
@@ -106,31 +124,31 @@ export function racePagina(cfg, r, circuits) {
       const t = T.training;
       secties.push({
         id: ids.training,
-        vraag: vul(t.vraag, { naam }),
+        vraag: vul(t.vraag, v),
         kort: [...trainingen.map((x) => vul(t.snelst, { welke: t.welke[x.naam] ?? x.naam, wie: metTeam(x.top[0]) })), t.slot].join(' '),
         tabellen: trainingen.map((x) => ({ bijschrift: vul(t.bijschrift, { sessie: T.sessies[x.naam] ?? x.naam }), kop: T.uitslag.kop,
           klasse: 'compact', rijen: x.top.map((y) => [String(y.plek), coureur(y), y.team ?? '']) })),
       });
     }
     if (r.uitslag?.race?.length >= 3) {
-      secties.push({ id: ids.uitslag, vraag: vul(T.uitslag.vraag, { naam, jaar: RACE_JAAR }),
-        kort: winnaarZin(T, r.uitslag, naam, RACE_JAAR), tabellen: topTabellen(T, r.uitslag, RACE_JAAR) });
+      secties.push({ id: ids.uitslag, vraag: vul(T.uitslag.vraag, { ...v, jaar: RACE_JAAR }),
+        kort: winnaarZin(T, r.uitslag, v, RACE_JAAR), tabellen: topTabellen(T, r.uitslag, RACE_JAAR) });
     }
     if (r.vorige.race.length >= 3) {
-      secties.push({ id: ids.vorig, vraag: vul(T.uitslag.vraagVorig, { naam, jaar: r.vorige.jaar }),
-        kort: winnaarZin(T, r.vorige, naam, r.vorige.jaar), tabellen: topTabellen(T, r.vorige, r.vorige.jaar) });
+      secties.push({ id: ids.vorig, vraag: vul(T.uitslag.vraagVorig, { ...v, jaar: r.vorige.jaar }),
+        kort: winnaarZin(T, r.vorige, v, r.vorige.jaar), tabellen: topTabellen(T, r.vorige, r.vorige.jaar) });
     }
     if (circuit) {
       const s = T.safety;
       secties.push({
         id: ids.safety,
         vraag: vul(s.vraag, v),
-        kort: vul(s.kort, { plaats: v.plaats, races: circuit.races, vanaf: circuits.vanaf, aantal: circuit.safetyCars,
+        kort: vul(s.kort, { plaats: v.plaats, in: v.in, races: circuit.races, vanaf: circuits.vanaf, aantal: circuit.safetyCars,
           gemiddeld: getal(code, circuit.safetyCars / circuit.races), gemiddeldAlles: getal(code, uitersten(circuits).gemiddeld),
           rodeVlag: circuit.metRodeVlag ? vul(s.rodeVlag, { rodeVlag: circuit.metRodeVlag }) : s.geenRodeVlag }),
         tabel: { bijschrift: vul(s.bijschrift, v), kop: s.kop, klasse: 'compact',
           rijen: circuit.perRace.map((x) => [String(x.jaar), String(x.safetyCars), x.rodeVlag ? T.ja : T.nee]) },
-        links: [{ tekst: s.link, pagina: 'puntentelling', anker: 'safety-cars' }],
+        ...(puntentellingIn(code) ? { links: [{ tekst: s.link, pagina: 'puntentelling', anker: 'safety-cars' }] } : {}),
       });
       // Hoe vaak de polesitter hier won, tegen alle circuits samen.
       const hier = metPole(circuit.perRace);
@@ -140,7 +158,7 @@ export function racePagina(cfg, r, circuits) {
         secties.push({
           id: ids.pole,
           vraag: vul(p.vraag, v),
-          kort: vul(p.kort, { plaats: v.plaats, gewonnen: hier.filter((x) => x.poleWon).length, races: hier.length, vanaf: circuits.vanaf,
+          kort: vul(p.kort, { plaats: v.plaats, in: v.in, gewonnen: hier.filter((x) => x.poleWon).length, races: hier.length, vanaf: circuits.vanaf,
             gewonnenAlles: alles.filter((x) => x.poleWon).length, racesAlles: alles.length }),
           tabel: { bijschrift: vul(p.bijschrift, v), kop: p.kop, klasse: 'compact',
             rijen: hier.map((x) => [String(x.jaar), coureur(x.pole), coureur(x.winnaar)]) },
@@ -172,12 +190,12 @@ export function racePagina(cfg, r, circuits) {
   };
 }
 
-/** Het overzicht per seizoen: /races/ en /en/races/. */
+/** Het overzicht per seizoen: /races/, /en/races/, /de/rennen/ enzovoort. */
 export function overzicht(paginas, races) {
   if (!paginas.length) return null;
   const start = (pg) => races.find((r) => `race-${r.slug}` === pg.id).sessies.find((s) => s.naam === 'Race').start;
   const talen = {};
-  for (const code of ['nl', 'en']) {
+  for (const code of RACE_TALEN) {
     const T = RACE_TEKST[code];
     const O = T.overzicht;
     const naam = (pg) => pg.talen[code].kop.replace(` ${RACE_JAAR}`, '');
@@ -191,7 +209,7 @@ export function overzicht(paginas, races) {
       kop: vul(O.kop, v),
       kort: vul(O.kort, v),
       secties: [{
-        id: code === 'nl' ? 'races' : 'races',
+        id: 'races',
         vraag: vul(O.vraag, v),
         kort: vul(O.lijstKort, v),
         tabel: { bijschrift: vul(O.bijschrift, v), kop: O.kop2, klasse: 'compact',

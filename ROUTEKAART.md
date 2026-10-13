@@ -982,7 +982,7 @@ Van Danny: eerst reparaties, dan de vergelijkingspagina als concept.
 | erbij | Danny: in het AI-antwoord van Google op "race predicting game" staan F1 Predict, P1Predict en de Red Bull-predictor, wij niet. De vergelijkingspagina heet nu "Best F1 prediction games 2026" (NL "Beste F1-poule-apps van 2026"), en "race prediction game" staat op de Engelse voorpagina en in de vergelijking. De rest moet van buiten komen: genoemd worden in lijstjes, op Reddit en forums, AlternativeTo, Product Hunt, Bing Webmaster Tools (zie OVERDRACHT) | **gemerged** (12 oktober, PR #210) |
 | erbij | Danny: "Maak een pull to refresh. Ik moet nu steeds de app opnieuw afsluiten en openen voor een refresh." In de app op het beginscherm bovenaan naar beneden trekken haalt de poule opnieuw op, op het scherm waar je was; met een nieuwe versie online herlaadt de pagina. Terug in de app na meer dan een minuut gebeurt het vanzelf. Niet op het invulscherm en niet met een venster open | **gemerged** (12 oktober, PR #211) |
 | erbij | De app in zeven talen (Danny, 10 oktober: "niet per se op Nederland focussen maar wereldwijd"): Duits, Frans, Spaans, Italiaans en Portugees, elk in een eigen bestand in `app/talen/` dat de app pas ophaalt als iemand die taal kiest. Een taalmenu op het beginscherm, zeven knoppen onder Profiel, datums en plekken per taal, de herinneringen ook vertaald. De site zegt nu overal dat de app er in zeven talen is | **gemerged** (12 oktober, PR #212) |
-| erbij | De schermafdrukken van de app op de voorpagina in elke taal: de Duitse voorpagina toont de app in het Duits, enzovoort (eerst stond daar de Engelse app). `scripts/maak-beelden.mjs` maakt ze voor alle zeven, elk met een poulenaam in die taal, en de uitslag begint bij de score, want bovenaan een afgelopen race staat nu het podium. De JSON-LD van de app noemt ook de zeven talen in plaats van alleen NL en EN | **gebouwd** (13 oktober) |
+| erbij | De schermafdrukken van de app op de voorpagina in elke taal: de Duitse voorpagina toont de app in het Duits, enzovoort (eerst stond daar de Engelse app). `scripts/maak-beelden.mjs` maakt ze voor alle zeven, elk met een poulenaam in die taal, en de uitslag begint bij de score, want bovenaan een afgelopen race staat nu het podium. De JSON-LD van de app noemt ook de zeven talen in plaats van alleen NL en EN | **gemerged** (13 oktober, PR #213) |
 
 ## Uit het feedbackrapport van 10 oktober
 
@@ -1007,9 +1007,10 @@ hieronder en voor wat er verder bijkomt.
 |---|---|
 | nieuwe content eerst in het Engels, Nederlands ernaast | afspraak |
 | de app zelf in meer talen dan NL en EN (de vertaaltabel `T()` is er al op ingericht; de voorpagina heeft er al zeven) | **gebouwd** (12 oktober): Duits, Frans, Spaans, Italiaans en Portugees, elk in `app/talen/`; ook de herinneringen |
-| de plaatjes van de app op de voorpagina in DE, FR, ES, IT en PT | **gebouwd** (13 oktober): elke voorpagina toont de app in zijn eigen taal |
+| de plaatjes van de app op de voorpagina in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #213): elke voorpagina toont de app in zijn eigen taal |
 | de mails van Supabase per taal (nu één Engels sjabloon voor iedereen) | open |
-| de gidsen en racepagina's ook in DE, FR, ES, IT en PT | open |
+| de racepagina's ook in DE, FR, ES, IT en PT | **gebouwd** (13 oktober): alle zeven racepagina's en het overzicht in alle zeven talen, met de tijden ook in de tijd van dat land (Duitsland, Frankrijk, Spanje, Italië, Brazilië) |
+| de gidsen (organiseren, puntentelling, excel) ook in DE, FR, ES, IT en PT | open, volgende stap |
 
 ## Premium, later
 

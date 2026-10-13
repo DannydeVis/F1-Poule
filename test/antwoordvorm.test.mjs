@@ -11,7 +11,7 @@
 //   2. Elke sectie is een section.vraag met een h2 die op een vraagteken
 //      eindigt, en direct daaronder p.kort.
 //   3. Elk kort antwoord telt 25 tot 80 woorden en begint niet met een
-//      verwijswoord ("Dit", "Deze", "This", "That"...): wie alleen die alinea
+//      verwijswoord ("Dit", "Deze", "This", "That", "Dies", "Cette"...): wie alleen die alinea
 //      ziet, moet hem begrijpen.
 //   4. Het korte antwoord staat open in de HTML: nooit in <details>, dat is
 //      alleen voor de FAQ (en het taalmenu).
@@ -46,6 +46,11 @@ const woorden = (s) => s.split(/\s+/).filter(Boolean).length;
 const VERWIJS = {
   nl: ['dit', 'deze', 'dat', 'die', 'hier', 'zoals'],
   en: ['this', 'these', 'that', 'those', 'here', 'as', 'above'],
+  de: ['dies', 'diese', 'dieser', 'dieses', 'das', 'hier', 'wie', 'oben'],
+  fr: ['ceci', 'cela', 'ce', 'cet', 'cette', 'ces', 'ici', 'comme', 'voici'],
+  es: ['esto', 'este', 'esta', 'estos', 'estas', 'eso', 'aquí', 'como'],
+  it: ['questo', 'questa', 'questi', 'queste', 'qui', 'come'],
+  pt: ['isso', 'isto', 'este', 'esta', 'esses', 'estes', 'aqui', 'como'],
 };
 
 const lees = (pad) => readFileSync(join(wortel, ...pad.split('/'), 'index.html'), 'utf8');

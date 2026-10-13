@@ -296,7 +296,7 @@ Data:
 - Vertaal dan eerst organiseren en puntentelling, daarna excel (F1 Tippspiel Excel, porra F1 Excel, bolão F1 planilha, pronostici F1 Excel, pronostics F1 Excel).
 - Lokaliseren, niet letterlijk vertalen: de eigen woorden (Tippspiel en Tipprunde; porra, en in Latijns-Amerika quiniela; pronostici; pronostics; bolão), lokale concurrenten (Kicktipp in Duitsland), en Excel-formules per taal (functienamen en scheidingstekens verschillen, controleer het per taal).
 - Per taal een moedertaalspreker laten meelezen. Zonder die check liever niet publiceren.
-- De app zelf is er alleen in NL en EN. Zeg dat eerlijk op die pagina's, zoals de FAQ nu al doet.
+- De app zelf is er sinds 12 oktober 2026 in alle zeven talen; de racepagina's sinds 13 oktober ook (zie ROUTEKAART, Wereldwijd).
 
 ---
 
