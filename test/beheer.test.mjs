@@ -254,6 +254,21 @@ await page.waitForSelector('.melding');
   check('een poule bijwerken: naam, openbaar en poulebaas', p.name === 'De Kantoorpoule' && p.is_public === true
     && p.owner_member_id === 'lid-7', JSON.stringify(p));
   check('met een melding', (await tekst('.melding')).includes('De Kantoorpoule is bijgewerkt'), await tekst('.melding'));
+  check('zonder datum geen premium', !p.premium_tot && !(await page.$('[data-premium-badge]')), String(p.premium_tot));
+}
+// Premium: tot en met een dag, en weer uit.
+{
+  const datum = new Date(Date.now() + 40 * 864e5).toISOString().slice(0, 10);
+  await page.fill('#pouleform [name="premium_tot"]', datum);
+  await page.click('#pouleform button[type="submit"]');
+  await page.waitForFunction(() => document.querySelector('[data-premium-badge]'));
+  const p = (await db()).pools.find((x) => x.id === 'pool-2');
+  check('premium aanzetten: tot en met die dag, met een label in de lijst', p.premium_tot === `${datum}T23:59:59Z`
+    && (await tekst('[data-poule="pool-2"]')).includes('premium'), String(p.premium_tot));
+  await page.fill('#pouleform [name="premium_tot"]', '');
+  await page.click('#pouleform button[type="submit"]');
+  await page.waitForFunction(() => !document.querySelector('[data-premium-badge]'));
+  check('en weer uit met een leeg veld', !(await db()).pools.find((x) => x.id === 'pool-2').premium_tot);
 }
 await page.click('#pouledetail details summary');
 check('verwijderen kan pas als je de naam overtikt', await page.isDisabled('#pouleweg'));

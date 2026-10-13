@@ -204,6 +204,35 @@ alter table public.pools         add constraint pools_jokers_aantal
 -- hetzelfde patroon en om dezelfde reden -- een moment, geen vinkje, zodat een
 -- weekend dat al gereden is niet met terugwerkende kracht anders gaat tellen.
 alter table public.pools        add column if not exists contrair_vanaf timestamptz;
+-- Premium, stap 1 (13 oktober): een eigen profiel voor de poule, voor
+-- bedrijven en grote groepen. Een logo, een kleur en een regel over de sponsor
+-- met een link, in de kop van de app, op het deelplaatje en op het scherm waar
+-- je met een uitnodiging binnenkomt. Danny zet premium_tot met de hand in het
+-- beheer (beheer_poule_bijwerken); zolang die datum in de toekomst ligt, zet de
+-- poulebaas de rest. Wie wat mag staat in pools_profiel_bewaken() en in de
+-- policies op de logo's, niet alleen in de app: de code is openbaar.
+--   merk_logo  het pad in de bucket poulelogo: <poule-id>/<naam>.png|jpg|webp
+--   merk_kleur #rrggbb, in kleine letters
+alter table public.pools        add column if not exists premium_tot   timestamptz;
+alter table public.pools        add column if not exists merk_kleur    text;
+alter table public.pools        add column if not exists merk_logo     text;
+alter table public.pools        add column if not exists sponsor_tekst text;
+alter table public.pools        add column if not exists sponsor_url   text;
+alter table public.pools        drop constraint if exists pools_merk_kleur;
+alter table public.pools         add constraint pools_merk_kleur
+  check (merk_kleur is null or merk_kleur ~ '^#[0-9a-f]{6}$');
+alter table public.pools        drop constraint if exists pools_merk_logo;
+alter table public.pools         add constraint pools_merk_logo
+  check (merk_logo is null or merk_logo ~ ('^' || id::text || '/[A-Za-z0-9_-]{1,60}[.](png|jpg|jpeg|webp)$'));
+alter table public.pools        drop constraint if exists pools_sponsor_tekst;
+alter table public.pools         add constraint pools_sponsor_tekst
+  check (sponsor_tekst is null or char_length(btrim(sponsor_tekst)) between 1 and 80);
+-- Alleen https, geen spaties of haakjes: de link komt in de app als <a href>.
+-- En een link zonder tekst is er niet: de tekst is wat je ziet.
+alter table public.pools        drop constraint if exists pools_sponsor_url;
+alter table public.pools         add constraint pools_sponsor_url
+  check (sponsor_url is null or (sponsor_tekst is not null and char_length(sponsor_url) <= 300
+         and sponsor_url ~ '^https://[A-Za-z0-9.-]+([/?#][^[:space:]<>"''`]*)?$'));
 
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
@@ -1076,6 +1105,58 @@ create trigger pool_members_bewaken
   before update on public.pool_members
   for each row execute function public.pool_members_bewaken();
 
+-- Het eigen profiel van een poule (premium). Ook hier alleen voor wie via de
+-- API komt; het beheer (beheer_poule_bijwerken, security definer) gaat erlangs.
+--
+--   * premium_tot zet alleen het beheer. Anders zette elke poulebaas premium
+--     voor zichzelf aan.
+--   * Een logo, kleur of sponsorregel zetten kan alleen zolang premium loopt.
+--     Weghalen (leeg maken) mag altijd, ook als premium voorbij is.
+--   * Wie mag bijwerken bepaalt pools_bijwerken al: de poulebaas.
+create or replace function public.pools_profiel_bewaken()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if current_user not in ('anon', 'authenticated') then return new; end if;
+  if new.premium_tot is distinct from old.premium_tot then
+    raise exception 'premium zet alleen het beheer aan';
+  end if;
+  if ((new.merk_kleur    is distinct from old.merk_kleur    and new.merk_kleur    is not null)
+   or (new.merk_logo     is distinct from old.merk_logo     and new.merk_logo     is not null)
+   or (new.sponsor_tekst is distinct from old.sponsor_tekst and new.sponsor_tekst is not null)
+   or (new.sponsor_url   is distinct from old.sponsor_url   and new.sponsor_url   is not null))
+     and not coalesce(old.premium_tot > now(), false) then
+    raise exception 'een eigen profiel kan alleen met premium';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists pools_profiel_bewaken on public.pools;
+create trigger pools_profiel_bewaken
+  before update on public.pools
+  for each row execute function public.pools_profiel_bewaken();
+
+-- Of jij een logo in deze map van de bucket poulelogo mag zetten: de map is
+-- het id van een poule waar jij poulebaas van bent, en die poule heeft
+-- premium. Voor de policies op storage.objects hieronder. Een map die geen
+-- uuid is, is gewoon nee (en geen fout bij het omzetten).
+create or replace function public.mag_logo_zetten(p_map text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(p_map ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', false)
+     and exists (select 1 from public.pools p
+                 where p.id = p_map::uuid and p.premium_tot > now()
+                   and public.mag_beheren(p.id));
+$$;
+revoke all on function public.mag_logo_zetten(text) from public;
+grant execute on function public.mag_logo_zetten(text) to anon, authenticated;
+
 -- ------------------------------------------------------------
 --  Een poule ophalen zonder de hele tabel open te zetten
 --
@@ -1594,6 +1675,45 @@ create policy push_eigen on public.push_abonnementen
   using (public.mag_voor_speler_in(member_id, pool_id))
   with check (public.mag_voor_speler_in(member_id, pool_id));
 
+-- ---- logo's van een poule (premium) --------------------------
+-- Een openbare bucket: een logo staat in de kop en op het deelplaatje, en wie
+-- de link heeft mag hem zien. Hoogstens 200 kB, en alleen png, jpeg en webp;
+-- geen svg, want daar kan script in. Zetten, vervangen en weghalen alleen in
+-- de map van je eigen poule, als poulebaas, zolang premium loopt
+-- (mag_logo_zetten). Het logo zelf zien hoeft geen policy: een openbare
+-- bucket geeft een bestand aan wie de link heeft. Wel een policy om te lezen
+-- voor de poulebaas, in de map van zijn eigen poule: vervangen en weghalen
+-- moeten de rij eerst kunnen zien. Niet voor iedereen: de mappen zijn de ids
+-- van poules, en met een id kom je een poule binnen (poule_ophalen).
+--
+-- Alleen als er een schema storage is: in Supabase altijd, in een kale
+-- PostgreSQL (de tests) via de nabootsing in test/auth-nabootsing.sql.
+do $$
+begin
+  if to_regclass('storage.buckets') is null then return; end if;
+  insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  values ('poulelogo', 'poulelogo', true, 204800, array['image/png', 'image/jpeg', 'image/webp'])
+  on conflict (id) do update set public = excluded.public,
+    file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+  drop policy if exists poulelogo_zetten     on storage.objects;
+  drop policy if exists poulelogo_vervangen  on storage.objects;
+  drop policy if exists poulelogo_weghalen   on storage.objects;
+  drop policy if exists poulelogo_lezen      on storage.objects;
+  create policy poulelogo_lezen on storage.objects
+    for select to anon, authenticated
+    using (bucket_id = 'poulelogo' and public.mag_logo_zetten((storage.foldername(name))[1]));
+  create policy poulelogo_zetten on storage.objects
+    for insert to anon, authenticated
+    with check (bucket_id = 'poulelogo' and public.mag_logo_zetten((storage.foldername(name))[1]));
+  create policy poulelogo_vervangen on storage.objects
+    for update to anon, authenticated
+    using (bucket_id = 'poulelogo' and public.mag_logo_zetten((storage.foldername(name))[1]))
+    with check (bucket_id = 'poulelogo' and public.mag_logo_zetten((storage.foldername(name))[1]));
+  create policy poulelogo_weghalen on storage.objects
+    for delete to anon, authenticated
+    using (bucket_id = 'poulelogo' and public.mag_logo_zetten((storage.foldername(name))[1]));
+end $$;
+
 -- ------------------------------------------------------------
 --  Rechten op tabelniveau
 --  Supabase geeft anon en authenticated standaard alles op `public`. Dat is
@@ -1939,6 +2059,12 @@ begin
   end if;
   if p_wijziging ? 'is_public' then
     update public.pools set is_public = coalesce((p_wijziging ->> 'is_public')::boolean, false)
+    where id = p_pool;
+  end if;
+  -- Premium: tot wanneer (een datum, of leeg voor uit). Alleen hier, zie
+  -- pools_profiel_bewaken().
+  if p_wijziging ? 'premium_tot' then
+    update public.pools set premium_tot = nullif(p_wijziging ->> 'premium_tot', '')::timestamptz
     where id = p_pool;
   end if;
   if p_wijziging ? 'owner_member_id' then

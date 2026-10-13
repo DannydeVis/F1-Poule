@@ -1010,7 +1010,7 @@ hieronder en voor wat er verder bijkomt.
 | de plaatjes van de app op de voorpagina in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #213): elke voorpagina toont de app in zijn eigen taal |
 | de mails van Supabase per taal (nu één Engels sjabloon voor iedereen) | open |
 | de racepagina's ook in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #214): alle zeven racepagina's en het overzicht in alle zeven talen, met de tijden ook in de tijd van dat land (Duitsland, Frankrijk, Spanje, Italië, Brazilië) |
-| de gidsen organiseren en puntentelling ook in DE, FR, ES, IT en PT | **gebouwd** (13 oktober): elke voorpagina heeft nu het menu met de gidsen en de races |
+| de gidsen organiseren en puntentelling ook in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #215): elke voorpagina heeft nu het menu met de gidsen en de races |
 | de gids excel ook in DE, FR, ES, IT en PT | open: de formules verschillen per taal (functienamen en scheidingstekens), eerst per taal nagaan |
 
 ## Premium, later
@@ -1022,7 +1022,8 @@ Eerst de gratis app goed; daarna premium in twee stappen.
    de uitnodiging. Eerst door Danny met de hand aan te zetten in het beheer,
    zonder betaling. Afdwingen in de database (regels in `schema.sql`), niet
    alleen in de app: de code is openbaar. Logo's in Supabase Storage, met een
-   maximale grootte.
+   maximale grootte. **Gebouwd** (13 oktober): zie BEDIENING §19. Na het
+   mergen moet `schema.sql` één keer opnieuw in Supabase.
 2. **Betalen, wereldwijd**: via een Merchant of Record (Paddle of Lemon
    Squeezy), die de btw, sales tax en GST per land en de facturen regelt.
    Stripe is goedkoper maar laat de belasting per land bij Danny. Na betaling

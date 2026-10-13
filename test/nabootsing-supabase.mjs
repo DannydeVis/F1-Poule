@@ -173,6 +173,17 @@ function magVoorSpelerIn(memberId, poolId) {
 }
 
 // mag_beheren(): de poulebaas, of elk lid als de poule geen eigenaar heeft.
+// De checks op pools uit schema.sql (premium): de naam van de check die faalt,
+// of null.
+function profielFout(p) {
+  if (p.merk_kleur != null && !/^#[0-9a-f]{6}$/.test(p.merk_kleur)) return 'pools_merk_kleur';
+  if (p.merk_logo != null && !new RegExp(`^${p.id}/[A-Za-z0-9_-]{1,60}[.](png|jpg|jpeg|webp)$`).test(p.merk_logo)) return 'pools_merk_logo';
+  if (p.sponsor_tekst != null && !(String(p.sponsor_tekst).trim().length >= 1 && String(p.sponsor_tekst).trim().length <= 80)) return 'pools_sponsor_tekst';
+  if (p.sponsor_url != null && !(p.sponsor_tekst != null && p.sponsor_url.length <= 300
+      && /^https:\/\/[A-Za-z0-9.-]+([/?#][^\s<>"'`]*)?$/.test(p.sponsor_url))) return 'pools_sponsor_url';
+  return null;
+}
+
 function magBeheren(poolId) {
   const ik = wieBenIk();
   if (!ik) return false;
@@ -408,6 +419,23 @@ function uitvoeren(tabel, q) {
       if (kolommen.includes('user_id')) {
         for (const r of raakt) if (r.user_id) r.aangemaakt_door = null;
       }
+    }
+    // De trigger pools_profiel_bewaken() en de checks op pools uit schema.sql
+    // (premium): premium_tot zet alleen het beheer, een logo, kleur of
+    // sponsorregel alleen zolang premium loopt, en de waarden kloppen.
+    if (tabel === 'pools') {
+      const u = q._update;
+      const raakt = rijen.filter((r) => q._filters.every((f) => past(r, f)) && magRaken(tabel, r));
+      if ('premium_tot' in u && raakt.some((r) => (r.premium_tot ?? null) !== (u.premium_tot ?? null))) {
+        return { data: null, error: { code: 'P0001', message: 'premium zet alleen het beheer aan' } };
+      }
+      const zet = ['merk_kleur', 'merk_logo', 'sponsor_tekst', 'sponsor_url'].filter((k) => k in u && u[k] !== null);
+      if (zet.length && raakt.some((r) => !(r.premium_tot && Date.parse(r.premium_tot) > Date.now())
+          && zet.some((k) => u[k] !== r[k]))) {
+        return { data: null, error: { code: 'P0001', message: 'een eigen profiel kan alleen met premium' } };
+      }
+      const fout = raakt.map((r) => profielFout({ ...r, ...u })).find(Boolean);
+      if (fout) return { data: null, error: { code: '23514', message: `new row violates check constraint "${fout}"` } };
     }
     // update(...).eq(...).is(kolom, null): de is-controle hoort bij de
     // schrijfactie zelf, zodat een rij die inmiddels gevuld is niet geraakt
@@ -993,6 +1021,7 @@ Object.assign(functies, {
     if ('beschrijving' in p_wijziging) p.beschrijving = String(p_wijziging.beschrijving ?? '').trim() || null;
     if ('is_public' in p_wijziging) p.is_public = !!p_wijziging.is_public;
     if ('owner_member_id' in p_wijziging) p.owner_member_id = baas;
+    if ('premium_tot' in p_wijziging) p.premium_tot = p_wijziging.premium_tot || null;
     bewaren();
     return { data: kopie(p), error: null };
   }),
@@ -1116,4 +1145,50 @@ async function rpc(naam, argumenten) {
   return fn(argumenten ?? {});
 }
 
-export const createClient = () => ({ from: maakQuery, auth, rpc });
+// ---- opslag (Supabase Storage), alleen de bucket poulelogo -----------------
+// De regels van schema.sql: hoogstens 200 kB, png, jpeg of webp, en alleen in
+// de map van een poule waar jij poulebaas van bent en die premium heeft
+// (mag_logo_zetten). Een bestand wordt een data-url in de "database", zodat
+// het na herladen nog te zien is; getPublicUrl geeft die terug.
+const LOGO_SOORTEN = ['image/png', 'image/jpeg', 'image/webp'];
+function magLogoZetten(pad) {
+  const map = String(pad).split('/')[0];
+  const p = store.pools.find((x) => gelijk(x.id, map));
+  return !!p && !!p.premium_tot && Date.parse(p.premium_tot) > Date.now() && magBeheren(p.id);
+}
+const leesAlsUrl = (bestand) => (typeof bestand === 'string' ? Promise.resolve(bestand)
+  : new Promise((klaar, mis) => { const r = new FileReader(); r.onload = () => klaar(r.result); r.onerror = mis; r.readAsDataURL(bestand); }));
+globalThis.__opslagTeller = { upload: 0, remove: 0 };
+const storage = {
+  from(bucket) {
+    return {
+      async upload(pad, bestand, { contentType } = {}) {
+        globalThis.__opslagTeller.upload++;
+        const fout = volgendeFout();
+        if (fout) return fout;
+        const soort = contentType ?? bestand?.type;
+        if (bucket !== 'poulelogo') return { data: null, error: { statusCode: '404', message: 'Bucket not found' } };
+        if ((bestand?.size ?? 0) > 204800) return { data: null, error: { statusCode: '413', message: 'The object exceeded the maximum allowed size' } };
+        if (!LOGO_SOORTEN.includes(soort)) return { data: null, error: { statusCode: '415', message: `mime type ${soort} is not supported` } };
+        if (!magLogoZetten(pad)) return { data: null, error: { statusCode: '403', message: 'new row violates row-level security policy' } };
+        store.opslag ??= {};
+        if (store.opslag[pad]) return { data: null, error: { statusCode: '409', message: 'The resource already exists' } };
+        store.opslag[pad] = await leesAlsUrl(bestand);
+        bewaren();
+        return { data: { path: pad }, error: null };
+      },
+      async remove(paden) {
+        globalThis.__opslagTeller.remove++;
+        const weg = paden.filter((pad) => store.opslag?.[pad] && magLogoZetten(pad));
+        for (const pad of weg) delete store.opslag[pad];
+        bewaren();
+        return { data: weg.map((name) => ({ name })), error: null };
+      },
+      getPublicUrl(pad) {
+        return { data: { publicUrl: store.opslag?.[pad] ?? `https://opslag.nabootsing/${bucket}/${pad}` } };
+      },
+    };
+  },
+};
+
+export const createClient = () => ({ from: maakQuery, auth, rpc, storage });

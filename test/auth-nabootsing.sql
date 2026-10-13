@@ -62,4 +62,41 @@ alter default privileges in schema public grant all on tables to anon, authentic
 alter default privileges in schema public grant all on functions to anon, authenticated;
 alter default privileges in schema public grant all on sequences to anon, authenticated;
 
-do $$ begin raise notice 'ok: auth-nabootsing klaar (auth.users + auth.uid())'; end $$;
+-- De opslag van Supabase (Storage), zo ver als schema.sql hem gebruikt: de
+-- buckets, de bestanden als rijen in storage.objects met RLS erop, en
+-- storage.foldername() zoals Supabase hem heeft (de mappen van een pad, zonder
+-- de bestandsnaam). Zo draaien de policies op de logo's (premium) hier ook,
+-- en test/premium.test.sql kan ze uitproberen. In Supabase bestaat dit
+-- allemaal al; schema.sql maakt het nooit zelf aan.
+create schema if not exists storage;
+create table if not exists storage.buckets (
+  id                 text primary key,
+  name               text not null,
+  public             boolean default false,
+  file_size_limit    bigint,
+  allowed_mime_types text[]
+);
+create table if not exists storage.objects (
+  id         uuid primary key default gen_random_uuid(),
+  bucket_id  text references storage.buckets(id),
+  name       text,
+  owner      uuid,
+  created_at timestamptz default now(),
+  metadata   jsonb
+);
+alter table storage.objects enable row level security;
+create or replace function storage.foldername(name text)
+returns text[]
+language plpgsql
+as $$
+declare _parts text[];
+begin
+  select string_to_array(name, '/') into _parts;
+  return _parts[1:array_length(_parts, 1) - 1];
+end $$;
+grant usage on schema storage to anon, authenticated;
+grant select, insert, update, delete on storage.objects to anon, authenticated;
+grant select on storage.buckets to anon, authenticated;
+grant execute on function storage.foldername(text) to anon, authenticated;
+
+do $$ begin raise notice 'ok: auth-nabootsing klaar (auth.users + auth.uid() + storage)'; end $$;

@@ -374,6 +374,20 @@
     border-radius:22px;overflow:hidden;align-self:flex-start;
   }
   .baan{height:3px;background:var(--accent)}
+  /* Premium: het eigen profiel van een poule. De kleur alleen op de baan
+     bovenaan en het streepje onder het logo, nooit op tekst: een kleur die
+     een bedrijf kiest haalt niet vanzelf het contrast. */
+  .baan.merkbaan{height:5px}
+  .poulelogo{width:44px;height:44px;object-fit:contain;border-radius:10px;flex:none;
+    background:#fff;padding:4px;border:1px solid var(--lijn)}
+  .poulelogo.groot{width:64px;height:64px;border-radius:14px;padding:6px}
+  .sponsorregel{font-size:12px;color:var(--ink2);line-height:1.4}
+  .sponsorregel a{color:var(--ink);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+  .merkkop{display:flex;align-items:center;gap:14px}
+  .profielvoorbeeld{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;
+    border:1px solid var(--lijn);background:var(--paneel)}
+  .profielvoorbeeld .kleurvlak{width:28px;height:28px;border-radius:8px;border:1px solid var(--lijn);flex:none}
+  .kleurveld{width:56px;height:44px;padding:2px;border-radius:10px;border:1px solid var(--lijn);background:var(--paneel)}
   .kaart-in{padding:24px 22px 30px;display:flex;flex-direction:column;gap:24px}
   .merk{display:flex;align-items:center;gap:10px}
   /* Het logo, de P. Eerst stond hier een rood blokje, als plaatsvervanger tot
@@ -3893,7 +3907,45 @@ const ENGELS = Object.fromEntries([
   ['Zeker weten? Tik nog een keer. Je kiest daarna je naam opnieuw in de poule.',
    'Are you sure? Tap again. You will pick your name in the pool again afterwards.'],
   ['Er ging iets mis op de achtergrond. Het scherm klopt misschien niet meer.',
-   'Something went wrong in the background. This screen may no longer be right.'],
+   'Something went wrong in the background. This screen may no longer be right.'],  // Premium: het eigen profiel van een poule (13 oktober).
+  ['mogelijk gemaakt door {sponsor}',
+   'brought to you by {sponsor}'],
+  ['eigen logo en kleur',
+   'your own logo and colour'],
+  ['Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij een eigen logo, een eigen kleur en een regel over de sponsor met een link: in de app, op het deelplaatje en bij de uitnodiging. Mail {adres} om het aan te zetten.',
+   'A league for your company, club or association? With premium it gets its own logo, its own colour and a sponsor line with a link: in the app, on the share image and on the invite. Email {adres} to switch it on.'],
+  ['eigen profiel',
+   'league profile'],
+  ['Premium tot {datum}. Het logo, de kleur en de sponsorregel staan in de app, op het deelplaatje en bij de uitnodiging.',
+   'Premium until {datum}. The logo, the colour and the sponsor line appear in the app, on the share image and on the invite.'],
+  ['nog geen sponsorregel',
+   'no sponsor line yet'],
+  ['logo (png, jpg of webp, hoogstens 200 kB)',
+   'logo (png, jpg or webp, 200 kB at most)'],
+  ['kleur',
+   'colour'],
+  ['sponsorregel',
+   'sponsor line'],
+  ['Bakkerij Jansen',
+   'Smith\'s Bakery'],
+  ['link van de sponsor (https://)',
+   'sponsor link (https://)'],
+  ['Profiel opslaan',
+   'Save profile'],
+  ['Profiel weghalen',
+   'Remove profile'],
+  ['Een link hoort bij een sponsorregel: vul ook de tekst in.',
+   'A link belongs to a sponsor line: fill in the text as well.'],
+  ['De link moet met https:// beginnen, zonder spaties.',
+   'The link has to start with https://, without spaces.'],
+  ['Het logo moet een png, jpg of webp zijn.',
+   'The logo has to be a png, jpg or webp.'],
+  ['Het logo is groter dan 200 kB. Maak hem kleiner en probeer het opnieuw.',
+   'The logo is larger than 200 kB. Make it smaller and try again.'],
+  ['Het profiel van de poule is opgeslagen.',
+   'The league profile has been saved.'],
+  ['Het profiel van de poule is weggehaald.',
+   'The league profile has been removed.'],
 ]);
 
 const TAALSLEUTEL = 'poule:taal';
@@ -6801,6 +6853,34 @@ DONKER_TOESTEL.addEventListener?.('change', () => {
   if (!document.documentElement.dataset.thema) werkThemaknopBij();
 });
 
+// ---- premium: het eigen profiel van een poule ----------------
+// Een logo, een kleur en een sponsorregel, voor bedrijven en grote groepen
+// (ROUTEKAART, premium stap 1). Danny zet premium_tot in het beheer; zolang die
+// datum in de toekomst ligt, laat de app het profiel zien en kan de poulebaas
+// het aanpassen (profielBlok). Wie wat mag staat in schema.sql
+// (pools_profiel_bewaken en de policies op de bucket poulelogo); hier staat
+// alleen wat je ziet. Is premium voorbij, dan is alles weer zoals in elke
+// andere poule.
+const premiumActief = (p = S.poule) => !!p?.premium_tot && Date.parse(p.premium_tot) > Date.now();
+const LOGO_MAX = 200 * 1024;
+const LOGO_SOORTEN = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
+function logoUrl(p = S.poule) {
+  if (!premiumActief(p) || !p.merk_logo || !db?.storage) return null;
+  return db.storage.from('poulelogo').getPublicUrl(p.merk_logo).data?.publicUrl ?? null;
+}
+const merkKleur = (p = S.poule) =>
+  (premiumActief(p) && /^#[0-9a-f]{6}$/.test(p.merk_kleur ?? '') ? p.merk_kleur : null);
+function sponsorRegel(p = S.poule) {
+  if (!premiumActief(p) || !p.sponsor_tekst) return '';
+  const url = /^https:\/\//.test(p.sponsor_url ?? '') ? p.sponsor_url : null;
+  const naam = url ? `<a href="${esc(url)}" target="_blank" rel="sponsored noopener">${esc(p.sponsor_tekst)}</a>`
+    : esc(p.sponsor_tekst);
+  return `<span class="sponsorregel" data-sponsor>${T('mogelijk gemaakt door {sponsor}', { sponsor: naam })}</span>`;
+}
+const poulelogoImg = (klasse = '') => (logoUrl()
+  ? `<img class="poulelogo${klasse ? ` ${klasse}` : ''}" data-poulelogo src="${esc(logoUrl())}" alt="" width="44" height="44">` : '');
+const merkbaan = () => (merkKleur() ? `<div class="baan merkbaan" style="background:${merkKleur()}"></div>` : '<div class="baan"></div>');
+
 // Het pijltje achter de poulenaam: hier kun je kiezen.
 const KEUZE_PIJL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
   stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6850,13 +6930,15 @@ function toonApp() {
       </aside>
 
       <main class="hoofd" tabindex="-1">
-        <div class="baan"></div>
+        ${merkbaan()}
         <div class="kop">
+          ${poulelogoImg()}
           <div class="koptekst">
             <span class="meta">${T('seizoen {jaar} · {n} {spelers}', {
               jaar: seizoen(), n: S.leden.length,
               spelers: S.leden.length === 1 ? T('speler') : T('spelers') })}</span>
             <span class="ptitel">${esc(S.poule.name)}</span>
+            ${sponsorRegel()}
           </div>
           ${volgend ? `<span class="pil"><span class="stip klopt"></span>
             <span class="mono">${T('{race} sluit in', {
@@ -6945,6 +7027,7 @@ function toonApp() {
   knoopLegePoule();
   knoopBeheer();
   knoopOmschrijving();
+  knoopProfiel();
   knoopOpenbaar();
   knoopAutofill();
   knoopJokers();
@@ -7804,6 +7887,7 @@ function poulePagina(rijen) {
     ${agendaBlok()}
     ${beheerKop()}
     ${omschrijvingBlok()}
+    ${profielBlok()}
     ${openbaarBlok()}
     ${autofillBlok()}
     ${jokersBlok()}
@@ -8757,6 +8841,136 @@ async function omschrijvingBewaren(tekst) {
   // Ook in het lijstje op dit toestel, anders staat de oude tekst er nog bij
   // als je straks tussen je poules wisselt.
   onthoudInLijst(S.poule);
+}
+
+// ---- eigen profiel (premium) ----------------------------------
+// Alleen voor de poulebaas. Zonder premium een regel over wat het is en hoe je
+// eraan komt: mailen, want betalen in de app komt pas later (ROUTEKAART,
+// premium stap 2). Met premium het logo, de kleur en de sponsorregel, met een
+// voorbeeld van hoe het eruitziet. De database controleert alles nog een keer
+// (pools_profiel_bewaken, de checks op pools, de policies op poulelogo); de
+// controles hier zijn er alleen voor een duidelijke melding.
+function profielBlok() {
+  if (!magBeheren()) return '';
+  if (!premiumActief()) {
+    const mail = `<a href="mailto:${esc(PRIVACY_CONTACT)}?subject=${
+      encodeURIComponent(`Premium: ${S.poule.name}`)}">${esc(PRIVACY_CONTACT)}</a>`;
+    return `
+    <div class="scheiding"></div>
+    <span class="label">${T('eigen logo en kleur')}</span>
+    <p class="zacht" style="margin:0" data-premium-uitleg>${T('Een poule voor je bedrijf, club of '
+      + 'vereniging? Met premium krijgt hij een eigen logo, een eigen kleur en een regel over de '
+      + 'sponsor met een link: in de app, op het deelplaatje en bij de uitnodiging. Mail {adres} '
+      + 'om het aan te zetten.', { adres: mail })}</p>`;
+  }
+  const P = S.profiel ?? {};
+  const kleur = P.kleur ?? S.poule.merk_kleur ?? '#ee4d33';
+  const tekst = P.tekst ?? S.poule.sponsor_tekst ?? '';
+  const url = P.url ?? S.poule.sponsor_url ?? '';
+  return `
+    <div class="scheiding"></div>
+    <span class="label">${T('eigen profiel')}</span>
+    <p class="zacht" style="margin:0">${T('Premium tot {datum}. Het logo, de kleur en de '
+      + 'sponsorregel staan in de app, op het deelplaatje en bij de uitnodiging.',
+      { datum: esc(datumKort(S.poule.premium_tot)) })}</p>
+    <div class="profielvoorbeeld" data-profielvoorbeeld>
+      ${poulelogoImg() || `<span class="kleurvlak" style="background:${esc(kleur)}"></span>`}
+      <div><strong>${esc(S.poule.name)}</strong><br>${sponsorRegel()
+        || `<span class="sponsorregel">${T('nog geen sponsorregel')}</span>`}</div>
+    </div>
+    <label class="label" for="profiellogo">${T('logo (png, jpg of webp, hoogstens 200 kB)')}</label>
+    <input class="veld" id="profiellogo" type="file" accept="image/png,image/jpeg,image/webp">
+    <label class="label" for="profielkleur">${T('kleur')}</label>
+    <input class="kleurveld" id="profielkleur" type="color" value="${esc(kleur)}">
+    <label class="label" for="profieltekst">${T('sponsorregel')}</label>
+    <input class="veld" id="profieltekst" maxlength="80" autocomplete="off"
+      placeholder="${T('Bakkerij Jansen')}" value="${esc(tekst)}">
+    <label class="label" for="profielurl">${T('link van de sponsor (https://)')}</label>
+    <input class="veld" id="profielurl" type="url" inputmode="url" autocomplete="off"
+      placeholder="https://" value="${esc(url)}">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="knop klein" id="profielBewaren">${T('Profiel opslaan')}</button>
+      ${S.poule.merk_logo || S.poule.merk_kleur || S.poule.sponsor_tekst
+        ? `<button class="knop klein" id="profielWeg">${T('Profiel weghalen')}</button>` : ''}
+    </div>
+    <p class="err" id="profielfout">${esc(S.profielFout)}</p>`;
+}
+
+// Dezelfde regel als pools_sponsor_url in schema.sql.
+const SPONSOR_URL = /^https:\/\/[A-Za-z0-9.-]+([/?#][^\s<>"'`]*)?$/;
+
+function knoopProfiel() {
+  const bewaren = app.querySelector('#profielBewaren');
+  if (!bewaren) return;
+  const veld = (id) => app.querySelector(id);
+  // Wat je intikt blijft staan als het scherm opnieuw getekend wordt.
+  const onthoudInvoer = () => {
+    S.profiel = { kleur: veld('#profielkleur').value, tekst: veld('#profieltekst').value,
+                  url: veld('#profielurl').value };
+  };
+  ['#profielkleur', '#profieltekst', '#profielurl'].forEach((id) => veld(id).addEventListener('input', onthoudInvoer));
+
+  bewaren.onclick = async () => {
+    onthoudInvoer();
+    const kleur = veld('#profielkleur').value.toLowerCase();
+    const tekst = schoon(veld('#profieltekst').value);
+    const url = schoon(veld('#profielurl').value);
+    const bestand = veld('#profiellogo').files?.[0] ?? null;
+    S.profielFout = url && !tekst ? T('Een link hoort bij een sponsorregel: vul ook de tekst in.')
+      : url && !SPONSOR_URL.test(url) ? T('De link moet met https:// beginnen, zonder spaties.')
+      : bestand && !LOGO_SOORTEN[bestand.type] ? T('Het logo moet een png, jpg of webp zijn.')
+      : bestand && bestand.size > LOGO_MAX ? T('Het logo is groter dan 200 kB. Maak hem kleiner en probeer het opnieuw.')
+      : '';
+    if (S.profielFout) { render(); return; }
+    bewaren.disabled = true;
+    bewaren.textContent = T('Bezig...');
+    try {
+      const wijziging = { merk_kleur: /^#[0-9a-f]{6}$/.test(kleur) ? kleur : null,
+                          sponsor_tekst: tekst || null, sponsor_url: url || null };
+      const oud = S.poule.merk_logo;
+      if (!DEMO) {
+        if (bestand) {
+          const pad = `${S.poule.id}/logo-${Date.now()}.${LOGO_SOORTEN[bestand.type]}`;
+          const { error } = await db.storage.from('poulelogo')
+            .upload(pad, bestand, { contentType: bestand.type, upsert: false });
+          if (error) throw new Error(uitleg(error));
+          wijziging.merk_logo = pad;
+        }
+        const { error } = await db.from('pools').update(wijziging).eq('id', S.poule.id);
+        if (error) throw new Error(uitleg(error));
+        // Het vorige logo mag weg; lukt dat niet, dan blijft er een bestand
+        // liggen dat niemand ziet.
+        if (wijziging.merk_logo && oud) {
+          Promise.resolve(db.storage.from('poulelogo').remove([oud])).catch(() => {});
+        }
+      }
+      Object.assign(S.poule, wijziging);
+      onthoudInLijst(S.poule);
+      S.profiel = null;
+      S.melding = T('Het profiel van de poule is opgeslagen.');
+    } catch (e) { S.profielFout = e.message; }
+    render();
+  };
+
+  const weg = app.querySelector('#profielWeg');
+  if (weg) weg.onclick = async () => {
+    weg.disabled = true;
+    weg.textContent = T('Bezig...');
+    try {
+      const leeg = { merk_kleur: null, merk_logo: null, sponsor_tekst: null, sponsor_url: null };
+      const oud = S.poule.merk_logo;
+      if (!DEMO) {
+        const { error } = await db.from('pools').update(leeg).eq('id', S.poule.id);
+        if (error) throw new Error(uitleg(error));
+        if (oud) Promise.resolve(db.storage.from('poulelogo').remove([oud])).catch(() => {});
+      }
+      Object.assign(S.poule, leeg);
+      onthoudInLijst(S.poule);
+      S.profiel = null; S.profielFout = '';
+      S.melding = T('Het profiel van de poule is weggehaald.');
+    } catch (e) { S.profielFout = e.message; }
+    render();
+  };
 }
 
 // ---- openbaar: vindbaar zonder code --------------------------
@@ -10320,8 +10534,12 @@ function raceRegels(x, naam, breed) {
   return { maat: 72, regels: [pasIn(x, regels[0] ?? '', breed), tweede].filter(Boolean) };
 }
 
-const laadBeeld = (src) => new Promise((klaar) => {
+// cors: een plaatje van een ander domein (het logo van een poule, in de opslag
+// van Supabase) mag alleen op het canvas als het met CORS komt; anders kan het
+// deelplaatje daarna niet meer worden opgeslagen.
+const laadBeeld = (src, cors = false) => new Promise((klaar) => {
   const img = new Image();
+  if (cors) img.crossOrigin = 'anonymous';
   img.onload = () => klaar(img);
   img.onerror = () => klaar(null);
   img.src = src;
@@ -10351,6 +10569,10 @@ async function deelDoek(tekst, maat = DEELMAAT) {
   const K = DEELKLEUR, L = DEELLETTER;
   await laadDeelletters(`${tekst}PREDICTTHERACE0123456789·…▲▼`);
   const logo = await laadBeeld(new URL('../pictogrammen/predicttherace-logo.png', location.href).href);
+  // Premium: het logo van de poule onderaan, en de schuine strepen in de kleur
+  // van de poule. Alleen de strepen: tekst blijft in de kleuren van de app.
+  const poulelogo = logoUrl() ? await laadBeeld(logoUrl(), true) : null;
+  const strepen = merkKleur() ?? K.accent;
 
   const doek = document.createElement('canvas');
   doek.width = b; doek.height = h;
@@ -10366,7 +10588,7 @@ async function deelDoek(tekst, maat = DEELMAAT) {
 
   x.fillStyle = K.bg; x.fillRect(0, 0, b, h);
   x.save();
-  x.globalAlpha = 0.9; x.fillStyle = K.accent;
+  x.globalAlpha = 0.9; x.fillStyle = strepen;
   x.beginPath(); x.moveTo(b - 250, 0); x.lineTo(b - 170, 0); x.lineTo(b, 170); x.lineTo(b, 250); x.closePath(); x.fill();
   x.globalAlpha = 0.35;
   x.beginPath(); x.moveTo(b - 140, 0); x.lineTo(b - 110, 0); x.lineTo(b, 110); x.lineTo(b, 140); x.closePath(); x.fill();
@@ -10376,7 +10598,7 @@ async function deelDoek(tekst, maat = DEELMAAT) {
   if (logo) x.drawImage(logo, rand, y, 52, 52);
   else { x.fillStyle = K.accent; x.fillRect(rand, y + 6, 40, 40); }
   schrijf('PREDICT THE RACE', rand + 68, y + 38, { font: `700 34px ${L.cond}`, spatie: 2 });
-  return { doek, x, schrijf, label, K, L, b, h, rand, breed: b - 2 * rand, voet: maat.voet ?? h - 56 };
+  return { doek, x, schrijf, label, K, L, b, h, rand, breed: b - 2 * rand, voet: maat.voet ?? h - 56, poulelogo };
 }
 
 // De grote kop (een race, of de naam van de poule) zo groot als hij in twee
@@ -10470,9 +10692,23 @@ function deelLijst(d, rijen, y, onder) {
 // Voet: waar dit vandaan komt, en een geblokte vlag. Het adres staat nergens
 // vast in de app (zie test/domein.test.mjs): het komt uit de adresbalk.
 function deelVoet(d) {
-  const { x, label, K, b, rand, breed, voet } = d;
+  const { x, label, K, b, rand, breed, voet, poulelogo } = d;
   x.fillStyle = K.lijn; x.fillRect(rand, voet - 38, breed, 2);
-  label(location.host || 'Predict the Race', rand, voet, K.ink2);
+  // Premium: links het logo en de sponsor, het adres schuift naar rechts.
+  const tekst = premiumActief() && S.poule.sponsor_tekst ? S.poule.sponsor_tekst : null;
+  if (poulelogo || tekst) {
+    let px = rand;
+    if (poulelogo) {
+      const hoog = 44, br = Math.min(132, Math.round(poulelogo.width / poulelogo.height * hoog) || hoog);
+      x.drawImage(poulelogo, px, voet - hoog + 8, br, hoog);
+      px += br + 16;
+    }
+    if (tekst) {
+      x.font = `400 24px ${d.L.mono}`;
+      label(pasIn(x, tekst, breed / 2 - (px - rand)), px, voet, K.ink);
+    }
+    label(location.host || 'Predict the Race', b - rand - 6 * 12 - 20, voet, K.ink2, 'right');
+  } else label(location.host || 'Predict the Race', rand, voet, K.ink2);
   const vak = 12;
   for (let rij = 0; rij < 2; rij++) {
     for (let k = 0; k < 6; k++) {
@@ -12013,13 +12249,17 @@ function puntenVan(memberId) {
 
 function kiesSpeler() {
   app.innerHTML = `
-    <div class="toegang"><div class="kaart" data-intro="kaart|wie-ben-jij"><div class="baan"></div>
+    <div class="toegang"><div class="kaart" data-intro="kaart|wie-ben-jij">${merkbaan()}
       <div class="kaart-in">
         <div class="merk">
           <span class="blok"></span>
           <span class="naam">Predict the Race</span>
           <span class="code">${esc(S.poule.join_code ?? S.poule.name)}</span>
         </div>
+        ${premiumActief() && (logoUrl() || S.poule.sponsor_tekst) ? `<div class="merkkop">
+          ${poulelogoImg('groot')}
+          <div><strong>${esc(S.poule.name)}</strong><br>${sponsorRegel()}</div>
+        </div>` : ''}
         <div>
           <h1 class="middel">${T('Wie ben jij?')}</h1>
           <p class="zacht" style="margin:8px 0 0">${T('Tik op je naam. '

@@ -222,6 +222,16 @@ jobs:
           psql -d beheer -v ON_ERROR_STOP=1 -f schema.sql
           psql -d beheer -v ON_ERROR_STOP=1 -f test/beheer.test.sql
 
+      # Premium (het eigen profiel van een poule): premium zet alleen het
+      # beheer aan, logo, kleur en sponsorregel alleen de poulebaas zolang
+      # premium loopt, en de logo's in de opslag alleen in de eigen map.
+      - name: premium — het eigen profiel van een poule
+        run: |
+          createdb premium
+          psql -d premium -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d premium -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d premium -v ON_ERROR_STOP=1 -f test/premium.test.sql
+
       # De afscherming uit fase 0: met de publieke anon key mag je alleen zien
       # wat bij een poule hoort waar je zelf in zit. Deze test zet een tweede
       # poule neer waar de speler niets mee te maken heeft, en controleert
