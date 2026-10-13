@@ -1774,7 +1774,12 @@ function llms() {
   };
   // Een regel over de open poule alleen als er een open poule is.
   const metPoule = (r) => llmsVars.openPoule || !r.includes('{openPoule}');
-  const paginaTalen = TALEN.filter((c) => PAGINAS.some((pg) => pg.talen[c]));
+  // De losse pagina's per groep met dezelfde talen: de gidsen over organiseren
+  // en de puntentelling in alle zeven, de rest (nog) alleen in NL en EN.
+  const groepen = new Map();
+  for (const pg of PAGINAS) groepen.set(clusterVan(pg).join(), [...(groepen.get(clusterVan(pg).join()) ?? []), pg]);
+  const paginaGroepen = [...groepen].map(([talen, pgs]) =>
+    `${opsomming(pgs.map((pg) => pg.talen[pg.talen.en ? 'en' : clusterVan(pg)[0]].kop))} in ${opsomming(talen.split(',').map(taalNaamEn))}`);
   const raceTalen = TALEN.filter((c) => RACEPAGINAS.some((pg) => pg.talen[c]));
   const lijst = (soort) => ALLE.filter((pg) => pg.soort === soort).map((pg) => {
     const hoofd = pg.talen.en ? 'en' : clusterVan(pg)[0];
@@ -1800,7 +1805,7 @@ ${zin('en', 'makerzin')}
 ${llmsVars.openPoule ? `- Open league: anyone without a group of their own can join the open league and play against other F1 fans: ${llmsVars.openPoule}
 ` : ''}- App languages: ${opsomming(APP_TALEN.map(taalNaamEn))}
 - Website languages: the homepage in ${TALEN.map((c) => `${teksten[c].naam} (${urlVan(c)})`).join(', ')}${
-  paginaTalen.length ? `; the guides and the about page in ${opsomming(paginaTalen.map(taalNaamEn))}` : ''}${
+  paginaGroepen.map((g) => `; ${g}`).join('')}${
   raceTalen.length ? `; the race pages in ${opsomming(raceTalen.map(taalNaamEn))}` : ''}
 - Results: the calendar, the entry list and the official results come automatically from OpenF1 (https://openf1.org)
 - Made by: ${MAKER.naam} from ${MAKER.plaats} (${overUrl('en')})

@@ -59,6 +59,13 @@
 // Schrijfregels uit het zoekplan: het antwoord eerst, geen en-dash of em-dash,
 // en Nederlands en Engels elk zelf geschreven, niet de een uit de ander
 // vertaald. Danny leest beide voordat ze online gaan.
+//
+// Sinds 13 oktober staan organiseren en puntentelling ook in het Duits, Frans,
+// Spaans, Italiaans en Portugees: naar het Engels, met de woorden van de
+// voorpagina en de app in die taal (Tipprunde, ligue, porra, lega, bolão; de
+// namen van de niveaus; Joker, jolly, comodín, coringa). De ids van de secties
+// zijn per taal; safety-cars is overal hetzelfde, daar linken de racepagina's
+// naartoe. Een moedertaalspreker die meeleest blijft welkom.
 
 export const PAGINAS = [
   {
@@ -267,6 +274,507 @@ export const PAGINAS = [
           ['faq', 'Frequently asked questions about the app'],
         ],
       },
+      de: {
+        pad: 'de/f1-tippspiel-organisieren',
+        titel: 'F1-Tippspiel organisieren in 5 Minuten | Predict the Race',
+        omschrijving: 'So richtest du ein F1-Tippspiel mit Freunden oder Kollegen ein: vier Schritte, die wichtigen Entscheidungen und die drei Fallen, an denen Tipprunden scheitern.',
+        kop: 'Ein F1-Tippspiel organisieren',
+        kort: 'Ein F1-Tippspiel richtest du in fünf Minuten ein: Gib der Tipprunde einen Namen, entscheide, wie viel getippt wird, und teile den Code in der Gruppe. Schwierig ist, die ganze Saison durchzuhalten. Eine Tipprunde schläft ein, wenn jemand hoffnungslos zurückliegt, wenn Leute das Tippen vergessen oder wenn es nach dem Rennen nichts zu bereden gibt.',
+        teaser: 'Alles zum Organisieren einer Tipprunde: die Entscheidungen und die Fallen',
+        secties: [
+          {
+            id: 'einrichten',
+            vraag: 'Wie erstellt man ein F1-Tippspiel?',
+            kort: 'Ein F1-Tippspiel erstellst du in vier Schritten: Gib der Tipprunde einen Namen, trag deinen eigenen Namen ein, entscheide, wie viel getippt wird, und teile den Code in deiner Gruppe. Danach musst du als Administrator nichts mehr pflegen, denn Rennkalender, Fahrer und Ergebnisse kommen von selbst.',
+            stappen: [
+              'Gib der Tipprunde einen Namen. Der Name steht in der App und in der Einladung. Eine kurze Beschreibung hilft allen, die in mehreren Tipprunden spielen, etwa "Büro-Tipprunde, um die Ehre".',
+              'Trag deinen eigenen Namen ein. Du bist der erste Spieler und der Administrator der Tipprunde, du wählst also die Fragen und die Regeln.',
+              'Entscheide, wie viel getippt wird: Einfach, Klassisch oder Fortgeschritten, oder stell deine eigenen Fragen zusammen.',
+              'Teile den Einladungslink oder den sechsstelligen Code in deiner Gruppe. Wer ihn öffnet, wählt einen Namen und ist dabei, ohne Konto und ohne Passwort.',
+            ],
+            tekst: [
+              'Ab dann läuft alles von selbst. Kalender und Fahrer sind schon da, und nach jedem Qualifying und jedem Rennen kommt das offizielle Ergebnis herein und die Punkte werden berechnet. Niemand tippt etwas ab.',
+              'Mach das rechtzeitig vor dem ersten Rennen. Bis dieses Rennen gefahren ist, kannst du die Fragen noch ändern; danach sind sie fest, damit jedes Wochenende nach denselben Regeln zählt.',
+            ],
+          },
+          {
+            id: 'fragen',
+            vraag: 'Wie viele Fragen sollten zählen?',
+            kort: 'Lass so viele Fragen zählen, wie deine Gruppe durchhält. Die beiden Top 10 pro Wochenende, Qualifying und Rennen, reichen für eine spannende Tipprunde. Wer mehr will, nimmt mit Klassisch den Rennsieger, die Pole-Position und die schnellste Runde dazu, und Fortgeschritten schaltet alle {nGevorderd} Fragen ein.',
+            tabel: {
+              bijschrift: 'Die drei Niveaus in Predict the Race',
+              kop: ['Niveau', 'Fragen', 'Punkte pro Wochenende'],
+              rijen: [
+                ['Einfach', '{nSimpel}', '{simpel}'],
+                ['Klassisch', '{nKlassiek}', '{klassiek}'],
+                // Met een zacht afbreekstreepje: anders past de tabel niet op 360 pixels.
+                ['Fortge\u00adschritten', '{nGevorderd}', '{gevorderd}, plus Sprint und Saison'],
+              ],
+            },
+            tekst: [
+              'Einfach sind nur die beiden Top 10. Fortgeschritten schaltet alles ein, vom schnellsten Boxenstopp und den Teamduellen bis zur Zahl der Safety-Car-Phasen und einer roten Flagge.',
+              'Mehr Fragen heißt mehr zu gewinnen, aber auch mehr auszufüllen. In einer Gruppe, in der die Hälfte erst am Samstagmorgen an das Qualifying denkt, hält Einfach länger durch als Fortgeschritten.',
+            ],
+          },
+          {
+            id: 'joker',
+            vraag: 'Sollte man mit Jokern spielen?',
+            kort: 'Ja, wenn Spieler, die zurückliegen, noch etwas zu hoffen haben sollen. Ein Joker verdoppelt alle deine Punkte eines Rennwochenendes. Mit Jokern bekommt jeder standardmäßig {jokers} pro Saison; als Administrator kannst du 1 bis {jokersMax} einstellen oder sie ausgeschaltet lassen.',
+            tekst: [
+              'Den Joker setzt du vor Beginn des Wochenendes, danach ist er fest. So wird jedes Wochenende zu einer kleinen Wette: Ist das die Strecke, auf der du es besser weißt als alle anderen?',
+            ],
+          },
+          {
+            id: 'fallen',
+            vraag: 'Woran scheitert ein F1-Tippspiel?',
+            kort: 'Ein F1-Tippspiel scheitert selten an den Fragen. Fast immer ist es eines von drei Dingen: ein Rückstand, den niemand aufholen kann, Leute, die das Tippen vergessen, oder nichts zu bereden nach dem Rennen. Für jedes gibt es eine Lösung: mehr zu gewinnen als die Endwertung, Erinnerungen vor der Deadline und jedes Wochenende etwas zum Zeigen.',
+            punten: [
+              ['Ein Rückstand, den niemand aufholt', 'Wer nach acht Rennen meilenweit zurückliegt, hört auf. Gib den Leuten also mehr zu gewinnen als die Endwertung: den Wochenendsieger (wer an einem Wochenende die meisten Punkte holt, gewinnt dieses Wochenende), die direkten Duelle (du siehst, wer gegen jeden Freund öfter gewonnen hat) und Joker.'],
+              ['Vergessen zu tippen', 'Ein verpasstes Rennen bringt dich in Rückstand, nach zwei bist du raus. Dagegen helfen das Kalender-Abo mit einer Erinnerung {agendaUur} vor jeder Deadline, eine Push-Benachrichtigung, wenn du {venster} vor einer Deadline noch nichts getippt hast, und das automatische Ausfüllen: Was jemand offen gelassen hat, füllt die App zufällig aus, von der Top 10 bis zu den Zusatzfragen, statt null Punkte.'],
+              ['Nichts zu bereden', 'Nach dem Rennen muss es etwas zu sehen geben. Das Ergebnis pro Fahrer, die Tabelle mit Aufsteigern und Absteigern und ein Ergebnisbild für die Gruppe liefern jedes Wochenende Gesprächsstoff.'],
+            ],
+          },
+          {
+            id: 'checkliste',
+            vraag: 'Was solltest du vor Saisonbeginn klären?',
+            kort: 'Kläre vor dem ersten Qualifying die Tipprunde und den Code, das Niveau, die Joker und das automatische Ausfüllen. Sorg dafür, dass alle den Kalender abonnieren oder Benachrichtigungen einschalten, die Saisonfragen ausfüllen und wissen, worum ihr spielt. Wer das früh klärt, muss die ganze Saison nicht mehr daran denken.',
+            lijst: [
+              'Die Tipprunde existiert und der Code ist geteilt, vor dem ersten Qualifying.',
+              'Das Niveau ist gewählt: Einfach, Klassisch, Fortgeschritten oder eigene Fragen.',
+              'Joker: an oder aus, und wie viele pro Person.',
+              'Automatisches Ausfüllen: gemeinsam abgesprochen, ob es an ist.',
+              'Alle haben den Kalender abonniert oder Benachrichtigungen eingeschaltet.',
+              'Die Saisonfragen sind vor dem ersten Rennen ausgefüllt.',
+              'Alle wissen, worum ihr spielt: um die Ehre. In der App gibt es keinen Einsatz, keinen Pott und keinen Preis.',
+            ],
+          },
+          {
+            id: 'buero',
+            vraag: 'Wie organisiert man ein F1-Tippspiel im Büro?',
+            kort: 'Ein Tippspiel im Büro läuft wie jedes andere, nur sollte der Einstieg leicht sein: Nimm Einfach mit den beiden Top 10, teile den Code im Team-Chat und spielt um die Ehre. Predict the Race ist kostenlos, auch für eine große Tipprunde im Büro. Niemand braucht ein Konto oder einen App-Store, denn es läuft im Browser auf jedem Handy und Computer.',
+            punten: [
+              ['Einfach hält alle dabei', 'Nicht jeder Kollege schaut jedes Rennen. Zwei Top 10 dauern eine Minute, und die Fans spielen Fortgeschritten in einer eigenen Tipprunde mit Freunden.'],
+              ['Nur um die Ehre', 'In der App gibt es keinen Einsatz, keinen Pott und keinen Preis. Nichts einzusammeln oder auszuzahlen, und niemand muss bei der Arbeit an Geld denken.'],
+              ['Kostenlos bei jeder Größe', 'Eine Tipprunde hat keine Spielergrenze, und es gibt keine Firmenpreise. Macht die ganze Abteilung oder die ganze Firma mit, bleibt es kostenlos.'],
+              ['Automatisches Ausfüllen einschalten', 'Wer im Urlaub ist oder ein Wochenende vergisst, bekommt einen zufälligen Tipp statt null Punkte und fällt nicht raus.'],
+              ['Eine Beschreibung dazuschreiben', 'Etwa "Büro-Tipprunde, um die Ehre". Wer auch mit Freunden in einer Tipprunde ist, sieht beim Wechseln sofort, welche welche ist.'],
+            ],
+            tekst: [
+              'Am Montag gibt es dann Gesprächsstoff: den Wochenendsieger, wer in der Tabelle geklettert ist, und das Ergebnisbild, das du mit einem Fingertipp im Chat teilst.',
+            ],
+          },
+        ],
+        faq: [
+          ['Kann jemand mitten in der Saison einsteigen?', 'Ja. Wer später einsteigt, sammelt ab dem nächsten Rennen Punkte. Saisonfragen, die noch offen sind, kann er noch ausfüllen, aber eine Antwort lässt sich nicht mehr ändern, sobald sie abgegeben ist.'],
+          ['Kann ich in mehr als einer Tipprunde sein?', 'Ja. In der App wechselst du zwischen deinen Tipprunden, und die Beschreibung, die der Administrator dazuschreibt, steht beim Wechseln dabei.'],
+          ['Kann eine Tipprunde öffentlich sein?', 'Ja. Standardmäßig ist sie privat und man macht mit dem Code mit, aber du kannst sie auch auffindbar machen, sodass jeder mitmachen kann.'],
+        ],
+        leesOok: [
+          ['niveaus', 'Einfach, Klassisch oder Fortgeschritten: die drei Niveaus nebeneinander'],
+          ['punten', 'Das ganze Punktesystem, mit Zusatzfragen und Saisonfragen'],
+          ['faq', 'Häufige Fragen zur App'],
+        ],
+      },
+      fr: {
+        pad: 'fr/organiser-pronostics-f1',
+        titel: 'Organiser des pronostics F1 entre amis | Predict the Race',
+        omschrijving: 'Lancez une ligue de pronostics F1 entre amis ou collègues en cinq minutes : les quatre étapes, les choix qui comptent et les trois pièges qui tuent une ligue.',
+        kop: 'Organiser des pronostics F1 entre amis',
+        kort: 'Une ligue de pronostics F1 se lance en cinq minutes : donnez-lui un nom, choisissez combien de questions comptent et partagez le code dans votre groupe. Le plus dur, c\'est de tenir toute la saison. Une ligue s\'essouffle quand quelqu\'un est trop loin derrière, quand les gens oublient de pronostiquer, ou quand il n\'y a rien à commenter après la course.',
+        teaser: 'Tout pour organiser une ligue : les choix et les pièges',
+        secties: [
+          {
+            id: 'lancer',
+            vraag: 'Comment organiser des pronostics F1 entre amis ?',
+            kort: 'Vous organisez des pronostics F1 entre amis en quatre étapes : nommez la ligue, entrez votre propre nom, choisissez combien pronostiquer et partagez le code dans votre groupe. Ensuite, l\'administrateur n\'a plus rien à suivre : le calendrier, les pilotes et les résultats arrivent tout seuls.',
+            stappen: [
+              'Nommez la ligue. Le nom apparaît dans l\'appli et dans l\'invitation. Une courte description aide ceux qui jouent dans plusieurs ligues, par exemple "ligue du bureau, pour la gloire".',
+              'Entrez votre propre nom. Vous êtes le premier joueur et l\'administrateur de la ligue : c\'est vous qui choisissez les questions et les règles.',
+              'Choisissez combien pronostiquer : Simple, Classique ou Avancé, ou composez vos propres questions.',
+              'Partagez le lien d\'invitation ou le code à six caractères dans votre groupe. Qui l\'ouvre choisit un nom et c\'est parti, sans compte ni mot de passe.',
+            ],
+            tekst: [
+              'À partir de là, tout tourne tout seul. Le calendrier et les pilotes sont déjà là, et après chaque séance de qualifications et chaque course, le résultat officiel arrive et les points sont calculés. Personne ne recopie rien.',
+              'Faites-le bien avant la première course. Tant que cette course n\'a pas eu lieu, vous pouvez encore changer les questions ; ensuite, elles sont verrouillées, pour que chaque week-end compte selon les mêmes règles.',
+            ],
+          },
+          {
+            id: 'questions',
+            vraag: 'Combien de questions faut-il compter ?',
+            kort: 'Comptez autant de questions que votre groupe peut suivre. Les deux top 10 de chaque week-end, qualifications et course, suffisent pour une ligue disputée. Pour aller plus loin, Classique ajoute le vainqueur, la pole position et le meilleur tour, et Avancé active les {nGevorderd} questions.',
+            tabel: {
+              bijschrift: 'Les trois niveaux de Predict the Race',
+              kop: ['Niveau', 'Questions', 'Points par week-end'],
+              rijen: [
+                ['Simple', '{nSimpel}', '{simpel}'],
+                ['Classique', '{nKlassiek}', '{klassiek}'],
+                ['Avancé', '{nGevorderd}', '{gevorderd}, plus sprint et saison'],
+              ],
+            },
+            tekst: [
+              'Simple, ce sont juste les deux top 10. Avancé active tout, de l\'arrêt au stand le plus rapide et des duels entre coéquipiers jusqu\'au nombre de voitures de sécurité et au drapeau rouge.',
+              'Plus de questions, c\'est plus à gagner, mais aussi plus à remplir. Dans un groupe où la moitié ne pense aux qualifications que le samedi matin, Simple tient plus longtemps qu\'Avancé.',
+            ],
+          },
+          {
+            id: 'jokers',
+            vraag: 'Faut-il jouer avec des jokers ?',
+            kort: 'Oui, si vous voulez que les joueurs en retard gardent de l\'espoir. Un joker double tous vos points d\'un week-end de course. Avec les jokers activés, chacun en reçoit {jokers} par saison par défaut ; en tant qu\'administrateur, vous pouvez en régler de 1 à {jokersMax}, ou les laisser désactivés.',
+            tekst: [
+              'Vous posez un joker avant le début du week-end, puis il est verrouillé. Chaque week-end devient un petit pari : est-ce le circuit où vous en savez plus que tout le monde ?',
+            ],
+          },
+          {
+            id: 'pieges',
+            vraag: 'Qu\'est-ce qui tue une ligue de pronostics F1 ?',
+            kort: 'Une ligue de pronostics F1 meurt rarement à cause des questions. C\'est presque toujours l\'une de ces trois choses : un écart que personne ne peut combler, des joueurs qui oublient de pronostiquer, ou rien à commenter après la course. Chacune a sa solution : plus à gagner que le classement final, des rappels avant l\'échéance et quelque chose à montrer chaque week-end.',
+            punten: [
+              ['Un écart que personne ne comble', 'Celui qui est loin derrière après huit courses arrête de jouer. Donnez donc plus à gagner que le classement final : le vainqueur du week-end (celui qui marque le plus en un week-end gagne ce week-end), les face-à-face (vous voyez qui a gagné le plus souvent contre chaque ami) et les jokers.'],
+              ['Oublier de pronostiquer', 'Une course manquée et vous êtes en retard ; deux, et vous décrochez. Ce qui aide : l\'abonnement au calendrier avec un rappel {agendaUur} avant chaque échéance, une notification quand vous n\'avez rien rempli {venster} avant une échéance, et le remplissage automatique, qui remplit au hasard ce que quelqu\'un a laissé vide, du top 10 aux questions supplémentaires, au lieu de zéro.'],
+              ['Rien à commenter', 'Après la course, il faut quelque chose à regarder. Le résultat pilote par pilote, le classement avec qui monte et qui descend, et une image du résultat pour le groupe donnent à chacun de quoi débattre chaque week-end.'],
+            ],
+          },
+          {
+            id: 'checklist',
+            vraag: 'Que faut-il régler avant le début de la saison ?',
+            kort: 'Avant les premières qualifications, réglez la ligue et le code, le niveau, les jokers et le remplissage automatique. Assurez-vous que chacun s\'abonne au calendrier ou active les notifications, remplit les questions de saison et sait pour quoi vous jouez. Réglez cela tôt et personne n\'aura à y repenser de la saison.',
+            lijst: [
+              'La ligue existe et le code est partagé, avant les premières qualifications.',
+              'Le niveau est choisi : Simple, Classique, Avancé ou vos propres questions.',
+              'Jokers : activés ou non, et combien chacun.',
+              'Remplissage automatique : décidé ensemble s\'il est activé.',
+              'Chacun s\'est abonné au calendrier ou a activé les notifications.',
+              'Les questions de saison sont remplies avant la première course.',
+              'Tout le monde sait pour quoi vous jouez : la gloire. Il n\'y a ni mise, ni cagnotte, ni prix dans l\'appli.',
+            ],
+          },
+          {
+            id: 'bureau',
+            vraag: 'Comment organiser des pronostics F1 au bureau ?',
+            kort: 'Une ligue au bureau s\'organise comme les autres, mais doit rester facile à rejoindre : choisissez Simple avec les deux top 10, partagez le code dans le chat de l\'équipe et jouez pour la gloire. Predict the Race est gratuit, même pour une grande ligue au travail. Personne n\'a besoin de compte ni de store, car tout fonctionne dans le navigateur, sur tout téléphone ou ordinateur.',
+            punten: [
+              ['Simple garde tout le monde', 'Tous les collègues ne regardent pas chaque course. Deux top 10 prennent une minute, et les passionnés peuvent jouer en Avancé dans leur propre ligue entre amis.'],
+              ['Pour la gloire seulement', 'Il n\'y a ni mise, ni cagnotte, ni prix dans l\'appli. Rien à collecter ni à reverser, et personne n\'a à penser à l\'argent au travail.'],
+              ['Gratuit quelle que soit la taille', 'Une ligue n\'a pas de limite de joueurs et il n\'y a pas de tarif entreprise. Si tout le service ou toute l\'entreprise participe, c\'est toujours gratuit.'],
+              ['Activez le remplissage automatique', 'Celui qui est en vacances ou oublie un week-end reçoit un pronostic au hasard au lieu de zéro point, et ne décroche pas.'],
+              ['Ajoutez une description', 'Par exemple "ligue du bureau, pour la gloire". Ceux qui jouent aussi dans une ligue entre amis voient tout de suite laquelle est laquelle quand ils changent.'],
+            ],
+            tekst: [
+              'Le lundi, il y a de quoi parler : le vainqueur du week-end, qui a grimpé au classement, et l\'image du résultat que vous partagez dans le chat d\'un seul geste.',
+            ],
+          },
+        ],
+        faq: [
+          ['Peut-on rejoindre une ligue en cours de saison ?', 'Oui. Les retardataires marquent à partir de la course suivante. Les questions de saison auxquelles ils n\'ont pas encore répondu peuvent encore être remplies, mais une réponse ne peut plus être changée une fois donnée.'],
+          ['Puis-je être dans plusieurs ligues ?', 'Oui. Vous passez d\'une ligue à l\'autre dans l\'appli, et la description ajoutée par l\'administrateur s\'affiche quand vous changez.'],
+          ['Une ligue peut-elle être publique ?', 'Oui. Par défaut elle est privée et on la rejoint avec le code, mais vous pouvez la rendre visible pour que tout le monde puisse la rejoindre.'],
+        ],
+        leesOok: [
+          ['niveaus', 'Simple, Classique ou Avancé : les trois niveaux côte à côte'],
+          ['punten', 'Le barème complet, avec les questions supplémentaires et les questions de saison'],
+          ['faq', 'Questions fréquentes sur l\'appli'],
+        ],
+      },
+      es: {
+        pad: 'es/organizar-porra-f1',
+        titel: 'Cómo organizar una porra de F1 | Predict the Race',
+        omschrijving: 'Monta una porra de F1 con amigos o compañeros en cinco minutos: los cuatro pasos, las decisiones que importan y las tres trampas que acaban con una liga.',
+        kop: 'Cómo organizar una porra de F1',
+        kort: 'Una porra de F1 se monta en cinco minutos: ponle nombre a la liga, decide cuánto se predice y comparte el código en el grupo. Lo difícil es aguantar toda la temporada. Una porra se apaga cuando alguien se queda demasiado atrás, cuando la gente se olvida de predecir o cuando no hay nada de qué hablar después de la carrera.',
+        teaser: 'Todo sobre organizar una liga: las decisiones y las trampas',
+        secties: [
+          {
+            id: 'montar',
+            vraag: '¿Cómo se hace una porra de F1?',
+            kort: 'Una porra de F1 se hace en cuatro pasos: ponle nombre a la liga, escribe tu propio nombre, decide cuánto se predice y comparte el código en tu grupo. Después, el administrador no tiene que llevar nada, porque el calendario, los pilotos y los resultados llegan solos.',
+            stappen: [
+              'Ponle nombre a la liga. El nombre aparece en la app y en la invitación. Una descripción corta ayuda a quien juega en varias ligas, algo como "porra de la oficina, por la gloria".',
+              'Escribe tu propio nombre. Eres el primer jugador y el administrador de la liga, así que tú eliges las preguntas y las reglas.',
+              'Decide cuánto se predice: Sencillo, Clásico o Avanzado, o arma tu propio juego de preguntas.',
+              'Comparte el enlace de invitación o el código de seis caracteres en tu grupo. Quien lo abre elige un nombre y ya está dentro, sin cuenta y sin contraseña.',
+            ],
+            tekst: [
+              'A partir de ahí funciona solo. El calendario y los pilotos ya están, y después de cada clasificación y cada carrera llega el resultado oficial y se calculan los puntos. Nadie tiene que copiar nada.',
+              'Hazlo con tiempo antes de la primera carrera. Hasta que se dispute esa carrera aún puedes cambiar las preguntas; después quedan fijas, para que cada fin de semana se puntúe con las mismas reglas.',
+            ],
+          },
+          {
+            id: 'preguntas',
+            vraag: '¿Cuántas preguntas deberían contar?',
+            kort: 'Cuenta tantas preguntas como tu grupo vaya a seguir. Los dos top 10 de cada fin de semana, clasificación y carrera, bastan para una liga reñida. Si quieres más, Clásico añade el ganador, la pole position y la vuelta rápida, y Avanzado activa las {nGevorderd} preguntas.',
+            tabel: {
+              bijschrift: 'Los tres niveles de Predict the Race',
+              kop: ['Nivel', 'Preguntas', 'Puntos por fin de semana'],
+              rijen: [
+                ['Sencillo', '{nSimpel}', '{simpel}'],
+                ['Clásico', '{nKlassiek}', '{klassiek}'],
+                ['Avanzado', '{nGevorderd}', '{gevorderd}, más sprint y temporada'],
+              ],
+            },
+            tekst: [
+              'Sencillo son solo los dos top 10. Avanzado lo activa todo, desde la parada en boxes más rápida y los duelos entre compañeros hasta el número de coches de seguridad y la bandera roja.',
+              'Más preguntas significa más para ganar, pero también más que rellenar. En un grupo donde la mitad solo piensa en la clasificación el sábado por la mañana, Sencillo aguanta más que Avanzado.',
+            ],
+          },
+          {
+            id: 'comodines',
+            vraag: '¿Conviene jugar con comodines?',
+            kort: 'Sí, si quieres que los jugadores que van atrás tengan algo que esperar. Un comodín duplica todos tus puntos de un fin de semana de carrera. Con los comodines activados, cada uno recibe {jokers} por temporada por defecto; como administrador puedes elegir de 1 a {jokersMax}, o dejarlos desactivados.',
+            tekst: [
+              'El comodín se pone antes de que empiece el fin de semana, y después queda fijo. Así cada fin de semana es una pequeña apuesta: ¿es este el circuito donde sabes más que nadie?',
+            ],
+          },
+          {
+            id: 'trampas',
+            vraag: '¿Qué acaba con una porra de F1?',
+            kort: 'Una porra de F1 rara vez muere por las preguntas. Casi siempre es una de tres cosas: una distancia que nadie puede recortar, gente que se olvida de predecir o nada de qué hablar después de la carrera. Cada una tiene su solución: más que ganar que la clasificación final, recordatorios antes del plazo y algo que enseñar cada fin de semana.',
+            punten: [
+              ['Una distancia que nadie recorta', 'Quien va muy atrás después de ocho carreras deja de jugar. Así que da más que ganar que la clasificación final: el ganador del fin de semana (quien más puntos suma en un fin de semana gana ese fin de semana), los cara a cara (ves quién ha ganado más veces contra cada amigo) y los comodines.'],
+              ['Olvidarse de predecir', 'Te pierdes una carrera y vas por detrás; te pierdes dos y te descuelgas. Lo que ayuda: la suscripción al calendario con un aviso {agendaUur} antes de cada plazo, una notificación si no has rellenado nada {venster} antes de un plazo, y el relleno automático, que rellena al azar lo que alguien dejó en blanco, del top 10 a las preguntas extra, en vez de cero.'],
+              ['Nada de qué hablar', 'Después de la carrera tiene que haber algo que mirar. El resultado piloto a piloto, la clasificación con quién sube y quién baja, y una imagen del resultado para el grupo dan tema de discusión cada fin de semana.'],
+            ],
+          },
+          {
+            id: 'lista',
+            vraag: '¿Qué hay que dejar listo antes de que empiece la temporada?',
+            kort: 'Antes de la primera clasificación, deja listos la liga y el código, el nivel, los comodines y el relleno automático. Asegúrate de que todos se suscriban al calendario o activen las notificaciones, rellenen las preguntas de temporada y sepan por qué jugáis. Si lo dejas listo pronto, nadie tendrá que volver a pensarlo en toda la temporada.',
+            lijst: [
+              'La liga existe y el código está compartido, antes de la primera clasificación.',
+              'El nivel está elegido: Sencillo, Clásico, Avanzado o tus propias preguntas.',
+              'Comodines: sí o no, y cuántos por persona.',
+              'Relleno automático: acordado entre todos si está activado.',
+              'Todos se han suscrito al calendario o han activado las notificaciones.',
+              'Las preguntas de temporada están rellenadas antes de la primera carrera.',
+              'Todos saben por qué jugáis: por la gloria. En la app no hay cuota, ni bote, ni premio.',
+            ],
+          },
+          {
+            id: 'oficina',
+            vraag: '¿Cómo se organiza una porra de F1 en la oficina?',
+            kort: 'Una porra en la oficina se organiza como cualquier otra, pero tiene que ser fácil entrar: elige Sencillo con los dos top 10, comparte el código en el chat del equipo y jugad por la gloria. Predict the Race es gratis, incluso para una liga grande en el trabajo. Nadie necesita cuenta ni tienda de apps, porque funciona en el navegador de cualquier móvil u ordenador.',
+            punten: [
+              ['Sencillo mantiene a todos', 'No todos los compañeros ven cada carrera. Dos top 10 llevan un minuto, y los fans pueden jugar Avanzado en su propia liga con amigos.'],
+              ['Solo por la gloria', 'En la app no hay cuota, ni bote, ni premio. Nada que recaudar ni que repartir, y nadie tiene que pensar en dinero en el trabajo.'],
+              ['Gratis sea cual sea el tamaño', 'Una liga no tiene límite de jugadores y no hay precio para empresas. Si se apunta todo el departamento o toda la empresa, sigue siendo gratis.'],
+              ['Activa el relleno automático', 'Quien está de vacaciones u olvida un fin de semana recibe una predicción al azar en vez de cero puntos, y no se descuelga.'],
+              ['Añade una descripción', 'Algo como "porra de la oficina, por la gloria". Quien también juega en una liga con amigos ve enseguida cuál es cuál al cambiar.'],
+            ],
+            tekst: [
+              'El lunes hay de qué hablar: el ganador del fin de semana, quién ha subido en la clasificación y la imagen del resultado que compartes en el chat con un toque.',
+            ],
+          },
+        ],
+        faq: [
+          ['¿Puede alguien unirse a mitad de temporada?', 'Sí. Quien llega tarde puntúa desde la siguiente carrera. Las preguntas de temporada que aún no haya contestado las puede rellenar, pero una respuesta ya no se puede cambiar una vez enviada.'],
+          ['¿Puedo estar en más de una liga?', 'Sí. En la app cambias entre tus ligas, y la descripción que pone el administrador aparece al cambiar.'],
+          ['¿Puede una liga ser pública?', 'Sí. Por defecto es privada y se entra con el código, pero puedes hacerla visible para que cualquiera pueda unirse.'],
+        ],
+        leesOok: [
+          ['niveaus', 'Sencillo, Clásico o Avanzado: los tres niveles lado a lado'],
+          ['punten', 'Toda la puntuación, con las preguntas extra y las de temporada'],
+          ['faq', 'Preguntas frecuentes sobre la app'],
+        ],
+      },
+      it: {
+        pad: 'it/organizzare-pronostici-f1',
+        titel: 'Organizzare i pronostici F1 con gli amici | Predict the Race',
+        omschrijving: 'Crea una lega di pronostici F1 con amici o colleghi in cinque minuti: i quattro passi, le scelte che contano e le tre trappole che fanno morire una lega.',
+        kop: 'Organizzare i pronostici F1 con gli amici',
+        kort: 'Una lega di pronostici F1 si crea in cinque minuti: dai un nome alla lega, decidi quanto pronosticare e condividi il codice nel gruppo. La parte difficile è tenerla viva tutta la stagione. Una lega si spegne quando qualcuno resta troppo indietro, quando la gente si dimentica di pronosticare o quando dopo la gara non c\'è niente di cui parlare.',
+        teaser: 'Tutto su come organizzare una lega: le scelte e le trappole',
+        secties: [
+          {
+            id: 'creare',
+            vraag: 'Come si organizzano i pronostici F1 con gli amici?',
+            kort: 'I pronostici F1 con gli amici si organizzano in quattro passi: dai un nome alla lega, inserisci il tuo nome, decidi quanto pronosticare e condividi il codice nel tuo gruppo. Poi l\'amministratore non deve più seguire niente, perché calendario, piloti e risultati arrivano da soli.',
+            stappen: [
+              'Dai un nome alla lega. Il nome compare nell\'app e nell\'invito. Una breve descrizione aiuta chi gioca in più leghe, per esempio "lega dell\'ufficio, per la gloria".',
+              'Inserisci il tuo nome. Sei il primo giocatore e l\'amministratore della lega, quindi scegli tu le domande e le regole.',
+              'Decidi quanto pronosticare: Semplice, Classico o Avanzato, oppure componi le tue domande.',
+              'Condividi il link di invito o il codice di sei caratteri nel tuo gruppo. Chi lo apre sceglie un nome ed è dentro, senza account e senza password.',
+            ],
+            tekst: [
+              'Da lì in poi va tutto da solo. Calendario e piloti ci sono già, e dopo ogni qualifica e ogni gara arriva il risultato ufficiale e i punti vengono calcolati. Nessuno deve ricopiare niente.',
+              'Fallo con anticipo rispetto alla prima gara. Finché quella gara non si è corsa puoi ancora cambiare le domande; dopo restano fisse, così ogni weekend conta con le stesse regole.',
+            ],
+          },
+          {
+            id: 'domande',
+            vraag: 'Quante domande dovrebbero contare?',
+            kort: 'Fai contare tante domande quante il tuo gruppo riesce a seguire. Le due top 10 di ogni weekend, qualifiche e gara, bastano per una lega combattuta. Se vuoi di più, Classico aggiunge vincitore, pole position e giro più veloce, e Avanzato attiva tutte le {nGevorderd} domande.',
+            tabel: {
+              bijschrift: 'I tre livelli di Predict the Race',
+              kop: ['Livello', 'Domande', 'Punti per weekend'],
+              rijen: [
+                ['Semplice', '{nSimpel}', '{simpel}'],
+                ['Classico', '{nKlassiek}', '{klassiek}'],
+                ['Avanzato', '{nGevorderd}', '{gevorderd}, più sprint e stagione'],
+              ],
+            },
+            tekst: [
+              'Semplice sono solo le due top 10. Avanzato attiva tutto, dal pit stop più veloce e i duelli tra compagni di squadra fino al numero di safety car e alla bandiera rossa.',
+              'Più domande vuol dire più da vincere, ma anche più da compilare. In un gruppo dove metà pensa alle qualifiche solo il sabato mattina, Semplice dura più di Avanzato.',
+            ],
+          },
+          {
+            id: 'jolly',
+            vraag: 'Conviene giocare con i jolly?',
+            kort: 'Sì, se vuoi che chi è indietro abbia ancora qualcosa da sperare. Un jolly raddoppia tutti i tuoi punti di un weekend di gara. Con i jolly attivi, ognuno ne riceve {jokers} a stagione di default; come amministratore puoi sceglierne da 1 a {jokersMax}, oppure lasciarli spenti.',
+            tekst: [
+              'Il jolly si gioca prima che inizi il weekend, poi resta bloccato. Così ogni weekend diventa una piccola scommessa: è questo il circuito dove ne sai più di tutti?',
+            ],
+          },
+          {
+            id: 'trappole',
+            vraag: 'Che cosa fa morire una lega di pronostici F1?',
+            kort: 'Una lega di pronostici F1 muore di rado per colpa delle domande. Quasi sempre è una di tre cose: un distacco che nessuno può recuperare, gente che si dimentica di pronosticare, o niente di cui parlare dopo la gara. Ognuna ha il suo rimedio: più da vincere della classifica finale, promemoria prima della scadenza e qualcosa da mostrare ogni weekend.',
+            punten: [
+              ['Un distacco che nessuno recupera', 'Chi dopo otto gare è lontanissimo smette di giocare. Quindi metti in palio più della classifica finale: il vincitore del weekend (chi fa più punti in un weekend vince quel weekend), i testa a testa (vedi chi ha vinto più spesso contro ogni amico) e i jolly.'],
+              ['Dimenticarsi di pronosticare', 'Salti una gara e sei indietro; ne salti due e molli. Cosa aiuta: l\'abbonamento al calendario con un promemoria {agendaUur} prima di ogni scadenza, una notifica se non hai compilato niente {venster} prima di una scadenza, e la compilazione automatica, che riempie a caso quello che qualcuno ha lasciato vuoto, dalla top 10 alle domande extra, invece di zero.'],
+              ['Niente di cui parlare', 'Dopo la gara deve esserci qualcosa da guardare. Il risultato pilota per pilota, la classifica con chi sale e chi scende, e un\'immagine del risultato per il gruppo danno a tutti qualcosa su cui discutere ogni weekend.'],
+            ],
+          },
+          {
+            id: 'checklist',
+            vraag: 'Cosa sistemare prima che inizi la stagione?',
+            kort: 'Prima delle prime qualifiche, sistema la lega e il codice, il livello, i jolly e la compilazione automatica. Fai in modo che tutti si abbonino al calendario o attivino le notifiche, compilino le domande di stagione e sappiano per cosa giocate. Se lo sistemi presto, nessuno dovrà più pensarci per tutta la stagione.',
+            lijst: [
+              'La lega esiste e il codice è condiviso, prima delle prime qualifiche.',
+              'Il livello è scelto: Semplice, Classico, Avanzato o le tue domande.',
+              'Jolly: sì o no, e quanti a testa.',
+              'Compilazione automatica: deciso insieme se è attiva.',
+              'Tutti si sono abbonati al calendario o hanno attivato le notifiche.',
+              'Le domande di stagione sono compilate prima della prima gara.',
+              'Tutti sanno per cosa giocate: per la gloria. Nell\'app non ci sono quote, né montepremi, né premi.',
+            ],
+          },
+          {
+            id: 'ufficio',
+            vraag: 'Come si organizzano i pronostici F1 in ufficio?',
+            kort: 'Una lega in ufficio si organizza come le altre, ma deve restare facile entrarci: scegli Semplice con le due top 10, condividi il codice nella chat del team e giocate per la gloria. Predict the Race è gratis, anche per una lega grande al lavoro. Nessuno ha bisogno di account o di scaricare app, perché funziona nel browser di qualsiasi telefono o computer.',
+            punten: [
+              ['Semplice tiene dentro tutti', 'Non tutti i colleghi guardano ogni gara. Due top 10 richiedono un minuto, e gli appassionati possono giocare in Avanzato in una lega loro con gli amici.'],
+              ['Solo per la gloria', 'Nell\'app non ci sono quote, né montepremi, né premi. Niente da raccogliere o da pagare, e nessuno deve pensare ai soldi al lavoro.'],
+              ['Gratis a qualsiasi dimensione', 'Una lega non ha limite di giocatori e non ci sono prezzi per aziende. Se partecipa tutto il reparto o tutta l\'azienda, resta gratis.'],
+              ['Attiva la compilazione automatica', 'Chi è in ferie o si dimentica un weekend riceve un pronostico a caso invece di zero punti, e non resta indietro.'],
+              ['Aggiungi una descrizione', 'Per esempio "lega dell\'ufficio, per la gloria". Chi gioca anche in una lega con gli amici vede subito quale è quale quando cambia.'],
+            ],
+            tekst: [
+              'Il lunedì c\'è di che parlare: il vincitore del weekend, chi è salito in classifica e l\'immagine del risultato che condividi nella chat con un tocco.',
+            ],
+          },
+        ],
+        faq: [
+          ['Si può entrare in una lega a stagione iniziata?', 'Sì. Chi entra tardi fa punti dalla gara successiva. Le domande di stagione a cui non ha ancora risposto può ancora compilarle, ma una risposta non si può più cambiare una volta data.'],
+          ['Posso essere in più di una lega?', 'Sì. Nell\'app passi da una lega all\'altra, e la descrizione che aggiunge l\'amministratore compare quando cambi.'],
+          ['Una lega può essere pubblica?', 'Sì. Di default è privata e si entra con il codice, ma puoi renderla visibile così chiunque può entrare.'],
+        ],
+        leesOok: [
+          ['niveaus', 'Semplice, Classico o Avanzato: i tre livelli a confronto'],
+          ['punten', 'Tutto il punteggio, con le domande extra e quelle di stagione'],
+          ['faq', 'Domande frequenti sull\'app'],
+        ],
+      },
+      pt: {
+        pad: 'pt/organizar-bolao-f1',
+        titel: 'Como organizar um bolão de F1 | Predict the Race',
+        omschrijving: 'Monte um bolão de F1 com amigos ou colegas em cinco minutos: os quatro passos, as escolhas que importam e as três armadilhas que acabam com um bolão.',
+        kop: 'Como organizar um bolão de F1',
+        kort: 'Um bolão de F1 se monta em cinco minutos: dê um nome ao bolão, decida quanto palpitar e compartilhe o código no grupo. O difícil é manter o bolão vivo a temporada inteira. Um bolão morre quando alguém fica para trás sem chance, quando o pessoal esquece de palpitar ou quando não há nada para comentar depois da corrida.',
+        teaser: 'Tudo sobre organizar um bolão: as escolhas e as armadilhas',
+        secties: [
+          {
+            id: 'montar',
+            vraag: 'Como organizar um bolão de F1 com os amigos?',
+            kort: 'Você organiza um bolão de F1 com os amigos em quatro passos: dê um nome ao bolão, digite seu próprio nome, decida quanto palpitar e compartilhe o código no seu grupo. Depois disso o administrador não precisa acompanhar nada, porque o calendário, os pilotos e os resultados chegam sozinhos.',
+            stappen: [
+              'Dê um nome ao bolão. O nome aparece no app e no convite. Uma descrição curta ajuda quem joga em mais de um bolão, algo como "bolão do trabalho, pela glória".',
+              'Digite seu próprio nome. Você é o primeiro jogador e o administrador do bolão, então escolhe as perguntas e as regras.',
+              'Decida quanto palpitar: Simples, Clássico ou Avançado, ou monte suas próprias perguntas.',
+              'Compartilhe o link de convite ou o código de seis caracteres no seu grupo. Quem abre escolhe um nome e já está dentro, sem conta e sem senha.',
+            ],
+            tekst: [
+              'A partir daí tudo funciona sozinho. O calendário e os pilotos já estão lá, e depois de cada classificação e cada corrida chega o resultado oficial e os pontos são calculados. Ninguém digita nada.',
+              'Faça isso com antecedência, antes da primeira corrida. Até essa corrida acontecer, você ainda pode mudar as perguntas; depois elas ficam travadas, para que todo fim de semana seja pontuado pelas mesmas regras.',
+            ],
+          },
+          {
+            id: 'perguntas',
+            vraag: 'Quantas perguntas devem contar?',
+            kort: 'Conte tantas perguntas quanto o seu grupo conseguir acompanhar. Os dois top 10 de cada fim de semana, classificação e corrida, bastam para um bolão disputado. Se quiser mais, o Clássico acrescenta vencedor, pole position e volta mais rápida, e o Avançado liga todas as {nGevorderd} perguntas.',
+            tabel: {
+              bijschrift: 'Os três níveis do Predict the Race',
+              kop: ['Nível', 'Perguntas', 'Pontos por fim de semana'],
+              rijen: [
+                ['Simples', '{nSimpel}', '{simpel}'],
+                ['Clássico', '{nKlassiek}', '{klassiek}'],
+                ['Avançado', '{nGevorderd}', '{gevorderd}, mais sprint e temporada'],
+              ],
+            },
+            tekst: [
+              'O Simples tem só os dois top 10. O Avançado liga tudo, do pit stop mais rápido e os duelos entre companheiros até o número de safety cars e a bandeira vermelha.',
+              'Mais perguntas significa mais para ganhar, mas também mais para preencher. Num grupo em que metade só pensa na classificação no sábado de manhã, o Simples dura mais que o Avançado.',
+            ],
+          },
+          {
+            id: 'coringas',
+            vraag: 'Vale a pena jogar com coringas?',
+            kort: 'Sim, se você quer que quem está atrás ainda tenha o que esperar. Um coringa dobra todos os seus pontos de um fim de semana de corrida. Com os coringas ligados, cada um recebe {jokers} por temporada por padrão; como administrador, você pode escolher de 1 a {jokersMax}, ou deixá-los desligados.',
+            tekst: [
+              'Você coloca o coringa antes de o fim de semana começar, e depois ele fica travado. Assim cada fim de semana vira uma pequena aposta: é esse o circuito em que você sabe mais que todo mundo?',
+            ],
+          },
+          {
+            id: 'armadilhas',
+            vraag: 'O que acaba com um bolão de F1?',
+            kort: 'Um bolão de F1 raramente morre por causa das perguntas. Quase sempre é uma de três coisas: uma diferença que ninguém consegue tirar, gente que esquece de palpitar, ou nada para comentar depois da corrida. Cada uma tem sua solução: mais para ganhar do que a classificação final, lembretes antes do prazo e algo para mostrar a cada fim de semana.',
+            punten: [
+              ['Uma diferença que ninguém tira', 'Quem está muito atrás depois de oito corridas para de jogar. Então dê mais para ganhar do que a classificação final: o vencedor do fim de semana (quem faz mais pontos num fim de semana ganha aquele fim de semana), o confronto direto (você vê quem venceu mais vezes contra cada amigo) e os coringas.'],
+              ['Esquecer de palpitar', 'Perdeu uma corrida, ficou para trás; perdeu duas, desistiu. O que ajuda: a assinatura do calendário com um lembrete {agendaUur} antes de cada prazo, uma notificação se você não preencheu nada {venster} antes de um prazo, e o preenchimento automático, que preenche ao acaso o que alguém deixou em branco, do top 10 às perguntas extras, em vez de zero.'],
+              ['Nada para comentar', 'Depois da corrida tem que haver algo para ver. O resultado piloto por piloto, a classificação com quem subiu e quem caiu, e uma imagem do resultado para o grupo dão assunto a cada fim de semana.'],
+            ],
+          },
+          {
+            id: 'checklist',
+            vraag: 'O que acertar antes do começo da temporada?',
+            kort: 'Antes da primeira classificação, acerte o bolão e o código, o nível, os coringas e o preenchimento automático. Garanta que todos assinem o calendário ou liguem as notificações, preencham as perguntas da temporada e saibam pelo que vocês jogam. Acertando isso cedo, ninguém precisa pensar nisso de novo a temporada toda.',
+            lijst: [
+              'O bolão existe e o código foi compartilhado, antes da primeira classificação.',
+              'O nível está escolhido: Simples, Clássico, Avançado ou suas próprias perguntas.',
+              'Coringas: ligados ou não, e quantos para cada um.',
+              'Preenchimento automático: combinado entre todos se fica ligado.',
+              'Todos assinaram o calendário ou ligaram as notificações.',
+              'As perguntas da temporada estão preenchidas antes da primeira corrida.',
+              'Todos sabem pelo que vocês jogam: pela glória. No app não há taxa de entrada, nem vaquinha, nem prêmio.',
+            ],
+          },
+          {
+            id: 'trabalho',
+            vraag: 'Como organizar um bolão de F1 no trabalho?',
+            kort: 'Um bolão no trabalho se organiza como qualquer outro, mas precisa ser fácil de entrar: escolha o Simples com os dois top 10, compartilhe o código no chat da equipe e joguem pela glória. O Predict the Race é grátis, até para um bolão grande no trabalho. Ninguém precisa de conta nem de loja de apps, porque funciona no navegador de qualquer celular ou computador.',
+            punten: [
+              ['O Simples mantém todo mundo', 'Nem todo colega assiste a todas as corridas. Dois top 10 levam um minuto, e os fãs podem jogar no Avançado num bolão próprio com os amigos.'],
+              ['Só pela glória', 'No app não há taxa de entrada, nem vaquinha, nem prêmio. Nada para recolher ou pagar, e ninguém precisa pensar em dinheiro no trabalho.'],
+              ['Grátis de qualquer tamanho', 'Um bolão não tem limite de jogadores e não há preço para empresas. Se o departamento inteiro ou a empresa inteira entrar, continua grátis.'],
+              ['Ligue o preenchimento automático', 'Quem está de férias ou esquece um fim de semana recebe um palpite ao acaso em vez de zero, e não fica para trás.'],
+              ['Coloque uma descrição', 'Algo como "bolão do trabalho, pela glória". Quem também joga num bolão com os amigos vê na hora qual é qual ao trocar.'],
+            ],
+            tekst: [
+              'Na segunda-feira tem assunto: o vencedor do fim de semana, quem subiu na classificação e a imagem do resultado que você compartilha no chat com um toque.',
+            ],
+          },
+        ],
+        faq: [
+          ['Alguém pode entrar no meio da temporada?', 'Sim. Quem entra depois pontua a partir da próxima corrida. As perguntas da temporada que ainda não respondeu podem ser preenchidas, mas uma resposta não pode mais ser mudada depois de enviada.'],
+          ['Posso estar em mais de um bolão?', 'Sim. No app você troca entre seus bolões, e a descrição que o administrador coloca aparece quando você troca.'],
+          ['Um bolão pode ser público?', 'Sim. Por padrão ele é privado e se entra com o código, mas você pode deixá-lo visível para que qualquer pessoa entre.'],
+        ],
+        leesOok: [
+          ['niveaus', 'Simples, Clássico ou Avançado: os três níveis lado a lado'],
+          ['punten', 'A pontuação completa, com as perguntas extras e as da temporada'],
+          ['faq', 'Perguntas frequentes sobre o app'],
+        ],
+      },
     },
   },
   {
@@ -472,6 +980,481 @@ export const PAGINAS = [
         leesOok: [
           ['niveaus', 'Simple, Classic or Advanced: which questions each level includes'],
           ['faq', 'Frequently asked questions about the app'],
+        ],
+      },
+      de: {
+        pad: 'de/f1-tippspiel-punktesystem',
+        titel: 'Punktesystem für ein F1-Tippspiel | Predict the Race',
+        omschrijving: 'Vier Arten, Punkte in einem F1-Tippspiel zu vergeben, mit Vor- und Nachteilen, einem durchgerechneten Beispiel und dem System von Predict the Race.',
+        kop: 'Punktesystem für ein F1-Tippspiel',
+        kort: 'In den meisten F1-Tippspielen gibt es Punkte für jeden Fahrer in deiner Top 10, und je näher er an deinem Platz landet, desto mehr. Predict the Race gibt {exact} Punkte für den genauen Platz, {bijna} bei einem Platz daneben und {twee} bei zwei Plätzen daneben. Nur genaue Treffer zu zählen klingt streng und fair, aber dann punktet fast niemand und das Glück entscheidet die Tabelle.',
+        teaser: 'Das Punktesystem erklärt, mit Rechenbeispiel',
+        secties: [
+          {
+            id: 'systeme',
+            vraag: 'Welche Punktesysteme gibt es?',
+            kort: 'Für F1-Tipps gibt es vier gängige Punktesysteme: nur der genaue Platz, Punkte nach Abstand, echte WM-Punkte, und nur Sieger und Podium. Der Unterschied liegt darin, ob knapp daneben noch zählt. Predict the Race zählt nach Abstand, damit auch punktet, wer das Feld gut einschätzt, wenn die Reihenfolge leicht anders ausfällt.',
+            punten: [
+              ['Nur der genaue Platz', 'Du punktest, wenn ein Fahrer genau auf deinem Platz ankommt. Leicht zu erklären, aber eine Top 10, die überall einen Platz daneben liegt, bringt nichts. Nach ein paar Rennen stehen alle fast bei null, und ein Glückstreffer entscheidet die Tipprunde.'],
+              ['Punkte nach Abstand', '{exact} Punkte für den genauen Platz, {bijna} bei einem Platz daneben, {twee} bei zwei Plätzen daneben, danach nichts. So zählt Predict the Race. Wer das Feld gut einschätzt, punktet auch, wenn die Reihenfolge etwas durcheinandergerät. Der Haken ist das Rechnen: Von Hand sind das zehn Fahrer pro Session für jeden Spieler.'],
+              ['Echte WM-Punkte', 'Für jeden Fahrer auf dem richtigen Platz bekommst du die Punkte, die er in der WM bekommt: {wkPunten}. Das fühlt sich echt an, aber ein richtiger P10 ist {wkLaatste} Punkt wert und der Sieger {wkEerste}. Wer den Sieger verpasst, liegt weit zurück, und die untere Hälfte deiner Top 10 zählt kaum.'],
+              ['Nur Sieger und Podium', 'Schnell ausgefüllt, aber die meisten tippen denselben Favoriten. Alle landen bei ungefähr derselben Punktzahl, und es gibt wenig zu gewinnen.'],
+            ],
+            tekst: [
+              'Zusatzfragen wie Pole-Position oder schnellste Runde kommen obendrauf, jede mit einer festen Punktzahl für eine richtige Antwort.',
+            ],
+          },
+          {
+            id: 'rechenbeispiel',
+            vraag: 'Wie wertet man eine Top 10 aus?',
+            kort: 'Werte eine Top 10 Fahrer für Fahrer aus: {exact} Punkte, wenn er genau auf deinem Platz landet, {een} bei einem Platz daneben, {twee} bei zwei Plätzen daneben, danach nichts. Zähl die zehn Zeilen zusammen; eine perfekte Top 10 ist {perfect} wert. Unten ein erfundenes Rennen, gerechnet mit demselben Code wie die App.',
+            rekenvoorbeeld: { bijschrift: 'Ein erfundenes Rennen: deine Top 10 gegen das Ergebnis',
+              kop: ['Fahrer', 'Dein Tipp', 'Ergebnis', 'Punkte'], geenPlek: 'Ausfall', totaal: 'Gesamt' },
+            voorbeeld: '{voorbeeldTotaal} von {top10} Punkten. Nur mit genauen Treffern wären es {voorbeeldExact} gewesen, obwohl {voorbeeldDichtbij} der 10 Fahrer höchstens einen Platz neben dem Tipp landeten.',
+            tekst: [
+              'Schau dir Albon an: getippt auf P10, ins Ziel gekommen als Elfter. Das ist ein Platz daneben, also {bijna} Punkte, obwohl er außerhalb der Top 10 landete. Sainz ist ausgefallen und hat keine gewertete Position, also gibt es für ihn nichts.',
+            ],
+          },
+          {
+            id: 'knapp-daneben',
+            vraag: 'Warum sollte knapp daneben zählen?',
+            kort: 'Knapp daneben sollte zählen, weil in einem F1-Ergebnis immer Glück steckt: ein langsamer Boxenstopp, und aus deinem P4 wird P5. Zählt nur der genaue Platz, gewinnt der Glücklichste. Zählt der Abstand, gewinnt, wer das Feld am besten einschätzt, und darum sollte es in einem Tippspiel gehen.',
+            tekst: [
+              'Es hält die Tipprunde auch lebendig. Ein schlechtes Wochenende bringt trotzdem etwas, und der Spitzenreiter bleibt in Reichweite.',
+            ],
+          },
+          {
+            id: 'zusatzfragen',
+            vraag: 'Wofür gibt es sonst noch Punkte?',
+            kort: 'Neben den beiden Top 10 gibt es jedes Wochenende Zusatzfragen wie Rennsieger, Pole-Position und schnellste Runde, dazu {nSeizoen} Saisonfragen für das ganze Jahr. Jede bringt eine feste Punktzahl für eine richtige Antwort: der Rennsieger {winnaar}, die Pole-Position {pole}.',
+            vragentabel: true,
+            tekst: [
+              'Wie viel ein Wochenende wert ist, hängt vom Niveau ab, das der Administrator wählt: {simpel} Punkte bei Einfach, {klassiek} bei Klassisch und {gevorderd} bei Fortgeschritten. An Sprint-Wochenenden kommt der Sprint dazu, und die Saisonfragen werden am Saisonende gewertet.',
+            ],
+          },
+          {
+            id: 'gleiche-tipps',
+            vraag: 'Was, wenn alle dasselbe tippen?',
+            kort: 'Wenn alle dasselbe tippen, ändert diese Frage nichts an der Tabelle: Alle bekommen dieselben Punkte oder keiner. Für diesen Fall kann der Administrator in Predict the Race "gegen den Strom" einschalten. Eine richtige Antwort auf eine Zusatzfrage zählt dann umso mehr, je weniger Spieler dasselbe gesagt haben, bis fast doppelt. Die Top 10 und die Teamduelle zählen wie gewohnt.',
+            contrairtabel: { bijschrift: 'Was ein richtiger Rennsieger wert ist, wenn {contrairSpelers} Spieler geantwortet haben',
+              kop: ['Dasselbe gesagt', 'Zählt', 'Punkte'], rij: '{zelfde} von {spelers}' },
+            tekst: [
+              'Die App zählt, wie viele Spieler die Frage selbst beantwortet haben und wie viele davon dasselbe gesagt haben wie du. Der Anteil, der etwas anderes gesagt hat, kommt obendrauf. Warst du der Einzige von {contrairSpelers}, wird deine richtige Antwort mit {contrairEen} multipliziert, und ein richtiger Rennsieger ist {contrairPunten} Punkte wert statt {winnaar}. Haben alle dasselbe gesagt, ändert sich nichts. Der Faktor wird auf eine Nachkommastelle gerundet, damit die Zahl auf dem Rennbildschirm die Zahl ist, mit der die App rechnet.',
+              'Antworten, die die App selbst ausgefüllt hat, zählen nicht: Sie gehören niemandem und würden deinen Tipp weniger selten aussehen lassen, als er war. Hat nur ein Spieler geantwortet, ist daran nichts selten. Und die Regel wirkt nicht rückwirkend: Sie gilt nur für Wochenenden, die beginnen, nachdem der Administrator sie eingeschaltet hat.',
+              'Die Top 10 und die Duelle sind absichtlich ausgenommen. In einer Top 10 bekäme jeder Platz seine eigene Seltenheit, und niemand könnte erklären, woher seine Punkte kommen. Ein Punktesystem, das man nicht erklären kann, schadet mehr als eine Frage, die nichts ändert.',
+            ],
+          },
+          {
+            id: 'safety-cars',
+            vraag: 'Wie oft gibt es ein Safety Car in einem F1-Rennen?',
+            kort: 'Von den {scRaces} Formel-1-Rennen seit {scVanaf} hatten {scMet} mindestens ein Safety Car, das virtuelle Safety Car mitgezählt. Im Schnitt kam das Safety Car {scGemiddeld}-mal pro Rennen, und {rvMet} Rennen wurden mit einer roten Flagge unterbrochen. Genauso wertet Predict the Race die Frage nach der Zahl der Safety-Car-Phasen. Unten die Zahlen pro Strecke, Stand {scTot}.',
+            circuittabel: { bijschrift: 'Pro Strecke: Rennen seit {scVanaf}, Safety Cars (virtuelle mitgezählt) und Rennen mit roter Flagge, Stand {scTot}',
+              kop: ['Strecke', 'Rennen', 'Safety Cars', 'Rote Flagge'] },
+            tekst: [
+              'Am häufigsten kam das Safety Car in {scMeestPlek}: {scMeestAantal}-mal in {scMeestRaces} Rennen. Am seltensten in {scMinstPlek}: {scMinstAantal}-mal in {scMinstRaces} Rennen. Es zählen nur Strecken mit mindestens {scMinRaces} Rennen.',
+              'Die Zahlen stammen aus den Meldungen der Rennleitung in OpenF1, gezählt nach denselben Regeln wie in der App. Abgesagte Rennen sind nicht dabei. Die Tabelle aktualisiert sich automatisch.',
+            ],
+          },
+          {
+            id: 'gleichstand',
+            vraag: 'Was passiert bei Punktgleichheit?',
+            kort: 'Zwei Spieler mit gleich vielen Punkten teilen sich den Platz. Liegen zwei gleichauf auf Platz zwei, ist der Nächste Vierter: 1, 2, 2, 4. Genau so ordnet Predict the Race die Tabelle. Beim Wochenendsieger ist es genauso: Teilen sich zwei Spieler die höchste Punktzahl, haben beide dieses Wochenende gewonnen.',
+          },
+          {
+            id: 'joker',
+            vraag: 'Was macht ein Joker mit deinen Punkten?',
+            kort: 'Ein Joker verdoppelt alles, was du an einem Wochenende holst: beide Top 10, den Sprint und die Zusatzfragen. Saisonfragen werden nie verdoppelt. Sind Joker in deiner Tipprunde eingeschaltet, bekommt jeder standardmäßig {jokers} pro Saison, und du setzt einen Joker vor Beginn des Wochenendes.',
+          },
+        ],
+        faq: [
+          ['Kann ich die Punkte pro Frage ändern?', 'Nein. Die Punkte pro Frage sind fest, damit eine Punktzahl in jeder Tipprunde dasselbe bedeutet. Als Administrator wählst du, welche Fragen zählen und ob Joker an sind.'],
+          ['Zählt ein Fahrer außerhalb der Top 10 noch?', 'Ja. Du tippst eine Top 10, aber das ganze Ergebnis zählt. Setzt du jemanden auf P10 und er wird Elfter, bekommst du {bijna} Punkte.'],
+          ['Was bekommt man für einen Fahrer, der ausfällt?', 'Nichts, wenn er keine gewertete Position hat. Das ist Pech, aber dasselbe Pech für alle, die ihn in ihrer Top 10 hatten.'],
+          ['Wann erscheinen die Punkte?', 'Nach jedem Qualifying und jedem Rennen, sobald das offizielle Ergebnis da ist. Ändert eine Strafe das Ergebnis kurz nach dem Rennen, rechnet die App neu.'],
+        ],
+        leesOok: [
+          ['niveaus', 'Einfach, Klassisch oder Fortgeschritten: welche Fragen jedes Niveau hat'],
+          ['faq', 'Häufige Fragen zur App'],
+        ],
+      },
+      fr: {
+        pad: 'fr/bareme-pronostics-f1',
+        titel: 'Barème de points pour des pronostics F1 | Predict the Race',
+        omschrijving: 'Quatre façons de compter les points de pronostics F1, leurs forces et leurs défauts, un exemple entièrement calculé et le barème de Predict the Race.',
+        kop: 'Le barème de points des pronostics F1',
+        kort: 'La plupart des ligues de pronostics F1 comptent chaque pilote de votre top 10, avec plus de points quand il finit près de la place prévue. Predict the Race donne {exact} points pour la place exacte, {bijna} à une place près et {twee} à deux places près. Ne compter que les places exactes semble strict mais juste ; en pratique presque personne ne marque et la chance décide du classement.',
+        teaser: 'Le barème expliqué, avec un exemple calculé',
+        secties: [
+          {
+            id: 'baremes',
+            vraag: 'Quels barèmes existe-t-il ?',
+            kort: 'Il existe quatre barèmes courants pour les pronostics F1 : la place exacte seulement, les points selon l\'écart, les vrais points du championnat, et le vainqueur et le podium seulement. Ce qui les distingue, c\'est si le presque juste rapporte encore. Predict the Race compte selon l\'écart, pour que celui qui lit bien la course marque même quand l\'ordre change un peu.',
+            punten: [
+              ['Place exacte seulement', 'Vous marquez quand un pilote finit exactement à la place prévue. Facile à expliquer, mais un top 10 décalé d\'une place partout ne rapporte rien. Après quelques courses, tout le monde est proche de zéro et un coup de chance décide de la ligue.'],
+              ['Points selon l\'écart', '{exact} points pour la place exacte, {bijna} à une place près, {twee} à deux places près, rien au-delà. C\'est le barème de Predict the Race. Si vous lisez bien la course, vous marquez même quand l\'ordre bouge un peu. Le hic, c\'est le calcul : à la main, ce sont dix pilotes par séance pour chaque joueur.'],
+              ['Vrais points F1', 'Pour chaque pilote à la bonne place, vous recevez les points qu\'il marque au championnat : {wkPunten}. Ça ressemble au vrai, mais un P10 juste vaut {wkLaatste} point et le vainqueur {wkEerste}. Manquez le vainqueur et vous êtes loin derrière, et le bas de votre top 10 ne compte presque pas.'],
+              ['Vainqueur et podium seulement', 'Vite rempli, mais la plupart choisissent le même favori. Tout le monde finit avec à peu près le même score et il y a peu d\'enjeu.'],
+            ],
+            tekst: [
+              'Les questions supplémentaires comme la pole position ou le meilleur tour s\'ajoutent, chacune avec un nombre de points fixe pour une bonne réponse.',
+            ],
+          },
+          {
+            id: 'exemple',
+            vraag: 'Comment compter les points d\'un top 10 ?',
+            kort: 'Comptez un top 10 pilote par pilote : {exact} points s\'il finit exactement à la place prévue, {een} à une place près, {twee} à deux places près, et rien au-delà. Additionnez les dix lignes ; un top 10 parfait vaut {perfect}. Ci-dessous, une course inventée, calculée avec le même code que l\'appli.',
+            rekenvoorbeeld: { bijschrift: 'Une course inventée : votre top 10 face au résultat',
+              kop: ['Pilote', 'Prévu', 'Arrivée', 'Points'], geenPlek: 'Abandon', totaal: 'Total' },
+            voorbeeld: '{voorbeeldTotaal} sur {top10} points. Avec les places exactes seulement, cela aurait fait {voorbeeldExact}, alors que {voorbeeldDichtbij} des 10 pilotes ont fini à une place près du pronostic.',
+            tekst: [
+              'Regardez Albon : pronostiqué P10, arrivé onzième. C\'est une place d\'écart, donc {bijna} points, même s\'il a fini hors du top 10. Sainz a abandonné et n\'a pas de position classée, il ne rapporte donc rien.',
+            ],
+          },
+          {
+            id: 'presque-juste',
+            vraag: 'Pourquoi le presque juste doit-il compter ?',
+            kort: 'Le presque juste doit compter parce qu\'un résultat de F1 contient toujours une part de chance : un arrêt au stand lent et votre P4 devient P5. Si seule la place exacte compte, le plus chanceux gagne. Si l\'écart compte, c\'est celui qui lit le mieux la course qui gagne, et c\'est tout l\'intérêt d\'une ligue de pronostics.',
+            tekst: [
+              'Cela garde aussi la ligue en vie. Un mauvais week-end rapporte quand même quelque chose, et le leader reste à portée.',
+            ],
+          },
+          {
+            id: 'questions-supplementaires',
+            vraag: 'Que peut-on marquer d\'autre ?',
+            kort: 'En plus des deux top 10, vous pouvez marquer chaque week-end avec des questions supplémentaires, comme le vainqueur, la pole position et le meilleur tour, et avec {nSeizoen} questions de saison pour toute l\'année. Chacune vaut un nombre de points fixe pour une bonne réponse : le vainqueur {winnaar}, la pole position {pole}.',
+            vragentabel: true,
+            tekst: [
+              'Ce que vaut un week-end dépend du niveau choisi par l\'administrateur : {simpel} points en Simple, {klassiek} en Classique et {gevorderd} en Avancé. Les week-ends sprint, le sprint s\'ajoute, et les questions de saison sont réglées en fin de saison.',
+            ],
+          },
+          {
+            id: 'memes-pronostics',
+            vraag: 'Et si tout le monde pronostique la même chose ?',
+            kort: 'Si tout le monde pronostique la même chose, cette question ne change rien au classement : tout le monde marque les mêmes points, ou personne. Pour ce cas, l\'administrateur peut activer le mode à contre-courant dans Predict the Race. Une bonne réponse à une question supplémentaire compte alors d\'autant plus que peu de joueurs ont dit la même chose, jusqu\'à presque le double. Le top 10 et les duels entre coéquipiers comptent comme d\'habitude.',
+            contrairtabel: { bijschrift: 'Ce que vaut un bon vainqueur quand {contrairSpelers} joueurs ont répondu',
+              kop: ['Même réponse', 'Compte', 'Points'], rij: '{zelfde} sur {spelers}' },
+            tekst: [
+              'L\'appli compte combien de joueurs ont répondu eux-mêmes à la question, et combien d\'entre eux ont dit la même chose que vous. La part qui a dit autre chose s\'ajoute. Si vous étiez le seul sur {contrairSpelers}, votre bonne réponse compte {contrairEen} fois, et un bon vainqueur vaut {contrairPunten} points au lieu de {winnaar}. Si tout le monde a dit la même chose, rien ne change. Le multiplicateur est arrondi à une décimale, donc le chiffre affiché sur l\'écran de la course est celui avec lequel l\'appli compte.',
+              'Les réponses remplies par l\'appli elle-même ne comptent pas : elles n\'appartiennent à personne et feraient paraître votre choix moins rare qu\'il ne l\'était. Si un seul joueur a répondu, il n\'y a rien de rare. Et la règle n\'est pas rétroactive : elle ne s\'applique qu\'aux week-ends qui commencent après son activation par l\'administrateur.',
+              'Le top 10 et les duels sont laissés de côté exprès. Dans un top 10, chaque position aurait sa propre rareté, et personne ne pourrait expliquer d\'où viennent ses points. Un barème qu\'on ne peut pas expliquer fait plus de dégâts qu\'une question qui ne change rien.',
+            ],
+          },
+          {
+            id: 'safety-cars',
+            vraag: 'Combien de safety cars y a-t-il dans une course de F1 ?',
+            kort: 'Sur les {scRaces} courses de Formule 1 depuis {scVanaf}, {scMet} ont connu au moins un safety car, safety car virtuel compris. En moyenne, le safety car est sorti {scGemiddeld} fois par course, et {rvMet} courses ont été interrompues par un drapeau rouge. C\'est aussi ainsi que Predict the Race compte la question sur le nombre de safety cars. Ci-dessous, les chiffres par circuit, jusqu\'au {scTot}.',
+            circuittabel: { bijschrift: 'Par circuit : courses depuis {scVanaf}, safety cars (virtuels compris) et courses avec drapeau rouge, jusqu\'au {scTot}',
+              kop: ['Circuit', 'GP', 'Safety cars', 'Drapeau rouge'] },
+            tekst: [
+              'Le safety car est sorti le plus souvent à {scMeestPlek} : {scMeestAantal} fois en {scMeestRaces} courses. Le moins souvent à {scMinstPlek} : {scMinstAantal} fois en {scMinstRaces} courses. Seuls les circuits avec au moins {scMinRaces} courses comptent ici.',
+              'Les chiffres viennent des messages de la direction de course dans OpenF1, comptés avec les mêmes règles que l\'appli. Les courses annulées ne sont pas incluses. Le tableau se met à jour automatiquement.',
+            ],
+          },
+          {
+            id: 'egalite',
+            vraag: 'Que se passe-t-il quand deux joueurs sont à égalité de points ?',
+            kort: 'Deux joueurs avec les mêmes points partagent la place. S\'ils sont à égalité à la deuxième place, le suivant est quatrième : 1, 2, 2, 4. Predict the Race établit le classement ainsi. Le vainqueur du week-end fonctionne pareil : si deux joueurs partagent le meilleur score, ils ont tous les deux gagné ce week-end.',
+          },
+          {
+            id: 'jokers',
+            vraag: 'Que fait un joker à vos points ?',
+            kort: 'Un joker double tout ce que vous marquez en un week-end : les deux top 10, le sprint et les questions supplémentaires. Les questions de saison ne sont jamais doublées. Si les jokers sont activés dans votre ligue, chacun en reçoit {jokers} par saison par défaut, et vous posez un joker avant le début du week-end.',
+          },
+        ],
+        faq: [
+          ['Puis-je changer les points par question ?', 'Non. Les points par question sont fixes, pour qu\'un score signifie la même chose dans chaque ligue. En tant qu\'administrateur, vous choisissez les questions qui comptent et si les jokers sont activés.'],
+          ['Un pilote hors du top 10 compte-t-il encore ?', 'Oui. Vous pronostiquez un top 10, mais tout le résultat compte. Mettez quelqu\'un en P10, il finit onzième, et vous recevez {bijna} points.'],
+          ['Que rapporte un pilote qui abandonne ?', 'Rien, s\'il n\'a pas de position classée. C\'est de la malchance, mais la même pour tous ceux qui l\'avaient dans leur top 10.'],
+          ['Quand les points apparaissent-ils ?', 'Après chaque séance de qualifications et chaque course, dès que le résultat officiel est là. Si une pénalité change le résultat peu après la course, l\'appli recompte.'],
+        ],
+        leesOok: [
+          ['niveaus', 'Simple, Classique ou Avancé : les questions de chaque niveau'],
+          ['faq', 'Questions fréquentes sur l\'appli'],
+        ],
+      },
+      es: {
+        pad: 'es/puntuacion-porra-f1',
+        titel: 'Sistema de puntos para una porra de F1 | Predict the Race',
+        omschrijving: 'Cuatro formas de puntuar una porra de F1, lo bueno y lo malo de cada una, un ejemplo calculado de principio a fin y la puntuación de Predict the Race.',
+        kop: 'Sistema de puntos para una porra de F1',
+        kort: 'La mayoría de las porras de F1 puntúan cada piloto de tu top 10, con más puntos cuanto más cerca termina de donde lo pusiste. Predict the Race da {exact} puntos por la posición exacta, {bijna} por una posición de diferencia y {twee} por dos. Puntuar solo los aciertos exactos suena estricto pero justo; en la práctica casi nadie puntúa y la suerte decide la clasificación.',
+        teaser: 'Los sistemas de puntos explicados, con un ejemplo calculado',
+        secties: [
+          {
+            id: 'sistemas',
+            vraag: '¿Qué sistemas de puntos hay?',
+            kort: 'Hay cuatro sistemas de puntos habituales para las predicciones de F1: solo la posición exacta, puntos por distancia, los puntos reales del campeonato, y solo ganador y podio. Lo que los diferencia es si casi acertar todavía puntúa. Predict the Race puntúa por distancia, para que quien lee bien la carrera sume aunque el orden salga un poco distinto.',
+            punten: [
+              ['Solo la posición exacta', 'Puntúas cuando un piloto termina justo donde lo pusiste. Fácil de explicar, pero un top 10 que falla por una posición en todas no suma nada. A las pocas carreras todos están cerca de cero y un golpe de suerte decide la liga.'],
+              ['Puntos por distancia', '{exact} puntos por la posición exacta, {bijna} por una de diferencia, {twee} por dos, nada más allá. Así puntúa Predict the Race. Si lees bien la carrera, sumas aunque el orden cambie un poco. La pega son las cuentas: a mano son diez pilotos por sesión para cada jugador.'],
+              ['Puntos reales de F1', 'Por cada piloto en la posición correcta recibes los puntos que él suma en el campeonato: {wkPunten}. Parece lo auténtico, pero acertar el P10 vale {wkLaatste} punto y el ganador {wkEerste}. Si fallas el ganador te quedas muy atrás, y la mitad de abajo de tu top 10 apenas cuenta.'],
+              ['Solo ganador y podio', 'Se rellena rápido, pero casi todos eligen al mismo favorito. Todos acaban con más o menos la misma puntuación y hay poco en juego.'],
+            ],
+            tekst: [
+              'Las preguntas extra como la pole position o la vuelta rápida se suman aparte, cada una con un número fijo de puntos si aciertas.',
+            ],
+          },
+          {
+            id: 'ejemplo',
+            vraag: '¿Cómo se puntúa un top 10?',
+            kort: 'Un top 10 se puntúa piloto a piloto: {exact} puntos si termina justo donde lo pusiste, {een} por una posición de diferencia, {twee} por dos, y nada más allá. Suma las diez filas; un top 10 perfecto vale {perfect}. Abajo hay una carrera inventada, puntuada con el mismo código que usa la app.',
+            rekenvoorbeeld: { bijschrift: 'Una carrera inventada: tu top 10 frente al resultado',
+              kop: ['Piloto', 'Predicho', 'Final', 'Puntos'], geenPlek: 'Retiro', totaal: 'Total' },
+            voorbeeld: '{voorbeeldTotaal} de {top10} puntos. Contando solo los aciertos exactos habrían sido {voorbeeldExact}, aunque {voorbeeldDichtbij} de los 10 pilotos terminaron a una posición o menos de la predicción.',
+            tekst: [
+              'Fíjate en Albon: predicho P10, terminó undécimo. Es una posición de diferencia, así que {bijna} puntos, aunque acabó fuera del top 10. Sainz abandonó y no tiene posición clasificada, así que no suma nada.',
+            ],
+          },
+          {
+            id: 'casi',
+            vraag: '¿Por qué debería contar casi acertar?',
+            kort: 'Casi acertar debería contar porque un resultado de F1 siempre tiene algo de suerte: una parada lenta y tu P4 se convierte en P5. Si solo cuenta la posición exacta, gana el que más suerte tiene. Si cuenta la distancia, gana quien mejor lee la carrera, y de eso debería tratar una porra.',
+            tekst: [
+              'Además mantiene viva la liga. Un mal fin de semana todavía te da algo, y el líder sigue a tiro.',
+            ],
+          },
+          {
+            id: 'preguntas-extra',
+            vraag: '¿Qué más se puede puntuar?',
+            kort: 'Además de los dos top 10, cada fin de semana puedes puntuar preguntas extra como el ganador, la pole position y la vuelta rápida, y {nSeizoen} preguntas de temporada para todo el año. Cada una vale un número fijo de puntos si aciertas: el ganador {winnaar}, la pole position {pole}.',
+            vragentabel: true,
+            tekst: [
+              'Lo que vale un fin de semana depende del nivel que elija el administrador: {simpel} puntos en Sencillo, {klassiek} en Clásico y {gevorderd} en Avanzado. Los fines de semana con sprint se suma la sprint, y las preguntas de temporada se resuelven al final de la temporada.',
+            ],
+          },
+          {
+            id: 'lo-mismo',
+            vraag: '¿Y si todos predicen lo mismo?',
+            kort: 'Si todos predicen lo mismo, esa pregunta no cambia nada en la clasificación: todos suman los mismos puntos, o nadie. Para ese caso, el administrador puede activar a contracorriente en Predict the Race. Una respuesta correcta a una pregunta extra vale entonces más cuantos menos jugadores dijeron lo mismo, hasta casi el doble. El top 10 y los duelos entre compañeros puntúan como siempre.',
+            contrairtabel: { bijschrift: 'Lo que vale acertar el ganador cuando responden {contrairSpelers} jugadores',
+              kop: ['Dijeron lo mismo', 'Cuenta', 'Puntos'], rij: '{zelfde} de {spelers}' },
+            tekst: [
+              'La app cuenta cuántos jugadores respondieron la pregunta ellos mismos y cuántos de ellos dijeron lo mismo que tú. La parte que dijo otra cosa se suma. Si fuiste el único de {contrairSpelers}, tu respuesta correcta cuenta {contrairEen} veces, y acertar el ganador vale {contrairPunten} puntos en vez de {winnaar}. Si todos dijeron lo mismo, no cambia nada. El multiplicador se redondea a un decimal, así que el número de la pantalla de la carrera es el número con el que puntúa la app.',
+              'Las respuestas que rellenó la propia app no cuentan: no son de nadie y harían que tu elección pareciera menos rara de lo que fue. Si solo respondió un jugador, no hay nada raro en ello. Y la regla no es retroactiva: solo se aplica a los fines de semana que empiezan después de que el administrador la active.',
+              'El top 10 y los duelos se dejan fuera a propósito. En un top 10 cada posición tendría su propia rareza, y nadie podría explicar de dónde salen sus puntos. Un sistema de puntos que no se puede explicar hace más daño que una pregunta que no cambia nada.',
+            ],
+          },
+          {
+            id: 'safety-cars',
+            vraag: '¿Cuántas veces sale el safety car en una carrera de F1?',
+            kort: 'De las {scRaces} carreras de Fórmula 1 desde {scVanaf}, {scMet} tuvieron al menos un safety car, contando el safety car virtual. De media, el safety car salió {scGemiddeld} veces por carrera, y {rvMet} carreras se detuvieron con bandera roja. Así puntúa también Predict the Race la pregunta sobre el número de safety cars. Abajo están las cifras por circuito, hasta el {scTot}.',
+            circuittabel: { bijschrift: 'Por circuito: carreras desde {scVanaf}, safety cars (virtual incluido) y carreras con bandera roja, hasta el {scTot}',
+              kop: ['Circuito', 'GP', 'Safety cars', 'Bandera roja'] },
+            tekst: [
+              'El safety car salió más veces en {scMeestPlek}: {scMeestAantal} veces en {scMeestRaces} carreras. Menos veces en {scMinstPlek}: {scMinstAantal} en {scMinstRaces} carreras. Aquí solo cuentan los circuitos con al menos {scMinRaces} carreras.',
+              'Las cifras salen de los mensajes de dirección de carrera en OpenF1, contados con las mismas reglas que la app. Las carreras canceladas no se incluyen. La tabla se actualiza sola.',
+            ],
+          },
+          {
+            id: 'empate',
+            vraag: '¿Qué pasa cuando dos jugadores empatan a puntos?',
+            kort: 'Dos jugadores con los mismos puntos comparten la posición. Si empatan en segundo lugar, el siguiente es cuarto: 1, 2, 2, 4. Así ordena Predict the Race la clasificación. Con el ganador del fin de semana pasa lo mismo: si dos jugadores comparten la mejor puntuación, los dos ganaron ese fin de semana.',
+          },
+          {
+            id: 'comodines',
+            vraag: '¿Qué hace un comodín con tus puntos?',
+            kort: 'Un comodín duplica todo lo que sumas en un fin de semana: los dos top 10, la sprint y las preguntas extra. Las preguntas de temporada nunca se duplican. Si tu liga tiene los comodines activados, cada uno recibe {jokers} por temporada por defecto, y el comodín se pone antes de que empiece el fin de semana.',
+          },
+        ],
+        faq: [
+          ['¿Puedo cambiar los puntos de cada pregunta?', 'No. Los puntos de cada pregunta son fijos, para que una puntuación signifique lo mismo en todas las ligas. Como administrador eliges qué preguntas cuentan y si hay comodines.'],
+          ['¿Cuenta un piloto fuera del top 10?', 'Sí. Predices un top 10, pero cuenta todo el resultado. Pones a alguien en P10, termina undécimo, y sumas {bijna} puntos.'],
+          ['¿Qué sumas por un piloto que abandona?', 'Nada, si no tiene posición clasificada. Es mala suerte, pero la misma para todos los que lo tenían en su top 10.'],
+          ['¿Cuándo aparecen los puntos?', 'Después de cada clasificación y cada carrera, en cuanto llega el resultado oficial. Si una sanción cambia el resultado poco después de la carrera, la app vuelve a puntuar.'],
+        ],
+        leesOok: [
+          ['niveaus', 'Sencillo, Clásico o Avanzado: qué preguntas tiene cada nivel'],
+          ['faq', 'Preguntas frecuentes sobre la app'],
+        ],
+      },
+      it: {
+        pad: 'it/punteggio-pronostici-f1',
+        titel: 'Sistema di punteggio per i pronostici F1 | Predict the Race',
+        omschrijving: 'Quattro modi di dare i punti nei pronostici F1, pregi e difetti di ognuno, un esempio calcolato per intero e il punteggio usato da Predict the Race.',
+        kop: 'Il sistema di punteggio per i pronostici F1',
+        kort: 'Quasi tutte le leghe di pronostici F1 danno punti per ogni pilota della tua top 10, di più quanto più finisce vicino a dove l\'hai messo. Predict the Race dà {exact} punti per la posizione esatta, {bijna} per una posizione di scarto e {twee} per due. Contare solo le posizioni esatte sembra severo ma giusto; in pratica quasi nessuno fa punti e la fortuna decide la classifica.',
+        teaser: 'Il punteggio spiegato, con un esempio calcolato',
+        secties: [
+          {
+            id: 'sistemi',
+            vraag: 'Quali sistemi di punteggio esistono?',
+            kort: 'Esistono quattro sistemi di punteggio comuni per i pronostici F1: solo la posizione esatta, punti in base allo scarto, i veri punti del mondiale, e solo vincitore e podio. A distinguerli è se il quasi giusto conta ancora. Predict the Race conta lo scarto, così chi legge bene la gara fa punti anche quando l\'ordine esce un po\' diverso.',
+            punten: [
+              ['Solo la posizione esatta', 'Fai punti quando un pilota finisce esattamente dove l\'hai messo. Facile da spiegare, ma una top 10 sbagliata di una posizione ovunque non porta niente. Dopo qualche gara sono tutti vicini a zero e un colpo di fortuna decide la lega.'],
+              ['Punti in base allo scarto', '{exact} punti per la posizione esatta, {bijna} per una di scarto, {twee} per due, niente oltre. Così conta Predict the Race. Se leggi bene la gara, fai punti anche quando l\'ordine cambia un po\'. Il problema sono i conti: a mano sono dieci piloti per sessione per ogni giocatore.'],
+              ['Veri punti F1', 'Per ogni pilota nella posizione giusta ricevi i punti che lui prende nel mondiale: {wkPunten}. Sembra la cosa vera, ma un P10 giusto vale {wkLaatste} punto e il vincitore {wkEerste}. Sbagli il vincitore e sei lontanissimo, e la metà bassa della tua top 10 conta poco.'],
+              ['Solo vincitore e podio', 'Si compila in fretta, ma quasi tutti scelgono lo stesso favorito. Tutti finiscono con più o meno lo stesso punteggio e c\'è poco in palio.'],
+            ],
+            tekst: [
+              'Le domande extra come pole position o giro più veloce si aggiungono, ognuna con un numero fisso di punti per una risposta giusta.',
+            ],
+          },
+          {
+            id: 'esempio',
+            vraag: 'Come si calcolano i punti di una top 10?',
+            kort: 'I punti di una top 10 si calcolano pilota per pilota: {exact} punti se finisce esattamente dove l\'hai messo, {een} per una posizione di scarto, {twee} per due, e niente oltre. Somma le dieci righe; una top 10 perfetta vale {perfect}. Qui sotto una gara inventata, calcolata con lo stesso codice dell\'app.',
+            rekenvoorbeeld: { bijschrift: 'Una gara inventata: la tua top 10 contro il risultato',
+              kop: ['Pilota', 'Previsto', 'Arrivo', 'Punti'], geenPlek: 'Ritirato', totaal: 'Totale' },
+            voorbeeld: '{voorbeeldTotaal} su {top10} punti. Contando solo le posizioni esatte sarebbero stati {voorbeeldExact}, anche se {voorbeeldDichtbij} dei 10 piloti sono arrivati entro una posizione dal pronostico.',
+            tekst: [
+              'Guarda Albon: pronosticato P10, arrivato undicesimo. È una posizione di scarto, quindi {bijna} punti, anche se è finito fuori dalla top 10. Sainz si è ritirato e non ha una posizione classificata, quindi non porta niente.',
+            ],
+          },
+          {
+            id: 'quasi-giusto',
+            vraag: 'Perché il quasi giusto dovrebbe contare?',
+            kort: 'Il quasi giusto dovrebbe contare perché in un risultato di F1 c\'è sempre un po\' di fortuna: un pit stop lento e il tuo P4 diventa P5. Se conta solo la posizione esatta, vince il più fortunato. Se conta lo scarto, vince chi legge meglio la gara, ed è di questo che dovrebbe trattarsi una lega di pronostici.',
+            tekst: [
+              'Tiene anche viva la lega. Un brutto weekend porta comunque qualcosa, e il primo resta a portata.',
+            ],
+          },
+          {
+            id: 'domande-extra',
+            vraag: 'Per cos\'altro si possono fare punti?',
+            kort: 'Oltre alle due top 10, ogni weekend puoi fare punti con domande extra come vincitore, pole position e giro più veloce, più {nSeizoen} domande di stagione per tutto l\'anno. Ognuna vale un numero fisso di punti per una risposta giusta: il vincitore {winnaar}, la pole position {pole}.',
+            vragentabel: true,
+            tekst: [
+              'Quanto vale un weekend dipende dal livello scelto dall\'amministratore: {simpel} punti in Semplice, {klassiek} in Classico e {gevorderd} in Avanzato. Nei weekend sprint si aggiunge la sprint, e le domande di stagione si chiudono a fine stagione.',
+            ],
+          },
+          {
+            id: 'stesso-pronostico',
+            vraag: 'E se tutti pronosticano la stessa cosa?',
+            kort: 'Se tutti pronosticano la stessa cosa, quella domanda non cambia niente in classifica: tutti prendono gli stessi punti, oppure nessuno. Per questo caso l\'amministratore può attivare controcorrente in Predict the Race. Una risposta giusta a una domanda extra vale allora di più quanti meno giocatori hanno detto la stessa cosa, fino a quasi il doppio. La top 10 e i duelli tra compagni contano come sempre.',
+            contrairtabel: { bijschrift: 'Quanto vale un vincitore giusto quando rispondono {contrairSpelers} giocatori',
+              kop: ['Stessa risposta', 'Conta', 'Punti'], rij: '{zelfde} su {spelers}' },
+            tekst: [
+              'L\'app conta quanti giocatori hanno risposto alla domanda da soli, e quanti di loro hanno detto la stessa cosa che hai detto tu. La parte che ha detto altro si aggiunge. Se eri l\'unico su {contrairSpelers}, la tua risposta giusta conta {contrairEen} volte, e un vincitore giusto vale {contrairPunten} punti invece di {winnaar}. Se tutti hanno detto la stessa cosa, non cambia niente. Il moltiplicatore è arrotondato a un decimale, quindi il numero sulla schermata della gara è quello con cui conta l\'app.',
+              'Le risposte compilate dall\'app stessa non contano: non sono di nessuno e farebbero sembrare la tua scelta meno rara di quanto fosse. Se ha risposto un solo giocatore, non c\'è niente di raro. E la regola non è retroattiva: vale solo per i weekend che iniziano dopo che l\'amministratore l\'ha attivata.',
+              'La top 10 e i duelli sono esclusi di proposito. In una top 10 ogni posizione avrebbe la sua rarità, e nessuno saprebbe spiegare da dove vengono i suoi punti. Un punteggio che non si riesce a spiegare fa più danni di una domanda che non cambia niente.',
+            ],
+          },
+          {
+            id: 'safety-cars',
+            vraag: 'Quante volte entra la safety car in una gara di F1?',
+            kort: 'Delle {scRaces} gare di Formula 1 dal {scVanaf}, {scMet} hanno avuto almeno una safety car, virtual safety car compresa. In media la safety car è entrata {scGemiddeld} volte a gara, e {rvMet} gare sono state fermate con la bandiera rossa. Predict the Race conta allo stesso modo la domanda sul numero di safety car. Qui sotto i numeri per circuito, aggiornati al {scTot}.',
+            circuittabel: { bijschrift: 'Per circuito: gare dal {scVanaf}, safety car (virtual compresa) e gare con bandiera rossa, aggiornati al {scTot}',
+              kop: ['Circuito', 'Gare', 'Safety car', 'Bandiera rossa'] },
+            tekst: [
+              'La safety car è entrata più spesso a {scMeestPlek}: {scMeestAantal} volte in {scMeestRaces} gare. Meno spesso a {scMinstPlek}: {scMinstAantal} volte in {scMinstRaces} gare. Contano solo i circuiti con almeno {scMinRaces} gare.',
+              'I numeri vengono dai messaggi della direzione gara in OpenF1, contati con le stesse regole dell\'app. Le gare annullate non sono incluse. La tabella si aggiorna da sola.',
+            ],
+          },
+          {
+            id: 'parita',
+            vraag: 'Cosa succede quando due giocatori sono a pari punti?',
+            kort: 'Due giocatori con gli stessi punti condividono la posizione. Se sono pari al secondo posto, il successivo è quarto: 1, 2, 2, 4. Predict the Race ordina la classifica così. Il vincitore del weekend funziona allo stesso modo: se due giocatori condividono il punteggio più alto, hanno vinto entrambi quel weekend.',
+          },
+          {
+            id: 'jolly',
+            vraag: 'Cosa fa un jolly ai tuoi punti?',
+            kort: 'Un jolly raddoppia tutto quello che fai in un weekend: le due top 10, la sprint e le domande extra. Le domande di stagione non vengono mai raddoppiate. Se nella tua lega i jolly sono attivi, ognuno ne riceve {jokers} a stagione di default, e il jolly si gioca prima che inizi il weekend.',
+          },
+        ],
+        faq: [
+          ['Posso cambiare i punti di ogni domanda?', 'No. I punti per domanda sono fissi, così un punteggio significa la stessa cosa in ogni lega. Come amministratore scegli quali domande contano e se i jolly sono attivi.'],
+          ['Un pilota fuori dalla top 10 conta ancora?', 'Sì. Pronostichi una top 10, ma conta tutto il risultato. Metti qualcuno in P10, finisce undicesimo, e prendi {bijna} punti.'],
+          ['Cosa prendi per un pilota che si ritira?', 'Niente, se non ha una posizione classificata. È sfortuna, ma la stessa per tutti quelli che lo avevano nella top 10.'],
+          ['Quando compaiono i punti?', 'Dopo ogni qualifica e ogni gara, appena arriva il risultato ufficiale. Se una penalità cambia il risultato poco dopo la gara, l\'app ricalcola.'],
+        ],
+        leesOok: [
+          ['niveaus', 'Semplice, Classico o Avanzato: quali domande ha ogni livello'],
+          ['faq', 'Domande frequenti sull\'app'],
+        ],
+      },
+      pt: {
+        pad: 'pt/pontuacao-bolao-f1',
+        titel: 'Pontuação de um bolão de F1 explicada | Predict the Race',
+        omschrijving: 'Quatro jeitos de pontuar um bolão de F1, os prós e contras de cada um, um exemplo calculado do começo ao fim e a pontuação do Predict the Race.',
+        kop: 'A pontuação de um bolão de F1',
+        kort: 'A maioria dos bolões de F1 pontua cada piloto do seu top 10, com mais pontos quanto mais perto ele termina de onde você o colocou. O Predict the Race dá {exact} pontos pela posição exata, {bijna} por uma posição de diferença e {twee} por duas. Pontuar só acertos exatos parece rigoroso mas justo; na prática quase ninguém pontua e a sorte decide a classificação.',
+        teaser: 'A pontuação explicada, com um exemplo calculado',
+        secties: [
+          {
+            id: 'sistemas',
+            vraag: 'Quais sistemas de pontuação existem?',
+            kort: 'Existem quatro sistemas de pontuação comuns para palpites de F1: só a posição exata, pontos pela distância, os pontos reais do campeonato, e só vencedor e pódio. O que os diferencia é se quase acertar ainda pontua. O Predict the Race pontua pela distância, para que quem lê bem a corrida pontue mesmo quando a ordem sai um pouco diferente.',
+            punten: [
+              ['Só a posição exata', 'Você pontua quando um piloto termina exatamente onde você o colocou. Fácil de explicar, mas um top 10 que erra por uma posição em tudo não vale nada. Depois de algumas corridas todo mundo está perto de zero e um chute de sorte decide o bolão.'],
+              ['Pontos pela distância', '{exact} pontos pela posição exata, {bijna} por uma de diferença, {twee} por duas, nada além disso. É assim que o Predict the Race pontua. Se você lê bem a corrida, pontua mesmo quando a ordem muda um pouco. O problema é a conta: na mão, são dez pilotos por sessão para cada jogador.'],
+              ['Pontos reais da F1', 'Para cada piloto na posição certa você recebe os pontos que ele ganha no campeonato: {wkPunten}. Parece o de verdade, mas acertar o P10 vale {wkLaatste} ponto e o vencedor {wkEerste}. Errou o vencedor, ficou muito para trás, e a metade de baixo do seu top 10 quase não conta.'],
+              ['Só vencedor e pódio', 'Rápido de preencher, mas quase todos escolhem o mesmo favorito. Todo mundo acaba com mais ou menos a mesma pontuação e há pouco em jogo.'],
+            ],
+            tekst: [
+              'As perguntas extras, como pole position ou volta mais rápida, vêm por cima, cada uma com um número fixo de pontos para a resposta certa.',
+            ],
+          },
+          {
+            id: 'exemplo',
+            vraag: 'Como se pontua um top 10?',
+            kort: 'Um top 10 se pontua piloto por piloto: {exact} pontos se ele termina exatamente onde você o colocou, {een} por uma posição de diferença, {twee} por duas, e nada além disso. Some as dez linhas; um top 10 perfeito vale {perfect}. Abaixo está uma corrida inventada, pontuada com o mesmo código que o app usa.',
+            rekenvoorbeeld: { bijschrift: 'Uma corrida inventada: seu top 10 contra o resultado',
+              kop: ['Piloto', 'Palpite', 'Final', 'Pontos'], geenPlek: 'Abandono', totaal: 'Total' },
+            voorbeeld: '{voorbeeldTotaal} de {top10} pontos. Contando só os acertos exatos, teriam sido {voorbeeldExact}, mesmo com {voorbeeldDichtbij} dos 10 pilotos terminando a até uma posição do palpite.',
+            tekst: [
+              'Veja o Albon: palpite P10, terminou em décimo primeiro. É uma posição de diferença, então {bijna} pontos, mesmo tendo terminado fora do top 10. O Sainz abandonou e não tem posição classificada, então não vale nada.',
+            ],
+          },
+          {
+            id: 'quase',
+            vraag: 'Por que quase acertar deve contar?',
+            kort: 'Quase acertar deve contar porque um resultado de F1 sempre tem um pouco de sorte: um pit stop lento e o seu P4 vira P5. Se só a posição exata conta, ganha quem tem mais sorte. Se a distância conta, ganha quem lê melhor a corrida, e é disso que um bolão deveria se tratar.',
+            tekst: [
+              'Isso também mantém o bolão vivo. Um fim de semana ruim ainda rende alguma coisa, e o líder continua ao alcance.',
+            ],
+          },
+          {
+            id: 'perguntas-extras',
+            vraag: 'O que mais dá para pontuar?',
+            kort: 'Além dos dois top 10, a cada fim de semana dá para pontuar perguntas extras como vencedor, pole position e volta mais rápida, mais {nSeizoen} perguntas da temporada para o ano todo. Cada uma vale um número fixo de pontos para a resposta certa: o vencedor {winnaar}, a pole position {pole}.',
+            vragentabel: true,
+            tekst: [
+              'Quanto vale um fim de semana depende do nível que o administrador escolhe: {simpel} pontos no Simples, {klassiek} no Clássico e {gevorderd} no Avançado. Nos fins de semana com sprint, a sprint vem por cima, e as perguntas da temporada são resolvidas no fim da temporada.',
+            ],
+          },
+          {
+            id: 'mesmo-palpite',
+            vraag: 'E se todo mundo der o mesmo palpite?',
+            kort: 'Se todo mundo der o mesmo palpite, essa pergunta não muda nada na classificação: todos fazem os mesmos pontos, ou ninguém faz. Para esse caso, o administrador pode ligar o contra a maré no Predict the Race. Uma resposta certa numa pergunta extra passa a valer mais quanto menos jogadores disseram o mesmo, até quase o dobro. O top 10 e os duelos entre companheiros pontuam como sempre.',
+            contrairtabel: { bijschrift: 'Quanto vale acertar o vencedor quando {contrairSpelers} jogadores responderam',
+              kop: ['Disseram o mesmo', 'Conta', 'Pontos'], rij: '{zelfde} de {spelers}' },
+            tekst: [
+              'O app conta quantos jogadores responderam à pergunta por conta própria e quantos deles disseram o mesmo que você. A parte que disse outra coisa vem por cima. Se você foi o único de {contrairSpelers}, sua resposta certa conta {contrairEen} vezes, e acertar o vencedor vale {contrairPunten} pontos em vez de {winnaar}. Se todos disseram o mesmo, nada muda. O multiplicador é arredondado para uma casa decimal, então o número na tela da corrida é o número com que o app pontua.',
+              'Respostas que o próprio app preencheu não contam: elas não são de ninguém e fariam o seu palpite parecer menos raro do que foi. Se só um jogador respondeu, não há nada de raro. E a regra não é retroativa: só vale para fins de semana que começam depois que o administrador a ligou.',
+              'O top 10 e os duelos ficam de fora de propósito. Num top 10, cada posição teria sua própria raridade, e ninguém conseguiria explicar de onde vêm seus pontos. Uma pontuação que ninguém consegue explicar faz mais estrago que uma pergunta que não muda nada.',
+            ],
+          },
+          {
+            id: 'safety-cars',
+            vraag: 'Quantas vezes o safety car entra numa corrida de F1?',
+            kort: 'Das {scRaces} corridas de Fórmula 1 desde {scVanaf}, {scMet} tiveram pelo menos um safety car, contando o safety car virtual. Em média o safety car entrou {scGemiddeld} vezes por corrida, e {rvMet} corridas foram interrompidas com bandeira vermelha. É assim também que o Predict the Race pontua a pergunta sobre o número de safety cars. Abaixo estão os números por circuito, até {scTot}.',
+            circuittabel: { bijschrift: 'Por circuito: corridas desde {scVanaf}, safety cars (virtual incluído) e corridas com bandeira vermelha, até {scTot}',
+              kop: ['Circuito', 'GP', 'Safety cars', 'Bandeira vermelha'] },
+            tekst: [
+              'O safety car entrou mais vezes em {scMeestPlek}: {scMeestAantal} vezes em {scMeestRaces} corridas. Menos vezes em {scMinstPlek}: {scMinstAantal} em {scMinstRaces} corridas. Aqui só contam os circuitos com pelo menos {scMinRaces} corridas.',
+              'Os números vêm das mensagens da direção de prova no OpenF1, contados com as mesmas regras do app. Corridas canceladas não entram. A tabela se atualiza sozinha.',
+            ],
+          },
+          {
+            id: 'empate',
+            vraag: 'O que acontece quando dois jogadores empatam em pontos?',
+            kort: 'Dois jogadores com os mesmos pontos dividem a posição. Se empatam em segundo, o próximo é quarto: 1, 2, 2, 4. É assim que o Predict the Race monta a classificação. O vencedor do fim de semana funciona igual: se dois jogadores dividem a maior pontuação, os dois venceram aquele fim de semana.',
+          },
+          {
+            id: 'coringas',
+            vraag: 'O que um coringa faz com os seus pontos?',
+            kort: 'Um coringa dobra tudo o que você faz num fim de semana: os dois top 10, a sprint e as perguntas extras. As perguntas da temporada nunca são dobradas. Se o seu bolão tem os coringas ligados, cada um recebe {jokers} por temporada por padrão, e você coloca o coringa antes de o fim de semana começar.',
+          },
+        ],
+        faq: [
+          ['Posso mudar os pontos de cada pergunta?', 'Não. Os pontos de cada pergunta são fixos, para que uma pontuação signifique a mesma coisa em todo bolão. Como administrador, você escolhe quais perguntas contam e se os coringas estão ligados.'],
+          ['Um piloto fora do top 10 ainda conta?', 'Sim. Você dá palpite num top 10, mas o resultado inteiro conta. Colocou alguém em P10, ele terminou em décimo primeiro, e você ganha {bijna} pontos.'],
+          ['Quanto vale um piloto que abandona?', 'Nada, se ele não tiver posição classificada. É azar, mas o mesmo azar para todos que o tinham no top 10.'],
+          ['Quando os pontos aparecem?', 'Depois de cada classificação e cada corrida, assim que o resultado oficial chega. Se uma punição muda o resultado logo depois da corrida, o app pontua de novo.'],
+        ],
+        leesOok: [
+          ['niveaus', 'Simples, Clássico ou Avançado: quais perguntas cada nível tem'],
+          ['faq', 'Perguntas frequentes sobre o app'],
         ],
       },
     },

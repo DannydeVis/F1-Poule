@@ -1009,8 +1009,9 @@ hieronder en voor wat er verder bijkomt.
 | de app zelf in meer talen dan NL en EN (de vertaaltabel `T()` is er al op ingericht; de voorpagina heeft er al zeven) | **gebouwd** (12 oktober): Duits, Frans, Spaans, Italiaans en Portugees, elk in `app/talen/`; ook de herinneringen |
 | de plaatjes van de app op de voorpagina in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #213): elke voorpagina toont de app in zijn eigen taal |
 | de mails van Supabase per taal (nu één Engels sjabloon voor iedereen) | open |
-| de racepagina's ook in DE, FR, ES, IT en PT | **gebouwd** (13 oktober): alle zeven racepagina's en het overzicht in alle zeven talen, met de tijden ook in de tijd van dat land (Duitsland, Frankrijk, Spanje, Italië, Brazilië) |
-| de gidsen (organiseren, puntentelling, excel) ook in DE, FR, ES, IT en PT | open, volgende stap |
+| de racepagina's ook in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #214): alle zeven racepagina's en het overzicht in alle zeven talen, met de tijden ook in de tijd van dat land (Duitsland, Frankrijk, Spanje, Italië, Brazilië) |
+| de gidsen organiseren en puntentelling ook in DE, FR, ES, IT en PT | **gebouwd** (13 oktober): elke voorpagina heeft nu het menu met de gidsen en de races |
+| de gids excel ook in DE, FR, ES, IT en PT | open: de formules verschillen per taal (functienamen en scheidingstekens), eerst per taal nagaan |
 
 ## Premium, later
 
