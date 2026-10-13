@@ -73,6 +73,8 @@ const urlVan = (c) => `${BASIS}/${teksten[c].pad ? teksten[c].pad + '/' : ''}`;
 const vul = (tekst, vars) => String(tekst).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
 const lokaal = (url) => join(wortel, url.replace(BASIS + '/', '').replace(/\/$/, '/index.html'));
 const appBron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
+const APP_TALEN = [...appBron.match(/const TALEN = \{([\s\S]*?)\n\};/)[1].matchAll(/^\s*([a-z]{2}): \{/gm)]
+  .map(([, c]) => c);
 const puntenApp = Object.fromEntries([...appBron.matchAll(
   /\{ id:'([a-z0-9_]+)',\s*naam:'[^']*',\s*punten:(\d+)/g)].map((m) => [m[1], Number(m[2])]));
 
@@ -166,6 +168,23 @@ for (const code of TALEN) {
     JSON.stringify(soort('WebSite')?.alternateName));
   check(`${code}: de app heet gratis`, soort('WebApplication')?.offers?.price === '0'
     && soort('WebApplication')?.isAccessibleForFree === true);
+  check(`${code}: de app zegt in welke talen hij er is: dezelfde als in de app`,
+    JSON.stringify(soort('WebApplication')?.inLanguage) === JSON.stringify(APP_TALEN),
+    JSON.stringify(soort('WebApplication')?.inLanguage));
+
+  // De schermafdrukken, op de pagina en in de JSON-LD: de app in de taal van
+  // de pagina. Een Duitse bezoeker die de app in het Engels ziet, denkt dat
+  // hij er in het Duits niet is.
+  const html = readFileSync(join(wortel, pad, 'index.html'), 'utf8');
+  const schermen = [...html.matchAll(/(?:src|srcset)="[./]*(site\/beeld\/[a-z]+-([a-z]+)-(?:licht|donker)\.jpg)"/g)];
+  const verschillend = [...new Set(schermen.map(([, p]) => p))];
+  check(`${code}: de schermafdrukken zijn van de app in het ${t.naam}, licht en donker`,
+    verschillend.length === 6 && schermen.every(([, , taal]) => taal === code)
+      && verschillend.every((p) => existsSync(join(wortel, p))),
+    verschillend.join(' '));
+  check(`${code}: ook in de JSON-LD`, (soort('WebApplication')?.screenshot ?? []).length === 3
+    && soort('WebApplication').screenshot.every((s) => s.includes(`-${code}-donker.jpg`)),
+    JSON.stringify(soort('WebApplication')?.screenshot));
 
   // De punten zijn die van de app.
   const [plek, losse, seizoen] = kop.tabellen;

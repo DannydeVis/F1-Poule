@@ -6141,7 +6141,9 @@ opnieuw genereren vanzelf.
 
 De schermafdrukken en deelplaatjes (`site/beeld/`, `site/og/`) maakt
 `scripts/maak-beelden.mjs`, met de nabootsing uit de tests en verzonnen namen.
-Alleen nodig als de app er anders uit is gaan zien.
+Alleen nodig als de app er anders uit is gaan zien. Sinds 13 oktober in alle
+zeven talen: `site/beeld/<scherm>-<taal>-<licht|donker>.jpg`, en elke
+voorpagina neemt die van zijn eigen taal.
 
 ### De app naar app/, zonder dat er iets breekt
 
@@ -10204,9 +10206,9 @@ te komen; `test/talen.test.mjs` zakt anders ("elke zin uit de app staat erin").
 vergelijking ("Een andere taal" en de korte samenvatting) en llms.txt zeggen nu
 dat de app er in zeven talen is.
 
-**Nog niet**: de plaatjes van de app op de voorpagina in de vijf nieuwe talen
-(nu Engels), en de mails van Supabase (één sjabloon voor iedereen, Engels).
-Allebei op de routekaart.
+**Nog niet**: de mails van Supabase (één sjabloon voor iedereen, Engels). Op
+de routekaart. De plaatjes van de app op de voorpagina zijn er sinds 13
+oktober in alle zeven talen (hieronder).
 
 **Tests.** `test/talen.test.mjs` (79): elk taalbestand volledig en zonder
 extra's, dezelfde plaatshouders en tags, geen kopie van het Engels, geen
@@ -10220,3 +10222,32 @@ taalbestand dat niet laadt geeft Engels en een melding.
 `test/herinneringen.test.mjs`: de melding in het Duits en in de vier andere
 talen. Twaalf mutanten, alle gevangen.
 
+---
+
+## De schermafdrukken in elke taal (13 oktober)
+
+De voorpagina in het Duits, Frans, Spaans, Italiaans en Portugees toonde de app
+in het Engels (`schermen: 'en'` in `site/teksten.mjs`). Nu de app die talen
+spreekt, toont elke voorpagina de app in zijn eigen taal.
+
+- `scripts/maak-beelden.mjs` loopt alle zeven talen af, elk met een poulenaam
+  in die taal (`POULENAAM`: Freitagsrunde, La ligue du vendredi, Bolão da
+  sexta-feira enzovoort). Drie schermen (races, uitslag, stand), licht en
+  donker: 42 plaatjes van 390×844, samen anderhalve MB. De deelplaatjes
+  (`site/og/`) zijn opnieuw gemaakt, met de telefoon in de eigen taal.
+- De uitslag begint bij de score, niet bovenaan: bij een afgelopen race staat
+  daar sinds PR #209 het weekendpodium, en dan viel de score onder de rand.
+- `schermen` is weg uit `site/teksten.mjs`; de generator neemt de taalcode.
+- De JSON-LD van de app (`WebApplication`) zei `inLanguage: ['nl', 'en']`.
+  Dat zijn nu de zeven talen uit `TALEN` in de app.
+
+Draai `node scripts/maak-beelden.mjs` opnieuw als de app er anders uit gaat
+zien, en daarna `node scripts/maak-site.mjs`.
+
+**Tests.** `test/beelden.test.mjs` (101): elk van de 42 plaatjes bestaat en is
+390×844, en per scherm en thema zijn de zeven talen zeven verschillende
+plaatjes. `test/site.test.mjs` (545): elke voorpagina toont zes
+schermafdrukken (drie schermen, licht en donker), alle zes in zijn eigen taal,
+ook in de JSON-LD; en de JSON-LD noemt de talen van de app. Zes mutanten, alle
+gevangen (die met alleen lichte plaatjes pas nadat de controle alleen nog naar
+`src` en `srcset` kijkt; de JSON-LD noemt de donkere ook).

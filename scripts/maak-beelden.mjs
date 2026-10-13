@@ -11,7 +11,7 @@
  * nabootsing uit de tests, dus er is geen database en geen internet voor
  * nodig, en de namen in beeld zijn verzonnen.
  *
- *   site/beeld/{races,uitslag,stand}-{nl,en}-{licht,donker}.jpg
+ *   site/beeld/{races,uitslag,stand}-{taal}-{licht,donker}.jpg   (alle zeven talen)
  *   site/og/og-{taal}.jpg
  */
 
@@ -86,7 +86,13 @@ async function schermen(taal, poulenaam) {
     await page.waitForSelector('.strip');
     await page.click('[data-tab="race"]');
     await page.waitForSelector('.score');
-    await page.evaluate(() => window.scrollTo(0, 0));
+    // Bovenaan een afgelopen weekend staat sinds 12 oktober het podium. Dit
+    // plaatje gaat over wat je voorspelling per coureur opleverde, dus begint
+    // het bij je punten, net onder de kop.
+    await page.evaluate(() => {
+      const kop = document.querySelector('.zijbalk')?.getBoundingClientRect().height ?? 0;
+      window.scrollTo(0, document.querySelector('.score').getBoundingClientRect().top + window.scrollY - kop - 12);
+    });
     await kiek('uitslag');
     await page.click('#terug');
     await page.click('[data-weergave="stand"]');
@@ -97,10 +103,15 @@ async function schermen(taal, poulenaam) {
   await stoppen();
 }
 
+// De app spreekt sinds 12 oktober zeven talen, dus de voorpagina in elke taal
+// laat de app in die taal zien, met een poulenaam die daar past.
+const POULENAAM = {
+  nl: 'Vrijdagmiddagpoule', en: 'Sunday Grid Club', de: 'Freitagsrunde', fr: 'La ligue du vendredi',
+  es: 'La liga del viernes', it: 'La lega del venerdì', pt: 'Bolão da sexta-feira',
+};
 const ALLEEN_OG = process.argv.includes('og');
 if (!ALLEEN_OG) {
-  await schermen('nl', 'Vrijdagmiddagpoule');
-  await schermen('en', 'Sunday Grid Club');
+  for (const code of TALEN) await schermen(code, POULENAAM[code]);
 }
 
 // ---- deelplaatjes ----------------------------------------------------------
@@ -125,7 +136,7 @@ await page.setViewportSize({ width: 1200, height: 630 });
 for (const code of TALEN) {
   const t = teksten[code];
   const telefoon = `data:image/jpeg;base64,${readFileSync(join(wortel, 'site', 'beeld',
-    `races-${t.schermen}-donker.jpg`)).toString('base64')}`;
+    `races-${code}-donker.jpg`)).toString('base64')}`;
   await page.setContent(`<!DOCTYPE html><html lang="${code}"><head><style>
     @font-face{font-family:K;src:url(${lettertype('barlow-condensed-700-latin.woff2')})}
     @font-face{font-family:K;src:url(${lettertype('barlow-condensed-700-latin-ext.woff2')});
