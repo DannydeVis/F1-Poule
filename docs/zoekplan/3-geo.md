@@ -228,7 +228,7 @@ Vraagt iemand een assistent naar de beste F1-poule-app, dan zoekt die naar verge
 - bovenaan: "Deze vergelijking is geschreven door de maker van Predict the Race."
 - een tabel met alleen controleerbare feiten per app (gratis, account nodig, wat voorspel je, uitslagen automatisch, talen, advertenties), met een link naar de eigen site van elke app en een zichtbare controledatum
 - per app eerlijk wanneer die beter past
-- ook de zwakke punten van Predict the Race: de app alleen in NL en EN, geen app in de stores, geen prijzen, een jong project
+- ook de zwakke punten van Predict the Race: geen app in de stores, geen prijzen, een jong project (de app alleen in NL en EN gold tot 12 oktober 2026; nu zeven talen)
 - elke drie maanden opnieuw controleren (de waarschuwing uit AEO fase 2.6)
 
 ---

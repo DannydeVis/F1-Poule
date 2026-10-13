@@ -10251,3 +10251,56 @@ schermafdrukken (drie schermen, licht en donker), alle zes in zijn eigen taal,
 ook in de JSON-LD; en de JSON-LD noemt de talen van de app. Zes mutanten, alle
 gevangen (die met alleen lichte plaatjes pas nadat de controle alleen nog naar
 `src` en `srcset` kijkt; de JSON-LD noemt de donkere ook).
+
+---
+
+## De racepagina's in zeven talen (13 oktober)
+
+Punt 2 van het plan na de zeven talen in de app: de racepagina's (de laatste
+zeven races van 2026 en het overzicht) bestonden alleen in NL en EN. Nu in alle
+zeven talen van de voorpagina, op een eigen pad per taal: `de/rennen/`,
+`fr/courses/`, `es/carreras/`, `it/gare/`, `pt/corridas/` (met daaronder
+`2026/<slug>/`, dezelfde slug als in NL en EN).
+
+**Hoe het werkt.**
+
+- `site/races.mjs`: per race in `RACES` voor elke taal de naam, de korte naam,
+  de plaats en `in` (de plaats met zijn voorzetsel: "ad Austin", "na Cidade do
+  México", "à Lusail"). `RACE_TEKST` heeft de teksten per taal, met een eigen
+  `tijdzone`: Europe/Berlin, Europe/Paris, Europe/Madrid, Europe/Rome en
+  America/Sao_Paulo (Braziliaans Portugees, net als de site). De tabel heeft
+  dan naast UTC een kolom met de tijd van dat land, en de tekst noemt die tijd.
+  Engels blijft alleen UTC.
+- `scripts/racepaginas.mjs`: `RACE_TALEN` (de talen met teksten, in de volgorde
+  van de voorpagina), `RACE_IDS` (de ankers per taal; safety-cars en pole
+  overal hetzelfde) en `lokaleZone()`. De link naar de tabel van alle circuits
+  in de gids over de puntentelling staat er alleen in een taal waarin die gids
+  er is; zodra de gidsen vertaald zijn, komt hij vanzelf.
+- `site/paginas.mjs`: `PAGINA_UI` (kruimelpad, menu, auteursregel, voet) in de
+  vijf talen.
+- Het hoofdmenu op de voorpagina vraagt minstens twee pagina's in die taal
+  (`hoofdmenu(..., minstens)`). Met alleen de racepagina's houdt de Duitse
+  voorpagina de sprongen (So funktioniert es, Punkte, Fragen); het overzicht
+  van de races staat in de voet. Op de racepagina's zelf staat het menu wel.
+- llms.txt noemt bij elke racepagina alle talen, en bij de talen van de site
+  "the race pages in" de zeven.
+
+**De woorden** zijn die van de voorpagina en de app in die taal: tippen en
+Tipprunde met "du" (de), pronostics en ligue met "vous" (fr), predicción en
+liga met "tú" (es), pronostico en lega (it), palpite en bolão met "você" (pt).
+Polesetter, poleman, "quem larga na pole". Een moedertaalspreker die meeleest
+blijft welkom (zoekplan SEO fase 5); de zinnen staan allemaal in
+`site/races.mjs`.
+
+**Tests.** `test/racepaginas.test.mjs` (29): alle zeven talen, elk pad, de
+tijden per taal opnieuw uitgerekend in de eigen tijdzone, de vraag boven de
+tijden per taal, de getallen in de teksten over safety cars en de polesitter
+per taal, geen plekhouder op een pagina, het overzicht en de links ernaartoe
+per taal, de sprongen op een voorpagina zonder gidsen, en in de kopie (met
+pole en vrije trainingen) alle zeven in de browser: contrast en 360 pixels.
+`test/antwoordvorm.test.mjs` kent nu ook de verwijswoorden in de vijf talen.
+Acht mutanten, alle gevangen.
+
+**Volgende stap**: de gidsen (organiseren, puntentelling, excel) in DE, FR, ES,
+IT en PT.
+

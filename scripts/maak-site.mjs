@@ -878,12 +878,14 @@ const DOORSTUREN = `(function(){try{
 // Het hoofdmenu bovenaan: de losse pagina's in deze taal (PAGINA_UI.menu in
 // site/paginas.mjs), met de huidige pagina gemarkeerd. Een taal zonder eigen
 // pagina's krijgt null, en de voorpagina dan de sprongen naar zijn blokken.
-function hoofdmenu(code, p, huidig = null) {
+// De voorpagina vraagt er minstens twee: een taal met alleen de racepagina's
+// houdt daar de sprongen, en het overzicht van de races staat in de voet.
+function hoofdmenu(code, p, huidig = null, minstens = 1) {
   const menu = PAGINA_UI[code]?.menu;
   const items = (menu?.items ?? [])
     .map(([id, tekst]) => ({ id, tekst, t: ALLE.find((x) => x.id === id)?.talen[code] }))
     .filter((x) => x.t);
-  if (!items.length) return null;
+  if (items.length < minstens) return null;
   return `<nav class="kopnav" aria-label="${esc(menu.naam)}">
       ${items.map((x) => `<a href="${p}${x.t.pad}/"${x.id === huidig ? ' aria-current="page"' : ''}>${esc(x.tekst)}</a>`).join('')}
     </nav>`;
@@ -958,7 +960,7 @@ ${jsonLd(code, datum)}
 <header class="kop">
   <div class="binnen">
     <a class="merk" href="${naar(code, code)}" aria-label="Predict the Race"><img class="blok" src="${p}pictogrammen/predicttherace-logo.png" alt="" width="24" height="24"><b>Predict the Race</b></a>
-    ${hoofdmenu(code, p) ?? `<nav class="kopnav" aria-label="${esc(t.nav.hoe)}">
+    ${hoofdmenu(code, p, null, 2) ?? `<nav class="kopnav" aria-label="${esc(t.nav.hoe)}">
       <a href="#hoe">${esc(t.nav.hoe)}</a><a href="#punten">${esc(t.nav.punten)}</a><a href="#faq">${esc(t.nav.faq)}</a>
     </nav>`}
     <details class="taalmenu">
@@ -1773,6 +1775,7 @@ function llms() {
   // Een regel over de open poule alleen als er een open poule is.
   const metPoule = (r) => llmsVars.openPoule || !r.includes('{openPoule}');
   const paginaTalen = TALEN.filter((c) => PAGINAS.some((pg) => pg.talen[c]));
+  const raceTalen = TALEN.filter((c) => RACEPAGINAS.some((pg) => pg.talen[c]));
   const lijst = (soort) => ALLE.filter((pg) => pg.soort === soort).map((pg) => {
     const hoofd = pg.talen.en ? 'en' : clusterVan(pg)[0];
     const rest = clusterVan(pg).filter((c) => c !== hoofd);
@@ -1797,7 +1800,8 @@ ${zin('en', 'makerzin')}
 ${llmsVars.openPoule ? `- Open league: anyone without a group of their own can join the open league and play against other F1 fans: ${llmsVars.openPoule}
 ` : ''}- App languages: ${opsomming(APP_TALEN.map(taalNaamEn))}
 - Website languages: the homepage in ${TALEN.map((c) => `${teksten[c].naam} (${urlVan(c)})`).join(', ')}${
-  paginaTalen.length ? `; the guides and the about page in ${opsomming(paginaTalen.map(taalNaamEn))}` : ''}
+  paginaTalen.length ? `; the guides and the about page in ${opsomming(paginaTalen.map(taalNaamEn))}` : ''}${
+  raceTalen.length ? `; the race pages in ${opsomming(raceTalen.map(taalNaamEn))}` : ''}
 - Results: the calendar, the entry list and the official results come automatically from OpenF1 (https://openf1.org)
 - Made by: ${MAKER.naam} from ${MAKER.plaats} (${overUrl('en')})
 - Online since: ${LLMS.online}

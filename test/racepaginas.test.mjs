@@ -10,18 +10,22 @@
 //   1. De drempel: geen pagina zonder race in de gegevens of zonder vorige
 //      editie, en zonder racepagina's ook geen overzicht.
 //   2. Voor elke race uit site/races.mjs met gegevens en een vorige editie een
-//      pagina in NL en EN, op /races/<jaar>/<slug>/ en /en/races/<jaar>/<slug>/.
-//   3. De tijden: elke sessie op volgorde, in UTC en (op de Nederlandse pagina)
-//      in Nederlandse tijd, hier opnieuw uitgerekend. De vraag erboven is
+//      pagina in alle zeven talen, op /races/<jaar>/<slug>/, /en/races/...,
+//      /de/rennen/..., /fr/courses/..., /es/carreras/..., /it/gare/... en
+//      /pt/corridas/....
+//   3. De tijden: elke sessie op volgorde, in UTC en (behalve op de Engelse
+//      pagina) in de tijd van het land van de taal: Nederland, Duitsland,
+//      Frankrijk, Spanje, Italië, Brazilië. Hier opnieuw uitgerekend. De vraag erboven is
 //      wanneer het voorspellen sluit ("Wanneer sluit het voorspellen voor de GP
 //      van Singapore?"), niet hoe laat de race begint; het korte antwoord
 //      noemt wanneer de kwalificatie en de race op slot gaan.
 //   4. De top 10 van vorig jaar, race en kwalificatie, zoals in de gegevens;
 //      de uitslag van dit jaar alleen als die er is.
 //   5. De safety cars per jaar zoals in site/data/circuits.json, met een link
-//      naar de tabel van alle circuits in de gids over de puntentelling.
+//      naar de tabel van alle circuits in de gids over de puntentelling (in een
+//      taal waarin die gids er nog niet is: geen link).
 //   6. Het overzicht noemt en linkt elke racepagina op datum, en de voorpagina
-//      en elke gids linken naar het overzicht (NL en EN).
+//      en elke gids linken naar het overzicht (in elke taal).
 //   7. Geen vraag op een racepagina staat ook in de vragenlijst: een race
 //      concurreert niet met een gids.
 //   8. llms.txt noemt de racepagina's.
@@ -42,11 +46,11 @@ import { spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { chromium } from 'playwright';
 import { maakControle, wortel, CONTRAST } from './hulp.mjs';
-import { RACE_JAAR, RACES } from '../site/races.mjs';
-import { RACEPAGINAS, RACEDATA, CIRCUITDATA, bouwRacepaginas } from '../scripts/racepaginas.mjs';
+import { RACE_JAAR, RACES, RACE_TEKST } from '../site/races.mjs';
+import { RACEPAGINAS, RACEDATA, CIRCUITDATA, RACE_IDS as IDS, RACE_TALEN, bouwRacepaginas } from '../scripts/racepaginas.mjs';
 import { PAGINAS } from '../site/paginas.mjs';
 import { VRAGEN } from '../site/vragen.mjs';
-import { teksten } from '../site/teksten.mjs';
+import { teksten, TALEN } from '../site/teksten.mjs';
 
 const { check, afronden } = maakControle('de racepagina\'s');
 
@@ -62,7 +66,27 @@ const tijd = (iso, zone) => new Intl.DateTimeFormat('nl', { hour: '2-digit', min
 const naamVan = (x) => x.naam ?? x.code ?? `#${x.nr}`;
 // Races met pole en winnaar (poleWon ja of nee), zoals de pagina ze telt.
 const metPole = (perRace = []) => perRace.filter((x) => typeof x.poleWon === 'boolean');
-const IDS = { nl: { training: 'vrije-trainingen', pole: 'pole', safety: 'safety-cars' }, en: { training: 'practice', pole: 'pole', safety: 'safety-cars' } };
+// De tijd naast UTC per taal, hier los van site/races.mjs opgeschreven.
+const ZONE = { nl: 'Europe/Amsterdam', en: null, de: 'Europe/Berlin', fr: 'Europe/Paris', es: 'Europe/Madrid', it: 'Europe/Rome', pt: 'America/Sao_Paulo' };
+// De vraag boven de tijden, per taal.
+const VRAAG = {
+  nl: (k) => `Wanneer sluit het voorspellen voor de ${k}?`, en: (k) => `When do predictions close for the ${k}?`,
+  de: (k) => `Wann schließen die Tipps für den ${k}?`, fr: (k) => `Quand ferment les pronostics du ${k} ?`,
+  es: (k) => `¿Cuándo se cierran las predicciones del ${k}?`, it: (k) => `Quando si chiudono i pronostici per il ${k}?`,
+  pt: (k) => `Quando fecham os palpites para o ${k}?`,
+};
+// Wat er in de tekst bij de safety cars staat ("3 races", "4 keer"), bij de
+// polesitter ("1 van de 3 races" en "55 van de 87") en bij de punten ("10 en 25 punten").
+const WOORD = {
+  nl: { races: 'race', keer: 'keer', hier: (g, r) => `${g} van de ${r} races`, alles: (g, r) => `${g} van de ${r}`, en: 'en', punten: 'punten' },
+  en: { races: 'race', keer: 'times', hier: (g, r) => `${g} of the ${r} races`, alles: (g, r) => `${g} of ${r}`, en: 'and', punten: 'points' },
+  de: { races: 'Rennen', keer: 'Mal', hier: (g, r) => `${g} der ${r} Rennen`, alles: (g, r) => `${g} von ${r}`, en: 'und', punten: 'Punkte' },
+  fr: { races: 'courses', keer: 'fois', hier: (g, r) => `${g} des ${r} courses`, alles: (g, r) => `${g} sur ${r}`, en: 'et', punten: 'points' },
+  es: { races: 'carreras', keer: 'veces', hier: (g, r) => `${g} de las ${r} carreras`, alles: (g, r) => `${g} de ${r}`, en: 'y', punten: 'puntos' },
+  it: { races: 'gare', keer: 'volte', hier: (g, r) => `${g} delle ${r} gare`, alles: (g, r) => `${g} su ${r}`, en: 'e', punten: 'punti' },
+  pt: { races: 'corridas', keer: 'vezes', hier: (g, r) => `${g} das ${r} corridas`, alles: (g, r) => `${g} de ${r}`, en: 'e', punten: 'pontos' },
+};
+check('de racepagina\'s zijn er in alle zeven talen van de voorpagina', JSON.stringify(RACE_TALEN) === JSON.stringify(TALEN), RACE_TALEN.join());
 
 // ---- 1. de drempel, met een eigen voorbeeld ------------------------------------------
 {
@@ -99,9 +123,11 @@ const IDS = { nl: { training: 'vrije-trainingen', pole: 'pole', safety: 'safety-
   const tijdensWeekend = bouw({ vrijeTrainingen: vt, uitslag: { kwalificatie: top, race: null } });
   const nl = tijdensWeekend.talen.nl.secties.find((x) => x.id === 'vrije-trainingen');
   const en = tijdensWeekend.talen.en.secties.find((x) => x.id === 'practice');
-  check('tijdens het weekend de vrije trainingen, direct na de tijden, in NL en EN',
-    tijdensWeekend.talen.nl.secties.map((x) => x.id).join() === 'tijden,vrije-trainingen,vorig-jaar' && !!en,
-    tijdensWeekend.talen.nl.secties.map((x) => x.id).join());
+  check('tijdens het weekend de vrije trainingen, direct na de tijden, in elke taal',
+    tijdensWeekend.talen.nl.secties.map((x) => x.id).join() === 'tijden,vrije-trainingen,vorig-jaar' && !!en
+      && RACE_TALEN.every((c) => tijdensWeekend.talen[c].secties.map((x) => x.id).join() === `${IDS[c].tijden},${IDS[c].training},${IDS[c].vorig}`
+        && tijdensWeekend.talen[c].secties[1].tabellen.length === 2),
+    RACE_TALEN.map((c) => tijdensWeekend.talen[c].secties.map((x) => x.id).join()).join(' | '));
   check('per training een tabel met zijn top 10, zonder de training zonder uitslag',
     nl?.tabellen?.length === 2 && JSON.stringify(nl.tabellen.map((t) => t.rijen)) === JSON.stringify([top, ander].map((l) => l.map((x) => [String(x.plek), x.naam, x.team ?? ''])))
       && nl.tabellen.map((t) => t.bijschrift).join() === 'Vrije training 1: de top 10,Vrije training 2: de top 10'
@@ -125,8 +151,13 @@ const IDS = { nl: { training: 'vrije-trainingen', pole: 'pole', safety: 'safety-
   const metCijfers = bouwRacepaginas({ ...data, races: [race(a.slug, a.circuit)] }, circuits)[0];
   const pnl = metCijfers.talen.nl.secties.find((x) => x.id === 'pole');
   const pen = metCijfers.talen.en.secties.find((x) => x.id === 'pole');
-  check('pole direct na de safety cars, in NL en EN', metCijfers.talen.nl.secties.map((x) => x.id).join() === 'tijden,vorig-jaar,safety-cars,pole' && !!pen,
-    metCijfers.talen.nl.secties.map((x) => x.id).join());
+  check('pole direct na de safety cars, in elke taal', metCijfers.talen.nl.secties.map((x) => x.id).join() === 'tijden,vorig-jaar,safety-cars,pole' && !!pen
+      && RACE_TALEN.every((c) => metCijfers.talen[c].secties.map((x) => x.id).join() === `${IDS[c].tijden},${IDS[c].vorig},safety-cars,pole`),
+    RACE_TALEN.map((c) => metCijfers.talen[c].secties.map((x) => x.id).join()).join(' | '));
+  check('en in elke taal de getallen van het circuit en van alle circuits in de tekst',
+    RACE_TALEN.every((c) => { const k = metCijfers.talen[c].secties.find((x) => x.id === 'pole').kort;
+      return k.includes(WOORD[c].hier(1, 2)) && k.includes(WOORD[c].alles(4, 6)); }),
+    RACE_TALEN.filter((c) => !metCijfers.talen[c].secties.find((x) => x.id === 'pole').kort.includes(WOORD[c].hier(1, 2))).join());
   check('alleen races met pole en winnaar: hier 1 van de 2, over alle circuits 4 van de 6',
     /won de polesitter 1 van de 2 races sinds 2023; over alle circuits was dat 4 van de 6\./.test(pnl?.kort)
       && /the polesitter won 1 of the 2 races since 2023; across all circuits it was 4 of 6\./.test(pen?.kort), pnl?.kort);
@@ -150,10 +181,11 @@ if (!RACEDATA) {
   check(`site/data/races-${RACE_JAAR}.json staat er nog niet, en dus zijn er geen racepagina's`, RACEPAGINAS.length === 0);
 } else {
   const verwacht = RACES.filter((cfg) => RACEDATA.races.some((r) => r.slug === cfg.slug && r.vorige?.race?.length));
-  check('voor elke race met gegevens en een vorige editie een pagina, in NL en EN, op de goede plek',
+  const MAP = { nl: 'races', en: 'en/races', de: 'de/rennen', fr: 'fr/courses', es: 'es/carreras', it: 'it/gare', pt: 'pt/corridas' };
+  check('voor elke race met gegevens en een vorige editie een pagina, in alle zeven talen, op de goede plek',
     verwacht.length > 0 && verwacht.every((cfg) => {
       const pg = paginas.find((x) => x.id === `race-${cfg.slug}`);
-      return pg?.talen.nl.pad === `races/${RACE_JAAR}/${cfg.slug}` && pg?.talen.en.pad === `en/races/${RACE_JAAR}/${cfg.slug}`;
+      return TALEN.every((c) => pg?.talen[c]?.pad === `${MAP[c]}/${RACE_JAAR}/${cfg.slug}`);
     }) && paginas.length === verwacht.length, paginas.map((pg) => pg.id).join(' '));
 
   const fout = { tijden: [], top: [], safety: [], evenement: [], pole: [], training: [] };
@@ -163,22 +195,24 @@ if (!RACEDATA) {
     const race = r.sessies.find((s) => s.naam === 'Race');
     const circuit = CIRCUITDATA?.circuits.find((c) => c.circuit === r.circuit);
     if (pg.evenement.start !== (r.start ?? r.sessies[0].start) || pg.evenement.eind !== (race.eind ?? race.start)) fout.evenement.push(slug);
-    for (const code of ['nl', 'en']) {
+    for (const code of TALEN) {
       const html = lees(pg.talen[code].pad);
-      const ids = code === 'nl' ? { tijden: 'tijden', vorig: 'vorig-jaar', uitslag: 'uitslag' } : { tijden: 'times', vorig: 'last-year', uitslag: 'result' };
+      const ids = IDS[code];
+      const zone = ZONE[code];
       // 3. de tijden
       const tijden = sectie(html, ids.tijden);
       const rijen = tabellen(tijden)[0]?.rijen ?? [];
-      const verwachtRijen = r.sessies.map((s) => [tijd(s.start, 'UTC'), ...(code === 'nl' ? [tijd(s.start, 'Europe/Amsterdam')] : [])]);
+      const verwachtRijen = r.sessies.map((s) => [tijd(s.start, 'UTC'), ...(zone ? [tijd(s.start, zone)] : [])]);
       if (JSON.stringify(rijen.map((x) => x.slice(2))) !== JSON.stringify(verwachtRijen)) fout.tijden.push(`${slug} ${code}: ${JSON.stringify(rijen)}`);
       const kort = ontdoe(tijden.match(/<p class="kort">([\s\S]*?)<\/p>/)?.[1] ?? '');
-      if (!kort.includes(tijd(race.start, 'UTC')) || (code === 'nl' && !kort.includes(tijd(race.start, 'Europe/Amsterdam')))) fout.tijden.push(`${slug} ${code}: kort zonder de starttijd`);
+      if (!kort.includes(tijd(race.start, 'UTC')) || (zone && !kort.includes(tijd(race.start, zone)))) fout.tijden.push(`${slug} ${code}: kort zonder de starttijd`);
       const kwali = r.sessies.find((s) => s.naam === 'Qualifying');
-      if (kwali && !kort.includes(tijd(kwali.start, code === 'nl' ? 'Europe/Amsterdam' : 'UTC'))) fout.tijden.push(`${slug} ${code}: kort zonder de kwalificatie`);
+      if (kwali && !kort.includes(tijd(kwali.start, zone ?? 'UTC'))) fout.tijden.push(`${slug} ${code}: kort zonder de kwalificatie`);
       const naamKort = RACES.find((x) => x.slug === slug)?.[code]?.kort;
       const vraagTijden = ontdoe(tijden.match(/<h2[^>]*>([\s\S]*?)<\/h2>/)?.[1] ?? '');
-      const vraagHoort = code === 'nl' ? `Wanneer sluit het voorspellen voor de ${naamKort}?` : `When do predictions close for the ${naamKort}?`;
-      if (vraagTijden !== vraagHoort) fout.tijden.push(`${slug} ${code}: de vraag is "${vraagTijden}"`);
+      if (vraagTijden !== VRAAG[code](naamKort)) fout.tijden.push(`${slug} ${code}: de vraag is "${vraagTijden}"`);
+      // Nergens een {plekhouder} die de generator niet kende.
+      if (/\{[a-zA-Z]+\}/.test(ontdoe(html.slice(html.indexOf('<main'), html.indexOf('</main>'))))) fout.tijden.push(`${slug} ${code}: een {plekhouder} op de pagina`);
       if (code === 'nl' && (/een virtuele meegeteld/.test(html) || !/de virtuele safety car meegeteld/.test(html))) fout.safety.push(`${slug} nl: "een virtuele meegeteld"`);
       // 4. de top 10's
       const top = (lijst) => lijst.map((x) => [String(x.plek), x.naam ?? x.code ?? `#${x.nr}`, x.team ?? '']);
@@ -191,14 +225,13 @@ if (!RACEDATA) {
       if (circuit) {
         const s = sectie(html, 'safety-cars');
         const rijenSc = tabellen(s)[0]?.rijen ?? [];
-        const ja = code === 'nl' ? 'ja' : 'yes';
-        const nee = code === 'nl' ? 'nee' : 'no';
+        const { ja, nee } = RACE_TEKST[code];
         const verwachtSc = circuit.perRace.map((x) => [String(x.jaar), String(x.safetyCars), x.rodeVlag ? ja : nee]);
         if (JSON.stringify(rijenSc) !== JSON.stringify(verwachtSc)) fout.safety.push(`${slug} ${code}: tabel`);
         const tekst = ontdoe(s);
-        if (!tekst.includes(`${circuit.races} race`) || !new RegExp(`\\b${circuit.safetyCars} (keer|times)\\b`).test(tekst)) fout.safety.push(`${slug} ${code}: tekst`);
-        const gids = PAGINAS.find((x) => x.id === 'puntentelling').talen[code].pad;
-        if (!s.includes(`${gids}/#safety-cars"`)) fout.safety.push(`${slug} ${code}: geen link naar de tabel van alle circuits`);
+        if (!tekst.includes(`${circuit.races} ${WOORD[code].races}`) || !tekst.includes(`${circuit.safetyCars} ${WOORD[code].keer}`)) fout.safety.push(`${slug} ${code}: tekst`);
+        const gids = PAGINAS.find((x) => x.id === 'puntentelling').talen[code]?.pad;
+        if (gids ? !s.includes(`${gids}/#safety-cars"`) : s.includes('#safety-cars"')) fout.safety.push(`${slug} ${code}: ${gids ? 'geen' : 'een'} link naar de tabel van alle circuits`);
       } else fout.safety.push(`${slug}: circuit ${r.circuit} niet in circuits.json`);
       // 9. pole
       const p = sectie(html, IDS[code].pole);
@@ -207,10 +240,9 @@ if (!RACEDATA) {
         const rijenPole = tabellen(p)[0]?.rijen ?? [];
         if (JSON.stringify(rijenPole) !== JSON.stringify(hier.map((x) => [String(x.jaar), naamVan(x.pole), naamVan(x.winnaar)]))) fout.pole.push(`${slug} ${code}: tabel`);
         const alles = CIRCUITDATA.circuits.flatMap((c) => metPole(c.perRace));
-        const woord = code === 'nl' ? 'van de' : 'of the';
         const tekst = ontdoe(p);
-        if (!tekst.includes(`${hier.filter((x) => x.poleWon).length} ${woord} ${hier.length} races`)
-          || !tekst.includes(`${alles.filter((x) => x.poleWon).length} ${code === 'nl' ? 'van de' : 'of'} ${alles.length}`)) fout.pole.push(`${slug} ${code}: tekst`);
+        if (!tekst.includes(WOORD[code].hier(hier.filter((x) => x.poleWon).length, hier.length))
+          || !tekst.includes(WOORD[code].alles(alles.filter((x) => x.poleWon).length, alles.length))) fout.pole.push(`${slug} ${code}: tekst`);
       }
       // 10. de vrije trainingen
       const t = sectie(html, IDS[code].training);
@@ -220,11 +252,11 @@ if (!RACEDATA) {
       if (t && JSON.stringify(tabellen(t).map((x) => x.rijen)) !== JSON.stringify(trainingen.map((x) => top(x.top)))) fout.training.push(`${slug} ${code}: tabellen`);
     }
   }
-  check('de tijden: elke sessie op volgorde, in UTC en in Nederlandse tijd, onder de vraag wanneer het voorspellen sluit, met de kwalificatie en de race in het korte antwoord',
+  check('de tijden: elke sessie op volgorde, in UTC en in de tijd van het land, onder de vraag wanneer het voorspellen sluit, met de kwalificatie en de race in het korte antwoord, zonder plekhouders',
     fout.tijden.length === 0, fout.tijden.slice(0, 3).join(' | '));
   check('de top 10 van vorig jaar zoals in de gegevens, de winnaar in de tekst, en de uitslag van dit jaar alleen als die er is',
     fout.top.length === 0, fout.top.slice(0, 3).join(' | '));
-  check('de safety cars per jaar zoals in circuits.json, met een link naar de tabel van alle circuits',
+  check('de safety cars per jaar zoals in circuits.json, met een link naar de tabel van alle circuits als de gids er in die taal is',
     fout.safety.length === 0, fout.safety.slice(0, 3).join(' | '));
   check('de SportsEvent loopt van de eerste sessie tot het einde van de race', fout.evenement.length === 0, fout.evenement.join(' '));
   const polesitter = CIRCUITDATA?.circuits.some((c) => metPole(c.perRace).length);
@@ -238,16 +270,27 @@ if (!RACEDATA) {
   const opDatum = [...paginas].sort((a, b) => a.evenement.start.localeCompare(b.evenement.start)).map((pg) => pg.id);
   check('het overzicht noemt elke racepagina, op datum', JSON.stringify(overzicht?.lijst) === JSON.stringify(opDatum), overzicht?.lijst?.join(' '));
   const mis = [];
-  for (const code of ['nl', 'en']) {
+  for (const code of TALEN) {
     const hier = overzicht.talen[code].pad;
     const html = lees(hier);
-    for (const pg of paginas) if (!html.includes(`href="../${code === 'en' ? '../' : ''}${pg.talen[code].pad}/"`)) mis.push(`${code}: ${pg.id} niet gelinkt`);
+    const terug = '../'.repeat(hier.split('/').length);
+    for (const pg of paginas) if (!html.includes(`href="${terug}${pg.talen[code].pad}/"`)) mis.push(`${code}: ${pg.id} niet gelinkt`);
     const naarOverzicht = (van) => lees(van).includes(`${hier}/"`);
     if (!naarOverzicht(teksten[code].pad || '.')) mis.push(`${code}: de voorpagina linkt niet naar het overzicht`);
     for (const pg of [...PAGINAS, ...paginas]) if (pg.talen[code] && !naarOverzicht(pg.talen[code].pad)) mis.push(`${code}: ${pg.id} linkt niet naar het overzicht`);
   }
-  check('het overzicht linkt elke racepagina, en de voorpagina, de gidsen en de racepagina\'s linken naar het overzicht (NL en EN)',
+  check('het overzicht linkt elke racepagina, en de voorpagina, de gidsen en de racepagina\'s linken naar het overzicht (in elke taal)',
     mis.length === 0, mis.slice(0, 4).join(' | '));
+
+  // Een taal met alleen de racepagina's (nog geen gidsen) houdt op de
+  // voorpagina de sprongen naar de blokken; een menu met alleen "Rennen" zou
+  // die wegdrukken. Het overzicht staat dan in de voet.
+  const kopnav = (code) => lees(teksten[code].pad || '.').match(/<nav class="kopnav"[^>]*>([\s\S]*?)<\/nav>/)?.[1] ?? '';
+  const alleenRaces = TALEN.filter((c) => !PAGINAS.some((pg) => pg.talen[c]));
+  check('een taal met alleen racepagina\'s houdt op de voorpagina de sprongen naar de blokken, een taal met gidsen krijgt het menu',
+    alleenRaces.length > 0 && alleenRaces.every((c) => kopnav(c).includes('href="#hoe"') && !kopnav(c).includes(overzicht.talen[c].pad))
+      && TALEN.filter((c) => !alleenRaces.includes(c)).every((c) => kopnav(c).includes(`${overzicht.talen[c].pad}/"`) && !kopnav(c).includes('href="#hoe"')),
+    TALEN.map((c) => `${c}: ${kopnav(c).replace(/\s+/g, ' ').slice(0, 60)}`).join(' | '));
 
   // ---- 7. geen vraag uit de vragenlijst ---------------------------------------------------------
   const sleutel = (x) => x.toLowerCase().replace(/[?!.,:;'"()]/g, ' ').split(/\s+/).filter(Boolean).join(' ');
@@ -259,8 +302,9 @@ if (!RACEDATA) {
   // ---- 8. llms.txt ------------------------------------------------------------------------------
   const llms = readFileSync(join(wortel, 'llms.txt'), 'utf8');
   const blok = llms.split('\n## Race pages\n')[1]?.split('\n## ')[0] ?? '';
-  check('llms.txt noemt elke racepagina onder "Race pages", Engels eerst met de Nederlandse erachter',
-    paginas.every((pg) => blok.includes(`(https://predicttherace.com/${pg.talen.en.pad}/)`) && blok.includes(`(https://predicttherace.com/${pg.talen.nl.pad}/)`)),
+  check('llms.txt noemt elke racepagina onder "Race pages", Engels eerst met de andere talen erachter',
+    paginas.every((pg) => blok.includes(`- [${pg.talen.en.kop}](https://predicttherace.com/${pg.talen.en.pad}/)`)
+      && TALEN.every((c) => blok.includes(`(https://predicttherace.com/${pg.talen[c].pad}/)`))),
     blok.split('\n').filter(Boolean).length + ' regels');
 }
 
@@ -291,16 +335,16 @@ if (RACEDATA && CIRCUITDATA && paginas.length) {
   const fout = [];
   if (maak.status !== 0) fout.push(`maak-site: ${maak.stderr.split('\n').find(Boolean)}`);
   const pad = (code) => paginas[0].talen[code].pad;
-  for (const code of maak.status === 0 ? ['nl', 'en'] : []) {
+  for (const code of maak.status === 0 ? TALEN : []) {
     const html = readFileSync(join(kopie, ...pad(code).split('/'), 'index.html'), 'utf8');
     const p = sectie(html, IDS[code].pole);
     const kort = ontdoe(p.match(/<p class="kort">([\s\S]*?)<\/p>/)?.[1] ?? '');
-    const woord = code === 'nl' ? 'punten' : 'points';
-    if (!kort.includes(`${punten('pole')} ${code === 'nl' ? 'en' : 'and'} ${punten('winnaar')} ${woord}`) || /[{}]/.test(kort)) fout.push(`${code}: pole zonder de punten uit de app: ${kort}`);
+    if (!kort.includes(`${punten('pole')} ${WOORD[code].en} ${punten('winnaar')} ${WOORD[code].punten}`) || /[{}]/.test(kort)) fout.push(`${code}: pole zonder de punten uit de app: ${kort}`);
     const circuit = circuits.circuits.find((c) => c.circuit === r.circuit);
     if (JSON.stringify(tabellen(p)[0]?.rijen) !== JSON.stringify(circuit.perRace.map((x) => [String(x.jaar), x.pole.naam, x.winnaar.naam]))) fout.push(`${code}: pole-tabel`);
     const t = sectie(html, IDS[code].training);
     if (tabellen(t).length !== 2 || tabellen(t)[1].rijen[0][1] !== top.at(-1).naam) fout.push(`${code}: vrije trainingen`);
+    if (/\{[a-zA-Z]+\}/.test(ontdoe(html.slice(html.indexOf('<main'), html.indexOf('</main>'))))) fout.push(`${code}: een {plekhouder} op de pagina`);
     const volgorde = [...html.matchAll(/<section class="vraag" id="([^"]+)">/g)].map((m) => m[1]);
     if (volgorde.indexOf(IDS[code].training) !== 1 || volgorde.indexOf(IDS[code].pole) !== volgorde.indexOf(IDS[code].safety) + 1) fout.push(`${code}: volgorde ${volgorde.join()}`);
   }
@@ -322,7 +366,7 @@ if (RACEDATA && CIRCUITDATA && paginas.length) {
     await new Promise((klaar) => server.listen(0, '127.0.0.1', klaar));
     const browser = await chromium.launch();
     const page = await browser.newPage();
-    for (const code of ['nl', 'en']) {
+    for (const code of TALEN) {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.goto(`http://127.0.0.1:${server.address().port}/${pad(code)}/`);
       await page.waitForLoadState('networkidle');
