@@ -389,6 +389,16 @@
   .merk .blok.metlogo{display:none}
   .sponsorbalk{padding:8px 16px;border-bottom:1px solid var(--lijn);background:var(--paneel)}
   .teamstand{display:flex;flex-direction:column;gap:8px}
+  .eigenvragen{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--lijn);
+    border-radius:14px;background:var(--paneel)}
+  .eigenvraag{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--lijn)}
+  .eigenkop{display:flex;align-items:flex-start;gap:8px}
+  .eigenkop b{flex:1;min-width:0}
+  .eigenkop .knop{width:auto;flex:none}
+  .eigenkeuzes{display:flex;flex-wrap:wrap;gap:8px}
+  .eigenkeuzes .knop{width:auto}
+  .eigenkeuzes .knop[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .eigennieuw{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--lijn)}
   .teamregel{display:flex;gap:8px;align-items:center}
   .teamregel .veld{flex:1;min-width:0}
   .teamregel .knop{width:auto;flex:none}
@@ -3952,6 +3962,34 @@ const ENGELS = Object.fromEntries([
    'team of {naam}'],
   ['Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.',
    'A league for your company, club or society? With premium it gets teams that play against each other, its own logo, its own colour and a sponsor line with a link. Email {adres} to turn it on.'],
+  ['vragen van de poulebaas',
+   'questions from the owner'],
+  ['{punten} punten per goed antwoord, tot de start van de race',
+   '{punten} points per right answer, until the race starts'],
+  ['uitkomst',
+   'outcome'],
+  ['nog geen uitkomst',
+   'no outcome yet'],
+  ['jij: {keuze}',
+   'you: {keuze}'],
+  ['niet beantwoord',
+   'not answered'],
+  ['nieuwe vraag voor dit weekend',
+   'new question for this weekend'],
+  ['Regent het tijdens de race?',
+   'Will it rain during the race?'],
+  ['antwoorden, gescheiden door komma\'s',
+   'answers, separated by commas'],
+  ['Ja, Nee',
+   'Yes, No'],
+  ['Vraag toevoegen',
+   'Add question'],
+  ['Vraag weghalen',
+   'Remove question'],
+  ['uitkomst van "{vraag}"',
+   'outcome of "{vraag}"'],
+  ['Zet een eigen vraag bij dit weekend, met 2 tot 6 antwoorden om uit te kiezen.',
+   'Add your own question to this weekend, with 2 to 6 answers to choose from.'],
   ['mogelijk gemaakt door {sponsor}',
    'brought to you by {sponsor}'],
   ['eigen logo en kleur',
@@ -4941,9 +4979,24 @@ const jokersOver = (memberId) => jokersPerSeizoen() - S.jokers.filter(j =>
 // weekendwinst en in de grafiek, zonder dat die drie hem apart hoeven te
 // kennen.
 const scoreWeekend = (p, race) => {
-  const som = weekendSessies(race).reduce((n, w) => n + scoreTab(p, race, w), 0);
+  const som = weekendSessies(race).reduce((n, w) => n + scoreTab(p, race, w), 0)
+    + (p ? eigenPunten(race.id, p.member_id) : 0);
   return p && heeftJoker(race.id, p.member_id) ? som * 2 : som;
 };
+
+// ---- eigen vragen (premium) ------------------------------------
+// De poulebaas zet per weekend hoogstens drie eigen vragen, elk met 2 tot 6
+// antwoorden om uit te kiezen, en vult na de start de uitkomst in. Een goed
+// antwoord is EIGEN_PUNTEN waard en telt mee in het weekend (scoreWeekend),
+// dus ook in de stand, de weekendwinst en onder een joker. Wie wat mag staat in
+// schema.sql (eigen_vraag_opslaan en de rest). Een vraag die er staat telt
+// ook als premium daarna voorbij is: anders verschoven punten achteraf.
+const EIGEN_PUNTEN = 10;
+const eigenVragenVan = (raceId) => (S.eigenVragen ?? []).filter(v => zelfde(v.race_id, raceId));
+const eigenAntwoord = (vraagId, memberId) => (S.eigenAntwoorden ?? [])
+  .find(a => zelfde(a.vraag_id, vraagId) && zelfde(a.member_id, memberId))?.keuze ?? null;
+const eigenPunten = (raceId, memberId) => eigenVragenVan(raceId).reduce((n, v) =>
+  n + (v.uitkomst && eigenAntwoord(v.id, memberId) === v.uitkomst ? EIGEN_PUNTEN : 0), 0);
 // Wat één sessie oplevert mét de joker erbij, voor de plekken die per sessie
 // punten tonen (je punten op het racescherm, de poule ernaast, iemands
 // inzending). Zonder dit stond daar 11 terwijl de lijst 22 zei.
@@ -6110,6 +6163,20 @@ function bouwPreds() {
     }
     per.get(sleutel)[VRAAG_VELD[a.question_id] ?? a.question_id] = a.waarde;
   }
+  // Wie alleen een eigen vraag beantwoordde (premium) krijgt ook een rij,
+  // anders telt dat antwoord nergens mee.
+  for (const a of S.eigenAntwoorden ?? []) {
+    const v = (S.eigenVragen ?? []).find(x => zelfde(x.id, a.vraag_id));
+    if (!v) continue;
+    const sleutel = `${v.race_id}|${a.member_id}`;
+    if (!per.has(sleutel)) {
+      per.set(sleutel, { pool_id:S.poule?.id, race_id:v.race_id, member_id:a.member_id,
+                         quali_top10:null, race_top10:null, sprint_top10:null,
+                         race_winnaar:null, pole:null, teamgenoot_duels:null,
+                         snelste_ronde:null, snelste_pitstop:null,
+                         safety_cars:null, rode_vlag:null });
+    }
+  }
   S.preds = [...per.values()];
   vulAutoAan();
 }
@@ -6166,6 +6233,8 @@ async function laad() {
   S.poulevragen = inhoud.data.poulevragen ?? [];
   S.jokers = inhoud.data.jokers ?? [];
   S.teams = inhoud.data.teams ?? [];
+  S.eigenVragen = inhoud.data.eigenvragen ?? [];
+  S.eigenAntwoorden = inhoud.data.eigenantwoorden ?? [];
   S.geladenOp = Date.now();
   // De poule zelf komt mee, dus een omschrijving die iemand anders net
   // aanpaste staat er meteen goed bij.
@@ -7111,6 +7180,7 @@ function toonApp() {
   knoopSeizoen();
   knoopSeizoenslaag();
   knoopJokerZetten();
+  knoopEigenVragen();
   knoopMail();
   knoopInstall(() => render());
   knoopMelding();
@@ -9837,6 +9907,7 @@ function raceDetailKop() {
         : `<span class="vlag"></span>`}
     </div>
     ${jokerRegel(r)}
+    ${eigenVragenBlok(r)}
     ${weekendPodium(r)}
     <!-- Alleen de sessies die dit weekend bestaan en die de poule speelt: een
          gewoon weekend krijgt geen sprint-tab, een sprintweekend er drie, en een
@@ -9896,6 +9967,107 @@ function jokerRegel(r) {
         ? `<button class="knop klein" id="jokerknop">${ligt ? T('Haal weg') : T('Zet hier')}</button>`
         : `<span class="mono">2×</span>`}
     </div>`;
+}
+
+// Boven de tabbladen, net als de joker: een eigen vraag hoort bij het weekend.
+function eigenVragenBlok(r) {
+  const vragen = eigenVragenVan(r.id);
+  const open = !!r.deadline_race && Date.now() < Date.parse(r.deadline_race);
+  const baas = magBeheren();
+  const kanZetten = baas && premiumActief() && open && vragen.length < 3;
+  if (!vragen.length && !kanZetten) return '';
+  const vraagHtml = (v) => {
+    const mijn = eigenAntwoord(v.id, S.ik.id);
+    const keuzes = open
+      ? `<div class="eigenkeuzes">${v.opties.map(o => `<button class="knop klein" type="button"
+          data-eigen-keuze="${esc(v.id)}" data-optie="${esc(o)}" aria-pressed="${mijn === o}">${esc(o)}</button>`).join('')}</div>`
+      : `<p class="zacht klein" style="margin:0">${mijn ? T('jij: {keuze}', { keuze: esc(mijn) }) : T('niet beantwoord')}${
+          v.uitkomst && mijn === v.uitkomst ? ` · <b>+${EIGEN_PUNTEN}</b>` : ''}</p>
+        <p class="zacht klein" style="margin:0">${v.opties.map(o => `${esc(o)} ${
+          (S.eigenAntwoorden ?? []).filter(a => zelfde(a.vraag_id, v.id) && a.keuze === o).length}`).join(' · ')}</p>
+        ${baas ? `<select class="veld" data-eigen-uitkomst="${esc(v.id)}" aria-label="${
+            T('uitkomst van "{vraag}"', { vraag: esc(v.vraag) })}">
+            <option value="">${T('nog geen uitkomst')}</option>
+            ${v.opties.map(o => `<option value="${esc(o)}"${v.uitkomst === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+          </select>`
+          : `<p class="klein" style="margin:0"><span class="label">${T('uitkomst')}</span> ${
+              v.uitkomst ? esc(v.uitkomst) : T('nog geen uitkomst')}</p>`}`;
+    return `<div class="eigenvraag" data-eigenvraag="${esc(v.id)}">
+      <div class="eigenkop"><b>${esc(v.vraag)}</b>${baas ? `<button class="knop klein" type="button"
+        data-eigen-weg="${esc(v.id)}" aria-label="${T('Vraag weghalen')}">×</button>` : ''}</div>
+      ${keuzes}
+    </div>`;
+  };
+  return `
+    <div class="eigenvragen" data-eigenvragen>
+      <span class="label">${T('vragen van de poulebaas')}</span>
+      <p class="zacht klein" style="margin:0">${T('{punten} punten per goed antwoord, tot de start van de race',
+        { punten: EIGEN_PUNTEN })}</p>
+      ${vragen.map(vraagHtml).join('')}
+      ${kanZetten ? `<div class="eigennieuw">
+        ${vragen.length ? '' : `<p class="zacht klein" style="margin:0">${
+          T('Zet een eigen vraag bij dit weekend, met 2 tot 6 antwoorden om uit te kiezen.')}</p>`}
+        <input class="veld" id="eigenvraag" maxlength="120" autocomplete="off" value="${esc(S.eigenConcept?.vraag ?? '')}"
+          aria-label="${T('nieuwe vraag voor dit weekend')}" placeholder="${T('Regent het tijdens de race?')}">
+        <input class="veld" id="eigenopties" maxlength="250" autocomplete="off" value="${esc(S.eigenConcept?.opties ?? '')}"
+          aria-label="${T("antwoorden, gescheiden door komma's")}" placeholder="${T('Ja, Nee')}">
+        <button class="knop klein" type="button" id="eigenErbij">${T('Vraag toevoegen')}</button>
+      </div>` : ''}
+      <p class="err" id="eigenfout">${esc(S.eigenFout ?? '')}</p>
+    </div>`;
+}
+
+async function eigenActie(werk) {
+  S.eigenFout = '';
+  try {
+    if (!DEMO) {
+      const { data, error } = await werk();
+      if (error) throw new Error(uitleg(error));
+      return data;
+    }
+  } catch (e) { S.eigenFout = e.message; render(); return undefined; }
+  return null;
+}
+
+function knoopEigenVragen() {
+  const r = S.race;
+  if (!r || !app.querySelector('[data-eigenvragen]')) return;
+  app.querySelectorAll('[data-eigen-keuze]').forEach(k => k.onclick = async () => {
+    const id = k.dataset.eigenKeuze;
+    const keuze = eigenAntwoord(id, S.ik.id) === k.dataset.optie ? null : k.dataset.optie;
+    if (await eigenActie(() => db.rpc('eigen_antwoord_geven', { p_vraag: id, p_member: S.ik.id, p_keuze: keuze })) === undefined) return;
+    S.eigenAntwoorden = (S.eigenAntwoorden ?? []).filter(a => !(zelfde(a.vraag_id, id) && zelfde(a.member_id, S.ik.id)));
+    if (keuze) S.eigenAntwoorden.push({ vraag_id: id, member_id: S.ik.id, keuze });
+    bouwPreds();
+    render();
+  });
+  app.querySelectorAll('[data-eigen-uitkomst]').forEach(k => k.onchange = async () => {
+    const id = k.dataset.eigenUitkomst;
+    if (await eigenActie(() => db.rpc('eigen_vraag_uitkomst', { p_vraag: id, p_uitkomst: k.value || null })) === undefined) return;
+    S.eigenVragen = S.eigenVragen.map(v => (zelfde(v.id, id) ? { ...v, uitkomst: k.value || null } : v));
+    render();
+  });
+  app.querySelectorAll('[data-eigen-weg]').forEach(k => k.onclick = async () => {
+    const id = k.dataset.eigenWeg;
+    if (await eigenActie(() => db.rpc('eigen_vraag_weghalen', { p_vraag: id })) === undefined) return;
+    S.eigenVragen = S.eigenVragen.filter(v => !zelfde(v.id, id));
+    S.eigenAntwoorden = (S.eigenAntwoorden ?? []).filter(a => !zelfde(a.vraag_id, id));
+    bouwPreds();
+    render();
+  });
+  const erbij = app.querySelector('#eigenErbij');
+  if (erbij) erbij.onclick = async () => {
+    // Wat je intikte blijft staan als het niet lukt (het scherm wordt opnieuw getekend).
+    S.eigenConcept = { vraag: app.querySelector('#eigenvraag').value, opties: app.querySelector('#eigenopties').value };
+    const vraag = schoon(S.eigenConcept.vraag);
+    const opties = S.eigenConcept.opties.split(',').map(schoon).filter(Boolean);
+    const id = await eigenActie(() => db.rpc('eigen_vraag_opslaan',
+      { p_pool: S.poule.id, p_race: r.id, p_vraag_id: null, p_vraag: vraag, p_opties: opties }));
+    if (id === undefined) return;
+    S.eigenVragen = [...(S.eigenVragen ?? []), { id: id ?? `demo-${Date.now()}`, race_id: r.id, vraag, opties, uitkomst: null }];
+    S.eigenConcept = null;
+    render();
+  };
 }
 
 function knoopJokerZetten() {

@@ -779,6 +779,12 @@ globalThis.__mail = {
 //  verschil tussen de twee smaken — wel of niet je spelers mee — precies is
 //  wat het scherm belooft, en dat moet een browsertest kunnen nalopen.
 // ------------------------------------------------------------
+// eigen_vraag_open(): de race is nog niet begonnen.
+function eigenVraagOpen(raceId) {
+  const r = store.races.find((x) => gelijk(x.id, raceId));
+  return !!r?.deadline_race && Date.parse(r.deadline_race) > Date.now();
+}
+
 const functies = {
   // De vier functies uit fase 0. Ze bestaan omdat een policy niet kan eisen
   // dát je filtert: "een poule vinden op zijn code" en "de hele tabel
@@ -816,7 +822,83 @@ const functies = {
         .map(({ race_id, member_id }) => ({ race_id, member_id })),
       teams: (store.pool_teams ?? []).filter((t) => gelijk(t.pool_id, poule.id))
         .map(({ id, naam }) => ({ id, naam })),
+      eigenvragen: (store.pool_eigen_vragen ?? []).filter((v) => gelijk(v.pool_id, poule.id))
+        .map(({ id, race_id, vraag, opties, uitkomst }) => ({ id, race_id, vraag, opties: [...opties], uitkomst: uitkomst ?? null })),
+      eigenantwoorden: (store.pool_eigen_antwoorden ?? []).filter((a) => {
+        const v = (store.pool_eigen_vragen ?? []).find((x) => gelijk(x.id, a.vraag_id));
+        return v && gelijk(v.pool_id, poule.id) && (!eigenVraagOpen(v.race_id) || magVoorSpeler(a.member_id));
+      }).map(({ vraag_id, member_id, keuze }) => ({ vraag_id, member_id, keuze })),
     }, error: null };
+  },
+
+  // Eigen vragen (premium), met de regels van schema.sql (test/eigen-vragen.test.sql).
+  eigen_vraag_opslaan({ p_pool, p_race, p_vraag_id = null, p_vraag, p_opties } = {}) {
+    const fout = (message) => ({ data: null, error: { code: 'P0001', message } });
+    if (!magBeheren(p_pool)) return fout('alleen de poulebaas zet een eigen vraag');
+    const poule = store.pools.find((p) => gelijk(p.id, p_pool));
+    if (!(poule?.premium_tot && Date.parse(poule.premium_tot) > Date.now())) return fout('eigen vragen kunnen alleen met premium');
+    if (!eigenVraagOpen(p_race)) return fout('de race is al begonnen');
+    const vraag = String(p_vraag ?? '').trim();
+    if (vraag.length < 3 || vraag.length > 120) return fout('een vraag heeft 3 tot 120 tekens');
+    const opties = (p_opties ?? []).map((o) => String(o ?? '').trim()).filter(Boolean);
+    if (opties.length < 2 || opties.length > 6) return fout('een vraag heeft 2 tot 6 antwoorden');
+    if (opties.some((o) => o.length > 40)) return fout('een antwoord heeft hoogstens 40 tekens');
+    if (new Set(opties.map((o) => o.toLowerCase())).size !== opties.length) return fout('twee antwoorden zijn hetzelfde');
+    store.pool_eigen_vragen ??= [];
+    store.pool_eigen_antwoorden ??= [];
+    if (!p_vraag_id) {
+      if (store.pool_eigen_vragen.filter((v) => gelijk(v.pool_id, p_pool) && gelijk(v.race_id, p_race)).length >= 3) {
+        return fout('hoogstens 3 eigen vragen per weekend');
+      }
+      const v = { id: `eigen-${store.pool_eigen_vragen.length + 1}-${Date.now()}`, pool_id: p_pool, race_id: p_race, vraag, opties, uitkomst: null };
+      store.pool_eigen_vragen.push(v);
+      bewaren();
+      return { data: v.id, error: null };
+    }
+    const v = store.pool_eigen_vragen.find((x) => gelijk(x.id, p_vraag_id) && gelijk(x.pool_id, p_pool) && gelijk(x.race_id, p_race));
+    if (!v) return fout('die vraag bestaat niet');
+    Object.assign(v, { vraag, opties });
+    store.pool_eigen_antwoorden = store.pool_eigen_antwoorden.filter((a) => !gelijk(a.vraag_id, v.id) || opties.includes(a.keuze));
+    bewaren();
+    return { data: v.id, error: null };
+  },
+
+  eigen_vraag_weghalen({ p_vraag } = {}) {
+    const v = (store.pool_eigen_vragen ?? []).find((x) => gelijk(x.id, p_vraag));
+    if (!v) return { data: null, error: { code: 'P0001', message: 'die vraag bestaat niet' } };
+    if (!magBeheren(v.pool_id)) return { data: null, error: { code: 'P0001', message: 'alleen de poulebaas haalt een eigen vraag weg' } };
+    store.pool_eigen_vragen = store.pool_eigen_vragen.filter((x) => x !== v);
+    store.pool_eigen_antwoorden = (store.pool_eigen_antwoorden ?? []).filter((a) => !gelijk(a.vraag_id, v.id));
+    bewaren();
+    return { data: null, error: null };
+  },
+
+  eigen_vraag_uitkomst({ p_vraag, p_uitkomst } = {}) {
+    const fout = (message) => ({ data: null, error: { code: 'P0001', message } });
+    const v = (store.pool_eigen_vragen ?? []).find((x) => gelijk(x.id, p_vraag));
+    if (!v) return fout('die vraag bestaat niet');
+    if (!magBeheren(v.pool_id)) return fout('alleen de poulebaas vult de uitkomst in');
+    if (eigenVraagOpen(v.race_id)) return fout('de uitkomst kan pas als de race begonnen is');
+    if (p_uitkomst && !v.opties.includes(p_uitkomst)) return fout('de uitkomst is een van de antwoorden');
+    v.uitkomst = p_uitkomst || null;
+    bewaren();
+    return { data: null, error: null };
+  },
+
+  eigen_antwoord_geven({ p_vraag, p_member, p_keuze } = {}) {
+    const fout = (message) => ({ data: null, error: { code: 'P0001', message } });
+    const v = (store.pool_eigen_vragen ?? []).find((x) => gelijk(x.id, p_vraag));
+    if (!v) return fout('die vraag bestaat niet');
+    if (!magVoorSpelerIn(p_member, v.pool_id)) return fout('je antwoordt alleen voor jezelf');
+    if (!eigenVraagOpen(v.race_id)) return fout('de race is al begonnen');
+    store.pool_eigen_antwoorden ??= [];
+    store.pool_eigen_antwoorden = store.pool_eigen_antwoorden.filter((a) => !(gelijk(a.vraag_id, p_vraag) && gelijk(a.member_id, p_member)));
+    if (p_keuze) {
+      if (!v.opties.includes(p_keuze)) return fout('kies een van de antwoorden');
+      store.pool_eigen_antwoorden.push({ vraag_id: p_vraag, member_id: p_member, keuze: p_keuze });
+    }
+    bewaren();
+    return { data: null, error: null };
   },
 
   // Teams (premium), met de regels van schema.sql (test/teams.test.sql).

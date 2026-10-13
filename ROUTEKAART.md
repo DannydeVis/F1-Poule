@@ -1042,8 +1042,8 @@ zelf leuker maken. Elk in een eigen PR, alles afgedwongen in schema.sql:
 
 | wat | stand |
 |---|---|
-| teams binnen een poule: de poulebaas maakt teams, iedereen kiest zijn team, een teamstand op gemiddelde per speler | **gebouwd** (13 oktober), BEDIENING §19 |
-| eigen vragen van de poulebaas: per weekend een eigen bonusvraag met vaste punten; de poulebaas vult de uitkomst in | open |
+| teams binnen een poule: de poulebaas maakt teams, iedereen kiest zijn team, een teamstand op gemiddelde per speler | **gemerged** (13 oktober, PR #221), BEDIENING §19 |
+| eigen vragen van de poulebaas: per weekend een eigen bonusvraag met vaste punten; de poulebaas vult de uitkomst in | **gebouwd** (13 oktober): hoogstens 3 per weekend, 2 tot 6 antwoorden om uit te kiezen, 10 punten, telt mee in het weekend (ook onder een joker), geheim tot de start; BEDIENING §19 |
 | tussenklassementen en prijzen: een winnaar per periode naast de seizoenswinnaar, prijzen als tekst (geen geld) | open |
 | seizoensoverzicht à la Wrapped: deelbare plaatjes aan het eind van het seizoen, gratis voor iedereen (het is reclame) | open |
 | klein: de stand als PDF/CSV, een kant-en-klare samenvatting per race, een herinnerknop voor wie nog niet invulde | open |

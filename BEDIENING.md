@@ -2401,6 +2401,24 @@ elkaar.
 Is premium voorbij, dan zijn de teams nergens meer te zien (ze blijven wel
 bewaard, en zijn terug zodra premium weer loopt).
 
+### Eigen vragen
+
+Met premium zet de poulebaas per weekend hoogstens drie eigen vragen, zoals
+"Regent het tijdens de race?" of "Wie wint het duel Hamilton of Russell?".
+
+1. Open de race (Races → de race). Boven de tabbladen staat het blok "vragen
+   van de poulebaas".
+2. Tik de vraag in, en daaronder de antwoorden met komma's ertussen
+   (bijvoorbeeld `Ja, Nee`; 2 tot 6 antwoorden) → Vraag toevoegen.
+3. Iedereen kiest tot de start van de race een antwoord. Elkaars antwoord zie
+   je pas na de start, net als bij de rest.
+4. Na de start kiest de poulebaas bij de vraag de uitkomst. Een goed antwoord
+   is 10 punten en telt mee in dat weekend (een joker verdubbelt het). De
+   punten staan in de stand zodra de uitslag van de race binnen is.
+
+Een vraag weghalen kan met het kruisje; dan vervallen ook de punten ervan. Een
+vraag die er staat blijft tellen, ook als premium daarna afloopt.
+
 ### Waar je het ziet
 
 - Op een telefoon: het logo in de bovenbalk, op de plek van de P; de sponsor

@@ -721,5 +721,19 @@
  "Team {naam} weghalen": "Quitar el equipo {naam}",
  "wie zit waar": "quién está en qué equipo",
  "team van {naam}": "equipo de {naam}",
- "Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.": "¿Una liga para tu empresa, club o asociación? Con premium tiene equipos que compiten entre sí, su propio logo, su propio color y una línea para el patrocinador con un enlace. Escribe a {adres} para activarlo."
+ "Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.": "¿Una liga para tu empresa, club o asociación? Con premium tiene equipos que compiten entre sí, su propio logo, su propio color y una línea para el patrocinador con un enlace. Escribe a {adres} para activarlo.",
+ "vragen van de poulebaas": "preguntas del administrador",
+ "{punten} punten per goed antwoord, tot de start van de race": "{punten} puntos por respuesta correcta, hasta la salida de la carrera",
+ "uitkomst": "resultado",
+ "nog geen uitkomst": "aún sin resultado",
+ "jij: {keuze}": "tú: {keuze}",
+ "niet beantwoord": "sin responder",
+ "nieuwe vraag voor dit weekend": "nueva pregunta para este fin de semana",
+ "Regent het tijdens de race?": "¿Lloverá durante la carrera?",
+ "antwoorden, gescheiden door komma's": "respuestas, separadas por comas",
+ "Ja, Nee": "Sí, No",
+ "Vraag toevoegen": "Añadir pregunta",
+ "Vraag weghalen": "Quitar pregunta",
+ "uitkomst van \"{vraag}\"": "resultado de \"{vraag}\"",
+ "Zet een eigen vraag bij dit weekend, met 2 tot 6 antwoorden om uit te kiezen.": "Añade tu propia pregunta a este fin de semana, con 2 a 6 respuestas para elegir."
 }

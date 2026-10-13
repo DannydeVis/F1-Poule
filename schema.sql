@@ -251,6 +251,44 @@ alter table public.pool_teams  add constraint pool_teams_naam
   check (char_length(btrim(naam)) between 1 and 30);
 create unique index if not exists pool_teams_uniek on public.pool_teams (pool_id, lower(btrim(naam)));
 
+-- Premium: eigen vragen van de poulebaas (13 oktober). Per weekend hoogstens
+-- drie, elk met 2 tot 6 antwoorden om uit te kiezen ("Ja" en "Nee", of twee
+-- coureurs): dan rekent de app zelf goed of fout. Een goed antwoord is 10
+-- punten (EIGEN_PUNTEN in de app) en telt mee in het weekend, dus een joker
+-- verdubbelt het. Tot de start van de race zet de poulebaas de vraag en kiezen
+-- de spelers; daarna vult de poulebaas de uitkomst in en ziet iedereen
+-- elkaars antwoord. Alleen via de functies eigen_vraag_opslaan(),
+-- eigen_vraag_weghalen(), eigen_vraag_uitkomst() en eigen_antwoord_geven();
+-- lezen via poule_ophalen(). Geen policy en geen grant op deze tabellen.
+create table if not exists public.pool_eigen_vragen (
+  id         uuid primary key default gen_random_uuid(),
+  pool_id    uuid not null references public.pools(id) on delete cascade,
+  race_id    bigint not null references public.races(id) on delete cascade,
+  vraag      text not null,
+  opties     text[] not null,
+  uitkomst   text,
+  created_at timestamptz not null default now()
+);
+alter table public.pool_eigen_vragen drop constraint if exists pool_eigen_vragen_vraag;
+alter table public.pool_eigen_vragen  add constraint pool_eigen_vragen_vraag
+  check (char_length(btrim(vraag)) between 3 and 120);
+alter table public.pool_eigen_vragen drop constraint if exists pool_eigen_vragen_opties;
+alter table public.pool_eigen_vragen  add constraint pool_eigen_vragen_opties
+  check (cardinality(opties) between 2 and 6);
+alter table public.pool_eigen_vragen drop constraint if exists pool_eigen_vragen_uitkomst;
+alter table public.pool_eigen_vragen  add constraint pool_eigen_vragen_uitkomst
+  check (uitkomst is null or uitkomst = any(opties));
+create index if not exists pool_eigen_vragen_poule on public.pool_eigen_vragen (pool_id, race_id);
+
+create table if not exists public.pool_eigen_antwoorden (
+  vraag_id   uuid not null references public.pool_eigen_vragen(id) on delete cascade,
+  -- De foreign key naar pool_members staat verderop (pool_eigen_antwoorden_member_fk):
+  -- in een oudere database is member_id hier nog geen sleutel.
+  member_id  uuid not null,
+  keuze      text not null,
+  primary key (vraag_id, member_id)
+);
+
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
 alter table public.pool_members add column if not exists created_at   timestamptz not null default now();
@@ -570,6 +608,9 @@ alter table public.answers  add constraint answers_pool_fk
 alter table public.answers drop constraint if exists answers_race_fk;
 alter table public.answers  add constraint answers_race_fk
   foreign key (race_id) references public.races(id) on delete cascade;
+alter table public.pool_eigen_antwoorden drop constraint if exists pool_eigen_antwoorden_member_fk;
+alter table public.pool_eigen_antwoorden  add constraint pool_eigen_antwoorden_member_fk
+  foreign key (member_id) references public.pool_members(member_id) on delete cascade;
 alter table public.answers drop constraint if exists answers_member_fk;
 alter table public.answers  add constraint answers_member_fk
   foreign key (member_id) references public.pool_members(member_id) on delete cascade;
@@ -1268,6 +1309,155 @@ grant execute on function public.poule_team_opslaan(uuid, uuid, text) to anon, a
 grant execute on function public.poule_team_weghalen(uuid)            to anon, authenticated;
 grant execute on function public.poule_team_kiezen(uuid, uuid)        to anon, authenticated;
 
+-- ---- eigen vragen (premium) ------------------------------------
+-- Open zolang de race nog niet begonnen is (deadline_race).
+create or replace function public.eigen_vraag_open(p_race bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce((select deadline_race > now() from public.races where id = p_race), false);
+$$;
+revoke all on function public.eigen_vraag_open(bigint) from public;
+
+-- Een vraag zetten of aanpassen: alleen de poulebaas, alleen met premium,
+-- alleen voor de start van de race. De vraag 3 tot 120 tekens; 2 tot 6
+-- antwoorden van elk 1 tot 40 tekens, allemaal anders; hoogstens 3 vragen per
+-- weekend. Past de poulebaas de antwoorden aan, dan vervallen de gegeven
+-- antwoorden die er niet meer bij staan. p_vraag_id leeg is een nieuwe vraag.
+create or replace function public.eigen_vraag_opslaan(p_pool uuid, p_race bigint, p_vraag_id uuid,
+                                                      p_vraag text, p_opties text[])
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_vraag  text := btrim(coalesce(p_vraag, ''));
+  v_opties text[];
+  v_id     uuid;
+begin
+  if not public.mag_beheren(p_pool) then
+    raise exception 'alleen de poulebaas zet een eigen vraag';
+  end if;
+  if not exists (select 1 from public.pools where id = p_pool and premium_tot > now()) then
+    raise exception 'eigen vragen kunnen alleen met premium';
+  end if;
+  if not public.eigen_vraag_open(p_race) then
+    raise exception 'de race is al begonnen';
+  end if;
+  if char_length(v_vraag) not between 3 and 120 then
+    raise exception 'een vraag heeft 3 tot 120 tekens';
+  end if;
+  select coalesce(array_agg(o order by n), '{}') into v_opties
+    from (select btrim(x) as o, n from unnest(coalesce(p_opties, '{}')) with ordinality as t(x, n)) t
+   where o <> '';
+  if cardinality(v_opties) not between 2 and 6 then
+    raise exception 'een vraag heeft 2 tot 6 antwoorden';
+  end if;
+  if exists (select 1 from unnest(v_opties) o where char_length(o) > 40) then
+    raise exception 'een antwoord heeft hoogstens 40 tekens';
+  end if;
+  if (select count(distinct lower(o)) from unnest(v_opties) o) <> cardinality(v_opties) then
+    raise exception 'twee antwoorden zijn hetzelfde';
+  end if;
+  if p_vraag_id is null then
+    if (select count(*) from public.pool_eigen_vragen where pool_id = p_pool and race_id = p_race) >= 3 then
+      raise exception 'hoogstens 3 eigen vragen per weekend';
+    end if;
+    insert into public.pool_eigen_vragen (pool_id, race_id, vraag, opties)
+    values (p_pool, p_race, v_vraag, v_opties) returning id into v_id;
+  else
+    update public.pool_eigen_vragen set vraag = v_vraag, opties = v_opties
+     where id = p_vraag_id and pool_id = p_pool and race_id = p_race returning id into v_id;
+    if v_id is null then raise exception 'die vraag bestaat niet'; end if;
+    delete from public.pool_eigen_antwoorden where vraag_id = v_id and keuze <> all(v_opties);
+  end if;
+  return v_id;
+end $$;
+
+-- Een vraag weghalen: alleen de poulebaas, ook na de start (dan vervallen de
+-- punten ervan).
+create or replace function public.eigen_vraag_weghalen(p_vraag uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_pool uuid;
+begin
+  select pool_id into v_pool from public.pool_eigen_vragen where id = p_vraag;
+  if v_pool is null then raise exception 'die vraag bestaat niet'; end if;
+  if not public.mag_beheren(v_pool) then
+    raise exception 'alleen de poulebaas haalt een eigen vraag weg';
+  end if;
+  delete from public.pool_eigen_vragen where id = p_vraag;
+end $$;
+
+-- De uitkomst invullen: alleen de poulebaas, pas na de start van de race, en
+-- een van de antwoorden (of leeg om hem weer weg te halen).
+create or replace function public.eigen_vraag_uitkomst(p_vraag uuid, p_uitkomst text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v public.pool_eigen_vragen;
+begin
+  select * into v from public.pool_eigen_vragen where id = p_vraag;
+  if v.id is null then raise exception 'die vraag bestaat niet'; end if;
+  if not public.mag_beheren(v.pool_id) then
+    raise exception 'alleen de poulebaas vult de uitkomst in';
+  end if;
+  if public.eigen_vraag_open(v.race_id) then
+    raise exception 'de uitkomst kan pas als de race begonnen is';
+  end if;
+  if nullif(p_uitkomst, '') is not null and not (p_uitkomst = any(v.opties)) then
+    raise exception 'de uitkomst is een van de antwoorden';
+  end if;
+  update public.pool_eigen_vragen set uitkomst = nullif(p_uitkomst, '') where id = p_vraag;
+end $$;
+
+-- Een antwoord geven: voor je eigen speler, in deze poule, voor de start van
+-- de race, en een van de antwoorden. Leeg haalt je antwoord weg.
+create or replace function public.eigen_antwoord_geven(p_vraag uuid, p_member uuid, p_keuze text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v public.pool_eigen_vragen;
+begin
+  select * into v from public.pool_eigen_vragen where id = p_vraag;
+  if v.id is null then raise exception 'die vraag bestaat niet'; end if;
+  if not public.mag_voor_speler_in(p_member, v.pool_id) then
+    raise exception 'je antwoordt alleen voor jezelf';
+  end if;
+  if not public.eigen_vraag_open(v.race_id) then
+    raise exception 'de race is al begonnen';
+  end if;
+  if nullif(p_keuze, '') is null then
+    delete from public.pool_eigen_antwoorden where vraag_id = p_vraag and member_id = p_member;
+    return;
+  end if;
+  if not (p_keuze = any(v.opties)) then
+    raise exception 'kies een van de antwoorden';
+  end if;
+  insert into public.pool_eigen_antwoorden (vraag_id, member_id, keuze) values (p_vraag, p_member, p_keuze)
+  on conflict (vraag_id, member_id) do update set keuze = excluded.keuze;
+end $$;
+
+revoke all on function public.eigen_vraag_opslaan(uuid, bigint, uuid, text, text[]) from public;
+revoke all on function public.eigen_vraag_weghalen(uuid)                         from public;
+revoke all on function public.eigen_vraag_uitkomst(uuid, text)                    from public;
+revoke all on function public.eigen_antwoord_geven(uuid, uuid, text)              from public;
+grant execute on function public.eigen_vraag_opslaan(uuid, bigint, uuid, text, text[]) to anon, authenticated;
+grant execute on function public.eigen_vraag_weghalen(uuid)                         to anon, authenticated;
+grant execute on function public.eigen_vraag_uitkomst(uuid, text)                    to anon, authenticated;
+grant execute on function public.eigen_antwoord_geven(uuid, uuid, text)              to anon, authenticated;
+
 -- ------------------------------------------------------------
 --  Een poule ophalen zonder de hele tabel open te zetten
 --
@@ -1362,7 +1552,20 @@ as $$
     -- De teams (premium); wie in welk team zit staat bij de leden.
     'teams',      coalesce((select jsonb_agg(jsonb_build_object('id', t.id, 'naam', t.naam)
                      order by t.created_at, t.naam)
-                   from public.pool_teams t, poule p where t.pool_id = p.id), '[]'::jsonb)
+                   from public.pool_teams t, poule p where t.pool_id = p.id), '[]'::jsonb),
+    -- De eigen vragen (premium), en de antwoorden erop: die van jezelf altijd,
+    -- die van je medespelers pas als de race begonnen is (net als de rest).
+    'eigenvragen', coalesce((select jsonb_agg(jsonb_build_object('id', v.id, 'race_id', v.race_id,
+                     'vraag', v.vraag, 'opties', to_jsonb(v.opties), 'uitkomst', v.uitkomst)
+                     order by v.created_at, v.vraag)
+                   from public.pool_eigen_vragen v, poule p where v.pool_id = p.id), '[]'::jsonb),
+    'eigenantwoorden', coalesce((select jsonb_agg(jsonb_build_object('vraag_id', a.vraag_id,
+                     'member_id', a.member_id, 'keuze', a.keuze))
+                   from public.pool_eigen_antwoorden a
+                   join public.pool_eigen_vragen v on v.id = a.vraag_id, poule p
+                   where v.pool_id = p.id
+                     and (not public.eigen_vraag_open(v.race_id)
+                          or public.mag_voor_speler(a.member_id))), '[]'::jsonb)
   ) end;
 $$;
 
@@ -1660,6 +1863,10 @@ alter table public.jokers         enable row level security;
 alter table public.push_abonnementen enable row level security;
 alter table public.pool_teams     enable row level security;
 revoke all on public.pool_teams from anon, authenticated;
+alter table public.pool_eigen_vragen     enable row level security;
+alter table public.pool_eigen_antwoorden enable row level security;
+revoke all on public.pool_eigen_vragen     from anon, authenticated;
+revoke all on public.pool_eigen_antwoorden from anon, authenticated;
 
 -- Eerst élke policy in public weg, ook die dit bestand niet kent, en daarna
 -- alleen de policies hieronder terug. Tot 29 september stond hier een lijst
@@ -2621,6 +2828,9 @@ select 'premium: kolommen, bewaking en logo-opslag',
          when to_regclass('public.pool_teams') is null
            or not exists (select 1 from pg_proc where proname = 'poule_team_kiezen')
            then 'TEAMS ONTBREKEN: draai schema.sql opnieuw'
+         when to_regclass('public.pool_eigen_vragen') is null
+           or not exists (select 1 from pg_proc where proname = 'eigen_antwoord_geven')
+           then 'EIGEN VRAGEN ONTBREKEN: draai schema.sql opnieuw'
          when to_regclass('storage.objects') is not null
           and (select count(*) from pg_policies
                where schemaname = 'storage' and tablename = 'objects'

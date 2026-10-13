@@ -242,6 +242,16 @@ jobs:
           psql -d teams -v ON_ERROR_STOP=1 -f schema.sql
           psql -d teams -v ON_ERROR_STOP=1 -f test/teams.test.sql
 
+      # Eigen vragen van de poulebaas (premium): zetten alleen de poulebaas met
+      # premium voor de start, antwoorden voor jezelf voor de start, geheim tot
+      # de start, de uitkomst pas daarna.
+      - name: eigen vragen — eigen vragen van de poulebaas
+        run: |
+          createdb eigen
+          psql -d eigen -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d eigen -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d eigen -v ON_ERROR_STOP=1 -f test/eigen-vragen.test.sql
+
       # De afscherming uit fase 0: met de publieke anon key mag je alleen zien
       # wat bij een poule hoort waar je zelf in zit. Deze test zet een tweede
       # poule neer waar de speler niets mee te maken heeft, en controleert
