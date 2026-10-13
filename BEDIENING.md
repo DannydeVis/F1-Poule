@@ -2419,6 +2419,23 @@ Met premium zet de poulebaas per weekend hoogstens drie eigen vragen, zoals
 Een vraag weghalen kan met het kruisje; dan vervallen ook de punten ervan. Een
 vraag die er staat blijft tellen, ook als premium daarna afloopt.
 
+### Tussenklassementen en prijzen
+
+Met premium deelt de poulebaas het seizoen op in periodes met een eigen
+winnaar, zodat ook wie in het seizoen achterstaat iets te winnen heeft.
+
+1. Onder Poule, in het blok "tussenklassementen": een naam (bijvoorbeeld
+   Voorjaar), de eerste en de laatste race, en eventueel een prijs als tekst
+   ("Kratje bier", "Vrije middag") → Tussenklassement toevoegen. Hoogstens 10
+   per seizoen. Een prijs voor de seizoenswinnaar: een periode over alle races.
+2. Onder Stand staat per periode wie er leidt, met alleen de punten van die
+   races. Zodra alle races van de periode een uitslag hebben (of afgelast
+   zijn), staat er wie er won, met de prijs. Gelijk aan de top is samen
+   winnen.
+
+De app regelt geen geld: geen inleg, geen uitbetaling. De prijs is alleen een
+regel tekst.
+
 ### Waar je het ziet
 
 - Op een telefoon: het logo in de bovenbalk, op de plek van de P; de sponsor
