@@ -10357,3 +10357,63 @@ staan. `test/vragen.test.mjs`, `test/antwoordvorm.test.mjs` (690) en
 `test/hoofdmenu.test.mjs` gaan nu over alle zeven talen. `test/geo.test.mjs`
 kijkt of llms.txt per losse pagina de goede talen noemt.
 
+---
+
+## Premium, stap 1: het eigen profiel van een poule (13 oktober)
+
+Punt 3 van het plan (ROUTEKAART, premium): een poule kan een eigen logo, een
+eigen kleur en een sponsorregel met link krijgen. Danny zet premium met de hand
+aan in het beheer; betalen komt in stap 2. **Na het mergen moet `schema.sql`
+één keer opnieuw in Supabase** (BEDIENING §19): dat maakt de kolommen, de
+regels en de bucket `poulelogo`.
+
+**Database** (`schema.sql`):
+
+- `pools` krijgt `premium_tot`, `merk_kleur`, `merk_logo`, `sponsor_tekst` en
+  `sponsor_url`, met checks: een kleur is `#rrggbb`, een link is `https://`
+  zonder spaties, haakjes of aanhalingstekens en hoort bij een tekst, de tekst
+  is 1 tot 80 tekens, het logo staat in `<poule-id>/` en is png, jpg of webp.
+- `pools_profiel_bewaken()` (trigger, alleen voor anon en authenticated):
+  `premium_tot` zet alleen het beheer; een logo, kleur of sponsorregel zetten
+  alleen als premium loopt; leegmaken altijd.
+- `beheer_poule_bijwerken` kent `premium_tot` (een datum, of leeg voor uit).
+- De bucket `poulelogo` (openbaar, 200 kB, png/jpeg/webp) en vier policies op
+  `storage.objects`: zetten, vervangen, weghalen en lezen alleen in de map van
+  een poule waar je poulebaas van bent en die premium heeft
+  (`mag_logo_zetten()`). Lezen ook niet voor iedereen: de mappen zijn ids van
+  poules, en met een id kom je een poule binnen. Het logo zelf is te zien via
+  de openbare link. Dit blok draait alleen als er een schema `storage` is; in
+  de tests is dat de nabootsing in `test/auth-nabootsing.sql`.
+
+**App**:
+
+- `premiumActief()`, `logoUrl()`, `merkKleur()`, `sponsorRegel()`: alles wat
+  je ziet hangt aan "premium loopt". Daarna is de poule weer gewoon.
+- De kop: het logo voor de naam, "mogelijk gemaakt door" met de link
+  (`rel="sponsored noopener"`, nieuw venster) eronder, en de baan bovenaan in
+  de kleur. "Wie ben jij?" na een uitnodiging: het logo, de naam en de
+  sponsor. Het deelplaatje: de schuine strepen in de kleur en het logo met de
+  sponsor onderaan (het logo met CORS, anders kan het plaatje niet worden
+  opgeslagen). De kleur nooit op tekst, om het contrast.
+- Onder Poule, voor de poulebaas: zonder premium een regel wat het is, met
+  het contactadres; met premium het blok "eigen profiel" (logo, kleur,
+  sponsorregel, link, voorbeeld, opslaan en weghalen). Het vorige logo wordt
+  weggehaald als er een nieuw komt.
+- 19 nieuwe zinnen, in alle zeven talen.
+
+**Beheer**: bij een poule "Premium tot en met" (een datum; leeg is uit), en
+"premium" achter de naam in de lijst.
+
+**Nabootsing** (`test/nabootsing-supabase.mjs`): de opslag (`storage.from()`
+met `upload`, `remove`, `getPublicUrl`, met dezelfde regels), de trigger en
+checks op `pools`, en `premium_tot` in de beheerfunctie.
+
+**Tests.** `test/premium.test.sql` (16 stappen) en `test/premium.test.mjs`
+(24), `test/beheer.test.mjs` met premium aan en uit. De CI draait de nieuwe
+SQL-test als eigen stap.
+
+**Nog niet** (stap 2): betalen via Paddle of Lemon Squeezy, met een webhook die
+`premium_tot` zet. Daarvoor eerst een KvK-inschrijving, voorwaarden en een
+aanvulling op de privacyverklaring (een logo en een sponsorregel zijn geen
+persoonsgegevens, maar betalen wel).
+

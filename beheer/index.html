@@ -588,7 +588,8 @@ function poulesTab() {
       <section class="kaart"><div class="tabelvak"><table>
         <thead><tr><th>Poule</th><th>Code</th><th class="getal">Spelers</th><th class="breed">Poulebaas</th><th class="breed">Laatste inzending</th></tr></thead>
         <tbody>${lijst.map((p) => `<tr class="klikbaar" data-poule="${esc(p.id)}" aria-selected="${p.id === B.poule}" tabindex="0">
-          <td><strong>${esc(p.name)}</strong>${p.is_public ? ' <span class="badge">openbaar</span>' : ''}
+          <td><strong>${esc(p.name)}</strong>${p.is_public ? ' <span class="badge">openbaar</span>' : ''}${
+            premium(p) ? ' <span class="badge" data-premium-badge>premium</span>' : ''}
             <div class="zacht klein">seizoen ${esc(p.season)}</div></td>
           <td class="code">${esc(p.join_code)}</td>
           <td class="getal">${getal(p.spelers)}</td>
@@ -599,6 +600,10 @@ function poulesTab() {
       ${open ? pouleDetail(open) : ''}
     </div>`;
 }
+
+// Premium (het eigen profiel van een poule): loopt zolang premium_tot in de
+// toekomst ligt. Zetten kan alleen hier, via beheer_poule_bijwerken.
+const premium = (p) => !!p.premium_tot && Date.parse(p.premium_tot) > Date.now();
 
 function pouleDetail(p) {
   const leden = B.spelers.filter((s) => s.pool_id === p.id);
@@ -615,6 +620,12 @@ function pouleDetail(p) {
           ${leden.map((s) => `<option value="${esc(s.member_id)}" ${s.member_id === p.owner_member_id ? 'selected' : ''}>${esc(s.naam)}</option>`).join('')}
         </select></label>
         <label class="schakel"><input type="checkbox" name="is_public" ${p.is_public ? 'checked' : ''}>Openbaar: vindbaar zonder code</label>
+        <label><span class="label">Premium tot en met</span><input class="veld" type="date" name="premium_tot"
+          value="${esc(p.premium_tot ? String(p.premium_tot).slice(0, 10) : '')}"></label>
+        <p class="zacht klein" style="margin:0">${premium(p)
+          ? 'Premium loopt: de poulebaas zet een eigen logo, kleur en sponsorregel onder Poule.'
+          : p.premium_tot ? 'Premium is voorbij. Een nieuwe datum zet het weer aan.'
+          : 'Leeg is geen premium. Met een datum zet de poulebaas een eigen logo, kleur en sponsorregel (zie BEDIENING.md).'}</p>
         <div class="knoppen"><button class="knop primair" type="submit">Opslaan</button>
           <button class="knop" type="button" data-spelers-van="${esc(p.id)}">Spelers bekijken</button></div>
       </form>
@@ -980,7 +991,9 @@ const knopen = {
       const f = new FormData(form);
       doe(() => rpc('beheer_poule_bijwerken', { p_pool: p.id, p_wijziging: {
         name: f.get('name'), beschrijving: f.get('beschrijving'),
-        owner_member_id: f.get('owner_member_id') || null, is_public: f.get('is_public') === 'on' } }),
+        owner_member_id: f.get('owner_member_id') || null, is_public: f.get('is_public') === 'on',
+        // Tot en met die dag: het einde van de dag in UTC.
+        premium_tot: f.get('premium_tot') ? `${f.get('premium_tot')}T23:59:59Z` : '' } }),
       `${f.get('name')} is bijgewerkt.`);
     };
     vak.querySelector('[data-spelers-van]').onclick = () => {

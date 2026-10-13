@@ -2347,3 +2347,48 @@ gelezen had. Op jouw verzoek ("kan je dat zelf niet doen?") niet meer: teksten
 gaan als gewone PR en de automerge zet ze online zodra de tests groen zijn.
 Wil je iets toch eerst lezen, zeg het, of zet de PR op GitHub zelf terug op
 concept ("Convert to draft"); de automerge slaat een concept over.
+
+## 19. Premium: een eigen profiel voor een poule
+
+Voor bedrijven, clubs en grote groepen: een eigen logo, een eigen kleur en een
+regel over de sponsor met een link ("mogelijk gemaakt door Bakkerij Jansen").
+Ze staan in de kop van de app, op het scherm waar je met een uitnodiging
+binnenkomt ("Wie ben jij?") en op het deelplaatje. Betalen kan nog niet; jij
+zet het met de hand aan (ROUTEKAART, premium stap 2 is betalen).
+
+### Eén keer: schema.sql opnieuw laden
+
+Na het mergen van de PR met premium: Supabase → SQL Editor → de inhoud van
+`schema.sql` plakken → Run. Dat maakt de nieuwe kolommen op `pools`, de regels
+(alleen het beheer zet premium aan; logo, kleur en sponsorregel alleen de
+poulebaas zolang premium loopt) en de bucket `poulelogo` in Storage met zijn
+regels (openbaar, hoogstens 200 kB, png, jpeg of webp). Niets met de hand in
+Storage of bij Policies aanmaken: dat doet schema.sql, en een tweede keer
+draaien kan altijd.
+
+Nalopen: Storage → Buckets → `poulelogo` staat er, met "Public" aan.
+
+### Een poule premium maken
+
+1. Iemand mailt naar contact@predicttherace.com (de poulebaas ziet onder Poule
+   een regel met dat adres).
+2. Open het beheer → Poules → zoek de poule op naam of code → klik erop.
+3. Vul bij "Premium tot en met" een datum in, bijvoorbeeld het einde van het
+   seizoen → Opslaan. In de lijst staat er "premium" achter de naam.
+4. De poulebaas ziet nu onder Poule het blok "eigen profiel": logo kiezen,
+   kleur kiezen, sponsorregel en link invullen, Profiel opslaan.
+
+Uitzetten: het datumveld leegmaken en opslaan. Na de datum gaat het vanzelf
+uit: het profiel is dan nergens meer te zien, en de poulebaas kan geen nieuw
+logo of nieuwe kleur meer zetten (weghalen kan wel).
+
+### Wat de regels zijn
+
+- Een logo is png, jpg of webp en hoogstens 200 kB. Svg niet: daar kan script
+  in. Logo's staan in Storage in een map per poule, en alleen de poulebaas van
+  die poule kan er iets in zetten of weghalen, zolang premium loopt.
+- Een sponsorlink begint met `https://`; een link zonder tekst kan niet.
+- De kleur staat alleen op de baan bovenaan, het vlakje naast de naam en de
+  schuine strepen van het deelplaatje, nooit op tekst: een kleur die een bedrijf
+  kiest haalt niet vanzelf het contrast.
+
