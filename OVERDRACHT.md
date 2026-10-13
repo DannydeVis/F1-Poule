@@ -10564,3 +10564,37 @@ poule), allemaal gevangen.
 
 **Na het mergen:** schema.sql opnieuw laden in Supabase.
 
+## Premium uitbreiden, deel 2: eigen vragen van de poulebaas (13 oktober)
+
+**Database** (`schema.sql`):
+- `pool_eigen_vragen` (pool, race, vraag 3 tot 120 tekens, opties 2 tot 6,
+  uitkomst een van de opties of leeg) en `pool_eigen_antwoorden` (vraag,
+  speler, keuze). De foreign key naar pool_members staat bij de andere
+  (`pool_eigen_antwoorden_member_fk`), omdat member_id in een oude database
+  pas later een sleutel wordt.
+- Geen policy en geen grant; alles via `eigen_vraag_opslaan` (poulebaas,
+  premium, voor de start, hoogstens 3, antwoorden aanpassen laat vervallen
+  antwoorden weg), `eigen_vraag_weghalen` (poulebaas), `eigen_vraag_uitkomst`
+  (poulebaas, na de start, een van de opties) en `eigen_antwoord_geven` (je
+  eigen speler, voor de start, een van de opties, leeg haalt weg).
+  `eigen_vraag_open(race)` is de deadline: de start van de race.
+- `poule_ophalen` geeft `eigenvragen` en `eigenantwoorden` (van medespelers
+  pas na de start). De controletabel meldt "EIGEN VRAGEN ONTBREKEN".
+
+**App**: `eigenVragenBlok()` boven de tabbladen op het racescherm (kiezen;
+na de start je antwoord, de telling per antwoord en voor de poulebaas de
+uitkomst; het formulier voor de poulebaas met premium). `eigenPunten()` telt
+in `scoreWeekend()`, dus overal waar weekendpunten staan, en onder de joker.
+`EIGEN_PUNTEN = 10`. Een speler die alleen een eigen vraag beantwoordde krijgt
+een rij in S.preds (bouwPreds). Wat je intikt blijft staan als het niet lukt.
+14 teksten in zeven talen.
+
+**Tests.** `test/eigen-vragen.test.sql` (28, eigen CI-stap) en
+`test/eigen-vragen.test.mjs` (17). Mutanten: vijf in de app (geen punten,
+joker niet over de eigen vraag, formulier zonder premium, invoer kwijt na een
+fout, geen rij voor wie alleen een eigen vraag beantwoordde) en drie in de
+database (antwoord na de start, geen geheim, uitkomst voor de start), allemaal
+gevangen.
+
+**Na het mergen:** schema.sql opnieuw laden in Supabase.
+

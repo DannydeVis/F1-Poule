@@ -19,6 +19,8 @@ drop table if exists public.answers        cascade;
 drop table if exists public.pool_questions cascade;
 drop table if exists public.questions      cascade;
 drop table if exists public.predictions    cascade;
+drop table if exists public.pool_eigen_antwoorden cascade;
+drop table if exists public.pool_eigen_vragen     cascade;
 drop table if exists public.pool_teams     cascade;
 drop table if exists public.pool_members   cascade;
 drop table if exists public.races          cascade;

@@ -721,5 +721,19 @@
  "Team {naam} weghalen": "Supprimer l'équipe {naam}",
  "wie zit waar": "qui est dans quelle équipe",
  "team van {naam}": "équipe de {naam}",
- "Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.": "Une ligue pour votre entreprise, votre club ou votre association ? Avec premium, elle a des équipes qui s'affrontent, son propre logo, sa propre couleur et une ligne pour le sponsor avec un lien. Écrivez à {adres} pour l'activer."
+ "Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.": "Une ligue pour votre entreprise, votre club ou votre association ? Avec premium, elle a des équipes qui s'affrontent, son propre logo, sa propre couleur et une ligne pour le sponsor avec un lien. Écrivez à {adres} pour l'activer.",
+ "vragen van de poulebaas": "questions de l'administrateur",
+ "{punten} punten per goed antwoord, tot de start van de race": "{punten} points par bonne réponse, jusqu'au départ de la course",
+ "uitkomst": "résultat",
+ "nog geen uitkomst": "pas encore de résultat",
+ "jij: {keuze}": "vous : {keuze}",
+ "niet beantwoord": "sans réponse",
+ "nieuwe vraag voor dit weekend": "nouvelle question pour ce week-end",
+ "Regent het tijdens de race?": "Va-t-il pleuvoir pendant la course ?",
+ "antwoorden, gescheiden door komma's": "réponses, séparées par des virgules",
+ "Ja, Nee": "Oui, Non",
+ "Vraag toevoegen": "Ajouter la question",
+ "Vraag weghalen": "Supprimer la question",
+ "uitkomst van \"{vraag}\"": "résultat de \"{vraag}\"",
+ "Zet een eigen vraag bij dit weekend, met 2 tot 6 antwoorden om uit te kiezen.": "Ajoutez votre propre question à ce week-end, avec 2 à 6 réponses au choix."
 }
