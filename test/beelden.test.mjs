@@ -20,6 +20,9 @@
 //      lichte met de racebaan dat er even stond.
 //   7. Elke pagina wijst naar het favicon en het iPhone-pictogram, en die
 //      bestaan.
+//   9. De schermafdrukken van de app op de voorpagina: per taal een eigen
+//      setje, want een Duitse bezoeker hoort de app in het Duits te zien. Elk
+//      390×844 en per taal echt anders, niet zeven keer de Engelse.
 
 import { readFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -226,6 +229,26 @@ for (const [pad, maat] of Object.entries(PICTOGRAMMEN)) {
       && existsSync(join(wortel, pad.split('/').slice(0, -1).join('/'), m[1])));
   });
   check('en elke pagina van de site ook, met een logo dat bestaat', kop.length === 0, kop.join(', '));
+}
+
+// ---- 9. de schermafdrukken van de app, in elke taal -------------------------------
+// scripts/maak-beelden.mjs zet de app in elke taal en fotografeert drie
+// schermen, licht en donker. De voorpagina in die taal toont ze (zie
+// test/site.test.mjs).
+for (const scherm of ['races', 'uitslag', 'stand']) {
+  for (const thema of ['licht', 'donker']) {
+    const vingerafdruk = new Set();
+    for (const code of TALEN) {
+      const pad = `site/beeld/${scherm}-${code}-${thema}.jpg`;
+      const buf = existsSync(join(wortel, pad)) ? bestand(pad) : Buffer.alloc(0);
+      const m = jpegMaat(buf);
+      check(`${pad.split('/').pop()} is een JPEG van 390×844`, m?.b === 390 && m?.h === 844,
+        m ? `${m.b}×${m.h}` : 'ontbreekt');
+      vingerafdruk.add(createHash('sha1').update(buf).digest('hex'));
+    }
+    check(`${scherm}, ${thema}: elke taal heeft zijn eigen schermafdruk`, vingerafdruk.size === TALEN.length,
+      `${vingerafdruk.size} verschillend`);
+  }
 }
 
 process.exit(afronden() ? 0 : 1);

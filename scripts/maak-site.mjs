@@ -765,7 +765,7 @@ const BEWEGING = `(function(){try{
     addEventListener('scroll',bij,{passive:true});addEventListener('resize',bij);bij()}
 }catch(e){document.documentElement.classList.add('klaar');[].slice.call(document.querySelectorAll('.onthul')).forEach(function(el){el.classList.add('zichtbaar')})}})();`;
 const beeld = (code, scherm, thema) =>
-  `${voor(code)}site/beeld/${scherm}-${teksten[code].schermen}-${thema}.jpg`;
+  `${voor(code)}site/beeld/${scherm}-${code}-${thema}.jpg`;
 
 // De andere namen waaronder de site bekend kan zijn: aan elkaar, en het domein.
 const SITENAMEN = ['PredictTheRace', new URL(BASIS).host];
@@ -795,11 +795,11 @@ function jsonLd(code, datum) {
     { '@type': 'WebApplication', '@id': `${BASIS}/#app`, name: 'Predict the Race',
       url: `${BASIS}/app/`, applicationCategory: 'GameApplication',
       applicationSubCategory: 'Formula 1 prediction game', operatingSystem: 'Web, iOS, Android',
-      browserRequirements: 'Requires JavaScript', inLanguage: ['nl', 'en'], isAccessibleForFree: true,
+      browserRequirements: 'Requires JavaScript', inLanguage: APP_TALEN, isAccessibleForFree: true,
       description: antwoordVan(code),
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
       featureList: t.functies.items.map(([kop]) => kop),
-      screenshot: SCHERMEN.map((s) => `${BASIS}/site/beeld/${s}-${t.schermen}-donker.jpg`),
+      screenshot: SCHERMEN.map((s) => `${BASIS}/site/beeld/${s}-${code}-donker.jpg`),
       author: { '@id': `${BASIS}/#maker` } },
     { '@type': 'FAQPage', '@id': `${url}#faq`, inLanguage: code,
       mainEntity: faqItems(code).map(([vraag, antwoord]) => ({ '@type': 'Question', name: vraag,

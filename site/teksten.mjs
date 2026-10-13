@@ -74,7 +74,7 @@ export const STANDAARD = 'en';
 export const teksten = {
   // ---------------------------------------------------------------- NL
   nl: {
-    pad: '', locale: 'nl_NL', naam: 'Nederlands', kort: 'NL', schermen: 'nl',
+    pad: '', locale: 'nl_NL', naam: 'Nederlands', kort: 'NL',
     aanbod: 'Deze pagina bestaat ook in het Nederlands.', aanbodKnop: 'Lees in het Nederlands',
     titel: 'Gratis F1-poule met je vrienden | Predict the Race',
     omschrijving: 'Voorspel per Formule 1-race de top 10 van kwalificatie en race en speel tegen je vrienden in je eigen poule. Uitslagen komen vanzelf binnen. Gratis.',
@@ -208,7 +208,7 @@ export const teksten = {
 
   // ---------------------------------------------------------------- EN
   en: {
-    pad: 'en', locale: 'en_GB', naam: 'English', kort: 'EN', schermen: 'en',
+    pad: 'en', locale: 'en_GB', naam: 'English', kort: 'EN',
     aanbod: 'This page is also available in English.', aanbodKnop: 'Read in English',
     titel: 'Free F1 prediction game for friends | Predict the Race',
     omschrijving: 'Predict the top 10 of every Formula 1 qualifying and race and play against your friends in your own league. Results come in automatically. Free.',
@@ -340,7 +340,7 @@ export const teksten = {
 
   // ---------------------------------------------------------------- DE
   de: {
-    pad: 'de', locale: 'de_DE', naam: 'Deutsch', kort: 'DE', schermen: 'en',
+    pad: 'de', locale: 'de_DE', naam: 'Deutsch', kort: 'DE',
     aanbod: 'Diese Seite gibt es auch auf Deutsch.', aanbodKnop: 'Auf Deutsch lesen',
     titel: 'Kostenloses F1-Tippspiel mit Freunden | Predict the Race',
     omschrijving: 'Tippe bei jedem Formel-1-Rennen die Top 10 von Qualifying und Rennen und spiele in deiner eigenen Tipprunde gegen Freunde. Ergebnisse kommen automatisch. Gratis.',
@@ -472,7 +472,7 @@ export const teksten = {
 
   // ---------------------------------------------------------------- FR
   fr: {
-    pad: 'fr', locale: 'fr_FR', naam: 'Français', kort: 'FR', schermen: 'en',
+    pad: 'fr', locale: 'fr_FR', naam: 'Français', kort: 'FR',
     aanbod: 'Cette page existe aussi en français.', aanbodKnop: 'Lire en français',
     titel: 'Pronostics F1 gratuits entre amis | Predict the Race',
     omschrijving: 'Pronostiquez le top 10 des qualifications et de chaque Grand Prix de Formule 1 et affrontez vos amis dans votre propre ligue. Résultats automatiques. Gratuit.',
@@ -604,7 +604,7 @@ export const teksten = {
 
   // ---------------------------------------------------------------- ES
   es: {
-    pad: 'es', locale: 'es_ES', naam: 'Español', kort: 'ES', schermen: 'en',
+    pad: 'es', locale: 'es_ES', naam: 'Español', kort: 'ES',
     aanbod: 'Esta página también está en español.', aanbodKnop: 'Leer en español',
     titel: 'Porra de F1 gratis con tus amigos | Predict the Race',
     omschrijving: 'Predice el top 10 de la clasificación y de cada carrera de Fórmula 1 y compite con tus amigos en tu propia liga. Los resultados llegan solos. Gratis.',
@@ -736,7 +736,7 @@ export const teksten = {
 
   // ---------------------------------------------------------------- IT
   it: {
-    pad: 'it', locale: 'it_IT', naam: 'Italiano', kort: 'IT', schermen: 'en',
+    pad: 'it', locale: 'it_IT', naam: 'Italiano', kort: 'IT',
     aanbod: 'Questa pagina è disponibile anche in italiano.', aanbodKnop: 'Leggi in italiano',
     titel: 'Pronostici F1 gratis con gli amici | Predict the Race',
     omschrijving: 'Pronostica la top 10 delle qualifiche e di ogni gara di Formula 1 e sfida i tuoi amici nella tua lega. I risultati arrivano da soli. Gratis.',
@@ -868,7 +868,7 @@ export const teksten = {
 
   // ---------------------------------------------------------------- PT
   pt: {
-    pad: 'pt', locale: 'pt_BR', naam: 'Português', kort: 'PT', schermen: 'en',
+    pad: 'pt', locale: 'pt_BR', naam: 'Português', kort: 'PT',
     aanbod: 'Esta página também está em português.', aanbodKnop: 'Ler em português',
     titel: 'Bolão de F1 grátis com seus amigos | Predict the Race',
     omschrijving: 'Dê seu palpite no top 10 da classificação e de cada corrida de Fórmula 1 e dispute com seus amigos no seu próprio bolão. Resultados automáticos. Grátis.',
