@@ -1023,6 +1023,9 @@ Eerst de gratis app goed; daarna premium in twee stappen.
    zonder betaling. Afdwingen in de database (regels in `schema.sql`), niet
    alleen in de app: de code is openbaar. Logo's in Supabase Storage, met een
    maximale grootte. **Gemerged** (13 oktober, PR #216): zie BEDIENING §19.
+   Daarna (13 oktober, PR erna) ook op een telefoon zichtbaar (logo in de
+   bovenbalk, sponsor eronder), in de story, in de uitnodigingstekst, en
+   een groot logo maakt de app zelf kleiner (PR #219).
    `schema.sql` moet één keer opnieuw in Supabase; zolang dat niet is gebeurd
    zegt het beheer dat bij Opslaan (PR #217, gemerged).
 2. **Betalen, wereldwijd**: via een Merchant of Record (Paddle of Lemon

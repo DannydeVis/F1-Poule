@@ -16,12 +16,13 @@
 //      formaat. Er wordt dan niets opgeslagen of geüpload.
 //   4. Het profiel staat in de kop: het logo, de baan in de kleur, en "mogelijk
 //      gemaakt door" met een link die als sponsor gemarkeerd is en in een nieuw
-//      venster opent. Ook voor een speler die geen poulebaas is, en die ziet
-//      de velden niet.
+//      venster opent. Op een telefoon (geen kop) het logo in de bovenbalk en
+//      de sponsor in een balk eronder. Ook voor een speler die geen poulebaas
+//      is, en die ziet de velden niet. De uitnodiging noemt de sponsor.
 //   5. Wie met de code binnenkomt, ziet bij "Wie ben jij?" het logo en de
 //      sponsor.
 //   6. Het deelplaatje: de schuine strepen in de kleur van de poule, en het
-//      logo onderaan.
+//      logo onderaan; in de story ook (logo rechtsonder, strepen linksonder).
 //   7. Weghalen haalt alles weg, ook het bestand. Is premium voorbij, dan is
 //      het profiel nergens meer te zien.
 //   8. In het Engels de uitleg in het Engels; geen javascriptfouten.
@@ -138,6 +139,41 @@ const kop = () => page.evaluate(() => {
     k.href === 'https://bakkerij-jansen.example/actie' && k.rel === 'sponsored noopener' && k.doel === '_blank', JSON.stringify(k));
   check('en de baan bovenaan in de kleur van de poule', k.baan === 'rgb(0, 85, 255)', k.baan);
 }
+// Op een telefoon is er geen kop (.kop staat uit). Daar staat het logo in de
+// bovenbalk op de plek van de P, en de sponsor in een balk onder de baan. Op
+// een breed scherm niet, want daar staan ze al in de kop.
+{
+  const zichtbaar = (sel) => page.evaluate((s) => {
+    const e = document.querySelector(s);
+    return !!e && getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0;
+  }, sel);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const telefoon = {
+    logo: await zichtbaar('.merk [data-poulelogo]'), p: await zichtbaar('.merk .blok'),
+    sponsor: await zichtbaar('.sponsorbalk [data-sponsor]'),
+    tekst: await page.evaluate(() => document.querySelector('.sponsorbalk')?.textContent.replace(/\s+/g, ' ').trim()),
+  };
+  check('op een telefoon het logo in de bovenbalk in plaats van de P, en de sponsor eronder',
+    telefoon.logo && !telefoon.p && telefoon.sponsor && telefoon.tekst === 'mogelijk gemaakt door Bakkerij Jansen',
+    JSON.stringify(telefoon));
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const breed = { logo: await zichtbaar('.merk [data-poulelogo]'), p: await zichtbaar('.merk .blok'),
+    balk: await zichtbaar('.sponsorbalk') };
+  check('op een breed scherm niet dubbel: daar staan ze in de kop', !breed.logo && breed.p && !breed.balk, JSON.stringify(breed));
+}
+// De uitnodiging die je in de groepsapp zet, noemt de sponsor ook.
+{
+  const tekst = await page.evaluate(() => {
+    let gekopieerd = '';
+    navigator.share = undefined;
+    navigator.clipboard.writeText = async (t) => { gekopieerd = t; };
+    return new Promise((klaar) => {
+      document.querySelector('#uitnodiging')?.click();
+      setTimeout(() => klaar(gekopieerd), 300);
+    });
+  });
+  check('de uitnodiging noemt de sponsor', /\?code=/.test(tekst) && tekst.includes('mogelijk gemaakt door Bakkerij Jansen'), tekst);
+}
 
 // Bram is geen poulebaas: hij ziet het profiel wel, de velden niet.
 await page.evaluate(() => {
@@ -219,8 +255,34 @@ await page.waitForSelector('.deelvenster img');
       blauw: tel(c.width - 260, 0, 260, 260, (r, g, b) => b > 200 && r < 60 && g > 50 && g < 120),
     };
   });
-  check('op het deelplaatje het logo onderaan', telling.groen > 400, JSON.stringify(telling));
+  check('op het deelplaatje het logo onderaan', telling.groen > 2000, JSON.stringify(telling));
   check('en de schuine strepen in de kleur van de poule', telling.blauw > 2000, JSON.stringify(telling));
+}
+// De story (9:16): het logo rechtsonder, en de strepen linksonder ook in de
+// kleur van de poule (eerst bleven die rood).
+await page.click('.deelvenster [data-vorm="story"]');
+// Het bericht is ook staand (1080 bij 1350): wacht op 9:16.
+await page.waitForFunction(() => { const i = document.querySelector('.deelvenster img'); return i && i.naturalHeight > 1.6 * i.naturalWidth; });
+{
+  const telling = await page.evaluate(async () => {
+    const img = document.querySelector('.deelvenster img');
+    await img.decode();
+    const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const tel = (x0, y0, b, h, past) => {
+      const d = x.getImageData(x0, y0, b, h).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) if (past(d[i], d[i + 1], d[i + 2])) n++;
+      return n;
+    };
+    const b = c.width, h = c.height;
+    return {
+      groen: tel(b - 400, h - 300, 400, 300, (r, g, bl) => g > 200 && r < 60 && bl < 60),
+      blauw: tel(0, h - 260, 260, 260, (r, g, bl) => bl > 200 && r < 60 && g > 50 && g < 120),
+    };
+  });
+  check('in de story het logo rechtsonder', telling.groen > 4000, JSON.stringify(telling));
+  check('en de strepen linksonder in de kleur van de poule', telling.blauw > 2000, JSON.stringify(telling));
 }
 await page.keyboard.press('Escape');
 
