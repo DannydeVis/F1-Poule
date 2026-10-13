@@ -244,6 +244,20 @@
   .groen{color:var(--groen)} .amber{color:var(--amber)} .accentkleur{color:var(--accent)}
   .zacht{color:var(--ink2);font-size:14px}
   .hide{display:none!important}
+  .groepsapphulp{display:flex;flex-direction:column;gap:8px}
+  .wachtop .herinner{margin-left:6px;min-height:32px;padding:0 12px;vertical-align:middle}
+  /* Afdrukken van de stand (premium): alleen de tabel, zwart op wit. */
+  #afdruk{display:none}
+  @media print{
+    body.afdrukken{background:#fff!important}
+    body.afdrukken > *:not(#afdruk){display:none!important}
+    body.afdrukken #afdruk{display:block;color:#000;font:11pt/1.4 system-ui,sans-serif}
+    #afdruk h1{font-size:20pt;margin:0 0 4pt}
+    #afdruk table{width:100%;border-collapse:collapse;margin-top:10pt}
+    #afdruk th,#afdruk td{border-bottom:1px solid #bbb;padding:4pt 6pt;text-align:left}
+    #afdruk .n{text-align:right}
+    #afdruk .voet{margin-top:14pt;color:#555;font-size:9pt}
+  }
 
   /* Een knop is een knop en geen kop. In condensed hoofdletters op 22 pixels
      over de volle breedte woog de opslaanknop zwaarder dan de racenaam
@@ -3675,6 +3689,26 @@ const ENGELS = Object.fromEntries([
   ['Overslaan', 'Skip'],
   ['Tik rechts voor verder, links voor terug. Vasthouden pauzeert.',
    'Tap right for next, left for back. Hold to pause.'],
+  // Premium: de groepsapp en de stand als bestand.
+  ['voor de groepsapp', 'for the group chat'],
+  ['Kant-en-klare berichten om in de groepsapp te zetten, en de stand als bestand.', 'Ready-made messages to post in the group chat, and the standings as a file.'],
+  ['Herinner wie nog niets invulde ({n})', 'Remind who has not filled in yet ({n})'],
+  ['Iedereen heeft de top 10 voor {race} ingevuld.', 'Everyone has filled in the top 10 for {race}.'],
+  ['Samenvatting van {race}', 'Summary of {race}'],
+  ['Stand als CSV (Excel, Sheets)', 'Standings as CSV (Excel, Sheets)'],
+  ['Stand afdrukken of als PDF', 'Print the standings or save as PDF'],
+  ['Tekst om zelf te kopiëren', 'Text to copy yourself'],
+  ['{race}: de top 10 voor {sessie} sluit {wanneer}.', '{race}: the top 10 for {sessie} closes {wanneer}.'],
+  ['Nog niets ingevuld: {wie}', 'Not filled in yet: {wie}'],
+  ['Weekendwinnaar: {wie} ({n} punten)', 'Weekend winner: {wie} ({n} points)'],
+  ['Stand na {n} van de {totaal} races', 'Standings after {n} of the {totaal} races'],
+  ['Beste team: {team} ({n} per speler)', 'Best team: {team} ({n} per player)'],
+  ['{naam} leidt', '{naam} leads'],
+  ['Volgende: {race}, sluit {wanneer}', 'Next: {race}, closes {wanneer}'],
+  ['naam', 'name'],
+  ['team', 'team'],
+  ['totaal', 'total'],
+  ['Herinner ze', 'Remind them'],
   // Het seizoen als verhaal.
   ['Bekijk je seizoen {jaar}', 'See your {jaar} season'],
   ['jouw seizoen', 'your season'],
@@ -4024,8 +4058,8 @@ const ENGELS = Object.fromEntries([
    'outcome of "{vraag}"'],
   ['Zet een eigen vraag bij dit weekend, met 2 tot 6 antwoorden om uit te kiezen.',
    'Add your own question to this weekend, with 2 to 6 answers to choose from.'],
-  ['Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met prijzen, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.',
-   'A league for your company, club or society? With premium it gets teams that play against each other, its own questions every weekend, interim standings with prizes, its own logo, its own colour and a sponsor line with a link. Email {adres} to turn it on.'],
+  ['Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met prijzen, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.',
+   'A league for your company, club or society? With premium it gets teams that play against each other, its own questions every weekend, interim standings with prizes, reminders and summaries for the group chat, the standings as a file, its own logo, its own colour and a sponsor line with a link. Email {adres} to turn it on.'],
   ['tussenklassementen',
    'interim standings'],
   ['ronde {van} tot en met {tot}',
@@ -7241,6 +7275,7 @@ function toonApp() {
   knoopProfiel();
   knoopTeams();
   knoopPeriodes();
+  knoopGroepsapp();
   knoopOpenbaar();
   knoopAutofill();
   knoopJokers();
@@ -7492,7 +7527,8 @@ function hero(volgend) {
         wacht.length
           ? T('nog geen top 10: {wie}', {
               wie: wacht.map(l => esc(l.display_name)).join(', ') })
-          : T('iedereen heeft zijn top 10')}</div>` : ''}
+          : T('iedereen heeft zijn top 10')}${wacht.length && groepsappHulp()
+          ? ` <button class="knop klein herinner" data-herinner>${T('Herinner ze')}</button>` : ''}</div>` : ''}
       <button class="knop primair" data-naar-race="${esc(r.id)}">${
         !teDoen ? T('Je inzending bekijken')
         : teDoen.staat === 'deels'
@@ -8108,6 +8144,7 @@ function poulePagina(rijen) {
     ${profielBlok()}
     ${teamsBlok()}
     ${periodesBeheer()}
+    ${groepsappBlok()}
     ${openbaarBlok()}
     ${autofillBlok()}
     ${jokersBlok()}
@@ -9081,8 +9118,9 @@ function profielBlok() {
     <span class="label">${T('eigen logo en kleur')}</span>
     <p class="zacht" style="margin:0" data-premium-uitleg>${T('Een poule voor je bedrijf, club of '
       + 'vereniging? Met premium krijgt hij teams die tegen elkaar spelen, eigen vragen per weekend, '
-      + 'tussenklassementen met prijzen, een eigen logo, een eigen kleur en een regel over de sponsor met '
-      + 'een link. Mail {adres} om het aan te zetten.', { adres: mail })}</p>`;
+      + 'tussenklassementen met prijzen, herinneringen en samenvattingen voor de groepsapp, de stand als '
+      + 'bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} '
+      + 'om het aan te zetten.', { adres: mail })}</p>`;
   }
   const P = S.profiel ?? {};
   const kleur = P.kleur ?? S.poule.merk_kleur ?? '#ee4d33';
@@ -9375,6 +9413,175 @@ function knoopPeriodes() {
       render();
     };
   });
+}
+
+// ---- premium: de groepsapp en de stand als bestand ---------------------------
+// Drie kleine dingen voor de poulebaas met premium: een herinnering voor wie
+// nog niets invulde, een kant-en-klare samenvatting van het weekend, en de
+// stand als CSV (voor Excel of Google Sheets) of op papier (of als PDF, via
+// afdrukken). Er gaat niets naar de database: het is opmaak van wat elke
+// speler in de app al ziet. Daarom staat de premiumgrens hier alleen in de app;
+// in de database valt niets af te schermen.
+//
+// Delen gaat met de deelknop van het toestel (WhatsApp, Telegram, Signal,
+// Messenger, wat iemand ook gebruikt). Heeft de browser die niet, dan gaat
+// de tekst naar het klembord.
+const groepsappHulp = () => magBeheren() && premiumActief();
+
+function groepsappBlok() {
+  if (!groepsappHulp()) return '';
+  const volgend = eerstvolgende();
+  const wacht = volgend ? nogNietIngevuld(volgend.race, volgend.welk) : [];
+  const laatste = laatsteMetUitslag();
+  return `
+    <div class="scheiding"></div>
+    <span class="label">${T('voor de groepsapp')}</span>
+    <p class="zacht" style="margin:0">${T('Kant-en-klare berichten om in de groepsapp te zetten, en de stand als bestand.')}</p>
+    <div class="groepsapphulp">
+      ${volgend && wacht.length ? `<button class="knop klein" data-herinner>${
+        T('Herinner wie nog niets invulde ({n})', { n: wacht.length })}</button>` : ''}
+      ${volgend && !wacht.length && S.leden.length > 1 ? `<p class="zacht klein" style="margin:0" data-iedereen>${
+        T('Iedereen heeft de top 10 voor {race} ingevuld.', { race: esc(volgend.race.name) })}</p>` : ''}
+      ${laatste ? `<button class="knop klein" data-samenvatting>${
+        T('Samenvatting van {race}', { race: esc(laatste.name) })}</button>` : ''}
+      ${gereden() ? `<button class="knop klein" data-export-csv>${T('Stand als CSV (Excel, Sheets)')}</button>
+      <button class="knop klein" data-afdrukken>${T('Stand afdrukken of als PDF')}</button>` : ''}
+    </div>
+    <textarea class="veld tekstblok hide" id="groepsappveld" readonly rows="8"
+      aria-label="${T('Tekst om zelf te kopiëren')}"></textarea>`;
+}
+
+// Delen met de deelknop van het toestel, of naar het klembord. Lukt geen van
+// beide, dan komt de tekst in beeld om zelf te kopiëren.
+async function deelTekst(tekst, knop) {
+  if (navigator.share) {
+    try { await navigator.share({ text: tekst }); return; } catch (e) { if (e?.name === 'AbortError') return; }
+  }
+  const was = knop.textContent;
+  if (await naarKlembord(tekst)) {
+    knop.textContent = T('Gekopieerd');
+    setTimeout(() => { knop.textContent = was; }, 2400);
+    return;
+  }
+  const veld = app.querySelector('#groepsappveld');
+  if (veld) { veld.value = tekst; veld.classList.remove('hide'); veld.select(); }
+  else S.melding = T('Kopiëren lukt niet');
+}
+
+// "⏰ Monaco: de race sluit zo 15:00. Nog niets ingevuld: Bram, Eva."
+function herinnerTekst() {
+  const volgend = eerstvolgende();
+  if (!volgend) return '';
+  const wacht = nogNietIngevuld(volgend.race, volgend.welk);
+  if (!wacht.length) return '';
+  return `⏰ ${T('{race}: de top 10 voor {sessie} sluit {wanneer}.', { race: volgend.race.name,
+    sessie: T(SESSIES[volgend.welk].wat), wanneer: sluitTekst(volgend.iso) })}\n`
+    + `${T('Nog niets ingevuld: {wie}', { wie: wacht.map(l => l.display_name).join(', ') })}\n`
+    + `👉 ${linkBasis()}?code=${S.poule.join_code}`;
+}
+
+// De samenvatting van een weekend: wie won, wie steeg, de top 5 van de stand,
+// het beste team, de tussenklassementen, en wanneer de volgende sluit.
+function samenvattingTekst(race = laatsteMetUitslag()) {
+  if (!race) return '';
+  const regels = [`🏁 ${race.name} · ${S.poule?.name ?? ''}`];
+  const winnaars = weekendWinnaars(race);
+  if (winnaars.length) regels.push(`🏆 ${T('Weekendwinnaar: {wie} ({n} punten)', {
+    wie: winnaars.map(w => w.naam).join(', '), n: winnaars[0].punten })}`);
+  const stijger = grootsteStijger(race);
+  if (stijger) regels.push(`📈 ${T('Grootste stijger: {wie}', { wie: stijger })}`);
+  const stand = standRijen();
+  const plekken = gedeeldePlekken(stand);
+  regels.push('', `📊 ${T('Stand na {n} van de {totaal} races', { n: gereden(), totaal: S.races.length })}`);
+  stand.slice(0, 5).forEach((r, i) => regels.push(`${MEDAILLE[plekken[i] - 1] ?? `${plekken[i]}.`} ${r.naam}  ${r.punten}`));
+  if (stand.length > 5) regels.push(T('en nog {n}', { n: stand.length - 5 }));
+  const team = teamRijen(stand)[0];
+  if (team) regels.push('', `👥 ${T('Beste team: {team} ({n} per speler)', { team: team.naam, n: komma(team.gemiddeld) })}`);
+  for (const x of periodesVan(seizoen()).filter(x => race.round >= x.van_ronde && race.round <= x.tot_ronde)) {
+    const { rijen, klaar } = periodeStand(x);
+    const top = rijen[0]?.punten ?? 0;
+    if (!top) continue;
+    const wie = rijen.filter(r => r.punten === top).map(r => r.naam).join(', ');
+    regels.push(`🎯 ${x.naam}: ${klaar ? T('{naam} wint', { naam: wie }) + (x.prijs ? ` (${x.prijs})` : '')
+      : T('{naam} leidt', { naam: wie })}`);
+  }
+  const volgend = eerstvolgende();
+  if (volgend) regels.push('', `⏭️ ${T('Volgende: {race}, sluit {wanneer}', { race: volgend.race.name, wanneer: sluitTekst(volgend.iso) })}`);
+  regels.push(`👉 ${linkBasis()}?code=${S.poule.join_code}`);
+  return regels.join('\n');
+}
+
+// De stand als CSV. Excel in de meeste talen verwacht een puntkomma, in het
+// Engels een komma. Met een BOM vooraan, anders leest Excel é en ü verkeerd.
+// Een naam die met =, +, - of @ begint zou Excel als formule lezen; die
+// krijgt een apostrof ervoor.
+function standCsv() {
+  const scheiding = TAAL === 'en' ? ',' : ';';
+  const cel = (v) => {
+    let s = String(v ?? '');
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return /["\n\r,;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const races = S.races.filter(heeftUitslag).sort((a, b) => a.round - b.round);
+  const stand = standRijen();
+  const plekken = gedeeldePlekken(stand);
+  const teams = teamsActief();
+  const seizoensvragen = !!seizoenUitslag();
+  const kop = [T('plek'), T('naam'), ...(teams ? [T('team')] : []), T('totaal'),
+    ...races.map(r => `${r.round}. ${r.name}`), ...(seizoensvragen ? [T('seizoensvragen')] : [])];
+  const regels = stand.map((r, i) => [plekken[i], r.naam,
+    ...(teams ? [S.teams.find(t => zelfde(t.id, teamVan(r.id)))?.naam ?? ''] : []), r.punten,
+    ...races.map(x => scoreWeekend(vindPred(x.id, r.id), x)),
+    ...(seizoensvragen ? [scoreSeizoen(r.id)] : [])]);
+  return '\ufeff' + [kop, ...regels].map(rij => rij.map(cel).join(scheiding)).join('\r\n') + '\r\n';
+}
+
+function bewaarBestand(inhoud, naam, soort) {
+  const url = URL.createObjectURL(new Blob([inhoud], { type: soort }));
+  const a = document.createElement('a');
+  a.href = url; a.download = naam;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+// Afdrukken: een eenvoudige tabel, zwart op wit, met alleen de stand. Via het
+// afdrukvenster kan iedere browser er ook een PDF van maken.
+function standAfdrukken() {
+  document.querySelector('#afdruk')?.remove();
+  const stand = standRijen();
+  const plekken = gedeeldePlekken(stand);
+  const teams = teamsActief();
+  const zeges = new Map(weekendOverwinningen().map(w => [w.naam, w.aantal]));
+  const el = document.createElement('div');
+  el.id = 'afdruk';
+  el.innerHTML = `
+    <h1>${esc(S.poule?.name ?? T('Stand'))}</h1>
+    <p>${T('Stand na {n} van de {totaal} races', { n: gereden(), totaal: S.races.length })} · ${
+      T('seizoen {jaar}', { jaar: seizoen() })} · ${esc(datumKort(new Date().toISOString()))}</p>
+    <table>
+      <thead><tr><th>${T('plek')}</th><th>${T('naam')}</th>${teams ? `<th>${T('team')}</th>` : ''}<th class="n">${
+        T('weekendzeges')}</th><th class="n">${T('punten')}</th></tr></thead>
+      <tbody>${stand.map((r, i) => `<tr><td>${plekken[i]}</td><td>${esc(r.naam)}</td>${teams ? `<td>${
+        esc(S.teams.find(t => zelfde(t.id, teamVan(r.id)))?.naam ?? '')}</td>` : ''}<td class="n">${
+        zeges.get(r.naam) ?? 0}</td><td class="n">${r.punten}</td></tr>`).join('')}</tbody>
+    </table>
+    <p class="voet">${T('voorspel mee op {adres}', { adres: esc(location.host || 'Predict the Race') })}</p>`;
+  document.body.appendChild(el);
+  document.body.classList.add('afdrukken');
+  const weg = () => { document.body.classList.remove('afdrukken'); el.remove(); };
+  window.addEventListener('afterprint', weg, { once: true });
+  window.print();
+}
+
+function knoopGroepsapp() {
+  app.querySelectorAll('[data-herinner]').forEach(knop => knop.onclick = () => deelTekst(herinnerTekst(), knop));
+  const samen = app.querySelector('[data-samenvatting]');
+  if (samen) samen.onclick = () => deelTekst(samenvattingTekst(), samen);
+  const csv = app.querySelector('[data-export-csv]');
+  if (csv) csv.onclick = () => bewaarBestand(standCsv(),
+    deelBestandsnaam(`stand ${S.poule?.name ?? ''}`).replace(/\.png$/, '.csv'), 'text/csv;charset=utf-8');
+  const druk = app.querySelector('[data-afdrukken]');
+  if (druk) druk.onclick = standAfdrukken;
 }
 
 // Dezelfde regel als pools_sponsor_url in schema.sql.

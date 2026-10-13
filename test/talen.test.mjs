@@ -89,7 +89,7 @@ check('elke {plaatshouder} komt in beide talen voor',
 // wél opvalt in plaats van in een marge te verdwijnen.
 const MAG_GELIJK = new Set([
   'Races', 'races', 'Race', 'race', 'Sprint', 'sprint', 'demo',
-  'Pole position', 'pole', 'safety cars', 'jokers', 'top 10', '{wie} won',
+  'Pole position', 'pole', 'safety cars', 'jokers', 'top 10', '{wie} won', 'team',
   // De afkortingen op de aftelklok. "u" wordt "h", maar dag en minuut
   // beginnen in beide talen met dezelfde letter.
   'd', 'm',

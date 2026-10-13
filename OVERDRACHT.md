@@ -10654,3 +10654,27 @@ alleen, 60 dagen genegeerd, het venster niet op de story), allemaal gevangen.
 
 **Geen database-wijziging.**
 
+## Premium uitbreiden, deel 4: de groepsapp en de stand als bestand (13 oktober)
+
+**App.** `groepsappBlok()` onder Poule, na de tussenklassementen, en een knop
+"Herinner ze" in de kaart bovenaan (`hero()`), allebei achter
+`groepsappHulp()` (de poulebaas, met premium). `herinnerTekst()` gebruikt
+`eerstvolgende()` en `nogNietIngevuld()`; `samenvattingTekst()` de
+weekendwinnaars, `grootsteStijger()`, `standRijen()`, `teamRijen()` en
+`periodeStand()`; `standCsv()` maakt de CSV (BOM, puntkomma behalve in het
+Engels, een apostrof voor een cel die met =, +, -, @ begint, tegen formules in
+Excel); `standAfdrukken()` zet een `#afdruk` neer, roept `window.print()` en
+haalt het weg bij `afterprint` (de print-CSS verbergt de rest). Delen via
+`deelTekst()`: `navigator.share`, anders het klembord, anders een tekstveld.
+
+**Geen database.** Er wordt niets opgeslagen en elke speler ziet deze
+gegevens al; de premiumgrens staat dus alleen in de app. De premium-uitleg
+noemt het nu ("herinneringen en samenvattingen voor de groepsapp, de stand als
+bestand"). 19 nieuwe teksten in zeven talen; 'team' mag in het Engels gelijk
+blijven (talen.test.mjs).
+
+**Tests.** `test/groepsapp-hulp.test.mjs` (30); `premium.test.mjs` volgt de
+nieuwe uitleg. Zeven mutanten in de app (zonder premium, ook voor een speler,
+iedereen in de herinnering, geen apostrof, altijd een komma, de afdruk blijft
+staan, geen team in de samenvatting), allemaal gevangen.
+
