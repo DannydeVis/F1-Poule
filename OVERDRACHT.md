@@ -10304,3 +10304,56 @@ Acht mutanten, alle gevangen.
 **Volgende stap**: de gidsen (organiseren, puntentelling, excel) in DE, FR, ES,
 IT en PT.
 
+---
+
+## De gidsen organiseren en puntentelling in zeven talen (13 oktober)
+
+Het vervolg op de racepagina's: de twee gidsen die het zoekplan eerst noemt
+(SEO fase 5: "vertaal dan eerst organiseren en puntentelling, daarna excel")
+staan nu ook in het Duits, Frans, Spaans, Italiaans en Portugees.
+
+| taal | organiseren | puntentelling |
+|---|---|---|
+| DE | `/de/f1-tippspiel-organisieren/` | `/de/f1-tippspiel-punktesystem/` |
+| FR | `/fr/organiser-pronostics-f1/` | `/fr/bareme-pronostics-f1/` |
+| ES | `/es/organizar-porra-f1/` | `/es/puntuacion-porra-f1/` |
+| IT | `/it/organizzare-pronostici-f1/` | `/it/punteggio-pronostici-f1/` |
+| PT | `/pt/organizar-bolao-f1/` | `/pt/pontuacao-bolao-f1/` |
+
+- **Teksten** in `site/paginas.mjs`, naar het Engels en met de woorden van de
+  voorpagina en de app in die taal: Tippspiel en Tipprunde (de), pronostics en
+  ligue (fr), porra en liga (es), pronostici en lega (it), bolão (pt); de
+  niveaus (Einfach, Classique, Sencillo, Semplice, Simples enzovoort); Joker,
+  jolly, comodín, coringa; "gegen den Strom", "à contre-courant",
+  "a contracorriente", "controcorrente", "contra a maré". De eerste kop van
+  organiseren is in elke taal de vraag die al in `site/vragen.mjs` stond uit de
+  zoekresultaten ("Wie erstellt man ein F1-Tippspiel?", "¿Cómo se hace una
+  porra de F1?" enzovoort), nu beantwoord.
+- **Alles wat over de app gaat** komt uit de app, net als in NL en EN: de
+  punten, de jokers, de uren, het rekenvoorbeeld, de tabel bij contrair
+  voorspellen, de safety cars per circuit.
+- **Tabellen op een telefoon**: een paar koppen zijn korter dan in het Engels
+  (Prévu, Predicho, Previsto, Palpite; GP in plaats van "courses"), en
+  "Fortgeschritten" heeft in de tabel een zacht afbreekstreepje. Anders pasten
+  ze niet op 360 pixels.
+- **Menu**: elke voorpagina heeft nu het menu met de gidsen en de races, in
+  plaats van de sprongen naar de blokken. De teasers naar de gidsen staan onder
+  de stappen en onder de puntentabel, net als in NL en EN.
+- **Racepagina's**: de link naar de tabel van alle circuits staat er nu in alle
+  zeven talen, want de gids over de puntentelling bestaat in alle zeven.
+- **`site/vragen.mjs`**: de vragen van de voorpagina en de twee gidsen in de
+  vijf talen (205 regels erbij).
+- **llms.txt** noemt per groep pagina's de talen: de twee gidsen in zeven, de
+  excel-gids, de vergelijking en de about-pagina in NL en EN.
+
+**Nog niet**: de excel-gids in de vijf talen. De formules verschillen per taal
+(Excel vertaalt de functienamen, en `;` of `,` hangt af van de landinstelling);
+dat wil per taal nagegaan worden voordat hij online gaat. Een moedertaalspreker
+die meeleest blijft welkom, ook voor deze twee gidsen.
+
+**Tests.** `test/site.test.mjs` (1080) keurt de tien nieuwe pagina's net als
+de Nederlandse en Engelse, met per taal de getallen uit de app die erin moeten
+staan. `test/vragen.test.mjs`, `test/antwoordvorm.test.mjs` (690) en
+`test/hoofdmenu.test.mjs` gaan nu over alle zeven talen. `test/geo.test.mjs`
+kijkt of llms.txt per losse pagina de goede talen noemt.
+

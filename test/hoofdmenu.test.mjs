@@ -13,9 +13,9 @@
 //      zijn.
 //   2. Op een pagina uit het menu is die pagina gemarkeerd (aria-current),
 //      elders geen enkele.
-//   3. Een taal zonder eigen pagina's, of met alleen de racepagina's (sinds 13
-//      oktober Duits, Frans, Spaans, Italiaans en Portugees, tot hun gidsen er
-//      zijn), houdt op de voorpagina de sprongen naar #hoe, #punten en #faq.
+//   3. Een taal zonder eigen pagina's, of met alleen de racepagina's, houdt op
+//      de voorpagina de sprongen naar #hoe, #punten en #faq. Sinds 13 oktober
+//      hebben alle zeven talen gidsen; dit geldt dan weer voor een nieuwe taal.
 
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname, normalize } from 'node:path';

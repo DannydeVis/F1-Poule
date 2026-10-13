@@ -284,11 +284,14 @@ if (!RACEDATA) {
 
   // Een taal met alleen de racepagina's (nog geen gidsen) houdt op de
   // voorpagina de sprongen naar de blokken; een menu met alleen "Rennen" zou
-  // die wegdrukken. Het overzicht staat dan in de voet.
+  // die wegdrukken. Het overzicht staat dan in de voet. Sinds de gidsen er in
+  // alle zeven talen zijn (13 oktober) is er zo'n taal niet meer, en heeft elke
+  // voorpagina het menu met het overzicht erin; test/hoofdmenu.test.mjs houdt
+  // het eerste geval ook bij.
   const kopnav = (code) => lees(teksten[code].pad || '.').match(/<nav class="kopnav"[^>]*>([\s\S]*?)<\/nav>/)?.[1] ?? '';
   const alleenRaces = TALEN.filter((c) => !PAGINAS.some((pg) => pg.talen[c]));
   check('een taal met alleen racepagina\'s houdt op de voorpagina de sprongen naar de blokken, een taal met gidsen krijgt het menu',
-    alleenRaces.length > 0 && alleenRaces.every((c) => kopnav(c).includes('href="#hoe"') && !kopnav(c).includes(overzicht.talen[c].pad))
+    alleenRaces.every((c) => kopnav(c).includes('href="#hoe"') && !kopnav(c).includes(overzicht.talen[c].pad))
       && TALEN.filter((c) => !alleenRaces.includes(c)).every((c) => kopnav(c).includes(`${overzicht.talen[c].pad}/"`) && !kopnav(c).includes('href="#hoe"')),
     TALEN.map((c) => `${c}: ${kopnav(c).replace(/\s+/g, ' ').slice(0, 60)}`).join(' | '));
 

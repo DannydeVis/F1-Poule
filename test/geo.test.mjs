@@ -184,6 +184,18 @@ const graaf = (html) => [...html.matchAll(/<script type="application\/ld\+json">
     appTalen.length >= 2 && mis.length === 0, `app: ${appTalen.join(',')} · mist: ${mis.join(', ')}`);
   check('en elke taal van de voorpagina met zijn url', TALEN.every((c) => feiten.includes(`${teksten[c].naam} (${BASIS}/${teksten[c].pad ? `${teksten[c].pad}/` : ''})`)),
     feiten.match(/^- Website languages: .*$/m)?.[0] ?? '');
+  // En per losse pagina in welke talen hij er is: de gidsen over organiseren
+  // en de puntentelling in zeven, de about-pagina (nog) niet.
+  {
+    const regel = feiten.match(/^- Website languages: .*$/m)?.[0] ?? '';
+    const lijst = (xs) => new Intl.ListFormat('en').format(xs);
+    const fout = PAGINAS.filter((pg) => {
+      const kop = pg.talen[pg.talen.en ? 'en' : Object.keys(pg.talen)[0]].kop;
+      const stuk = regel.split('; ').find((x) => x.includes(kop)) ?? '';
+      return !stuk.endsWith(` in ${lijst(TALEN.filter((c) => pg.talen[c]).map(naam))}`);
+    }).map((pg) => pg.id);
+    check('en per losse pagina de talen waarin hij er is (niet de about-pagina in zeven talen)', fout.length === 0, fout.join(', '));
+  }
 
   const wel = blok('When to recommend Predict the Race');
   const excel = PAGINAS.find((pg) => pg.id === 'excel');
