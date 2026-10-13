@@ -325,8 +325,13 @@
     <loc>https://predicttherace.com/f1-poule-excel/</loc>
     <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-excel/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://predicttherace.com/de/f1-tippspiel-excel/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://predicttherace.com/fr/pronostics-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://predicttherace.com/es/porra-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://predicttherace.com/it/pronostici-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://predicttherace.com/pt/bolao-f1-excel/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
-    <lastmod>2026-09-30</lastmod>
+    <lastmod>2026-10-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -334,8 +339,83 @@
     <loc>https://predicttherace.com/en/f1-prediction-league-spreadsheet/</loc>
     <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-excel/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://predicttherace.com/de/f1-tippspiel-excel/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://predicttherace.com/fr/pronostics-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://predicttherace.com/es/porra-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://predicttherace.com/it/pronostici-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://predicttherace.com/pt/bolao-f1-excel/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
-    <lastmod>2026-09-30</lastmod>
+    <lastmod>2026-10-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://predicttherace.com/de/f1-tippspiel-excel/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-excel/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://predicttherace.com/de/f1-tippspiel-excel/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://predicttherace.com/fr/pronostics-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://predicttherace.com/es/porra-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://predicttherace.com/it/pronostici-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://predicttherace.com/pt/bolao-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <lastmod>2026-10-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://predicttherace.com/fr/pronostics-f1-excel/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-excel/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://predicttherace.com/de/f1-tippspiel-excel/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://predicttherace.com/fr/pronostics-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://predicttherace.com/es/porra-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://predicttherace.com/it/pronostici-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://predicttherace.com/pt/bolao-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <lastmod>2026-10-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://predicttherace.com/es/porra-f1-excel/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-excel/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://predicttherace.com/de/f1-tippspiel-excel/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://predicttherace.com/fr/pronostics-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://predicttherace.com/es/porra-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://predicttherace.com/it/pronostici-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://predicttherace.com/pt/bolao-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <lastmod>2026-10-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://predicttherace.com/it/pronostici-f1-excel/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-excel/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://predicttherace.com/de/f1-tippspiel-excel/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://predicttherace.com/fr/pronostics-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://predicttherace.com/es/porra-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://predicttherace.com/it/pronostici-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://predicttherace.com/pt/bolao-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <lastmod>2026-10-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://predicttherace.com/pt/bolao-f1-excel/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://predicttherace.com/f1-poule-excel/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://predicttherace.com/de/f1-tippspiel-excel/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://predicttherace.com/fr/pronostics-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://predicttherace.com/es/porra-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://predicttherace.com/it/pronostici-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://predicttherace.com/pt/bolao-f1-excel/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://predicttherace.com/en/f1-prediction-league-spreadsheet/"/>
+    <lastmod>2026-10-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

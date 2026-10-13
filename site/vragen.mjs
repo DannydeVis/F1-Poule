@@ -288,6 +288,15 @@ export const VRAGEN = [
   { vraag: 'Zählt ein Fahrer außerhalb der Top 10 noch?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Was bekommt man für einen Fahrer, der ausfällt?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Wann erscheinen die Punkte?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
+  // ---- excel ----
+  { vraag: 'Welche Spalten brauchst du?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'excel#spalten', status: 'beantwoord' },
+  { vraag: 'Welche Formel berechnet die Punkte?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'excel#formel', status: 'beantwoord' },
+  { vraag: 'Was machst du mit Fahrern außerhalb der Top 10?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'excel#ausserhalb-top-10', status: 'beantwoord' },
+  { vraag: 'Wo hakt es mit Excel?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'excel#probleme', status: 'beantwoord' },
+  { vraag: 'Geht es auch ohne Tabelle?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'excel#ohne-tabelle', status: 'beantwoord' },
+  { vraag: 'Funktioniert das auch in Google Tabellen?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  { vraag: 'Wie zähle ich den Sieger und die Pole-Position mit?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  { vraag: 'Wie setze ich Spieler mit gleich vielen Punkten auf denselben Platz?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
   // ================================================================ FR
   // ---- voorpagina ----
   { vraag: 'Qu\'est-ce que Predict the Race ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'voorpagina#wat', status: 'beantwoord' },
@@ -329,6 +338,15 @@ export const VRAGEN = [
   { vraag: 'Un pilote hors du top 10 compte-t-il encore ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Que rapporte un pilote qui abandonne ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Quand les points apparaissent-ils ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
+  // ---- excel ----
+  { vraag: 'De quelles colonnes avez-vous besoin ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'excel#colonnes', status: 'beantwoord' },
+  { vraag: 'Quelle formule calcule les points ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'excel#formule', status: 'beantwoord' },
+  { vraag: 'Que faire des pilotes hors du top 10 ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'excel#hors-top-10', status: 'beantwoord' },
+  { vraag: 'Où ça coince avec Excel ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'excel#problemes', status: 'beantwoord' },
+  { vraag: 'Peut-on se passer de tableur ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'excel#sans-tableur', status: 'beantwoord' },
+  { vraag: 'Est-ce que ça marche dans Google Sheets ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  { vraag: 'Comment compter le vainqueur et la pole position ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  { vraag: 'Comment mettre à la même place des joueurs à égalité de points ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
   // ================================================================ ES
   // ---- voorpagina ----
   { vraag: '¿Qué es Predict the Race?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'voorpagina#wat', status: 'beantwoord' },
@@ -370,6 +388,15 @@ export const VRAGEN = [
   { vraag: '¿Cuenta un piloto fuera del top 10?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: '¿Qué sumas por un piloto que abandona?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: '¿Cuándo aparecen los puntos?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
+  // ---- excel ----
+  { vraag: '¿Qué columnas necesitas?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'excel#columnas', status: 'beantwoord' },
+  { vraag: '¿Qué fórmula calcula los puntos?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'excel#formula', status: 'beantwoord' },
+  { vraag: '¿Qué haces con los pilotos fuera del top 10?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'excel#fuera-top-10', status: 'beantwoord' },
+  { vraag: '¿Dónde falla Excel?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'excel#problemas', status: 'beantwoord' },
+  { vraag: '¿Se puede hacer sin hoja de cálculo?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'excel#sin-hoja', status: 'beantwoord' },
+  { vraag: '¿Funciona en Google Sheets?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  { vraag: '¿Cómo cuento el ganador y la pole position?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  { vraag: '¿Cómo pongo en la misma posición a jugadores empatados a puntos?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
   // ================================================================ IT
   // ---- voorpagina ----
   { vraag: 'Che cos\'è Predict the Race?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'voorpagina#wat', status: 'beantwoord' },
@@ -411,6 +438,15 @@ export const VRAGEN = [
   { vraag: 'Un pilota fuori dalla top 10 conta ancora?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Cosa prendi per un pilota che si ritira?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Quando compaiono i punti?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
+  // ---- excel ----
+  { vraag: 'Quali colonne servono?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'excel#colonne', status: 'beantwoord' },
+  { vraag: 'Quale formula calcola i punti?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'excel#formula', status: 'beantwoord' },
+  { vraag: 'Cosa fai con i piloti fuori dalla top 10?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'excel#fuori-top-10', status: 'beantwoord' },
+  { vraag: 'Dove si inceppa Excel?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'excel#problemi', status: 'beantwoord' },
+  { vraag: 'Si può fare senza foglio di calcolo?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'excel#senza-foglio', status: 'beantwoord' },
+  { vraag: 'Funziona anche in Fogli Google?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  { vraag: 'Come conto il vincitore e la pole position?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  { vraag: 'Come metto alla stessa posizione i giocatori a pari punti?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
   // ================================================================ PT
   // ---- voorpagina ----
   { vraag: 'O que é o Predict the Race?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'voorpagina#wat', status: 'beantwoord' },
@@ -452,6 +488,15 @@ export const VRAGEN = [
   { vraag: 'Um piloto fora do top 10 ainda conta?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Quanto vale um piloto que abandona?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
   { vraag: 'Quando os pontos aparecem?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'puntentelling#faq', status: 'beantwoord' },
+  // ---- excel ----
+  { vraag: 'De quais colunas você precisa?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'excel#colunas', status: 'beantwoord' },
+  { vraag: 'Qual fórmula calcula os pontos?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'excel#formula', status: 'beantwoord' },
+  { vraag: 'E os pilotos fora do top 10?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'excel#fora-top-10', status: 'beantwoord' },
+  { vraag: 'Onde a planilha complica?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'excel#problemas', status: 'beantwoord' },
+  { vraag: 'Dá para fazer sem planilha?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'excel#sem-planilha', status: 'beantwoord' },
+  { vraag: 'Funciona no Planilhas Google?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  { vraag: 'Como conto o vencedor e a pole position?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  { vraag: 'Como coloco na mesma posição jogadores empatados em pontos?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
   // ================================================================ DE, FR, ES, IT, PT: de zoektermen
   // De zoektermen voor een poule maken in de andere talen (SEO fase 5). Sinds
   // 13 oktober staat de gids organiseren in die talen, met deze vragen als

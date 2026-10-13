@@ -351,6 +351,13 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
     excel: {
       nl: [`MAX(0;${fMax}-${fStap}*ABS(B2-C2))`, `=ALS(B14=C14;${winnaarApp};0)`, `de winnaar ${winnaarApp} punten waard`],
       en: [`MAX(0,${fMax}-${fStap}*ABS(B2-C2))`, `=IF(B14=C14,${winnaarApp},0)`, `the winner is worth ${winnaarApp} points`],
+      // Excel vertaalt de functienamen: in het Italiaans is ABS ook ASS, in het
+      // Portugees MAX ook MÁXIMO.
+      de: [`=WENN(C2="";0;MAX(0;${fMax}-${fStap}*ABS(B2-C2)))`, `=WENN(B14=C14;${winnaarApp};0)`, `der Sieger ${winnaarApp} Punkte wert`],
+      fr: [`=SI(C2="";0;MAX(0;${fMax}-${fStap}*ABS(B2-C2)))`, `=SI(B14=C14;${winnaarApp};0)`, `le vainqueur vaut ${winnaarApp} points`],
+      es: [`=SI(C2="";0;MAX(0;${fMax}-${fStap}*ABS(B2-C2)))`, `=SI(B14=C14;${winnaarApp};0)`, `el ganador vale ${winnaarApp} puntos`],
+      it: [`=SE(C2="";0;MAX(0;${fMax}-${fStap}*ASS(B2-C2)))`, `=SE(B14=C14;${winnaarApp};0)`, `il vincitore vale ${winnaarApp} punti`],
+      pt: [`=SE(C2="";0;MÁXIMO(0;${fMax}-${fStap}*ABS(B2-C2)))`, `=SE(B14=C14;${winnaarApp};0)`, `o vencedor vale ${winnaarApp} pontos`],
     },
   };
   // De gidsen en de about-pagina, en de racepagina's met hun overzicht
@@ -520,7 +527,9 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
         const formule = await page.evaluate(() => document.querySelector('.formules code')?.textContent ?? '');
         let reken = null;
         try {
-          const js = formule.replace(/^=/, '').replace(/\bALS\(/g, 'IF(').replace(/;/g, ',').replace(/C2=""/g, 'C2===""');
+          // De namen van Excel in de taal van de pagina terug naar het Engels.
+          const js = formule.replace(/^=/, '').replace(/\b(ALS|WENN|SI|SE)\(/g, 'IF(').replace(/MÁXIMO\(/g, 'MAX(')
+            .replace(/\bASS\(/g, 'ABS(').replace(/;/g, ',').replace(/C2=""/g, 'C2===""');
           if (!/^[A-Z0-9(),"=*+\- ]+$/.test(js)) throw new Error(js);
           reken = new Function('IF', 'MAX', 'ABS', 'B2', 'C2', `return ${js};`);
         } catch { /* reken blijft leeg */ }

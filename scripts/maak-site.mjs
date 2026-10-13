@@ -185,6 +185,18 @@ const APP_GETALLEN = {
 if (APP_GETALLEN.perfect !== PUNTEN.race_top10.punten) {
   throw new Error(`tien keer ${PLEKPUNTEN[0]} is niet ${PUNTEN.race_top10.punten}, het maximum van race_top10 in app/index.html`);
 }
+// Excel vertaalt de namen van functies: in het Italiaans is ABS ook ASS, in
+// het Portugees MAX ook MÁXIMO. Waar een komma het decimaalteken is, scheidt
+// een puntkomma de argumenten. {formule} is de formule in de taal van de pagina.
+const EXCEL_NAMEN = {
+  nl: ['ALS', 'MAX', 'ABS', ';'], en: ['IF', 'MAX', 'ABS', ','], de: ['WENN', 'MAX', 'ABS', ';'],
+  fr: ['SI', 'MAX', 'ABS', ';'], es: ['SI', 'MAX', 'ABS', ';'], it: ['SE', 'MAX', 'ASS', ';'],
+  pt: ['SE', 'MÁXIMO', 'ABS', ';'],
+};
+const spreadsheetFormule = (code) => {
+  const [als, max, abs, s] = EXCEL_NAMEN[code];
+  return `=${als}(C2=""${s}0${s}${max}(0${s}${formule[1]}-${formule[2]}*${abs}(B2-C2)))`;
+};
 // De {namen} die in site/paginas.mjs kunnen staan: alles van hierboven, en wat
 // alleen de gidsen nodig hebben.
 const feitenVoor = (code) => ({
@@ -198,8 +210,7 @@ const feitenVoor = (code) => ({
   // De vaste zinnen (GEO 1.1), zodat de about-pagina ze letterlijk overneemt.
   kernzin: zin(code, 'kernzin'), makerzin: zin(code, 'makerzin'),
   // De spreadsheetformule uit dezelfde twee getallen als scoreLijst().
-  formuleNL: `=ALS(C2="";0;MAX(0;${formule[1]}-${formule[2]}*ABS(B2-C2)))`,
-  formuleEN: `=IF(C2="",0,MAX(0,${formule[1]}-${formule[2]}*ABS(B2-C2)))`,
+  formuleNL: spreadsheetFormule('nl'), formuleEN: spreadsheetFormule('en'), formule: spreadsheetFormule(code),
   wkPunten: WK_PUNTEN.join(', '), wkEerste: WK_PUNTEN[0], wkLaatste: WK_PUNTEN.at(-1),
   ...circuitFeiten(code),
 });

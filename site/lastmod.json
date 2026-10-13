@@ -5,16 +5,21 @@
   },
   "https://predicttherace.com/de/": {
     "datum": "2026-10-13",
-    "hash": "e22b24d1ac9e3c31"
+    "hash": "9c537ac03b8e1cef"
+  },
+  "https://predicttherace.com/de/f1-tippspiel-excel/": {
+    "datum": "2026-10-13",
+    "hash": "a07ac4bda51d7b29",
+    "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/f1-tippspiel-organisieren/": {
     "datum": "2026-10-13",
-    "hash": "41d41c0b08c21921",
+    "hash": "49d53fa810b42cc5",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/f1-tippspiel-punktesystem/": {
     "datum": "2026-10-13",
-    "hash": "0c1630d447c1d0a2",
+    "hash": "8127314ccd452555",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/rennen/": {
@@ -72,8 +77,8 @@
     "sinds": "2026-09-29"
   },
   "https://predicttherace.com/en/f1-prediction-league-spreadsheet/": {
-    "datum": "2026-09-30",
-    "hash": "b06a4f3e1f239d6c",
+    "datum": "2026-10-13",
+    "hash": "680c15dbf56fc227",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/f1-prediction-scoring-system/": {
@@ -132,7 +137,7 @@
   },
   "https://predicttherace.com/es/": {
     "datum": "2026-10-13",
-    "hash": "bc3f876902b921ec"
+    "hash": "c4b24b85122ff495"
   },
   "https://predicttherace.com/es/carreras/": {
     "datum": "2026-10-13",
@@ -176,12 +181,17 @@
   },
   "https://predicttherace.com/es/organizar-porra-f1/": {
     "datum": "2026-10-13",
-    "hash": "3f8f6cc2e14bb1ce",
+    "hash": "9ae347aa7ac2de16",
+    "sinds": "2026-10-13"
+  },
+  "https://predicttherace.com/es/porra-f1-excel/": {
+    "datum": "2026-10-13",
+    "hash": "66225c10241419d0",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/es/puntuacion-porra-f1/": {
     "datum": "2026-10-13",
-    "hash": "ac6c7ff2d060df8d",
+    "hash": "51ad0164291bcd5e",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/f1-poule-apps-vergeleken/": {
@@ -190,8 +200,8 @@
     "sinds": "2026-09-29"
   },
   "https://predicttherace.com/f1-poule-excel/": {
-    "datum": "2026-09-30",
-    "hash": "4cc95e69d6b3846b",
+    "datum": "2026-10-13",
+    "hash": "883a4d5f859ca7b1",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/f1-poule-organiseren/": {
@@ -206,11 +216,11 @@
   },
   "https://predicttherace.com/fr/": {
     "datum": "2026-10-13",
-    "hash": "8d734791073fd7a3"
+    "hash": "d18f66800a5992be"
   },
   "https://predicttherace.com/fr/bareme-pronostics-f1/": {
     "datum": "2026-10-13",
-    "hash": "65f7309a56ceda82",
+    "hash": "5f11ab22b43acd85",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/fr/courses/": {
@@ -255,12 +265,17 @@
   },
   "https://predicttherace.com/fr/organiser-pronostics-f1/": {
     "datum": "2026-10-13",
-    "hash": "81efcb642dc58f09",
+    "hash": "8eb9bf30fc1c3e4b",
+    "sinds": "2026-10-13"
+  },
+  "https://predicttherace.com/fr/pronostics-f1-excel/": {
+    "datum": "2026-10-13",
+    "hash": "58ddc41ecd6a24c2",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/": {
     "datum": "2026-10-13",
-    "hash": "77641338678b47c3"
+    "hash": "a932a0c89b663ed3"
   },
   "https://predicttherace.com/it/gare/": {
     "datum": "2026-10-13",
@@ -304,12 +319,17 @@
   },
   "https://predicttherace.com/it/organizzare-pronostici-f1/": {
     "datum": "2026-10-13",
-    "hash": "3f10e50bb9506046",
+    "hash": "e750f69f607194a6",
+    "sinds": "2026-10-13"
+  },
+  "https://predicttherace.com/it/pronostici-f1-excel/": {
+    "datum": "2026-10-13",
+    "hash": "02562be4f59aba8d",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/punteggio-pronostici-f1/": {
     "datum": "2026-10-13",
-    "hash": "fad7d09e38fe55b2",
+    "hash": "fabc22bc59437f98",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/over/": {
@@ -323,7 +343,12 @@
   },
   "https://predicttherace.com/pt/": {
     "datum": "2026-10-13",
-    "hash": "84b7ea07150a6fa8"
+    "hash": "48aceb558bd2db49"
+  },
+  "https://predicttherace.com/pt/bolao-f1-excel/": {
+    "datum": "2026-10-13",
+    "hash": "a27f7d212e953942",
+    "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/corridas/": {
     "datum": "2026-10-13",
@@ -367,12 +392,12 @@
   },
   "https://predicttherace.com/pt/organizar-bolao-f1/": {
     "datum": "2026-10-13",
-    "hash": "1c4f2bf081bd6424",
+    "hash": "94c15ef6c01728f0",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/pontuacao-bolao-f1/": {
     "datum": "2026-10-13",
-    "hash": "559020542eb06309",
+    "hash": "000f569dcae09d41",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/races/": {
