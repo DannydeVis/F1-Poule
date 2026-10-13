@@ -2454,6 +2454,31 @@ winnaar, zodat ook wie in het seizoen achterstaat iets te winnen heeft.
 De app regelt geen geld: geen inleg, geen uitbetaling. De prijs is alleen een
 regel tekst.
 
+### Voor de groepsapp
+
+Met premium staat onder Poule een blok "voor de groepsapp", alleen voor de
+poulebaas:
+
+- **Herinner wie nog niets invulde (2).** Een bericht met de race, welke top
+  10 sluit en wanneer, wie nog niets invulde, en de link naar de poule. Staat
+  er ook als **Herinner ze** in de kaart bovenaan, naast "nog geen top 10".
+  Heeft iedereen ingevuld, dan staat er alleen een regel.
+- **Samenvatting van (race).** De weekendwinnaar, de grootste stijger, de top
+  5 van de stand met medailles, het beste team, wie een tussenklassement leidt
+  of won, wanneer de volgende race sluit, en de link.
+- **Stand als CSV (Excel, Sheets).** Plek, naam, team, totaal en een kolom per
+  gereden race (en de seizoensvragen als die gescoord zijn). In het Engels met
+  komma's, in de andere talen met puntkomma's, zodat Excel het meteen in
+  kolommen zet.
+- **Stand afdrukken of als PDF.** Een kale tabel, zwart op wit. In het
+  afdrukvenster kies je "Opslaan als PDF".
+
+Delen gaat met de deelknop van de telefoon (WhatsApp, Telegram, Signal, wat
+de groep gebruikt); op een computer gaat de tekst naar het klembord.
+
+Er wordt niets opgeslagen: het is alleen opmaak van wat elke speler in de app
+al ziet. Daarom staat de premiumgrens hier alleen in de app.
+
 ### Waar je het ziet
 
 - Op een telefoon: het logo in de bovenbalk, op de plek van de P; de sponsor
