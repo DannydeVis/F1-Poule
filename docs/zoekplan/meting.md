@@ -126,6 +126,12 @@ Frans, Spaans, Italiaans en Portugees linkt ChatGPT naar de Engelse pagina en
 niet naar die in de eigen taal; die pagina's staan er pas sinds 13 oktober.
 Eén verouderd feit: "Dutch and English" (prompt 6).
 
+Perplexity, uitgelogd (zelfde dag): prompts 1, 2, 4, 5 en 6, daarna vroeg
+Perplexity om in te loggen. Nergens genoemd. Bij prompt 4 ("Wat is Predict
+the Race?") beschrijft Perplexity een ander spel met dezelfde naam: het
+voorspelspel van Oracle Red Bull Racing in hun My Paddock-programma. Dat is
+een merkprobleem voor de vindbaarheid; ChatGPT haalde ze niet door elkaar.
+
 | maand | assistent | prompt | genoemd? | met link? | feiten goed? | andere apps | opmerking |
 |---|---|---|---|---|---|---|---|
 | okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 1 | ja, als eerste ("mijn favoriet") | ja | ja: gratis, geen advertenties, code of link, top 10 kwalificatie en race, stand vanzelf | F1 Poule (f1poule.com), GP Poule (gppoule.nl) | raadt ons aan om mee te beginnen |
@@ -141,4 +147,9 @@ Eén verouderd feit: "Dutch and English" (prompt 6).
 | okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 11 (es) | ja, als tweede, maar "yo empezaría por Predict the Race" | ja, maar naar /en/about/ | ja | PronoGP, F1 Fantasy |  |
 | okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 12 (it) | ja, als derde | ja, maar naar /en/ | ja | Superbru (favoriet), PronoGP, F1 Fantasy |  |
 | okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 13 (pt) | ja, als eerste ("minha escolha") | ja, maar naar /en/ | ja | Superbru, F1 Fantasy, Undercut |  |
+| okt 2026 (kwartaal, 15-10) | Perplexity, uitgelogd | 1 | nee | nee | n.v.t. | GP Poule (aanrader), Superbru, F1 Poule, Poule F1 |  |
+| okt 2026 (kwartaal, 15-10) | Perplexity, uitgelogd | 2 | nee | nee | n.v.t. | F1 Poule | eigen stappenplan met 10/3-telling en een inleg als "gebruikelijke optie" |
+| okt 2026 (kwartaal, 15-10) | Perplexity, uitgelogd | 4 | nee: een ander spel met dezelfde naam | nee | fout: beschrijft "Predict the Race" van Oracle Red Bull Racing in het My Paddock-programma (voorspellen voor de kwalificatie, prijzen van Red Bull) | Red Bull Racing | **naamsverwarring**, zie de notitie boven de tabel |
+| okt 2026 (kwartaal, 15-10) | Perplexity, uitgelogd | 5 | nee | nee | n.v.t. | Superbru (aanrader), Grid Guesser, Podium Prophets, PronoGP, F1 Fantasy |  |
+| okt 2026 (kwartaal, 15-10) | Perplexity, uitgelogd | 6 | nee | nee | n.v.t. | Podium Prophets (aanrader), Pit Lane Fantasy Racing, The First Sector ("free for host and players"), GridPlay, F1 Predict |  |
 | | | | | | | | |

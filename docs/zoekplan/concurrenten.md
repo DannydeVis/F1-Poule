@@ -74,6 +74,21 @@ Uit de antwoorden van ChatGPT op de promptset (zelfde dag) nog:
 - PronoGP (prono-gp.com): app voor F1 en MotoGP, podium, pole en winnaar,
   gratis met een abonnement ernaast (Spaans en Italiaans)
 
+Uit de antwoorden van Perplexity (zelfde dag):
+
+- **Oracle Red Bull Racing heeft een voorspelspel dat ook "Predict the Race"
+  heet**, in hun loyaliteitsprogramma My Paddock: voorspellen voor de
+  kwalificatie, punten, prijzen van Red Bull aan het eind van het seizoen.
+  Perplexity geeft dat als antwoord op "Wat is Predict the Race?". Net als
+  bij F1 Predict lijkt de naam op de onze; hier zou hij gelijk zijn.
+  Nagezocht: Oracle beschrijft My Paddock (oracle.com/redbullracing) met
+  "predict race results" als manier om punten te verdienen; de naam
+  "Predict the Race" zelf staat niet in de zoekresultaten.
+- Poule F1, Pit Lane Fantasy Racing (app, top 10 in volgorde), GridPlay
+  (kwalificatie, winnaar, podium, bonusvragen)
+- The First Sector zou volgens Perplexity "free for host and players" zijn;
+  hierboven staat dat de poulebaas betaalt. Niet gecontroleerd.
+
 Geen van deze staat op de vergelijkingspagina; voor een plek daar eerst op
 hun eigen site controleren. De vergelijkingspagina zelf is niet opnieuw
 gecontroleerd: dat kan pas met toegang tot die sites.
