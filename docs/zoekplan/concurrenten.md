@@ -60,7 +60,21 @@ Claude Code niet te bereiken). Nieuw ten opzichte van de lijst hierboven:
   landelijke poule of een eigen poule, de inzet spreek je onderling af, per
   race of voor het hele seizoen
 
-Geen van drieën staat op de vergelijkingspagina; voor een plek daar eerst op
+Uit de antwoorden van ChatGPT op de promptset (zelfde dag) nog:
+
+- Grid Guesser (gridguesser.com): top 10 per race, eigen leagues, bonus
+  voor een keuze die niemand anders in de groep maakte
+- Undercut (playundercut.com): voor vriendengroepen, alleen op uitnodiging,
+  extra voorspellingen, de basis gratis
+- Tiposi.io: Duits, alle coureurs van P1 tot de laatste, kwalificatie en
+  race, telling instelbaar, gratis in de browser (ChatGPT's favoriet in het
+  Duits)
+- Grid Team (gridteam.app): gratis app voor iOS en Android, top 10, eigen
+  league (ChatGPT's favoriet in het Frans)
+- PronoGP (prono-gp.com): app voor F1 en MotoGP, podium, pole en winnaar,
+  gratis met een abonnement ernaast (Spaans en Italiaans)
+
+Geen van deze staat op de vergelijkingspagina; voor een plek daar eerst op
 hun eigen site controleren. De vergelijkingspagina zelf is niet opnieuw
 gecontroleerd: dat kan pas met toegang tot die sites.
 
