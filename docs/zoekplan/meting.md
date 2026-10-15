@@ -120,6 +120,25 @@ Nulmeting GEO (fase 0): gedaan op 27 september 2026, samen met het kanaal
 "AI-assistenten" in GA4. De antwoorden per assistent zijn niet genoteerd; de
 eerste maandmeting in november is het vergelijkingspunt.
 
+Eerste kwartaalronde, ChatGPT uitgelogd (15 oktober 2026): genoemd bij 12
+van de 13 prompts, niet bij prompt 3 (eerlijke puntentelling). In het Duits,
+Frans, Spaans, Italiaans en Portugees linkt ChatGPT naar de Engelse pagina en
+niet naar die in de eigen taal; die pagina's staan er pas sinds 13 oktober.
+Eén verouderd feit: "Dutch and English" (prompt 6).
+
 | maand | assistent | prompt | genoemd? | met link? | feiten goed? | andere apps | opmerking |
 |---|---|---|---|---|---|---|---|
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 1 | ja, als eerste ("mijn favoriet") | ja | ja: gratis, geen advertenties, code of link, top 10 kwalificatie en race, stand vanzelf | F1 Poule (f1poule.com), GP Poule (gppoule.nl) | raadt ons aan om mee te beginnen |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 2 | ja, het hele stappenplan gaat over ons | ja | ja, op één punt na: "zescijferige code", het zijn zes tekens (letters en cijfers) | geen | maakt er zelfs een WhatsApp-uitnodiging met onze link bij |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 3 | nee | nee | n.v.t. | geen | verzint een eigen telling (10/3 per plek plus bonussen) in plaats van 5/3/1 uit onze gids puntentelling; daar valt te winnen |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 4 | ja | ja | ja: gratis, geen account, geen geld, onafhankelijk en geen officiële F1-app, simpele of uitgebreide telling | geen |  |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 5 | ja, als eerste ("best overall") | ja | ja: top 10 kwalificatie en race, losse vragen, jokers, duels, geen account | F1 Fantasy, Grid Guesser | raadt ons aan om mee te beginnen |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 6 | ja, als eerste | ja | bijna: "in Dutch and English" klopt niet meer, de app is er sinds 13 oktober in zeven talen; verder goed (open poule, geen advertenties, geen account) | Grid Guesser, Podium Prophets, Superbru |  |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 7 | ja, als eerste platform | ja | ja: browser, eigen poules, niveau instelbaar | Undercut, Podium Prophets, F1 Fantasy | geeft daarnaast een eigen huispuntentelling, niet de onze |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 8 | ja | ja | ja: 5/3/1, top 10 kwalificatie en race, eigen en open poules, uitslagen vanzelf, gratis, geen gokken, onafhankelijk, privacy (mail alleen als je wilt, Analytics met toestemming), Danny de Visser uit Rotterdam | geen |  |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 9 (de) | ja, als tweede | ja, maar naar /en/ en niet naar de Duitse pagina | ja: top 10, code, geen account, geen advertenties | Tiposi.io (favoriet), Superbru, F1 Fantasy |  |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 10 (fr) | ja, samen met Grid Team aangeraden | ja, maar naar /en/ | ja, ook "en français" | Grid Team, F1 Fantasy |  |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 11 (es) | ja, als tweede, maar "yo empezaría por Predict the Race" | ja, maar naar /en/about/ | ja | PronoGP, F1 Fantasy |  |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 12 (it) | ja, als derde | ja, maar naar /en/ | ja | Superbru (favoriet), PronoGP, F1 Fantasy |  |
+| okt 2026 (kwartaal, 15-10) | ChatGPT, uitgelogd | 13 (pt) | ja, als eerste ("minha escolha") | ja, maar naar /en/ | ja | Superbru, F1 Fantasy, Undercut |  |
 | | | | | | | | |
