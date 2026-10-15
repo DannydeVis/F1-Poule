@@ -67,6 +67,14 @@ vroegen ook"? Welke vraag, welke pagina. Waar je kijkt (uit `2-aeo.md`):
 
 Nieuwe vragen uit die rondes gaan in `site/vragen.mjs`.
 
+Kwartaalronde 15 oktober 2026 (Claude Code, via een zoekmachine; Search
+Console wordt nog niet uitgelezen, zie BEDIENING §18): geen nieuwe vraag die
+een eigen plek nodig heeft. Drie onderwerpen die andere voorspelsites in hun
+FAQ zetten, staan al op de site en zijn als variant toegevoegd: hoeveel
+spelers er in een poule kunnen (organiseren, werk), of je een herinnering
+krijgt (organiseren, valkuilen) en of de sprint meetelt (puntentelling, losse
+vragen). In het Nederlands en het Engels.
+
 | maand | zoekvraag | waar zichtbaar | pagina | opmerking |
 |---|---|---|---|---|
 | | | | | |

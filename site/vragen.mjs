@@ -74,14 +74,18 @@ export const VRAGEN = [
     bron: 'hypothese', doel: 'organiseren#vragen', status: 'beantwoord' },
   { vraag: 'Speel je met jokers?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'organiseren#jokers', status: 'beantwoord' },
   { vraag: 'Waar loopt een F1-poule op stuk?', taal: 'nl', varianten: ['Hoe houd je een F1-poule het hele seizoen spannend?',
-    'Wat doe je als iemand vergeet in te vullen?'],
-    bron: 'hypothese', doel: 'organiseren#valkuilen', status: 'beantwoord' },
+    'Wat doe je als iemand vergeet in te vullen?', 'Krijg je een herinnering voor de deadline?'],
+    // Kwartaalronde oktober 2026: tippevent.de zet herinneringsmails in zijn FAQ.
+    bron: 'zoekresultaat', doel: 'organiseren#valkuilen', status: 'beantwoord' },
   { vraag: 'Wat regel je voordat het seizoen begint?', taal: 'nl', varianten: ['Checklist voor de poulebaas'],
     bron: 'hypothese', doel: 'organiseren#checklist', status: 'beantwoord' },
   { vraag: 'Kan iemand halverwege het seizoen nog instappen?', taal: 'nl', varianten: ['Kun je halverwege het seizoen nog beginnen?'],
     bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
-  { vraag: 'Hoe organiseer je een F1-poule op je werk?', taal: 'nl', varianten: ['f1 poule op het werk', 'f1 poule met collega\'s', 'f1 poule kantoor'],
-    bron: 'hypothese', doel: 'organiseren#werk', status: 'beantwoord' },
+  // Kwartaalronde oktober 2026: voorspelsites als tippevent.de zetten "hoeveel
+  // deelnemers" in hun FAQ; het antwoord (geen maximum) staat in deze sectie.
+  { vraag: 'Hoe organiseer je een F1-poule op je werk?', taal: 'nl', varianten: ['f1 poule op het werk', 'f1 poule met collega\'s', 'f1 poule kantoor',
+    'Hoeveel spelers kunnen er in een poule?'],
+    bron: 'zoekresultaat', doel: 'organiseren#werk', status: 'beantwoord' },
   { vraag: 'Kan ik in meer dan één poule zitten?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
   { vraag: 'Kan een poule openbaar zijn?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
   { vraag: 'Wat is het verschil tussen een poule en een pronostiek?', taal: 'nl', varianten: ['Wat is een F1-pronostiek?'],
@@ -94,7 +98,8 @@ export const VRAGEN = [
     bron: 'hypothese', doel: 'puntentelling#rekenvoorbeeld', status: 'beantwoord' },
   { vraag: 'Waarom telt bijna goed mee?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'puntentelling#bijna-goed', status: 'beantwoord' },
   { vraag: 'Welke vragen kun je nog meer laten meetellen?', taal: 'nl',
-    varianten: ['Hoeveel punten geef je voor de losse vragen?', 'Welke bonusvragen kun je stellen in een F1-poule?'],
+    // Kwartaalronde oktober 2026: F1 Predict en GP Poule noemen de sprint apart.
+    varianten: ['Hoeveel punten geef je voor de losse vragen?', 'Welke bonusvragen kun je stellen in een F1-poule?', 'Telt de sprint ook mee?'],
     bron: 'hypothese', doel: 'puntentelling#losse-vragen', status: 'beantwoord' },
   { vraag: 'Wat als twee spelers evenveel punten hebben?', taal: 'nl', varianten: ['Wat gebeurt er bij een gelijke stand?'],
     bron: 'hypothese', doel: 'puntentelling#gelijk', status: 'beantwoord' },
@@ -177,16 +182,17 @@ export const VRAGEN = [
     bron: 'hypothese', doel: 'organiseren#questions', status: 'beantwoord' },
   { vraag: 'Should you play with jokers?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'organiseren#jokers', status: 'beantwoord' },
   { vraag: 'What kills an F1 prediction league?', taal: 'en', varianten: ['How do you keep an F1 league exciting all season?',
-    'What if someone forgets to predict?'],
-    bron: 'hypothese', doel: 'organiseren#pitfalls', status: 'beantwoord' },
+    'What if someone forgets to predict?', 'Do you get a reminder before the deadline?'],
+    bron: 'zoekresultaat', doel: 'organiseren#pitfalls', status: 'beantwoord' },
   { vraag: 'What should you sort out before the season starts?', taal: 'en', varianten: ['A checklist for the league admin'],
     bron: 'hypothese', doel: 'organiseren#checklist', status: 'beantwoord' },
   { vraag: 'Can someone join halfway through the season?', taal: 'en', varianten: ['Can you start an F1 prediction league mid-season?'],
     bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
   // Stond eerst als FAQ "Does it work for an office league?"; die vraag is nu
   // een variant, het antwoord staat in de sectie.
-  { vraag: 'How do you run an F1 prediction league at work?', taal: 'en', varianten: ['Does it work for an office league?', 'f1 office pool'],
-    bron: 'hypothese', doel: 'organiseren#at-work', status: 'beantwoord' },
+  { vraag: 'How do you run an F1 prediction league at work?', taal: 'en', varianten: ['Does it work for an office league?', 'f1 office pool',
+    'How many players can join a league?'],
+    bron: 'zoekresultaat', doel: 'organiseren#at-work', status: 'beantwoord' },
   { vraag: 'Can I be in more than one league?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
   { vraag: 'Can a league be public?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'organiseren#faq', status: 'beantwoord' },
 
@@ -198,7 +204,7 @@ export const VRAGEN = [
   { vraag: 'Why should nearly right count?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'puntentelling#nearly-right', status: 'beantwoord' },
   // Pagina's met ideeën voor bonusvragen en seizoensvoorspellingen.
   { vraag: 'What else can you score?', taal: 'en',
-    varianten: ['How many points should the extra questions be worth?', 'What bonus questions can you add to an F1 prediction league?'],
+    varianten: ['How many points should the extra questions be worth?', 'What bonus questions can you add to an F1 prediction league?', 'Does the sprint count too?'],
     bron: 'zoekresultaat', doel: 'puntentelling#extra-questions', status: 'beantwoord' },
   { vraag: 'What happens when two players are level on points?', taal: 'en', varianten: [],
     bron: 'hypothese', doel: 'puntentelling#ties', status: 'beantwoord' },

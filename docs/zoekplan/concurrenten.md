@@ -48,6 +48,22 @@ Prophets vs F1 Predict". Dat zijn precies de vragen van onze vergelijking.
 - Italiaans: BERACE, Prono Racing. "Pronostici F1" geeft vooral goktips.
 - Portugees: F1 Big Ball ("sem dinheiro envolvido"), WebBolão, bolaof1.com.br
 
+## Kwartaalronde 15 oktober 2026
+
+Opnieuw gezocht (zoekmachine, geen eigen sites geopend: die waren vanuit
+Claude Code niet te bereiken). Nieuw ten opzichte van de lijst hierboven:
+
+- Forecast 1: app voor F1 en MotoGP, de punten-plekken voorspellen
+- RaceRival (racerival.com): voorspelspel; r/F1Fantasy zou er een eigen
+  league op starten
+- GP Poule bestaat ook als iPhone-app (van Vendi Concepts B.V.): een
+  landelijke poule of een eigen poule, de inzet spreek je onderling af, per
+  race of voor het hele seizoen
+
+Geen van drieën staat op de vergelijkingspagina; voor een plek daar eerst op
+hun eigen site controleren. De vergelijkingspagina zelf is niet opnieuw
+gecontroleerd: dat kan pas met toegang tot die sites.
+
 ## Gecontroleerd voor de vergelijkingspagina (29 september 2026)
 
 De vergelijking (`vergelijking` in `site/paginas.mjs`, NL `/f1-poule-apps-vergeleken/`,
