@@ -10678,3 +10678,16 @@ nieuwe uitleg. Zeven mutanten in de app (zonder premium, ook voor een speler,
 iedereen in de herinnering, geen apostrof, altijd een komma, de afdruk blijft
 staan, geen team in de samenvatting), allemaal gevangen.
 
+## Naamgenoot: niet het voorspelspel van een team (16 oktober)
+
+Bij de kwartaalmeting gaf Perplexity op "Wat is Predict the Race?" het
+voorspelspel van Oracle Red Bull Racing in hun My Paddock-programma
+(docs/zoekplan/meting.md). Nagezocht: My Paddock heeft race-voorspellingen;
+dat die ook "Predict the Race" heten, staat niet in de zoekresultaten.
+
+Daarom geen nieuwe FAQ, maar één zin erbij in het bestaande antwoord op "Is
+dit een officiële Formule 1-app?" (site/teksten.mjs, zeven talen): het staat
+ook los van de voorspelspellen die teams zelf aanbieden, zoals dat van Red
+Bull Racing. In llms.txt (scripts/maak-site.mjs) staat het bij de kernfeiten.
+Bij de volgende meting kijken of Perplexity de twee nog verwart.
+
