@@ -99,13 +99,13 @@ export const PAGINAS = [
           {
             id: 'vragen',
             vraag: 'Hoeveel vragen laat je meetellen?',
-            kort: 'Laat zo veel vragen meetellen als je groep volhoudt. De twee top 10\'s per weekend, van de kwalificatie en de race, zijn genoeg voor een fanatieke poule. Wie meer wil, kiest Klassiek met de winnaar, de pole position en de snelste ronde erbij, of Gevorderd met alle {nGevorderd} vragen.',
+            kort: 'Laat zo veel vragen meetellen als je groep volhoudt. De twee top 10\'s per weekend, van de kwalificatie en de race, zijn genoeg voor een fanatieke poule. Wie meer wil, kiest Klassiek met de sprint, de winnaar, de pole position en de snelste ronde erbij, of Gevorderd met alle {nGevorderd} vragen.',
             tabel: {
               bijschrift: 'De drie niveaus van Predict the Race',
               kop: ['Niveau', 'Vragen', 'Punten per weekend'],
               rijen: [
                 ['Simpel', '{nSimpel}', '{simpel}'],
-                ['Klassiek', '{nKlassiek}', '{klassiek}'],
+                ['Klassiek', '{nKlassiek}', '{klassiek}, plus sprint'],
                 ['Gevorderd', '{nGevorderd}', '{gevorderd}, plus sprint en seizoen'],
               ],
             },
@@ -140,7 +140,7 @@ export const PAGINAS = [
               'De poule staat klaar en de code is gedeeld, vóór de eerste kwalificatie.',
               'Het niveau is gekozen: Simpel, Klassiek, Gevorderd of zelf samengesteld.',
               'Jokers: aan of uit, en hoeveel per speler.',
-              'Automatisch invullen: samen afgesproken of het aan gaat.',
+              'Automatisch invullen: samen afgesproken of het aan blijft.',
               'Iedereen heeft zich op de agenda geabonneerd of de meldingen aangezet.',
               'De seizoensvragen zijn ingevuld vóór de eerste race.',
               'Iedereen weet waar je om speelt: om de eer. De app kent geen inleg, pot of prijzen.',
@@ -200,13 +200,13 @@ export const PAGINAS = [
           {
             id: 'questions',
             vraag: 'How many questions should count?',
-            kort: 'Count as many questions as your group will keep up with. The two top 10s each weekend, qualifying and race, are plenty for a competitive league. If you want more, Classic adds the winner, pole position and fastest lap, and Advanced switches on all {nGevorderd} questions.',
+            kort: 'Count as many questions as your group will keep up with. The two top 10s each weekend, qualifying and race, are plenty for a competitive league. If you want more, Classic adds the sprint, the winner, pole position and fastest lap, and Advanced switches on all {nGevorderd} questions.',
             tabel: {
               bijschrift: 'The three levels in Predict the Race',
               kop: ['Level', 'Questions', 'Points per weekend'],
               rijen: [
                 ['Simple', '{nSimpel}', '{simpel}'],
-                ['Classic', '{nKlassiek}', '{klassiek}'],
+                ['Classic', '{nKlassiek}', '{klassiek}, plus sprint'],
                 ['Advanced', '{nGevorderd}', '{gevorderd}, plus sprint and season'],
               ],
             },
@@ -241,7 +241,7 @@ export const PAGINAS = [
               'The league exists and the code is shared, before the first qualifying session.',
               'The level is chosen: Simple, Classic, Advanced or your own set.',
               'Jokers: on or off, and how many each.',
-              'Auto-fill: agreed together whether it is on.',
+              'Auto-fill: agreed together whether it stays on.',
               'Everyone has subscribed to the calendar or switched on notifications.',
               'The season questions are filled in before the first race.',
               'Everyone knows what you are playing for: bragging rights. There is no entry fee, pot or prize in the app.',
@@ -300,13 +300,13 @@ export const PAGINAS = [
           {
             id: 'fragen',
             vraag: 'Wie viele Fragen sollten zählen?',
-            kort: 'Lass so viele Fragen zählen, wie deine Gruppe durchhält. Die beiden Top 10 pro Wochenende, Qualifying und Rennen, reichen für eine spannende Tipprunde. Wer mehr will, nimmt mit Klassisch den Rennsieger, die Pole-Position und die schnellste Runde dazu, und Fortgeschritten schaltet alle {nGevorderd} Fragen ein.',
+            kort: 'Lass so viele Fragen zählen, wie deine Gruppe durchhält. Die beiden Top 10 pro Wochenende, Qualifying und Rennen, reichen für eine spannende Tipprunde. Wer mehr will, nimmt mit Klassisch den Sprint, den Rennsieger, die Pole-Position und die schnellste Runde dazu, und Fortgeschritten schaltet alle {nGevorderd} Fragen ein.',
             tabel: {
               bijschrift: 'Die drei Niveaus in Predict the Race',
               kop: ['Niveau', 'Fragen', 'Punkte pro Wochenende'],
               rijen: [
                 ['Einfach', '{nSimpel}', '{simpel}'],
-                ['Klassisch', '{nKlassiek}', '{klassiek}'],
+                ['Klassisch', '{nKlassiek}', '{klassiek}, plus Sprint'],
                 // Met een zacht afbreekstreepje: anders past de tabel niet op 360 pixels.
                 ['Fortge\u00adschritten', '{nGevorderd}', '{gevorderd}, plus Sprint und Saison'],
               ],
@@ -342,7 +342,7 @@ export const PAGINAS = [
               'Die Tipprunde existiert und der Code ist geteilt, vor dem ersten Qualifying.',
               'Das Niveau ist gewählt: Einfach, Klassisch, Fortgeschritten oder eigene Fragen.',
               'Joker: an oder aus, und wie viele pro Person.',
-              'Automatisches Ausfüllen: gemeinsam abgesprochen, ob es an ist.',
+              'Automatisches Ausfüllen: gemeinsam abgesprochen, ob es an bleibt.',
               'Alle haben den Kalender abonniert oder Benachrichtigungen eingeschaltet.',
               'Die Saisonfragen sind vor dem ersten Rennen ausgefüllt.',
               'Alle wissen, worum ihr spielt: um die Ehre. In der App gibt es keinen Einsatz, keinen Pott und keinen Preis.',
@@ -401,13 +401,13 @@ export const PAGINAS = [
           {
             id: 'questions',
             vraag: 'Combien de questions faut-il compter ?',
-            kort: 'Comptez autant de questions que votre groupe peut suivre. Les deux top 10 de chaque week-end, qualifications et course, suffisent pour une ligue disputée. Pour aller plus loin, Classique ajoute le vainqueur, la pole position et le meilleur tour, et Avancé active les {nGevorderd} questions.',
+            kort: 'Comptez autant de questions que votre groupe peut suivre. Les deux top 10 de chaque week-end, qualifications et course, suffisent pour une ligue disputée. Pour aller plus loin, Classique ajoute le sprint, le vainqueur, la pole position et le meilleur tour, et Avancé active les {nGevorderd} questions.',
             tabel: {
               bijschrift: 'Les trois niveaux de Predict the Race',
               kop: ['Niveau', 'Questions', 'Points par week-end'],
               rijen: [
                 ['Simple', '{nSimpel}', '{simpel}'],
-                ['Classique', '{nKlassiek}', '{klassiek}'],
+                ['Classique', '{nKlassiek}', '{klassiek}, plus le sprint'],
                 ['Avancé', '{nGevorderd}', '{gevorderd}, plus sprint et saison'],
               ],
             },
@@ -442,7 +442,7 @@ export const PAGINAS = [
               'La ligue existe et le code est partagé, avant les premières qualifications.',
               'Le niveau est choisi : Simple, Classique, Avancé ou vos propres questions.',
               'Jokers : activés ou non, et combien chacun.',
-              'Remplissage automatique : décidé ensemble s\'il est activé.',
+              'Remplissage automatique : décidé ensemble s\'il reste activé.',
               'Chacun s\'est abonné au calendrier ou a activé les notifications.',
               'Les questions de saison sont remplies avant la première course.',
               'Tout le monde sait pour quoi vous jouez : la gloire. Il n\'y a ni mise, ni cagnotte, ni prix dans l\'appli.',
@@ -501,13 +501,13 @@ export const PAGINAS = [
           {
             id: 'preguntas',
             vraag: '¿Cuántas preguntas deberían contar?',
-            kort: 'Cuenta tantas preguntas como tu grupo vaya a seguir. Los dos top 10 de cada fin de semana, clasificación y carrera, bastan para una liga reñida. Si quieres más, Clásico añade el ganador, la pole position y la vuelta rápida, y Avanzado activa las {nGevorderd} preguntas.',
+            kort: 'Cuenta tantas preguntas como tu grupo vaya a seguir. Los dos top 10 de cada fin de semana, clasificación y carrera, bastan para una liga reñida. Si quieres más, Clásico añade la sprint, el ganador, la pole position y la vuelta rápida, y Avanzado activa las {nGevorderd} preguntas.',
             tabel: {
               bijschrift: 'Los tres niveles de Predict the Race',
               kop: ['Nivel', 'Preguntas', 'Puntos por fin de semana'],
               rijen: [
                 ['Sencillo', '{nSimpel}', '{simpel}'],
-                ['Clásico', '{nKlassiek}', '{klassiek}'],
+                ['Clásico', '{nKlassiek}', '{klassiek}, más sprint'],
                 ['Avanzado', '{nGevorderd}', '{gevorderd}, más sprint y temporada'],
               ],
             },
@@ -542,7 +542,7 @@ export const PAGINAS = [
               'La liga existe y el código está compartido, antes de la primera clasificación.',
               'El nivel está elegido: Sencillo, Clásico, Avanzado o tus propias preguntas.',
               'Comodines: sí o no, y cuántos por persona.',
-              'Relleno automático: acordado entre todos si está activado.',
+              'Relleno automático: acordado entre todos si sigue activado.',
               'Todos se han suscrito al calendario o han activado las notificaciones.',
               'Las preguntas de temporada están rellenadas antes de la primera carrera.',
               'Todos saben por qué jugáis: por la gloria. En la app no hay cuota, ni bote, ni premio.',
@@ -601,13 +601,13 @@ export const PAGINAS = [
           {
             id: 'domande',
             vraag: 'Quante domande dovrebbero contare?',
-            kort: 'Fai contare tante domande quante il tuo gruppo riesce a seguire. Le due top 10 di ogni weekend, qualifiche e gara, bastano per una lega combattuta. Se vuoi di più, Classico aggiunge vincitore, pole position e giro più veloce, e Avanzato attiva tutte le {nGevorderd} domande.',
+            kort: 'Fai contare tante domande quante il tuo gruppo riesce a seguire. Le due top 10 di ogni weekend, qualifiche e gara, bastano per una lega combattuta. Se vuoi di più, Classico aggiunge la sprint, vincitore, pole position e giro più veloce, e Avanzato attiva tutte le {nGevorderd} domande.',
             tabel: {
               bijschrift: 'I tre livelli di Predict the Race',
               kop: ['Livello', 'Domande', 'Punti per weekend'],
               rijen: [
                 ['Semplice', '{nSimpel}', '{simpel}'],
-                ['Classico', '{nKlassiek}', '{klassiek}'],
+                ['Classico', '{nKlassiek}', '{klassiek}, più sprint'],
                 ['Avanzato', '{nGevorderd}', '{gevorderd}, più sprint e stagione'],
               ],
             },
@@ -642,7 +642,7 @@ export const PAGINAS = [
               'La lega esiste e il codice è condiviso, prima delle prime qualifiche.',
               'Il livello è scelto: Semplice, Classico, Avanzato o le tue domande.',
               'Jolly: sì o no, e quanti a testa.',
-              'Compilazione automatica: deciso insieme se è attiva.',
+              'Compilazione automatica: deciso insieme se resta attiva.',
               'Tutti si sono abbonati al calendario o hanno attivato le notifiche.',
               'Le domande di stagione sono compilate prima della prima gara.',
               'Tutti sanno per cosa giocate: per la gloria. Nell\'app non ci sono quote, né montepremi, né premi.',
@@ -701,13 +701,13 @@ export const PAGINAS = [
           {
             id: 'perguntas',
             vraag: 'Quantas perguntas devem contar?',
-            kort: 'Conte tantas perguntas quanto o seu grupo conseguir acompanhar. Os dois top 10 de cada fim de semana, classificação e corrida, bastam para um bolão disputado. Se quiser mais, o Clássico acrescenta vencedor, pole position e volta mais rápida, e o Avançado liga todas as {nGevorderd} perguntas.',
+            kort: 'Conte tantas perguntas quanto o seu grupo conseguir acompanhar. Os dois top 10 de cada fim de semana, classificação e corrida, bastam para um bolão disputado. Se quiser mais, o Clássico acrescenta a sprint, vencedor, pole position e volta mais rápida, e o Avançado liga todas as {nGevorderd} perguntas.',
             tabel: {
               bijschrift: 'Os três níveis do Predict the Race',
               kop: ['Nível', 'Perguntas', 'Pontos por fim de semana'],
               rijen: [
                 ['Simples', '{nSimpel}', '{simpel}'],
-                ['Clássico', '{nKlassiek}', '{klassiek}'],
+                ['Clássico', '{nKlassiek}', '{klassiek}, mais sprint'],
                 ['Avançado', '{nGevorderd}', '{gevorderd}, mais sprint e temporada'],
               ],
             },

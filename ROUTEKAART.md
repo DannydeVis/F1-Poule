@@ -289,7 +289,9 @@ Wie niks inlevert krijgt een willekeurige top 10, gemarkeerd als "automatisch"
 (tot 25 september 2026 was dat de WK-stand). Houdt iemand die twee races mist
 in de race, zonder dat vergeten loont.
 
-Staat uit tot de poulebaas hem aanzet, en dan alleen vanaf dat moment — zie
+Staat sinds 17 oktober 2026 in een nieuwe poule meteen aan; de poulebaas kan
+hem uitzetten. Oudere poules hadden hem uit tot de poulebaas hem aanzette, en
+dan alleen vanaf dat moment — zie
 `OVERDRACHT.md` voor waarom dat een datum is en geen vinkje. Je wint er geen
 weekend mee: de seizoensstand houdt je aangehaakt, een weekend winnen is iets
 wat je doet.

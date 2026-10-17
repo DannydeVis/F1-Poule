@@ -457,7 +457,6 @@
  "Simpel": "Simple",
  "alleen de twee top-tienen": "seulement les deux top 10",
  "Klassiek": "Classique",
- "de top-tienen plus drie losse vragen": "les top 10 plus trois questions supplémentaires",
  "Gevorderd": "Avancé",
  "alles wat er is": "tout ce qui existe",
  "binnenkort": "bientôt",
@@ -793,5 +792,6 @@
  "naam": "nom",
  "team": "équipe",
  "totaal": "total",
- "Herinner ze": "Les relancer"
+ "Herinner ze": "Les relancer",
+ "de top-tienen, ook van de sprint, plus drie losse vragen": "les top 10, sprint compris, plus trois questions supplémentaires"
 }

@@ -10716,3 +10716,30 @@ genegeerd, afgelast niet overgeslagen, vorig niet doorgegeven), allemaal
 gevangen. Na het mergen vult de eerstvolgende run van de sync de 24 races van
 2027 met de lijst van Abu Dhabi.
 
+## Klassiek met sprint, automatisch invullen standaard aan (17 oktober)
+
+Twee keuzes van Danny bij de voorbereiding op 2027.
+
+**Klassiek krijgt de sprint.** In 2027 zijn er tien sprintweekenden (2026: zes).
+Klassiek, de standaard, sloeg die sessies over. Nu staat `sprint_top10` in
+`PRESETS.klassiek`. Het weekendmaximum blijft 145 (`weekendSom` telt de sprint
+niet mee); eronder staat "Op een sprintweekend komt daar 25 bij". Op de site
+staat bij Klassiek "plus sprint" (`extraSprint` in `site/teksten.mjs`), en de
+FAQ en de organiseren-gidsen zijn mee aangepast. Bestaande Klassiek-poules
+houden hun vastgelegde vragenset zonder sprint; erbij zetten kan met de SQL in
+BEDIENING §6.
+
+**Automatisch invullen staat in een nieuwe poule meteen aan.** "Als iemand wat
+vergeet in te vullen, elk weekend random, elk weekend anders." Dat willekeurige
+deel bestond al: `willekeurigeLijst()` zaait met poule, race, speler en sessie,
+dus elk weekend en elke speler een andere lijst. Wat ontbrak was de stand:
+uit tot de poulebaas hem aanzette. Nu zet `poule_aanmaken()` in `schema.sql`
+`autofill_vanaf = now()` (de nabootsing doet hetzelfde). Bestaande poules
+veranderen niet; de poulebaas kan hem daar zelf aanzetten.
+
+**Na het mergen:** `schema.sql` opnieuw draaien in Supabase (`poule_aanmaken`
+is veranderd).
+
+Tests: `poule-aanmaken.test.mjs` (Klassiek heeft de sprint, los genoemd, max
+145; een nieuwe poule heeft `autofill_vanaf`; "182 punten al gevraagd") en
+`seizoenswissel.test.sql` (een nieuwe poule heeft een recente `autofill_vanaf`).
