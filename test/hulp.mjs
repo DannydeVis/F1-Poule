@@ -153,6 +153,12 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
     } catch { /* niets */ }
   });
   if (!toestemming) await page.addInitScript(zegNeeTegenMeten);
+  // Turnstile (turnstile.js heeft een site key) komt in een test nooit van
+  // Cloudflare: zonder token gaat elke aanroep gewoon door, net als op een
+  // toestel waar een adblocker Turnstile tegenhoudt. test/misbruik.test.mjs
+  // zet er in voorafAan een nagebootste Turnstile voor in de plaats (een
+  // route die later komt, gaat voor).
+  await page.route('https://challenges.cloudflare.com/**', (r) => r.abort());
   if (voorafAan) await voorafAan(page);
   const jsFouten = [];
   page.on('pageerror', (e) => jsFouten.push(String(e)));

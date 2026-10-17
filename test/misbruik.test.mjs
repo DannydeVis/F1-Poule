@@ -38,7 +38,7 @@ const zet = (page, fn, arg) => page.evaluate(([f, a]) => {
 
 const TESTSLEUTEL = '1x00000000000000000000BB';
 const turnstileMet = (sleutel) => readFileSync(join(wortel, 'turnstile.js'), 'utf8')
-  .replace("const SITE_KEY = '';", `const SITE_KEY = '${sleutel}';`);
+  .replace(/const SITE_KEY = '[^']*';/, `const SITE_KEY = '${sleutel}';`);
 const NEP_TURNSTILE = `
   window.__ts = { renders: 0, removes: 0, opties: [] };
   window.turnstile = {
@@ -50,6 +50,8 @@ const NEP_TURNSTILE = `
     },
     remove() { window.__ts.removes++; },
   };`;
+// Een app zonder site key, zoals vóór 17 oktober.
+const zonderSleutel = (p) => p.route('**/turnstile.js', (r) => r.fulfill({ contentType: 'text/javascript', body: turnstileMet('') }));
 // Met site key en de nagebootste Turnstile; `cloudflare` telt de verzoeken.
 const metTurnstile = (cloudflare, { laadt = true } = {}) => async (p) => {
   await p.route('**/turnstile.js', (r) => r.fulfill({ contentType: 'text/javascript', body: turnstileMet(TESTSLEUTEL) }));
@@ -63,7 +65,10 @@ const metTurnstile = (cloudflare, { laadt = true } = {}) => async (p) => {
 {
   const cloudflare = [];
   const { page, jsFouten, stoppen } = await startPagina({
-    voorafAan: (p) => p.on('request', (r) => { if (r.url().includes('cloudflare')) cloudflare.push(r.url()); }),
+    voorafAan: async (p) => {
+      await zonderSleutel(p);
+      p.on('request', (r) => { if (r.url().includes('cloudflare')) cloudflare.push(r.url()); });
+    },
   });
   await page.waitForSelector('#code');
   await page.fill('#code', 'RTM026');
@@ -81,7 +86,7 @@ const metTurnstile = (cloudflare, { laadt = true } = {}) => async (p) => {
 {
   // Captcha aan in Supabase terwijl de app nog geen site key heeft: dan komt
   // niemand er nieuw in. De volgorde in BEDIENING.md is dus geen detail.
-  const { page, stoppen } = await startPagina();
+  const { page, stoppen } = await startPagina({ voorafAan: zonderSleutel });
   await page.waitForSelector('#code');
   await zet(page, 'db.captcha_aan = true;');
   await page.fill('#code', 'RTM026');
@@ -279,8 +284,8 @@ const OPEN = 'db.pools[0].is_public = true;';
     check(`en ${pagina} ook (opnieuw gegenereerd)`, html.includes('Turnstile'));
   }
   const ts = readFileSync(join(wortel, 'turnstile.js'), 'utf8');
-  check('turnstile.js staat zonder site key: eerst de key, dan captcha aan', /const SITE_KEY = '';/.test(ts)
-    || /const SITE_KEY = '0x[0-9A-Za-z_-]+';/.test(ts));
+  check('turnstile.js heeft de site key van de widget voor predicttherace.com (openbaar, begint met 0x4)',
+    /const SITE_KEY = '0x4[0-9A-Za-z_-]{10,}';/.test(ts), ts.match(/const SITE_KEY = '[^']*'/)?.[0]);
   const beheer = readFileSync(join(wortel, 'beheer', 'index.html'), 'utf8');
   check('de app en het beheer laden allebei hetzelfde turnstile.js',
     app.includes('<script src="../turnstile.js" defer></script>') && beheer.includes('<script src="../turnstile.js" defer></script>'));

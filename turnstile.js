@@ -7,9 +7,11 @@
 // anon key uit de broncode duizenden accounts maken, en met elk account weer
 // tien spelers en vijf poules (zie "Misbruik tegengaan" in schema.sql).
 //
-// Onzichtbaar: Turnstile kijkt in de browser of er een mens zit en geeft een
+// Managed: Turnstile kijkt in de browser of er een mens zit en geeft een
 // token, zonder puzzel. Alleen als hij twijfelt, verschijnt er onderin een
-// vakje om aan te vinken.
+// vakje om aan te vinken (appearance: interaction-only). Liever dat dan
+// Invisible, waar een echte speler die Cloudflare verdacht vindt alleen een
+// foutmelding krijgt.
 //
 // Gebruik: `await window.ptrCaptcha()` geeft een vers token, of undefined als
 // er geen site key is of Turnstile niet laadt. Een token werkt maar één keer,
@@ -21,9 +23,10 @@
 // Volgorde (BEDIENING.md §7b): eerst de site key hieronder, pas daarna
 // captcha aan in Supabase. Andersom kan niemand meer inloggen.
 (() => {
-  // De site key van de Turnstile-widget voor predicttherace.com (Cloudflare,
-  // Turnstile, je widget). Openbaar, net als de anon key. Leeg = uit.
-  const SITE_KEY = '';
+  // De site key van de Turnstile-widget "Predict the Race" (Cloudflare,
+  // Turnstile; modus Managed, hostnames predicttherace.com en
+  // www.predicttherace.com). Openbaar, net als de anon key. Leeg = uit.
+  const SITE_KEY = '0x4AAAAAAFZfPU0x8aMvrBQQ';
   const API = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
   // Zo lang wachten we op een token. Een vakje aanvinken kost een mens een
   // paar seconden; daarna gaat de aanroep zonder token, en zegt Supabase nee.
