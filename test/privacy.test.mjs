@@ -99,6 +99,12 @@ if (await page.$('[data-lid]')) {
   if (await page.$('#rondleidingweg')) await page.click('#rondleidingweg');
 }
 await page.waitForSelector('[data-race], .speler');
+// Het aanmelden haalt eerst een Turnstile-token (turnstile.js); de claim kan
+// dus net na het scherm binnenkomen. Wachten op de claim zelf, niet op het scherm.
+await page.waitForFunction(() => globalThis.__db.pool_members.find((l) => l.display_name === 'Danny')?.user_id,
+  null, { timeout: 15000 }).catch(() => {});
+await page.waitForSelector('[data-weergave="profiel"], #rondleidingweg');
+if (await page.$('#rondleidingweg')) await page.click('#rondleidingweg');
 check('na het verwijderen kun je jezelf gewoon weer aanwijzen',
   (await speler('Danny')).user_id !== null, JSON.stringify(await speler('Danny')));
 
