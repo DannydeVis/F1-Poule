@@ -1185,9 +1185,13 @@ mailadres. Wie al een sessie heeft, merkt niets.
 2. **Een Turnstile-widget maken.** Log in bij Cloudflare (een gratis account
    is genoeg; je domein hoeft niet bij Cloudflare te staan), kies Turnstile,
    "Add widget". Naam: Predict the Race. Hostnames: `predicttherace.com` en
-   `www.predicttherace.com`. Widget mode: **Invisible**. Opslaan. Je krijgt een
+   `www.predicttherace.com`. Widget mode: **Managed** (bijna niemand ziet iets;
+   alleen bij twijfel een vakje om aan te vinken, en daar is de app op
+   gebouwd). "Skip future security rule challenges" uit: dat werkt alleen
+   als de site via Cloudflare loopt. Opslaan. Je krijgt een
    **site key** (begint met `0x`, openbaar) en een **secret key** (geheim).
-3. **De site key in de app.** Geef mij de site key, of zet hem zelf in
+3. **De site key in de app.** Gedaan op 17 oktober: `0x4AAAAAAFZfPU0x8aMvrBQQ`
+   staat in `turnstile.js`. Voor een nieuwe widget: geef mij de site key, of zet hem zelf in
    `turnstile.js` op GitHub, bovenaan: `const SITE_KEY = '0x...';`. Wacht tot
    de site bijgewerkt is (Actions, een paar minuten). Controle: open de app in
    een privévenster, doe mee met een poule; dat moet gewoon lukken. Vanaf nu

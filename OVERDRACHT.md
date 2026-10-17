@@ -10879,3 +10879,15 @@ de open poule op 200 zet en een tweede run de keuze van het beheer laat staan.
 key, secret key in Supabase, captcha aan). Stap 1 (schema.sql) doe ik na het
 mergen.
 
+
+**Nagekomen (17 oktober, avond):** schema.sql staat in Supabase (Danny draaide
+het in de SQL Editor; de Supabase-koppeling blijft hangen op elk stuk met
+`delete` of `drop`, want daar wil hij een bevestiging voor). De widget heet
+"Predict the Race", modus **Managed** in plaats van Invisible: bij Invisible
+krijgt een echte speler die Cloudflare verdacht vindt alleen een foutmelding,
+bij Managed een vakje (`appearance: interaction-only` in `turnstile.js`). De
+site key `0x4AAAAAAFZfPU0x8aMvrBQQ` staat in `turnstile.js`. De tests laten
+Cloudflare standaard weg (`test/hulp.mjs` breekt elk verzoek naar
+challenges.cloudflare.com af); `misbruik.test.mjs` zet voor de gevallen
+zonder site key een `turnstile.js` met lege sleutel klaar. Captcha in
+Supabase gaat pas aan als dit live staat.

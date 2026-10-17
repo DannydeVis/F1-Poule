@@ -50,11 +50,15 @@ check('en het is eerlijk over het enige dat nog van buiten komt',
 // om — en dat is precies de bedoeling. De dynamische import van de
 // supabase-client staat niet in de markup en is hier vervangen door de
 // nabootsing; die staat wél in de verklaring genoemd.
+// Eén uitzondering sinds 17 oktober: Cloudflare Turnstile bij het aanmelden
+// (turnstile.js). Die staat in de verklaring, dus die mag, en verder niets.
 const vreemd = await page.evaluate(() => [...document.querySelectorAll('link[href], script[src], img[src]')]
   .map((e) => e.getAttribute('href') || e.getAttribute('src'))
-  .filter((u) => /^https?:\/\//.test(u ?? '')));
-check('en dat klopt: de pagina haalt niets bij een andere host op',
+  .filter((u) => /^https?:\/\//.test(u ?? ''))
+  .filter((u) => !u.startsWith('https://challenges.cloudflare.com/turnstile/')));
+check('en dat klopt: de pagina haalt niets bij een andere host op, behalve Turnstile',
   vreemd.length === 0, vreemd.join(' | ') || '(niets)');
+check('en Turnstile staat in de verklaring', verklaring.includes('Cloudflare Turnstile'));
 check('het verschil tussen de twee manieren van weggaan staat erbij',
   verklaring.includes('zodat de stand van de anderen blijft kloppen')
     && verklaring.includes('niet terug te draaien'));
