@@ -353,9 +353,22 @@ begin
     raise exception 'gezakt: anon of authenticated heeft het recht om poules toe te voegen of weg te gooien'; end if;
   raise notice 'ok: rechtstreeks een poule in de tabel zetten kan niet, ook niet met een extra policy';
 
+  -- Sinds 17 oktober niet meer zonder sessie: met alleen de anon key kon een
+  -- script anders onbeperkt poules aanmaken. De app logt eerst anoniem in.
+  gelukt := false;
+  begin
+    perform public.poule_aanmaken('Zonder sessie', null, 'Kees', array['race_top10']);
+    gelukt := true;
+  exception when others then
+    if sqlerrm not like '%niet aangemeld%' then raise; end if;
+  end;
+  if gelukt then raise exception 'gezakt: een poule aanmaken kan nog zonder sessie'; end if;
+  raise notice 'ok: zonder sessie geen poule';
+
+  perform set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003"}', true);
   if public.poule_aanmaken('Via de functie', null, 'Kees', array['race_top10']) -> 'poule' ->> 'id' is null then
-    raise exception 'gezakt: een poule aanmaken via poule_aanmaken() kan niet meer zonder account'; end if;
-  raise notice 'ok: een poule aanmaken kan zonder account, via poule_aanmaken()';
+    raise exception 'gezakt: een poule aanmaken via poule_aanmaken() kan niet meer, ook niet met een sessie'; end if;
+  raise notice 'ok: een poule aanmaken kan met een (anonieme) sessie, via poule_aanmaken()';
 
   -- De poule waar de stappen hieronder mee verder gaan, klaargezet door de
   -- beheerder van de database zelf.

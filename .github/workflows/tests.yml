@@ -262,6 +262,13 @@ jobs:
           psql -d periodes -v ON_ERROR_STOP=1 -f schema.sql
           psql -d periodes -v ON_ERROR_STOP=1 -f test/periodes.test.sql
 
+      - name: misbruik — sessie, limieten, woordfilter en de teller
+        run: |
+          createdb misbruik
+          psql -d misbruik -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d misbruik -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d misbruik -v ON_ERROR_STOP=1 -f test/misbruik.test.sql
+
       - name: reservekopie — een kopie komt ook echt terug
         run: |
           createdb terug

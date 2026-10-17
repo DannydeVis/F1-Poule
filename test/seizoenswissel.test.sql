@@ -23,6 +23,10 @@ declare
   jaar     int;
   uit      jsonb;
 begin
+  -- poule_aanmaken() wil een sessie (17 oktober); de app heeft er altijd een.
+  insert into auth.users (id) values ('5e550000-0000-0000-0000-000000000001') on conflict do nothing;
+  perform set_config('request.jwt.claims', '{"sub":"5e550000-0000-0000-0000-000000000001"}', true);
+
   -- ---------------------------------------------------------------
   --  1. een lege kalender
   -- ---------------------------------------------------------------

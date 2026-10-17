@@ -793,5 +793,12 @@
  "team": "Team",
  "totaal": "gesamt",
  "Herinner ze": "Erinnern",
- "de top-tienen, ook van de sprint, plus drie losse vragen": "die Top 10, auch im Sprint, plus drei Zusatzfragen"
+ "de top-tienen, ook van de sprint, plus drie losse vragen": "die Top 10, auch im Sprint, plus drei Zusatzfragen",
+ "De beveiligingscontrole lukte niet. Probeer het opnieuw; blokkeert je browser challenges.cloudflare.com, zet dat dan even uit.": "Die Sicherheitsprüfung hat nicht geklappt. Versuch es noch einmal; wenn dein Browser challenges.cloudflare.com blockiert, erlaube es kurz.",
+ "De app kon je niet aanmelden. Herlaad de pagina en probeer het opnieuw.": "Die App konnte dich nicht anmelden. Lade die Seite neu und versuch es noch einmal.",
+ "Vanaf dit toestel staan er al 10 spelers in deze poule. Laat de anderen zich op hun eigen telefoon aanmelden.": "Von diesem Gerät aus sind schon 10 Spieler in dieser Runde. Die anderen melden sich auf ihrem eigenen Handy an.",
+ "Deze poule is vol: er mogen hoogstens {n} spelers in.": "Diese Runde ist voll: Es dürfen höchstens {n} Spieler mitmachen.",
+ "Je hebt vandaag al 5 poules aangemaakt. Morgen kan het weer.": "Du hast heute schon 5 Runden erstellt. Morgen geht es wieder.",
+ "Die naam kan niet in een openbare poule. Kies een andere.": "Dieser Name geht in einer öffentlichen Runde nicht. Wähle einen anderen.",
+ "<b>Tegen bots</b><br>Als de app een account voor je maakt of je inlogt met je mailadres, kijkt Cloudflare Turnstile of er een mens achter het scherm zit. Meestal merk je daar niets van. Cloudflare ziet daarbij je IP-adres en gegevens over je browser, gebruikt die alleen voor deze controle en zet geen cookies om je te volgen.": "<b>Gegen Bots</b><br>Wenn die App ein Konto für dich anlegt oder dich mit deiner E-Mail-Adresse anmeldet, prüft Cloudflare Turnstile, ob ein Mensch vor dem Bildschirm sitzt. Meistens merkst du davon nichts. Cloudflare sieht dabei deine IP-Adresse und Angaben zu deinem Browser, nutzt sie nur für diese Prüfung und setzt keine Cookies, um dir zu folgen."
 }
