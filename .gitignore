@@ -1,3 +1,7 @@
 # Alleen nodig om de tests te draaien; de poule zelf heeft geen npm nodig.
 node_modules/
 package-lock.json
+
+# Een geopende reservekopie (scripts/reservekopie.mjs open): nooit in de repo.
+reservekopie/
+*.ptrk

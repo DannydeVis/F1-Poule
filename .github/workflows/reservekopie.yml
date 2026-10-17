@@ -1,0 +1,43 @@
+name: Reservekopie
+
+# Elke nacht een versleutelde kopie van de database, bewaard als bijlage bij
+# de run (90 dagen). Supabase op het gratis plan maakt er zelf geen die je
+# kunt terughalen. Zie scripts/reservekopie.mjs en BEDIENING.md,
+# "Reservekopie".
+#
+# De kopie komt nooit in de repo: die is openbaar. Ook de bijlage is voor
+# iedereen met een GitHub-account te downloaden, daarom is hij versleuteld
+# met RESERVEKOPIE_WACHTWOORD.
+
+on:
+  schedule:
+    - cron: '41 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  kopie:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Database ophalen en versleutelen
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          RESERVEKOPIE_WACHTWOORD: ${{ secrets.RESERVEKOPIE_WACHTWOORD }}
+        run: node scripts/reservekopie.mjs
+
+      - name: Bewaren bij de run
+        uses: actions/upload-artifact@v4
+        with:
+          name: reservekopie-${{ github.run_id }}
+          path: reservekopie/*.ptrk
+          retention-days: 90
+          if-no-files-found: error

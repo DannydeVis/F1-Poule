@@ -262,6 +262,13 @@ jobs:
           psql -d periodes -v ON_ERROR_STOP=1 -f schema.sql
           psql -d periodes -v ON_ERROR_STOP=1 -f test/periodes.test.sql
 
+      - name: reservekopie — een kopie komt ook echt terug
+        run: |
+          createdb terug
+          psql -d terug -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d terug -v ON_ERROR_STOP=1 -f schema.sql
+          node test/reservekopie-terugzetten.mjs terug
+
       # De afscherming uit fase 0: met de publieke anon key mag je alleen zien
       # wat bij een poule hoort waar je zelf in zit. Deze test zet een tweede
       # poule neer waar de speler niets mee te maken heeft, en controleert

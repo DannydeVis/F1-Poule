@@ -10743,3 +10743,50 @@ is veranderd).
 Tests: `poule-aanmaken.test.mjs` (Klassiek heeft de sprint, los genoemd, max
 145; een nieuwe poule heeft `autofill_vanaf`; "182 punten al gevraagd") en
 `seizoenswissel.test.sql` (een nieuwe poule heeft een recente `autofill_vanaf`).
+
+## Reservekopie van de database (17 oktober)
+
+Danny vroeg of er een reservekopie moest komen, "voor als er ook maar iets
+fout gaat: een AI die een fout maakt, hacks". Er was er geen: Supabase op het
+gratis plan maakt geen kopie die je zelf kunt terughalen, en de code staat wel
+in git maar de inzendingen van spelers nergens anders.
+
+Nu: `scripts/reservekopie.mjs` haalt elke tabel uit `public` op met de
+service-sleutel (PostgREST, in stukken van duizend), pakt het in met gzip en
+versleutelt het met AES-256-GCM (sleutel via scrypt uit
+`RESERVEKOPIE_WACHTWOORD`). `.github/workflows/reservekopie.yml` draait dat
+elke nacht en bewaart het bestand 90 dagen als bijlage bij de run; niets komt
+in de repo. Versleuteld omdat bijlagen van een openbare repo voor iedereen met
+een GitHub-account te downloaden zijn.
+
+Het script zakt liever dan een waardeloze kopie te maken: zonder (of met een
+te kort) wachtwoord, met de anon-sleutel (aan de rol in de JWT of het
+voorvoegsel `sb_publishable_`; met die sleutel geven de policies zonder fout
+bijna niets terug), met een lege races-tabel en met poules zonder spelers.
+
+`node scripts/reservekopie.mjs open <bestand>` schrijft een `.json` en een
+`.sql`. De SQL vult aan (`on conflict do nothing`), in één transactie met
+`session_replication_role = replica` (anders weigert de deadline-trigger
+oude antwoorden; op Supabase mag de rol postgres dit, nagekeken), en zet de
+tellers van races en sync_runs voorbij het hoogste nummer. `TABELLEN` staat
+in terugzetvolgorde; de test houdt hem gelijk met schema.sql.
+
+Niet erin: `auth.users` (niet via de API). Na een ramp waarin accounts weg
+zijn, hangen spelers aan een oud account; BEDIENING §13a zegt hoe dat recht
+komt.
+
+**Danny moet:** het secret `RESERVEKOPIE_WACHTWOORD` zetten (tot dan is de
+nachtelijke run rood), en main beschermen met een ruleset (geen force-push,
+niet verwijderen). Dat laatste kon ik niet zelf: de GitHub-proxy van deze
+sessie laat geen schrijven naar repo-instellingen toe.
+
+Tests: `reservekopie.test.mjs` (38 checks) en `reservekopie-terugzetten.mjs`
+(nieuwe stap in de schema-job: vullen, ophalen, ramp, terugzetten, alles
+precies terug).
+
+Bijvangst bij het laden van `poule_aanmaken`: in de echte database staan
+functies die niet uit schema.sql komen (`admin_dashboard`, `admin_accounts`,
+`admin_address`, `admin_day`, `admin_gate`, `account_items_cap`,
+`account_sync`, `delete_my_account`, `is_admin`) en tabellen `site_admins` en
+`account_items` (leeg). Waarschijnlijk een eerdere opzet. Niet aangeraakt.
+
