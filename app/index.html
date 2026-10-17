@@ -3465,8 +3465,8 @@ const ENGELS = Object.fromEntries([
    'just the two top tens'],
   ['Klassiek',
    'Classic'],
-  ['de top-tienen plus drie losse vragen',
-   'the top tens plus three extra questions'],
+  ['de top-tienen, ook van de sprint, plus drie losse vragen',
+   'the top tens, the sprint too, plus three extra questions'],
   ['Gevorderd',
    'Advanced'],
   ['alles wat er is',
@@ -6046,8 +6046,12 @@ const GEBOUWD = ['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole',
 //
 // Drie dingen die bewust zo zijn:
 //
-//   Het staat uit, tenzij de poulebaas het aanzet. Dit verandert de spelregels
-//   van een poule, en dat is niet aan de app.
+//   Een nieuwe poule begint ermee aan (sinds 17 oktober, Danny: "als iemand
+//   wat vergeet in te vullen, elk weekend random"). poule_aanmaken() zet
+//   autofill_vanaf op het moment van aanmaken. De poulebaas kan het uitzetten;
+//   een bestaande poule waar het uit stond, blijft zo tot de poulebaas het
+//   aanzet. Dat verandert de spelregels van die poule, en dat is niet aan de
+//   app.
 //
 //   Het is een moment en geen vinkje. `autofill_vanaf` bewaart wanneer het
 //   aanging, en alleen deadlines daarna tellen mee. Anders zou aanzetten
@@ -6802,8 +6806,11 @@ function kopieerknop(waar, knopKies, veldKies, maakTekst) {
 const PRESETS = {
   simpel:    { naam:'Simpel',    uitleg:'alleen de twee top-tienen',
                vragen:['quali_top10', 'race_top10'] },
-  klassiek:  { naam:'Klassiek',  uitleg:'de top-tienen plus drie losse vragen',
-               vragen:['quali_top10', 'race_top10', 'winnaar', 'pole', 'snelste_ronde'] },
+  // Klassiek kreeg op 17 oktober de sprint erbij: in 2027 zijn er tien
+  // sprintweekenden, en zonder sprint sloeg Klassiek die sessies over. Een
+  // bestaande poule houdt zijn vragenset (die ligt vast zodra er gereden is).
+  klassiek:  { naam:'Klassiek',  uitleg:'de top-tienen, ook van de sprint, plus drie losse vragen',
+               vragen:['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole', 'snelste_ronde'] },
   gevorderd: { naam:'Gevorderd', uitleg:'alles wat er is',
                vragen:['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole',
                        'snelste_ronde', 'snelste_pitstop', 'teamgenoot_duels',

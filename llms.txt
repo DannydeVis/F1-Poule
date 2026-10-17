@@ -101,14 +101,14 @@ Season questions (once per year, scored at the end of the season):
 | Number of different race winners | 30 |
 | Which team finishes fourth | 30 |
 
-The league admin chooses what counts: Simple (just the two top 10s, 100 points per weekend), Classic (plus winner, pole and fastest lap, 145) or Advanced (everything, 202 per weekend plus sprint and season).
+The league admin chooses what counts: Simple (just the two top 10s, 100 points per weekend), Classic (plus winner, pole and fastest lap, 145 per weekend plus sprint) or Advanced (everything, 202 per weekend plus sprint and season).
 
 ## The most complete F1 league. Or the simplest.
 
 Switch everything on and you predict fourteen questions: from pole and fastest pit stop to safety cars, red flags and teammate duels. Rather keep it easy? Stick to two top 10s and everyone is done in a minute.
 
 - Simple (2 questions, 100 points per weekend): Qualifying top 10, Race top 10
-- Classic (5 questions, 145 points per weekend): Qualifying top 10, Race top 10, Race winner, Pole position, Fastest lap
+- Classic (6 questions, 145 points per weekend): Qualifying top 10, Race top 10, Sprint top 10, Race winner, Pole position, Fastest lap
 - Advanced (14 questions, 202 points per weekend): Qualifying top 10, Race top 10, Sprint top 10, Race winner, Pole position, Fastest lap, Fastest pit stop, Teammate battles, Number of safety cars, Red flag, yes or no, World champion, Constructors' champion, Number of different race winners, Which team finishes fourth
 
 Or build your own league: switch each question on or off, with its points shown. Once the first race has been run the set is locked, so every weekend stays fairly comparable.
@@ -153,7 +153,7 @@ The start of the session. The qualifying top 10 closes when qualifying starts, t
 
 ### What if I forget a race?
 
-Then you score nothing that weekend, unless the league admin has switched on auto-fill: then the app randomly fills in whatever you left blank, from the top 10 to the extra questions.
+Then the app randomly fills in whatever you left blank, from the top 10 to the extra questions, different every weekend. In a new league this is on by default. If the league admin has switched it off, you score nothing that weekend.
 
 ### What is a joker?
 

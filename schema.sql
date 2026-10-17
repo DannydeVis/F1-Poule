@@ -1782,8 +1782,11 @@ begin
   -- die in november begonnen werd een poule voor 2027 -- met de laatste races
   -- van 2026 nog voor de deur. Zit het seizoen erop en is het volgende er nog
   -- niet, dan het laatste dat er is; de poulebaas schuift door zodra het kan.
-  insert into public.pools (name, beschrijving, season)
-  values (btrim(p_naam), nullif(btrim(coalesce(p_beschrijving, '')), ''),
+  -- autofill_vanaf: automatisch invullen staat in een nieuwe poule meteen aan
+  -- (17 oktober). Wie iets vergeet krijgt een willekeurig antwoord, elk
+  -- weekend anders; de poulebaas kan het uitzetten.
+  insert into public.pools (name, beschrijving, autofill_vanaf, season)
+  values (btrim(p_naam), nullif(btrim(coalesce(p_beschrijving, '')), ''), now(),
           coalesce(
             (select min(season) from public.races
               where not afgelast and deadline_race > now()),

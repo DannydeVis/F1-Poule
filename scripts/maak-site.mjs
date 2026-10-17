@@ -1048,7 +1048,7 @@ ${jsonLd(code, datum)}
         <h3>${esc(naam)}</h3>
         <p class="tagline">${esc(regel)}</p>
         <p class="aantal"><b data-tel="${PRESET_VRAGEN[n].length}">${PRESET_VRAGEN[n].length}</b> ${esc(t.niveaus.vragen)}</p>
-        <p class="weekend">${esc(vul(t.niveaus.perWeekend, { n: PRESET_PUNTEN[n] }))}${meest ? ` · ${esc(t.niveaus.extra)}` : ''}</p>
+        <p class="weekend">${esc(vul(t.niveaus.perWeekend, { n: PRESET_PUNTEN[n] }))}${meest ? ` · ${esc(t.niveaus.extra)}` : PRESET_VRAGEN[n].includes('sprint_top10') ? ` · ${esc(t.niveaus.extraSprint)}` : ''}</p>
         <ul class="chips">${PRESET_VRAGEN[n].map((id) => `<li>${esc(vraagNaam(t, id))}</li>`).join('')}</ul>
       </li>`;
     }).join('')}

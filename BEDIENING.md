@@ -253,7 +253,7 @@ Drie knoppen, groot en tikbaar:
 | Preset | Bevat | Punten per weekend |
 |---|---|---|
 | **Simpel** | Top 10 kwalificatie, top 10 race | 100 |
-| **Klassiek** | + winnaar, pole, snelste ronde | 145 |
+| **Klassiek** | + winnaar, pole, snelste ronde, top 10 sprint | 145 (+25 op een sprintweekend) |
 | **Gevorderd** | + safety cars, rode vlag, snelste pitstop, teamgenoot-duels, top 10 sprint, de vier seizoensvragen | 202 |
 
 Daaronder een regel **Zelf samenstellen**, die pas een lijst met vinkjes
@@ -269,6 +269,10 @@ langs — zie hieronder. Draai je `schema.sql` en zie je onderaan de regel
 vierentwintig weekenden; hem meetellen zou het maximum achttien keer per
 seizoen te hoog zetten. Staat de vraag aan, dan komt er een regel onder:
 "Op een sprintweekend komt daar 25 bij, voor de top 10 van de sprint."
+
+Klassiek heeft sinds 17 oktober 2026 ook de top 10 van de sprint. In 2027 zijn
+er tien sprintweekenden, en zonder sprint sloeg Klassiek die sessies over.
+Bestaande poules houden hun vragenset; die ligt vast zodra er gereden is.
 
 Standaard staat **Klassiek** geselecteerd. Wie doorklikt zonder na te denken
 krijgt daarmee iets dat leuker is dan alleen twee top-tienen, zonder overweldigd
@@ -604,7 +608,8 @@ Poule → beheer alleen-lezen, met een regel eronder:
 Technisch: een veld `questions_locked` op de poule, gezet door de scoringslogica
 zodra de eerste race een uitslag krijgt.
 
-**Een poule zonder sprint.** Simpel en Klassiek spelen de sprint niet mee. Zo'n
+**Een poule zonder sprint.** Simpel speelt de sprint niet mee, en Klassiek tot
+17 oktober 2026 ook niet. Zo'n
 poule krijgt op een sprintweekend geen sprint-tab, geen S in de kalender en
 geen teller naar de sprint: wat openstaat is de kwalificatie (sinds 4 oktober;
 daarvoor stond er een leeg sprint-tabblad). Een sessie met alleen een losse
@@ -626,7 +631,10 @@ dat niet: Singapore is de eerste sprint sinds die datum.
 
 ### 6a. Automatisch invullen bij vergeten
 
-Staat uit. De poulebaas zet hem aan in Poule → beheer, en vanaf dat moment
+Staat in een nieuwe poule meteen aan (sinds 17 oktober 2026: `poule_aanmaken()`
+zet `autofill_vanaf` op het moment van aanmaken). De poulebaas kan hem uitzetten
+in Poule → beheer. Poules van daarvoor houden hun stand: daar stond hij uit tot
+de poulebaas hem aanzette. Zolang hij aanstaat
 krijgt wie een top 10 vergeet een **willekeurige top 10** uit de coureurs van
 dat weekend, zichtbaar gemarkeerd als automatisch. Dat levert een paar punten
 op: genoeg om niet op nul te staan, nooit genoeg om vergeten lonend te maken.

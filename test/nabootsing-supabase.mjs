@@ -1052,7 +1052,8 @@ const functies = {
     }
     const poule = { id: 'pool-' + (store.pools.length + 1), name: String(p_naam).trim(),
                     beschrijving: String(p_beschrijving ?? '').trim() || null,
-                    season: 2026, join_code: 'ABC123', owner_member_id: null };
+                    season: 2026, join_code: 'ABC123', owner_member_id: null,
+                    autofill_vanaf: new Date().toISOString() };
     store.pools.push(poule);
     const ik = { member_id: 'lid-' + (store.pool_members.length + 1), pool_id: poule.id,
                  display_name: String(p_speler).trim(), user_id: wieBenIk(), aangemaakt_door: wieBenIk() };

@@ -40,6 +40,12 @@ begin
       uit -> 'poule' ->> 'season';
   end if;
   raise notice 'ok: en een poule zonder kalender begint in het jaar van vandaag';
+  if (uit -> 'poule' ->> 'autofill_vanaf') is null
+     or (uit -> 'poule' ->> 'autofill_vanaf')::timestamptz < now() - interval '1 minute' then
+    raise exception 'gezakt: automatisch invullen staat niet meteen aan in een nieuwe poule (%)',
+      uit -> 'poule' ->> 'autofill_vanaf';
+  end if;
+  raise notice 'ok: automatisch invullen staat in een nieuwe poule meteen aan';
 
   -- ---------------------------------------------------------------
   --  2. november: 2026 heeft nog een race, 2027 staat er al

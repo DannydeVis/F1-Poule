@@ -67,6 +67,15 @@ check('de drie voorstellen staan er met hun punten',
 
 const voorgekozen = await page.getAttribute('.preset.aan', 'data-preset');
 check('Klassiek staat standaard aan', voorgekozen === 'klassiek', String(voorgekozen));
+// Sinds 17 oktober zit de sprint in Klassiek (in 2027 tien sprintweekenden).
+// Hij telt niet mee in het weekendmaximum, maar wordt er apart bij genoemd.
+{
+  const klassiek = await tekst('.veldblok');
+  check('Klassiek heeft de sprint erbij, apart genoemd naast het weekendmaximum',
+    /Op een sprintweekend komt daar 25 bij/.test(klassiek)
+      && (await page.textContent('.somregel .getal')).trim() === '145',
+    klassiek.match(/Op een sprintweekend[^.]*\./)?.[0] ?? 'die regel staat er niet');
+}
 
 // De losse vragen zitten achter een knop: één vraag per scherm, geen muur.
 check('de losse vragen staan dichtgeklapt',
@@ -97,13 +106,13 @@ const binnenkort = await page.$$eval('.vraagregel', (n) =>
 check('een vraag die de app nog niet kan stellen heet binnenkort',
   binnenkort.length === 1 && binnenkort[0] === 'regen',
   binnenkort.join(', ') || 'niets gemarkeerd');
-// Klassiek plus safety cars is 157, en dat wordt allemaal al gevraagd; pas
+// Klassiek (met de sprint) plus safety cars is 182, en dat wordt allemaal al gevraagd; pas
 // als je de verzonnen vraag aanzet klopt het totaal niet meer met wat er
 // echt gevraagd wordt.
 await page.click('[data-vraag-aan="regen"]');
 const voet = await tekst('.veldblok');
 check('en de voet zegt hoeveel er nu al gevraagd wordt',
-  /Daarvan wordt nu 157 punten al gevraagd/.test(voet),
+  /Daarvan wordt nu 182 punten al gevraagd/.test(voet),
   voet.match(/Daarvan wordt nu[^.]*\./)?.[0] ?? 'die regel staat er niet');
 await page.click('[data-vraag-aan="regen"]');
 
@@ -134,7 +143,7 @@ check('bij een gewone set staat er geen waarschuwing',
   (await page.$('.waarschuwing')) === null);
 
 // Alles uit behalve de twee gokvragen: dan hangt 100% van geluk af.
-for (const id of ['quali_top10', 'race_top10', 'winnaar', 'pole', 'snelste_ronde']) {
+for (const id of ['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole', 'snelste_ronde']) {
   await page.click(`[data-vraag-aan="${id}"]`);
 }
 const gokMelding = await tekst('.waarschuwing');
@@ -189,6 +198,9 @@ check('de aanmaker is meteen het eerste lid', ik?.display_name === 'Danny',
   JSON.stringify(ik));
 check('en staat als poulebaas genoteerd', nieuw.owner_member_id === ik.member_id,
   `${nieuw.owner_member_id} tegen ${ik.member_id}`);
+check('automatisch invullen staat in een nieuwe poule meteen aan',
+  !!nieuw.autofill_vanaf && Date.now() - Date.parse(nieuw.autofill_vanaf) < 10 * 60 * 1000,
+  String(nieuw.autofill_vanaf));
 
 const vinkjes = await page.evaluate(() => globalThis.__db.pool_questions);
 const mijne = vinkjes.filter((v) => v.pool_id === nieuw.id).map((v) => v.question_id);
