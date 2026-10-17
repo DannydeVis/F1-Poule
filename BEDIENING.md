@@ -740,6 +740,15 @@ voor te doen, en er staat nergens meer een jaartal dat met de hand bijgewerkt
 moet worden. Schuif je door vóórdat OpenF1 hem heeft, dan staat er "nog geen
 races — de kalender wordt automatisch opgehaald", en dat klopt dan ook.
 
+**De coureurs van het nieuwe jaar.** OpenF1 heeft de races van volgend jaar
+al in het najaar, maar de coureurs pas rond het eerste weekend. Tot die tijd
+krijgen de races van het nieuwe jaar voorlopig de coureurs van de laatste race
+van het vorige seizoen, zodat iedereen de seizoensvragen (wereldkampioen,
+constructeurs) en de eerste top 10 al kan invullen. Binnen veertien dagen voor
+elke race haalt de sync de echte lijst op; een nieuwe coureur of een nieuw team
+staat er dan vanzelf in. Wie bij de seizoensvragen een coureur koos die niet
+meer rijdt, kan dat aanpassen tot de start van het eerste weekend.
+
 Een poule die in november begint, speelt de laatste races van dit jaar mee; een
 poule die na de finale begint, begint in het nieuwe jaar (als die kalender er
 al is).

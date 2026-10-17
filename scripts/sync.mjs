@@ -396,7 +396,7 @@ function sessiesVanRace(race, weekenden) {
 const UITSLAGVELDEN = ['quali_result', 'race_result', 'fastest_lap',
                        'fastest_pitstop', 'safety_cars', 'rode_vlag'];
 
-async function uitslagen(races, jaar) {
+async function uitslagen(races, jaar, vorig = []) {
   // Wanneer mogen we een sessie gaan opvragen? Deze regel telt 45 minuten
   // vanaf de START van de sessie, niet vanaf het einde — deadline_quali en
   // deadline_race zijn allebei het begintijdstip. Er stond hier "OpenF1 rekent
@@ -446,10 +446,13 @@ async function uitslagen(races, jaar) {
     const bron = wilLijst(race) && deelnemersUit(race, Date.now(), sessiesVanRace(race, weekenden));
     if (bron) await probeer(patch, 'drivers', () => deelnemers(bron), gemist);
     // Heeft OpenF1 nog geen coureurs bij deze race, en staat er ook nog niets,
-    // dan voorlopig de lijst van de vorige race. Anders kan niemand invullen.
-    // Zie voorlopigeLijst() in uitslagen.mjs.
-    if (bron && !patch.drivers && !(race.drivers ?? []).length) {
-      const leen = voorlopigeLijst(race, races);
+    // dan voorlopig de lijst van de vorige race, of van de laatste race van
+    // vorig seizoen. Anders kan niemand invullen. Zie voorlopigeLijst() in
+    // uitslagen.mjs. Ook voor een race die nog maanden weg is: lenen kost geen
+    // verzoek, en de seizoensvragen van volgend jaar gaan al bij de eerste
+    // race dicht.
+    if (!patch.drivers && !(race.drivers ?? []).length) {
+      const leen = voorlopigeLijst(race, races, vorig);
       if (leen) {
         patch.drivers = leen.drivers;
         console.log(`  ronde ${race.round} ${race.name}: voorlopig de coureurs van ${leen.naam},`
@@ -779,7 +782,7 @@ try {
   for (const jaar of plan.uitslagen) {
     const races = alle.filter((r) => r.season === jaar);
     console.log(`Uitslagen ${jaar} controleren voor ${races.length} races`);
-    await uitslagen(races, jaar);
+    await uitslagen(races, jaar, alle.filter((r) => r.season === jaar - 1));
   }
 
   // Opnieuw ophalen: uitslagen() heeft er net uitslagen bij gezet, en die
