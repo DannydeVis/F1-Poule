@@ -52,6 +52,9 @@
 <!-- Toestemming voor Google Analytics, gedeeld met de site. Zonder meet-ID
      doet het niets; zie toestemming.js en BEDIENING.md §17. -->
 <script src="../toestemming.js" defer></script>
+<!-- Cloudflare Turnstile voor het inloggen (captcha in Supabase Auth). Zonder
+     site key doet het niets; zie turnstile.js en BEDIENING.md §7b. -->
+<script src="../turnstile.js" defer></script>
 <style>
   /* ==========================================================
      Lettertypen, uit deze repo en niet bij Google vandaan
@@ -1835,12 +1838,26 @@ async function bestaandeSessie() {
   } catch { return zetAccount(null); }
 }
 
+// Een vers Turnstile-token voor één aanroep naar Supabase Auth (turnstile.js).
+// Een token werkt maar één keer, dus elke aanroep haalt een nieuwe. Zonder
+// site key, of als Turnstile niet laadt, undefined: dan gaat de aanroep
+// zonder token, en zegt Supabase nee zodra captcha daar aanstaat.
+async function captcha() {
+  if (DEMO) return undefined;
+  try { return await window.ptrCaptcha?.(); } catch { return undefined; }
+}
+
 // Nu is er wel een account nodig. Eén keer per toestel; daarna staat de
 // sessie in localStorage en komt hij via bestaandeSessie() terug.
+//
+// Sinds 17 oktober wil de database een sessie voor meedoen en aanmaken
+// (vereis_sessie() in schema.sql). Lukt dit niet, dan zegt maakSpeler() dat
+// in plaats van de database te vragen.
 async function zorgVoorAccount() {
   if (DEMO || !db || mijnUid) return mijnUid;
   try {
-    const { data, error } = await db.auth.signInAnonymously();
+    const { data, error } = await db.auth.signInAnonymously({
+      options: { captchaToken: await captcha() } });
     if (error) return null;
     return zetAccount(data?.user);
   } catch { return null; }
@@ -1945,7 +1962,8 @@ async function stuurInlogLink(mail) {
   try {
     const { error } = await db.auth.signInWithOtp({
       email: mail,
-      options: { shouldCreateUser: false, emailRedirectTo: inlogTerugLink() },
+      options: { shouldCreateUser: false, emailRedirectTo: inlogTerugLink(),
+                 captchaToken: await captcha() },
     });
     if (!error) return { fout: '', soort: 'inloggen' };
     const onbekend = error.code === 'otp_disabled' || /signups not allowed/i.test(String(error.message ?? ''));
@@ -1959,7 +1977,8 @@ async function stuurInlogLink(mail) {
   try {
     const { error } = await db.auth.signInWithOtp({
       email: mail,
-      options: { shouldCreateUser: true, emailRedirectTo: inlogTerugLink() },
+      options: { shouldCreateUser: true, emailRedirectTo: inlogTerugLink(),
+                 captchaToken: await captcha() },
     });
     return error ? { fout: uitlegAuth(error) } : { fout: '', soort: 'nieuw' };
   } catch (e) { return { fout: uitlegAuth(e) }; }
@@ -1972,7 +1991,8 @@ async function stuurInlogLink(mail) {
 async function inloggenMetMaillink({ sleutel, soort }) {
   vergeetLinkCode();
   try {
-    const { error } = await db.auth.verifyOtp({ token_hash: sleutel, type: soort });
+    const { error } = await db.auth.verifyOtp({ token_hash: sleutel, type: soort,
+      options: { captchaToken: await captcha() } });
     if (!error) return '';
     return error.code === 'otp_expired' || /expired|invalid/i.test(String(error.message ?? ''))
       ? T('Die link is al gebruikt of verlopen. Vraag een nieuwe mail aan.')
@@ -1990,7 +2010,8 @@ async function inloggenMetMaillink({ sleutel, soort }) {
 async function inloggenMetCode(mail, code) {
   if (DEMO || !db) return { fout: T('Inloggen kan niet in demomodus.') };
   try {
-    const { error } = await db.auth.verifyOtp({ email: mail, token: code, type: 'email' });
+    const { error } = await db.auth.verifyOtp({ email: mail, token: code, type: 'email',
+      options: { captchaToken: await captcha() } });
     if (error) return { fout: uitlegAuth(error) };
   } catch (e) { return { fout: uitlegAuth(e) }; }
   try { sessionStorage.setItem(NET_INGELOGD, '1'); } catch { /* dan als gewone herlaadactie */ }
@@ -2038,6 +2059,13 @@ function uitlegAuth(error) {
   // dezelfde zin, dus wij ook.
   if (code === 'otp_expired' || /token has expired or is invalid|otp.*(expired|invalid)/i.test(bericht)) {
     return T('Die code klopt niet of is verlopen. Vraag een nieuwe mail aan.');
+  }
+  // Turnstile (captcha in Supabase Auth): het token ontbrak, was al gebruikt
+  // of klopte niet. Meestal een blokkade van een adblocker of een trage
+  // verbinding; opnieuw proberen haalt een vers token.
+  if (/captcha/i.test(code) || /captcha/i.test(bericht)) {
+    return T('De beveiligingscontrole lukte niet. Probeer het opnieuw; '
+         + 'blokkeert je browser challenges.cloudflare.com, zet dat dan even uit.');
   }
   if (/rate.?limit|only request this after|too many/i.test(bericht) || /rate_limit/.test(code)) {
     return T('Er is net al een mail verstuurd. Wacht een minuutje en probeer het opnieuw.');
@@ -2101,13 +2129,19 @@ const alBezetDoorAccount = (error) =>
 // toestel opent. Dat is veel beter dan iemand niet laten meedoen omdat de
 // telefoon van een ander was.
 async function maakSpeler(poolId, naam) {
-  await zorgVoorAccount();
+  if (!(await zorgVoorAccount())) return { data: null, error: GEEN_SESSIE };
   // Via de functie: een insert met `.select()` erachter kan niet meer, want
   // `returning` heeft leesrecht nodig en op dit moment ben je nog geen lid.
   // De botsing hierboven zit nu in poule_meedoen() zelf -- het is een regel
   // van de database, niet van het scherm.
   return db.rpc('poule_meedoen', { p_pool: poolId, p_naam: naam });
 }
+
+// Wat de database zegt als er geen sessie is (vereis_sessie() in schema.sql).
+// Lukt het aanmelden al in de app niet, dan dezelfde fout zonder de database
+// te vragen, zodat uitleg() hem op één plek uitlegt.
+const GEEN_SESSIE = { code: 'P0001', hint: 'geen_sessie',
+                      message: 'Je bent niet aangemeld. Herlaad de app en probeer het opnieuw.' };
 
 // Speel ik als iemand die aan een ánder account hangt? Dan neemt de database
 // mijn wijzigingen niet meer aan. Dat kan legitiem zijn — dezelfde persoon op
@@ -4124,6 +4158,21 @@ const ENGELS = Object.fromEntries([
    'The league profile has been saved.'],
   ['Het profiel van de poule is weggehaald.',
    'The league profile has been removed.'],
+  // Misbruik tegengaan (17 oktober): Turnstile en de sloten in de database.
+  ['De beveiligingscontrole lukte niet. Probeer het opnieuw; blokkeert je browser challenges.cloudflare.com, zet dat dan even uit.',
+   'The security check did not work. Try again; if your browser blocks challenges.cloudflare.com, allow it for a moment.'],
+  ['De app kon je niet aanmelden. Herlaad de pagina en probeer het opnieuw.',
+   'The app could not sign you in. Reload the page and try again.'],
+  ['Vanaf dit toestel staan er al 10 spelers in deze poule. Laat de anderen zich op hun eigen telefoon aanmelden.',
+   'This device already has 10 players in this league. Let the others join on their own phones.'],
+  ['Deze poule is vol: er mogen hoogstens {n} spelers in.',
+   'This league is full: it can have at most {n} players.'],
+  ['Je hebt vandaag al 5 poules aangemaakt. Morgen kan het weer.',
+   'You have already created 5 leagues today. You can make another one tomorrow.'],
+  ['Die naam kan niet in een openbare poule. Kies een andere.',
+   'That name cannot be used in a public league. Choose another one.'],
+  ['<b>Tegen bots</b><br>Als de app een account voor je maakt of je inlogt met je mailadres, kijkt Cloudflare Turnstile of er een mens achter het scherm zit. Meestal merk je daar niets van. Cloudflare ziet daarbij je IP-adres en gegevens over je browser, gebruikt die alleen voor deze controle en zet geen cookies om je te volgen.',
+   '<b>Against bots</b><br>When the app creates an account for you or signs you in with your email address, Cloudflare Turnstile checks that there is a person behind the screen. Usually you notice nothing. Cloudflare sees your IP address and details about your browser, uses them only for this check and sets no cookies to follow you.'],
 ]);
 
 const TAALSLEUTEL = 'poule:taal';
@@ -5562,6 +5611,26 @@ function uitleg(error) {
          + 'Eén account kan niet twee keer in dezelfde stand staan.');
   }
   if (code === '23503') return T('Deze race of speler bestaat niet meer. Herlaad de app en probeer het opnieuw.');
+  // De sloten tegen misbruik (schema.sql, "Misbruik tegengaan"). De database
+  // geeft een vaste hint mee, zodat de uitleg in elke taal kan; de tekst van
+  // de database zelf is Nederlands.
+  const hint = String(error?.hint ?? '');
+  if (hint === 'geen_sessie') {
+    return T('De app kon je niet aanmelden. Herlaad de pagina en probeer het opnieuw.');
+  }
+  if (hint === 'spelers_per_account') {
+    return T('Vanaf dit toestel staan er al 10 spelers in deze poule. '
+         + 'Laat de anderen zich op hun eigen telefoon aanmelden.');
+  }
+  if (hint.startsWith('poule_vol')) {
+    return T('Deze poule is vol: er mogen hoogstens {n} spelers in.', { n: hint.split(':')[1] ?? '' });
+  }
+  if (hint === 'poules_per_dag') {
+    return T('Je hebt vandaag al 5 poules aangemaakt. Morgen kan het weer.');
+  }
+  if (hint === 'woordfilter') {
+    return T('Die naam kan niet in een openbare poule. Kies een andere.');
+  }
   const bericht = String(error?.message ?? '');
   if (GEEN_NET.test(bericht)) return T('Geen verbinding. Probeer het zo nog eens.');
   // Een eigen melding uit schema.sql ("De race is gesloten") is voor de speler
@@ -8872,6 +8941,11 @@ function privacyBlok() {
         + 'Analytics alleen als je daar ja op zegt. De lettertypen staan in de app zelf, dus daar '
         + 'gaat niets naartoe. Eén ding komt nog van buiten: de code waarmee de app '
         + 'met de database praat, van esm.sh. Die ziet daarbij je IP-adres.')}</p>
+      <p style="margin:0 0 10px">${T('<b>Tegen bots</b><br>'
+        + 'Als de app een account voor je maakt of je inlogt met je mailadres, '
+        + 'kijkt Cloudflare Turnstile of er een mens achter het scherm zit. Meestal merk je daar niets '
+        + 'van. Cloudflare ziet daarbij je IP-adres en gegevens over je browser, gebruikt die alleen voor '
+        + 'deze controle en zet geen cookies om je te volgen.')}</p>
       <p style="margin:0 0 10px">${T('<b>Tellen</b><br>'
         + 'Per dag telt de app hoe vaak hij geopend wordt, en welke accounts dat '
         + 'deden. Dat laatste alleen om te kunnen zien hoeveel mensen er meespelen, '
@@ -13644,7 +13718,7 @@ async function pouleAanmaken(m) {
   // een halve poule achter -- wel een poule maar geen speler, of wel een
   // speler en geen vragen. Nu is het één transactie die slaagt of niets doet.
   // Dat de aanmaker meteen poulebaas is dwingt de database nu zelf af.
-  await zorgVoorAccount();
+  if (!(await zorgVoorAccount())) throw new Error(uitleg(GEEN_SESSIE));
   const { data, error } = await db.rpc('poule_aanmaken', {
     p_naam: m.naam.trim(),
     p_beschrijving: m.beschrijving.trim() || null,

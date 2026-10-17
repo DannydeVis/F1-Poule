@@ -58,7 +58,7 @@ begin
   select count(*) into n from public.pool_members;
   if n <> 1 then raise exception 'gezakt: % spelers in plaats van 1', n; end if;
   select count(*) into n from public.pools;
-  if n <> 1 then raise exception 'gezakt: % poules in plaats van 1', n; end if;
+  if n <> 2 then raise exception 'gezakt: % poules in plaats van 2 (de poule en de open poule)', n; end if;
   select count(*) into n from public.races;
   if n <> 1 then raise exception 'gezakt: % races in plaats van 1', n; end if;
   raise notice 'ok: poule, speler en race zijn bewaard gebleven';
@@ -120,3 +120,29 @@ begin
   end if;
   raise notice 'ok: policies en een functie uit een vroege opzet zijn weg, ook zonder dat schema.sql hun namen kent';
 end $$;
+
+-- Het maximum aantal spelers (17 oktober): de eerste run zet de open poule op
+-- 200 en de rest op 500. Daarna blijft staan wat het beheer kiest, ook als
+-- schema.sql opnieuw draait.
+do $$
+begin
+  if (select max_spelers from public.pools where join_code = '80C98C') <> 200
+     or (select max_spelers from public.pools where join_code = 'RTM026') <> 500 then
+    raise exception 'gezakt: na de eerste run staan de maxima op % en % in plaats van 200 en 500',
+      (select max_spelers from public.pools where join_code = '80C98C'),
+      (select max_spelers from public.pools where join_code = 'RTM026');
+  end if;
+  raise notice 'ok: de eerste run zet de open poule op 200 spelers en de rest op 500';
+  update public.pools set max_spelers = 300 where join_code = '80C98C';
+end $$;
+\o /dev/null
+\ir ../schema.sql
+\o
+do $$
+begin
+  if (select max_spelers from public.pools where join_code = '80C98C') <> 300 then
+    raise exception 'gezakt: een tweede run van schema.sql zette het maximum van de open poule terug';
+  end if;
+  raise notice 'ok: een tweede run laat het maximum dat het beheer koos staan';
+end $$;
+

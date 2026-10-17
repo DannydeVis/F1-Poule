@@ -10790,3 +10790,92 @@ functies die niet uit schema.sql komen (`admin_dashboard`, `admin_accounts`,
 `account_sync`, `delete_my_account`, `is_admin`) en tabellen `site_admins` en
 `account_items` (leeg). Waarschijnlijk een eerdere opzet. Niet aangeraakt.
 
+## Misbruik tegengaan voor de publieke lancering (17 oktober)
+
+Danny: "Predict the Race gaat in 2027 publiek en de open poule (80C98C) staat
+op elke pagina. Zet misbruik dicht." Wat er kon: `poule_meedoen()` en
+`poule_aanmaken()` zijn security definer, uitvoerbaar door anon, en keken niet
+naar `auth.uid()`. Met alleen de anon key: onbeperkt spelers in elke poule
+(het id uit `poule_ophalen('80C98C')`) en onbeperkt poules. `tel_bezoek()` nam
+elk pad op `^[a-z0-9/_-]{1,40}$`.
+
+Wat er nu staat (schema.sql, blok "Misbruik tegengaan"; BEDIENING §7b):
+
+- **Sessie verplicht.** `vereis_sessie()` aan het begin van beide functies.
+  De app doet al `zorgVoorAccount()` (anoniem inloggen) vooraf; lukt dat niet,
+  dan geeft `maakSpeler()` / `pouleAanmaken()` meteen dezelfde fout als de
+  database (`GEEN_SESSIE`), zonder de database te vragen.
+- **Limieten.** 10 spelers per account per poule (`aangemaakt_door`), genoeg
+  voor een telefoon die rondgaat. `pools.max_spelers` (500, de open poule 200;
+  alleen de eerste run zet die waarden, daarna blijft staan wat het beheer
+  kiest). 5 poules per account per 24 uur, in een eigen tabel `aanmaak_log`
+  en niet via `owner_member_id`: een poule kan weg of van baas wisselen, en
+  een poulebaas kan zichzelf losmaken (dan wordt `aangemaakt_door` leeg),
+  waardoor de teller terug zou springen. De poule-rij gaat `for update` op
+  slot tijdens het tellen, en het aanmaken krijgt een advisory lock per
+  account, zodat twee gelijktijdige aanroepen niet allebei onder de grens
+  tellen. `max_spelers` kan de poulebaas niet zelf veranderen
+  (`pools_misbruik_bewaken`, want `pools` heeft een tabelbrede update-grant).
+- **Meldingen in zeven talen.** De database gooit een Nederlandse melding met
+  een vaste `hint` (geen_sessie, spelers_per_account, poule_vol:<n>,
+  poules_per_dag, woordfilter); `uitleg()` in de app vertaalt op de hint. Zo
+  hoeft de database geen talen te kennen, en blijft de melding leesbaar voor
+  wie de functie zelf aanroept.
+- **Woordfilter.** Alleen in openbare poules (Danny's wens; een vriendengroep
+  mag zichzelf noemen hoe ze wil). Triggers op `pools` en `pool_members`, dus
+  elke weg erin telt: de functies, de poulebaas via de API, het beheer. Ook de
+  omschrijving, want die staat in de lijst met openbare poules. Openbaar
+  worden kan pas als de namen erin netjes zijn. Normaliseren: kleine letters,
+  accenten eraf, 0/1/3/4/5/7/@/$ naar letters, de rest wordt een spatie.
+  Hele woorden, plus de naam zonder spaties (voor `k.u.t`); `*` voor een
+  voorvoegsel. Afgewogen tegen het Scunthorpe-probleem: geen losse substrings,
+  dus `Scunthorpe`, `Kutná Hora` en `Puttanesca` komen erdoor. Een woord uit
+  de beginlijst uitzetten gaat met `uit = true`, want de seed is `on conflict
+  do nothing` en zou een verwijderd woord terugzetten. `naam_verboden()` en
+  `naam_netjes()` zijn uitvoerbaar voor anon/authenticated, omdat de triggers
+  draaien als wie schrijft; daarmee leert iemand alleen of een naam door het
+  filter komt, en de lijst zelf blijft dicht.
+- **Bezoekteller.** Alleen `start` en `app`, de twee aanroepen van
+  `telBezoek()` in de app (de test houdt die twee lijsten gelijk). In Supabase
+  stonden ook alleen die twee.
+- **Turnstile.** `turnstile.js` in de hoofdmap, gedeeld door app en beheer
+  (zoals `toestemming.js`). Elke aanroep rendert een eigen onzichtbare widget
+  (`appearance: interaction-only`) en ruimt hem daarna op, dus elk token is
+  vers. Meegestuurd bij `signInAnonymously`, `signInWithOtp` (beide pogingen
+  in `stuurInlogLink`) en `verifyOtp` (link en code). Of Supabase `verifyOtp`
+  met captcha beveiligt is niet zeker; meesturen kost niets en voorkomt dat
+  inloggen met de code stukgaat als dat wel zo is. OAuth en `updateUser`
+  kent Supabase-captcha niet. Zonder site key (nu) laadt er niets en gaat
+  alles zoals het ging; laadt Turnstile niet, dan gaat de aanroep zonder token
+  en legt `uitlegAuth()` de captchafout uit. 30 seconden wachten op een token,
+  genoeg om een vakje aan te vinken.
+- **Controletabel.** `misbruik: sessie, limieten, woordfilter, teller` en
+  `open poule (80C98C): spelers / maximum`. Of captcha aanstaat kan de
+  database niet zien (dat zit in Supabase Auth); de regel zegt dat erbij.
+
+Wat er niet mee dichtzit, en waarom dat nu goed genoeg is: zonder captcha kan
+een script nog steeds anonieme accounts maken (Supabase begrenst dat op 30 per
+uur per IP-adres), en met elk account 10 spelers per poule en 5 poules per
+dag. Turnstile maakt elk account duur. Een grens per IP-adres kan PostgreSQL
+niet: het IP zit bij PostgREST, niet in de database.
+
+Ook bijgewerkt: de twee nieuwe tabellen (`verboden_woorden`, `aanmaak_log`) in
+`TABELLEN` van de reservekopie; `aanmaak_log` heeft een primaire sleutel
+(`user_id, gemaakt` met `clock_timestamp()`), anders dubbelt het terugzetten.
+`policies.test.sql` en `seizoenswissel.test.sql` riepen `poule_aanmaken()`
+aan zonder sessie en doen dat nu met. De privacyverklaring (site en app)
+noemt Turnstile.
+
+Tests: `misbruik.test.sql` (nieuwe stap in de CI-schemajob: sessie, de drie
+limieten, het maximum dat alleen het beheer zet, het woordfilter met
+cijfertrucs en Scunthorpe, openbaar maken, de teller, de controleregels) en
+`misbruik.test.mjs` (een nagebootste Turnstile: zonder site key niets van
+Cloudflare, captcha aan zonder key houdt iedereen buiten, met key een vers
+token per aanroep in app en beheer, Turnstile geblokkeerd geeft uitleg, de
+vijf meldingen in NL, EN en DE). `oude-structuur` legt vast dat de eerste run
+de open poule op 200 zet en een tweede run de keuze van het beheer laat staan.
+
+**Danny moet:** BEDIENING §7b, stap 2 tot en met 5 (Turnstile-widget, site
+key, secret key in Supabase, captcha aan). Stap 1 (schema.sql) doe ik na het
+mergen.
+

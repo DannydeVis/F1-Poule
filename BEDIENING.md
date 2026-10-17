@@ -1130,6 +1130,84 @@ reservesleutel, en dat is de reden dat het scherm er nadrukkelijk om vraagt.
 
 ---
 
+## 7b. Misbruik tegengaan: sessie, limieten, woordfilter en Turnstile
+
+In 2027 gaat Predict the Race publiek, en de open poule (80C98C) staat op elke
+pagina. Tot 17 oktober kon een script met alleen de anon key uit de broncode,
+zonder sessie, onbeperkt spelers in elke poule zetten en onbeperkt poules
+aanmaken. Dat zit nu dicht, in de database ("Misbruik tegengaan" in
+`schema.sql`) en met Turnstile bij het inloggen.
+
+**Wat de database nu afdwingt**
+
+| regel | grens | wat de speler ziet |
+|---|---|---|
+| meedoen of een poule maken zonder sessie | kan niet | "De app kon je niet aanmelden. Herlaad de pagina en probeer het opnieuw." |
+| spelers per account per poule | 10 | "Vanaf dit toestel staan er al 10 spelers in deze poule..." |
+| spelers per poule | `max_spelers`: 500, de open poule 200 | "Deze poule is vol: er mogen hoogstens 200 spelers in." |
+| nieuwe poules per account | 5 in 24 uur | "Je hebt vandaag al 5 poules aangemaakt. Morgen kan het weer." |
+| namen in een openbare poule | woordfilter | "Die naam kan niet in een openbare poule. Kies een andere." |
+| de bezoekteller | alleen `start` en `app` | niets: een ander pad wordt genegeerd |
+
+De meldingen staan in alle zeven talen. Spelers merken van de sessie niets:
+de app logt al anoniem in voordat hij meedoet of een poule maakt.
+
+**Het maximum van een poule aanpassen:** in het beheer, onder Poules, bij de
+poule: "Hoogstens zoveel spelers". De poulebaas kan het zelf niet.
+
+**Het woordfilter aanvullen:** in Supabase, Table Editor, tabel
+`verboden_woorden`, of in de SQL Editor:
+
+```sql
+insert into public.verboden_woorden (woord, taal) values ('nieuwwoord', 'nl');
+```
+
+Kleine letters, alleen a tot z, eventueel woorden met een spatie ertussen. Een
+`*` aan het eind pakt alles wat zo begint (`kanker*` pakt ook `kankerlijer`);
+zonder `*` telt alleen het hele woord, zodat `kut` niet `Kutná Hora` raakt.
+Accenten, cijfertrucs (`k4nk3r`) en puntjes of spaties ertussen (`k.u.t`)
+vangt het filter zelf. Raakt een woord uit de beginlijst te veel: zet `uit` op
+`true` in plaats van het weg te halen, anders zet de volgende run van
+`schema.sql` het terug. Het filter geldt alleen in openbare poules: spelers en
+de naam en omschrijving van de poule. Een poule wordt pas openbaar als de
+namen erin door het filter komen.
+
+**Wat jij moet doen, in deze volgorde**
+
+De volgorde is belangrijk: zet je captcha aan in Supabase voordat de app een
+token meestuurt, dan kan niemand meer een account maken of inloggen met een
+mailadres. Wie al een sessie heeft, merkt niets.
+
+1. **schema.sql opnieuw draaien.** Dat doe ik na het mergen zelf in Supabase
+   (zoals bij `poule_aanmaken` op 17 oktober). Onderaan de controletabel staat
+   dan `misbruik: sessie, limieten, woordfilter, teller` op `ok (53 woorden;
+   ...)` en `open poule (80C98C): spelers / maximum` op `.. / 200`.
+2. **Een Turnstile-widget maken.** Log in bij Cloudflare (een gratis account
+   is genoeg; je domein hoeft niet bij Cloudflare te staan), kies Turnstile,
+   "Add widget". Naam: Predict the Race. Hostnames: `predicttherace.com` en
+   `www.predicttherace.com`. Widget mode: **Invisible**. Opslaan. Je krijgt een
+   **site key** (begint met `0x`, openbaar) en een **secret key** (geheim).
+3. **De site key in de app.** Geef mij de site key, of zet hem zelf in
+   `turnstile.js` op GitHub, bovenaan: `const SITE_KEY = '0x...';`. Wacht tot
+   de site bijgewerkt is (Actions, een paar minuten). Controle: open de app in
+   een privévenster, doe mee met een poule; dat moet gewoon lukken. Vanaf nu
+   stuurt de app bij elke inlogaanroep een vers token mee.
+4. **De secret key in Supabase.** Supabase, Authentication, Attack Protection
+   (heet soms "Bot and Abuse Protection"): "Enable Captcha protection" aan,
+   provider **Turnstile by Cloudflare**, plak de secret key, Save. Dit is stap
+   4 en niet eerder: vanaf dit moment weigert Supabase elke aanmelding zonder
+   geldig token.
+5. **Nakijken.** In een privévenster: meedoen met een poule, en inloggen met
+   je mailadres (de code uit de mail). Allebei moet het lukken. Lukt het niet
+   en zegt de app "De beveiligingscontrole lukte niet", zet dan in Supabase
+   captcha weer uit en laat het mij weten.
+
+De secret key staat alleen in Supabase, nergens anders, en hoort nooit in de
+chat of in GitHub. De site key is openbaar, net als de anon key.
+
+Wat de database niet kan zien: of captcha aanstaat. Dat staat in de
+instellingen van Supabase Auth. De controletabel zegt dat er ook bij.
+
 ## 8. Waar je op moet letten bij de vrije selectie
 
 Als spelers zelf mogen samenstellen, kiest iemand vroeg of laat alleen de

@@ -1687,6 +1687,234 @@ as $$
    limit 1;
 $$;
 
+-- ------------------------------------------------------------
+--  Misbruik tegengaan (17 oktober)
+--
+--  In 2027 gaat Predict the Race publiek, en de open poule (80C98C) staat op
+--  elke pagina. Wat er tot nu toe kon met alleen de anon key uit de broncode,
+--  zonder sessie: onbeperkt spelers in elke poule zetten (het id komt uit
+--  poule_ophalen()) en onbeperkt poules aanmaken. Daar staan nu vijf sloten
+--  op, allemaal hier in de database, want de app is openbaar en wie hem
+--  omzeilt komt hier alsnog langs:
+--
+--    1. poule_meedoen() en poule_aanmaken() willen een sessie (auth.uid()).
+--       De app logt al anoniem in voordat hij die aanroept; met Turnstile
+--       (captcha) ervoor kost elke sessie een bot een opgeloste puzzel.
+--    2. Hoogstens 10 spelers per account per poule (aangemaakt_door). Genoeg
+--       voor een telefoon die rondgaat bij het inschrijven.
+--    3. Hoogstens 5 nieuwe poules per account in 24 uur (aanmaak_log).
+--    4. Een maximum aantal spelers per poule: pools.max_spelers, standaard
+--       500, de open poule 200. Alleen het beheer verandert het.
+--    5. In een openbare poule (is_public) een woordfilter op de namen van
+--       spelers en de naam en omschrijving van de poule (verboden_woorden).
+--
+--  Elke weigering heeft een vaste hint, zodat de app hem in de taal van de
+--  speler kan uitleggen; de Nederlandse tekst is er voor wie de functie zelf
+--  aanroept. De hints: geen_sessie, spelers_per_account, poule_vol,
+--  poules_per_dag, woordfilter.
+-- ------------------------------------------------------------
+
+-- Hoeveel spelers er in een poule mogen. Eerst zonder standaard, zodat de
+-- eerste run de open poule op 200 kan zetten en de rest op 500; daarna blijft
+-- staan wat het beheer kiest, ook als dit bestand opnieuw draait.
+alter table public.pools add column if not exists max_spelers int;
+update public.pools set max_spelers = case when join_code = '80C98C' then 200 else 500 end
+ where max_spelers is null;
+alter table public.pools alter column max_spelers set default 500;
+alter table public.pools alter column max_spelers set not null;
+alter table public.pools drop constraint if exists pools_max_spelers;
+alter table public.pools  add constraint pools_max_spelers check (max_spelers between 1 and 10000);
+
+-- Wie wanneer een poule aanmaakte, voor de grens van vijf per dag. Een eigen
+-- tabel en geen kolom op pools: een poule kan weg (het beheer) of van baas
+-- wisselen, en dan zou de teller terugspringen. Twee dagen is genoeg om terug
+-- te kijken; poule_aanmaken() ruimt de rest op. Geen grant: alleen de functie
+-- schrijft en leest hier.
+create table if not exists public.aanmaak_log (
+  user_id  uuid not null,
+  gemaakt  timestamptz not null default clock_timestamp(),
+  primary key (user_id, gemaakt)
+);
+alter table public.aanmaak_log enable row level security;
+revoke all on public.aanmaak_log from anon, authenticated;
+
+-- De woorden die niet in een openbare poule mogen. Aan te vullen in Supabase
+-- (Table Editor of SQL Editor), zonder dit bestand aan te raken:
+--
+--   insert into public.verboden_woorden (woord, taal) values ('nieuwwoord', 'nl');
+--
+-- Kleine letters, alleen a tot z, eventueel meer woorden met een spatie
+-- ertussen. Een * aan het eind pakt alles wat zo begint ('kanker*' pakt ook
+-- 'kankerlijer'). Zonder * telt alleen het hele woord, zodat 'kut' niet
+-- 'Kutná Hora' raakt. Een woord uit de lijst hieronder dat te veel raakt: zet
+-- `uit` op true in plaats van het weg te halen, anders zet de volgende run
+-- van dit bestand het terug.
+create table if not exists public.verboden_woorden (
+  woord      text primary key,
+  taal       text,
+  uit        boolean not null default false,
+  toegevoegd timestamptz not null default now()
+);
+alter table public.verboden_woorden drop constraint if exists verboden_woorden_vorm;
+alter table public.verboden_woorden  add constraint verboden_woorden_vorm
+  check (woord ~ '^[a-z]+( [a-z]+)*[*]?$');
+alter table public.verboden_woorden enable row level security;
+revoke all on public.verboden_woorden from anon, authenticated;
+-- Een korte beginlijst: grove scheldwoorden en scheldnamen in de zeven talen
+-- van de app. Geen "verdomme" of "merde": wie zijn poule "Shit happens" noemt,
+-- is geen probleem.
+insert into public.verboden_woorden (woord, taal) values
+  ('kanker*', 'nl'), ('tering*', 'nl'), ('tyfus*', 'nl'), ('kut', 'nl'), ('kutwijf', 'nl'),
+  ('klootzak', 'nl'), ('hoer', 'nl'), ('hoerenzoon', 'nl'), ('mongool', 'nl'), ('flikker', 'nl'),
+  ('fuck*', 'en'), ('motherfucker', 'en'), ('cunt', 'en'), ('nigger*', 'en'), ('nigga*', 'en'),
+  ('faggot', 'en'), ('whore', 'en'), ('slut', 'en'), ('retard', 'en'), ('bitch', 'en'),
+  ('fotze', 'de'), ('hurensohn', 'de'), ('arschloch', 'de'), ('wichser', 'de'), ('schlampe', 'de'),
+  ('missgeburt', 'de'), ('spast', 'de'),
+  ('salope', 'fr'), ('connard', 'fr'), ('connasse', 'fr'), ('encule', 'fr'), ('pute', 'fr'),
+  ('fils de pute', 'fr'), ('nique ta mere', 'fr'),
+  ('puta', 'es'), ('puto', 'es'), ('gilipollas', 'es'), ('maricon', 'es'), ('hijo de puta', 'es'),
+  ('hijoputa', 'es'), ('pendejo', 'es'),
+  ('cazzo', 'it'), ('stronzo', 'it'), ('puttana', 'it'), ('vaffanculo', 'it'), ('frocio', 'it'),
+  ('coglione', 'it'), ('troia', 'it'),
+  ('caralho', 'pt'), ('viado', 'pt'), ('buceta', 'pt'), ('filho da puta', 'pt'), ('arrombado', 'pt')
+on conflict (woord) do nothing;
+
+-- Een naam zoals het woordfilter hem leest: kleine letters, accenten eraf,
+-- de bekende cijfertrucs terug naar letters (k4nk3r), en alles wat geen
+-- letter is wordt een spatie.
+create or replace function public.naam_voor_filter(p_tekst text)
+returns text
+language sql
+immutable
+set search_path = public
+as $$
+  select btrim(regexp_replace(
+    translate(lower(coalesce(p_tekst, '')),
+              'áàâäãåāçćčéèêëēęíìîïīñńóòôöõøōúùûüūýÿšśžźż013457@$',
+              'aaaaaaaccceeeeeeiiiiinnooooooouuuuuyysszzzoieastas'),
+    '[^a-z]+', ' ', 'g'))
+$$;
+
+-- Staat er een verboden woord in? Ook als iemand er puntjes of spaties
+-- tussen zet ('k.u.t', 'f u c k'): dan telt de naam ook zonder spaties.
+create or replace function public.naam_verboden(p_tekst text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  with n as (select public.naam_voor_filter(p_tekst) as los,
+                    replace(public.naam_voor_filter(p_tekst), ' ', '') as vast)
+  select exists (
+    select 1 from public.verboden_woorden w, n
+     where not w.uit
+       and (case when w.woord like '%*'
+                 then n.los ~ ('(^| )' || rtrim(w.woord, '*'))
+                   or n.vast like rtrim(w.woord, '*') || '%'
+                 else n.los ~ ('(^| )' || w.woord || '( |$)')
+                   or n.vast = replace(w.woord, ' ', '')
+            end))
+$$;
+-- Uitvoerbaar voor anon en authenticated, omdat de triggers hieronder draaien
+-- als wie schrijft (een poulebaas die zijn poule via de API bijwerkt). Wie de
+-- functie zelf aanroept, leert alleen of een naam door het filter komt, en dat
+-- leert hij ook door de naam te proberen. De lijst zelf blijft dicht.
+revoke all on function public.naam_verboden(text) from public;
+grant execute on function public.naam_verboden(text) to anon, authenticated;
+
+-- Weigert een naam in een openbare poule als hij een verboden woord bevat.
+create or replace function public.naam_netjes(p_tekst text)
+returns void
+language plpgsql
+stable
+set search_path = public
+as $$
+begin
+  if public.naam_verboden(p_tekst) then
+    raise exception 'Die naam kan niet in een openbare poule. Kies een andere.'
+      using hint = 'woordfilter';
+  end if;
+end $$;
+revoke all on function public.naam_netjes(text) from public;
+grant execute on function public.naam_netjes(text) to anon, authenticated;
+
+-- Op de poule zelf. Draait bij elke weg erin: poule_aanmaken(), de poulebaas
+-- die naam of omschrijving bijwerkt (pools_bijwerken), het beheer.
+--   * Openbaar: de naam en omschrijving door het woordfilter. Wordt een poule
+--     openbaar, dan ook de namen van wie er al in zit.
+--   * max_spelers zet alleen het beheer (beheer_poule_bijwerken), niet de
+--     poulebaas: die zou zijn poule anders zelf groter maken.
+create or replace function public.pools_misbruik_bewaken()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  fout text;
+begin
+  if tg_op = 'UPDATE' and current_user in ('anon', 'authenticated')
+     and new.max_spelers is distinct from old.max_spelers then
+    raise exception 'het maximum aantal spelers zet alleen het beheer';
+  end if;
+  if new.is_public then
+    if tg_op = 'INSERT' or new.name is distinct from old.name
+       or new.beschrijving is distinct from old.beschrijving or not old.is_public then
+      perform public.naam_netjes(new.name);
+      perform public.naam_netjes(new.beschrijving);
+    end if;
+    if tg_op = 'UPDATE' and not old.is_public then
+      select display_name into fout from public.pool_members
+       where pool_id = new.id and public.naam_verboden(display_name) limit 1;
+      if fout is not null then
+        raise exception 'In deze poule speelt iemand met een naam die niet in een openbare poule kan: %', fout
+          using hint = 'woordfilter';
+      end if;
+    end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists pools_misbruik_bewaken on public.pools;
+create trigger pools_misbruik_bewaken
+  before insert or update on public.pools
+  for each row execute function public.pools_misbruik_bewaken();
+
+-- En op de spelers: een nieuwe speler of een nieuwe naam in een openbare
+-- poule. Ook als de naam via het beheer verandert.
+create or replace function public.pool_members_woordfilter()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if tg_op = 'INSERT' or new.display_name is distinct from old.display_name then
+    if exists (select 1 from public.pools where id = new.pool_id and is_public) then
+      perform public.naam_netjes(new.display_name);
+    end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists pool_members_woordfilter on public.pool_members;
+create trigger pool_members_woordfilter
+  before insert or update on public.pool_members
+  for each row execute function public.pool_members_woordfilter();
+
+-- Zonder sessie geen speler en geen poule.
+create or replace function public.vereis_sessie()
+returns uuid
+language plpgsql
+stable
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Je bent niet aangemeld. Herlaad de app en probeer het opnieuw.'
+      using hint = 'geen_sessie';
+  end if;
+  return auth.uid();
+end $$;
+revoke all on function public.vereis_sessie() from public;
+
 -- Meedoen aan een poule: een speler aanmaken en meteen terugkrijgen.
 --
 -- Dit was een insert vanuit de app met `.select()` erachter. Dat kan niet
@@ -1716,9 +1944,25 @@ as $$
 declare
   nieuw public.pool_members%rowtype;
   naam  text := public.speler_naam(p_naam);
+  ik    uuid := public.vereis_sessie();
+  grens int;
 begin
-  if not exists (select 1 from public.pools where id = p_pool) then
+  -- De rij van de poule op slot tot het einde van deze transactie: twee
+  -- tegelijke aanmeldingen tellen anders allebei 199 en komen er allebei in.
+  select max_spelers into grens from public.pools where id = p_pool for update;
+  if not found then
     raise exception 'die poule bestaat niet';
+  end if;
+  if (select count(*) from public.pool_members where pool_id = p_pool) >= grens then
+    raise exception 'Deze poule is vol: er mogen hoogstens % spelers in.', grens
+      using hint = 'poule_vol:' || grens;
+  end if;
+  -- Een telefoon die rondgaat bij het inschrijven, ja; een script dat er
+  -- honderd namen in zet, nee.
+  if (select count(*) from public.pool_members
+       where pool_id = p_pool and aangemaakt_door = ik) >= 10 then
+    raise exception 'Vanaf dit account staan er al 10 spelers in deze poule. Laat de rest zich op hun eigen toestel aanmelden.'
+      using hint = 'spelers_per_account';
   end if;
   if exists (select 1 from public.pool_members
              where pool_id = p_pool and lower(btrim(display_name)) = lower(naam)) then
@@ -1726,11 +1970,11 @@ begin
   end if;
   begin
     insert into public.pool_members (pool_id, display_name, user_id, aangemaakt_door)
-    values (p_pool, naam, auth.uid(), auth.uid())
+    values (p_pool, naam, ik, ik)
     returning * into nieuw;
   exception when unique_violation then
     insert into public.pool_members (pool_id, display_name, user_id, aangemaakt_door)
-    values (p_pool, naam, null, auth.uid())
+    values (p_pool, naam, null, ik)
     returning * into nieuw;
   end;
   return jsonb_build_object('member_id', nieuw.member_id,
@@ -1766,6 +2010,7 @@ as $$
 declare
   nieuwe public.pools%rowtype;
   ik     public.pool_members%rowtype;
+  wie    uuid := public.vereis_sessie();
 begin
   if coalesce(btrim(p_naam), '') = '' then
     raise exception 'een poule heeft een naam nodig';
@@ -1774,6 +2019,16 @@ begin
     raise exception 'je hebt zelf ook een naam nodig';
   end if;
   perform public.speler_naam(p_speler);
+  -- Vijf per account per etmaal. Het advisory lock houdt twee tegelijke
+  -- aanroepen van hetzelfde account uit elkaar, anders tellen ze allebei vier.
+  perform pg_advisory_xact_lock(hashtext('poule_aanmaken:' || wie::text));
+  delete from public.aanmaak_log where gemaakt < now() - interval '2 days';
+  if (select count(*) from public.aanmaak_log
+       where user_id = wie and gemaakt > now() - interval '24 hours') >= 5 then
+    raise exception 'Je hebt vandaag al 5 poules aangemaakt. Morgen kan het weer.'
+      using hint = 'poules_per_dag';
+  end if;
+  insert into public.aanmaak_log (user_id, gemaakt) values (wie, clock_timestamp());
 
   -- Het seizoen van de eerstvolgende race, en niet het laatste seizoen in de
   -- tabel. Dat was max(season), en dat ging goed zolang er maar één seizoen
@@ -1795,7 +2050,7 @@ begin
   returning * into nieuwe;
 
   insert into public.pool_members (pool_id, display_name, user_id, aangemaakt_door)
-  values (nieuwe.id, btrim(p_speler), auth.uid(), auth.uid())
+  values (nieuwe.id, btrim(p_speler), wie, wie)
   returning * into ik;
 
   update public.pools set owner_member_id = ik.member_id where id = nieuwe.id
@@ -2348,6 +2603,11 @@ revoke all on public.actief   from anon, authenticated;
 
 -- De enige weg erin. Iedereen mag hem aanroepen (ook zonder account), maar
 -- hij schrijft alleen een optelling en je eigen account, en leest niets.
+--
+-- Alleen de twee schermen die de app telt (telBezoek() in app/index.html):
+-- 'start' (het beginscherm) en 'app' (een poule). Tot 17 oktober nam hij elk
+-- pad dat op ^[a-z0-9/_-]{1,40}$ leek, en dan was de tabel vol te schrijven
+-- met verzonnen paden. Een ander pad wordt stil genegeerd.
 create or replace function public.tel_bezoek(p_pad text)
 returns void
 language plpgsql
@@ -2356,7 +2616,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if p_pad is null or p_pad !~ '^[a-z0-9/_-]{1,40}$' then return; end if;
+  if p_pad is null or p_pad not in ('start', 'app') then return; end if;
   insert into public.bezoeken (dag, pad, aantal) values (current_date, p_pad, 1)
     on conflict (dag, pad) do update set aantal = public.bezoeken.aantal + 1;
   if auth.uid() is not null and exists (select 1 from auth.users where id = auth.uid()) then
@@ -2490,6 +2750,11 @@ begin
   if p_wijziging ? 'is_public' then
     update public.pools set is_public = coalesce((p_wijziging ->> 'is_public')::boolean, false)
     where id = p_pool;
+  end if;
+  -- Hoeveel spelers er in mogen (pools_misbruik_bewaken laat alleen het beheer
+  -- dit zetten).
+  if p_wijziging ? 'max_spelers' then
+    update public.pools set max_spelers = (p_wijziging ->> 'max_spelers')::int where id = p_pool;
   end if;
   -- Premium: tot wanneer (een datum, of leeg voor uit). Alleen hier, zie
   -- pools_profiel_bewaken().
@@ -2945,6 +3210,43 @@ select 'premium: kolommen, bewaking en logo-opslag',
                  and policyname in ('poulelogo_zetten', 'poulelogo_vervangen', 'poulelogo_weghalen', 'poulelogo_lezen')) <> 4
            then 'LOGO-OPSLAG ONTBREEKT: draai schema.sql opnieuw'
          else 'ok' end
+union all
+-- Misbruik tegengaan (17 oktober): zonder sessie geen speler of poule, de
+-- limieten, het woordfilter en de bezoekteller die alleen 'start' en 'app'
+-- telt. Of de captcha (Turnstile) aanstaat, ziet de database niet: dat staat
+-- in de instellingen van Supabase Auth. BEDIENING.md §7b zegt hoe je het
+-- nakijkt.
+select 'misbruik: sessie, limieten, woordfilter, teller',
+       case
+         when (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+               where n.nspname = 'public' and p.proname in ('poule_meedoen', 'poule_aanmaken')
+                 and p.prosrc like '%vereis_sessie()%') <> 2
+           then 'ZONDER SESSIE KAN NOG: draai schema.sql opnieuw'
+         when not exists (select 1 from pg_proc where proname = 'poule_meedoen'
+                            and prosrc like '%spelers_per_account%' and prosrc like '%poule_vol%')
+           or not exists (select 1 from pg_proc where proname = 'poule_aanmaken'
+                            and prosrc like '%poules_per_dag%')
+           or not exists (select 1 from information_schema.columns
+                           where table_schema = 'public' and table_name = 'pools' and column_name = 'max_spelers')
+           then 'LIMIETEN ONTBREKEN: draai schema.sql opnieuw'
+         when (select count(*) from pg_trigger
+               where tgname in ('pools_misbruik_bewaken', 'pool_members_woordfilter')) <> 2
+           or to_regclass('public.verboden_woorden') is null
+           then 'WOORDFILTER ONTBREEKT: draai schema.sql opnieuw'
+         when not exists (select 1 from public.verboden_woorden where not uit)
+           then 'WOORDFILTER ZONDER WOORDEN'
+         when not exists (select 1 from pg_proc where proname = 'tel_bezoek'
+                            and prosrc like '%not in (''start'', ''app'')%')
+           then 'TELLER NEEMT ELK PAD: draai schema.sql opnieuw'
+         else 'ok (' || (select count(*) from public.verboden_woorden where not uit)
+              || ' woorden; de captcha staat in Supabase Auth)' end
+union all
+-- Hoe vol de open poule is, tegen zijn maximum. Die staat op elke pagina en
+-- is de eerste die volloopt.
+select 'open poule (80C98C): spelers / maximum',
+       coalesce((select (select count(*) from public.pool_members m where m.pool_id = p.id)::text
+                        || ' / ' || p.max_spelers
+                   from public.pools p where p.join_code = '80C98C'), 'niet gevonden')
 union all
 select 'aantal poules',        (select count(*)::text from public.pools)
 union all

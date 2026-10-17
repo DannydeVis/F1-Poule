@@ -8,7 +8,8 @@
 //
 // Wat hier staat moet kloppen met de app. test/privacypagina.test.mjs legt de
 // twee naast elkaar: wat de app noemt (Supabase, OpenF1, esm.sh, je IP-adres,
-// Google, het mailadres dat je alleen zelf koppelt) hoort hier ook te staan,
+// Google, Cloudflare Turnstile, het mailadres dat je alleen zelf koppelt) hoort
+// hier ook te staan,
 // en het contactadres is hetzelfde.
 //
 // Geen HTML in de teksten, net als in teksten.mjs. De sjabloon maakt links van
@@ -20,7 +21,7 @@
 // Waar iemand terecht kan met een vraag over zijn gegevens. Staat ook in de
 // app (PRIVACY_CONTACT); de test houdt die twee gelijk.
 export const CONTACT = 'contact@predicttherace.com';
-export const PRIVACY_BIJGEWERKT = '2026-09-24';
+export const PRIVACY_BIJGEWERKT = '2026-10-17';
 
 export const PRIVACY = {
   nl: {
@@ -29,7 +30,7 @@ export const PRIVACY = {
     omschrijving: 'Wat Predict the Race van je bewaart, waar het staat, wie het ziet en hoe je het weer weg krijgt. Geen advertenties, statistieken alleen met je ja.',
     kop: 'Wat Predict the Race van je weet',
     intro: 'Predict the Race is een gratis F1-voorspelspel voor vriendengroepen. Het bewaart zo weinig mogelijk, en wat het bewaart staat hieronder, in gewone taal.',
-    bijgewerkt: 'Bijgewerkt op 29 september 2026',
+    bijgewerkt: 'Bijgewerkt op 17 oktober 2026',
     secties: [
       ['Wat er bewaard wordt', [
         'De naam die je in een poule kiest, je voorspellingen en je punten. En een anoniem account: een willekeurig nummer, zodat de database weet welke voorspellingen van jou zijn.',
@@ -53,6 +54,9 @@ export const PRIVACY = {
       ]],
       ['Wat er niet gebeurt', [
         'Geen advertenties, en er wordt niets doorverkocht of gedeeld. Google Analytics alleen als je daar ja op zegt (zie hieronder). De lettertypen staan op de site zelf, dus daar gaat niets naartoe. Eén ding komt nog van buiten: de code waarmee de app met de database praat, van esm.sh. Die ziet daarbij je IP-adres.',
+      ]],
+      ['Tegen bots', [
+        'Als de app een account voor je maakt of je inlogt met je mailadres, kijkt Cloudflare Turnstile of er een mens achter het scherm zit. Meestal merk je daar niets van; twijfelt Turnstile, dan vraagt hij je een vakje aan te vinken. Cloudflare ziet daarbij je IP-adres en gegevens over je browser, gebruikt die alleen voor deze controle en zet geen cookies om je te volgen. Wij bewaren er niets van.',
       ]],
       ['Tellen', [
         'Per dag telt de app hoe vaak hij geopend wordt, en welke accounts dat deden. Dat laatste alleen om te kunnen zien hoeveel mensen er meespelen, en het verdwijnt na vijf weken. Er komt geen cookie aan te pas en er wordt geen IP-adres bewaard.',
@@ -83,7 +87,7 @@ export const PRIVACY = {
     omschrijving: 'What Predict the Race keeps about you, where it lives, who sees it and how to get it removed. No ads, statistics only with your yes.',
     kop: 'What Predict the Race knows about you',
     intro: 'Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.',
-    bijgewerkt: 'Updated on 29 September 2026',
+    bijgewerkt: 'Updated on 17 October 2026',
     secties: [
       ['What is kept', [
         'The name you pick in a pool, your predictions and your points. And an anonymous account: a random number, so the database knows which predictions are yours.',
@@ -107,6 +111,9 @@ export const PRIVACY = {
       ]],
       ['What does not happen', [
         'No ads, and nothing is sold on or shared. Google Analytics only if you say yes to it (see below). The fonts are on the site itself, so nothing goes there. One thing still comes from outside: the code the app uses to talk to the database, from esm.sh. That sees your IP address.',
+      ]],
+      ['Against bots', [
+        'When the app creates an account for you or signs you in with your email address, Cloudflare Turnstile checks that there is a person behind the screen. Usually you notice nothing; if Turnstile is unsure, it asks you to tick a box. Cloudflare sees your IP address and details about your browser, uses them only for this check and sets no cookies to follow you. We keep nothing of it.',
       ]],
       ['Counting', [
         'Each day the app counts how often it is opened, and which accounts did so. The latter only to see how many people are playing, and it disappears after five weeks. No cookie is involved and no IP address is stored.',

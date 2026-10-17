@@ -209,6 +209,9 @@
   .toegang h1{display:flex;align-items:center;gap:10px}
   .toegang h1 img{width:30px;height:30px}
 </style>
+<!-- Cloudflare Turnstile voor de inloglink (captcha in Supabase Auth), gedeeld
+     met de app. Zonder site key doet het niets; zie turnstile.js. -->
+<script src="../turnstile.js" defer></script>
 </head>
 <body>
 <div id="beheer" aria-live="polite"></div>
@@ -374,11 +377,17 @@ function toonInloggen() {
     ev.preventDefault();
     const mail = vak.querySelector('#mail').value.trim();
     // Alleen een bestaand account: het beheer maakt geen nieuwe accounts aan.
+    // Met een vers Turnstile-token (turnstile.js): staat captcha aan in
+    // Supabase, dan gaat er zonder token geen mail.
+    let captchaToken;
+    try { captchaToken = await window.ptrCaptcha?.(); } catch { captchaToken = undefined; }
     const { error } = await db.auth.signInWithOtp({ email: mail,
-      options: { shouldCreateUser: false, emailRedirectTo: terug() } });
-    vak.querySelector('#inlogbericht').textContent = error
-      ? 'Bij dat adres hoort geen account. Log in met Google.'
-      : `We hebben een inloglink gestuurd naar ${mail}.`;
+      options: { shouldCreateUser: false, emailRedirectTo: terug(), captchaToken } });
+    vak.querySelector('#inlogbericht').textContent = !error
+      ? `We hebben een inloglink gestuurd naar ${mail}.`
+      : /captcha/i.test(`${error.code ?? ''} ${error.message ?? ''}`)
+        ? 'De beveiligingscontrole lukte niet. Probeer het opnieuw, of log in met Google.'
+        : 'Bij dat adres hoort geen account. Log in met Google.';
   };
 }
 
@@ -617,7 +626,7 @@ function pouleDetail(p) {
   return `
     <section class="kaart" id="pouledetail">
       <div class="kaartkop"><h2>${esc(p.name)}</h2><span class="code">${esc(p.join_code)}</span></div>
-      <p class="zacht klein" style="margin:0">${getal(p.spelers)} spelers, ${getal(p.accounts)} met een account,
+      <p class="zacht klein" style="margin:0">${getal(p.spelers)} spelers${p.max_spelers ? ` (hoogstens ${getal(p.max_spelers)})` : ''}, ${getal(p.accounts)} met een account,
         ${getal(p.inzendingen)} inzendingen, ${getal(p.vragen)} vragen. Aangemaakt ${esc(datum(p.created_at))}.</p>
       <form class="formulier" id="pouleform">
         <label><span class="label">Naam</span><input class="veld" name="name" value="${esc(p.name)}" required></label>
@@ -627,6 +636,10 @@ function pouleDetail(p) {
           ${leden.map((s) => `<option value="${esc(s.member_id)}" ${s.member_id === p.owner_member_id ? 'selected' : ''}>${esc(s.naam)}</option>`).join('')}
         </select></label>
         <label class="schakel"><input type="checkbox" name="is_public" ${p.is_public ? 'checked' : ''}>Openbaar: vindbaar zonder code</label>
+        <label><span class="label">Hoogstens zoveel spelers</span><input class="veld" type="number" name="max_spelers"
+          min="1" max="10000" step="1" inputmode="numeric" value="${esc(p.max_spelers ?? '')}"></label>
+        <p class="zacht klein" style="margin:0">Standaard 500, de open poule 200. Zit de poule vol, dan krijgt wie
+          erbij wil een melding (schema.sql, "Misbruik tegengaan").</p>
         <label><span class="label">Premium tot en met</span><input class="veld" type="date" name="premium_tot"
           value="${esc(p.premium_tot ? String(p.premium_tot).slice(0, 10) : '')}"></label>
         <p class="zacht klein" style="margin:0">${premium(p)
@@ -998,11 +1011,13 @@ const knopen = {
       const f = new FormData(form);
       // Tot en met die dag: het einde van de dag in UTC.
       const tot = f.get('premium_tot') ? `${f.get('premium_tot')}T23:59:59Z` : '';
+      // Leeg (een database van voor 17 oktober kent het veld niet): niet meesturen.
+      const max = String(f.get('max_spelers') ?? '').trim();
       doe(async () => {
         const uit = await rpc('beheer_poule_bijwerken', { p_pool: p.id, p_wijziging: {
           name: f.get('name'), beschrijving: f.get('beschrijving'),
           owner_member_id: f.get('owner_member_id') || null, is_public: f.get('is_public') === 'on',
-          premium_tot: tot } });
+          premium_tot: tot, ...(max ? { max_spelers: Number(max) } : {}) } });
         // Een database van voor premium laat de datum stil liggen: zeg dat dan.
         if (tot && !uit?.premium_tot) throw new Error('De rest is opgeslagen, maar premium staat nog niet '
           + 'in de database. Laad schema.sql opnieuw in de SQL Editor van Supabase (BEDIENING.md, 19).');

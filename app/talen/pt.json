@@ -793,5 +793,12 @@
  "team": "time",
  "totaal": "total",
  "Herinner ze": "Lembrar",
- "de top-tienen, ook van de sprint, plus drie losse vragen": "os top 10, também da sprint, mais três perguntas extras"
+ "de top-tienen, ook van de sprint, plus drie losse vragen": "os top 10, também da sprint, mais três perguntas extras",
+ "De beveiligingscontrole lukte niet. Probeer het opnieuw; blokkeert je browser challenges.cloudflare.com, zet dat dan even uit.": "A verificação de segurança não funcionou. Tente de novo; se o seu navegador bloqueia challenges.cloudflare.com, permita por um momento.",
+ "De app kon je niet aanmelden. Herlaad de pagina en probeer het opnieuw.": "O app não conseguiu fazer seu login. Recarregue a página e tente de novo.",
+ "Vanaf dit toestel staan er al 10 spelers in deze poule. Laat de anderen zich op hun eigen telefoon aanmelden.": "Deste aparelho já há 10 jogadores neste bolão. Os outros entram pelo próprio celular.",
+ "Deze poule is vol: er mogen hoogstens {n} spelers in.": "Este bolão está cheio: pode ter no máximo {n} jogadores.",
+ "Je hebt vandaag al 5 poules aangemaakt. Morgen kan het weer.": "Você já criou 5 bolões hoje. Amanhã pode criar outro.",
+ "Die naam kan niet in een openbare poule. Kies een andere.": "Esse nome não pode ser usado em um bolão público. Escolha outro.",
+ "<b>Tegen bots</b><br>Als de app een account voor je maakt of je inlogt met je mailadres, kijkt Cloudflare Turnstile of er een mens achter het scherm zit. Meestal merk je daar niets van. Cloudflare ziet daarbij je IP-adres en gegevens over je browser, gebruikt die alleen voor deze controle en zet geen cookies om je te volgen.": "<b>Contra robôs</b><br>Quando o app cria uma conta para você ou faz seu login com seu e-mail, o Cloudflare Turnstile verifica se há uma pessoa diante da tela. Normalmente você não percebe nada. A Cloudflare vê seu endereço IP e dados do seu navegador, usa isso só para essa verificação e não coloca cookies para seguir você."
 }

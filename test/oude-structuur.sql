@@ -51,6 +51,9 @@ create table predictions (
 insert into pools (name, join_code, inleg, betaallink)
   values ('Vrijdagmiddagpoule', 'RTM026', 12.50, 'https://tikkie.me/pay/abc');
 insert into pool_members (pool_id, display_name, betaald) select id, 'Danny', true from pools;
+-- De open poule, die bij de eerste run van schema.sql met max_spelers op 200
+-- moet komen in plaats van 500 (17 oktober).
+insert into pools (name, join_code) values ('Open poule', '80C98C');
 insert into races (season, round, name) values (2026, 1, 'Melbourne');
 
 -- Wat er in productie ook nog stond (Security Advisor van Supabase, 29

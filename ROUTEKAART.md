@@ -1060,3 +1060,11 @@ als bijlage bij de run, met een script om terug te zetten; BEDIENING §13a.
 Open bij Danny: het secret `RESERVEKOPIE_WACHTWOORD` en een ruleset op main.
 Later te overwegen: Supabase Pro (dagelijkse kopie van de hele database, ook
 de accounts, en terugzetten met één knop) zodra er betalende poules zijn.
+
+**Misbruik tegengaan** (17 oktober, voor de publieke lancering in 2027).
+Gebouwd: meedoen en aanmaken alleen met een sessie, 10 spelers per account per
+poule, 5 poules per account per dag, een maximum per poule (500, de open poule
+200, in het beheer), een woordfilter in openbare poules, de bezoekteller alleen
+voor de echte schermen, en Turnstile bij elke inlogaanroep; BEDIENING §7b.
+Open bij Danny: de Turnstile-widget, de site key en captcha aan in Supabase.
+

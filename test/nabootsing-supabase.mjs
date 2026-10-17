@@ -107,6 +107,27 @@ store.bezoeken ??= {};
 store.actief ??= [];
 const bewaren = () => { try { sessionStorage.setItem(BEWAAR, JSON.stringify(store)); } catch { /* niets */ } };
 
+// Captcha in Supabase Auth (Turnstile, 17 oktober). Een test zet captcha_aan
+// op true; dan weigert elke aanroep die Supabase met captcha beveiligt een
+// ontbrekend, verzonnen of al gebruikt token, net als Supabase. Elk token dat
+// binnenkomt staat in captcha_log, met de aanroep erbij, zodat een test kan
+// zien dat de app per aanroep een vers token meestuurt.
+store.captcha_aan ??= false;
+store.captcha_log ??= [];
+store.aanmaak_log ??= [];
+function captchaFout(aanroep, opties) {
+  const token = opties?.captchaToken ?? null;
+  store.captcha_log.push({ aanroep, token });
+  bewaren();
+  if (!store.captcha_aan) return null;
+  const gebruikt = store.captcha_log.slice(0, -1).some((r) => r.token && r.token === token);
+  if (!token || !String(token).startsWith('ts-') || gebruikt) {
+    return { data: null, error: { code: 'captcha_failed',
+      message: 'captcha protection: request disallowed (timeout-or-duplicate)' } };
+  }
+  return null;
+}
+
 // Wordt door ontbrekende-sleutel.test.mjs leeggemaakt om een database zonder
 // unieke sleutel na te bootsen.
 const UNIEK = {
@@ -152,6 +173,14 @@ globalThis.__db = store;
 // ------------------------------------------------------------
 
 const wieBenIk = () => huidigeSessie()?.user?.id ?? null;
+
+// De sloten tegen misbruik uit schema.sql ("Misbruik tegengaan"): een fout met
+// een vaste hint, die de app in de taal van de speler uitlegt.
+const misbruik = (hint, message) => ({ data: null, error: { code: 'P0001', hint, message } });
+const GEEN_SESSIE = misbruik('geen_sessie', 'Je bent niet aangemeld. Herlaad de app en probeer het opnieuw.');
+// Het woordfilter, kort: de echte lijst en de regels staan in schema.sql en
+// test/misbruik.test.sql. Hier genoeg om de melding in de app te laten zien.
+const naamVerboden = (naam) => /(^|[^a-z])(kanker|kut|fuck)/i.test(String(naam ?? ''));
 
 // mag_voor_speler(): mijn eigen speler, of eentje die van niemand is en die
 // mijn account aanmaakte (de tweede speler op een gedeeld toestel). Een speler
@@ -570,9 +599,11 @@ const auth = {
     const s = huidigeSessie();
     return { data: { user: s?.user ?? null }, error: s ? null : { message: 'geen sessie' } };
   },
-  async signInAnonymously() {
+  async signInAnonymously({ options = {} } = {}) {
     const bestaand = huidigeSessie();
     if (bestaand) return { data: bestaand, error: null };
+    const nee = captchaFout('signInAnonymously', options);
+    if (nee) return nee;
     const user = { id: 'account-' + (store.auth_users.length + 1),
                    is_anonymous: true, email: null, new_email: null,
                    identities: [{ provider: 'anonymous', identity_data: {} }] };
@@ -653,6 +684,8 @@ const auth = {
   // Een inloglink naar een bestaand account. shouldCreateUser:false betekent
   // dat een onbekend adres een fout geeft in plaats van een leeg account.
   async signInWithOtp({ email, options = {} }) {
+    const nee = captchaFout('signInWithOtp', options);
+    if (nee) return nee;
     let user = store.auth_users.find((u) => gelijk(u.email, email));
     if (!user) {
       if (options.shouldCreateUser === false) {
@@ -687,7 +720,9 @@ const auth = {
   // token_hash, met als type `email` (inloggen of een nieuw account) of
   // `email_change` (een mailadres koppelen; die maakt het adres definitief,
   // net als de bevestigingslink).
-  async verifyOtp({ email, token, type, token_hash }) {
+  async verifyOtp({ email, token, type, token_hash, options = {} }) {
+    const nee = captchaFout('verifyOtp', options);
+    if (nee) return nee;
     if (token_hash) {
       const wacht = store.otp.find((o) => o.hash && o.hash === String(token_hash)
         && type === (o.bevestigt ? 'email_change' : 'email'));
@@ -1004,9 +1039,20 @@ const functies = {
   },
 
   poule_meedoen({ p_pool, p_naam } = {}) {
+    const ik = wieBenIk();
+    if (!ik) return GEEN_SESSIE;
     const poule = store.pools.find((p) => gelijk(p.id, p_pool));
     if (!poule) return { data: null, error: { message: 'die poule bestaat niet' } };
-    const ik = wieBenIk();
+    const grens = poule.max_spelers ?? 500;
+    if (store.pool_members.filter((m) => gelijk(m.pool_id, p_pool)).length >= grens) {
+      return misbruik(`poule_vol:${grens}`, `Deze poule is vol: er mogen hoogstens ${grens} spelers in.`);
+    }
+    if (store.pool_members.filter((m) => gelijk(m.pool_id, p_pool) && gelijk(m.aangemaakt_door, ik)).length >= 10) {
+      return misbruik('spelers_per_account', 'Vanaf dit account staan er al 10 spelers in deze poule.');
+    }
+    if (poule.is_public && naamVerboden(p_naam)) {
+      return misbruik('woordfilter', 'Die naam kan niet in een openbare poule. Kies een andere.');
+    }
     // Twee spelers op één account in één poule houdt de unieke sleutel tegen;
     // dan wordt de speler zonder account aangemaakt. Dat stond eerst in de
     // app en hoort in de database.
@@ -1041,6 +1087,12 @@ const functies = {
   },
 
   poule_aanmaken({ p_naam, p_beschrijving = null, p_speler, p_vragen = [] } = {}) {
+    const wie = wieBenIk();
+    if (!wie) return GEEN_SESSIE;
+    const dag = Date.now() - 864e5;
+    if (store.aanmaak_log.filter((r) => gelijk(r.user_id, wie) && r.gemaakt > dag).length >= 5) {
+      return misbruik('poules_per_dag', 'Je hebt vandaag al 5 poules aangemaakt. Morgen kan het weer.');
+    }
     if (!String(p_naam ?? '').trim()) {
       return { data: null, error: { message: 'een poule heeft een naam nodig' } };
     }
@@ -1050,6 +1102,7 @@ const functies = {
     if (String(p_speler).trim().length > 60) {
       return { data: null, error: { message: 'die naam is te lang (hoogstens 60 tekens)' } };
     }
+    store.aanmaak_log.push({ user_id: wie, gemaakt: Date.now() });
     const poule = { id: 'pool-' + (store.pools.length + 1), name: String(p_naam).trim(),
                     beschrijving: String(p_beschrijving ?? '').trim() || null,
                     season: 2026, join_code: 'ABC123', owner_member_id: null,
@@ -1129,7 +1182,8 @@ Object.assign(functies, {
   ik_ben_beheerder() { return { data: ikBenBeheerder(), error: null }; },
 
   tel_bezoek({ p_pad } = {}) {
-    if (!/^[a-z0-9/_-]{1,40}$/.test(String(p_pad ?? ''))) return { data: null, error: null };
+    // Net als schema.sql: alleen de twee schermen die de app telt.
+    if (!['start', 'app'].includes(String(p_pad ?? ''))) return { data: null, error: null };
     const sleutel = `${dag()}|${p_pad}`;
     store.bezoeken[sleutel] = (store.bezoeken[sleutel] ?? 0) + 1;
     const ik = wieBenIk();
@@ -1203,6 +1257,13 @@ Object.assign(functies, {
     if ('name' in p_wijziging) p.name = String(p_wijziging.name).trim();
     if ('beschrijving' in p_wijziging) p.beschrijving = String(p_wijziging.beschrijving ?? '').trim() || null;
     if ('is_public' in p_wijziging) p.is_public = !!p_wijziging.is_public;
+    if ('max_spelers' in p_wijziging) {
+      const n = Number(p_wijziging.max_spelers);
+      if (!Number.isInteger(n) || n < 1 || n > 10000) {
+        return { data: null, error: { code: '23514', message: 'new row for relation "pools" violates check constraint "pools_max_spelers"' } };
+      }
+      p.max_spelers = n;
+    }
     if ('owner_member_id' in p_wijziging) p.owner_member_id = baas;
     // Zet een test globalThis.__zonderPremium, dan doet dit alsof schema.sql
     // in Supabase nog van voor premium is: de sleutel valt stil weg en de rij

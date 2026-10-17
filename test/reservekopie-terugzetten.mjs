@@ -75,6 +75,7 @@ insert into public.site_beheerders (user_id) values ('00000000-0000-0000-0000-00
 insert into public.sync_runs (id, ok, bijgewerkt, samenvatting) values (7001, true, 3, 'Melbourne nagekeken');
 insert into public.bezoeken (dag, pad, aantal) values (current_date, '/app/', 12);
 insert into public.actief (dag, user_id) values (current_date, '00000000-0000-0000-0000-0000000000a2');
+insert into public.aanmaak_log (user_id) values ('00000000-0000-0000-0000-0000000000a1');
 commit;
 `);
 const leeg = TABELLEN.filter((t) => psql(`select count(*) from public.${t};`) === '0');
@@ -90,6 +91,7 @@ const voor = vinger();
 
 // ---- 3. de ramp --------------------------------------------------------------------
 psql(`delete from public.pools; delete from public.races; delete from public.site_beheerders;
+      delete from public.verboden_woorden; delete from public.aanmaak_log;
       delete from public.sync_runs; delete from public.bezoeken; delete from public.actief;`);
 check('na de ramp is de poule weg', psql('select count(*) from public.pool_members;') === '0'
   && psql('select count(*) from public.answers;') === '0');
