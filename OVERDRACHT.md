@@ -10691,3 +10691,28 @@ ook los van de voorspelspellen die teams zelf aanbieden, zoals dat van Red
 Bull Racing. In llms.txt (scripts/maak-site.mjs) staat het bij de kernfeiten.
 Bij de volgende meting kijken of Perplexity de twee nog verwart.
 
+## De coureurs van het nieuwe seizoen (17 oktober)
+
+Bij het nalopen van de voorbereidingen op 2027: de kalender van 2027 stond al
+in de database (24 races, 14 maart tot 12 december), maar zonder coureurs.
+`voorlopigeLijst()` leende alleen van een eerdere race in hetzelfde seizoen,
+dus ronde 1 kreeg niets tot OpenF1 de lijst gaf, rond het eerste weekend. De
+seizoensvragen (`seizoenslaagBlok()` pakt de eerste race mét coureurs) gaan bij
+de start van dat weekend dicht, dus die waren dan nauwelijks in te vullen.
+
+Nu: `voorlopigeLijst(race, races, vorig)` valt terug op de laatste race van het
+vorige seizoen (niet afgelast), en `uitslagen()` in `scripts/sync.mjs` krijgt
+dat seizoen mee. Het lenen hing aan `bron` (de race in het verversvenster of de
+dagelijkse ronde); dat is eraf, want lenen kost geen verzoek. Een geleende
+lijst telt als lijst, dus `lijstKanWachten()` houdt hem niet meer tegen en
+`deelnemersUit()` haalt de echte op binnen `VERVERS_VENSTER_DAGEN` (14) voor de
+race, zoals bij elke race.
+
+Tests: `kalender-en-coureurs.test.mjs` (vier nieuwe checks) en
+`jaarwisseling.test.mjs` (de echte sync: 2027 leent bij de eerste kalender, de
+dagelijkse ronde vraagt dan nog niets, en dicht bij ronde 1 vervangt de echte
+lijst met een nieuwkomer de geleende). Vier mutanten (alleen met bron, vorig
+genegeerd, afgelast niet overgeslagen, vorig niet doorgegeven), allemaal
+gevangen. Na het mergen vult de eerstvolgende run van de sync de 24 races van
+2027 met de lijst van Abu Dhabi.
+

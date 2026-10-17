@@ -335,13 +335,25 @@ export function deelnemersUit(race, nu = Date.now(), sessies = []) {
  * is: het veld verandert van race op race zelden. Zodra OpenF1 de echte lijst
  * heeft, vervangt de gewone verversing (deelnemersUit) hem.
  *
+ * Heeft het seizoen zelf nog geen race met een lijst, dan de laatste race van
+ * het vorige seizoen (`vorig`). Dat is de kalender van volgend jaar in het
+ * najaar: OpenF1 heeft de races al, maar de coureurs pas rond het eerste
+ * weekend. Zonder lijst kon niemand vóór de eerste race de seizoensvragen
+ * (wereldkampioen, constructeurs) of de top 10 invullen, terwijl de
+ * seizoensvragen juist bij de start van dat weekend dichtgaan. Een nieuwe
+ * coureur of een nieuw team komt erin zodra OpenF1 de echte lijst heeft: dat
+ * gebeurt binnen VERVERS_VENSTER_DAGEN voor de race.
+ *
  * Geeft { drivers, naam } of null.
  */
-export function voorlopigeLijst(race, races = []) {
-  const eerder = races
-    .filter((r) => r.round < race.round && !r.afgelast && (r.drivers ?? []).length)
+export function voorlopigeLijst(race, races = [], vorig = []) {
+  const laatste = (lijst) => lijst
+    .filter((r) => !r.afgelast && (r.drivers ?? []).length)
     .sort((a, b) => b.round - a.round)[0];
-  return eerder ? { drivers: eerder.drivers, naam: eerder.name } : null;
+  const eerder = laatste(races.filter((r) => r.round < race.round));
+  if (eerder) return { drivers: eerder.drivers, naam: eerder.name };
+  const vorige = laatste(vorig);
+  return vorige ? { drivers: vorige.drivers, naam: `${vorige.name} ${vorige.season}` } : null;
 }
 
 /**

@@ -150,8 +150,13 @@ function openf1(res, pad, zoek) {
     return lijst ? stuur(lijst.map((nr, i) => ({ driver_number: Number(nr), position: i + 1 }))) : niet();
   }
   if (pad === 'drivers') {
+    // In 2027 staat er een nieuwe coureur bij, zodat te zien is dat de echte
+    // lijst de geleende vervangt.
+    const nieuwkomer = String(sleutel).startsWith('2027')
+      ? [{ driver_number: 41, name_acronym: 'LIN', full_name: 'Arvid', team_name: 'Racing Bulls', team_colour: '6692ff' }] : [];
     return stuur([{ driver_number: 1, name_acronym: 'VER', full_name: 'Max', team_name: 'Red Bull', team_colour: '3671c6' },
-                  { driver_number: 4, name_acronym: 'NOR', full_name: 'Lando', team_name: 'McLaren', team_colour: 'ff8000' }]);
+                  { driver_number: 4, name_acronym: 'NOR', full_name: 'Lando', team_name: 'McLaren', team_colour: 'ff8000' },
+                  ...nieuwkomer]);
   }
   if (['laps', 'pit', 'race_control'].includes(pad)) return stuur([]);
   return niet();
@@ -253,6 +258,15 @@ wereld.sessies.push(...weekend(2027, 1, 150), ...weekend(2027, 2, 164),
   // de dagelijkse ronde in plaats van elke ronde elk een verzoek te kosten.
   check('de deelnemerslijsten van 2027 worden niet elke ronde gevraagd',
     vroeg('drivers?session_key=2027').length === 0, vroeg('drivers').join(' '));
+  // Maar zonder lijst kan niemand de seizoensvragen invullen, en die gaan bij
+  // de eerste race dicht. Dus voorlopig de lijst van de finale van 2026; dat
+  // kost geen verzoek.
+  const finale2026 = wereld.races.find((r) => r.season === 2026 && r.round === 4);
+  check('de races van 2027 lenen voorlopig de lijst van de laatste race van 2026',
+    nieuw.every((r) => JSON.stringify(r.drivers) === JSON.stringify(finale2026.drivers)),
+    JSON.stringify(nieuw.map((r) => r.drivers?.length)));
+  check('en de log zegt het', /ronde 1 Circuit 2027-1: voorlopig de coureurs van Circuit 2026-4 2026/.test(log),
+    log.slice(-400));
   const ics = readFileSync(agenda, 'utf8');
   check('de agenda heeft nu allebei de seizoenen',
     ics.includes('Circuit 2026-4') && ics.includes('Circuit 2027-1'));
@@ -309,8 +323,25 @@ for (const s of wereld.sessies) {
     `${voor} → ${r3().deadline_race} · ${log.slice(-300)}`);
   check('zonder dat 2026 opnieuw opgehaald wordt', vroeg('year=2026').length === 0,
     vroeg('year=2026').join(' '));
-  check('en in de dagelijkse ronde worden de lijsten van 2027 wel gevraagd',
-    vroeg('drivers?session_key=2027').length === 4, vroeg('drivers').join(' '));
+  // Ze hebben al een voorlopige lijst, en zijn nog maanden weg: de echte komt
+  // binnen veertien dagen voor de race, zoals bij elke race.
+  check('de dagelijkse ronde vraagt de lijsten van 2027 nog niet, ze hebben een voorlopige',
+    vroeg('drivers?session_key=2027').length === 0, vroeg('drivers').join(' '));
+}
+
+// ---- 6b. de eerste race van 2027 komt dichtbij ------------------------------------------
+// Binnen veertien dagen vraagt de sync de echte lijst, en die vervangt de
+// geleende: de nieuwkomer staat erin.
+{
+  const r1 = () => wereld.races.find((r) => r.season === 2027 && r.round === 1);
+  Object.assign(r1(), { deadline_quali: over(9), deadline_race: over(10) });
+  for (const s of wereld.sessies) {
+    if (s.meeting_key === 202701) s.date_start = over(s.session_name === 'Race' ? 10 : 9);
+  }
+  const { code, log } = await sync();
+  check('dicht bij de eerste race vervangt de echte lijst de geleende', code === 0
+    && r1().drivers?.some((d) => d.code === 'LIN') && r1().drivers.length === 3,
+    `${JSON.stringify(r1().drivers)} · ${log.slice(-300)}`);
 }
 
 // ---- 7. een lege database ------------------------------------------------------------------

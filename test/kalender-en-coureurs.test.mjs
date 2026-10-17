@@ -322,6 +322,24 @@ check('een rij zonder race_key houdt zijn ronde bezet',
   check('en slaat een afgelaste race over', naMadrid?.naam === 'Monza', JSON.stringify(naMadrid));
   check('zonder eerdere race met een lijst is er niets te lenen',
     voorlopigeLijst({ round: 1 }, races) === null);
+
+  // De kalender van volgend jaar: nog geen race met een lijst, dus de laatste
+  // race van vorig seizoen (die niet afgelast is).
+  const vorig = [
+    { season: 2026, round: 23, name: 'Lusail', drivers: lijst('QAT') },
+    { season: 2026, round: 24, name: 'Abu Dhabi', drivers: lijst('ABU') },
+    { season: 2026, round: 25, name: 'Nergens', drivers: lijst('NEE'), afgelast: true },
+  ];
+  const nieuwJaar = [{ season: 2027, round: 1, name: 'Melbourne', drivers: null },
+                     { season: 2027, round: 2, name: 'Shanghai', drivers: null }];
+  const eerste = voorlopigeLijst(nieuwJaar[0], nieuwJaar, vorig);
+  check('de eerste race van een nieuw seizoen leent de laatste lijst van vorig seizoen',
+    eerste?.drivers[0].code === 'ABU' && eerste.naam === 'Abu Dhabi 2026', JSON.stringify(eerste));
+  check('ook de races erna, zolang het seizoen zelf nog geen lijst heeft',
+    voorlopigeLijst(nieuwJaar[1], nieuwJaar, vorig)?.drivers[0].code === 'ABU');
+  check('een eerdere race van het eigen seizoen gaat voor',
+    voorlopigeLijst({ round: 2 }, [{ round: 1, name: 'Melbourne', drivers: lijst('MEL') }], vorig)?.naam === 'Melbourne');
+  check('zonder vorig seizoen nog steeds niets', voorlopigeLijst(nieuwJaar[0], nieuwJaar, []) === null);
 }
 
 // ------------------------------------------------------------------
