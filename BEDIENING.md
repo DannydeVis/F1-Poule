@@ -1738,6 +1738,61 @@ inclusief alle uitslagen van het seizoen tot nu toe. Dat is een hersteloperatie
 voor als er iets stuk is, geen opschoning.
 
 
+### 13a. Reservekopie
+
+Supabase op het gratis plan maakt geen reservekopie die je zelf kunt
+terughalen. Daarom maakt GitHub er elke nacht een (`.github/workflows/reservekopie.yml`,
+om 02:41 UTC): alle tabellen uit `public`, ingepakt en versleuteld, bewaard
+als bijlage bij de run, 90 dagen lang. Je hebt er dus altijd drie maanden
+aan nachten om naar terug te gaan. De code zelf staat in git; dit gaat om
+wat spelers invulden.
+
+Niet erin: de accounts zelf (`auth.users`, die zijn via de API niet te lezen).
+Wie na een ramp opnieuw inlogt met hetzelfde adres, krijgt een nieuw account;
+de speler hangt dan nog aan het oude. Met de SQL uit §7 ("Als een speler aan
+het verkeerde account hangt") of door de koppeling leeg te maken en de speler
+opnieuw te laten claimen, is dat recht te zetten.
+
+**Eenmalig instellen (anders wordt de run elke nacht rood):**
+
+1. Verzin een wachtwoord van minstens 16 tekens en zet het in je
+   wachtwoordmanager. Zonder dit wachtwoord is geen enkele kopie meer open te
+   krijgen, ook niet door mij.
+2. GitHub, de repo, Settings, Secrets and variables, Actions, New repository
+   secret. Naam `RESERVEKOPIE_WACHTWOORD`, waarde: dat wachtwoord.
+3. Actions, Reservekopie, Run workflow. Na een minuut staat er onder de run
+   een bijlage `reservekopie-...`.
+
+Waarom versleuteld: de repo is openbaar, en een bijlage bij een run kan
+iedereen met een GitHub-account downloaden. Zonder het wachtwoord is het
+ruis; met een verkeerd wachtwoord, of als er met het bestand geknoeid is,
+weigert het script het.
+
+**Terugzetten:**
+
+1. Download de bijlage van de nacht vóór het misging en pak de zip uit.
+2. `RESERVEKOPIE_WACHTWOORD=... node scripts/reservekopie.mjs open reservekopie-JJJJ-MM-DD.ptrk`.
+   Er komen twee bestanden naast: `.json` (alles, leesbaar) en `.sql`.
+3. Plak de `.sql` in de SQL Editor van Supabase en draai hem. Hij vult aan:
+   wat weg was komt terug, wat er nog staat blijft staan. Moet een tabel
+   helemaal terug naar dat moment (er is iets in veranderd dat niet klopt),
+   haal hem dan eerst leeg met `delete from public.<tabel>;`. Onderaan zie je
+   per tabel hoeveel rijen er nu staan.
+
+Het geopende bestand bevat namen en antwoorden: niet in de repo zetten (de
+map `reservekopie/` en `*.ptrk` staan in `.gitignore`) en weggooien als je
+klaar bent.
+
+Een tweede kopie buiten GitHub is verstandig voor het geval je GitHub-account
+zelf kwijt is: download eens per maand de nieuwste bijlage naar je eigen
+schijf. Het bestand is versleuteld, dus een gewone cloudmap mag.
+
+**Main beschermen.** Zet in GitHub onder Settings, Rules, Rulesets een regel
+op de standaardbranch met "Restrict deletions" en "Block force pushes".
+Dan kan niemand (ook geen AI met schrijfrechten) de geschiedenis van main
+overschrijven of de branch weggooien. Gewone pushes, de sync en automerge
+blijven werken.
+
 ---
 
 ## 14. Toegankelijkheid en wat er zonder verbinding gebeurt

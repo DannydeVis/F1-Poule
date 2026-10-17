@@ -1053,3 +1053,10 @@ zelf leuker maken. Elk in een eigen PR, alles afgedwongen in schema.sql:
 Laat liggen: white-label op eigen domein, een survival-modus en een
 knock-outtoernooi (veel werk voor weinig spelers). Een vrijwillige "Buy me a
 coffee"-link kan altijd; dat is aan Danny.
+
+**Reservekopie** (Danny, 17 oktober: "voor als er ook maar iets fout gaat").
+Gebouwd: elke nacht een versleutelde kopie van alle tabellen, 90 dagen bewaard
+als bijlage bij de run, met een script om terug te zetten; BEDIENING §13a.
+Open bij Danny: het secret `RESERVEKOPIE_WACHTWOORD` en een ruleset op main.
+Later te overwegen: Supabase Pro (dagelijkse kopie van de hele database, ook
+de accounts, en terugzetten met één knop) zodra er betalende poules zijn.
