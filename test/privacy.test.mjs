@@ -92,13 +92,12 @@ if (await page.$('[data-lid]')) {
   // Account verwijderen wist ook poule:welkom (zie vergeetMijOpDitToestel())
   // — met opzet, want na een nieuw account is de rondleiding, met de
   // koppelstap, weer relevant. Dus kan hij hier opnieuw verschijnen.
-  await Promise.race([
-    page.waitForSelector('#rondleidingweg'),
-    page.waitForSelector('[data-race], .speler'),
-  ]);
+  // Niet op .speler wachten: dat zijn ook de naamknoppen op het scherm waar
+  // je jezelf aanwijst, en dan kijkt de test te vroeg.
+  await page.waitForSelector('#rondleidingweg, [data-race]');
   if (await page.$('#rondleidingweg')) await page.click('#rondleidingweg');
 }
-await page.waitForSelector('[data-race], .speler');
+await page.waitForSelector('[data-race]');
 // Het aanmelden haalt eerst een Turnstile-token (turnstile.js); de claim kan
 // dus net na het scherm binnenkomen. Wachten op de claim zelf, niet op het scherm.
 await page.waitForFunction(() => globalThis.__db.pool_members.find((l) => l.display_name === 'Danny')?.user_id,

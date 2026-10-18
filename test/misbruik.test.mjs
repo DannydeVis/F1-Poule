@@ -190,6 +190,43 @@ const metTurnstile = (cloudflare, { laadt = true } = {}) => async (p) => {
   await stoppen();
 }
 
+// ---- 2b. een trage Turnstile en twee tikken -------------------------------------------
+// Zo ging het op 18 oktober op een iPhone: het aanmelden wachtte op Turnstile,
+// er werd nog eens getikt, en de tweede tik schreef een melding op een scherm
+// dat al weg was ("null is not an object ... #f"). Nu haalt het naamscherm
+// alvast een token, staan de knoppen op slot zolang het loopt, en komt een
+// melding alleen op een scherm dat er nog staat.
+{
+  const traag = NEP_TURNSTILE.replace('), 5);', '), 2500);');
+  if (traag === NEP_TURNSTILE) throw new Error('de trage Turnstile is niet traag');
+  const { page, jsFouten, stoppen } = await startPagina({ voorafAan: async (p) => {
+    await p.route('**/turnstile.js', (r) => r.fulfill({ contentType: 'text/javascript', body: turnstileMet(TESTSLEUTEL) }));
+    await p.route('https://challenges.cloudflare.com/**', (r) => r.fulfill({ contentType: 'text/javascript', body: traag }));
+  } });
+  await page.waitForSelector('#code');
+  await zet(page, 'db.captcha_aan = true;');
+  await page.fill('#code', 'RTM026');
+  await page.click('#mee');
+  await page.waitForSelector('#naam');
+  await page.waitForFunction(() => window.__ts?.renders === 1);
+  check('het naamscherm haalt alvast een token, voordat je iets tikt',
+    (await page.evaluate(() => window.__ts.renders)) === 1 && (await db(page)).captcha_log.length === 0);
+  await page.fill('#naam', 'Test');
+  await page.click('#maak');
+  const opSlot = await page.evaluate(() => [document.querySelector('#maak')?.disabled,
+    document.querySelector('#maak')?.textContent.trim()]);
+  await page.click('#maak', { force: true }).catch(() => {});
+  await page.evaluate(() => document.querySelector('#maak')?.click());
+  await naDeClaim(page);
+  const leden = (await db(page)).pool_members.filter((m) => m.display_name === 'Test');
+  check('zolang het aanmelden loopt, staat Meedoen op slot', opSlot[0] === true && opSlot[1] === 'Bezig...', JSON.stringify(opSlot));
+  check('twee tikken maken één speler, aan het account', leden.length === 1 && !!leden[0].user_id, JSON.stringify(leden));
+  check('het token van het naamscherm wordt gebruikt, geen tweede widget',
+    (await page.evaluate(() => window.__ts.renders)) === 1 && (await db(page)).captcha_log.length === 1);
+  check('en geen javascriptfout', jsFouten.length === 0, jsFouten.join(' | '));
+  await stoppen();
+}
+
 // ---- 3. Turnstile laadt niet ------------------------------------------------------
 {
   const cloudflare = [];

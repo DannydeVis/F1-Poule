@@ -10891,3 +10891,18 @@ Cloudflare standaard weg (`test/hulp.mjs` breekt elk verzoek naar
 challenges.cloudflare.com af); `misbruik.test.mjs` zet voor de gevallen
 zonder site key een `turnstile.js` met lege sleutel klaar. Captcha in
 Supabase gaat pas aan als dit live staat.
+
+**18 oktober: een fout op de iPhone na Turnstile.** Danny kreeg na meedoen het
+foutblok "null is not an object (evaluating 'app.querySelector('#f')...')".
+Oorzaak: aanmelden wacht nu op Turnstile (Managed liet hem zelfs een vakje
+aanvinken), er werd nog eens op Meedoen getikt, de eerste tik was intussen
+klaar en had het scherm vervangen, en de tweede schreef zijn melding naar een
+`#f` die er niet meer was. Nu, in `kiesSpeler()`: de knoppen staan op slot
+zolang het aanmelden loopt ("Bezig..."), een melding gaat via `meld()` alleen
+naar een scherm dat er nog staat (anders `S.melding`), en het naamscherm
+laat Turnstile alvast een token halen (`ptrCaptchaVooraf()` in
+`turnstile.js`; een token blijft vijf minuten geldig, na vier halen we een
+nieuwe, en wie het nodig heeft terwijl het nog loopt wacht op datzelfde
+token). De `fout()`-helpers bij het aanmaken en op het beginscherm kijken
+ook eerst of `#f` er is. Test: `misbruik.test.mjs` speelt het na met een
+trage Turnstile en twee tikken (33 checks); een mutant zonder slot valt om.
