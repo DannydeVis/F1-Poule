@@ -10780,6 +10780,12 @@ nachtelijke run rood), en main beschermen met een ruleset (geen force-push,
 niet verwijderen). Dat laatste kon ik niet zelf: de GitHub-proxy van deze
 sessie laat geen schrijven naar repo-instellingen toe.
 
+Gedaan op 18 oktober: het secret staat, de eerste handmatige run was groen
+(bijlage van 15 KB), en de ruleset "main beschermen" staat op active met
+alleen `deletion` en `non_fast_forward` op de standaardbranch, zonder bypass.
+Geen pull-request- of status-check-regel: de sync en automerge pushen
+rechtstreeks naar main.
+
 Tests: `reservekopie.test.mjs` (38 checks) en `reservekopie-terugzetten.mjs`
 (nieuwe stap in de schema-job: vullen, ophalen, ramp, terugzetten, alles
 precies terug).
