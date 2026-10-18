@@ -26,13 +26,13 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast,
          deelnemersUit, lijstDekt, opnieuwNakijken, zelfdeWaarde, veiligeVervanging,
          rondeIndeling, dubbeleRaces, voorlopigeLijst }
   from './uitslagen.mjs';
 import { maakAgenda } from './agenda.mjs';
-import { wieKrijgtEenSeintje } from './herinneringen.mjs';
+import { wieKrijgtEenSeintje, volgendeWekker } from './herinneringen.mjs';
 import { stuur as stuurPush } from './push.mjs';
 import { seizoenPlan, agendaSeizoenen, lijstKanWachten } from './seizoenen.mjs';
 import { OpenF1Dicht, vanwegeSessie, UITLEG as DICHT_UITLEG } from './openf1-dicht.mjs';
@@ -700,10 +700,21 @@ function schrijfAgenda(races) {
 const VAPID_PRIVE  = process.env.VAPID_PRIVE;
 const PUSH_CONTACT = process.env.PUSH_CONTACT ?? 'mailto:poule@voorbeeld.nl';
 
+// Geeft sync.yml door wanneer de wekker moet afgaan; die stap start dan
+// wekker.yml. Buiten GitHub Actions (een test, een run met de hand) staat
+// GITHUB_OUTPUT niet en gebeurt er niets.
+function zetWekker(races) {
+  const om = volgendeWekker({ races });
+  if (!om) return;
+  console.log(`Wekker voor de volgende herinnering: ${om}`);
+  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `wekker=${om}\n`);
+}
+
 async function herinneringen(races) {
   if (!VAPID_PRIVE || !races.length) return;
   const abonnementen = await sb('push_abonnementen?select=*');
   if (!abonnementen?.length) return;
+  zetWekker(races);
 
   // Alleen de top tienen: dat zijn de vragen waar een herinnering over gaat.
   // De losse vragen hangen aan dezelfde deadline, dus wie zijn top 10 invult

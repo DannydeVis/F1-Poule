@@ -1671,7 +1671,7 @@ const seizoen = () => S.seizoen ?? pouleSeizoen();
 // niets. De privé-helft hoort NOOIT hier maar als repository-secret in GitHub
 // (VAPID_PRIVE), want daarmee kan iemand meldingen namens deze app sturen.
 // Een paar maken: `node scripts/push-sleutels.mjs`. Zie BEDIENING.md §11c.
-const VAPID_PUBLIEK = '';
+const VAPID_PUBLIEK = 'BHyAFYEYwtkwpBZhct6OwUiCOrq3rafPTt8m9G66GTjR1bCB2tuCEeHCxSyBLw7jqu__vajZzzmc1GlHriXwEXU';
 
 // Waar iemand terecht kan met een vraag over zijn gegevens. Leeg laten mag —
 // dan staat die regel er gewoon niet — maar een privacyverklaring zonder
@@ -3852,6 +3852,10 @@ const ENGELS = Object.fromEntries([
    'You finished {plek} of {n}, with {punten} points.'],
   ['Je positie per race: van {eerste} bij {race} naar {nu} nu.',
    'Your position per race: from {eerste} at {race} to {nu} now.'],
+  ['Op een iPhone of iPad werken meldingen alleen in de app op je beginscherm, vanaf iOS 16.4. '
+    + 'Zet Predict the Race daar eerst op (zie "op je beginscherm" hierboven), open hem vanaf daar en tik dan opnieuw op deze knop.',
+   'On an iPhone or iPad, notifications only work in the app on your home screen, from iOS 16.4. '
+    + 'Add Predict the Race there first (see "add to home screen" above), open it from there and tap this button again.'],
   ['Zonder toestemming kan er geen melding komen.',
    'Without permission there can be no notification.'],
   ['{naam} losmaken van het toestel waar hij nu aan hangt',
@@ -8337,8 +8341,23 @@ async function pushInlezen() {
   } catch { S.push = 'kan niet'; }
 }
 
+// Een iPhone of iPad in Safari heeft geen PushManager: die bestaat daar pas
+// in de app op het beginscherm, vanaf iOS 16.4. Zonder deze tak zag je in
+// Safari dus helemaal niets over meldingen, en wist je niet dat het kon. Nu
+// staat de knop er wel, en legt een tik uit wat er eerst moet.
+const pushNaBeginscherm = () => !!VAPID_PUBLIEK && !DEMO && isApple() && !alGeinstalleerd();
+
 function meldingBlok() {
-  if (!pushKan() || !S.poule) return '';
+  if (!S.poule) return '';
+  if (pushNaBeginscherm()) {
+    return `<div class="scheiding"></div><span class="label">${T('herinneringen')}</span>
+      <p class="zacht" style="margin:0">${T('Krijg een seintje op dit toestel als een '
+        + 'deadline nadert en je nog niets hebt ingevuld. Op een iPhone werkt dat '
+        + 'alleen als Predict the Race op je beginscherm staat.')}</p>
+      <button class="knop klein" id="meldingAan">${T('Zet meldingen aan')}</button>
+      ${S.pushFout ? `<p class="zacht" id="meldingBeginscherm" style="margin:0">${esc(S.pushFout)}</p>` : ''}`;
+  }
+  if (!pushKan()) return '';
   const kop = `<div class="scheiding"></div><span class="label">${
     T('herinneringen')}</span>`;
   if (S.push === 'geweigerd') {
@@ -8367,7 +8386,14 @@ function meldingBlok() {
 function knoopMelding() {
   const aan = app.querySelector('#meldingAan');
   const uit = app.querySelector('#meldingUit');
-  if (aan) aan.onclick = async () => {
+  if (aan && pushNaBeginscherm()) aan.onclick = () => {
+    S.pushFout = T('Op een iPhone of iPad werken meldingen alleen in de app op je '
+      + 'beginscherm, vanaf iOS 16.4. Zet Predict the Race daar eerst op (zie '
+      + '"op je beginscherm" hierboven), open hem vanaf daar en tik dan opnieuw '
+      + 'op deze knop.');
+    render();
+  };
+  else if (aan) aan.onclick = async () => {
     aan.disabled = true; S.pushFout = '';
     try { await pushAanzetten(); }
     catch (e) { S.pushFout = e.message; }

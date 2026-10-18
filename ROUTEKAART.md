@@ -684,8 +684,13 @@ vervanging:
 
 - Meldingsrecht wordt geweigerd. Dan legt het scherm uit wat er aan de hand is
   en wijst het naar het agenda-abonnement, dat het zonder doet.
-- Op iOS werkt het alleen als de app op het beginscherm staat. Dat staat er ook
-  bij, vóórdat je op de knop drukt.
+- Op iOS werkt het alleen als de app op het beginscherm staat (vanaf iOS
+  16.4). Dat staat er ook bij, vóórdat je op de knop drukt, en in Safari legt
+  een tik op de knop het nog eens uit.
+- Sinds 18 oktober staat het aan: de publieke sleutel staat in `index.html`.
+  De sync zet een wekker voor elk venster, omdat GitHub de cron maar eens per
+  vier uur draait; zie BEDIENING §11c. Uitproberen kan met Actions,
+  Testmelding.
 - Het staat volledig uit tot iemand een VAPID-sleutelpaar maakt. Zonder
   `VAPID_PUBLIEK` in `index.html` biedt de app het niet eens aan, en zonder het
   secret `VAPID_PRIVE` stuurt de sync niets.

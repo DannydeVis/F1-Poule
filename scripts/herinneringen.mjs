@@ -85,9 +85,40 @@ const WOORDEN = {
 export const woorden = (taal) => WOORDEN[taal] ?? WOORDEN.nl;
 
 // Drie uur. Lang genoeg om er nog iets aan te doen, kort genoeg dat het over
-// vandaag gaat. De sync draait elk uur, dus binnen dit venster valt elke
-// deadline minstens één keer op.
+// vandaag gaat. Dat de sync binnen dit venster langskomt, regelt de wekker
+// hieronder: op de cron alleen kun je niet rekenen (zie sync.yml).
 export const VENSTER_UREN = 3;
+
+// Wanneer de sync opnieuw moet draaien voor de volgende herinnering.
+//
+// Nageteld over twee weken in oktober 2026: de cron van sync.yml staat op elk
+// kwartier, maar GitHub draaide hem gemiddeld eens per vier uur, met gaten tot
+// acht uur. Een venster van drie uur viel daar vaker tussendoor dan niet. Dus
+// rekent de sync uit wanneer het volgende venster opengaat, en zet hij een
+// wekker (.github/workflows/wekker.yml) die op dat moment de sync start. Een
+// run die je zelf start, wacht niet in die trage rij.
+//
+// Tien minuten na het openen van het venster, zodat de deadline zeker binnen
+// de drie uur valt als de sync draait. Alleen vensters die binnen `horizon`
+// opengaan: de wekker slaapt hoogstens vijfenhalf uur, en een verder weg
+// liggend venster pakt de volgende sync of wekker op.
+export const WEKKER_NA_OPENEN_MIN = 10;
+export const WEKKER_HORIZON_UREN = 12;
+
+export function volgendeWekker({ races = [], nu = Date.now(), horizon = WEKKER_HORIZON_UREN } = {}) {
+  let vroegst = null;
+  for (const race of races) {
+    if (race.afgelast) continue;
+    for (const welk of SESSIEVOLGORDE) {
+      const iso = race[SESSIES[welk].deadline];
+      if (!iso) continue;
+      const om = Date.parse(iso) - VENSTER_UREN * 3600e3 + WEKKER_NA_OPENEN_MIN * 60e3;
+      if (!(om > nu) || om - nu > horizon * 3600e3) continue;
+      if (vroegst === null || om < vroegst) vroegst = om;
+    }
+  }
+  return vroegst === null ? null : new Date(vroegst).toISOString();
+}
 
 const urenTot = (iso, nu) => (Date.parse(iso) - nu) / 3600e3;
 

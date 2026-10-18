@@ -10912,3 +10912,41 @@ nieuwe, en wie het nodig heeft terwijl het nog loopt wacht op datzelfde
 token). De `fout()`-helpers bij het aanmaken en op het beginscherm kijken
 ook eerst of `#f` er is. Test: `misbruik.test.mjs` speelt het na met een
 trage Turnstile en twee tikken (33 checks); een mutant zonder slot valt om.
+
+## Deadlineherinneringen aan (18 oktober)
+
+Danny: "Zet de deadlineherinneringen aan." `VAPID_PUBLIEK` was leeg, dus de
+app bood ze niet aan.
+
+- `node scripts/push-sleutels.mjs` gedraaid; het paar nagerekend (de publieke
+  helft volgt uit de privé). De publieke staat in `app/index.html`, de privé
+  is één keer aan Danny gegeven voor het secret `VAPID_PRIVE` en staat nergens
+  in de repo. Plus secret `PUSH_CONTACT` = `mailto:contact@predicttherace.com`.
+- **De cron haalt drie uur niet.** sync.yml geeft beide secrets door, maar de
+  laatste 100 geplande runs (2 tot 18 oktober) hadden een mediaan gat van 3u52,
+  90% onder 6u18 en een maximum van 8u02; 75 van de 99 gaten waren langer dan
+  drie uur. Een venster van drie uur werd dus meestal gemist. Oplossing zonder
+  server en zonder nieuw secret: `volgendeWekker()` in herinneringen.mjs rekent
+  uit wanneer het volgende venster opengaat (+10 min, binnen 12 uur), de sync
+  schrijft dat naar `GITHUB_OUTPUT`, sync.yml start `wekker.yml` met
+  `GITHUB_TOKEN` (`actions: write`; een workflow_dispatch met GITHUB_TOKEN is de
+  uitzondering die wel een run start), en die slaapt tot dat moment (hoogstens
+  5u30) en start de sync. Concurrency `wekker` met cancel-in-progress: de
+  nieuwste wint. Alleen als er abonnementen zijn.
+- Nieuw: `.github/workflows/testmelding.yml` + `scripts/testmelding.mjs`, een
+  knop die één melding stuurt naar de toestellen van één speler op naam. Bij
+  naamgenoten met een ander account niets, tenzij er een poulecode bij staat.
+  Raakt `laatst` niet aan. Geen endpoints of codes in de (openbare) log.
+- iPhone in Safari: daar bestaat geen PushManager, dus het blok viel weg en
+  zag je nooit dat het kon. Nu staat de knop er (`pushNaBeginscherm()`) en
+  legt een tik uit dat het pas vanaf het beginscherm werkt, iOS 16.4 of
+  nieuwer, in 7 talen.
+
+Tests: meldingen (31), herinneringen (49), testmelding (32). Mutanten: de
+naamgenotencheck eruit, de wekker tien minuten te vroeg, en de iPhone-tak
+eruit; alle drie gevangen.
+
+**Danny moet:** de secrets `VAPID_PRIVE` en `PUSH_CONTACT` zetten, daarna in de
+app (vanaf het beginscherm op een iPhone) meldingen aanzetten en Actions,
+Testmelding draaien met zijn spelernaam.
+

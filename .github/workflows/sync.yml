@@ -85,6 +85,8 @@ jobs:
     # workflow niets in de repo.
     permissions:
       contents: write
+      # Voor de wekker hieronder: een workflow starten.
+      actions: write
     steps:
       - uses: actions/checkout@v4
 
@@ -93,6 +95,7 @@ jobs:
           node-version: '24'
 
       - name: Synchroniseren met OpenF1
+        id: sync
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
@@ -108,6 +111,20 @@ jobs:
           VAPID_PRIVE: ${{ secrets.VAPID_PRIVE }}
           PUSH_CONTACT: ${{ secrets.PUSH_CONTACT }}
         run: node scripts/sync.mjs
+
+      # Gaat er binnen twaalf uur een herinneringsvenster open, dan zet de sync
+      # hier een wekker: wekker.yml slaapt tot dat moment en start dan deze
+      # workflow. Nodig omdat GitHub de cron hierboven eens per vier uur
+      # draait in plaats van elk kwartier, en een venster van drie uur daar
+      # tussendoor valt. Een run die met GITHUB_TOKEN gestart wordt, telt bij
+      # GitHub als handmatig en wacht niet in de trage rij. Zie
+      # scripts/herinneringen.mjs bij volgendeWekker.
+      - name: Wekker zetten voor de volgende herinnering
+        if: steps.sync.outputs.wekker != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OM: ${{ steps.sync.outputs.wekker }}
+        run: gh workflow run wekker.yml --ref "${GITHUB_REF_NAME}" -f om="$OM"
 
       # De sync schrijft kalender.ics alleen als er echt iets veranderd is, dus
       # deze stap doet meestal niets. Wie zich op die agenda geabonneerd heeft
