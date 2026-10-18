@@ -13404,6 +13404,9 @@ function puntenVan(memberId) {
 }
 
 function kiesSpeler() {
+  // Wie hier zijn naam kiest, gaat zich aanmelden: Turnstile alvast een token
+  // laten halen (turnstile.js), zodat meedoen straks niet zichtbaar wacht.
+  if (!DEMO && !mijnUid) { try { window.ptrCaptchaVooraf?.(); } catch { /* dan bij het meedoen */ } }
   app.innerHTML = `
     <div class="toegang"><div class="kaart" data-intro="kaart|wie-ben-jij">${merkbaan()}
       <div class="kaart-in">
@@ -13446,7 +13449,26 @@ function kiesSpeler() {
     || `<p class="zacht" style="margin:0">${
          T('Nog geen spelers, maak de eerste aan.')}</p>`;
 
+  // Aanmelden kan even duren (Turnstile, soms een vakje om aan te vinken).
+  // Zolang dat loopt staan de knoppen op slot: een tweede tik maakte anders
+  // een tweede speler aan of schreef een melding op een scherm dat al weg
+  // was. En de melding zelf komt alleen op dit scherm als het er nog staat.
+  let bezig = false;
+  const opSlot = (aan) => {
+    bezig = aan;
+    app.querySelectorAll('[data-lid], #maak').forEach((k) => { k.disabled = aan; });
+    const maak = app.querySelector('#maak');
+    if (maak) maak.textContent = aan ? T('Bezig...') : T('Meedoen');
+  };
+  const meld = (t) => {
+    const f = app.querySelector('#f');
+    if (f) f.textContent = t;
+    else { S.melding = t; render(); }
+  };
+
   app.querySelectorAll('[data-lid]').forEach(b => b.onclick = async () => {
+    if (bezig) return;
+    opSlot(true);
     const lid = S.leden.find(l => zelfde(l.member_id, b.dataset.lid));
     S.ik = { id: lid.member_id, naam: lid.display_name };
     onthoud(S.poule.id, S.ik.id);
@@ -13475,8 +13497,9 @@ function kiesSpeler() {
   });
 
   app.querySelector('#maak').onclick = async () => {
+    if (bezig) return;
     const naam = app.querySelector('#naam').value.trim();
-    if (!naam) { app.querySelector('#f').textContent = T('Vul een naam in'); return; }
+    if (!naam) { meld(T('Vul een naam in')); return; }
 
     // Bestaat die naam al in deze poule, dan is dit dezelfde persoon op een
     // ander toestel. Een tweede speler aanmaken zou hem zijn voorspellingen
@@ -13484,6 +13507,7 @@ function kiesSpeler() {
     const bestaand = S.leden.find(l =>
       (l.display_name ?? '').trim().toLowerCase() === naam.toLowerCase());
     if (bestaand) {
+      opSlot(true);
       S.ik = { id: bestaand.member_id, naam: bestaand.display_name };
       onthoud(S.poule.id, S.ik.id);
       const eersteKeer = !bestaand.user_id;
@@ -13505,7 +13529,7 @@ function kiesSpeler() {
         }
         render();
       }
-      catch (e) { app.querySelector('#f').textContent = e.message; }
+      catch (e) { opSlot(false); meld(e.message); }
       return;
     }
 
@@ -13514,8 +13538,9 @@ function kiesSpeler() {
       S.leden.push({ member_id:id, display_name:naam });
       S.ik = { id, naam }; onthoud(S.poule.id, id); render(); return;
     }
+    opSlot(true);
     const { data, error } = await maakSpeler(S.poule.id, naam);
-    if (error) { app.querySelector('#f').textContent = uitleg(error); return; }
+    if (error) { opSlot(false); meld(uitleg(error)); return; }
     S.ik = { id: data.member_id, naam };
     onthoud(S.poule.id, data.member_id);
     try {
@@ -13528,7 +13553,7 @@ function kiesSpeler() {
       if (isNuVanMij(data.member_id)) startRondleiding('claim');
       render();
     }
-    catch (e) { app.querySelector('#f').textContent = e.message; }
+    catch (e) { opSlot(false); meld(e.message); }
   };
 }
 
@@ -13638,7 +13663,7 @@ function maakStap(m, preset) {
 }
 
 function maakKnoppen(m) {
-  const fout = (t) => { S.maak.fout = t; app.querySelector('#f').textContent = t; };
+  const fout = (t) => { S.maak.fout = t; const f = app.querySelector('#f'); if (f) f.textContent = t; };
   const terug = app.querySelector('#terugstap');
   if (terug) terug.onclick = () => {
     // Vanaf de eerste stap terug is: toch maar meedoen met een bestaande poule.
@@ -14151,7 +14176,7 @@ function toonStart() {
     S.terugNaar = null;
     naarPoule(id);
   };
-  const fout = (t) => { app.querySelector('#f').textContent = t; };
+  const fout = (t) => { const f = app.querySelector('#f'); if (f) f.textContent = t; };
   if (S.melding) { fout(S.melding); S.melding = ''; }
 
   app.querySelectorAll('[data-naar-poule]').forEach(b => b.onclick = () => {

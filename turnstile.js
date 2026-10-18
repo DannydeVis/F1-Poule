@@ -77,5 +77,25 @@
     });
   }
 
-  window.ptrCaptcha = () => token().catch(() => undefined);
+  // Alvast een token halen, op het scherm waar je je naam kiest: dan hoeft
+  // meedoen er niet op te wachten. Een token blijft vijf minuten geldig; na
+  // vier minuten halen we liever een nieuwe. Loopt het halen nog als de app
+  // het token nodig heeft, dan wacht hij op dat ene in plaats van een tweede
+  // widget te maken. Elk token wordt maar één keer uitgegeven.
+  const HOUDBAAR = 240000;
+  let vooraf = null;
+  window.ptrCaptchaVooraf = () => {
+    if (!SITE_KEY || (vooraf && Date.now() - vooraf.sinds < HOUDBAAR)) return;
+    vooraf = { sinds: Date.now(), belofte: token().catch(() => undefined) };
+  };
+  window.ptrCaptcha = async () => {
+    if (vooraf && Date.now() - vooraf.sinds < HOUDBAAR) {
+      const { belofte } = vooraf;
+      vooraf = null;
+      const t = await belofte;
+      if (t) return t;
+    }
+    vooraf = null;
+    return token().catch(() => undefined);
+  };
 })();
