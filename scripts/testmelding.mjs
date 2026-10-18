@@ -59,7 +59,7 @@ export function kiesAbonnementen({ naam, code, leden, poules, abonnementen }) {
   if (!kandidaten.length) {
     return { fout: code ? 'Geen speler met die naam in die poule.' : 'Geen speler met die naam.' };
   }
-  const ids = new Set(kandidaten.map((l) => l.id));
+  const ids = new Set(kandidaten.map((l) => l.member_id));
   const gevonden = abonnementen.filter((a) => ids.has(a.member_id));
   if (!gevonden.length) {
     return { fout: 'Die speler heeft op geen enkel toestel meldingen aan. '
@@ -67,8 +67,8 @@ export function kiesAbonnementen({ naam, code, leden, poules, abonnementen }) {
   }
   // Wie is wie: een account, of bij een speler zonder account de speler zelf.
   const wie = new Set(gevonden.map((a) => {
-    const lid = kandidaten.find((l) => l.id === a.member_id);
-    return lid.user_id ?? `lid:${lid.id}`;
+    const lid = kandidaten.find((l) => l.member_id === a.member_id);
+    return lid.user_id ?? `lid:${lid.member_id}`;
   }));
   if (wie.size > 1) {
     return { fout: `Er zijn ${wie.size} verschillende spelers met die naam die meldingen aan `
@@ -105,7 +105,7 @@ export async function testmelding({ env = process.env, haal = fetch, log = conso
   // niet erg, want kiesAbonnementen vergelijkt daarna precies.
   const patroon = encodeURIComponent(naam);
   const [leden, abonnementen, poules] = await Promise.all([
-    naam ? sb(`pool_members?display_name=ilike.${patroon}&select=id,pool_id,user_id,display_name`) : [],
+    naam ? sb(`pool_members?display_name=ilike.${patroon}&select=member_id,pool_id,user_id,display_name`) : [],
     sb('push_abonnementen?select=endpoint,member_id,p256dh,auth,taal'),
     code ? sb(`pools?join_code=eq.${encodeURIComponent(code.toUpperCase())}&select=id,join_code`) : [],
   ]);

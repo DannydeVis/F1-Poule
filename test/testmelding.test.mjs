@@ -18,9 +18,9 @@ const { check, afronden } = maakControle('testmelding');
 
 // ---- wie krijgt hem ------------------------------------------------------
 const leden = [
-  { id: 'l1', pool_id: 'p1', user_id: 'u1', display_name: 'Danny' },
-  { id: 'l2', pool_id: 'p2', user_id: 'u1', display_name: 'danny' },
-  { id: 'l3', pool_id: 'p3', user_id: 'u2', display_name: 'Danny' },
+  { member_id: 'l1', pool_id: 'p1', user_id: 'u1', display_name: 'Danny' },
+  { member_id: 'l2', pool_id: 'p2', user_id: 'u1', display_name: 'danny' },
+  { member_id: 'l3', pool_id: 'p3', user_id: 'u2', display_name: 'Danny' },
 ];
 const poules = [{ id: 'p1', join_code: 'AAAAAA' }, { id: 'p3', join_code: 'CCCCCC' }];
 const ab = (endpoint, member_id, taal = 'nl') => ({ endpoint, member_id, p256dh: 'x', auth: 'y', taal });
@@ -55,8 +55,8 @@ check('en een speler zonder meldingen krijgt uitgelegd hoe het aan moet',
 
 // Een speler zonder account (nog niet geclaimd) is zichzelf.
 const zonder = kiesAbonnementen({ naam: 'Lando',
-  leden: [{ id: 'a', pool_id: 'p1', user_id: null, display_name: 'Lando' },
-          { id: 'b', pool_id: 'p3', user_id: null, display_name: 'Lando' }],
+  leden: [{ member_id: 'a', pool_id: 'p1', user_id: null, display_name: 'Lando' },
+          { member_id: 'b', pool_id: 'p3', user_id: null, display_name: 'Lando' }],
   poules, abonnementen: [ab('https://a/a', 'a'), ab('https://a/b', 'b')] });
 check('twee spelers zonder account met dezelfde naam tellen als twee mensen',
   !!zonder.fout, JSON.stringify(zonder));
@@ -79,12 +79,34 @@ toestel.generateKeys();
 const echtAb = (endpoint, member_id, taal) => ({ endpoint, member_id, taal,
   p256dh: b64u(toestel.getPublicKey()), auth: b64u(randomBytes(16)) });
 
+// De kolommen zoals ze in schema.sql staan: create table plus elke latere
+// "add column". Vraagt het script een kolom die niet bestaat, dan geeft deze
+// nep-database een 400, net als PostgREST. Zo zakte de eerste echte run: hij
+// vroeg pool_members.id, en die kolom heet member_id.
+const SCHEMA = readFileSync(join(wortel, 'schema.sql'), 'utf8');
+function kolommen(tabel) {
+  const blok = SCHEMA.match(new RegExp(`create table if not exists public\\.${tabel} \\(([\\s\\S]*?)\\n\\);`))?.[1] ?? '';
+  const uit = new Set([...blok.matchAll(/^\s+([a-z_0-9]+)\s+(?:uuid|text|int|bigint|boolean|timestamptz|jsonb|date|numeric)/gm)].map((m) => m[1]));
+  for (const m of SCHEMA.matchAll(new RegExp(`alter table public\\.${tabel}\\s+add column if not exists ([a-z_0-9]+)`, 'g'))) uit.add(m[1]);
+  return uit;
+}
+check('de nep-database kent de kolommen uit schema.sql',
+  kolommen('pool_members').has('member_id') && !kolommen('pool_members').has('id')
+    && kolommen('pools').has('join_code') && kolommen('push_abonnementen').has('taal'),
+  [...kolommen('pool_members')].join(','));
+
 function nep({ abonnementen, leden: l = leden, pushStatus = 201 }) {
   const verzoeken = [];
   const haal = async (url, opties = {}) => {
     verzoeken.push({ url: String(url), ...opties });
     const u = new URL(url);
     const json = (data) => new Response(JSON.stringify(data), { status: 200 });
+    const tabel = u.pathname.replace('/rest/v1/', '');
+    const gevraagd = (u.searchParams.get('select') ?? '').split(',').filter(Boolean);
+    const onbekend = gevraagd.filter((k) => !kolommen(tabel).has(k));
+    if (u.host === 'db.voorbeeld' && onbekend.length) {
+      return new Response(`column ${tabel}.${onbekend[0]} does not exist`, { status: 400 });
+    }
     if (u.pathname === '/rest/v1/pool_members') {
       const naam = u.searchParams.get('display_name').replace(/^ilike\./, '');
       return json(l.filter((x) => x.display_name.toLowerCase() === naam.toLowerCase()));
@@ -192,7 +214,7 @@ const env = { SUPABASE_URL: 'https://db.voorbeeld', SUPABASE_KEY: 'geheim', VAPI
   // Een naam met een jokerteken wordt in de database een zoekpatroon, maar
   // daarna telt alleen een precieze treffer.
   const { haal, verzoeken } = nep({ abonnementen: [echtAb('https://push.voorbeeld/telefoon', 'l1', 'nl')],
-    leden: [...leden, { id: 'l5', pool_id: 'p1', user_id: 'u5', display_name: 'D%n*y' }] });
+    leden: [...leden, { member_id: 'l5', pool_id: 'p1', user_id: 'u5', display_name: 'D%n*y' }] });
   // De nep-database doet geen patronen; deze naam vindt dus alleen zichzelf.
   let fout = '';
   await testmelding({ env: { ...env, SPELER: 'D%n*y' }, haal, log: () => {} })

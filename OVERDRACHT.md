@@ -10950,3 +10950,11 @@ eruit; alle drie gevangen.
 app (vanaf het beginscherm op een iPhone) meldingen aanzetten en Actions,
 Testmelding draaien met zijn spelernaam.
 
+
+**Nagekomen (18 oktober, middag):** de eerste echte Testmelding-run zakte:
+`scripts/testmelding.mjs` vroeg `pool_members.id`, maar die kolom heet
+`member_id`. De nep-database in de test kende dezelfde verkeerde naam, dus de
+test zag het niet. Hersteld, en de nep-database leest nu de kolommen uit
+schema.sql en geeft een 400 op een kolom die niet bestaat, net als PostgREST.
+Danny's abonnement (iPhone, web.push.apple.com) stond al goed in
+`push_abonnementen`.
