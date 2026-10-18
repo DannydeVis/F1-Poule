@@ -11,11 +11,14 @@
 // geen fetch-handler hebben. Dat is de reden dat deze app jarenlang geen
 // service worker had, en het is met één regel weer stuk te maken.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { maakControle, startPagina, meedoen, wortel } from './hulp.mjs';
 
 const { check, afronden } = maakControle('meldingen');
+
+const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 '
+  + '(KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
 // ---- eerst het bestand zelf, zonder browser ------------------------------
 const sw = readFileSync(join(wortel, 'sw.js'), 'utf8');
@@ -27,33 +30,114 @@ check('maar luistert wel naar push', /addEventListener\(\s*['"]push['"]/.test(sw
 check('en naar een tik op de melding',
   /addEventListener\(\s*['"]notificationclick['"]/.test(sw));
 
+// ---- de sleutel in index.html ---------------------------------------------
+// Sinds 18 oktober 2026 staat er een echte publieke sleutel (BEDIENING.md
+// §11c). Een P-256-punt is 65 bytes en begint met 0x04, in base64url dus met
+// een B. Een afgeknipte of verkeerd geplakte sleutel laat subscribe() pas op
+// een echt toestel zakken.
+const BRON = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
+const SLEUTEL = BRON.match(/const VAPID_PUBLIEK = '([^']*)';/)?.[1];
+check('VAPID_PUBLIEK staat ingevuld in index.html', !!SLEUTEL, String(SLEUTEL));
+const sleutelBytes = Buffer.from(SLEUTEL ?? '', 'base64url');
+check('en is een volledige publieke P-256-sleutel (65 bytes, begint met 0x04)',
+  sleutelBytes.length === 65 && sleutelBytes[0] === 4, `${sleutelBytes.length} bytes`);
+check('en het is niet de sleutel uit deze test',
+  SLEUTEL !== 'BH5WKgOsOKGNJfEDcwTQxDETF_yim8P_gL4pfUy2MmZR3zHIcKyhp0el0BP8udhSNdt3P1N1hIxHVq2yU1V5rMM');
+
+const MET = (sleutel) => (bron) => {
+  const uit = bron.replace(/const VAPID_PUBLIEK = '[^']*';/, `const VAPID_PUBLIEK = '${sleutel}';`);
+  if (uit === bron && !bron.includes(`const VAPID_PUBLIEK = '${sleutel}';`)) {
+    throw new Error('VAPID_PUBLIEK niet gevonden in index.html');
+  }
+  return uit;
+};
+const ZONDERSLEUTEL = MET('');
+const METSLEUTEL = MET('BH5WKgOsOKGNJfEDcwTQxDETF_yim8P_gL4pfUy2MmZR3zHIcKyhp0el0BP8udhSNdt3P1N1hIxHVq2yU1V5rMM');
+
+const tijdelijk = (naam, bron) => {
+  const pad = join(process.env.TMPDIR ?? '/tmp', `poule-${naam}-${process.pid}.html`);
+  writeFileSync(pad, bron);
+  return pad;
+};
+
 // ---- zonder VAPID-sleutel biedt de app het niet aan ----------------------
-// Zo staat het in de repo: VAPID_PUBLIEK is leeg tot iemand een sleutelpaar
-// maakt. Dan hoort er geen knop te zijn die toch niets doet.
-{
-  const { page, jsFouten, stoppen } = await startPagina();
+// Leeg laten mag nog steeds, bijvoorbeeld als iemand deze app overneemt
+// zonder sleutelpaar. Dan hoort er geen knop te zijn die toch niets doet,
+// ook niet op een iPhone.
+for (const userAgent of [undefined, IPHONE]) {
+  const { page, jsFouten, stoppen } = await startPagina({
+    indexPad: tijdelijk('push0', ZONDERSLEUTEL(BRON)), userAgent });
   await meedoen(page);
   await page.click('[data-weergave="profiel"]');
   await page.waitForSelector('#app');
   await page.waitForTimeout(150);
-  check('zonder ingestelde sleutel staat er geen aanbod voor meldingen',
+  check(`zonder ingestelde sleutel staat er geen aanbod voor meldingen${userAgent ? ' (iPhone)' : ''}`,
     (await page.$('#meldingAan')) === null && (await page.$('#meldingUit')) === null);
   check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
   await stoppen();
 }
 
-// ---- met een sleutel, en toestemming geweigerd ---------------------------
-const METSLEUTEL = (bron) => bron.replace(
-  "const VAPID_PUBLIEK = '';",
-  "const VAPID_PUBLIEK = 'BH5WKgOsOKGNJfEDcwTQxDETF_yim8P_gL4pfUy2MmZR3zHIcKyhp0el0BP8udhSNdt3P1N1hIxHVq2yU1V5rMM';");
-
+// ---- iPhone in Safari: eerst naar het beginscherm --------------------------
+// Safari op een iPhone kent geen PushManager; die bestaat pas in de app op het
+// beginscherm, vanaf iOS 16.4. De knop staat er toch, en een tik legt uit wat
+// er eerst moet in plaats van stil niets te doen.
 {
-  const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
-  const aangepast = METSLEUTEL(bron);
-  if (aangepast === bron) throw new Error('VAPID_PUBLIEK staat niet meer leeg in index.html');
-  const pad = join(process.env.TMPDIR ?? '/tmp', `poule-push-${process.pid}.html`);
-  const { writeFileSync } = await import('node:fs');
-  writeFileSync(pad, aangepast);
+  const { page, jsFouten, stoppen } = await startPagina({
+    indexPad: tijdelijk('push-ios', METSLEUTEL(BRON)), userAgent: IPHONE });
+  await page.addInitScript(() => { delete window.PushManager; });
+  await page.reload();
+  await meedoen(page);
+  await page.click('[data-weergave="profiel"]');
+  await page.waitForSelector('#meldingAan');
+  check('op een iPhone in Safari staat de knop er wel', true);
+  await page.click('#meldingAan');
+  await page.waitForSelector('#meldingBeginscherm');
+  const uitleg = (await page.textContent('#meldingBeginscherm')).replace(/\s+/g, ' ');
+  check('en een tik legt uit dat het pas vanaf het beginscherm werkt',
+    uitleg.includes('beginscherm') && uitleg.includes('iOS 16.4'), uitleg);
+  check('met een verwijzing naar de stappen erboven',
+    (await page.$('[data-beginscherm]')) !== null);
+  check('er is niets weggeschreven',
+    (await page.evaluate(() => globalThis.__db.push_abonnementen?.length ?? 0)) === 0);
+  check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
+  await stoppen();
+}
+
+// In het Engels hoort de uitleg ook Engels te zijn.
+{
+  const { page, stoppen } = await startPagina({
+    indexPad: tijdelijk('push-ios-en', METSLEUTEL(BRON)), userAgent: IPHONE, taal: 'en' });
+  await meedoen(page);
+  await page.click('[data-weergave="profiel"]');
+  await page.waitForSelector('#meldingAan');
+  await page.click('#meldingAan');
+  await page.waitForSelector('#meldingBeginscherm');
+  const uitleg = await page.textContent('#meldingBeginscherm');
+  check('de uitleg is vertaald', uitleg.includes('home screen') && uitleg.includes('iOS 16.4'), uitleg);
+  await stoppen();
+}
+
+// Vanaf het beginscherm geldt de gewone weg: geen uitleg, maar de echte vraag
+// om toestemming (hier geweigerd, zodat de gewone tak te zien is).
+{
+  const { page, stoppen } = await startPagina({
+    indexPad: tijdelijk('push-ios-app', METSLEUTEL(BRON)), userAgent: IPHONE });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'standalone', { get: () => true });
+    Object.defineProperty(Notification, 'permission', { get: () => 'denied' });
+  });
+  await page.reload();
+  await meedoen(page);
+  await page.click('[data-weergave="profiel"]');
+  await page.waitForFunction(() => document.querySelector('#app')?.textContent.includes('geblokkeerd'));
+  check('in de app op het beginscherm geldt de gewone weg',
+    (await page.$('#meldingBeginscherm')) === null);
+  await stoppen();
+}
+
+// ---- met een sleutel, en toestemming geweigerd ---------------------------
+{
+  const pad = tijdelijk('push', METSLEUTEL(BRON));
 
   const { page, jsFouten, stoppen } = await startPagina({ indexPad: pad });
   // Meldingen weigeren, zoals een browser dat onthoudt.
@@ -79,10 +163,7 @@ const METSLEUTEL = (bron) => bron.replace(
 
 // ---- met een sleutel en toestemming: de knop staat er --------------------
 {
-  const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
-  const pad = join(process.env.TMPDIR ?? '/tmp', `poule-push2-${process.pid}.html`);
-  const { writeFileSync } = await import('node:fs');
-  writeFileSync(pad, METSLEUTEL(bron));
+  const pad = tijdelijk('push2', METSLEUTEL(BRON));
 
   const { page, jsFouten, stoppen } = await startPagina({ indexPad: pad });
   // Een testbrowser meldt 'denied' zolang niemand ja gezegd heeft, en
@@ -115,10 +196,7 @@ const METSLEUTEL = (bron) => bron.replace(
 // uit deze rij, dus als hij hier niet in staat komt elke melding in het
 // Nederlands aan, ook bij wie de app in het Engels gebruikt.
 {
-  const bron = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
-  const pad = join(process.env.TMPDIR ?? '/tmp', `poule-push3-${process.pid}.html`);
-  const { writeFileSync } = await import('node:fs');
-  writeFileSync(pad, METSLEUTEL(bron));
+  const pad = tijdelijk('push3', METSLEUTEL(BRON));
 
   const { page, jsFouten, stoppen } = await startPagina({ indexPad: pad });
   await page.addInitScript(() => {

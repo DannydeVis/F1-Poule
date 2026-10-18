@@ -1512,17 +1512,26 @@ De regel, en vooral wat hij niet doet:
   ingevuld. Wie invult krijgt niets.
 - Dezelfde melding komt **niet twee keer**: de sync onthoudt per toestel wat er
   het laatst gestuurd is.
-- Op een **iPhone** werkt het alleen als Predict the Race op je beginscherm staat.
-  Dat is een regel van iOS, niet van de app.
+- Op een **iPhone** werkt het alleen als Predict the Race op je beginscherm staat,
+  vanaf iOS 16.4. Dat is een regel van iOS, niet van de app. In Safari staat de
+  knop er wel; een tik legt uit dat hij eerst op het beginscherm moet.
 - De melding komt **in de taal van dat toestel**: dezelfde taal waarin je de
   app gebruikte toen je hem aanzette. Wissel je later van taal, dan gaat de
   melding mee. Zie §11e.
 
-### Dit staat uit tot je het inricht
+### Inrichten (gedaan op 18 oktober 2026)
 
-De app biedt het pas aan als er een VAPID-sleutelpaar is, en de sync stuurt
-pas iets als de privésleutel als secret klaarstaat. Zonder die twee verandert
-er niets en klaagt er niets.
+De publieke sleutel staat sinds 18 oktober in `app/index.html`, dus de app
+biedt het aan. De sync stuurt pas iets als de privésleutel als secret
+klaarstaat. Ontbreekt die, dan klaagt er niets, maar komt er ook niets.
+
+Wat er nodig is:
+
+1. Secret `VAPID_PRIVE`: de privéhelft van het paar. Die staat nergens in de
+   repo; Danny heeft hem.
+2. Secret `PUSH_CONTACT`: `mailto:contact@predicttherace.com`.
+
+Hoe dat paar ooit gemaakt is, en hoe je een nieuw maakt:
 
 ```
 node scripts/push-sleutels.mjs
@@ -1535,9 +1544,40 @@ Dat script drukt een vers paar af en zegt waar de twee helften heen moeten:
 2. De **privé**-helft als repository-secret `VAPID_PRIVE` in GitHub →
    Settings → Secrets and variables → Actions. Nergens anders: wie hem heeft
    kan meldingen namens deze app sturen.
-3. En een secret `PUSH_CONTACT` met een mailadres dat je leest, bijvoorbeeld
-   `mailto:jij@voorbeeld.nl`. Pushdiensten willen weten wie de afzender is, en
-   gebruiken dat adres als er iets mis is met je verkeer.
+3. En een secret `PUSH_CONTACT` met een mailadres dat je leest, hier
+   `mailto:contact@predicttherace.com`. Pushdiensten willen weten wie de
+   afzender is, en gebruiken dat adres als er iets mis is met je verkeer.
+
+### Uitproberen zonder op een deadline te wachten
+
+Actions, **Testmelding**, Run workflow. Vul de naam van een speler in zoals
+hij in de poule staat (hoofdletters maken niet uit). Alle toestellen waar die
+speler meldingen aan heeft, krijgen binnen een minuut "Testmelding van
+Predict the Race", in de taal van dat toestel. Een echte herinnering komt
+daarna gewoon nog; de testmelding telt niet mee.
+
+- Heten twee spelers met meldingen aan zo (in verschillende poules, met een
+  ander account), dan stuurt hij niets en vraagt hij om de **poulecode** erbij.
+- Rood met "Geen enkel toestel bereikt": de privésleutel past niet bij de
+  publieke in `index.html`, of het abonnement is verlopen (dan is het meteen
+  opgeruimd; zet meldingen opnieuw aan).
+- De log is openbaar, net als de repo. De naam die je invult staat erin; het
+  script zet er geen endpoints, poulecodes of poulenamen bij.
+
+### Op tijd, ook al slaat GitHub runs over
+
+De cron van de sync staat op elk kwartier, maar GitHub draait hem bij deze
+repo ongeveer eens per vier uur, met gaten tot acht uur (nageteld over de
+eerste helft van oktober 2026). Een venster van drie uur valt daar vaker
+tussendoor dan niet. Daarom zet de sync een **wekker**: gaat er binnen twaalf
+uur een herinneringsvenster open, dan start hij `wekker.yml`, die slaapt tot
+tien minuten nadat het venster opengaat en dan de sync start. Een run die zo
+gestart wordt, wacht niet in de trage rij van geplande runs.
+
+Er loopt hoogstens één wekker tegelijk; een nieuwere vervangt de oude. In het
+Actions-tabblad zie je hem als "Wekker voor herinneringen", soms uren
+"bezig": dat is slapen, en dat kost niets in een openbare repo. De wekker
+gaat alleen als er minstens één toestel meldingen aan heeft.
 
 Sleutel kwijt? Maak een nieuw paar. Alle bestaande abonnementen vervallen dan —
 iedereen moet opnieuw op "Zet meldingen aan" tikken — maar er gaat niets anders
@@ -2132,8 +2172,8 @@ opent de app voortaan in een browservenster.
   run na de koppeling zet het nieuwe adres erin (Actions → Uitslagen
   synchroniseren → Run workflow, als je niet wilt wachten). Wie er al op
   geabonneerd is hoeft niets te doen.
-- **Meldingen** staan nog niet aan (§11c). Als ze aangaan is dat op het nieuwe
-  adres, en daar wijzen ze ook heen.
+- **Meldingen** (§11c) wijzen naar het adres in `APP_URL` van de sync, dus
+  naar predicttherace.com.
 
 ---
 

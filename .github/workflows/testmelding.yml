@@ -1,0 +1,46 @@
+name: Testmelding
+
+# Een knop in het Actions-tabblad: stuurt één testmelding naar de toestellen
+# van één speler, zodat je de herinneringen kunt proberen zonder op een
+# deadline te wachten. Zie BEDIENING.md §11c en scripts/testmelding.mjs.
+#
+# Let op: de log van een openbare repo is voor iedereen te lezen, en de naam
+# die je hier invult staat erin. Het script zelf schrijft geen endpoints,
+# poulecodes of poulenamen in de log.
+on:
+  workflow_dispatch:
+    inputs:
+      speler:
+        description: 'Naam van de speler, zoals in de poule (hoofdletters maken niet uit)'
+        type: string
+        required: true
+      poule:
+        description: 'Poulecode, alleen nodig als meer spelers zo heten'
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  testmelding:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Testmelding sturen
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          VAPID_PRIVE: ${{ secrets.VAPID_PRIVE }}
+          PUSH_CONTACT: ${{ secrets.PUSH_CONTACT }}
+          # Via env en niet in de run-regel zelf: dan kan een naam met
+          # aanhalingstekens of een $ niets in de shell aanrichten.
+          SPELER: ${{ inputs.speler }}
+          POULE: ${{ inputs.poule }}
+        run: node scripts/testmelding.mjs

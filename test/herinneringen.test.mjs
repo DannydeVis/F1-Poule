@@ -8,8 +8,10 @@
 // Draait zonder browser, net als test/push.test.mjs: er valt hier niets te
 // klikken, alleen na te rekenen.
 
-import { wieKrijgtEenSeintje, overTekst, VENSTER_UREN } from '../scripts/herinneringen.mjs';
-import { maakControle } from './hulp.mjs';
+import { wieKrijgtEenSeintje, overTekst, VENSTER_UREN, volgendeWekker } from '../scripts/herinneringen.mjs';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { maakControle, wortel } from './hulp.mjs';
 
 const { check, afronden } = maakControle('herinneringen voor de deadline');
 
@@ -163,5 +165,46 @@ check('in het Duits', inTaal('de')?.titel === 'Suzuka: Qualifying schließt in 2
 check('en in het Frans, Spaans, Italiaans en Portugees, elk anders',
   new Set(['fr', 'es', 'it', 'pt', 'nl', 'en', 'de'].map((t) => inTaal(t)?.titel)).size === 7,
   ['fr', 'es', 'it', 'pt'].map((t) => inTaal(t)?.titel).join(' | '));
+
+// ---- de wekker -----------------------------------------------------------
+// GitHub draait de cron van sync.yml eens per vier uur, niet elk kwartier.
+// Zonder wekker valt een venster van drie uur daar vaker tussendoor dan niet.
+const wek = (races, nu = NU) => volgendeWekker({ races, nu });
+check('de wekker gaat tien minuten na het openen van het venster af',
+  wek([race(5)]) === new Date(NU + (5 - VENSTER_UREN) * 3600e3 + 10 * 60e3).toISOString(),
+  String(wek([race(5)])));
+check('en kiest de vroegste sessie',
+  wek([race(8), { ...race(5), id: 2 }]) === wek([race(5)]));
+check('een venster dat al open is, is geen wekker meer waard (die sync draait nu)',
+  wek([{ ...race(2), deadline_race: null }]) === null, String(wek([{ ...race(2), deadline_race: null }])));
+check('maar de volgende sessie wel, ook als die pas morgen is: binnen twaalf uur',
+  wek([{ ...race(2), deadline_race: over(14) }]) !== null);
+check('en verder dan twaalf uur weg niet',
+  wek([{ ...race(2), deadline_race: over(16) }]) === null);
+check('een afgelaste race krijgt geen wekker', wek([{ ...race(5), afgelast: true }]) === null);
+check('en zonder races ook niet', wek([]) === null);
+// Als de wekker-sync draait, staat de klok op het wekmoment. Dan hoort de
+// herinnering mee te gaan, anders was de hele wekker voor niets.
+const wekmoment = Date.parse(wek([race(5)]));
+check('op het wekmoment valt de deadline binnen het venster',
+  roep({ races: [race(5)], abonnementen: [danny], nu: wekmoment }).length === 1);
+
+// En de draad van sync naar wekker naar sync.
+const yml = (f) => readFileSync(join(wortel, '.github', 'workflows', f), 'utf8');
+const sync = yml('sync.yml');
+const wekker = yml('wekker.yml');
+check('sync.yml geeft VAPID_PRIVE en PUSH_CONTACT door',
+  /VAPID_PRIVE: \$\{\{ secrets\.VAPID_PRIVE \}\}/.test(sync)
+    && /PUSH_CONTACT: \$\{\{ secrets\.PUSH_CONTACT \}\}/.test(sync));
+check('sync.yml start de wekker met de tijd die de sync doorgeeft',
+  sync.includes('steps.sync.outputs.wekker') && /gh workflow run wekker\.yml/.test(sync)
+    && /actions: write/.test(sync));
+check('wekker.yml start daarna de sync, met hoogstens één wekker tegelijk',
+  /gh workflow run sync\.yml/.test(wekker) && /cancel-in-progress: true/.test(wekker)
+    && /workflow_dispatch/.test(wekker));
+check('en slaapt nooit langer dan een job mag duren',
+  /19800/.test(wekker) && /timeout-minutes: 350/.test(wekker));
+check('de sync schrijft de wekker naar GITHUB_OUTPUT',
+  /GITHUB_OUTPUT.*wekker=/s.test(readFileSync(join(wortel, 'scripts', 'sync.mjs'), 'utf8')));
 
 process.exit(afronden() ? 0 : 1);
