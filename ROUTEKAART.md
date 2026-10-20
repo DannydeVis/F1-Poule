@@ -1073,3 +1073,14 @@ poule, 5 poules per account per dag, een maximum per poule (500, de open poule
 voor de echte schermen, en Turnstile bij elke inlogaanroep; BEDIENING §7b.
 Open bij Danny: de Turnstile-widget, de site key en captcha aan in Supabase.
 
+
+**De overgang naar 2027** (19 oktober). Gebouwd: een geleende coureurlijst
+gaat niet meer zomaar overboord. Komt de echte lijst (van OpenF1, of eerder uit
+het beheer), dan zet de database de open antwoorden om naar de nieuwe nummers
+en teamnamen; wat niet eenduidig is wordt gemeld in het logboek en in de app
+staat "kies opnieuw" en "actie nodig". In het beheer kan de grid van 2027
+gezet worden zodra hij officieel is. De voorlopige tijden van OpenF1 (de
+kwalificatie precies 24 uur voor de race) heten in de app "tijd voorlopig" en
+worden vanzelf vervangen; BEDIENING §6c.
+Open bij Danny: de grid van 2027 in het beheer zetten zodra hij bekend is
+(voor de eerste deadline op 13 maart).

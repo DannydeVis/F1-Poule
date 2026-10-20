@@ -10958,3 +10958,73 @@ test zag het niet. Hersteld, en de nep-database leest nu de kolommen uit
 schema.sql en geeft een 400 op een kolom die niet bestaat, net als PostgREST.
 Danny's abonnement (iPhone, web.push.apple.com) stond al goed in
 `push_abonnementen`.
+
+## De overgang naar 2027 (19 oktober)
+
+Danny: "Bereid de overgang naar 2027 voor, in één PR met tests." Het risico:
+tot OpenF1 de coureurs van 2027 heeft (rond Bahrein, 13 en 14 maart) leent de
+sync voor alle 24 races de lijst van Yas Marina 2026, en op die lijst vult
+iedereen de seizoensvragen en de eerste top 10's in. Antwoorden bewaren een
+startnummer of een teamnaam (wkStand() rekent op `String(nr)` en `d.team`).
+Neemt de kampioen nummer 1, wisselt iemand van nummer of krijgt een team een
+andere naam, dan scoorde een goed antwoord stil 0 (kampioen 50, constructeurs
+40, vierde team 30).
+
+Wat er nu is:
+
+- `races.lijst_herkomst` (`geleend`, `beheer`, `openf1`, leeg bij oude rijen).
+  Bij het laden van schema.sql krijgt een seizoen zonder uitslagen met
+  coureurs `geleend` (de 24 races van 2027).
+- `lijst_omzetting(oud, nieuw)` rekent uit wie wie is: op naam (zonder
+  hoofdletters en accenten), anders op afkorting, alleen bij precies één
+  kandidaat. Een team krijgt de nieuwe naam van het team waar zijn coureurs nu
+  rijden, of, zonder bekende coureurs, als er precies één team verdween en één
+  naam bijkwam. Een verdwenen coureur wiens nummer nu van een ander is wordt
+  `weg:` plus afkorting; anders blijft zijn nummer staan. De rest is een melding.
+- `antwoorden_omzetten()` past dat toe op de open antwoorden van één race:
+  seizoensvragen (zolang het seizoen niet gescoord is) en vragen waarvan de
+  deadline nog niet voorbij is. Gesloten antwoorden nooit. Een seizoensantwoord
+  ligt na de start van het seizoen vast in de deadline-trigger; de omzetting
+  mag daar langs via de transactievlag `poule.omzetten`, die alleen deze
+  functie zet. Niet via de API aan te roepen.
+- `lijst_vervangen(race, lijst, herkomst)` doet het vervangen plus omzetten en
+  schrijft een regel in sync_runs (meldingen in `fouten`). Met herkomst
+  `openf1` krijgen de latere races van het seizoen met een geleende lijst hem
+  mee; een lijst uit het beheer laat hij staan. Alleen voor de sync
+  (service_role).
+- De sync roept `rpc/lijst_vervangen` aan als OpenF1 een lijst heeft voor een
+  race met herkomst `geleend` of `beheer`, en zet anders `lijst_herkomst` mee in
+  de patch. Alleen als de rij de kolom heeft (een database zonder het nieuwe
+  schema blijft werken). Lukt de functie niet, dan blijft de oude lijst staan
+  en probeert de volgende run het opnieuw: een nieuwe lijst zonder omzetting
+  is precies wat stil 0 punten oplevert.
+- `beheer_coureurs_zetten(seizoen, lijst)` en de kaart "Coureurlijst" in het
+  beheer (Data): de grid voor alle races met een geleende (of eerder uit het
+  beheer gezette) lijst waarvan het weekend nog moet beginnen.
+- App: `verdwenenKeuzes()`, `verdwenenSeizoenKeuzes()` en `actieNodig()`;
+  "kies opnieuw" op het invulscherm (uit wat er op het scherm staat, ook wat
+  nog niet opgeslagen is) en bij de seizoensvragen (alleen vóór de eerste
+  race), "actie nodig" in het racesoverzicht. `drv()` toont `weg:TSU` als TSU.
+- Tijden: de sync neemt nieuwe tijden van OpenF1 al over (de dagelijkse ronde
+  met KALENDER=true haalt de kalender van elk lopend seizoen opnieuw op en de
+  upsert overschrijft de deadlines; test/jaarwisseling.test.mjs, stap 6). De
+  2027-tijden in de database zijn niet allemaal 11:00 UTC zoals gedacht, maar
+  hebben wel allemaal de kwalificatie precies 24 uur voor de race (2026: 4 van
+  de 25). `tijdVoorlopig()` in de app zegt "tijd voorlopig" als dat bij
+  minstens de helft van het seizoen zo is.
+
+Tests: `coureurlijsten.test.sql` (nieuwe CI-stap), `kies-opnieuw.test.mjs`,
+uitbreidingen in `jaarwisseling.test.mjs` en `beheer.test.mjs`. SQL-mutanten
+(geen deadline-check, geen `weg:`, geen omweg langs de trigger, beheer
+overschrijft OpenF1) allemaal gevangen.
+
+Bewuste keuzes:
+
+- Een seizoensvraag die na de start van het seizoen naar niemand meer wijst,
+  kan de speler niet meer veranderen (het blijft één schot). Daarom is de
+  grid in het beheer zetten vóór 13 maart de echte oplossing.
+- Een niet-eenduidig geval wordt niet geraden. Het staat in het logboek en
+  Danny kan de grid in het beheer rechtzetten.
+- Eigen vragen (premium) hebben vrije tekst als opties en worden niet omgezet.
+
+**Danny moet:** de grid van 2027 in het beheer zetten zodra hij officieel is.

@@ -90,6 +90,8 @@
     background:var(--paneel);color:var(--ink)}
   .veld::placeholder{color:var(--ink3)}
   select.veld{padding-right:8px}
+  textarea.veld{min-height:240px;padding:10px 12px;line-height:1.5;resize:vertical;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
   /* iOS tekent een datumveld anders breder dan de kaart. */
   input[type="date"].veld{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;
     text-align:left;line-height:42px}
@@ -475,7 +477,8 @@ async function doe(werk, melding) {
   } catch (e) {
     fout = e.message;
   }
-  B.melding = fout ? '' : melding;
+  // Een functie als melding: die weet pas na het werk wat er te melden valt.
+  B.melding = fout ? '' : (typeof melding === 'function' ? melding() : melding);
   await laadAlles();
   // Opnieuw laden wist de fout van het laden; die van de wijziging blijft staan.
   if (fout) { B.fout = fout; render(); }
@@ -773,14 +776,68 @@ function dataTab() {
           <td class="mono breed">${esc(r.round)}</td>
           <td><strong>${esc(r.name)}</strong>${r.afgelast ? ' <span class="badge">afgelast</span>' : ''}
             <div class="zacht klein">${esc(r.country ?? '')} · ${esc(datum(r.deadline_race))}</div></td>
-          <td class="getal breed">${(r.drivers ?? []).length || '<span class="amber">0</span>'}</td>
+          <td class="getal breed">${(r.drivers ?? []).length || '<span class="amber">0</span>'}${
+            HERKOMST[r.lijst_herkomst] ? ` <span class="badge">${HERKOMST[r.lijst_herkomst]}</span>` : ''}</td>
           ${uitslagCel(r, 'sprint_result', 'sprint_handmatig', 'deadline_sprint')}
           ${uitslagCel(r, 'quali_result', 'quali_handmatig', 'deadline_quali')}
           ${uitslagCel(r, 'race_result', 'race_handmatig', 'deadline_race')}
         </tr>`).join('') || '<tr><td colspan="6" class="zacht">Geen races in dit seizoen.</td></tr>'}</tbody>
       </table></div>
     </section>
-    ${open ? raceDetail(open) : ''}`;
+    ${open ? raceDetail(open) : ''}
+    ${grijdKaart(races)}`;
+}
+
+const HERKOMST = { geleend: 'geleend', beheer: 'uit het beheer' };
+
+// ---- de coureurlijst van een seizoen ----------------------------------------
+//
+// OpenF1 heeft de coureurs van een nieuw seizoen pas rond het eerste weekend.
+// Tot dan staat bij elke race een geleende lijst (die van de laatste race van
+// vorig jaar). Is de grid officieel, dan zet je hem hier voor alle races met
+// een geleende lijst. De open antwoorden gaan mee naar de nieuwe nummers en
+// teamnamen (lijst_vervangen() in schema.sql); de echte lijst van OpenF1
+// vervangt deze later, met dezelfde omzetting. Zie BEDIENING.md §6c.
+const weekendNogTeGaan = (r) => {
+  const start = Math.min(...[r.deadline_sprint, r.deadline_quali, r.deadline_race]
+    .filter(Boolean).map((t) => Date.parse(t)));
+  return !Number.isFinite(start) || start > Date.now();
+};
+const grijdRaces = (races) => races.filter((r) => !r.afgelast && weekendNogTeGaan(r)
+  && ['geleend', 'beheer'].includes(r.lijst_herkomst));
+const grijdRegel = (d) => [d.nr, d.code, d.naam, d.team].join(', ');
+
+// Eén coureur per regel: nummer, afkorting, naam, team. Komma, puntkomma of
+// tab ertussen, zodat plakken uit een spreadsheet ook gaat.
+function leesGrid(tekst) {
+  const regels = String(tekst).split(/\r?\n/).map((r) => r.trim()).filter(Boolean);
+  return regels.map((regel, i) => {
+    const delen = regel.split(/\t|;|,/).map((d) => d.trim());
+    if (delen.length !== 4 || delen.some((d) => !d)) {
+      throw new Error(`Regel ${i + 1} ("${regel}") heeft niet precies vier delen: nummer, afkorting, naam, team.`);
+    }
+    const [nr, code, naam, team] = delen;
+    return { nr, code, naam, team };
+  });
+}
+
+function grijdKaart(races) {
+  const doel = grijdRaces(races);
+  if (!doel.length) return '';
+  const bron = doel[0];
+  return `
+    <section class="kaart" id="grid">
+      <div class="kaartkop"><h2>Coureurlijst ${esc(B.seizoen)}</h2></div>
+      <p class="zacht klein" style="margin:0">${doel.length} ${doel.length === 1 ? 'race heeft' : 'races hebben'} nog een
+        lijst die niet van OpenF1 komt (${doel.filter((r) => r.lijst_herkomst === 'geleend').length} geleend). Is de grid
+        officieel, zet hem dan hier: één coureur per regel, nummer, afkorting, naam, team. De open antwoorden gaan mee
+        naar de nieuwe nummers en teamnamen; wat niet eenduidig is komt in het logboek, en de app vraagt die spelers
+        opnieuw te kiezen. De echte lijst van OpenF1 vervangt deze later vanzelf.</p>
+      <textarea class="veld" id="gridtekst" spellcheck="false" autocapitalize="off" autocomplete="off"
+        aria-label="Coureurlijst, één coureur per regel">${esc((bron.drivers ?? []).map(grijdRegel).join('\n'))}</textarea>
+      <div class="knoppen"><button class="knop primair" type="button" id="gridzetten">Zet deze lijst bij ${doel.length}
+        ${doel.length === 1 ? 'race' : 'races'}</button></div>
+    </section>`;
 }
 
 // Welke sessies een race heeft, met de sleutel waaronder OpenF1 hem kent.
@@ -1057,6 +1114,18 @@ const knopen = {
   data() {
     vak.querySelector('#seizoen').onchange = (ev) => { B.seizoen = Number(ev.target.value); B.race = null; render(); };
     kiesRij('[data-race]', (id) => { B.race = String(B.race) === id ? null : id; render(); });
+    const grid = vak.querySelector('#gridzetten');
+    if (grid) grid.onclick = () => {
+      let lijst;
+      try { lijst = leesGrid(vak.querySelector('#gridtekst').value); }
+      catch (e) { B.fout = e.message; B.melding = ''; render(); return; }
+      const seizoen = B.seizoen;
+      let uit = null;
+      doe(async () => {
+        uit = await rpc('beheer_coureurs_zetten', { p_seizoen: seizoen, p_drivers: lijst });
+      }, () => `De lijst staat bij ${uit?.races ?? 0} races; ${uit?.omgezet ?? 0} open antwoord(en) omgezet.`
+        + (uit?.meldingen?.length ? ` Let op: ${uit.meldingen.join('; ')}.` : ''));
+    };
     const r = B.races.find((x) => String(x.id) === String(B.race));
     if (!r) return;
     vak.querySelector('#afgelast').onchange = (ev) => doe(() =>

@@ -801,5 +801,14 @@
  "Je hebt vandaag al 5 poules aangemaakt. Morgen kan het weer.": "Du hast heute schon 5 Runden erstellt. Morgen geht es wieder.",
  "Die naam kan niet in een openbare poule. Kies een andere.": "Dieser Name geht in einer öffentlichen Runde nicht. Wähle einen anderen.",
  "<b>Tegen bots</b><br>Als de app een account voor je maakt of je inlogt met je mailadres, kijkt Cloudflare Turnstile of er een mens achter het scherm zit. Meestal merk je daar niets van. Cloudflare ziet daarbij je IP-adres en gegevens over je browser, gebruikt die alleen voor deze controle en zet geen cookies om je te volgen.": "<b>Gegen Bots</b><br>Wenn die App ein Konto für dich anlegt oder dich mit deiner E-Mail-Adresse anmeldet, prüft Cloudflare Turnstile, ob ein Mensch vor dem Bildschirm sitzt. Meistens merkst du davon nichts. Cloudflare sieht dabei deine IP-Adresse und Angaben zu deinem Browser, nutzt sie nur für diese Prüfung und setzt keine Cookies, um dir zu folgen.",
- "Op een iPhone of iPad werken meldingen alleen in de app op je beginscherm, vanaf iOS 16.4. Zet Predict the Race daar eerst op (zie \"op je beginscherm\" hierboven), open hem vanaf daar en tik dan opnieuw op deze knop.": "Auf einem iPhone oder iPad funktionieren Benachrichtigungen nur in der App auf deinem Startbildschirm, ab iOS 16.4. Lege Predict the Race zuerst dort ab (siehe \"auf den Startbildschirm\" oben), öffne die App von dort und tippe dann noch einmal auf diesen Knopf."
+ "Op een iPhone of iPad werken meldingen alleen in de app op je beginscherm, vanaf iOS 16.4. Zet Predict the Race daar eerst op (zie \"op je beginscherm\" hierboven), open hem vanaf daar en tik dan opnieuw op deze knop.": "Auf einem iPhone oder iPad funktionieren Benachrichtigungen nur in der App auf deinem Startbildschirm, ab iOS 16.4. Lege Predict the Race zuerst dort ab (siehe \"auf den Startbildschirm\" oben), öffne die App von dort und tippe dann noch einmal auf diesen Knopf.",
+ "{code}, niet meer in de lijst": "{code}, nicht mehr in der Liste",
+ "tijd voorlopig": "Zeit vorläufig",
+ "actie nodig": "Aktion nötig",
+ "De tijden van dit seizoen zijn nog voorlopig. Ze worden vanzelf bijgewerkt zodra ze vastliggen.": "Die Zeiten dieser Saison sind noch vorläufig. Sie werden automatisch aktualisiert, sobald sie feststehen.",
+ "kies opnieuw": "neu wählen",
+ "{wie} staat niet meer in de deelnemerslijst en levert zo niets op. Kies opnieuw en sla op.": "{wie} steht nicht mehr in der Fahrerliste und bringt so nichts. Wähle neu und speichere.",
+ "{wie} staan niet meer in de deelnemerslijst en leveren zo niets op. Kies opnieuw en sla op.": "{wie} stehen nicht mehr in der Fahrerliste und bringen so nichts. Wähle neu und speichere.",
+ "Kies opnieuw: je keuze bij {vragen} staat niet meer in de lijst, en levert zo niets op.": "Wähle neu: deine Wahl bei {vragen} steht nicht mehr in der Liste und bringt so nichts.",
+ "Kies opnieuw: je keuzes bij {vragen} staan niet meer in de lijst, en leveren zo niets op.": "Wähle neu: deine Wahl bei {vragen} steht nicht mehr in der Liste und bringt so nichts."
 }

@@ -3856,6 +3856,24 @@ const ENGELS = Object.fromEntries([
     + 'Zet Predict the Race daar eerst op (zie "op je beginscherm" hierboven), open hem vanaf daar en tik dan opnieuw op deze knop.',
    'On an iPhone or iPad, notifications only work in the app on your home screen, from iOS 16.4. '
     + 'Add Predict the Race there first (see "add to home screen" above), open it from there and tap this button again.'],
+  ['{code}, niet meer in de lijst',
+   '{code}, no longer in the line-up'],
+  ['tijd voorlopig',
+   'time provisional'],
+  ['actie nodig',
+   'action needed'],
+  ['De tijden van dit seizoen zijn nog voorlopig. Ze worden vanzelf bijgewerkt zodra ze vastliggen.',
+   'The times for this season are still provisional. They are updated automatically once they are confirmed.'],
+  ['kies opnieuw',
+   'choose again'],
+  ['{wie} staat niet meer in de deelnemerslijst en levert zo niets op. Kies opnieuw en sla op.',
+   '{wie} is no longer in the line-up and scores nothing like this. Choose again and save.'],
+  ['{wie} staan niet meer in de deelnemerslijst en leveren zo niets op. Kies opnieuw en sla op.',
+   '{wie} are no longer in the line-up and score nothing like this. Choose again and save.'],
+  ['Kies opnieuw: je keuze bij {vragen} staat niet meer in de lijst, en levert zo niets op.',
+   'Choose again: your pick for {vragen} is no longer in the line-up, and scores nothing like this.'],
+  ['Kies opnieuw: je keuzes bij {vragen} staan niet meer in de lijst, en leveren zo niets op.',
+   'Choose again: your picks for {vragen} are no longer in the line-up, and score nothing like this.'],
   ['Zonder toestemming kan er geen melding komen.',
    'Without permission there can be no notification.'],
   ['{naam} losmaken van het toestel waar hij nu aan hangt',
@@ -5041,6 +5059,68 @@ const seizoenVraagOpen = (id) => {
   if (!race || !S.ik) return false;
   return leegAntwoord(vindAntwoord(race.id, S.ik.id, id)?.waarde);
 };
+// ---- kies opnieuw ------------------------------------------
+// Tot OpenF1 de coureurs van een nieuw seizoen heeft, staat bij elke race een
+// geleende lijst (die van de laatste race van vorig jaar). Komt de echte, dan
+// zet de database de open antwoorden om naar de nieuwe nummers en teamnamen
+// (lijst_vervangen() in schema.sql). Wat daarna nog naar iemand wijst die er
+// niet meer in staat, scoort niets: dat moet je opnieuw kiezen, zolang het nog
+// kan. Zie BEDIENING.md §6c.
+const COUREUR_ANTWOORD = { quali_top10:'quali', race_top10:'race', sprint_top10:'sprint',
+  winnaar:'race', pole:'quali', snelste_ronde:'race', snelste_pitstop:'race', teamgenoot_duels:'race' };
+const inLijst = (r, nr) => (r.drivers ?? []).some(d => zelfde(d.nr, nr));
+
+// Mijn opgeslagen keuzes voor deze race die niet meer in de deelnemerslijst
+// staan, alleen voor sessies die nog open zijn. Een gesloten sessie telt zoals
+// hij is; daar valt niets meer aan te doen.
+function verdwenenKeuzes(r, nu = Date.now()) {
+  if (!S.ik || !(r.drivers ?? []).length) return [];
+  const dicht = dichteSessies(r, nu);
+  const weg = [];
+  for (const a of S.antwoorden) {
+    if (!zelfde(a.race_id, r.id) || !zelfde(a.member_id, S.ik.id)) continue;
+    const sessie = COUREUR_ANTWOORD[a.question_id];
+    if (!sessie || dicht[sessie] || !vraagActief(a.question_id)) continue;
+    for (const nr of [a.waarde].flat()) if (!leegAntwoord(nr) && !inLijst(r, nr)) weg.push(String(nr));
+  }
+  return [...new Set(weg)];
+}
+
+// Mijn seizoensvragen met een coureur of team dat niet meer in de lijst staat.
+// Alleen vóór de eerste race: daarna ligt een seizoensantwoord vast.
+function verdwenenSeizoenKeuzes() {
+  const race = seizoenRace();
+  if (!race || !S.ik || !seizoenOpen()) return [];
+  const drivers = S.races.find(r => (r.drivers ?? []).length)?.drivers ?? [];
+  if (!drivers.length) return [];
+  return seizoenVragen().filter(id => {
+    const w = vindAntwoord(race.id, S.ik.id, id)?.waarde;
+    if (leegAntwoord(w)) return false;
+    if (SEIZOENVRAAG[id].soort === 'coureur') return !drivers.some(d => zelfde(d.nr, w));
+    if (SEIZOENVRAAG[id].soort === 'team') return !drivers.some(d => zelfde(d.team, w));
+    return false;
+  });
+}
+
+// Moet ik bij deze race iets opnieuw kiezen? Voor het racesoverzicht.
+const actieNodig = (r) => verdwenenKeuzes(r).length > 0
+  || (zelfde(seizoenRace()?.id, r.id) && verdwenenSeizoenKeuzes().length > 0);
+
+// Is de tijd van deze race nog voorlopig? OpenF1 zet een nieuw seizoen eerst
+// neer met de kwalificatie precies 24 uur voor de race, bij elke race (in
+// oktober 2026 alle 24 races van 2027). Dat doet een echte kalender bijna
+// nooit: in 2026 kwam het bij 4 van de 25 races voor. Dus pas als minstens
+// de helft van het seizoen zo staat, heet deze race "tijd voorlopig". De
+// sync neemt de echte tijden over zodra OpenF1 ze heeft (de dagelijkse ronde
+// met KALENDER=true).
+function tijdVoorlopig(r, races = S.races) {
+  const precies24 = (x) => !!x.deadline_quali && !!x.deadline_race
+    && Date.parse(x.deadline_race) - Date.parse(x.deadline_quali) === 864e5;
+  if (!precies24(r)) return false;
+  const seizoen = races.filter(x => x.season === r.season && x.deadline_race);
+  return seizoen.length >= 4 && seizoen.filter(precies24).length * 2 >= seizoen.length;
+}
+
 // Het hele seizoen gereden? Een afgelaste race telt als geweest: daar komt
 // nooit meer een uitslag van.
 const seizoenKlaar = () =>
@@ -5300,8 +5380,16 @@ const hoofdletter = (s) => String(s ?? '').replace(/^./, c => c.toUpperCase());
 // gegevens voor 2026 domweg nergens voor. Zonder deze val viel `code` dan
 // terug op het kale nummer, en dat las als een kapot scherm ("er staat een
 // losse 6") in plaats van een coureur die niet meer bekend is.
+//
+// "weg:TSU" is een coureur die bij een nieuwe lijst verdween terwijl zijn
+// nummer nu van een ander is (lijst_vervangen() in schema.sql). Zonder dat
+// woordje had het antwoord stil naar die ander gewezen; nu staat de afkorting
+// er, en vraagt de app om opnieuw te kiezen (verdwenenKeuzes()).
 const drv = (race, nr) => (race.drivers ?? []).find(d => d.nr === nr)
-                         ?? { nr, code:`#${nr}`, naam:`onbekende coureur #${nr}`, team:'', kleur:'#888' };
+                         ?? (String(nr).startsWith('weg:')
+                           ? { nr, code: String(nr).slice(4), naam: T('{code}, niet meer in de lijst',
+                               { code: String(nr).slice(4) }), team:'', kleur:'#888' }
+                           : { nr, code:`#${nr}`, naam:`onbekende coureur #${nr}`, team:'', kleur:'#888' });
 
 // Ids komen als getal of als tekst terug, afhankelijk van het kolomtype in
 // Postgres. Overal als tekst vergelijken scheelt een klasse fouten waarbij
@@ -7652,7 +7740,9 @@ function kalenderRij(r, st = raceStand(r)) {
     <span class="rnd">${String(r.round).padStart(2,'0')}</span>
     <span class="rinfo">
       <span class="nm">${esc(r.name)}</span>
-      <span class="st ${st.soort}">${esc(st.tekst)}${won ? ` · ${esc(won)}` : ''}</span>
+      <span class="st ${st.soort}">${esc(st.tekst)}${won ? ` · ${esc(won)}` : ''}${
+        st.soort !== 'klaar' && tijdVoorlopig(r) ? ` · <span data-tijd-voorlopig>${T('tijd voorlopig')}</span>` : ''}${
+        actieNodig(r) ? ` · <b class="amber" data-actie-nodig>${T('actie nodig')}</b>` : ''}</span>
     </span>
     ${heeftJoker(r.id, S.ik.id)
       ? `<span class="jokervlag" title="${
@@ -8082,6 +8172,7 @@ function seizoenslaagBlok() {
   // Alleen tijdens het seizoen. Vóór de eerste race is er nog niets gereden en
   // ná afloop is er niets meer tegen te houden.
   const vast = open || uit ? [] : vastgelopenRaces();
+  const weg = verdwenenSeizoenKeuzes();
 
   const kop = open
     ? T('nog in te vullen · sluit {wanneer}',
@@ -8097,6 +8188,11 @@ function seizoenslaagBlok() {
     <div class="seizoenslaag">
       <span class="label">${T('seizoensvragen')} · ${esc(kop)}</span>
       <div class="groep">${vragen.map(regel).join('')}</div>
+      ${weg.length ? `<p class="err" style="margin:0" data-kies-opnieuw-seizoen>${weg.length === 1
+        ? T('Kies opnieuw: je keuze bij {vragen} staat niet meer in de lijst, en levert zo niets op.',
+            { vragen: esc(T(SEIZOENVRAAG[weg[0]].label)) })
+        : T('Kies opnieuw: je keuzes bij {vragen} staan niet meer in de lijst, en leveren zo niets op.',
+            { vragen: esc(opsomming(weg.map(id => T(SEIZOENVRAAG[id].label)))) })}</p>` : ''}
       ${vast.length ? `<p class="zacht" style="margin:0;color:var(--amber)">${
         T('{races} heeft geen uitslag en is niet afgelast. Zolang dat zo blijft '
           + 'kan het seizoen niet afgerond worden en blijven deze vragen ongescoord.',
@@ -10773,7 +10869,9 @@ function invulWeergave(paneel, r, dicht) {
   const elders = magOpslaan && top10Actief(S.tab) && compleet(lijst) && anderePoules().length > 0;
   const afsluiting = `
     <p class="label" style="margin:0">${T('sluit {wanneer}', {
-      wanneer: esc(sluitTekst(deadline)) })}</p>
+      wanneer: esc(sluitTekst(deadline)) })}${tijdVoorlopig(r) ? ` · ${T('tijd voorlopig')}` : ''}</p>
+    ${tijdVoorlopig(r) ? `<p class="zacht" style="margin:0" data-tijd-voorlopig>${
+      T('De tijden van dit seizoen zijn nog voorlopig. Ze worden vanzelf bijgewerkt zodra ze vastliggen.')}</p>` : ''}
     ${elders ? `<p class="zacht" style="margin:0">${T('Je top 10 gaat ook naar je andere poules, maar alleen waar je {wat} nog '
       + 'niet hebt ingevuld. Wat daar al staat, blijft staan.', { wat: T(SESSIES[S.tab].wat) })}</p>` : ''}
     <div class="opslaanbalk">
@@ -10789,7 +10887,20 @@ function invulWeergave(paneel, r, dicht) {
     </div>`;
   // Op een breed scherm de top 10 links en de rest met de opslaanknop
   // rechts, als er naast de top 10 iets te zien is. Anders één kolom.
-  paneel.innerHTML = (hoofd && (vragen || poule)
+  // Wat je koos en wat niet meer in de deelnemerslijst staat: bovenaan, want
+  // het scoort niets tot je het opnieuw kiest. Uit wat er nu op het scherm
+  // staat, dus ook wat je net aanklikte maar nog niet opsloeg.
+  const gekozen = [...(top10Actief(S.tab) ? S.keuze[S.tab] : []),
+    ...coureurVragen(S.tab).map(id => S.keuze[id]),
+    ...(S.tab === 'race' && vraagActief('teamgenoot_duels') ? S.keuze.duels : [])];
+  const weg = [...new Set(gekozen.filter(nr => !leegAntwoord(nr) && !inLijst(r, nr)).map(String))];
+  const kiesOpnieuw = weg.length ? `<div class="waarschuwing" data-kies-opnieuw>
+    <span class="label">${T('kies opnieuw')}</span>${weg.length === 1
+      ? T('{wie} staat niet meer in de deelnemerslijst en levert zo niets op. Kies opnieuw en sla op.',
+          { wie: esc(drv(r, weg[0]).code) })
+      : T('{wie} staan niet meer in de deelnemerslijst en leveren zo niets op. Kies opnieuw en sla op.',
+          { wie: esc(opsomming(weg.map(nr => drv(r, nr).code))) })}</div>` : '';
+  paneel.innerHTML = kiesOpnieuw + (hoofd && (vragen || poule)
     ? tweeKolommen({ hoofd, zij: vragen + poule + afsluiting })
     : hoofd + vragen + poule + afsluiting) + kiesblad(r);
   knoopBekijk(paneel);

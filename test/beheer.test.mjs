@@ -406,6 +406,66 @@ await page.waitForSelector('.melding.fout', { timeout: 5000 }).catch(() => {});
 check('is OpenF1 niet bereikbaar, dan staat dat er',
   (await page.$('.melding.fout')) !== null && (await tekst('.melding.fout')).includes('OpenF1 is niet bereikbaar'));
 
+// ---- 5b. de coureurlijst van een nieuw seizoen (BEDIENING.md §6c) ---------------------
+// Drie races van 2027: twee met een geleende lijst, één al van OpenF1. Plus
+// een race uit het verleden met een geleende lijst: die is al begonnen.
+await page.evaluate(() => {
+  const d = globalThis.__db;
+  const dag = (n) => new Date(Date.now() + n * 864e5).toISOString();
+  const geleend = d.races.find((r) => r.id === 1).drivers;
+  d.races.push(
+    { id: 271, season: 2027, round: 1, name: 'Bahrain', drivers: geleend, lijst_herkomst: 'geleend',
+      deadline_quali: dag(140), deadline_race: dag(141), deadline_sprint: null },
+    { id: 272, season: 2027, round: 2, name: 'Jeddah', drivers: geleend, lijst_herkomst: 'geleend',
+      deadline_quali: dag(147), deadline_race: dag(148), deadline_sprint: null },
+    { id: 273, season: 2027, round: 3, name: 'Melbourne', drivers: geleend, lijst_herkomst: 'openf1',
+      deadline_quali: dag(160), deadline_race: dag(161), deadline_sprint: null });
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(d));
+});
+await page.click('#vernieuw');
+await page.waitForSelector('#seizoen');
+check('in een seizoen zonder geleende lijsten staat geen kaart voor de coureurlijst', (await page.$('#grid')) === null);
+await page.selectOption('#seizoen', '2027');
+await page.waitForSelector('#grid');
+{
+  const kaart = await tekst('#grid');
+  check('in 2027 staat de kaart, met hoeveel races een lijst hebben die niet van OpenF1 komt',
+    kaart.includes('Coureurlijst 2027') && kaart.includes('2 races hebben') && kaart.includes('2 geleend'), kaart);
+  check('in de racetabel staat welke lijst geleend is',
+    (await tekst('#races tr[data-race="271"]')).includes('geleend')
+      && !(await tekst('#races tr[data-race="273"]')).includes('geleend'));
+  const voor = await page.inputValue('#gridtekst');
+  check('het tekstvak begint met de geleende lijst, één coureur per regel',
+    voor.split('\n').length === (await db()).races.find((r) => r.id === 271).drivers.length
+      && /^\d+, [A-Z]{3}, .+, .+$/.test(voor.split('\n')[0]), voor.split('\n')[0]);
+  check('de knop zegt bij hoeveel races', (await tekst('#gridzetten')) === 'Zet deze lijst bij 2 races');
+
+  await page.fill('#gridtekst', '1, NOR, Lando Norris, McLaren\n81, PIA, Oscar Piastri');
+  await page.click('#gridzetten');
+  await page.waitForSelector('.melding.fout');
+  check('een regel met drie delen wordt niet verstuurd, en de melding zegt welke',
+    (await tekst('.melding.fout')).includes('Regel 2') && !(await db()).coureurs_gezet, await tekst('.melding.fout'));
+
+  await page.fill('#gridtekst', '1; nor; Lando Norris; McLaren\n81\tPIA\tOscar Piastri\tMcLaren\n\n3, VER, Max Verstappen, Red Bull Racing');
+  await page.click('#gridzetten');
+  await page.waitForSelector('.melding:not(.fout)');
+  const d = await db();
+  check('puntkomma, tab en komma werken allemaal, en lege regels tellen niet',
+    JSON.stringify(d.coureurs_gezet?.p_drivers) === JSON.stringify([
+      { nr: '1', code: 'nor', naam: 'Lando Norris', team: 'McLaren' },
+      { nr: '81', code: 'PIA', naam: 'Oscar Piastri', team: 'McLaren' },
+      { nr: '3', code: 'VER', naam: 'Max Verstappen', team: 'Red Bull Racing' }]) && d.coureurs_gezet.p_seizoen === 2027,
+    JSON.stringify(d.coureurs_gezet));
+  check('de melding zegt bij hoeveel races, hoeveel antwoorden er omgezet zijn, en wat er niet eenduidig was',
+    /De lijst staat bij 2 races; 3 open antwoord\(en\) omgezet\. Let op: Fernando Alonso/.test(await tekst('.melding')),
+    await tekst('.melding'));
+  check('de races hebben de lijst, met herkomst beheer; die van OpenF1 niet',
+    d.races.find((r) => r.id === 271).lijst_herkomst === 'beheer' && d.races.find((r) => r.id === 271).drivers.length === 3
+      && d.races.find((r) => r.id === 273).lijst_herkomst === 'openf1');
+  check('de kaart blijft staan voor een correctie, nu met de nieuwe lijst',
+    (await page.inputValue('#gridtekst')).startsWith('1, NOR, Lando Norris, McLaren'));
+}
+
 // ---- 6. statistieken --------------------------------------------------------------
 await page.evaluate(() => {
   const d = globalThis.__db;

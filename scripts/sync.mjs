@@ -391,6 +391,12 @@ function sessiesVanRace(race, weekenden) {
   return meeting === undefined ? [] : (weekenden.perMeeting.get(meeting) ?? []);
 }
 
+// Kent de database races.lijst_herkomst al? Een database waar schema.sql
+// nog niet opnieuw in gedraaid is, heeft die kolom niet, en een patch met een
+// onbekende kolom weigert PostgREST helemaal, uitslag en al. Dus alleen als
+// de rij hem heeft (select=* geeft elke kolom, ook als hij leeg is).
+const KENT_HERKOMST = (race) => Object.prototype.hasOwnProperty.call(race, 'lijst_herkomst');
+
 // De velden waar punten aan hangen. Verandert hier iets nadat het er al stond,
 // dan verschuift de stand van de hele poule en hoort dat hard in de log.
 const UITSLAGVELDEN = ['quali_result', 'race_result', 'fastest_lap',
@@ -451,10 +457,13 @@ async function uitslagen(races, jaar, vorig = []) {
     // uitslagen.mjs. Ook voor een race die nog maanden weg is: lenen kost geen
     // verzoek, en de seizoensvragen van volgend jaar gaan al bij de eerste
     // race dicht.
+    let geleendNu = false;
     if (!patch.drivers && !(race.drivers ?? []).length) {
       const leen = voorlopigeLijst(race, races, vorig);
       if (leen) {
         patch.drivers = leen.drivers;
+        geleendNu = true;
+        if (KENT_HERKOMST(race)) patch.lijst_herkomst = 'geleend';
         console.log(`  ronde ${race.round} ${race.name}: voorlopig de coureurs van ${leen.naam},`
           + ' OpenF1 heeft ze nog niet');
       }
@@ -578,6 +587,44 @@ async function uitslagen(races, jaar, vorig = []) {
       if (bekende.length) {
         console.log(`  ronde ${race.round} ${race.name}: niet opnieuw kunnen nakijken:`
           + ` ${bekende.join(', ')} — wat er staat blijft staan`);
+      }
+    }
+
+    // Een lijst van OpenF1 voor een race die tot nu toe een geleende lijst had
+    // (of een uit het beheer): niet gewoon overschrijven, maar via
+    // lijst_vervangen() in de database. Die zet de open antwoorden om naar de
+    // nieuwe nummers en teamnamen, geeft de lijst door aan de latere races
+    // met een geleende lijst, en schrijft alles in sync_runs. Zie BEDIENING.md
+    // §6c. Lukt dat niet, dan blijft de oude lijst staan en probeert de
+    // volgende run het opnieuw: een nieuwe lijst zonder omzetting laat goede
+    // antwoorden stil op 0 punten uitkomen.
+    if (patch.drivers && !geleendNu && KENT_HERKOMST(race)) {
+      if (['geleend', 'beheer'].includes(race.lijst_herkomst)) {
+        try {
+          const uit = await sb('rpc/lijst_vervangen', { method: 'POST',
+            body: JSON.stringify({ p_race: race.id, p_drivers: patch.drivers, p_herkomst: 'openf1' }) });
+          const wat = `de echte coureurlijst vervangt de ${race.lijst_herkomst === 'beheer' ? 'lijst uit het beheer' : 'geleende lijst'}`
+            + `, ${uit?.omgezet ?? 0} open antwoord(en) omgezet`
+            + (uit?.meldingen?.length ? ` (${uit.meldingen.join('; ')})` : '');
+          console.log(`  ronde ${race.round} ${race.name}: ${wat}`);
+          noteer(`Ronde ${race.round} ${race.name}: ${wat}`);
+          veranderd++;
+          // De latere races met een geleende lijst hebben hem nu ook; dat hoeft
+          // deze run niet nog eens.
+          for (const r of races) {
+            if (r.round > race.round && r.lijst_herkomst === 'geleend') {
+              r.drivers = patch.drivers;
+            }
+          }
+          race.drivers = patch.drivers;
+          race.lijst_herkomst = 'openf1';
+        } catch (e) {
+          console.log(`  ronde ${race.round} ${race.name}: coureurlijst niet vervangen (${e.message})`);
+          noteer(`Ronde ${race.round} ${race.name}: coureurlijst niet vervangen (${e.message})`);
+        }
+        delete patch.drivers;
+      } else if (race.lijst_herkomst !== 'openf1') {
+        patch.lijst_herkomst = 'openf1';
       }
     }
 

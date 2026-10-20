@@ -757,6 +757,56 @@ elke race haalt de sync de echte lijst op; een nieuwe coureur of een nieuw team
 staat er dan vanzelf in. Wie bij de seizoensvragen een coureur koos die niet
 meer rijdt, kan dat aanpassen tot de start van het eerste weekend.
 
+**Als de echte lijst anders is dan de geleende.** Een antwoord bewaart een
+startnummer of een teamnaam. Neemt de kampioen nummer 1, wisselt iemand van
+nummer of krijgt een team een andere naam, dan wees een goed antwoord vroeger
+stil naar niemand en scoorde het 0. Nu houdt de database per race bij waar de
+lijst vandaan komt (`races.lijst_herkomst`: `geleend`, `beheer` of `openf1`),
+en gaat een geleende lijst nooit zomaar overboord:
+
+- Komt de echte lijst van OpenF1, dan zet de database de **open** antwoorden
+  om: het oude nummer naar het nieuwe (gezocht op naam, en anders op
+  afkorting), de oude teamnaam naar de nieuwe als dat eenduidig is. Dat geldt
+  voor de seizoensvragen en voor elke vraag waarvan de deadline nog niet
+  voorbij is. Een gesloten antwoord wordt nooit aangeraakt. De latere races
+  van dat seizoen die nog een geleende lijst hebben, krijgen de echte meteen
+  mee, met dezelfde omzetting.
+- Wat niet eenduidig is (twee coureurs met dezelfde naam, twee teams die
+  verdwijnen voor twee nieuwe namen) wordt niet omgezet. Een coureur die er
+  niet meer in staat ook niet: wie hem koos moet opnieuw kiezen. Is zijn
+  nummer nu van een ander, dan komt er `weg:` plus zijn afkorting te staan
+  (`weg:TSU`), zodat het antwoord niet stil naar die ander wijst.
+- Elke omzetting en elke melding staat in het **logboek van de sync** (beheer,
+  Data): "Coureurlijst 2027 ronde 1 Bahrain (openf1): 5 open antwoord(en)
+  omgezet, nummers {"4": "1"}", met in rood wat niet eenduidig was.
+- In de app staat bij zo'n keuze **"kies opnieuw"**, bij de seizoensvragen en
+  op het invulscherm, en in het racesoverzicht **"actie nodig"**, zolang de
+  deadline niet voorbij is. Een seizoensvraag kan alleen vóór de eerste race
+  nog anders; daarna ligt hij vast, ook als hij naar niemand meer wijst.
+
+**De grid zetten voordat OpenF1 hem heeft.** In het beheer, Data, kies het
+nieuwe seizoen: zolang er races zijn met een geleende lijst waarvan het weekend
+nog moet beginnen, staat daar de kaart **Coureurlijst 2027**. Zet erin de
+officiële grid, één coureur per regel: nummer, afkorting, naam, team (komma,
+puntkomma of tab ertussen; plakken uit een spreadsheet gaat dus ook). Het
+tekstvak begint met de lijst die er nu staat, dus meestal hoef je alleen te
+veranderen wat anders is. "Zet deze lijst bij 24 races" zet hem bij al die
+races (herkomst `beheer`) en zet de open antwoorden om, op dezelfde manier als
+hierboven. Een team houdt zijn kleur; een nieuwe teamnaam neemt de kleur van
+zijn coureurs mee. De echte lijst van OpenF1 vervangt deze later per race, met
+dezelfde omzetting; een lijst uit het beheer wordt niet door de lijst van een
+andere race overschreven.
+
+**De tijden van het nieuwe jaar.** OpenF1 zet de races van volgend jaar eerst
+neer met voorlopige tijden: de kwalificatie precies 24 uur voor de race, bij
+elke race. De dagelijkse ronde van de sync (`KALENDER=true`) haalt de kalender
+van het nieuwe jaar elke dag opnieuw op en neemt nieuwe tijden over zodra
+OpenF1 ze aanpast; de deadlines en de herinneringen schuiven vanzelf mee. Zolang
+minstens de helft van het seizoen zo staat, zegt de app bij die races **"tijd
+voorlopig"** (in het racesoverzicht en bij "sluit ..." op het invulscherm). In
+een echte kalender komt precies 24 uur ook voor (in 2026 bij 4 van de 25
+races), vandaar die drempel.
+
 Een poule die in november begint, speelt de laatste races van dit jaar mee; een
 poule die na de finale begint, begint in het nieuwe jaar (als die kalender er
 al is).
