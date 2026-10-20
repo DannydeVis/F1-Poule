@@ -37,6 +37,8 @@ const wereld = {
   verzoeken: [],      // alles wat er bij OpenF1 is gevraagd
   sync_runs: [],      // het logboek dat de sync bijhoudt voor het beheer
   rpc: [],            // aanroepen van lijst_vervangen()
+  doorschuif: [],     // wat seizoenen_doorschuiven() de volgende keer teruggeeft
+  doorschoven: 0,     // hoe vaak de sync seizoenen_doorschuiven() aanriep
 };
 let volgendId = 1;
 
@@ -139,6 +141,15 @@ function postgrest(req, res, tabel, zoek, body) {
 // hier gaat het erom dat de sync de functie aanroept in plaats van de lijst
 // gewoon over de geleende heen te schrijven.
 function rpc(res, functie, body) {
+  // seizoenen_doorschuiven(): de regel zelf staat in
+  // test/seizoensdoorschuif.test.sql; hier gaat het erom dat de sync hem elke
+  // run aanroept en opschrijft wat er gebeurde.
+  if (functie === 'seizoenen_doorschuiven' && !wereld.geenRpc) {
+    wereld.doorschoven++;
+    const uit = wereld.doorschuif; wereld.doorschuif = [];
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(uit));
+  }
   if (functie !== 'lijst_vervangen' || wereld.geenRpc) { res.writeHead(404); return res.end('{}'); }
   const { p_race, p_drivers, p_herkomst } = JSON.parse(body);
   wereld.rpc.push({ p_race, p_herkomst, codes: p_drivers.map((d) => d.code) });
@@ -318,6 +329,26 @@ wereld.uitslagen[sleutel(2026, 4, 'quali')] = ['4', '1'];
     && finale.race_result?.join() === '4,1', `${finale.race_result} · ${log.slice(-300)}`);
   check('en de kalender van 2027 wordt niet opnieuw opgehaald (dat doet de dagelijkse ronde)',
     vroeg('session_name=Race').length === 0, vroeg('session_name').join(' '));
+}
+
+// ---- 4b. automatisch doorschuiven ----------------------------------------------------------
+// De database zegt welke poules doorgingen; de sync zet ze in het logboek
+// (alleen het beheer leest dat) en niet met naam in de log van Actions, want
+// die is openbaar.
+{
+  const voor = wereld.doorschoven;
+  wereld.doorschuif = [{ id: 'p1', naam: 'Kantoorpoule', van: 2026, naar: 2027, openbaar: false },
+                       { id: 'p2', naam: 'Open poule', van: 2026, naar: 2027, openbaar: true }];
+  const { code, log } = await sync();
+  const regel = wereld.sync_runs.at(-1)?.samenvatting ?? '';
+  check('elke run roept seizoenen_doorschuiven() aan', code === 0 && wereld.doorschoven === voor + 1,
+    `${wereld.doorschoven - voor} keer`);
+  check('wat doorging staat met naam in het logboek',
+    regel.includes('Poule Kantoorpoule gaat door van 2026 naar 2027 (7 dagen na de finale)')
+      && regel.includes('Poule Open poule gaat door van 2026 naar 2027 (openbaar, meteen)'), regel);
+  check('en in de openbare log alleen het aantal',
+    /Doorgeschoven naar het volgende seizoen: 2 poule\(s\)/.test(log) && !log.includes('Kantoorpoule'),
+    log.slice(-300));
 }
 
 // ---- 5. januari: 2026 is afgerond --------------------------------------------------------

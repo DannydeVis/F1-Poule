@@ -200,6 +200,16 @@ jobs:
           psql -d wissel -v ON_ERROR_STOP=1 -f schema.sql
           psql -d wissel -v ON_ERROR_STOP=1 -f test/seizoenswissel.test.sql
 
+      # Het einde van een seizoen: pas klaar met elke race-uitslag (niet na de
+      # kwalificatie van de finale), de trigger op pools.season (één seizoen
+      # vooruit, alleen als het klaar is) en het automatisch doorschuiven.
+      - name: seizoenseinde — klaar na de finale, één seizoen vooruit, vanzelf door
+        run: |
+          createdb doorschuif
+          psql -d doorschuif -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d doorschuif -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d doorschuif -v ON_ERROR_STOP=1 -f test/seizoensdoorschuif.test.sql
+
       # Jokers zijn de tweede regel die hard in de database staat, naast de
       # deadline. Een joker die je achteraf mag verzetten is geen keuze maar
       # een knop om de uitslag mee te herschrijven, dus dat moet hier bewezen

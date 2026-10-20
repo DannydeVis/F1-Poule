@@ -11165,3 +11165,70 @@ terug, zoals in productie; met de vorige volgorde zakt die test met precies
 deze fout.
 
 **Danny moet:** `schema.sql` opnieuw draaien.
+
+## Het seizoenseinde en automatisch doorschuiven (21 oktober)
+
+Danny: "Twee PR's voor het seizoenseinde en de bewaking, met tests. Eerst PR 1:
+het lek daarin gaat open op zaterdag 5 december (kwalificatie in Abu Dhabi)."
+
+**Het lek.** `seizoenKlaar()` en `seizoenAfgerond()` in de app en
+`poule_seizoen_voorbij()` in de database telden een race als gereden zodra één
+sessie een uitslag had. Na de kwalificatie van de laatste race was het seizoen
+dus "klaar": onder Poule was "Begin aan 2027" klikbaar (en doorschuiven haalde
+de finale voor de hele poule uit beeld), "Bekijk je seizoen 2026" stond er,
+het seizoensverhaal speelde vanzelf af (en daarna, eenmaal gezien, niet meer
+na de echte finale), en de seizoensvragen werden gescoord op een WK-stand
+zonder de finale. Ook `periodeStand()` (een tussenklassement heette na de
+kwalificatie van zijn laatste ronde al "afgelopen", met winnaar) en
+`vastgelopenRaces()` hadden dezelfde regel. Het racesoverzicht ging goed,
+want dat gebruikt `weekendVoorbij()`.
+
+De regel is nu overal: elke race heeft een race-uitslag of is afgelast.
+`raceGereden()` in de app, `seizoen_klaar()` in de database, en de
+controletabel ("seizoen 2026 rond", "blijven hangen" en `controle_seizoen()`).
+`test/seizoenslek.test.mjs` en het eerste deel van
+`test/seizoensdoorschuif.test.sql` zakten eerst, precies op dit scenario (ook
+met een sprint als laatste uitslag), en slagen nu.
+
+**Automatisch doorschuiven.** `seizoenen_doorschuiven()` (alleen
+`service_role`) schuift een poule van S naar S+1 als S klaar is en er races van
+S+1 in de tabel staan: een openbare poule meteen, de rest 7 dagen na de
+laatste race van S. De sync roept hem elke run aan, na de uitslagen; wat
+doorging komt met naam in `sync_runs`, in de openbare log alleen het aantal.
+Lukt de aanroep niet (schema.sql nog niet gedraaid), dan gaat de run door met
+een regel in het logboek.
+
+**De trigger** `pools_seizoen_bewaken()` op `pools.season`: precies één seizoen
+omhoog, en alleen als het seizoen klaar is. Voor iedereen, ook de sync. De app
+vertaalt de twee fouten (hint `seizoen_stap` en `seizoen_niet_klaar`).
+Nagelopen wat er aan het seizoen hangt: de jokers en de seizoensvragen hangen
+aan `races.season`, de tussenklassementen hebben hun eigen kolom `seizoen`,
+automatisch invullen, jokers en contrair hebben een datum als streep, en de
+herinneringen en de omzetting van de coureurlijsten gaan per race.
+`poule_aanmaken()` kiest het seizoen van de eerstvolgende race, en zet bij het
+aanmaken (geen update) dus niets in de weg. Het beheer zet geen seizoen.
+
+**In de app.** Een speler leest "Op 13 december gaat de poule vanzelf door
+naar 2027", in een openbare poule (of als die dag al voorbij is) "zodra de
+kalender er is". De poulebaas leest dat het vanzelf gaat en dat hij het
+eerder kan. `DOORSCHUIF_NA_DAGEN` in de app is de 7 uit de database; een test
+houdt ze gelijk. Na het doorschuiven, tot de eerste race, een kaart bovenaan
+het racesoverzicht met de winnaar van vorig seizoen en zijn punten, "Bekijk je
+seizoen 2026" en "Naar 2026".
+
+**De herinneringen** nemen bij de eerste sessie van ronde 1 de seizoensvragen
+mee als die nog helemaal leeg zijn.
+
+Bewuste keuzes:
+
+- "Nog leeg" is: geen enkele seizoensvraag ingevuld. Wie er één invulde, deed
+  dat bewust en krijgt geen tweede melding.
+- Een seizoen zonder races telt in de database als klaar (er valt niets te
+  rijden), zodat een poule nooit vast komt te zitten. De app laat bij een
+  seizoen zonder races geen "seizoen rond" zien.
+- Doorschuiven zonder kalender van volgend jaar kan de poulebaas nog steeds
+  met de knop; vanzelf gebeurt het pas als de kalender er is.
+
+**Danny moet:** `schema.sql` draaien (BEDIENING §6c). Tot dan zegt de sync
+elke run "Doorschuiven niet gelukt" in het logboek, en zit het lek nog in de
+database.

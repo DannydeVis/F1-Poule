@@ -32,7 +32,7 @@ import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast
          rondeIndeling, dubbeleRaces, voorlopigeLijst }
   from './uitslagen.mjs';
 import { maakAgenda } from './agenda.mjs';
-import { wieKrijgtEenSeintje, volgendeWekker } from './herinneringen.mjs';
+import { wieKrijgtEenSeintje, volgendeWekker, SEIZOENVRAGEN } from './herinneringen.mjs';
 import { stuur as stuurPush } from './push.mjs';
 import { seizoenPlan, agendaSeizoenen, lijstKanWachten } from './seizoenen.mjs';
 import { OpenF1Dicht, vanwegeSessie, UITLEG as DICHT_UITLEG } from './openf1-dicht.mjs';
@@ -763,12 +763,12 @@ async function herinneringen(races) {
   if (!abonnementen?.length) return;
   zetWekker(races);
 
-  // Alleen de top tienen: dat zijn de vragen waar een herinnering over gaat.
-  // De losse vragen hangen aan dezelfde deadline, dus wie zijn top 10 invult
-  // ziet die vanzelf.
+  // De top tienen: dat zijn de vragen waar een herinnering over gaat. De
+  // losse vragen hangen aan dezelfde deadline, dus wie zijn top 10 invult ziet
+  // die vanzelf. En de seizoensvragen, voor het eerste weekend van een seizoen.
   const ids = races.map((r) => r.id).join(',');
   const [antwoorden, poulevragen] = await Promise.all([
-    sb(`answers?race_id=in.(${ids})&question_id=in.(quali_top10,sprint_top10,race_top10)`
+    sb(`answers?race_id=in.(${ids})&question_id=in.(quali_top10,sprint_top10,race_top10,${SEIZOENVRAGEN.join(',')})`
        + '&select=race_id,member_id,question_id'),
     sb('pool_questions?select=pool_id,question_id'),
   ]);
@@ -802,6 +802,36 @@ async function herinneringen(races) {
   console.log(`Herinneringen: ${gelukt} verstuurd`
     + (opgeruimd ? `, ${opgeruimd} verlopen abonnement(en) opgeruimd` : ''));
   if (gelukt) noteer(`${gelukt} herinnering(en) verstuurd`);
+}
+
+// ------------------------------------------------------------
+//  Automatisch doorschuiven naar het volgende seizoen
+//  De regel staat in de database (seizoenen_doorschuiven() in schema.sql): een
+//  openbare poule meteen als het seizoen klaar is en de kalender van volgend
+//  jaar er staat, de rest 7 dagen na de laatste race. Na de uitslagen, want
+//  de uitslag van de finale is wat een seizoen klaar maakt.
+//
+//  De namen van de poules gaan in sync_runs (alleen het beheer leest die), en
+//  niet in de log van Actions: die is openbaar. Lukt het niet, bijvoorbeeld
+//  omdat schema.sql nog niet opnieuw gedraaid is, dan gaat de run door; de
+//  poulebaas heeft de knop nog.
+// ------------------------------------------------------------
+
+function doorschuifRegels(lijst) {
+  return (lijst ?? []).map((p) => `Poule ${p.naam} gaat door van ${p.van} naar ${p.naar}`
+    + (p.openbaar ? ' (openbaar, meteen)' : ' (7 dagen na de finale)'));
+}
+
+async function doorschuiven() {
+  try {
+    const lijst = await sb('rpc/seizoenen_doorschuiven', { method: 'POST', body: '{}' });
+    if (!lijst?.length) return;
+    console.log(`Doorgeschoven naar het volgende seizoen: ${lijst.length} poule(s)`);
+    for (const regel of doorschuifRegels(lijst)) noteer(regel);
+  } catch (e) {
+    console.log(`Doorschuiven niet gelukt: ${e.message}`);
+    noteer(`Doorschuiven niet gelukt: ${String(e.message).slice(0, 200)}`);
+  }
 }
 
 // ------------------------------------------------------------
@@ -847,6 +877,7 @@ try {
   // bepalen welke poules op slot gaan.
   alle = await haalAlleRaces() ?? [];
   const lopend = alle.filter((r) => plan.uitslagen.includes(r.season));
+  await doorschuiven();
   await vragensetOpSlot(lopend);
   const inAgenda = agendaSeizoenen(alle, plan);
   schrijfAgenda(alle.filter((r) => inAgenda.includes(r.season)));
