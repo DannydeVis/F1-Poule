@@ -745,11 +745,15 @@ as $$
   from public.races r where r.id = p_race_id;
 $$;
 
--- En is het erop zit? Dan mag er niets meer bij, want dan is het antwoord
--- bekend. Dezelfde maatstaf als seizoenKlaar() in index.html: een race telt
--- als geweest zodra er van één sessie een uitslag is, en een afgelaste race
--- telt ook mee -- daar komt nooit meer iets van.
-create or replace function public.poule_seizoen_voorbij(p_race_id bigint)
+-- Is een seizoen klaar? Elke race heeft een race-uitslag of is afgelast:
+-- dezelfde maatstaf als raceGereden() en seizoenKlaar() in index.html, en als
+-- weekendVoorbij() daar. Tot 21 oktober telde één sessie al (een
+-- kwalificatie of sprint), en was het seizoen na de kwalificatie van de
+-- laatste race "klaar" terwijl de race nog moest: doorschuiven kon, en de
+-- seizoensvragen lagen vast. Een seizoen zonder races is klaar: er valt niets
+-- meer te rijden (de app laat dan geen "seizoen rond" zien, er is niets om
+-- rond te zijn).
+create or replace function public.seizoen_klaar(p_seizoen int)
 returns boolean
 language sql
 stable
@@ -758,12 +762,20 @@ set search_path = public
 as $$
   select not exists (
     select 1 from public.races r
-    where r.season = (select season from public.races where id = p_race_id)
-      and not r.afgelast
-      and r.race_result is null
-      and r.quali_result is null
-      and r.sprint_result is null
+    where r.season = p_seizoen and not r.afgelast and r.race_result is null
   );
+$$;
+
+-- En is het erop zit voor het seizoen van deze race? Dan mag er bij de
+-- seizoensvragen niets meer bij, want dan is het antwoord bekend.
+create or replace function public.poule_seizoen_voorbij(p_race_id bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.seizoen_klaar((select season from public.races where id = p_race_id));
 $$;
 
 -- Wanneer gaat een sessie van een race dicht? Eén plek voor die vraag, want
@@ -1893,6 +1905,42 @@ create trigger pools_misbruik_bewaken
   before insert or update on public.pools
   for each row execute function public.pools_misbruik_bewaken();
 
+-- Het seizoen van een poule (21 oktober). Alleen precies één seizoen omhoog,
+-- en alleen als het seizoen klaar is (seizoen_klaar(): elke race een
+-- race-uitslag of afgelast). Voor iedereen: de knop van de poulebaas in de
+-- app, het automatisch doorschuiven door de sync (seizoenen_doorschuiven()),
+-- het beheer en de API. Zonder deze trigger kon een poulebaas met de anon key
+-- terug naar 2024, of vooruit naar 2030, of doorschuiven terwijl de finale
+-- nog gereden moest worden; dan was die finale voor de hele poule uit beeld.
+--
+-- Wat aan het seizoen hangt en daarom niet verder hoeft te kijken: de jokers
+-- en de seizoensvragen hangen aan de races (races.season), de
+-- tussenklassementen hebben hun eigen kolom seizoen, automatisch invullen,
+-- de contraire telling en de jokers hebben een datum als streep, en de
+-- herinneringen en de omzetting van de coureurlijsten gaan per race. Een
+-- poule die doorschuift neemt dat allemaal mee zoals het is.
+create or replace function public.pools_seizoen_bewaken()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.season is not distinct from old.season then return new; end if;
+  if new.season is distinct from old.season + 1 then
+    raise exception 'Een poule gaat één seizoen tegelijk vooruit, van % naar %', old.season, old.season + 1
+      using hint = 'seizoen_stap';
+  end if;
+  if not public.seizoen_klaar(old.season) then
+    raise exception 'Seizoen % is nog niet klaar: er moet nog een race gereden worden', old.season
+      using hint = 'seizoen_niet_klaar';
+  end if;
+  return new;
+end $$;
+drop trigger if exists pools_seizoen_bewaken on public.pools;
+create trigger pools_seizoen_bewaken
+  before update of season on public.pools
+  for each row execute function public.pools_seizoen_bewaken();
+
 -- En op de spelers: een nieuwe speler of een nieuwe naam in een openbare
 -- poule. Ook als de naam via het beheer verandert.
 create or replace function public.pool_members_woordfilter()
@@ -2619,6 +2667,52 @@ drop trigger if exists sync_runs_opruimen on public.sync_runs;
 create trigger sync_runs_opruimen
   after insert on public.sync_runs
   for each statement execute function public.sync_runs_opruimen();
+
+-- ---- automatisch doorschuiven naar het volgende seizoen (21 oktober) ----
+-- Elke sync-run roept dit aan (scripts/sync.mjs, met de service_role key).
+-- Een poule gaat van seizoen S naar S+1 als S klaar is (seizoen_klaar()) en
+-- er al races van S+1 in de tabel staan:
+--   * een openbare poule (is_public, dus ook de open poule): meteen;
+--   * de rest: 7 dagen na de laatste race van S, tenzij de poulebaas al
+--     doorschoof. Zo heeft een vriendenpoule een week om de eindstand te
+--     bekijken, en wie eerder wil gebruikt de knop.
+-- De 7 dagen staan hier één keer; de app rekent met DOORSCHUIF_NA_DAGEN de
+-- datum uit die hij laat zien, en test/seizoensdoorschuiven.test.mjs houdt de
+-- twee gelijk. De trigger pools_seizoen_bewaken() kijkt nog eens na.
+-- Geeft de doorgeschoven poules terug, voor de samenvatting in sync_runs.
+create or replace function public.seizoenen_doorschuiven()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  wacht constant interval := interval '7 days';
+  p     record;
+  uit   jsonb := '[]'::jsonb;
+begin
+  for p in
+    select pl.id, pl.name, pl.season, pl.is_public,
+           (select max(r.deadline_race) from public.races r where r.season = pl.season) as laatste
+      from public.pools pl
+     where public.seizoen_klaar(pl.season)
+       and exists (select 1 from public.races r where r.season = pl.season + 1)
+     order by pl.season, pl.created_at
+  loop
+    if not p.is_public and (p.laatste is null or now() < p.laatste + wacht) then continue; end if;
+    update public.pools set season = p.season + 1 where id = p.id;
+    uit := uit || jsonb_build_object('id', p.id, 'naam', p.name, 'van', p.season,
+                                     'naar', p.season + 1, 'openbaar', p.is_public);
+  end loop;
+  return uit;
+end $$;
+revoke all on function public.seizoenen_doorschuiven() from public, anon, authenticated;
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute 'grant execute on function public.seizoenen_doorschuiven() to service_role';
+  end if;
+end $$;
 
 -- ---- een eigen bezoekersteller -----------------------------------------
 -- Hoe vaak de app per dag geopend wordt, en door hoeveel mensen. Zonder
@@ -3518,9 +3612,7 @@ stable
 set search_path = public
 as $$
   select coalesce(
-    (select min(season) from public.races
-      where not afgelast
-        and race_result is null and quali_result is null and sprint_result is null),
+    (select min(season) from public.races where not afgelast and race_result is null),
     (select max(season) from public.races),
     extract(year from now())::int)
 $$;
@@ -3704,6 +3796,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'poule_jokeraantal_bewaken', 'poule_meedoen', 'poule_ophalen',
           'poule_seizoen_gestart', 'poule_seizoen_voorbij', 'poule_team_kiezen',
           'poule_team_opslaan', 'poule_team_weghalen', 'publiek_profiel',
+          'seizoen_klaar', 'seizoenen_doorschuiven', 'pools_seizoen_bewaken',
           'sessie_deadline', 'speler_naam', 'sync_runs_opruimen', 'tel_bezoek',
           'vereis_sessie', 'verwijder_mijn_account'] as functies,
                array[
@@ -3820,18 +3913,10 @@ select 'seizoen ' || public.controle_seizoen() || ' rond',
          -- ok waar je niets aan hebt.
          when not exists (select 1 from public.races where season = public.controle_seizoen())
            then 'geen kalender'
-         when not exists (
-              select 1 from public.races r
-              where r.season = public.controle_seizoen() and not r.afgelast
-                and r.race_result is null
-                and r.quali_result is null
-                and r.sprint_result is null)
-           then 'ok'
+         when public.seizoen_klaar(public.controle_seizoen()) then 'ok'
          else 'nog ' || (select count(*)::text from public.races r
               where r.season = public.controle_seizoen() and not r.afgelast
-                and r.race_result is null
-                and r.quali_result is null
-                and r.sprint_result is null) || ' te gaan' end
+                and r.race_result is null) || ' te gaan' end
 union all
 -- En het getal dat zegt of dat vanzelf goed komt. De sync zet een race die
 -- OpenF1 een week na de deadline nog steeds niet heeft zelf op afgelast. Staat
@@ -3842,13 +3927,15 @@ union all
 -- Mét de namen erbij, want op het moment dat hier iets staat wil je weten
 -- wélke race en niet hoevéél. Zonder namen is de volgende stap "uitzoeken
 -- welke", en dat is precies de stap waar je op afhaakt.
-select 'blijven hangen (deadline > week geleden, niets binnen)',
+-- Sinds 21 oktober zonder race-uitslag, en niet "niets binnen": een race met
+-- alleen een kwalificatie houdt het seizoen net zo goed tegen.
+select 'blijven hangen (deadline > week geleden, geen race-uitslag)',
        coalesce((
          select count(*)::text || ': ' || string_agg(r.name || ' (ronde ' || r.round || ')',
                                                      ', ' order by r.round)
          from public.races r
          where r.season = public.controle_seizoen() and not r.afgelast
-           and r.race_result is null and r.quali_result is null and r.sprint_result is null
+           and r.race_result is null
            and r.deadline_race is not null
            and r.deadline_race < now() - interval '7 days'
        ), '0')

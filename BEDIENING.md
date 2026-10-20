@@ -762,15 +762,58 @@ Vijf dingen die daarbij vastliggen:
 
 ### 6c. Een nieuw seizoen, en terug naar het vorige
 
-Een poule hoort bij een seizoen. Zodra alle races van dat seizoen gereden zijn
-verschijnt de knop **Begin aan 2027** (of welk jaar er volgt) op twee plekken:
-op het racesoverzicht, op de plek waar anders de volgende race staat, en onder
-Poule → beheer. Zolang er nog iets te rijden valt is hij er niet — doorschuiven
-zou die race dan uit beeld halen.
+Een poule hoort bij een seizoen. **Een seizoen is klaar als elke race een
+race-uitslag heeft of afgelast is.** Een kwalificatie of een sprint is niet
+genoeg: tot 21 oktober was het seizoen na de kwalificatie van de laatste race
+al "klaar", met doorschuiven, "Bekijk je seizoen", het seizoensverhaal en de
+seizoensvragen gescoord op een WK-stand zonder de finale. Dezelfde regel staat
+in de app (`raceGereden()`), in de database (`seizoen_klaar()`) en in de
+controletabel ("seizoen 2026 rond").
 
-Op het racesoverzicht ziet alleen de poulebaas de knop. De rest leest daar
-"Zodra de poulebaas doorschuift naar 2027 staat hier de nieuwe kalender", zodat
-een scherm met alleen gereden races niet lijkt op een app die stilstaat.
+**Doorschuiven gaat vanzelf** (sinds 21 oktober). Elke run van de sync roept
+`seizoenen_doorschuiven()` aan. Een poule gaat naar het volgende seizoen als
+het seizoen klaar is en de races van het volgende jaar al in de tabel staan:
+
+- een **openbare poule** (ook de open poule): meteen, bij de eerstvolgende run;
+- **elke andere poule**: 7 dagen na de laatste race, zodat iedereen een week
+  de eindstand heeft. Die 7 staat één keer in `schema.sql`; de app rekent er de
+  datum mee uit.
+
+Wat er doorging staat in het logboek van de sync (beheer, Data): "Poule
+Kantoorpoule gaat door van 2026 naar 2027 (7 dagen na de finale)". In de
+openbare log van Actions staat alleen het aantal.
+
+De poulebaas kan het ook eerder: zodra het seizoen klaar is verschijnt de knop
+**Begin aan 2027** (of welk jaar er volgt) op het racesoverzicht, op de plek
+waar anders de volgende race staat, en onder Poule → beheer, met de zin "Op 13
+december gaat de poule vanzelf door naar 2027. Wil je eerder, schuif dan nu
+door." De rest leest op het racesoverzicht "Op 13 december gaat de poule vanzelf
+door naar 2027", of in een openbare poule "zodra de kalender er is". Zolang er
+nog iets te rijden valt is er geen knop.
+
+**De database bewaakt het.** Een trigger op `pools.season` laat een poule
+alleen precies één seizoen vooruit gaan, en alleen als het seizoen klaar is.
+Dat geldt voor de knop, de sync, het beheer en de API: met de anon key terug
+naar 2024 of vooruit naar 2030 kan niet meer. Wat er verder aan het seizoen
+hangt gaat vanzelf mee: de jokers en de seizoensvragen hangen aan de races,
+de tussenklassementen hebben hun eigen seizoen, automatisch invullen, jokers
+en contrair voorspellen hebben een datum als streep, en de herinneringen en de
+coureurlijsten gaan per race.
+
+**Na het doorschuiven**, tot de eerste race van het nieuwe seizoen, staat
+bovenaan het racesoverzicht een kaart met de winnaar van vorig seizoen en zijn
+punten, de knop **Bekijk je seizoen 2026** en **Naar 2026**. Anders stond de
+eindstand meteen achter de keuzelijst.
+
+**Wat jij moet doen:** één keer `schema.sql` draaien in de SQL Editor van
+Supabase (de nieuwe regel, de trigger en `seizoenen_doorschuiven()`). Daarna
+gaat alles vanzelf; de controletabel zegt bij "seizoen 2026 rond" pas "ok" als
+de finale een race-uitslag heeft.
+
+**Herinneringen bij het eerste weekend.** Bij de eerste sessie van ronde 1
+noemt de herinnering ook de seizoensvragen, als die nog helemaal leeg zijn. Wie
+zijn top 10 al had maar de seizoensvragen niet, krijgt dan toch een seintje:
+"Je seizoensvragen staan nog open."
 
 **De kalender van het volgende jaar komt vanzelf.** De sync gaat hem vanaf twee
 maanden voor de finale zoeken bij OpenF1 en zet hem erin zodra hij er is; tot
@@ -1447,9 +1490,10 @@ Iedereen in de poule ziet die, want het gaat om ieders punten. De poulebaas is
 degene die hem oplost — zie hieronder.
 
 **Blijft het seizoen ergens op hangen?** De seizoensvragen worden pas gescoord
-als élke race een uitslag heeft of afgelast is. Blijft er één race hangen — wel
-gereden volgens de kalender, niets binnengekomen, niet afgelast — dan leveren
-die 150 punten nooit iets op en blijft "Begin aan het volgende seizoen" grijs.
+als élke race een race-uitslag heeft of afgelast is. Blijft er één race hangen
+(wel gereden volgens de kalender, geen race-uitslag, niet afgelast), dan
+leveren die 150 punten nooit iets op, blijft "Begin aan het volgende seizoen"
+grijs en schuift de poule ook niet vanzelf door.
 
 Onderaan `schema.sql` staan daarom drie regels die dat nu al laten zien. Ze
 gaan over het seizoen dat nu speelt: tot de finale dit jaar, daarna het
@@ -1459,14 +1503,14 @@ hij niet uit beeld verdwijnt zodra de nieuwe kalender er is.
 ```
 afgelaste races                                        | 2
 seizoen 2026 rond                                      | nog 8 te gaan
-blijven hangen (deadline > week geleden, niets binnen) | 0
+blijven hangen (deadline > week geleden, geen race-uitslag) | 0
 ```
 
 Die laatste hoort **nul** te zijn. Staat er iets anders, dan noemt hij de races
 bij naam:
 
 ```
-blijven hangen (deadline > week geleden, niets binnen) | 1: Kuala Lumpur (ronde 19)
+blijven hangen (deadline > week geleden, geen race-uitslag) | 1: Kuala Lumpur (ronde 19)
 ```
 
 De sync zet een race die OpenF1 een week na de deadline nog steeds niet heeft

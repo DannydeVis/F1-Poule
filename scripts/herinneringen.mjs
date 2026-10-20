@@ -24,6 +24,9 @@ export const SESSIES = {
   race:   { naam: 'race',         vraag: 'race_top10',   deadline: 'deadline_race' },
 };
 export const SESSIEVOLGORDE = ['sprint', 'quali', 'race'];
+// De vier seizoensvragen. Ze hangen aan ronde 1 en liggen vast vanaf de eerste
+// sessie daarvan (poule_seizoen_gestart() in schema.sql).
+export const SEIZOENVRAGEN = ['kampioen', 'constructeur', 'winnaars', 'vierde_team'];
 
 // De app vertaalt zichzelf in de browser met een woordenlijst van vierhonderd
 // zinnen. Een push komt hiervandaan, zonder browser, en gaat over precies
@@ -38,6 +41,8 @@ const WOORDEN = {
     uren: (n) => `over ${n} uur`,
     titel: (race, sessie, wanneer) => `${race}: ${sessie} sluit ${wanneer}`,
     tekst: 'Je hebt hier nog niets ingevuld.',
+    seizoen: 'Je seizoensvragen staan ook nog open.',
+    alleenSeizoen: 'Je seizoensvragen staan nog open.',
   },
   en: {
     sprint: 'sprint', quali: 'qualifying', race: 'race',
@@ -45,6 +50,8 @@ const WOORDEN = {
     uren: (n) => `in ${n} hours`,
     titel: (race, sessie, wanneer) => `${race}: ${sessie} closes ${wanneer}`,
     tekst: 'You have not filled anything in here yet.',
+    seizoen: 'Your season questions are still open too.',
+    alleenSeizoen: 'Your season questions are still open.',
   },
   de: {
     sprint: 'Sprint', quali: 'Qualifying', race: 'Rennen',
@@ -52,6 +59,8 @@ const WOORDEN = {
     uren: (n) => `in ${n} Stunden`,
     titel: (race, sessie, wanneer) => `${race}: ${sessie} schließt ${wanneer}`,
     tekst: 'Du hast hier noch nichts getippt.',
+    seizoen: 'Deine Saisonfragen sind auch noch offen.',
+    alleenSeizoen: 'Deine Saisonfragen sind noch offen.',
   },
   fr: {
     sprint: 'sprint', quali: 'qualifications', race: 'course',
@@ -59,6 +68,8 @@ const WOORDEN = {
     uren: (n) => `dans ${n} heures`,
     titel: (race, sessie, wanneer) => `${race} : ${sessie}, clôture ${wanneer}`,
     tekst: 'Vous n\u2019avez encore rien pronostiqué ici.',
+    seizoen: 'Vos questions de la saison sont aussi encore ouvertes.',
+    alleenSeizoen: 'Vos questions de la saison sont encore ouvertes.',
   },
   es: {
     sprint: 'sprint', quali: 'clasificación', race: 'carrera',
@@ -66,6 +77,8 @@ const WOORDEN = {
     uren: (n) => `en ${n} horas`,
     titel: (race, sessie, wanneer) => `${race}: ${sessie} cierra ${wanneer}`,
     tekst: 'Todavía no has hecho tu predicción aquí.',
+    seizoen: 'Tus preguntas de la temporada también siguen abiertas.',
+    alleenSeizoen: 'Tus preguntas de la temporada siguen abiertas.',
   },
   it: {
     sprint: 'sprint', quali: 'qualifiche', race: 'gara',
@@ -73,6 +86,8 @@ const WOORDEN = {
     uren: (n) => `tra ${n} ore`,
     titel: (race, sessie, wanneer) => `${race}: ${sessie}, chiusura ${wanneer}`,
     tekst: 'Non hai ancora inserito nulla qui.',
+    seizoen: 'Anche le tue domande della stagione sono ancora aperte.',
+    alleenSeizoen: 'Le tue domande della stagione sono ancora aperte.',
   },
   pt: {
     sprint: 'sprint', quali: 'classificação', race: 'corrida',
@@ -80,6 +95,8 @@ const WOORDEN = {
     uren: (n) => `em ${n} horas`,
     titel: (race, sessie, wanneer) => `${race}: ${sessie} fecha ${wanneer}`,
     tekst: 'Você ainda não deu seu palpite aqui.',
+    seizoen: 'Suas perguntas da temporada também ainda estão abertas.',
+    alleenSeizoen: 'Suas perguntas da temporada ainda estão abertas.',
   },
 };
 export const woorden = (taal) => WOORDEN[taal] ?? WOORDEN.nl;
@@ -135,7 +152,8 @@ export function overTekst(uren, taal = 'nl') {
 /**
  * @param races        de races van dit seizoen, met hun deadlines
  * @param abonnementen rijen uit push_abonnementen
- * @param antwoorden   rijen {race_id, member_id, question_id} — alleen de top tienen
+ * @param antwoorden   rijen {race_id, member_id, question_id}: de top tienen, en
+ *                     de seizoensvragen (die hangen aan ronde 1)
  * @param poulevragen  rijen {pool_id, question_id}; een poule zonder rijen doet alles
  * @param nu           tijdstip in ms
  */
@@ -155,6 +173,13 @@ export function wieKrijgtEenSeintje({ races = [], abonnementen = [], antwoorden 
   const ingevuld = new Set(antwoorden.map(
     (a) => `${a.race_id}|${a.member_id}|${a.question_id}`));
 
+  // Het eerste weekend van een seizoen: de seizoensvragen liggen vast vanaf de
+  // eerste sessie ervan. Wie ze nog helemaal leeg heeft, hoort dat bij die
+  // sessie, ook als zijn top 10 al klaarstaat.
+  // Ronde 1, net als seizoenRace() in de app: daar hangen de antwoorden aan.
+  const eersteSessie = (race) => SESSIEVOLGORDE.filter((w) => race[SESSIES[w].deadline])
+    .sort((a, b) => Date.parse(race[SESSIES[a].deadline]) - Date.parse(race[SESSIES[b].deadline]))[0];
+
   // Alle sessies die binnen het venster sluiten, de vroegste eerst. Zo krijgt
   // een toestel bij twee openstaande sessies een seintje over degene die het
   // eerst dichtgaat, en niet over allebei.
@@ -166,7 +191,8 @@ export function wieKrijgtEenSeintje({ races = [], abonnementen = [], antwoorden 
       if (!iso) continue;
       const uren = urenTot(iso, nu);
       if (uren <= 0 || uren > VENSTER_UREN) continue;
-      bijna.push({ race, welk, uren });
+      const seizoen = Number(race.round) === 1 && eersteSessie(race) === welk;
+      bijna.push({ race, welk, uren, seizoen });
     }
   }
   bijna.sort((a, b) => a.uren - b.uren);
@@ -174,11 +200,14 @@ export function wieKrijgtEenSeintje({ races = [], abonnementen = [], antwoorden 
 
   const uit = [];
   for (const ab of abonnementen) {
-    const treffer = bijna.find(({ race, welk }) => {
-      const vraag = SESSIES[welk].vraag;
-      return stelt(ab.pool_id, vraag)
-        && !ingevuld.has(`${race.id}|${ab.member_id}|${vraag}`);
-    });
+    const top10Open = ({ race, welk }) => stelt(ab.pool_id, SESSIES[welk].vraag)
+      && !ingevuld.has(`${race.id}|${ab.member_id}|${SESSIES[welk].vraag}`);
+    const seizoenOpen = ({ race, seizoen }) => {
+      if (!seizoen) return false;
+      const vragen = SEIZOENVRAGEN.filter((v) => stelt(ab.pool_id, v));
+      return vragen.length > 0 && !vragen.some((v) => ingevuld.has(`${race.id}|${ab.member_id}|${v}`));
+    };
+    const treffer = bijna.find((b) => top10Open(b) || seizoenOpen(b));
     if (!treffer) continue;
     // Deze had hij al gehad. Elk uur opnieuw dezelfde melding sturen is de
     // snelste manier om iemand ze uit te laten zetten.
@@ -193,7 +222,8 @@ export function wieKrijgtEenSeintje({ races = [], abonnementen = [], antwoorden 
       bericht: {
         titel: w.titel(treffer.race.name, w[treffer.welk],
                        overTekst(treffer.uren, ab.taal)),
-        tekst: w.tekst,
+        tekst: !top10Open(treffer) ? w.alleenSeizoen
+          : seizoenOpen(treffer) ? `${w.tekst} ${w.seizoen}` : w.tekst,
         tag,
       },
     });

@@ -2594,15 +2594,28 @@ const ENGELS = Object.fromEntries([
   ['Alle races zijn gereden. Hieronder '
    + 'staat hoe ze gegaan zijn.',
    'Every race has been run. Below is how they went.'],
-  ['Alle races van {jaar} zijn gereden. Schuif door naar {volgend}, dan staat '
-   + 'hier de nieuwe kalender. {jaar} blijft te bekijken, met de stand en alles '
-   + 'wat erbij hoort.',
-   'Every race of {jaar} has been run. Move on to {volgend} and the new calendar '
-   + 'appears here. {jaar} stays viewable, with the standings and everything else.'],
-  ['Alle races van {jaar} zijn gereden. Zodra de poulebaas doorschuift naar '
-   + '{volgend} staat hier de nieuwe kalender.',
-   'Every race of {jaar} has been run. As soon as the pool owner moves on to '
-   + '{volgend}, the new calendar appears here.'],
+  ['Alle races van {jaar} zijn gereden. {vanzelf} Wil je eerder, schuif dan nu door. {jaar} blijft te bekijken, met de stand en alles wat erbij hoort.',
+   'Every race of {jaar} has been run. {vanzelf} Want it sooner? Move on now. {jaar} stays viewable, with the standings and everything else.'],
+  ['Alle races van {jaar} zijn gereden. {vanzelf} Dan staat hier de nieuwe kalender.',
+   'Every race of {jaar} has been run. {vanzelf} The new calendar will then appear here.'],
+  ['De poule gaat vanzelf door naar {volgend} zodra de kalender er is.',
+   'The pool moves on to {volgend} by itself as soon as the calendar is out.'],
+  ['Op {datum} gaat de poule vanzelf door naar {volgend}.',
+   'On {datum} the pool moves on to {volgend} by itself.'],
+  ['{vanzelf} Wil je eerder, gebruik dan deze knop.',
+   '{vanzelf} Want it sooner? Use this button.'],
+  ['eindstand {jaar}',
+   'final standings {jaar}'],
+  ['Winnaar van {jaar}: {naam}, met {punten} punten.',
+   'Winner of {jaar}: {naam}, with {punten} points.'],
+  ['De eindstand en alle races van {jaar} staan in de keuzelijst bovenaan.',
+   'The final standings and every race of {jaar} are in the list at the top.'],
+  ['Naar {jaar}',
+   'Go to {jaar}'],
+  ['Een poule gaat één seizoen tegelijk vooruit.',
+   'A pool moves forward one season at a time.'],
+  ['Dit seizoen is nog niet klaar: er moet nog een race gereden worden.',
+   'This season is not over yet: there is still a race to be run.'],
   ['nog geen races',
    'no races yet'],
   ['De kalender verschijnt hier vanzelf.',
@@ -4896,6 +4909,13 @@ const dichteSessies = (r, nu = Date.now()) => Object.fromEntries(SESSIEVOLGORDE.
 // op zaterdagmiddag, vóór de kwalificatie, dus een sprintweekend zou een paar
 // uur lang "nog niets gereden" heten terwijl er al punten op stonden.
 const heeftUitslag = (r) => SESSIEVOLGORDE.some(w => !!r?.[SESSIES[w].uitslag]);
+// Is de race zelf gereden, of komt er nooit meer iets? Dat is de maatstaf voor
+// "het seizoen is klaar" (seizoenKlaar, seizoenAfgerond, periodeStand) en in
+// de database voor poule_seizoen_voorbij() en seizoen_klaar(). Niet
+// heeftUitslag(): tot 21 oktober was het seizoen na de kwalificatie van de
+// laatste race al "klaar", met doorschuiven, het seizoensverhaal en de
+// seizoensvragen gescoord op een WK-stand zonder de finale.
+const raceGereden = (r) => !!r?.[SESSIES.race.uitslag] || !!r?.afgelast;
 const heeftUitslagLijst = (r) => SESSIEVOLGORDE.some(w => r?.[SESSIES[w].uitslag]?.length);
 
 // Welke sessie laat je zien als er meerdere van hetzelfde weekend een uitslag
@@ -5144,14 +5164,13 @@ function tijdVoorlopig(r, races = S.races) {
   return seizoen.length >= 4 && seizoen.filter(precies24).length * 2 >= seizoen.length;
 }
 
-// Het hele seizoen gereden? Een afgelaste race telt als geweest: daar komt
-// nooit meer een uitslag van.
-const seizoenKlaar = () =>
-  S.races.length > 0 && S.races.every(r => heeftUitslag(r) || r.afgelast);
+// Het hele seizoen gereden? Elke race een race-uitslag; een afgelaste race
+// telt als geweest, daar komt nooit meer een uitslag van (raceGereden).
+const seizoenKlaar = () => S.races.length > 0 && S.races.every(raceGereden);
 
 // Welke races houden het seizoen tegen?
 //
-// seizoenKlaar() eist van élke race een uitslag of een streep. Blijft er één
+// seizoenKlaar() eist van élke race een race-uitslag of een streep. Blijft er één
 // hangen -- de kalender zegt dat hij gereden is, er kwam niets binnen, en hij
 // staat niet op afgelast -- dan worden de seizoensvragen nooit gescoord en
 // blijft "Begin aan het volgende seizoen" grijs. Voor altijd, zonder dat er
@@ -5168,7 +5187,7 @@ const seizoenKlaar = () =>
 // van onderweg is.
 const VAST_NA_DAGEN = 7;
 const vastgelopenRaces = () => S.races.filter(r =>
-  !r.afgelast && !heeftUitslag(r) && r.deadline_race
+  !raceGereden(r) && r.deadline_race
   && Date.now() - new Date(r.deadline_race).getTime() > VAST_NA_DAGEN * 864e5);
 
 // De vier antwoorden, uit de races zelf. Pas als het seizoen erop zit, want
@@ -5745,6 +5764,11 @@ function uitleg(error) {
   }
   if (hint === 'woordfilter') {
     return T('Die naam kan niet in een openbare poule. Kies een andere.');
+  }
+  // De trigger pools_seizoen_bewaken() in schema.sql.
+  if (hint === 'seizoen_stap') return T('Een poule gaat één seizoen tegelijk vooruit.');
+  if (hint === 'seizoen_niet_klaar') {
+    return T('Dit seizoen is nog niet klaar: er moet nog een race gereden worden.');
   }
   const bericht = String(error?.message ?? '');
   if (GEEN_NET.test(bericht)) return T('Geen verbinding. Probeer het zo nog eens.');
@@ -7472,6 +7496,7 @@ function toonApp() {
   knoopJokers();
   knoopContrair();
   knoopSeizoen();
+  knoopVorigSeizoen();
   knoopSeizoenslaag();
   knoopJokerZetten();
   knoopEigenVragen();
@@ -7553,12 +7578,53 @@ function racesPagina(volgend) {
         + 'opnieuw invullen. Sta opslag voor deze site toe, of gebruik geen '
         + 'privévenster.')}</div>` : ''}
     ${seizoenBalk()}
+    ${vorigSeizoenKaart()}
     ${legePouleBlok()}
     ${volgend ? hero(volgend) : ''}
     <span class="label">${T('kalender')}</span>
     <div class="kalender">${komend.map(x => kalenderRij(x.r, x.st)).join('') || leeg}</div>
     ${gereden.length ? `<span class="label">${T('gereden')}</span>
       <div class="kalender">${gereden.map(x => kalenderRij(x.r, x.st)).join('')}</div>` : ''}`;
+}
+
+// ---- na het doorschuiven: hoe eindigde vorig seizoen? --------
+// Na het doorschuiven stond de eindstand meteen achter de keuzelijst, en het
+// racesoverzicht ging over een seizoen dat pas in maart begint. Tot de eerste
+// race van het nieuwe seizoen staat hier dus wie de poule vorig jaar won, met
+// zijn punten, het seizoensverhaal en de weg naar dat jaar.
+function vorigSeizoenUitslag() {
+  const vorig = pouleSeizoen() - 1;
+  if (seizoen() !== pouleSeizoen() || (S.races.length && !seizoenOpen()) || !S.ik) return null;
+  const races = S.alleRaces.filter(r => zelfde(r.season, vorig));
+  if (!races.length || !races.every(raceGereden)) return null;
+  if (!gespeeldeSeizoenen().includes(vorig)) return null;
+  // De stand van vorig jaar: dezelfde rekensom als de stand, op die races.
+  const huidig = seizoen();
+  kiesSeizoen(vorig);
+  try {
+    const rijen = standRijen();
+    const top = rijen[0]?.punten ?? 0;
+    return { jaar: vorig, punten: top, winnaars: top > 0 ? rijen.filter(x => x.punten === top) : [],
+             verhaal: !!seizoenOverzicht() };
+  } finally { kiesSeizoen(huidig); }
+}
+function vorigSeizoenKaart() {
+  const v = vorigSeizoenUitslag();
+  if (!v) return '';
+  return `<div class="leeg" data-vorigseizoen>
+    <span class="label">${T('eindstand {jaar}', { jaar: v.jaar })}</span>
+    ${v.winnaars.length ? `<p style="margin:0"><b>${T('Winnaar van {jaar}: {naam}, met {punten} punten.', {
+      jaar: v.jaar, naam: v.winnaars.map(w => esc(w.naam)).join(' & '), punten: v.punten })}</b></p>` : ''}
+    <p class="zacht" style="margin:0">${T('De eindstand en alle races van {jaar} staan in de keuzelijst bovenaan.', { jaar: v.jaar })}</p>
+    ${v.verhaal ? `<button class="knop primair" data-vorigverhaal>${T('Bekijk je seizoen {jaar}', { jaar: v.jaar })}</button>` : ''}
+    <button class="knop spook" data-naarvorig>${T('Naar {jaar}', { jaar: v.jaar })}</button>
+  </div>`;
+}
+function knoopVorigSeizoen() {
+  const jaar = pouleSeizoen() - 1;
+  const naar = () => { kiesSeizoen(jaar); S.race = null; S.bekijk = null; };
+  app.querySelector('[data-naarvorig]')?.addEventListener('click', () => { naar(); render(); });
+  app.querySelector('[data-vorigverhaal]')?.addEventListener('click', () => { naar(); render(); speelSeizoen(); });
 }
 
 // ---- een poule met alleen jou -------------------------------
@@ -9537,7 +9603,7 @@ function periodeStand(x) {
     punten: races.filter(heeftUitslag).reduce((n, r) => n + scoreWeekend(vindPred(r.id, l.member_id), r), 0),
   })).sort((a, b) => b.punten - a.punten || String(a.naam).localeCompare(String(b.naam)));
   const gestart = races.some(heeftUitslag);
-  const klaar = races.length > 0 && races.every(r => heeftUitslag(r) || afgelastEnLeeg(r));
+  const klaar = races.length > 0 && races.every(raceGereden);
   return { rijen, gestart, klaar };
 }
 
@@ -10018,10 +10084,10 @@ function knoopSeizoen() {
   });
 }
 
-// Zit het seizoen van deze poule erop? Elke race een uitslag of afgelast.
+// Zit het seizoen van deze poule erop? Elke race een race-uitslag of afgelast.
 function seizoenAfgerond() {
   const vanDitJaar = S.alleRaces.filter(r => zelfde(r.season, pouleSeizoen()));
-  return vanDitJaar.length > 0 && vanDitJaar.every(r => heeftUitslag(r) || r.afgelast);
+  return vanDitJaar.length > 0 && vanDitJaar.every(raceGereden);
 }
 
 // Het racesoverzicht als alles gereden is. Doorschuiven kon al, maar alleen
@@ -10035,20 +10101,41 @@ function seizoenAfgerond() {
 // afgelopen jaar hoeft daar niet te horen dat hij door kan schuiven.
 function seizoenRondBlok() {
   const nu = seizoen() === pouleSeizoen() && seizoenAfgerond();
-  const vars = { jaar: pouleSeizoen(), volgend: pouleSeizoen() + 1 };
+  const vars = { jaar: pouleSeizoen(), volgend: pouleSeizoen() + 1, vanzelf: nu ? vanzelfZin() : '' };
   return `<div class="leeg"><span class="label">${T('seizoen rond')}</span>
-    <p class="zacht" style="margin:0">${!nu
+    <p class="zacht" style="margin:0" data-vanzelf>${!nu
       ? T('Alle races zijn gereden. Hieronder staat hoe ze gegaan zijn.')
       : magBeheren()
-        ? T('Alle races van {jaar} zijn gereden. Schuif door naar {volgend}, dan staat '
-          + 'hier de nieuwe kalender. {jaar} blijft te bekijken, met de stand en alles '
-          + 'wat erbij hoort.', vars)
-        : T('Alle races van {jaar} zijn gereden. Zodra de poulebaas doorschuift naar '
-          + '{volgend} staat hier de nieuwe kalender.', vars)}</p>
+        ? T('Alle races van {jaar} zijn gereden. {vanzelf} Wil je eerder, schuif dan nu '
+          + 'door. {jaar} blijft te bekijken, met de stand en alles wat erbij hoort.', vars)
+        : T('Alle races van {jaar} zijn gereden. {vanzelf} Dan staat hier de nieuwe kalender.', vars)}</p>
     ${seizoenVerhaalKnop().replace('knop primair', 'knop spook')}
     ${nu && magBeheren() ? `<button class="knop primair" id="doorschuiven">${
       T('Begin aan {jaar}', { jaar: vars.volgend })}</button>` : ''}
   </div>`;
+}
+
+// Wanneer gaat de poule vanzelf door? De regel staat in de database
+// (seizoenen_doorschuiven() in schema.sql): een openbare poule meteen zodra de
+// kalender van volgend jaar er is, de rest DOORSCHUIF_NA_DAGEN na de laatste
+// race van het seizoen. De sync voert hem uit, dus "op 13 december" is de
+// eerste run van die dag. Is die datum al voorbij, dan wacht het alleen nog op
+// de kalender. test/seizoensdoorschuiven.test.mjs houdt de 7 gelijk met de
+// database.
+const DOORSCHUIF_NA_DAGEN = 7;
+function doorschuifDatum() {
+  const laatste = Math.max(...S.alleRaces.filter(r => zelfde(r.season, pouleSeizoen()))
+    .map(r => Date.parse(r.deadline_race)).filter(Number.isFinite));
+  return Number.isFinite(laatste) ? laatste + DOORSCHUIF_NA_DAGEN * 864e5 : null;
+}
+function vanzelfZin() {
+  const vars = { volgend: pouleSeizoen() + 1 };
+  const om = doorschuifDatum();
+  if (S.poule?.is_public || om === null || Date.now() >= om) {
+    return T('De poule gaat vanzelf door naar {volgend} zodra de kalender er is.', vars);
+  }
+  return T('Op {datum} gaat de poule vanzelf door naar {volgend}.',
+    { ...vars, datum: esc(datumKort(new Date(om).toISOString())) });
 }
 
 // De poulebaas schuift het seizoen door. Alleen als dit seizoen echt klaar is:
@@ -10061,11 +10148,12 @@ function nieuwSeizoenBlok() {
     <div class="scheiding"></div>
     <span class="label">${T('seizoen {jaar}', { jaar: pouleSeizoen() })}</span>
     <p class="zacht" style="margin:0">${klaar
-      ? T('Alle races van {jaar} zijn gereden. Doorschuiven naar {volgend} zet de '
+      ? `${T('Alle races van {jaar} zijn gereden. Doorschuiven naar {volgend} zet de '
         + 'kalender van volgend jaar klaar; dit jaar blijft gewoon te bekijken via de '
         + 'keuzelijst bovenaan, met de stand en alles wat erbij hoort. De vragenset '
         + 'en de spelers gaan mee.',
-        { jaar: pouleSeizoen(), volgend: pouleSeizoen() + 1 })
+        { jaar: pouleSeizoen(), volgend: pouleSeizoen() + 1 })} ${
+        T('{vanzelf} Wil je eerder, gebruik dan deze knop.', { vanzelf: vanzelfZin() })}`
       : T('Er moet nog gereden worden dit seizoen. Zodra de laatste race erop zit '
         + 'kun je hier doorschuiven naar {volgend}. Dit jaar blijft daarna te '
         + 'bekijken; er gaat niets weg.', { volgend: pouleSeizoen() + 1 })}</p>

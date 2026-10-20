@@ -207,4 +207,39 @@ check('en slaapt nooit langer dan een job mag duren',
 check('de sync schrijft de wekker naar GITHUB_OUTPUT',
   /GITHUB_OUTPUT.*wekker=/s.test(readFileSync(join(wortel, 'scripts', 'sync.mjs'), 'utf8')));
 
+// ---- de seizoensvragen bij het eerste weekend (21 oktober) --------------
+// Ze hangen aan ronde 1 en liggen vast vanaf de eerste sessie daarvan. Wie ze
+// nog helemaal leeg heeft, hoort het bij die sessie, ook met een volle top 10.
+{
+  const r1 = { ...race(2), id: 7, round: 1, name: 'Melbourne' };
+  const top10 = { race_id: 7, member_id: 'lid-1', question_id: 'quali_top10' };
+  const kampioen = { race_id: 7, member_id: 'lid-1', question_id: 'kampioen' };
+  const alles = roep({ races: [r1], abonnementen: [danny] });
+  check('ronde 1, niets ingevuld: één seintje dat ook de seizoensvragen noemt',
+    alles.length === 1 && alles[0].bericht.tekst === 'Je hebt hier nog niets ingevuld. Je seizoensvragen staan ook nog open.',
+    JSON.stringify(alles.map((x) => x.bericht)));
+  const alleen = roep({ races: [r1], abonnementen: [danny], antwoorden: [top10] });
+  check('top 10 ingevuld maar de seizoensvragen leeg: toch een seintje, over de seizoensvragen',
+    alleen.length === 1 && alleen[0].bericht.tekst === 'Je seizoensvragen staan nog open.'
+      && alleen[0].tag === '7:quali', JSON.stringify(alleen.map((x) => x.bericht)));
+  check('met één seizoensvraag ingevuld is dat geen reden meer',
+    roep({ races: [r1], abonnementen: [danny], antwoorden: [top10, kampioen] }).length === 0);
+  check('een poule zonder seizoensvragen hoort er niets over',
+    roep({ races: [r1], abonnementen: [danny], antwoorden: [top10],
+           poulevragen: [{ pool_id: 'pool-1', question_id: 'quali_top10' }] }).length === 0);
+  check('ronde 3 heeft geen seizoensvragen',
+    roep({ races: [race(2)], abonnementen: [danny],
+           antwoorden: [{ race_id: 1, member_id: 'lid-1', question_id: 'quali_top10' }] }).length === 0);
+  // Alleen bij de eerste sessie van ronde 1: daarna liggen ze al vast.
+  const r1Race = { ...r1, deadline_quali: over(-20), deadline_race: over(2) };
+  check('bij de race van ronde 1 (de kwalificatie is al dicht) niet meer over de seizoensvragen',
+    roep({ races: [r1Race], abonnementen: [danny],
+           antwoorden: [{ race_id: 7, member_id: 'lid-1', question_id: 'race_top10' }] }).length === 0);
+  const duits = roep({ races: [r1], abonnementen: [{ ...danny, taal: 'de' }], antwoorden: [top10] });
+  check('in het Duits', duits[0]?.bericht.tekst === 'Deine Saisonfragen sind noch offen.', JSON.stringify(duits[0]?.bericht));
+  const sync = readFileSync(join(wortel, 'scripts', 'sync.mjs'), 'utf8');
+  check('de sync haalt de antwoorden op de seizoensvragen ook op',
+    /question_id=in\.\(quali_top10,sprint_top10,race_top10,\$\{SEIZOENVRAGEN\.join\(','\)\}\)/.test(sync));
+}
+
 process.exit(afronden() ? 0 : 1);

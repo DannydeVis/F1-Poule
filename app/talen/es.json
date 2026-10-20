@@ -137,8 +137,6 @@
  "{letter} = {sessie} ingevuld": "{letter} = {sessie} rellenada",
  "seizoen rond": "temporada terminada",
  "Alle races zijn gereden. Hieronder staat hoe ze gegaan zijn.": "Ya se han corrido todas las carreras. Abajo ves cómo fueron.",
- "Alle races van {jaar} zijn gereden. Schuif door naar {volgend}, dan staat hier de nieuwe kalender. {jaar} blijft te bekijken, met de stand en alles wat erbij hoort.": "Ya se han corrido todas las carreras de {jaar}. Pasa a {volgend} y aquí aparecerá el nuevo calendario. {jaar} se puede seguir viendo, con la clasificación y todo lo demás.",
- "Alle races van {jaar} zijn gereden. Zodra de poulebaas doorschuift naar {volgend} staat hier de nieuwe kalender.": "Ya se han corrido todas las carreras de {jaar}. En cuanto el administrador de la liga pase a {volgend}, aquí aparecerá el nuevo calendario.",
  "nog geen races": "todavía no hay carreras",
  "De kalender verschijnt hier vanzelf.": "El calendario aparecerá aquí solo.",
  "Demomodus met verzonnen data.": "Modo demo con datos inventados.",
@@ -810,5 +808,16 @@
  "{wie} staat niet meer in de deelnemerslijst en levert zo niets op. Kies opnieuw en sla op.": "{wie} ya no está en la lista de pilotos y así no suma nada. Vuelve a elegir y guarda.",
  "{wie} staan niet meer in de deelnemerslijst en leveren zo niets op. Kies opnieuw en sla op.": "{wie} ya no están en la lista de pilotos y así no suman nada. Vuelve a elegir y guarda.",
  "Kies opnieuw: je keuze bij {vragen} staat niet meer in de lijst, en levert zo niets op.": "Vuelve a elegir: tu elección en {vragen} ya no está en la lista y así no suma nada.",
- "Kies opnieuw: je keuzes bij {vragen} staan niet meer in de lijst, en leveren zo niets op.": "Vuelve a elegir: tus elecciones en {vragen} ya no están en la lista y así no suman nada."
+ "Kies opnieuw: je keuzes bij {vragen} staan niet meer in de lijst, en leveren zo niets op.": "Vuelve a elegir: tus elecciones en {vragen} ya no están en la lista y así no suman nada.",
+ "Alle races van {jaar} zijn gereden. {vanzelf} Wil je eerder, schuif dan nu door. {jaar} blijft te bekijken, met de stand en alles wat erbij hoort.": "Ya se han corrido todas las carreras de {jaar}. {vanzelf} ¿Quieres pasar antes? Hazlo ahora. {jaar} sigue disponible, con la clasificación y todo lo demás.",
+ "Alle races van {jaar} zijn gereden. {vanzelf} Dan staat hier de nieuwe kalender.": "Ya se han corrido todas las carreras de {jaar}. {vanzelf} Entonces aparecerá aquí el nuevo calendario.",
+ "De poule gaat vanzelf door naar {volgend} zodra de kalender er is.": "La liga pasa sola a {volgend} en cuanto esté el calendario.",
+ "Op {datum} gaat de poule vanzelf door naar {volgend}.": "El {datum} la liga pasa sola a {volgend}.",
+ "{vanzelf} Wil je eerder, gebruik dan deze knop.": "{vanzelf} ¿Quieres pasar antes? Usa este botón.",
+ "eindstand {jaar}": "clasificación final {jaar}",
+ "Winnaar van {jaar}: {naam}, met {punten} punten.": "Ganador de {jaar}: {naam}, con {punten} puntos.",
+ "De eindstand en alle races van {jaar} staan in de keuzelijst bovenaan.": "La clasificación final y todas las carreras de {jaar} están en la lista de arriba.",
+ "Naar {jaar}": "Ir a {jaar}",
+ "Een poule gaat één seizoen tegelijk vooruit.": "Una liga avanza de temporada en temporada, de una en una.",
+ "Dit seizoen is nog niet klaar: er moet nog een race gereden worden.": "Esta temporada aún no ha terminado: falta por correr una carrera."
 }

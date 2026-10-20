@@ -1084,3 +1084,14 @@ kwalificatie precies 24 uur voor de race) heten in de app "tijd voorlopig" en
 worden vanzelf vervangen; BEDIENING §6c.
 Open bij Danny: de grid van 2027 in het beheer zetten zodra hij bekend is
 (voor de eerste deadline op 13 maart).
+
+**Het seizoenseinde** (21 oktober, vóór 5 december: de kwalificatie in Abu
+Dhabi). Gebouwd: een seizoen is pas klaar als elke race een race-uitslag heeft
+of afgelast is (eerst telde één sessie al, en was 2026 na de kwalificatie van
+de finale "klaar"). Een poule schuift vanzelf door naar het volgende seizoen:
+een openbare poule meteen, de rest 7 dagen na de finale, zodra de kalender van
+volgend jaar er is. Een trigger laat een poule alleen één seizoen vooruit gaan
+en alleen als het klaar is. Na het doorschuiven staat de winnaar van vorig
+seizoen bovenaan tot de eerste race, en de herinnering bij het eerste weekend
+noemt de seizoensvragen; BEDIENING §6c.
+Open bij Danny: `schema.sql` draaien.

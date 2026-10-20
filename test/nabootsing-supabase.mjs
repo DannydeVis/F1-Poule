@@ -465,6 +465,22 @@ function uitvoeren(tabel, q) {
       }
       const fout = raakt.map((r) => profielFout({ ...r, ...u })).find(Boolean);
       if (fout) return { data: null, error: { code: '23514', message: `new row violates check constraint "${fout}"` } };
+      // De trigger pools_seizoen_bewaken(): precies één seizoen omhoog, en
+      // alleen als dat seizoen klaar is (elke race een race-uitslag of
+      // afgelast, seizoen_klaar() in schema.sql).
+      if ('season' in u) {
+        for (const r of raakt) {
+          if (gelijk(u.season, r.season)) continue;
+          if (Number(u.season) !== Number(r.season) + 1) {
+            return { data: null, error: { code: 'P0001', hint: 'seizoen_stap',
+              message: `Een poule gaat één seizoen tegelijk vooruit, van ${r.season} naar ${Number(r.season) + 1}` } };
+          }
+          if (store.races.some((x) => gelijk(x.season, r.season) && !x.afgelast && !x.race_result)) {
+            return { data: null, error: { code: 'P0001', hint: 'seizoen_niet_klaar',
+              message: `Seizoen ${r.season} is nog niet klaar: er moet nog een race gereden worden` } };
+          }
+        }
+      }
     }
     // update(...).eq(...).is(kolom, null): de is-controle hoort bij de
     // schrijfactie zelf, zodat een rij die inmiddels gevuld is niet geraakt

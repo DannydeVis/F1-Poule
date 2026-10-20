@@ -79,7 +79,7 @@ async function seizoenVoorbij(page, { eigenaar = 'lid-1', volgendJaar = false, e
   await page.waitForSelector('#doorschuiven');
   const blok = await tekst(page, '.kalender .leeg');
   check('de poulebaas leest dat 2026 erop zit en dat hij door kan schuiven',
-    blok.includes('Alle races van 2026 zijn gereden. Schuif door naar 2027'), blok);
+    blok.includes('Alle races van 2026 zijn gereden.') && blok.includes('Wil je eerder, schuif dan nu door.'), blok);
   check('met de knop meteen erbij, op het racesoverzicht',
     (await tekst(page, '#doorschuiven')) === 'Begin aan 2027', await tekst(page, '#doorschuiven'));
 
@@ -126,8 +126,10 @@ async function seizoenVoorbij(page, { eigenaar = 'lid-1', volgendJaar = false, e
   await meedoen(page);
   await seizoenVoorbij(page, { eigenaar: 'iemand-anders' });
   const blok = await tekst(page, '.kalender .leeg');
+  // De finale is hier al twaalf dagen geleden: dan wacht het alleen nog op de
+  // kalender (de datum zelf staat in test/seizoensdoorschuiven.test.mjs).
   check('een speler die niet de poulebaas is leest waar het op wacht',
-    blok.includes('Zodra de poulebaas doorschuift naar 2027'), blok);
+    blok.includes('De poule gaat vanzelf door naar 2027 zodra de kalender er is.'), blok);
   check('en krijgt geen knop die hij toch niet mag gebruiken', (await page.$('#doorschuiven')) === null);
   check('geen javascriptfouten (4)', jsFouten.length === 0, jsFouten.join(' | '));
   await stoppen();
