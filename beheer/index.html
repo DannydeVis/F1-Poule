@@ -200,6 +200,8 @@
   .tip strong{display:block;font-size:14px}
   .balken{display:flex;flex-direction:column;gap:8px}
   .balk{display:grid;grid-template-columns:110px 1fr auto;align-items:center;gap:10px;font-size:14px}
+  #vragenkaart .balk{grid-template-columns:minmax(120px,42%) 1fr auto}
+  .vraagchips .badge{display:inline-block;margin:0 2px 4px 0}
   .balk .spoor{height:14px;border-radius:0 4px 4px 0;background:var(--accent);min-width:2px}
   .balk .getal{font-variant-numeric:tabular-nums;font-weight:600}
   details.tabelweergave summary{cursor:pointer;color:var(--ink2);font-size:13px;min-height:32px;
@@ -268,7 +270,7 @@ try {
 const B = {
   tab: 'overzicht',
   sessie: null,
-  overzicht: null, poules: [], spelers: [], races: [], sync: [], stats: null,
+  overzicht: null, poules: [], spelers: [], races: [], sync: [], stats: null, vragen: [],
   poule: null,          // de poule die open staat
   speler: null,         // de speler die open staat
   race: null,           // de race die open staat
@@ -451,12 +453,14 @@ function toonFout(tekst) {
 
 async function laadAlles() {
   try {
-    const [overzicht, poules, spelers, sync, stats, races] = await Promise.all([
+    const [overzicht, poules, spelers, sync, stats, races, vragen] = await Promise.all([
       rpc('beheer_overzicht'), rpc('beheer_poules'), rpc('beheer_spelers', { p_pool: null }),
       rpc('beheer_sync'), rpc('beheer_statistieken'),
       db.from('races').select('*').order('season').order('round'),
+      db.from('questions').select('id,naam,sessie,volgorde').order('volgorde'),
     ]);
     if (races.error) throw new Error(races.error.message);
+    B.vragen = vragen.error ? [] : (vragen.data ?? []);
     races.data?.sort((a, b) => a.season - b.season || a.round - b.round);
     Object.assign(B, { overzicht, poules: poules ?? [], spelers: spelers ?? [], sync: sync ?? [],
                        stats, races: races.data ?? [] });
@@ -572,6 +576,8 @@ function overzichtTab() {
       ${tegel('Bezoeken vandaag', getal(o.bezoeken_vandaag), `${getal(o.bezoeken_7d)} in 7 dagen`)}
       ${tegel('Inzendingen', getal(o.inzendingen_7d), 'in 7 dagen')}
       ${tegel('Gekoppelde accounts', getal(o.gekoppeld), `van ${getal(o.accounts)} accounts`)}
+      ${(() => { const s = setTelling()[0];
+        return s ? tegel('Meest gekozen vragenset', esc(s.naam), `${getal(s.aantal)} van ${getal(B.poules.length)} poules`) : ''; })()}
     </div>
     <section class="kaart" id="synckaart">
       <div class="kaartkop"><h2>Sync</h2>
@@ -591,6 +597,38 @@ function overzichtTab() {
         : '<p class="zacht" style="margin:0">Alle gereden sessies hebben een uitslag, en de volgende race heeft coureurs.</p>'}
     </section>`;
 }
+
+// ---- vragensets -----------------------------------------------------------------
+//
+// Welke vragen een poule heeft aangevinkt, en wat er het meest gekozen wordt.
+// De drie sets zijn die van het aanmaakscherm in app/index.html (PRESETS);
+// test/beheer.test.mjs houdt ze gelijk. Een poule zonder eigen keuze (geen
+// rijen in pool_questions) doet aan alles mee, zoals in de app.
+const VRAAGSETS = {
+  simpel:    { naam: 'Simpel',    vragen: ['quali_top10', 'race_top10'] },
+  klassiek:  { naam: 'Klassiek',  vragen: ['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole', 'snelste_ronde'] },
+  gevorderd: { naam: 'Gevorderd', vragen: ['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole',
+                                           'snelste_ronde', 'snelste_pitstop', 'teamgenoot_duels',
+                                           'safety_cars', 'rode_vlag',
+                                           'kampioen', 'constructeur', 'winnaars', 'vierde_team'] },
+};
+const vragenVan = (p) => p.vraaglijst?.length ? p.vraaglijst : B.vragen.map((v) => v.id);
+const vraagNaam = (id) => B.vragen.find((v) => v.id === id)?.naam ?? id;
+function setNaam(p) {
+  if (!p.vraaglijst?.length) return 'alle vragen (geen eigen keuze)';
+  const ids = p.vraaglijst;
+  const set = Object.values(VRAAGSETS).find((s) => s.vragen.length === ids.length && s.vragen.every((v) => ids.includes(v)));
+  return set ? set.naam : 'eigen keuze';
+}
+// Hoe vaak elke set voorkomt, de meeste eerst.
+function setTelling() {
+  const tel = new Map();
+  for (const p of B.poules) tel.set(setNaam(p), (tel.get(setNaam(p)) ?? 0) + 1);
+  return [...tel].map(([naam, aantal]) => ({ naam, aantal })).sort((a, b) => b.aantal - a.aantal);
+}
+// In hoeveel poules elke vraag meedoet, op de volgorde van de app.
+const vraagTelling = () => B.vragen.map((v) => ({ ...v,
+  aantal: B.poules.filter((p) => vragenVan(p).includes(v.id)).length }));
 
 // ---- poules ----------------------------------------------------------------
 
@@ -630,7 +668,10 @@ function pouleDetail(p) {
     <section class="kaart" id="pouledetail">
       <div class="kaartkop"><h2>${esc(p.name)}</h2><span class="code">${esc(p.join_code)}</span></div>
       <p class="zacht klein" style="margin:0">${getal(p.spelers)} spelers${p.max_spelers ? ` (hoogstens ${getal(p.max_spelers)})` : ''}, ${getal(p.accounts)} met een account,
-        ${getal(p.inzendingen)} inzendingen, ${getal(p.vragen)} vragen. Aangemaakt ${esc(datum(p.created_at))}.</p>
+        ${getal(p.inzendingen)} inzendingen. Aangemaakt ${esc(datum(p.created_at))}.</p>
+      <div data-vragenset><span class="label">Vragen · ${esc(setNaam(p))}</span>
+        <p class="vraagchips" style="margin:4px 0 0">${vragenVan(p).map((id) =>
+          `<span class="badge">${esc(vraagNaam(id))}</span>`).join(' ')}</p></div>
       <form class="formulier" id="pouleform">
         <label><span class="label">Naam</span><input class="veld" name="name" value="${esc(p.name)}" required></label>
         <label><span class="label">Omschrijving</span><input class="veld" name="beschrijving" value="${esc(p.beschrijving ?? '')}"></label>
@@ -943,6 +984,15 @@ function statistiekenTab() {
                      extra: (d) => `${d.inzenders} van ${d.spelers} spelers` })}
       </section>
     </div>
+    <section class="kaart" id="vragenkaart">
+      <div class="kaartkop"><h2>Vragen in de poules</h2><span class="zacht klein">in hoeveel van de ${getal(B.poules.length)} poules elke vraag meedoet</span></div>
+      <p class="zacht klein" style="margin:0" data-sets>${setTelling().map((s) => `${esc(s.naam)}: ${getal(s.aantal)}`).join(' · ')
+        || 'Nog geen poules.'}</p>
+      <div class="balken">${vraagTelling().map((v) => `
+        <div class="balk" data-vraag="${esc(v.id)}"><span>${esc(v.naam)}</span>
+          <span class="spoor" style="width:${B.poules.length ? (100 * v.aantal / B.poules.length).toFixed(1) : 0}%"></span>
+          <span class="getal">${getal(v.aantal)}</span></div>`).join('')}</div>
+    </section>
     <section class="kaart">
       <div class="kaartkop"><h2>Accounts achter de spelers</h2><span class="zacht klein">wie zijn browser leegmaakt zonder koppeling is zijn speler kwijt</span></div>
       <div class="balken">${['google', 'mail', 'anoniem', 'geen', 'weg'].filter((k) => accounts[k]).map((k) => `

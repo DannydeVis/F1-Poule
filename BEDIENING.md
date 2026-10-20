@@ -2308,10 +2308,13 @@ select id from auth.users where email = 'iemand@voorbeeld.nl';
   bezoeken, inzendingen, hoeveel accounts gekoppeld zijn; de status van de sync
   (draait / lang niet gedraaid / mislukt, met de fout); en wat aandacht nodig
   heeft: een sessie die al zes uur voorbij is zonder uitslag, of een race die
-  binnen vier dagen begint zonder coureurs.
+  binnen vier dagen begint zonder coureurs. Sinds 20 oktober ook de **meest
+  gekozen vragenset** (Simpel, Klassiek, Gevorderd of eigen keuze).
 - **Poules** — zoeken op naam, code of poulebaas; de naam, omschrijving,
   openbaar en de poulebaas aanpassen; een poule verwijderen (je tikt eerst de
-  naam over; spelers, inzendingen en jokers gaan mee).
+  naam over; spelers, inzendingen en jokers gaan mee). Bij elke poule staat
+  welke vragen hij heeft aangevinkt en welke set dat is. Een poule zonder eigen
+  keuze (van vóór de vragensets) doet aan alles mee en heet "alle vragen".
 - **Spelers** — alle spelers met hun poule, het soort account (Google,
   mailadres, alleen dit toestel, geen) en het mailadres als dat er is. Op
   volgorde van binnenkomst, de nieuwste bovenaan, met onder de naam wanneer
@@ -2328,7 +2331,9 @@ select id from auth.users where email = 'iemand@voorbeeld.nl';
 - **Statistieken** — bezoeken en actieve spelers per dag (dertig dagen), nieuwe
   spelers per week, hoeveel procent van de spelers per race iets inleverde, en
   wat voor accounts er achter de spelers zitten. Elke grafiek heeft een tabel
-  eronder.
+  eronder. En **Vragen in de poules**: hoe vaak elke vragenset gekozen is, en
+  per vraag in hoeveel poules hij meedoet. De drie sets staan in het beheer
+  (`VRAAGSETS`) en in de app (`PRESETS`); `test/beheer.test.mjs` houdt ze gelijk.
 
 ### Hoe het veilig blijft
 

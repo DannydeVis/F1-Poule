@@ -1225,7 +1225,12 @@ Object.assign(functies, {
     return { ...p, spelers: leden.length, accounts: leden.filter((m) => m.user_id).length,
              eigenaar: leden.find((m) => gelijk(m.member_id, p.owner_member_id))?.display_name ?? null,
              inzendingen: antw.length, laatste_inzending: laatste(antw),
-             vragen: (store.pool_questions ?? []).filter((q) => gelijk(q.pool_id, p.id)).length };
+             vragen: (store.pool_questions ?? []).filter((q) => gelijk(q.pool_id, p.id)).length,
+             vraaglijst: (() => {
+               const ids = (store.pool_questions ?? []).filter((q) => gelijk(q.pool_id, p.id)).map((q) => q.question_id);
+               const volgorde = (id) => store.questions.find((v) => v.id === id)?.volgorde ?? 0;
+               return ids.length ? ids.sort((a, b) => volgorde(a) - volgorde(b)) : null;
+             })() };
   })), error: null })),
 
   beheer_spelers: beheer(({ p_pool = null }) => ({ data: kopie(store.pool_members
