@@ -269,6 +269,16 @@ jobs:
           psql -d misbruik -v ON_ERROR_STOP=1 -f schema.sql
           psql -d misbruik -v ON_ERROR_STOP=1 -f test/misbruik.test.sql
 
+      # Een geleende coureurlijst vervangen (2027): nummerwissel, nieuwe
+      # teamnaam, nieuwe en verdwenen coureurs, gesloten antwoorden blijven
+      # staan, en het beheer. Zie lijst_vervangen() in schema.sql.
+      - name: coureurlijsten — open antwoorden omzetten
+        run: |
+          createdb lijsten
+          psql -d lijsten -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d lijsten -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d lijsten -v ON_ERROR_STOP=1 -f test/coureurlijsten.test.sql
+
       - name: reservekopie — een kopie komt ook echt terug
         run: |
           createdb terug

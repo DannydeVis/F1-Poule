@@ -36,6 +36,7 @@ const wereld = {
   uitslagen: {},      // session_key -> klassering
   verzoeken: [],      // alles wat er bij OpenF1 is gevraagd
   sync_runs: [],      // het logboek dat de sync bijhoudt voor het beheer
+  rpc: [],            // aanroepen van lijst_vervangen()
 };
 let volgendId = 1;
 
@@ -61,7 +62,7 @@ function rij(jaar, n, dagen, { uitslag = false } = {}) {
     id: volgendId++, season: jaar, round: n, name: `Circuit ${jaar}-${n}`,
     country: 'Nergensland', race_key: meeting * 10 + 2, quali_key: meeting * 10 + 1,
     sprint_key: null, deadline_quali: over(dagen - 1), deadline_race: over(dagen),
-    deadline_sprint: null, afgelast: false,
+    deadline_sprint: null, afgelast: false, lijst_herkomst: null,
     drivers: [{ nr: '1', code: 'VER', naam: 'Max', team: 'Red Bull', kleur: '#3671c6' },
               { nr: '4', code: 'NOR', naam: 'Lando', team: 'McLaren', kleur: '#ff8000' }],
     quali_result: uitslag ? ['1', '4'] : null, race_result: uitslag ? ['1', '4'] : null,
@@ -114,7 +115,7 @@ function postgrest(req, res, tabel, zoek, body) {
     for (const nieuw of JSON.parse(body)) {
       const oud = rijen.find((r) => r.season === nieuw.season && r.round === nieuw.round);
       if (oud) Object.assign(oud, nieuw);
-      else rijen.push({ id: volgendId++, afgelast: false, drivers: null, quali_result: null,
+      else rijen.push({ id: volgendId++, afgelast: false, drivers: null, lijst_herkomst: null, quali_result: null,
                         race_result: null, sprint_result: null, fastest_lap: null,
                         fastest_pitstop: null, safety_cars: null, rode_vlag: null, ...nieuw });
     }
@@ -130,6 +131,28 @@ function postgrest(req, res, tabel, zoek, body) {
     return stuur(null);
   }
   res.writeHead(405); res.end();
+}
+
+// lijst_vervangen() uit schema.sql, in het klein: de lijst en zijn herkomst
+// zetten, en doorgeven aan de latere races van het seizoen met een geleende
+// lijst. Het omzetten van antwoorden zelf staat in test/coureurlijsten.test.sql;
+// hier gaat het erom dat de sync de functie aanroept in plaats van de lijst
+// gewoon over de geleende heen te schrijven.
+function rpc(res, functie, body) {
+  if (functie !== 'lijst_vervangen' || wereld.geenRpc) { res.writeHead(404); return res.end('{}'); }
+  const { p_race, p_drivers, p_herkomst } = JSON.parse(body);
+  wereld.rpc.push({ p_race, p_herkomst, codes: p_drivers.map((d) => d.code) });
+  const race = wereld.races.find((r) => r.id === p_race);
+  Object.assign(race, { drivers: p_drivers, lijst_herkomst: p_herkomst });
+  if (p_herkomst === 'openf1') {
+    for (const r of wereld.races) {
+      if (r.season === race.season && r.round > race.round && r.lijst_herkomst === 'geleend') {
+        r.drivers = p_drivers;
+      }
+    }
+  }
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ race: p_race, omgezet: 2, meldingen: ['Max (#1) staat niet meer in de lijst'] }));
 }
 
 function openf1(res, pad, zoek) {
@@ -170,6 +193,7 @@ const server = createServer((req, res) => {
     const delen = url.pathname.split('/').filter(Boolean);
     try {
       if (delen[0] === 'v1') return openf1(res, delen[1], url.searchParams);
+      if (delen[0] === 'rest' && delen[1] === 'v1' && delen[2] === 'rpc') return rpc(res, delen[3], body);
       if (delen[0] === 'rest' && delen[1] === 'v1') return postgrest(req, res, delen[2], url.searchParams, body);
       res.writeHead(404); res.end();
     } catch (e) { res.writeHead(500); res.end(String(e)); }
@@ -267,6 +291,10 @@ wereld.sessies.push(...weekend(2027, 1, 150), ...weekend(2027, 2, 164),
     JSON.stringify(nieuw.map((r) => r.drivers?.length)));
   check('en de log zegt het', /ronde 1 Circuit 2027-1: voorlopig de coureurs van Circuit 2026-4 2026/.test(log),
     log.slice(-400));
+  check('en de database weet dat ze geleend zijn (lijst_herkomst)',
+    nieuw.every((r) => r.lijst_herkomst === 'geleend'), JSON.stringify(nieuw.map((r) => r.lijst_herkomst)));
+  check('de races van 2026 houden hun lijst zonder herkomst te verzinnen',
+    wereld.races.filter((r) => r.season === 2026).every((r) => r.lijst_herkomst !== 'geleend'));
   const ics = readFileSync(agenda, 'utf8');
   check('de agenda heeft nu allebei de seizoenen',
     ics.includes('Circuit 2026-4') && ics.includes('Circuit 2027-1'));
@@ -342,6 +370,41 @@ for (const s of wereld.sessies) {
   check('dicht bij de eerste race vervangt de echte lijst de geleende', code === 0
     && r1().drivers?.some((d) => d.code === 'LIN') && r1().drivers.length === 3,
     `${JSON.stringify(r1().drivers)} · ${log.slice(-300)}`);
+  // Via lijst_vervangen(), zodat de open antwoorden meegaan.
+  check('via lijst_vervangen(), met herkomst openf1',
+    wereld.rpc.length === 1 && wereld.rpc[0].p_race === r1().id && wereld.rpc[0].p_herkomst === 'openf1'
+      && r1().lijst_herkomst === 'openf1', JSON.stringify(wereld.rpc));
+  const later = wereld.races.filter((r) => r.season === 2027 && r.round > 1);
+  check('de latere races met een geleende lijst krijgen de echte mee',
+    later.every((r) => r.drivers?.some((d) => d.code === 'LIN') && r.lijst_herkomst === 'geleend'),
+    JSON.stringify(later.map((r) => [r.round, r.lijst_herkomst, r.drivers?.length])));
+  check('de log en het logboek zeggen hoeveel antwoorden er omgezet zijn, met de meldingen',
+    /ronde 1 Circuit 2027-1: de echte coureurlijst vervangt de geleende lijst, 2 open antwoord\(en\) omgezet \(Max \(#1\) staat niet meer in de lijst\)/.test(log)
+      && wereld.sync_runs.at(-1)?.samenvatting?.includes('2 open antwoord(en) omgezet'),
+    log.slice(-500));
+
+  // Een volgende run met dezelfde lijst: herkomst is openf1, dus gewoon een
+  // patch als er iets verandert, en geen tweede aanroep.
+  const { code: c2 } = await sync();
+  check('een volgende run roept lijst_vervangen() niet opnieuw aan', c2 === 0 && wereld.rpc.length === 1,
+    JSON.stringify(wereld.rpc));
+
+  // Kan de database het niet (schema.sql nog niet gedraaid), dan blijft de
+  // geleende lijst staan in plaats van stil zonder omzetting overschreven te worden.
+  const r2 = wereld.races.find((r) => r.season === 2027 && r.round === 2);
+  const voor = JSON.stringify(r2.drivers);
+  r2.drivers = r2.drivers.filter((d) => d.code !== 'LIN');
+  const geleend = JSON.stringify(r2.drivers);
+  Object.assign(r2, { deadline_quali: over(11), deadline_race: over(12) });
+  for (const x of wereld.sessies) {
+    if (x.meeting_key === 202702) x.date_start = over(x.session_name === 'Race' ? 12 : 11);
+  }
+  wereld.geenRpc = true;
+  const { code: c3, log: l3 } = await sync();
+  wereld.geenRpc = false;
+  check('lukt lijst_vervangen() niet, dan blijft de geleende lijst staan en zegt de log het',
+    c3 === 0 && JSON.stringify(r2.drivers) === geleend && /ronde 2 Circuit 2027-2: coureurlijst niet vervangen/.test(l3),
+    `${JSON.stringify(r2.drivers)} (was ${voor}) · ${l3.slice(-300)}`);
 }
 
 // ---- 7. een lege database ------------------------------------------------------------------

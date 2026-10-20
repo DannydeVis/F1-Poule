@@ -1336,6 +1336,32 @@ Object.assign(functies, {
     return { data: kopie(r), error: null };
   }),
 
+  // De coureurlijst van een seizoen zetten (schema.sql). Hier alleen de
+  // controle op de invoer en welke races hem krijgen; het omzetten van
+  // antwoorden staat in test/coureurlijsten.test.sql, tegen een echte database.
+  beheer_coureurs_zetten: beheer(({ p_seizoen, p_drivers = [] }) => {
+    const fout = (message) => ({ data: null, error: { message } });
+    if (!Array.isArray(p_drivers) || p_drivers.length < 2 || p_drivers.length > 30) {
+      return fout('Een lijst van 2 tot 30 coureurs, graag');
+    }
+    for (const d of p_drivers) {
+      if (!/^[0-9]{1,2}$/.test(d.nr ?? '')) return fout(`Startnummer "${d.nr ?? ''}" klopt niet: 1 tot 99`);
+      if (!/^[A-Za-z]{3}$/.test(d.code ?? '')) return fout(`Afkorting "${d.code ?? ''}" klopt niet: drie letters`);
+    }
+    if (new Set(p_drivers.map((d) => Number(d.nr))).size !== p_drivers.length) return fout('Een startnummer staat er twee keer in');
+    const nu = Date.now();
+    const doel = store.races.filter((r) => r.season === Number(p_seizoen) && !r.afgelast
+      && ['geleend', 'beheer'].includes(r.lijst_herkomst)
+      && Math.min(...[r.deadline_sprint, r.deadline_quali, r.deadline_race].filter(Boolean).map(Date.parse)) > nu);
+    if (!doel.length) return fout(`Geen race in ${p_seizoen} met een geleende lijst waarvan het weekend nog moet beginnen`);
+    const lijst = p_drivers.map((d) => ({ nr: String(Number(d.nr)), code: d.code.toUpperCase(),
+      naam: d.naam.trim(), team: d.team.trim(), kleur: '#888888' }));
+    for (const r of doel) Object.assign(r, { drivers: lijst, lijst_herkomst: 'beheer' });
+    store.coureurs_gezet = { p_seizoen, p_drivers };
+    bewaren();
+    return { data: { races: doel.length, omgezet: 3, meldingen: ['Fernando Alonso (#14) staat niet meer in de lijst'] }, error: null };
+  }),
+
   beheer_sync: beheer(() => ({ data: kopie([...store.sync_runs].reverse().slice(0, 50)), error: null })),
 
   beheer_statistieken: beheer(() => {

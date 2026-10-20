@@ -397,6 +397,11 @@ alter table public.races        add column if not exists quali_key      bigint;
 alter table public.races        add column if not exists deadline_quali timestamptz;
 alter table public.races        add column if not exists deadline_race  timestamptz;
 alter table public.races        add column if not exists drivers        jsonb;
+-- Waar de coureurlijst vandaan komt: 'openf1', 'geleend' (van een eerdere
+-- race of van vorig seizoen, omdat OpenF1 hem nog niet had) of 'beheer'.
+-- Leeg bij lijsten van voor deze kolom. Zie lijst_vervangen().
+alter table public.races        add column if not exists lijst_herkomst text
+  check (lijst_herkomst in ('openf1', 'geleend', 'beheer'));
 alter table public.races        add column if not exists quali_result   text[];
 alter table public.races        add column if not exists race_result    text[];
 alter table public.races        add column if not exists quali_handmatig boolean not null default false;
@@ -851,6 +856,15 @@ begin
   -- horen de antwoorden mee. Zelfde uitzondering als bij de jokers, en op
   -- dezelfde manier te herkennen: een cascade zit een triggerlaag dieper dan
   -- een delete uit de app.
+  -- Een coureurlijst die vervangen wordt (lijst_vervangen()): het nummer of
+  -- de teamnaam van een open antwoord verandert, niet wat iemand koos. Alleen
+  -- antwoorden_omzetten() zet deze vlag, voor de duur van zijn eigen
+  -- transactie; via de API is hij niet te zetten.
+  if tg_op = 'UPDATE' and current_setting('poule.omzetten', true) = 'aan' then
+    new.updated_at = now();
+    return new;
+  end if;
+
   if tg_op = 'DELETE' then
     if pg_trigger_depth() > 1 then return old; end if;
     select q.sessie into sessie_van from public.questions q where q.id = old.question_id;
@@ -3002,6 +3016,431 @@ grant execute on function public.beheer_speler_verwijderen(uuid)      to anon, a
 grant execute on function public.beheer_race_bijwerken(bigint, jsonb) to anon, authenticated;
 grant execute on function public.beheer_sync()                        to anon, authenticated;
 grant execute on function public.beheer_statistieken()                to anon, authenticated;
+
+-- ------------------------------------------------------------
+--  Coureurlijsten: geleend, uit het beheer, of van OpenF1
+--
+--  OpenF1 heeft de coureurs van een nieuw seizoen pas rond het eerste
+--  weekend. Tot dan leent de sync de lijst van de laatste race van vorig jaar
+--  (voorlopigeLijst() in scripts/uitslagen.mjs), en op die lijst vult iedereen
+--  de seizoensvragen en de eerste top 10's in. Een antwoord bewaart een
+--  startnummer of een teamnaam. Neemt de kampioen nummer 1, wisselt iemand van
+--  nummer of krijgt een team een andere naam, dan wijst een goed antwoord
+--  ineens naar niemand (of naar iemand anders) en scoort het stil 0.
+--
+--  Daarom houdt races.lijst_herkomst bij waar een lijst vandaan komt, en gaat
+--  het vervangen van een geleende lijst altijd via lijst_vervangen(). Die zet
+--  de open antwoorden om: oud nummer naar nieuw via naam en afkorting, oude
+--  teamnaam naar nieuwe als dat eenduidig is. Gesloten antwoorden nooit. Wat
+--  niet eenduidig is blijft staan en komt als melding in sync_runs; de app
+--  vraagt dan om opnieuw te kiezen. Zie BEDIENING.md §6c.
+-- ------------------------------------------------------------
+
+-- Een naam om op te vergelijken: kleine letters, zonder accenten en tekens.
+-- OpenF1 schrijft "Max VERSTAPPEN", wie het in het beheer intikt misschien
+-- "Max Verstappen" of "Sergio Pérez".
+create or replace function public.coureur_sleutel(p_naam text)
+returns text
+language sql
+immutable
+set search_path = public
+as $$
+  select btrim(regexp_replace(
+    translate(lower(coalesce(p_naam, '')),
+              'áàâäãåāçćčéèêëēęíìîïīñńóòôöõøōúùûüūýÿšśžźżłđ',
+              'aaaaaaaccceeeeeeiiiiinnooooooouuuuuyysszzzld'),
+    '[^a-z]+', ' ', 'g'))
+$$;
+
+-- Wie is wie tussen een oude en een nieuwe lijst. Puur rekenwerk, zonder
+-- iets te schrijven, zodat de test het per geval kan nalopen.
+--
+-- Geeft { coureurs: {oud nr: nieuw}, teams: {oude naam: nieuwe}, meldingen: [...] }.
+--
+-- Een coureur wordt gevonden op naam, en anders op afkorting. Alleen als dat
+-- precies één coureur oplevert; twee kandidaten is niet eenduidig, en dan
+-- blijft het oude nummer staan met een melding.
+--
+-- Een coureur die er niet meer in staat: zijn nummer blijft staan, en de app
+-- vraagt om opnieuw te kiezen. Behalve als iemand anders dat nummer nu heeft
+-- (de kampioen van vorig jaar stopt, een ander neemt nummer 1): dan zou het
+-- antwoord stil naar die ander wijzen. Daar komt 'weg:' plus zijn afkorting
+-- te staan, een waarde die nergens in de lijst voorkomt.
+--
+-- Een team dat er niet meer in staat krijgt de nieuwe naam van het team waar
+-- zijn coureurs nu rijden, als dat één nieuwe naam is. Zijn er geen bekende
+-- coureurs meer, dan alleen als er precies één team verdween en één nieuwe
+-- naam bij kwam. Anders een melding.
+create or replace function public.lijst_omzetting(p_oud jsonb, p_nieuw jsonb)
+returns jsonb
+language plpgsql
+immutable
+set search_path = public
+as $$
+declare
+  oud       jsonb := coalesce(p_oud, '[]'::jsonb);
+  nieuw     jsonb := coalesce(p_nieuw, '[]'::jsonb);
+  o         jsonb;
+  m         jsonb;
+  kand      jsonb;
+  gekoppeld jsonb := '{}'::jsonb;   -- oud nr -> nieuwe coureur
+  coureurs  jsonb := '{}'::jsonb;
+  teams     jsonb := '{}'::jsonb;
+  meldingen text[] := '{}';
+  wie       text;
+  bezet     text;
+  dubbel    text;
+  t         text;
+  doel      text;
+  kandteams text[];
+  verdwenen text[];
+  nieuwe_namen text[];
+begin
+  for o in select e from jsonb_array_elements(oud) e loop
+    m := null;
+    wie := format('%s (#%s)', coalesce(nullif(o ->> 'naam', ''), o ->> 'code', '?'), o ->> 'nr');
+
+    if public.coureur_sleutel(o ->> 'naam') <> '' then
+      select jsonb_agg(n) into kand from jsonb_array_elements(nieuw) n
+       where public.coureur_sleutel(n ->> 'naam') = public.coureur_sleutel(o ->> 'naam');
+      if jsonb_array_length(coalesce(kand, '[]')) = 1 then
+        m := kand -> 0;
+      elsif jsonb_array_length(coalesce(kand, '[]')) > 1 then
+        meldingen := meldingen || format('%s: twee coureurs met die naam in de nieuwe lijst, niets omgezet', wie);
+        continue;
+      end if;
+    end if;
+
+    if m is null and coalesce(o ->> 'code', '') <> '' then
+      select jsonb_agg(n) into kand from jsonb_array_elements(nieuw) n
+       where upper(n ->> 'code') = upper(o ->> 'code');
+      if jsonb_array_length(coalesce(kand, '[]')) > 1
+         or (jsonb_array_length(coalesce(kand, '[]')) = 1
+             and (select count(*) from jsonb_array_elements(oud) x
+                   where upper(x ->> 'code') = upper(o ->> 'code')) > 1) then
+        meldingen := meldingen || format('%s: afkorting %s is niet eenduidig, niets omgezet', wie, o ->> 'code');
+        continue;
+      elsif jsonb_array_length(coalesce(kand, '[]')) = 1 then
+        m := kand -> 0;
+      end if;
+    end if;
+
+    if m is null then
+      select n ->> 'naam' into bezet from jsonb_array_elements(nieuw) n where n ->> 'nr' = o ->> 'nr' limit 1;
+      if found then
+        coureurs := coureurs || jsonb_build_object(o ->> 'nr',
+          'weg:' || coalesce(nullif(upper(o ->> 'code'), ''), o ->> 'nr'));
+        meldingen := meldingen || format('%s staat niet meer in de lijst en #%s is nu van %s: wie %s koos moet opnieuw kiezen',
+          wie, o ->> 'nr', coalesce(bezet, '?'), coalesce(nullif(o ->> 'naam', ''), o ->> 'code'));
+      else
+        meldingen := meldingen || format('%s staat niet meer in de lijst: wie hem koos moet opnieuw kiezen', wie);
+      end if;
+      continue;
+    end if;
+    gekoppeld := gekoppeld || jsonb_build_object(o ->> 'nr', m);
+  end loop;
+
+  -- Twee oude coureurs op dezelfde nieuwe: dan klopt er een niet, en welke
+  -- weten we niet. Allebei laten staan.
+  for dubbel in
+    select v ->> 'nr' from jsonb_each(gekoppeld) g(k, v) group by v ->> 'nr' having count(*) > 1
+  loop
+    meldingen := meldingen || format('twee coureurs uit de oude lijst lijken op #%s, niets omgezet', dubbel);
+    gekoppeld := (select coalesce(jsonb_object_agg(k, v), '{}') from jsonb_each(gekoppeld) g(k, v)
+                   where v ->> 'nr' <> dubbel);
+  end loop;
+
+  select coalesce(jsonb_object_agg(k, v ->> 'nr'), '{}') into m
+    from jsonb_each(gekoppeld) g(k, v) where v ->> 'nr' <> k;
+  coureurs := coureurs || m;
+
+  -- Teams.
+  select coalesce(array_agg(distinct x ->> 'team'), '{}') into verdwenen
+    from jsonb_array_elements(oud) x
+   where not exists (select 1 from jsonb_array_elements(nieuw) n where n ->> 'team' = x ->> 'team');
+  select coalesce(array_agg(distinct n ->> 'team'), '{}') into nieuwe_namen
+    from jsonb_array_elements(nieuw) n
+   where not exists (select 1 from jsonb_array_elements(oud) x where x ->> 'team' = n ->> 'team');
+
+  foreach t in array verdwenen loop
+    select coalesce(array_agg(distinct (gekoppeld -> (x ->> 'nr')) ->> 'team'), '{}') into kandteams
+      from jsonb_array_elements(oud) x
+     where x ->> 'team' = t and gekoppeld ? (x ->> 'nr')
+       and ((gekoppeld -> (x ->> 'nr')) ->> 'team') = any(nieuwe_namen);
+    doel := null;
+    if cardinality(kandteams) = 1 then
+      doel := kandteams[1];
+    elsif cardinality(kandteams) = 0 and cardinality(verdwenen) = 1 and cardinality(nieuwe_namen) = 1 then
+      doel := nieuwe_namen[1];
+    end if;
+    if doel is null then
+      meldingen := meldingen || format('team %s staat niet meer in de lijst en de nieuwe naam is niet eenduidig: wie het koos moet opnieuw kiezen', t);
+    elsif exists (select 1 from jsonb_each_text(teams) e where e.value = doel) then
+      meldingen := meldingen || format('twee teams lijken nu %s te heten, niets omgezet', doel);
+      teams := (select coalesce(jsonb_object_agg(key, value), '{}') from jsonb_each(teams) where value #>> '{}' <> doel);
+    else
+      teams := teams || jsonb_build_object(t, doel);
+    end if;
+  end loop;
+
+  return jsonb_build_object('coureurs', coureurs, 'teams', teams, 'meldingen', to_jsonb(meldingen));
+end $$;
+
+-- Eén antwoordwaarde omzetten. Een top 10 of een lijst duels is een rij
+-- nummers; een coureur of een team één tekst. Een getal blijft een getal.
+create or replace function public.omgezette_waarde(p_waarde jsonb, p_kaart jsonb)
+returns jsonb
+language plpgsql
+immutable
+set search_path = public
+as $$
+declare
+  los jsonb;
+  uit jsonb := '[]'::jsonb;
+  doel text;
+begin
+  if p_kaart is null or p_kaart = '{}'::jsonb then return p_waarde; end if;
+  if jsonb_typeof(p_waarde) = 'array' then
+    for los in select e from jsonb_array_elements(p_waarde) e loop
+      uit := uit || jsonb_build_array(public.omgezette_waarde(los, p_kaart));
+    end loop;
+    return uit;
+  end if;
+  if jsonb_typeof(p_waarde) not in ('string', 'number') then return p_waarde; end if;
+  doel := p_kaart ->> (p_waarde #>> '{}');
+  if doel is null then return p_waarde; end if;
+  if jsonb_typeof(p_waarde) = 'number' and doel ~ '^[0-9]+$' then return to_jsonb(doel::int); end if;
+  return to_jsonb(doel);
+end $$;
+
+-- De open antwoorden van één race omzetten. Open is: een seizoensvraag zolang
+-- het seizoen niet gescoord is, of een vraag waarvan de deadline nog niet
+-- voorbij is. Een gesloten antwoord is wat iemand op tijd inleverde en wordt
+-- gescoord zoals het er staat; daar komt deze functie nooit aan.
+--
+-- De deadline-trigger houdt een seizoensantwoord na de start van het seizoen
+-- vast, ook voor de sync. Deze omzetting mag erlangs (poule.omzetten), want
+-- hij verandert niet wát iemand koos, alleen hoe dat heet.
+create or replace function public.antwoorden_omzetten(p_race bigint, p_omzet jsonb)
+returns int
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+declare
+  a      record;
+  nieuw  jsonb;
+  n      int := 0;
+begin
+  if coalesce(p_omzet -> 'coureurs', '{}') = '{}'::jsonb
+     and coalesce(p_omzet -> 'teams', '{}') = '{}'::jsonb then
+    return 0;
+  end if;
+  perform set_config('poule.omzetten', 'aan', true);
+  for a in
+    select an.pool_id, an.race_id, an.member_id, an.question_id, an.waarde, q.soort
+      from public.answers an
+      join public.questions q on q.id = an.question_id
+     where an.race_id = p_race
+       and q.soort in ('top10', 'coureur', 'duels', 'team')
+       and case when q.sessie = 'seizoen' then not public.poule_seizoen_voorbij(p_race)
+                else coalesce(now() < public.sessie_deadline(p_race, q.sessie), true) end
+  loop
+    nieuw := public.omgezette_waarde(a.waarde,
+               case when a.soort = 'team' then p_omzet -> 'teams' else p_omzet -> 'coureurs' end);
+    if nieuw is distinct from a.waarde then
+      update public.answers set waarde = nieuw
+       where pool_id = a.pool_id and race_id = a.race_id
+         and member_id = a.member_id and question_id = a.question_id;
+      n := n + 1;
+    end if;
+  end loop;
+  perform set_config('poule.omzetten', '', true);
+  return n;
+end $$;
+
+-- Een coureurlijst vervangen, met de omzetting erbij. Voor de sync (met de
+-- service_role key) als de echte lijst binnenkomt, en voor het beheer via
+-- beheer_coureurs_zetten(). Elke omzetting en elke melding komt in sync_runs.
+--
+-- Komt de echte lijst van OpenF1 binnen, dan krijgen de latere races van dat
+-- seizoen die nog een geleende lijst hebben hem ook, met dezelfde omzetting.
+-- Een lijst uit het beheer laat hij staan: die heeft iemand met opzet gezet,
+-- en die race krijgt zijn eigen lijst van OpenF1 vanzelf.
+create or replace function public.lijst_vervangen(p_race bigint, p_drivers jsonb, p_herkomst text,
+                                                  p_stil boolean default false)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+declare
+  r       public.races%rowtype;
+  omzet   jsonb;
+  n       int;
+  later   record;
+  totaal  int;
+  meld    text;
+begin
+  if p_herkomst not in ('openf1', 'geleend', 'beheer') then
+    raise exception 'Onbekende herkomst: %', p_herkomst;
+  end if;
+  if jsonb_typeof(p_drivers) is distinct from 'array' or jsonb_array_length(p_drivers) = 0 then
+    raise exception 'Een lege coureurlijst is geen lijst';
+  end if;
+  select * into r from public.races where id = p_race for update;
+  if not found then raise exception 'Die race bestaat niet'; end if;
+
+  omzet := public.lijst_omzetting(r.drivers, p_drivers);
+  n := public.antwoorden_omzetten(p_race, omzet);
+  update public.races set drivers = p_drivers, lijst_herkomst = p_herkomst where id = p_race;
+  totaal := n;
+
+  meld := nullif(array_to_string(array(select jsonb_array_elements_text(omzet -> 'meldingen')), '; '), '');
+  if n > 0 or (not p_stil and (meld is not null or omzet -> 'coureurs' <> '{}'::jsonb
+                               or omzet -> 'teams' <> '{}'::jsonb)) then
+    insert into public.sync_runs (gestart, klaar, ok, bijgewerkt, samenvatting, fouten)
+    values (now(), now(), true, n,
+            format('Coureurlijst %s ronde %s %s (%s): %s open antwoord(en) omgezet%s%s',
+                   r.season, r.round, r.name, p_herkomst, n,
+                   case when omzet -> 'coureurs' <> '{}'::jsonb then ', nummers ' || (omzet ->> 'coureurs') else '' end,
+                   case when omzet -> 'teams' <> '{}'::jsonb then ', teams ' || (omzet ->> 'teams') else '' end),
+            case when p_stil then null else meld end);
+  end if;
+
+  if p_herkomst = 'openf1' then
+    for later in
+      select id from public.races
+       where season = r.season and round > r.round and lijst_herkomst = 'geleend'
+       order by round
+    loop
+      totaal := totaal + coalesce((public.lijst_vervangen(later.id, p_drivers, 'geleend', true) ->> 'omgezet')::int, 0);
+    end loop;
+  end if;
+
+  return jsonb_build_object('race', p_race, 'ronde', r.round, 'naam', r.name,
+                            'omgezet', totaal, 'coureurs', omzet -> 'coureurs',
+                            'teams', omzet -> 'teams', 'meldingen', omzet -> 'meldingen');
+end $$;
+
+-- Het beheer: de coureurlijst van een seizoen zetten, voor alle races die nog
+-- een geleende lijst hebben (of eerder in het beheer gezet zijn) en waarvan
+-- het weekend nog niet begonnen is. Zo klopt de grid van volgend jaar zodra
+-- hij officieel is, ook al heeft OpenF1 hem nog niet.
+--
+-- p_drivers: [{nr, code, naam, team}]. De kleur komt uit de lijsten die er al
+-- staan: die van het team, en anders die van dezelfde coureur (een team met
+-- een nieuwe naam houdt zo zijn kleur).
+create or replace function public.beheer_coureurs_zetten(p_seizoen int, p_drivers jsonb)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+declare
+  lijst   jsonb;
+  d       jsonb;
+  race    record;
+  eerste  jsonb;
+  races   int := 0;
+  omgezet int := 0;
+  uit     jsonb;
+begin
+  perform public.beheer_poort();
+  if jsonb_typeof(p_drivers) is distinct from 'array'
+     or jsonb_array_length(p_drivers) not between 2 and 30 then
+    raise exception 'Een lijst van 2 tot 30 coureurs, graag';
+  end if;
+  for d in select e from jsonb_array_elements(p_drivers) e loop
+    if coalesce(d ->> 'nr', '') !~ '^[0-9]{1,2}$' then
+      raise exception 'Startnummer "%" klopt niet: 1 tot 99', coalesce(d ->> 'nr', '');
+    end if;
+    if coalesce(d ->> 'code', '') !~ '^[A-Za-z]{3}$' then
+      raise exception 'Afkorting "%" klopt niet: drie letters', coalesce(d ->> 'code', '');
+    end if;
+    if char_length(btrim(coalesce(d ->> 'naam', ''))) not between 2 and 60 then
+      raise exception 'Bij #% ontbreekt de naam', d ->> 'nr';
+    end if;
+    if char_length(btrim(coalesce(d ->> 'team', ''))) not between 2 and 60 then
+      raise exception 'Bij #% ontbreekt het team', d ->> 'nr';
+    end if;
+  end loop;
+  if (select count(distinct (e ->> 'nr')::int) from jsonb_array_elements(p_drivers) e) <> jsonb_array_length(p_drivers) then
+    raise exception 'Een startnummer staat er twee keer in';
+  end if;
+  if (select count(distinct upper(e ->> 'code')) from jsonb_array_elements(p_drivers) e) <> jsonb_array_length(p_drivers) then
+    raise exception 'Een afkorting staat er twee keer in';
+  end if;
+
+  with bekend as (
+    select x ->> 'team' team, x ->> 'code' code, x ->> 'kleur' kleur, r.season, r.round
+      from public.races r, jsonb_array_elements(coalesce(r.drivers, '[]')) x
+     where r.season in (p_seizoen, p_seizoen - 1) and coalesce(x ->> 'kleur', '') <> ''
+  )
+  select jsonb_agg(jsonb_build_object(
+           'nr', ((e ->> 'nr')::int)::text,
+           'code', upper(e ->> 'code'),
+           'naam', btrim(e ->> 'naam'),
+           'team', btrim(e ->> 'team'),
+           'kleur', coalesce(
+             (select b.kleur from bekend b where b.team = btrim(e ->> 'team') order by b.season desc, b.round desc limit 1),
+             (select b.kleur from bekend b where upper(b.code) = upper(e ->> 'code') order by b.season desc, b.round desc limit 1),
+             '#888888'))
+         order by btrim(e ->> 'team'), (e ->> 'nr')::int)
+    into lijst
+    from jsonb_array_elements(p_drivers) e;
+
+  for race in
+    select id from public.races
+     where season = p_seizoen and not afgelast
+       and coalesce(lijst_herkomst, '') in ('geleend', 'beheer')
+       and coalesce(least(deadline_sprint, deadline_quali, deadline_race), 'infinity'::timestamptz) > now()
+     order by round
+  loop
+    uit := public.lijst_vervangen(race.id, lijst, 'beheer', races > 0);
+    if races = 0 then eerste := uit; end if;
+    omgezet := omgezet + coalesce((uit ->> 'omgezet')::int, 0);
+    races := races + 1;
+  end loop;
+  if races = 0 then
+    raise exception 'Geen race in % met een geleende lijst waarvan het weekend nog moet beginnen', p_seizoen;
+  end if;
+  return jsonb_build_object('races', races, 'omgezet', omgezet,
+                            'coureurs', eerste -> 'coureurs', 'teams', eerste -> 'teams',
+                            'meldingen', eerste -> 'meldingen');
+end $$;
+
+-- Rekenen en omzetten zijn van de sync en het beheer; niet via de API.
+revoke all on function public.coureur_sleutel(text)                          from public, anon, authenticated;
+revoke all on function public.lijst_omzetting(jsonb, jsonb)                   from public, anon, authenticated;
+revoke all on function public.omgezette_waarde(jsonb, jsonb)                  from public, anon, authenticated;
+revoke all on function public.antwoorden_omzetten(bigint, jsonb)              from public, anon, authenticated;
+revoke all on function public.lijst_vervangen(bigint, jsonb, text, boolean)   from public, anon, authenticated;
+revoke all on function public.beheer_coureurs_zetten(int, jsonb)              from public;
+grant execute on function public.beheer_coureurs_zetten(int, jsonb)           to anon, authenticated;
+-- De sync roept lijst_vervangen() aan met de service_role key. Supabase geeft
+-- die rol elke functie in public al; hier staat het voor de duidelijkheid,
+-- en alleen als de rol bestaat (een kale PostgreSQL in de tests heeft hem niet).
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute 'grant execute on function public.lijst_vervangen(bigint, jsonb, text, boolean) to service_role';
+  end if;
+end $$;
+
+-- Lijsten die er al stonden voordat lijst_herkomst bestond. Een seizoen waar
+-- nog niets van gereden is en dat toch coureurs heeft, heeft die geleend:
+-- OpenF1 had ze nog niet (de kalender van 2027 in oktober 2026). Elke
+-- nieuwe lijst krijgt zijn herkomst van de sync of het beheer.
+update public.races r set lijst_herkomst = 'geleend'
+ where r.lijst_herkomst is null
+   and jsonb_array_length(coalesce(r.drivers, '[]'::jsonb)) > 0
+   and not exists (select 1 from public.races x
+                    where x.season = r.season
+                      and (x.race_result is not null or x.quali_result is not null));
 
 -- Triggerfuncties zijn niet om aan te roepen, alleen om af te gaan, en een
 -- trigger gaat af zonder dat wie schrijft hem mag uitvoeren. Supabase geeft

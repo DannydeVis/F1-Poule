@@ -801,5 +801,14 @@
  "Je hebt vandaag al 5 poules aangemaakt. Morgen kan het weer.": "Você já criou 5 bolões hoje. Amanhã pode criar outro.",
  "Die naam kan niet in een openbare poule. Kies een andere.": "Esse nome não pode ser usado em um bolão público. Escolha outro.",
  "<b>Tegen bots</b><br>Als de app een account voor je maakt of je inlogt met je mailadres, kijkt Cloudflare Turnstile of er een mens achter het scherm zit. Meestal merk je daar niets van. Cloudflare ziet daarbij je IP-adres en gegevens over je browser, gebruikt die alleen voor deze controle en zet geen cookies om je te volgen.": "<b>Contra robôs</b><br>Quando o app cria uma conta para você ou faz seu login com seu e-mail, o Cloudflare Turnstile verifica se há uma pessoa diante da tela. Normalmente você não percebe nada. A Cloudflare vê seu endereço IP e dados do seu navegador, usa isso só para essa verificação e não coloca cookies para seguir você.",
- "Op een iPhone of iPad werken meldingen alleen in de app op je beginscherm, vanaf iOS 16.4. Zet Predict the Race daar eerst op (zie \"op je beginscherm\" hierboven), open hem vanaf daar en tik dan opnieuw op deze knop.": "No iPhone ou iPad, as notificações só funcionam no app da sua tela de início, a partir do iOS 16.4. Adicione primeiro o Predict the Race (veja \"na tela de início\" acima), abra por lá e toque neste botão de novo."
+ "Op een iPhone of iPad werken meldingen alleen in de app op je beginscherm, vanaf iOS 16.4. Zet Predict the Race daar eerst op (zie \"op je beginscherm\" hierboven), open hem vanaf daar en tik dan opnieuw op deze knop.": "No iPhone ou iPad, as notificações só funcionam no app da sua tela de início, a partir do iOS 16.4. Adicione primeiro o Predict the Race (veja \"na tela de início\" acima), abra por lá e toque neste botão de novo.",
+ "{code}, niet meer in de lijst": "{code}, não está mais na lista",
+ "tijd voorlopig": "horário provisório",
+ "actie nodig": "ação necessária",
+ "De tijden van dit seizoen zijn nog voorlopig. Ze worden vanzelf bijgewerkt zodra ze vastliggen.": "Os horários desta temporada ainda são provisórios. Eles são atualizados automaticamente assim que forem confirmados.",
+ "kies opnieuw": "escolha de novo",
+ "{wie} staat niet meer in de deelnemerslijst en levert zo niets op. Kies opnieuw en sla op.": "{wie} não está mais na lista de pilotos e assim não pontua. Escolha de novo e salve.",
+ "{wie} staan niet meer in de deelnemerslijst en leveren zo niets op. Kies opnieuw en sla op.": "{wie} não estão mais na lista de pilotos e assim não pontuam. Escolha de novo e salve.",
+ "Kies opnieuw: je keuze bij {vragen} staat niet meer in de lijst, en levert zo niets op.": "Escolha de novo: sua escolha em {vragen} não está mais na lista e assim não pontua.",
+ "Kies opnieuw: je keuzes bij {vragen} staan niet meer in de lijst, en leveren zo niets op.": "Escolha de novo: suas escolhas em {vragen} não estão mais na lista e assim não pontuam."
 }
