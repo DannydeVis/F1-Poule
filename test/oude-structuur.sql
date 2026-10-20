@@ -77,7 +77,10 @@ create table account_items (user_id uuid, item jsonb);
 create table site_admins (user_id uuid primary key);
 create function account_items_cap() returns trigger language plpgsql as $f$ begin return new; end $f$;
 create trigger account_items_cap before insert on account_items for each row execute function account_items_cap();
-create function account_sync(p jsonb) returns void language sql as $f$ select $f$;
+-- account_sync gebruikt het rijtype van account_items, net als in productie:
+-- dan kan de tabel pas weg na de functie ("function account_sync(jsonb)
+-- depends on type account_items", 20 oktober).
+create function account_sync(p jsonb) returns setof account_items language sql as $f$ select * from account_items $f$;
 create function admin_accounts() returns setof uuid language sql as $f$ select user_id from site_admins $f$;
 create function admin_dashboard() returns jsonb language sql as $f$ select '{}'::jsonb $f$;
 create function admin_gate() returns boolean language sql as $f$ select false $f$;

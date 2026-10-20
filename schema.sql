@@ -2508,14 +2508,16 @@ $$;
 -- bestaan, en twee lege tabellen. Ze werkten niet eens (admin_dashboard()
 -- vroeg om tournament-tabellen), maar delete_my_account() wel: die was
 -- uitvoerbaar door elk ingelogd account en wiste het eigen account in
--- auth.users rechtstreeks, buiten verwijder_mijn_account() om. Eerst de
--- tabellen (daar hangt de trigger van account_items_cap() aan), dan de
--- functies, op naam, wat hun argumenten ook zijn. Zonder cascade: hangt er
--- onverwacht iets anders aan, dan stopt dit bestand liever met een fout.
--- De regel "functies en tabellen: alleen die uit schema.sql" in de
--- controletabel ziet het als er later weer zoiets bij komt.
-drop table if exists public.account_items;
-drop table if exists public.site_admins;
+-- auth.users rechtstreeks, buiten verwijder_mijn_account() om. Op naam, wat
+-- hun argumenten ook zijn, en in deze volgorde, want ze hangen aan elkaar:
+--   1. de functies, behalve account_items_cap(): account_sync(jsonb) gebruikt
+--      het rijtype van account_items, dus die tabel kan pas weg als hij weg
+--      is (in productie zakte het andersom, 20 oktober);
+--   2. de tabellen; de trigger op account_items gaat mee;
+--   3. account_items_cap(), die tot stap 2 aan die trigger vastzat.
+-- Zonder cascade: hangt er onverwacht iets anders aan, dan stopt dit bestand
+-- liever met een fout. De regel "functies en tabellen: alleen die uit
+-- schema.sql" in de controletabel ziet het als er later weer zoiets bij komt.
 do $$
 declare
   f record;
@@ -2525,7 +2527,20 @@ begin
             where p.pronamespace = 'public'::regnamespace
               and p.proname in ('admin_accounts', 'admin_dashboard', 'admin_gate', 'admin_day',
                                 'admin_address', 'is_admin', 'delete_my_account',
-                                'account_items_cap', 'account_sync') loop
+                                'account_sync') loop
+    execute format('drop function if exists %s', f.naam);
+  end loop;
+end $$;
+drop table if exists public.account_items;
+drop table if exists public.site_admins;
+do $$
+declare
+  f record;
+begin
+  for f in select p.oid::regprocedure as naam
+             from pg_proc p
+            where p.pronamespace = 'public'::regnamespace
+              and p.proname = 'account_items_cap' loop
     execute format('drop function if exists %s', f.naam);
   end loop;
 end $$;

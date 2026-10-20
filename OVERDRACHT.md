@@ -11149,3 +11149,19 @@ de fout van Danny. In Supabase gecontroleerd: verder hangt er niets aan wat
 had, maakt niet uit: `schema.sql` kan altijd opnieuw.
 
 **Danny moet:** `schema.sql` opnieuw draaien.
+
+**En nog een keer (20 oktober): `account_items` kon niet weg.** Bij de
+volgende run: "cannot drop table account_items because other objects depend
+on it: function account_sync(jsonb) depends on type account_items". Die
+functie gebruikt het rijtype van de tabel. Mijn eerdere controle in Supabase
+keek alleen naar views, policies en triggers, niet naar functies die een
+tabel als type gebruiken. Nu staat de volgorde vast: eerst de functies
+(behalve `account_items_cap()`), dan de tabellen (de trigger gaat mee), dan
+`account_items_cap()`. Daarna in Supabase alles nagelopen wat aan deze
+tabellen, hun rijtypen, de functies en `beheer_adres()` hangt: verder alleen
+de eigen sleutels en checks van de tabellen, die meegaan. In
+`test/oude-structuur.sql` geeft `account_sync` nu `setof account_items`
+terug, zoals in productie; met de vorige volgorde zakt die test met precies
+deze fout.
+
+**Danny moet:** `schema.sql` opnieuw draaien.
