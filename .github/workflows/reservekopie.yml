@@ -41,3 +41,16 @@ jobs:
           path: reservekopie/*.ptrk
           retention-days: 90
           if-no-files-found: error
+
+      # Bewaking (healthchecks.io, BEDIENING.md "Bewaking"): een ping na een
+      # geslaagde kopie, /fail als hij mislukt. Een ping die mislukt laat de
+      # run nooit falen; zonder secret HC_PING_KEY gebeurt er niets.
+      - name: Bewaking, reservekopie
+        if: ${{ !cancelled() }}
+        env:
+          HC_PING_KEY: ${{ secrets.HC_PING_KEY }}
+          STATUS: ${{ job.status }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$STATUS" = success ]; then bash scripts/bewaking.sh reservekopie ok
+          else bash scripts/bewaking.sh reservekopie fail "Reservekopie mislukt: $RUN"; fi
