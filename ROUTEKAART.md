@@ -1095,3 +1095,11 @@ en alleen als het klaar is. Na het doorschuiven staat de winnaar van vorig
 seizoen bovenaan tot de eerste race, en de herinnering bij het eerste weekend
 noemt de seizoensvragen; BEDIENING §6c.
 Open bij Danny: `schema.sql` draaien.
+
+**Bewaking** (21 oktober). Gebouwd: healthchecks.io meldt het als de sync, de
+uitslagen of de reservekopie stilvallen (drie checks, één secret
+`HC_PING_KEY`), en de sync zet een wekker om een uitslag 35 minuten na het
+einde van een sessie op te halen, daarna elke 30 minuten tot hij er is;
+BEDIENING §20.
+Open bij Danny: account, ping key, secret, de workflows één keer draaien,
+periode en grace per check.

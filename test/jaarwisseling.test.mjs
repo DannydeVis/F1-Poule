@@ -438,6 +438,34 @@ for (const s of wereld.sessies) {
     `${JSON.stringify(r2.drivers)} (was ${voor}) · ${l3.slice(-300)}`);
 }
 
+// ---- 4c. bewaking: de wekker voor een uitslag, en een uitslag die te laat is ----------
+// Zonder pushabonnementen (VAPID_PRIVE leeg) zet de sync toch een wekker als er
+// een uitslag op te halen is, en meldt hij een sessie die te laat is in
+// GITHUB_OUTPUT voor de check "uitslagen" (sync.yml, scripts/bewaking.mjs).
+{
+  const uitvoer = join(mkdtempSync(join(tmpdir(), 'uitvoer-')), 'out');
+  // Achteraan in dit bestand, want de sync haalt hier ook de deelnemers op.
+  const r1 = wereld.races.find((r) => r.season === 2027 && r.round === 1);
+  const bewaard = { deadline_quali: r1.deadline_quali, deadline_race: r1.deadline_race };
+  const lees = () => (existsSync(uitvoer) ? readFileSync(uitvoer, 'utf8') : '');
+
+  // De kwalificatie begon twee uur geleden: uitslag op te halen, nog niet te laat.
+  Object.assign(r1, { deadline_quali: over(-2 / 24), deadline_race: over(1) });
+  writeFileSync(uitvoer, '');
+  await sync({ GITHUB_OUTPUT: uitvoer });
+  check('zonder pushabonnementen zet de sync een wekker voor een uitslag die op te halen is',
+    /^wekker=/m.test(lees()), lees());
+  check('en twee uur na de start is de kwalificatie nog niet te laat', /^uitslagen_te_laat=$/m.test(lees()), lees());
+
+  // Vijf uur geleden: te laat, met de sessie erin.
+  Object.assign(r1, { deadline_quali: over(-5 / 24) });
+  writeFileSync(uitvoer, '');
+  await sync({ GITHUB_OUTPUT: uitvoer });
+  check('vijf uur na de start is hij te laat, en de uitvoer noemt hem',
+    /^uitslagen_te_laat=Circuit 2027-1 kwalificatie \(2027 ronde 1\)/m.test(lees()), lees());
+  Object.assign(r1, bewaard);
+}
+
 // ---- 7. een lege database ------------------------------------------------------------------
 // De eerste keer ooit: de sync begint bij het jaar van vandaag.
 {

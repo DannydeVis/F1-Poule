@@ -112,9 +112,10 @@ jobs:
           PUSH_CONTACT: ${{ secrets.PUSH_CONTACT }}
         run: node scripts/sync.mjs
 
-      # Gaat er binnen twaalf uur een herinneringsvenster open, dan zet de sync
-      # hier een wekker: wekker.yml slaapt tot dat moment en start dan deze
-      # workflow. Nodig omdat GitHub de cron hierboven eens per vier uur
+      # Gaat er binnen twaalf uur een herinneringsvenster open, of valt er een
+      # uitslag op te halen (35 minuten na het einde van een sessie, daarna elke
+      # 30 minuten tot de uitslag er is), dan zet de sync hier een wekker:
+      # wekker.yml slaapt tot dat moment en start dan deze workflow. Nodig omdat GitHub de cron hierboven eens per vier uur
       # draait in plaats van elk kwartier, en een venster van drie uur daar
       # tussendoor valt. Een run die met GITHUB_TOKEN gestart wordt, telt bij
       # GitHub als handmatig en wacht niet in de trage rij. Zie
@@ -144,3 +145,29 @@ jobs:
           git commit -m "Agenda bijgewerkt door de sync"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      # ---- bewaking (healthchecks.io), zie BEDIENING.md "Bewaking" ----------
+      # Twee checks. "sync": na elke run een ping, bij een rode run /fail met
+      # de link naar de run. "uitslagen": /fail als een gespeelde sessie meer
+      # dan twee uur na het einde nog geen uitslag heeft (scripts/bewaking.mjs),
+      # met de sessie erin; alleen na een geslaagde sync, zodat een stilgevallen
+      # sync alleen via "sync" meldt. Een ping die mislukt laat de run nooit
+      # falen (scripts/bewaking.sh). Zonder secret HC_PING_KEY gebeurt er niets.
+      - name: Bewaking, uitslagen op tijd
+        if: ${{ !cancelled() && steps.sync.outcome == 'success' }}
+        env:
+          HC_PING_KEY: ${{ secrets.HC_PING_KEY }}
+          TE_LAAT: ${{ steps.sync.outputs.uitslagen_te_laat }}
+        run: |
+          if [ -z "$TE_LAAT" ]; then bash scripts/bewaking.sh uitslagen ok
+          else bash scripts/bewaking.sh uitslagen fail "Uitslag te laat: $TE_LAAT"; fi
+
+      - name: Bewaking, sync gedraaid
+        if: ${{ !cancelled() }}
+        env:
+          HC_PING_KEY: ${{ secrets.HC_PING_KEY }}
+          STATUS: ${{ job.status }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$STATUS" = success ]; then bash scripts/bewaking.sh sync ok
+          else bash scripts/bewaking.sh sync fail "Sync-run mislukt: $RUN"; fi

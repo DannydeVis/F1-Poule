@@ -1,8 +1,11 @@
-name: Wekker voor herinneringen
+name: Wekker voor herinneringen en uitslagen
 
 # Gestart door sync.yml, niet door een mens en niet door een cron. Slaapt tot
-# het tijdstip dat de sync doorgaf (tien minuten nadat het herinneringsvenster
-# van drie uur opengaat) en start dan de sync, die de herinneringen stuurt.
+# het tijdstip dat de sync doorgaf en start dan de sync. Twee redenen voor zo'n
+# tijdstip: tien minuten nadat het herinneringsvenster van drie uur opengaat
+# (de sync stuurt dan de herinneringen), en 35 minuten na het einde van een
+# sessie, en daarna elke 30 minuten tot de uitslag er is (hoogstens 8 uur; zie
+# scripts/bewaking.mjs bij uitslagWekker). De sync kiest de vroegste.
 #
 # Waarom zo: GitHub draait de cron van sync.yml eens per vier uur, met gaten
 # tot acht uur, en een venster van drie uur valt daar tussendoor. Een
@@ -10,7 +13,8 @@ name: Wekker voor herinneringen
 # volgendeWekker en BEDIENING.md §11c.
 #
 # Hoogstens één wekker tegelijk: een nieuwe vervangt de vorige. Elke sync
-# rekent het volgende moment opnieuw uit, dus de nieuwste weet het het best.
+# rekent het vroegste moment opnieuw uit uit alles wat er nog komt, dus de
+# nieuwste weet het het best.
 # Ligt het moment verder weg dan vijfenhalf uur (de job mag zes uur duren),
 # dan slaapt hij vijfenhalf uur en start hij de sync eerder; die zet dan een
 # nieuwe wekker.

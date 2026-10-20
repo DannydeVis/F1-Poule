@@ -11232,3 +11232,42 @@ Bewuste keuzes:
 **Danny moet:** `schema.sql` draaien (BEDIENING §6c). Tot dan zegt de sync
 elke run "Doorschuiven niet gelukt" in het logboek, en zit het lek nog in de
 database.
+
+## Bewaking (21 oktober)
+
+Tweede PR van "seizoenseinde en bewaking".
+
+- **healthchecks.io**, drie checks, één secret `HC_PING_KEY`.
+  `scripts/bewaking.sh <slug> ok|fail [bericht]` pingt
+  `https://hc-ping.com/<key>/<slug>?create=1` (of `/fail`), met curl
+  `-fsS -m 10 --retry 3`; een mislukte ping laat de job nooit falen, en zonder
+  secret gebeurt er niets. De sleutel komt niet in de log (curl schrijft de URL
+  niet, en GitHub maskeert de secret).
+  - `sync`: na elke run die niet geannuleerd is, met de status van de job;
+    bij rood `/fail` met de link naar de run. Periode 6 uur, grace 6 uur
+    (gemeten: mediaan 3,7 uur, 90% onder 6,2, langste 7,1).
+  - `uitslagen`: na een geslaagde sync. `teLateUitslagen()` in
+    `scripts/bewaking.mjs`: een gespeelde sessie die meer dan 2 uur na het
+    einde (start plus 1 of 2 uur, plus het halfuur dat OpenF1 dicht is) geen
+    uitslag heeft en niet afgelast is. De sync geeft het door via
+    `GITHUB_OUTPUT` (`uitslagen_te_laat`). Periode 2 dagen.
+  - `reservekopie`: na elke run, `/fail` als hij mislukt. Periode 1 dag, grace
+    12 uur.
+- **Uitslagen op tijd**: `uitslagWekker()` plant een wekker 35 minuten na het
+  einde van een sessie, en zolang de uitslag er niet is elke 30 minuten
+  opnieuw, tot 8 uur na het einde. `zetWekker()` in de sync neemt de vroegste
+  van die en de herinnering, en zet hem nu altijd (de herinnering alleen als
+  er pushabonnementen zijn). `wekker.yml` blijft één wekker tegelijk.
+- **60 dagen zonder activiteit**: GitHub documenteert dat geplande workflows
+  in een openbare repo dan uitgaan, maar niet wat als activiteit telt. Geen
+  nepcommits; het vangnet is de check `sync`. Een gedocumenteerde manier om
+  het te voorkomen zonder commits heb ik niet gevonden. Weer aanzetten staat
+  in BEDIENING §20.
+
+Tests: `test/bewaking.test.mjs` (nieuw) en een blok in
+`test/jaarwisseling.test.mjs` met de echte sync.
+
+**Danny moet** (BEDIENING §20, "Inrichten"): een account op healthchecks.io,
+een ping key, het secret `HC_PING_KEY`, "Uitslagen synchroniseren" en
+"Reservekopie" één keer met de hand draaien, en per check periode en grace
+zetten. Eventueel Telegram of ntfy voor een melding op je telefoon.

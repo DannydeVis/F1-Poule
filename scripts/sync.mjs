@@ -33,6 +33,7 @@ import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast
   from './uitslagen.mjs';
 import { maakAgenda } from './agenda.mjs';
 import { wieKrijgtEenSeintje, volgendeWekker, SEIZOENVRAGEN } from './herinneringen.mjs';
+import { uitslagWekker, teLateUitslagen, teLaatTekst, vroegste } from './bewaking.mjs';
 import { stuur as stuurPush } from './push.mjs';
 import { seizoenPlan, agendaSeizoenen, lijstKanWachten } from './seizoenen.mjs';
 import { OpenF1Dicht, vanwegeSessie, UITLEG as DICHT_UITLEG } from './openf1-dicht.mjs';
@@ -750,18 +751,45 @@ const PUSH_CONTACT = process.env.PUSH_CONTACT ?? 'mailto:poule@voorbeeld.nl';
 // Geeft sync.yml door wanneer de wekker moet afgaan; die stap start dan
 // wekker.yml. Buiten GitHub Actions (een test, een run met de hand) staat
 // GITHUB_OUTPUT niet en gebeurt er niets.
-function zetWekker(races) {
-  const om = volgendeWekker({ races });
+//
+// Twee redenen voor een wekker: het venster van een herinnering (alleen als
+// er iemand is om te herinneren), en een uitslag die op te halen is (altijd,
+// zie uitslagWekker() in bewaking.mjs). Hoogstens één wekker tegelijk: de
+// vroegste wint, want wekker.yml vervangt een wekker die al sliep.
+const uitvoer = (regel) => {
+  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${regel}\n`);
+};
+function zetWekker(races, { herinneren }) {
+  const herinnering = herinneren ? volgendeWekker({ races }) : null;
+  const uitslag = uitslagWekker({ races });
+  const om = vroegste(herinnering, uitslag);
   if (!om) return;
-  console.log(`Wekker voor de volgende herinnering: ${om}`);
-  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `wekker=${om}\n`);
+  console.log(`Wekker: ${om} (${om === uitslag ? 'uitslag ophalen' : 'herinnering'})`);
+  uitvoer(`wekker=${om}`);
+}
+
+// Voor de check "uitslagen" op healthchecks.io (sync.yml): een gespeelde
+// sessie die meer dan twee uur na het einde nog geen uitslag heeft.
+function bewaakUitslagen(races) {
+  const laat = teLateUitslagen({ races });
+  if (laat.length) {
+    const tekst = teLaatTekst(laat);
+    console.log(`Uitslag te laat: ${tekst}`);
+    uitvoer(`uitslagen_te_laat=${tekst.replace(/[\r\n]+/g, ' ').slice(0, 900)}`);
+  } else {
+    uitvoer('uitslagen_te_laat=');
+  }
+}
+
+async function heeftAbonnementen() {
+  if (!VAPID_PRIVE) return false;
+  try { return !!(await sb('push_abonnementen?select=endpoint&limit=1'))?.length; } catch { return false; }
 }
 
 async function herinneringen(races) {
   if (!VAPID_PRIVE || !races.length) return;
   const abonnementen = await sb('push_abonnementen?select=*');
   if (!abonnementen?.length) return;
-  zetWekker(races);
 
   // De top tienen: dat zijn de vragen waar een herinnering over gaat. De
   // losse vragen hangen aan dezelfde deadline, dus wie zijn top 10 invult ziet
@@ -881,6 +909,8 @@ try {
   await vragensetOpSlot(lopend);
   const inAgenda = agendaSeizoenen(alle, plan);
   schrijfAgenda(alle.filter((r) => inAgenda.includes(r.season)));
+  zetWekker(lopend, { herinneren: await heeftAbonnementen() });
+  bewaakUitslagen(lopend);
   await herinneringen(lopend);
   await schrijfLogboek(true);
 } catch (e) {

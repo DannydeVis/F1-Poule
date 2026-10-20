@@ -1699,10 +1699,12 @@ uur een herinneringsvenster open, dan start hij `wekker.yml`, die slaapt tot
 tien minuten nadat het venster opengaat en dan de sync start. Een run die zo
 gestart wordt, wacht niet in de trage rij van geplande runs.
 
-Er loopt hoogstens één wekker tegelijk; een nieuwere vervangt de oude. In het
-Actions-tabblad zie je hem als "Wekker voor herinneringen", soms uren
-"bezig": dat is slapen, en dat kost niets in een openbare repo. De wekker
-gaat alleen als er minstens één toestel meldingen aan heeft.
+Er loopt hoogstens één wekker tegelijk; een nieuwere vervangt de oude, en de
+sync kiest steeds het vroegste moment. In het Actions-tabblad zie je hem als
+"Wekker voor herinneringen en uitslagen", soms uren "bezig": dat is slapen, en
+dat kost niets in een openbare repo. Voor de herinneringen gaat de wekker
+alleen als er minstens één toestel meldingen aan heeft; sinds 21 oktober zet
+de sync hem ook altijd voor een uitslag die op te halen is (§20, Bewaking).
 
 Sleutel kwijt? Maak een nieuw paar. Alle bestaande abonnementen vervallen dan —
 iedereen moet opnieuw op "Zet meldingen aan" tikken — maar er gaat niets anders
@@ -2845,3 +2847,94 @@ logo of nieuwe kleur meer zetten (weghalen kan wel).
   schuine strepen van het deelplaatje, nooit op tekst: een kleur die een bedrijf
   kiest haalt niet vanzelf het contrast.
 
+
+## 20. Bewaking
+
+Sinds 21 oktober meldt healthchecks.io (gratis plan, 20 checks) het als er iets
+stilvalt, in plaats van dat je het zelf in de app moet zien. Elke workflow pingt
+na afloop een check; blijft een ping te lang weg, of komt er een `/fail`, dan
+krijg je een mail.
+
+### De drie checks
+
+| check | wie pingt | betekent | periode | grace |
+|---|---|---|---|---|
+| `sync` | `sync.yml`, na elke run | de sync draaide; bij een rode run `/fail` met de link naar de run | 6 uur | 6 uur |
+| `uitslagen` | `sync.yml`, na een geslaagde run | `/fail` als een gespeelde sessie meer dan 2 uur na het einde nog geen uitslag heeft en niet afgelast is, met de sessie erin; anders een gewone ping | 2 dagen | 1 uur |
+| `reservekopie` | `reservekopie.yml` | de kopie van vannacht is gelukt; `/fail` als hij mislukte | 1 dag | 12 uur |
+
+Waarom die tijden:
+
+- **sync**: gemeten in `sync_runs` over 14 dagen (91 runs): mediaan 3,7 uur
+  tussen twee runs, 90% onder 6,2 uur, langste 7,1 uur. Met 6 uur plus 6 uur
+  grace komt er geen vals alarm, en een sync die een halve dag stil ligt meldt
+  zich wel. Rood was 1 op de 162 runs in 30 dagen, dus `/fail` mag meteen
+  melden.
+- **uitslagen**: het einde van een sessie is de start plus 1 uur (kwalificatie,
+  sprint) of 2 uur (race), plus het halfuur waarin OpenF1 een gratis account
+  niets geeft. Twee uur daarna is een uitslag te laat (`scripts/bewaking.mjs`).
+  De periode is 2 dagen, zodat een stilgevallen sync alleen via `sync` meldt en
+  niet twee keer.
+- **reservekopie**: draait elke nacht om 02:41 UTC; 12 uur grace vangt een run
+  die GitHub laat liggen.
+
+Een ping die mislukt laat een run nooit falen (`scripts/bewaking.sh`, curl met
+time-out en drie pogingen). Zonder secret `HC_PING_KEY` pingen de workflows
+niets en draait alles gewoon.
+
+### Uitslagen op tijd
+
+De sync zet nu ook een **wekker voor een uitslag** (`wekker.yml`, dezelfde als
+voor de herinneringen): 35 minuten na het einde van een sessie, en zolang de
+uitslag er niet is elke keer 30 minuten later, tot 8 uur na het einde. Dat
+gebeurt altijd, ook zonder pushabonnementen. Hoogstens één wekker tegelijk; de
+vroegste wint. Aanleiding: in de laatste drie raceweekenden kwam de eerste sync
+0,1 tot 2,3 uur nadat de uitslag op te halen was, en in Kuala Lumpur pas met
+een run met de hand.
+
+### Wat je doet als er een mail komt
+
+- **sync is down of `/fail`**: open de link in de mail (bij `/fail`) of
+  GitHub → Actions → "Uitslagen synchroniseren" en kijk naar de laatste run.
+  Draai hem met de hand: **Run workflow**. Staat er bovenaan "This scheduled
+  workflow is disabled because there hasn't been activity in this repository
+  for at least 60 days", zie hieronder.
+- **uitslagen `/fail`**: de mail noemt de sessie. Meestal heeft OpenF1 hem nog
+  niet; draai de sync met de hand. Blijft het leeg, vul de uitslag in in het
+  beheer (Data, de race, "overnemen" of met de hand), of zet de race op
+  afgelast als hij niet gereden is.
+- **reservekopie down of `/fail`**: Actions → "Reservekopie" → de laatste run.
+  Meestal een verlopen of ontbrekend secret (`RESERVEKOPIE_WACHTWOORD`); draai
+  hem daarna met de hand.
+
+### 60 dagen zonder activiteit
+
+GitHub zet geplande workflows in een openbare repo uit als er 60 dagen niets
+in de repo gebeurt ([GitHub Docs: Disabling and enabling a
+workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows)).
+Wat als activiteit telt staat er niet, en een waarschuwing vooraf ook niet.
+Het vangnet is de check `sync`: draait hij niet meer, dan meldt healthchecks
+dat binnen een halve dag. Er komen geen nepcommits om dat te voorkomen; een
+gedocumenteerde manier zonder commits heb ik niet gevonden (de API kan een
+uitgezette workflow weer aanzetten, maar zegt niets over het voorkomen ervan).
+
+Weer aanzetten: GitHub → Actions → de workflow links in de lijst → **Enable
+workflow**. Of met de GitHub CLI: `gh workflow enable sync.yml` (en
+`wekker.yml`, `reservekopie.yml` en de andere geplande). Draai daarna de sync
+één keer met de hand.
+
+### Inrichten (wat jij moet doen)
+
+1. Maak een account op **healthchecks.io** (gratis plan).
+2. Open het project (**My First Project** mag) → **Settings** → **Ping key**
+   → **Create ping key**. Kopieer hem.
+3. GitHub → de repo → **Settings** → **Secrets and variables** → **Actions**
+   → **New repository secret**: naam `HC_PING_KEY`, waarde de ping key. Plak
+   hem nergens anders (niet in de repo, niet in een chat).
+4. Draai elke workflow één keer met de hand (Actions → **Run workflow**):
+   "Uitslagen synchroniseren" en "Reservekopie". De eerste ping maakt de checks
+   `sync`, `uitslagen` en `reservekopie` vanzelf aan (`?create=1`).
+5. Zet in healthchecks per check **Period** en **Grace** zoals in de tabel
+   hierboven (de check aanklikken → **Change Schedule**).
+6. Eventueel een melding op je telefoon: **Integrations** → **Telegram** of
+   **ntfy**, en koppel die aan de drie checks. Mail staat standaard aan.
