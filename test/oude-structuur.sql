@@ -86,3 +86,10 @@ create function admin_day(d date, n int) returns int language sql as $f$ select 
 create function admin_address() returns text language sql as $f$ select 'iemand@voorbeeld.nl'::text $f$;
 create function is_admin() returns boolean language sql as $f$ select false $f$;
 create function delete_my_account() returns void language sql as $f$ select $f$;
+
+-- En de controletabel van vóór 20 oktober, die beheer_adres() gebruikte.
+-- schema.sql moet de view eerst weggooien en dan pas de functie; andersom
+-- zakte het in productie ("view poule_controle depends on function
+-- beheer_adres()").
+create function public.beheer_adres() returns text language sql as $f$ select 'iemand@voorbeeld.nl'::text $f$;
+create view public.poule_controle as select 'beheerders'::text as controle, public.beheer_adres() as uitkomst;
