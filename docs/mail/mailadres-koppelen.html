@@ -1,5 +1,6 @@
+{{ $t := printf "%v" (or .Data.taal "en") }}
 <style>a[x-apple-data-detectors]{color:inherit!important;text-decoration:none!important;font-size:inherit!important;font-family:inherit!important;font-weight:inherit!important;line-height:inherit!important}</style>
-<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f2f1ee;">One tap to confirm your email address for Predict the Race.</div>
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f2f1ee;">{{ if eq $t "nl" }}Eén tik om je mailadres voor Predict the Race te bevestigen.{{ else if eq $t "de" }}Ein Tipp, um deine E-Mail-Adresse für Predict the Race zu bestätigen.{{ else if eq $t "fr" }}Un geste pour confirmer votre adresse e-mail pour Predict the Race.{{ else if eq $t "es" }}Un toque para confirmar tu correo para Predict the Race.{{ else if eq $t "it" }}Un tocco per confermare il tuo indirizzo email per Predict the Race.{{ else if eq $t "pt" }}Um toque para confirmar seu e-mail para o Predict the Race.{{ else }}One tap to confirm your email address for Predict the Race.{{ end }}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f2f1ee;font-family:Arial,Helvetica,sans-serif;">
   <tr>
     <td align="center" style="padding:32px 12px;">
@@ -17,22 +18,22 @@
         </tr>
         <tr>
           <td style="padding:28px 28px 0;">
-            <h1 style="margin:0;font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:34px;line-height:1;font-weight:700;text-transform:uppercase;color:#14151a;">Confirm your email</h1>
-            <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#61656d;">Confirm that {{ .NewEmail }} is yours. After that you can sign in with it on any device, and you won't lose your player if this browser is ever cleared.</p>
+            <h1 style="margin:0;font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:34px;line-height:1;font-weight:700;text-transform:uppercase;color:#14151a;">{{ if eq $t "nl" }}Bevestig je mailadres{{ else if eq $t "de" }}Bestätige deine E-Mail{{ else if eq $t "fr" }}Confirmez votre e-mail{{ else if eq $t "es" }}Confirma tu correo{{ else if eq $t "it" }}Conferma la tua email{{ else if eq $t "pt" }}Confirme seu e-mail{{ else }}Confirm your email{{ end }}</h1>
+            <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#61656d;">{{ if eq $t "nl" }}Bevestig dat {{ .NewEmail }} van jou is. Daarna log je er op elk toestel mee in, en ben je je speler niet kwijt als deze browser ooit leeggemaakt wordt.{{ else if eq $t "de" }}Bestätige, dass {{ .NewEmail }} dir gehört. Danach kannst du dich damit auf jedem Gerät anmelden, und dein Spieler bleibt erhalten, auch wenn dieser Browser einmal geleert wird.{{ else if eq $t "fr" }}Confirmez que {{ .NewEmail }} est bien à vous. Vous pourrez ensuite vous connecter avec sur n'importe quel appareil, et vous ne perdrez pas votre joueur si ce navigateur est un jour vidé.{{ else if eq $t "es" }}Confirma que {{ .NewEmail }} es tuyo. Después podrás entrar con él en cualquier dispositivo, y no perderás tu jugador si algún día se borra este navegador.{{ else if eq $t "it" }}Conferma che {{ .NewEmail }} è tuo. Poi potrai accedere con questo indirizzo da qualsiasi dispositivo, e non perderai il tuo giocatore se questo browser viene svuotato.{{ else if eq $t "pt" }}Confirme que {{ .NewEmail }} é seu. Depois você pode entrar com ele em qualquer aparelho, e não perde seu jogador se este navegador for limpo.{{ else }}Confirm that {{ .NewEmail }} is yours. After that you can sign in with it on any device, and you won't lose your player if this browser is ever cleared.{{ end }}</p>
           </td>
         </tr>
         <tr>
           <td style="padding:24px 28px 0;">
-            <a href="https://predicttherace.com/app/?token_hash={{ .TokenHash }}&amp;type=email_change" style="display:block;background:#d93d24;color:#ffffff;text-decoration:none;text-align:center;font-size:17px;font-weight:700;padding:16px 20px;border-radius:10px;">Confirm email address</a>
+            <a href="https://predicttherace.com/app/?token_hash={{ .TokenHash }}&amp;type=email_change" style="display:block;background:#d93d24;color:#ffffff;text-decoration:none;text-align:center;font-size:17px;font-weight:700;padding:16px 20px;border-radius:10px;">{{ if eq $t "nl" }}Mailadres bevestigen{{ else if eq $t "de" }}E-Mail-Adresse bestätigen{{ else if eq $t "fr" }}Confirmer l'adresse e-mail{{ else if eq $t "es" }}Confirmar correo{{ else if eq $t "it" }}Conferma indirizzo email{{ else if eq $t "pt" }}Confirmar e-mail{{ else }}Confirm email address{{ end }}</a>
           </td>
         </tr>
         <tr>
           <td style="padding:24px 28px 28px;">
-            <p style="margin:0;font-size:13px;line-height:1.5;color:#696e75;">Didn't ask for this? You can ignore this email. Nothing changes.</p>
+            <p style="margin:0;font-size:13px;line-height:1.5;color:#696e75;">{{ if eq $t "nl" }}Niet om gevraagd? Dan kun je deze mail negeren. Er verandert niets.{{ else if eq $t "de" }}Nicht angefordert? Dann kannst du diese E-Mail ignorieren. Es ändert sich nichts.{{ else if eq $t "fr" }}Vous n'avez rien demandé ? Ignorez simplement cet e-mail. Rien ne change.{{ else if eq $t "es" }}¿No lo has pedido? Puedes ignorar este correo. No cambia nada.{{ else if eq $t "it" }}Non lo hai chiesto tu? Puoi ignorare questa email. Non cambia nulla.{{ else if eq $t "pt" }}Não pediu isto? Pode ignorar este e-mail. Nada muda.{{ else }}Didn't ask for this? You can ignore this email. Nothing changes.{{ end }}</p>
           </td>
         </tr>
       </table>
-      <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#696e75;">Predict the Race &middot; the F1 prediction game for you and your friends<br><a href="https://predicttherace.com" style="color:#696e75;">predicttherace.com</a></p>
+      <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#696e75;">Predict the Race &middot; {{ if eq $t "nl" }}het F1-voorspelspel voor jou en je vrienden{{ else if eq $t "de" }}das F1-Tippspiel für dich und deine Freunde{{ else if eq $t "fr" }}le jeu de pronostics F1 pour vous et vos amis{{ else if eq $t "es" }}el juego de predicciones de F1 para ti y tus amigos{{ else if eq $t "it" }}il gioco di pronostici F1 per te e i tuoi amici{{ else if eq $t "pt" }}o jogo de palpites de F1 para você e seus amigos{{ else }}the F1 prediction game for you and your friends{{ end }}<br><a href="https://predicttherace.com" style="color:#696e75;">predicttherace.com</a></p>
     </td>
   </tr>
 </table>

@@ -69,3 +69,20 @@ begin
   new.updated_at = now();
   return new;
 end $f$;
+
+-- En wat er tot 20 oktober in productie stond van een andere app (PadelBracket):
+-- twee tabellen, een trigger op een ervan, en functies met allerlei
+-- signaturen. schema.sql gooit ze weg op naam, ongeacht de argumenten.
+create table account_items (user_id uuid, item jsonb);
+create table site_admins (user_id uuid primary key);
+create function account_items_cap() returns trigger language plpgsql as $f$ begin return new; end $f$;
+create trigger account_items_cap before insert on account_items for each row execute function account_items_cap();
+create function account_sync(p jsonb) returns void language sql as $f$ select $f$;
+create function admin_accounts() returns setof uuid language sql as $f$ select user_id from site_admins $f$;
+create function admin_dashboard() returns jsonb language sql as $f$ select '{}'::jsonb $f$;
+create function admin_gate() returns boolean language sql as $f$ select false $f$;
+create function admin_day(d date) returns int language sql as $f$ select 0 $f$;
+create function admin_day(d date, n int) returns int language sql as $f$ select n $f$;
+create function admin_address() returns text language sql as $f$ select 'iemand@voorbeeld.nl'::text $f$;
+create function is_admin() returns boolean language sql as $f$ select false $f$;
+create function delete_my_account() returns void language sql as $f$ select $f$;

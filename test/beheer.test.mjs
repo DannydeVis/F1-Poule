@@ -84,12 +84,19 @@ await naarBeheer();
     && (await page.$('#google')) !== null && (await page.$('.tabs')) === null, t);
 }
 const spelerVoor = (await db()).pool_members.find((m) => m.member_id === 'lid-1').user_id;
-await page.evaluate(() => globalThis.__mail.googleAls('devisser.danny@gmail.com'));
+// Dit account staat in site_beheerders (zoals het echte, sinds 20 oktober de
+// enige bron). Na het koppelen van Google houdt het hetzelfde id.
+await page.evaluate((id) => {
+  const d = globalThis.__db;
+  d.site_beheerders = [id];
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(d));
+}, spelerVoor);
+await page.evaluate(() => globalThis.__mail.googleAls('danny@voorbeeld.nl'));
 await page.click('#google');
 await page.goto(await page.evaluate(() => globalThis.__mail.laatsteLink()));
 await page.waitForSelector('.tabs, .toegang');
-check('met het beheeradres ben je meteen binnen, zonder dat ergens iets aangezet hoeft te worden',
-  (await page.$('.tabs')) !== null && (await db()).site_beheerders.length === 0);
+check('een account in site_beheerders is meteen binnen',
+  (await page.$('.tabs')) !== null && (await db()).site_beheerders.length === 1);
 {
   const d = await db();
   const u = d.auth_users.find((x) => x.id === spelerVoor);
@@ -147,7 +154,7 @@ await page.goto(await page.evaluate(() => globalThis.__mail.laatsteLink()));
 await page.waitForSelector('.toegang');
 {
   const t = await tekst('.toegang');
-  check('een gewoon account is geen beheerder, en ziet niets', t.includes('geen beheeradres')
+  check('een gewoon account is geen beheerder, en ziet niets', t.includes('account is geen beheerder')
     && t.includes('iemand@voorbeeld.nl') && (await page.$('.tabs')) === null, t);
   check('met een knop om met een ander Google-account in te loggen',
     (await page.$eval('#google', (k) => k.textContent.trim()).catch(() => null)) === 'Inloggen met een ander Google-account');

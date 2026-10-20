@@ -606,6 +606,7 @@ const auth = {
     if (nee) return nee;
     const user = { id: 'account-' + (store.auth_users.length + 1),
                    is_anonymous: true, email: null, new_email: null,
+                   user_metadata: { ...(options.data ?? {}) },
                    identities: [{ provider: 'anonymous', identity_data: {} }] };
     store.auth_users.push(user);
     bewaren();
@@ -659,9 +660,18 @@ const auth = {
 
   // Een mailadres aan het huidige account hangen. Net als bij Supabase komt
   // het adres in `new_email` en pas in `email` als er op de link geklikt is.
-  async updateUser({ email }, opties = {}) {
+  // `data` komt erbij in user_metadata; zonder email is het alleen dat.
+  async updateUser({ email, data } = {}, opties = {}) {
     const sessie = huidigeSessie();
     if (!sessie) return { data: null, error: { message: 'geen sessie' } };
+    if (email === undefined) {
+      const user = store.auth_users.find((u) => u.id === sessie.user.id);
+      if (!user) return { data: null, error: { message: 'geen account' } };
+      user.user_metadata = { ...(user.user_metadata ?? {}), ...(data ?? {}) };
+      bewaren();
+      zetSessie(user);
+      return { data: { user: kopie(user) }, error: null };
+    }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email ?? ''))) {
       return { data: null, error: { code: 'validation_failed', message: 'Unable to validate email address: invalid format' } };
     }
@@ -674,8 +684,12 @@ const auth = {
     if (store.alleen_team) return nietToegestaan(email);
     const user = store.auth_users.find((u) => u.id === sessie.user.id);
     user.new_email = email;
+    user.user_metadata = { ...(user.user_metadata ?? {}), ...(data ?? {}) };
+    // `taal` is wat er op dat moment in user_metadata staat: de taal van de
+    // mail, want het sjabloon kiest op {{ .Data.taal }}.
     store.otp.push({ code: nieuweSleutel(), hash: nieuweHash(), user_id: user.id, email,
-                     bevestigt: true, terug: opties.emailRedirectTo ?? '' });
+                     bevestigt: true, terug: opties.emailRedirectTo ?? '',
+                     taal: user.user_metadata.taal ?? null });
     bewaren();
     zetSessie(user);
     return { data: { user: kopie(user) }, error: null };
@@ -699,8 +713,11 @@ const auth = {
         return { data: null, error: { code: 'validation_failed', message: 'Unable to validate email address: invalid format' } };
       }
       if (store.alleen_team) return nietToegestaan(email);
+      // options.data geldt alleen hier, bij een nieuw account. Bij een
+      // bestaand account laat Supabase de metadata zoals hij is.
       user = { id: 'account-' + (store.auth_users.length + 1), is_anonymous: false,
-               email, new_email: null, identities: [{ provider: 'email', identity_data: { email } }] };
+               email, new_email: null, user_metadata: { ...(options.data ?? {}) },
+               identities: [{ provider: 'email', identity_data: { email } }] };
       store.auth_users.push(user);
     }
     if (store.alleen_team) return nietToegestaan(email);
@@ -708,7 +725,8 @@ const auth = {
     // (BEDIENING.md §5b). Zes cijfers, net als bij Supabase.
     const token = String(100000 + ((Date.now() + ++teller * 7919) % 900000));
     store.otp.push({ code: nieuweSleutel(), hash: nieuweHash(), token, user_id: user.id, email,
-                     bevestigt: false, terug: options.emailRedirectTo ?? '' });
+                     bevestigt: false, terug: options.emailRedirectTo ?? '',
+                     taal: user.user_metadata?.taal ?? null });
     bewaren();
     return { data: {}, error: null };
   },
@@ -798,6 +816,14 @@ globalThis.__mail = {
       + '&type=' + (laatste.bevestigt ? 'email_change' : 'email');
   },
   aantalVerstuurd() { return store.otp.length; },
+  // In welke taal de laatste mail ging: wat er bij het versturen in
+  // user_metadata.taal stond ({{ .Data.taal }} in de sjablonen), of null.
+  laatsteTaal() { return store.otp[store.otp.length - 1]?.taal ?? null; },
+  // De metadata van een account, of van het account van de sessie.
+  metadata(id) {
+    const uid = id ?? huidigeSessie()?.user?.id;
+    return kopie(store.auth_users.find((u) => u.id === uid)?.user_metadata ?? null);
+  },
   // De code uit de laatste inlogmail, zoals hij in de mail zou staan.
   laatsteCode() {
     return [...store.otp].reverse().find((o) => o.token)?.token ?? null;
@@ -1155,15 +1181,12 @@ const functies = {
 //  deze zijn er zodat test/beheer.test.mjs de beheerpagina kan nalopen.
 // ------------------------------------------------------------
 const dag = (d = new Date()) => d.toISOString().slice(0, 10);
-// Net als in schema.sql: wie in site_beheerders staat, of wie het beheeradres
-// heeft (en dat is bevestigd: in de nabootsing staat een adres pas in `email`
-// na de bevestiging, of komt het van Google).
-const BEHEERADRES = 'devisser.danny@gmail.com';
+// Net als in schema.sql: wie in site_beheerders staat. Er is geen adres meer
+// dat je beheerder maakt (tot 20 oktober wel, in beheer_adres()).
 const ikBenBeheerder = () => {
   const ik = wieBenIk();
   if (!ik) return false;
-  const u = store.auth_users.find((x) => gelijk(x.id, ik));
-  return store.site_beheerders.some((id) => gelijk(id, ik)) || gelijk(String(u?.email ?? '').toLowerCase(), BEHEERADRES);
+  return store.site_beheerders.some((id) => gelijk(id, ik));
 };
 const geenBeheerder = { data: null, error: { code: '42501', message: 'Alleen voor beheerders' } };
 function accountsoort(userId) {

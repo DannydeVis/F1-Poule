@@ -445,19 +445,53 @@ En het sjabloon aanpassen kan pas met een **eigen mailserver (SMTP)**: zonder
 staat er in Supabase "Set up custom SMTP to edit templates", en mailt
 Supabase bovendien alleen naar het eigen team (zie §7). Dus eerst §7, punt 2.
 Daarna **één keer in Supabase**, onder Authentication → Emails, telkens bij
-Body op **Source**. Supabase heeft één sjabloon per soort mail, voor iedereen
-dezelfde taal; de app speelt in zeven talen, dus staan de mails voorlopig in
-het Engels (Danny, 6 oktober). Drie sjablonen doen ertoe.
+Body op **Source**. Drie sjablonen doen ertoe.
+
+**De mails staan in de taal van de speler** (sinds 20 oktober). Supabase heeft
+één sjabloon per soort mail, dus staan alle zeven talen in hetzelfde sjabloon,
+en kiest het sjabloon er één op `{{ .Data.taal }}`: de taal die de app in het
+account zet (`user_metadata.taal`). Geen taal, of een taal die de app niet
+kent: Engels. Het onderwerp kan dat niet kiezen, dus dat is Engels en kort;
+de eerste regel van de mail (wat een mailprogramma als voorvertoning laat
+zien) staat wel in de taal van de speler.
 
 De opgemaakte versies (logo, rode streep, rode knop, de code in een vakje, in
-de kleuren van de app) staan in de repo; kopieer de inhoud van het bestand en
-plak hem bij Source:
+de kleuren van de app) staan in de repo. **Zo plak je ze**, per sjabloon:
 
-| Sjabloon | Onderwerp | Bestand |
+1. Open in Supabase **Authentication → Emails** en kies het sjabloon uit de
+   tabel hieronder.
+2. Zet bij **Subject** precies het onderwerp uit de tabel.
+3. Klik bij **Body** op **Source**, selecteer alles wat er staat en gooi het
+   weg.
+4. Open het bestand uit de tabel in de repo (op GitHub: het bestand openen,
+   dan de knop **Copy raw file** rechtsboven), en plak het. De eerste regel
+   moet `{{ $t := printf "%v" (or .Data.taal "en") }}` zijn; zonder die regel
+   gaat er geen mail meer uit.
+5. Klik op **Save changes**.
+
+| Sjabloon | Subject | Bestand |
 |---|---|---|
 | **Magic link or OTP** (inloggen met je mailadres) | `Sign in to Predict the Race` | `docs/mail/inloggen.html` |
 | **Change email address** (een mailadres koppelen) | `Confirm your email address for Predict the Race` | `docs/mail/mailadres-koppelen.html` |
 | **Confirm signup** (een nieuw account met je mailadres) | `Welcome to Predict the Race` | `docs/mail/account-maken.html` |
+
+De voorvertoning in Supabase toont de Engelse versie (daar is geen account met
+een taal). Wil je een andere taal zien: zet onder **Profiel** in de app een
+andere taal en vraag een inlogmail aan.
+
+**Wanneer welke taal.** De app zet de taal in het account bij het aanmaken
+(anoniem, of een nieuw account via de inlogmail), bij elke taalwissel onder
+Profiel, en bij elke keer dat de app opent met een account waarin een andere
+taal staat. Eén uitzondering: vraag je op een leeg toestel een inlogmail aan
+voor een account dat al bestaat, dan kan de app de taal nog niet zetten (je
+bent dat account op dat moment nog niet; Supabase negeert dan wat de app
+meestuurt). Die mail gaat in de taal waarin het account de laatste keer
+speelde, en na het inloggen zet de app de taal van dat toestel.
+
+**Een tekst aanpassen** doe je in `scripts/mailsjablonen.mjs`, niet in de
+bestanden zelf: `node scripts/mailsjablonen.mjs` schrijft ze opnieuw, en
+`test/mailsjablonen.test.mjs` zakt als de bestanden er niet precies uit komen,
+of als een sjabloon in een van de talen niet rendert.
 
 **De knop gaat naar de app, niet naar Supabase** (sinds 7 oktober). In alle
 drie staat `https://predicttherace.com/app/?token_hash={{ .TokenHash }}&type=…`
@@ -481,10 +515,7 @@ cijfers. `docs/` staat niet op de site (`_config.yml`).
 
 Confirm signup is wat Supabase stuurt als iemand met een nieuw adres inlogt;
 daar staat dus ook de code in. De andere sjablonen (Invite user, Reset
-password, Reauthentication) gebruikt de app niet. Wil je later elke speler een mail in
-zijn eigen taal, dan moet de app de taal bij het account bewaren
-(`user_metadata`) en kiest het sjabloon daarop met `{{ if }}`; dat is een
-kleine aanpassing in de app.
+password, Reauthentication) gebruikt de app niet.
 
 Tot dat gebeurd is werkt alles verder gewoon (de link doet het), alleen
 blijft het codeveld leeg voor wie in een iPhone-beginschermapp inlogt. Een
@@ -2248,17 +2279,19 @@ database" met deze drie stappen erbij (en links):
 3. Ga terug naar het beheer en tik op **Opnieuw proberen**.
 
 Daarna hoeft dat niet meer, ook niet als je later pas voor het eerst inlogt:
-het beheer kijkt bij elke keer inloggen of het account het beheeradres heeft.
+het beheer kijkt bij elke keer inloggen of het account in `site_beheerders`
+staat.
 
 ### Binnenkomen, op elk toestel
 
-Het beheeradres is `devisser.danny@gmail.com` (je eigen Google-account, in
-`schema.sql` in `beheer_adres()`; niet hetzelfde als het publieke
-contactadres `contact@predicttherace.com`). Daarmee inloggen is op
-elk toestel hetzelfde:
+Beheerder ben je als je account in de tabel `site_beheerders` staat. Dat is
+de enige bron: er staat geen mailadres in `schema.sql` of in de repo. Jouw
+eigen Google-account staat er al in (niet hetzelfde als het publieke
+contactadres `contact@predicttherace.com`). Inloggen is op elk toestel
+hetzelfde:
 
 1. Ga naar **predicttherace.com/beheer/**.
-2. Tik op **Inloggen met Google** en kies het Google-account met dat adres.
+2. Tik op **Inloggen met Google** en kies je beheerdersaccount.
    (Google vraagt altijd welk account, ook als je op dat toestel met een ander
    account bent ingelogd.)
 3. Je bent binnen.
@@ -2272,8 +2305,8 @@ Wat er op de achtergrond gebeurt, en waarom je daar niets voor hoeft te doen:
   telefoon, en nu log je in op je pc), dan zegt het beheer dat en log je
   opnieuw met Google in. Dit toestel gebruikt daarna ook in de app dat account,
   met dezelfde poules als op je andere toestel.
-- **Log je in met een ander Google-account**, dan zegt het beheer "dat is geen
-  beheeradres" met een knop om een ander account te kiezen.
+- **Log je in met een ander Google-account**, dan zegt het beheer "dat account
+  is geen beheerder" met een knop om een ander account te kiezen.
 - Onder **Liever met een inloglink per mail** kan het ook met een link naar je
   mail, maar alleen voor een adres dat al een account heeft (het beheer maakt
   zelf geen accounts aan). Op een iPhone of iPad werkt dat niet in het
@@ -2293,14 +2326,23 @@ beginscherm en log daar in met Google. Log je eerst in Safari in en installeer
 je daarna, dan vraagt het geïnstalleerde beheer nog één keer om in te loggen:
 iOS geeft een app op het beginscherm een eigen opslag.
 
-De controletabel onderaan `schema.sql` zegt bij **beheerders** of het
-beheeradres al een keer is ingelogd, en hoeveel beheerders er verder zijn.
-Iemand anders beheerder maken (die moet wel eerst een keer ingelogd zijn):
+De controletabel onderaan `schema.sql` zegt bij **beheerders** hoeveel
+accounts beheerder zijn (alleen het aantal, geen adressen). Staat er "GEEN",
+dan kan niemand het beheer in: voeg jezelf dan toe met de regel hieronder.
+
+**Een extra beheerder toevoegen.** Die persoon moet eerst een keer ingelogd
+zijn (in de app of het beheer, met Google of een mailadres), zodat er een
+account is. Daarna één regel in de SQL Editor van Supabase, met het adres van
+dat account:
 
 ```sql
 insert into public.site_beheerders (user_id)
-select id from auth.users where email = 'iemand@voorbeeld.nl';
+select id from auth.users where lower(email) = lower('iemand@voorbeeld.nl');
 ```
+
+Weghalen gaat met dezelfde `select` achter
+`delete from public.site_beheerders where user_id in (...)`. Het adres staat
+zo alleen in de SQL Editor, niet in de repo.
 
 ### Wat erop staat
 

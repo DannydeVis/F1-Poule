@@ -1834,8 +1834,29 @@ async function bestaandeSessie() {
   if (DEMO || !db) return null;
   try {
     const { data } = await db.auth.getSession();
-    return zetAccount(data?.session?.user);
+    const uid = zetAccount(data?.session?.user);
+    taalNaarAccount();
+    return uid;
   } catch { return zetAccount(null); }
+}
+
+// De taal van de speler in user_metadata, zodat de mails van Supabase
+// (docs/mail/) in die taal gaan: de sjablonen kiezen op {{ .Data.taal }}.
+//
+// signInAnonymously en signInWithOtp zetten hem alleen bij een nieuw account
+// (options.data). Een inloglink naar een bestaand account laat de metadata
+// zoals hij is, en dat kan ook niet anders: op een leeg toestel ben je dat
+// account nog niet. Daarom zet de app hem bij elke sessie en bij elke
+// taalwissel met updateUser, en gaat een inlogmail in de taal waarin dat
+// account de laatste keer speelde. Zonder await en zonder foutmelding, net als
+// pushTaalBijwerken(): het ergste is één mail in de vorige taal.
+const taalData = () => ({ taal: TAAL });
+async function taalNaarAccount() {
+  try {
+    if (DEMO || !db || !mijnAccount || mijnAccount.user_metadata?.taal === TAAL) return;
+    const { data, error } = await db.auth.updateUser({ data: taalData() });
+    if (!error && data?.user) zetAccount(data.user);
+  } catch { /* een mail in de vorige taal is geen reden om iets te melden */ }
 }
 
 // Een vers Turnstile-token voor één aanroep naar Supabase Auth (turnstile.js).
@@ -1857,7 +1878,7 @@ async function zorgVoorAccount() {
   if (DEMO || !db || mijnUid) return mijnUid;
   try {
     const { data, error } = await db.auth.signInAnonymously({
-      options: { captchaToken: await captcha() } });
+      options: { captchaToken: await captcha(), data: taalData() } });
     if (error) return null;
     return zetAccount(data?.user);
   } catch { return null; }
@@ -1931,7 +1952,7 @@ async function koppelMail(mail) {
   if (!uid) return { fout: T('Er is nog geen account om een mailadres aan te hangen.') };
   try {
     const { data, error } = await db.auth.updateUser(
-      { email: mail }, { emailRedirectTo: inlogTerugLink() });
+      { email: mail, data: taalData() }, { emailRedirectTo: inlogTerugLink() });
     if (error) return { fout: uitlegAuth(error) };
     if (data?.user) zetAccount(data.user);
     return { fout: '' };
@@ -1963,7 +1984,7 @@ async function stuurInlogLink(mail) {
     const { error } = await db.auth.signInWithOtp({
       email: mail,
       options: { shouldCreateUser: false, emailRedirectTo: inlogTerugLink(),
-                 captchaToken: await captcha() },
+                 captchaToken: await captcha(), data: taalData() },
     });
     if (!error) return { fout: '', soort: 'inloggen' };
     const onbekend = error.code === 'otp_disabled' || /signups not allowed/i.test(String(error.message ?? ''));
@@ -1978,7 +1999,7 @@ async function stuurInlogLink(mail) {
     const { error } = await db.auth.signInWithOtp({
       email: mail,
       options: { shouldCreateUser: true, emailRedirectTo: inlogTerugLink(),
-                 captchaToken: await captcha() },
+                 captchaToken: await captcha(), data: taalData() },
     });
     return error ? { fout: uitlegAuth(error) } : { fout: '', soort: 'nieuw' };
   } catch (e) { return { fout: uitlegAuth(e) }; }
@@ -4292,6 +4313,8 @@ async function zetTaal(taal) {
   // de taal wisselen mag nooit blijven hangen op een netwerkverzoek, en het
   // ergste wat er misgaat is één herinnering in de vorige taal.
   pushTaalBijwerken();
+  // En voor de mails van Supabase: de taal in het account (taalNaarAccount).
+  taalNaarAccount();
   // Het hele scherm opnieuw, want er is geen stukje dat geen tekst bevat.
   if (S.poule && S.ik) render(); else toonStart();
 }

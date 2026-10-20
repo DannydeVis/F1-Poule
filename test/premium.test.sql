@@ -25,14 +25,15 @@
 \set ON_ERROR_STOP on
 
 insert into auth.users (id, email, email_confirmed_at, is_anonymous) values
-  -- de beheerder (het beheeradres, bevestigd)
-  ('dddddddd-0000-0000-0000-0000000000a1', 'devisser.danny@gmail.com', now(), false),
+  -- de beheerder (in site_beheerders, hieronder)
+  ('dddddddd-0000-0000-0000-0000000000a1', 'beheerder@voorbeeld.nl', now(), false),
   -- Anna: poulebaas van poule A
   ('aaaaaaaa-0000-0000-0000-0000000000a2', null, null, true),
   -- Bram: speelt mee in poule A, maar is geen poulebaas
   ('bbbbbbbb-0000-0000-0000-0000000000a3', null, null, true),
   -- Chris: poulebaas van poule B, zonder premium
   ('cccccccc-0000-0000-0000-0000000000a4', null, null, true);
+insert into public.site_beheerders (user_id) values ('dddddddd-0000-0000-0000-0000000000a1');
 
 insert into pools (id, name, join_code) values
   ('11111111-0000-0000-0000-0000000000a1', 'Bedrijfspoule', 'PREM01'),

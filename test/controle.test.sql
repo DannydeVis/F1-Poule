@@ -583,3 +583,36 @@ begin
   end if;
   raise notice 'ok: elke eigen functie heeft een vaste search_path';
 end $$;
+
+-- "functies en tabellen: alleen die uit schema.sql" (20 oktober): een functie
+-- of tabel in public die schema.sql niet maakt, valt op. Zo stonden er
+-- functies en tabellen van een andere app in productie.
+do $$
+declare uit text;
+begin
+  select uitkomst into uit from public.poule_controle where controle = 'functies en tabellen: alleen die uit schema.sql';
+  if uit is distinct from 'ok' then raise exception 'gezakt: na schema.sql zegt de regel "%"', uit; end if;
+  raise notice 'ok: na schema.sql zegt de regel functies en tabellen ok';
+
+  create function public.vreemde_functie(x int) returns int language sql set search_path = public as 'select x';
+  create table public.vreemde_tabel (id int);
+  select uitkomst into uit from public.poule_controle where controle = 'functies en tabellen: alleen die uit schema.sql';
+  if uit not like '%ONBEKENDE FUNCTIE: vreemde_functie%' or uit not like '%ONBEKENDE TABEL: vreemde_tabel%' then
+    raise exception 'gezakt: met een vreemde functie en tabel zegt de regel "%"', uit;
+  end if;
+  raise notice 'ok: een vreemde functie en tabel vallen op';
+
+  drop function public.vreemde_functie(int);
+  drop table public.vreemde_tabel;
+  alter function public.ik_ben_beheerder() rename to ik_ben_beheerder_weg;
+  select uitkomst into uit from public.poule_controle where controle = 'functies en tabellen: alleen die uit schema.sql';
+  if uit not like '%ONTBREEKT: ik_ben_beheerder%' then
+    raise exception 'gezakt: zonder ik_ben_beheerder zegt de regel "%"', uit;
+  end if;
+  raise notice 'ok: een ontbrekende functie valt ook op';
+  alter function public.ik_ben_beheerder_weg() rename to ik_ben_beheerder;
+
+  select uitkomst into uit from public.poule_controle where controle = 'functies en tabellen: alleen die uit schema.sql';
+  if uit is distinct from 'ok' then raise exception 'gezakt: na opruimen zegt de regel "%"', uit; end if;
+  raise notice 'ok: na opruimen weer ok';
+end $$;

@@ -7320,7 +7320,7 @@ overleefden eerst (hoofdletters, en `prompt=select_account`), daarom de
 hoofdletters in de SQL-test en `naar_google` in de nabootsing.
 
 **De controletabel telde Danny dubbel.** Na het draaien stond er
-"devisser.danny@gmail.com (ingelogd) + 1 extra": de versie van `schema.sql`
+"<het beheeradres> (ingelogd) + 1 extra": de versie van `schema.sql`
 uit de eerste beheer-PR zette het account van het beheeradres zelf in
 `site_beheerders`, en de regel telde elke rij in die tabel. Nu telt "extra"
 alleen accounts met een ander adres. De rij zelf blijft staan (hij doet geen
@@ -9729,8 +9729,10 @@ Danny: "overal staat denk ik nog mijn persoonlijke email adres. maar laten we
 dat veranderen in de ...@predicttherace.com". Het publieke contactadres
 (`PRIVACY_CONTACT` in de app, `CONTACT` in `site/privacy.mjs`, en daarmee de
 privacypagina's NL en EN) is nu `contact@predicttherace.com`. Het
-beheeradres in `beheer_adres()` blijft Danny's Gmail: dat is het
+beheeradres in `beheer_adres()` bleef Danny's Gmail: dat is het
 Google-account waarmee hij het beheer opent, en dat staat nergens op de site.
+(Sinds 20 oktober staat dat adres nergens meer: `site_beheerders` is de enige
+bron, zie verderop.)
 
 `test/domein.test.mjs` verbood elke vermelding van het domein in de app
 (buiten de deeltags), zodat links uitgerekend worden. Een mailadres is geen
@@ -11047,3 +11049,87 @@ aangevinkt. En wellicht in het overzicht wat het meest gebruikt wordt?"
 
 Tests: `beheer.test.mjs` (sectie 9) en een check in `beheer.test.sql`.
 
+
+## Opruimen, en de mails per taal (20 oktober)
+
+Danny: "Opruimen en mails per taal, in één PR met tests."
+
+**1. De restanten van PadelBracket.** In de database van Supabase stonden
+negen functies en twee tabellen van een andere app (`admin_accounts`,
+`admin_dashboard`, `admin_gate`, `admin_day`, `admin_address`, `is_admin`,
+`delete_my_account`, `account_items_cap`, `account_sync`; tabellen
+`account_items` en `site_admins`). `delete_my_account()` was aan te roepen
+door elk ingelogd account. `schema.sql` gooit ze nu weg: de tabellen met
+`drop table if exists`, de functies op naam in een lus over `pg_proc`, zodat
+de signatuur niet uitmaakt. Zonder `cascade`: hangt er onverwacht iets aan,
+dan zakt het hardop. In Supabase hing er alleen de trigger
+`account_items_cap` aan `account_items`, en die gaat met de tabel mee.
+
+De controletabel heeft een nieuwe regel **functies en tabellen: alleen die
+uit schema.sql**: elke functie of tabel in `public` die `schema.sql` niet
+maakt heet ONBEKENDE FUNCTIE of ONBEKENDE TABEL, en wat ontbreekt heet
+ONTBREEKT. Functies van een extensie tellen niet mee. De regel heeft een
+lijst namen; `test/schema-objecten.test.mjs` zakt als die lijst niet precies
+is wat `schema.sql` maakt. **Voeg je een functie of tabel toe, zet hem dan
+ook in die lijst.** `test/oude-structuur.sql` zet de restanten neer (ook een
+functie met twee signaturen), en de controle erna kijkt of ze weg zijn.
+
+**2. Geen privé-mailadres meer.** `site_beheerders` (op `user_id`) is de
+enige bron voor wie beheerder is. `beheer_adres()` is weg, en daarmee het
+Gmail-adres uit `schema.sql`, de tests, de nabootsing, BEDIENING en deze
+overdracht. Voordat het adres wegging stond Danny's account al in
+`site_beheerders` (gecontroleerd in Supabase: één rij, van hem), dus hij
+houdt toegang. De tests gebruiken `beheerder@voorbeeld.nl`, en
+`test/schema-objecten.test.mjs` zakt als het oude adres ergens in git staat
+(het adres staat in die test in twee delen, zodat de test zichzelf niet
+vindt). De controleregel **beheerders** noemt alleen het aantal; bij nul
+staat er GEEN met een verwijzing naar BEDIENING §16, waar staat hoe je een
+beheerder toevoegt (één regel SQL).
+
+**3. De mails van Supabase in de taal van de speler.**
+
+- De app zet de taal in `user_metadata.taal`: als `options.data` bij
+  `signInAnonymously` en `signInWithOtp`, als `data` naast het adres bij het
+  koppelen (`updateUser`), en met `taalNaarAccount()` bij elke sessie en elke
+  taalwissel onder Profiel (alleen als hij afwijkt, zonder await).
+- Eerst uitgezocht: zet `options.data` bij `signInWithOtp` de metadata van een
+  bestaand account bij? Nee. Supabase gebruikt het alleen bij een nieuw
+  account. En "dan eerst `updateUser`" kan op een leeg toestel niet: je bent
+  dat account dan nog niet. Daarom gaat die ene mail (een inloglink naar een
+  bestaand account, vanaf een nieuw toestel) in de taal waarin het account de
+  laatste keer speelde; na het inloggen zet de app de taal van het nieuwe
+  toestel. De nabootsing doet hetzelfde, en `test/mailtaal.test.mjs` legt
+  het vast.
+- De drie sjablonen in `docs/mail/` komen nu uit `scripts/mailsjablonen.mjs`
+  en staan in zeven talen. Bovenaan staat
+  `{{ $t := printf "%v" (or .Data.taal "en") }}`: Engels zonder taal, en
+  altijd een tekst, ook als iemand een getal in zijn metadata zet (anders
+  struikelt `eq` en gaat er geen mail uit). Elke tekst is een keten
+  `{{ if eq $t "nl" }}…{{ else }}Engels{{ end }}`. Het onderwerp kent geen
+  `{{ if }}`, dus dat blijft Engels en kort; de voorvertoning (de eerste regel)
+  staat in de taal van de speler.
+- `test/mailsjablonen.test.mjs` rendert ze met een eigen mini-renderer (die
+  alles buiten het gebruikte stukje Go-template weigert) en, als Go op de
+  machine staat, ook met het echte `html/template`. Lokaal gecontroleerd met
+  Go: ook een account zonder metadata (`nil`) rendert.
+- Terminologie per taal zoals in de app: Tipprunde, ligue, liga, lega, bolão.
+  Aanspreekvorm ook: du, vous, tú, tu, você.
+
+Bewuste keuzes:
+
+- De `data` bij het koppelen is dubbel (de taal staat er meestal al via
+  `taalNaarAccount()`), maar kost niets en dekt het geval dat die eerdere
+  aanroep mislukte.
+- Het beheer zet geen taal. Danny's account krijgt zijn taal uit de app; wie
+  alleen het beheer gebruikt krijgt Engelse mails.
+
+**Danny moet:**
+
+1. `schema.sql` draaien in de SQL Editor van Supabase. De nieuwe
+   `ik_ben_beheerder()` (alleen `site_beheerders`) is al via de koppeling
+   geladen; het beheer werkt dus al zonder het adres. Het weggooien van de
+   PadelBracket-restanten en `beheer_adres()`, en de nieuwe controletabel,
+   niet: de koppeling blijft hangen op SQL met "drop" of "delete". Daarna zegt
+   de regel functies en tabellen "ok", en beheerders "1".
+2. De drie sjablonen opnieuw in Supabase plakken, met het onderwerp erbij:
+   BEDIENING §5b, de stappen onder "Zo plak je ze".

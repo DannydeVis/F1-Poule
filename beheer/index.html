@@ -233,7 +233,7 @@
 //
 //  Inloggen gaat met hetzelfde account als in de app. Op hetzelfde toestel
 //  deelt het beheer de sessie met de app (dezelfde site), dus wie daar al met
-//  zijn beheeradres is ingelogd, is hier meteen binnen.
+//  met een beheerdersaccount is ingelogd, is hier meteen binnen.
 // ============================================================
 
 const SUPABASE_URL = 'https://etifamdwqxjfaeaordlr.supabase.co';
@@ -291,8 +291,8 @@ async function rpc(naam, args) {
 // ---- binnenkomen ------------------------------------------------------------
 //
 // Op elk toestel hetzelfde: "Inloggen met Google" en je Google-account kiezen.
-// Beheerder ben je met het beheeradres (schema.sql, beheer_adres()); dat hangt
-// niet af van wanneer schema.sql gedraaid is.
+// Beheerder ben je als je account in site_beheerders staat (schema.sql; een
+// extra beheerder toevoegen staat in BEDIENING.md §16).
 //
 // Eén geval vraagt iets anders: speel je op dit toestel anoniem in de app, dan
 // deelt het beheer die sessie (dezelfde site). Inloggen zou dat account
@@ -365,7 +365,7 @@ function knoopGoogle({ koppelen = false } = {}) {
 
 function toonInloggen() {
   toegang(`
-    <p style="margin:0">Log in met Google en kies het account met je beheeradres.</p>
+    <p style="margin:0">Log in met Google en kies je beheerdersaccount.</p>
     ${googleKnop()}
     <details><summary class="zacht klein">Liever met een inloglink per mail</summary>
       <form id="mailform" class="formulier" style="margin-top:10px">
@@ -401,7 +401,7 @@ function toonGeenToegang() {
   if (u?.is_anonymous) {
     toegang(`
       <p style="margin:0">Op dit toestel gebruik je de app zonder gekoppeld account.</p>
-      <p class="zacht" style="margin:0">Log in met Google en kies het account met je beheeradres. Je
+      <p class="zacht" style="margin:0">Log in met Google en kies je beheerdersaccount. Je
         Google-account hangt daarna aan dit toestel: je speler in de app blijft van jou, en je bent hier
         binnen.</p>
       ${googleKnop()}
@@ -410,7 +410,7 @@ function toonGeenToegang() {
   }
   toegang(`
     <p style="margin:0">Je bent ingelogd als ${esc(u?.email ?? 'een account zonder mailadres')}, en dat
-      is geen beheeradres.</p>
+      account is geen beheerder.</p>
     ${googleKnop('Inloggen met een ander Google-account')}
     <p class="zacht klein" style="margin:0">Dit toestel gebruikt daarna ook in de app dat account.</p>
     <p class="zacht klein" id="inlogbericht" style="margin:0"></p>
