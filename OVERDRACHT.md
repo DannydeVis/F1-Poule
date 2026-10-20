@@ -11145,7 +11145,7 @@ database had met de oude view; `test/oude-structuur.sql` zet die nu neer
 kijkt of de functie weg is. Met de oude volgorde zakt die test met precies
 de fout van Danny. In Supabase gecontroleerd: verder hangt er niets aan wat
 `schema.sql` weggooit (de drie checks op `account_items` en de ene op
-`site_admins` horen bij die tabellen zelf). De SQL Editor draait alles in één
-transactie, dus de mislukte run heeft niets half achtergelaten.
+`site_admins` horen bij die tabellen zelf). Wat de mislukte run al gedaan
+had, maakt niet uit: `schema.sql` kan altijd opnieuw.
 
 **Danny moet:** `schema.sql` opnieuw draaien.
