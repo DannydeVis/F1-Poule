@@ -195,6 +195,23 @@ begin
   if n <> 1 then raise exception 'gezakt: Poule A staat er niet goed in: %', uit; end if;
   raise notice 'ok: de poules met code, aantal spelers, poulebaas en inzendingen';
 
+  -- Welke vragen: op de volgorde van de app, en leeg (null) zonder eigen keuze.
+  insert into public.pool_questions (pool_id, question_id) values
+    ('11111111-0000-0000-0000-000000000051', 'winnaar'),
+    ('11111111-0000-0000-0000-000000000051', 'quali_top10');
+  uit := public.beheer_poules();
+  if (select p -> 'vraaglijst' from jsonb_array_elements(uit) p where p ->> 'name' = 'Poule A')
+     <> '["quali_top10", "winnaar"]'::jsonb then
+    raise exception 'gezakt: de vraaglijst van Poule A is %',
+      (select p -> 'vraaglijst' from jsonb_array_elements(uit) p where p ->> 'name' = 'Poule A');
+  end if;
+  if (select jsonb_typeof(p -> 'vraaglijst') from jsonb_array_elements(uit) p where p ->> 'name' <> 'Poule A' limit 1)
+     <> 'null' then
+    raise exception 'gezakt: een poule zonder eigen keuze heeft toch een vraaglijst: %', uit;
+  end if;
+  delete from public.pool_questions where pool_id = '11111111-0000-0000-0000-000000000051';
+  raise notice 'ok: per poule de aangevinkte vragen, op de volgorde van de app, en leeg zonder eigen keuze';
+
   uit := public.beheer_spelers('11111111-0000-0000-0000-000000000051');
   if jsonb_array_length(uit) <> 3 then raise exception 'gezakt: niet alleen de spelers van Poule A: %', uit; end if;
   if (select x ->> 'account' from jsonb_array_elements(uit) x where x ->> 'naam' = 'Anna') <> 'mail'

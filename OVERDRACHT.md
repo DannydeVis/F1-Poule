@@ -11028,3 +11028,22 @@ Bewuste keuzes:
 - Eigen vragen (premium) hebben vrije tekst als opties en worden niet omgezet.
 
 **Danny moet:** de grid van 2027 in het beheer zetten zodra hij officieel is.
+
+## Vragen per poule in het beheer (20 oktober)
+
+Danny: "Het lijkt me leuk dat ik kan zien welke vragen de poule heeft
+aangevinkt. En wellicht in het overzicht wat het meest gebruikt wordt?"
+
+- `beheer_poules()` geeft per poule `vraaglijst` mee (de question_id's op de
+  volgorde van `questions.volgorde`, of null zonder eigen keuze). In Supabase
+  geladen.
+- Het beheer leest `questions` voor de namen, herkent de sets Simpel,
+  Klassiek en Gevorderd (`VRAAGSETS`, gelijk aan `PRESETS` in de app; de test
+  vergelijkt de twee) en toont: bij elke poule de set en de vragen, in het
+  overzicht een tegel "Meest gekozen vragenset", en in de statistieken een
+  kaart "Vragen in de poules" met de telling per set en per vraag.
+- Een poule zonder rijen in `pool_questions` doet aan alles mee, zoals in de
+  app, en telt bij elke vraag mee.
+
+Tests: `beheer.test.mjs` (sectie 9) en een check in `beheer.test.sql`.
+

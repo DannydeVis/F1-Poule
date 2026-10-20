@@ -2694,7 +2694,13 @@ begin
                               where m.member_id = p.owner_member_id),
              'inzendingen', (select count(*) from public.answers a where a.pool_id = p.id),
              'laatste_inzending', (select max(updated_at) from public.answers a where a.pool_id = p.id),
-             'vragen',      (select count(*) from public.pool_questions q where q.pool_id = p.id))
+             'vragen',      (select count(*) from public.pool_questions q where q.pool_id = p.id),
+             -- Welke vragen, op de volgorde van de app. Leeg (null) is een
+             -- poule zonder eigen keuze: die doet aan alles mee.
+             'vraaglijst',  (select jsonb_agg(q.question_id order by v.volgorde)
+                               from public.pool_questions q
+                               join public.questions v on v.id = q.question_id
+                              where q.pool_id = p.id))
            order by p.created_at desc)
     from public.pools p), '[]'::jsonb);
 end $$;

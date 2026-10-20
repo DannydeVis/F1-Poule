@@ -506,6 +506,58 @@ await page.waitForSelector('.melding');
     && !d.pool_members.some((m) => m.pool_id === 'pool-2'));
 }
 
+// ---- 9. welke vragen de poules hebben -------------------------------------------------
+// Drie poules: twee met Klassiek, één zonder eigen keuze (doet aan alles mee).
+await page.evaluate(() => {
+  const d = globalThis.__db;
+  const klassiek = ['quali_top10', 'race_top10', 'sprint_top10', 'winnaar', 'pole', 'snelste_ronde'];
+  d.pools = d.pools.filter((p) => p.id === 'pool-1');
+  d.pools.push({ id: 'pool-k2', name: 'Kantoor', join_code: 'KTR002', season: 2026 },
+               { id: 'pool-alles', name: 'Oud', join_code: 'OUD003', season: 2026 });
+  d.pool_questions = [...klassiek.map((q) => ({ pool_id: 'pool-1', question_id: q })),
+                      ...[...klassiek].reverse().map((q) => ({ pool_id: 'pool-k2', question_id: q }))];
+  sessionStorage.setItem('nabootsing:db', JSON.stringify(d));
+});
+await page.click('#vernieuw');
+await page.click('[data-tab="overzicht"]');
+{
+  const t = await tekst('main');
+  check('het overzicht noemt de meest gekozen vragenset', t.includes('Meest gekozen vragenset') && t.includes('Klassiek')
+    && t.includes('2 van 3 poules'), t.slice(0, 400));
+}
+await page.click('[data-tab="statistieken"]');
+await page.waitForSelector('#vragenkaart');
+{
+  const sets = await tekst('#vragenkaart [data-sets]');
+  check('de statistieken tellen de vragensets', sets === 'Klassiek: 2 · alle vragen (geen eigen keuze): 1', sets);
+  const balk = async (id) => tekst(`#vragenkaart [data-vraag="${id}"]`);
+  check('en per vraag in hoeveel poules hij meedoet: de top 10 in alle drie, de rode vlag alleen in de oude',
+    (await balk('race_top10')).endsWith('3') && (await balk('rode_vlag')).endsWith('1')
+      && (await balk('winnaar')).endsWith('3'), `${await balk('race_top10')} | ${await balk('rode_vlag')}`);
+  check('met de naam van de vraag uit de database', (await balk('rode_vlag')).startsWith('Rode vlag'));
+}
+await page.click('[data-tab="poules"]');
+await open('[data-poule="pool-k2"]', '#pouledetail');
+{
+  const v = await tekst('#pouledetail [data-vragenset]');
+  check('een poule laat zijn vragenset zien, op de volgorde van de app',
+    v.startsWith('Vragen · Klassiek') && v.indexOf('Top 10 kwalificatie') < v.indexOf('Snelste ronde'), v);
+}
+await page.click('[data-poule="pool-alles"]');
+await page.waitForFunction(() => document.querySelector('#pouledetail h2')?.textContent === 'Oud');
+check('een poule zonder eigen keuze heet zo, met alle vragen erbij',
+  (await tekst('#pouledetail [data-vragenset]')).startsWith('Vragen · alle vragen (geen eigen keuze)')
+    && (await tekst('#pouledetail [data-vragenset]')).includes('Rode vlag'));
+{
+  // De sets in het beheer zijn die van het aanmaakscherm in de app.
+  const sets = (bron, naam) => [...bron.matchAll(/(simpel|klassiek|gevorderd):\s*\{[^}]*?vragen:\s*\[([^\]]*)\]/g)]
+    .map((m) => `${m[1]}=${m[2].replace(/\s+/g, '')}`).join(';');
+  const app = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
+  const beheer = readFileSync(join(wortel, 'beheer', 'index.html'), 'utf8');
+  check('de vragensets in het beheer zijn dezelfde als in de app (PRESETS)',
+    sets(app) !== '' && sets(app) === sets(beheer), `${sets(app)}\n${sets(beheer)}`);
+}
+
 // ---- 8. installeerbaar -------------------------------------------------------------
 {
   const html = readFileSync(join(wortel, 'beheer', 'index.html'), 'utf8');
