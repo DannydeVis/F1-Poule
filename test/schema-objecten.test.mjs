@@ -44,7 +44,7 @@ check(`de lijst tabellen is precies wat schema.sql maakt (${tabellen.length}, me
 const weg = ['admin_accounts', 'admin_dashboard', 'admin_gate', 'admin_day', 'admin_address',
              'is_admin', 'delete_my_account', 'account_items_cap', 'account_sync'];
 check('de functies van de andere app staan in de lijst om weg te gooien',
-  weg.every((f) => new RegExp(`'${f}'`).test(schema.slice(schema.indexOf('drop table if exists public.account_items')))));
+  weg.every((f) => new RegExp(`'${f}'`).test(schema.slice(schema.indexOf('-- Restanten van een andere app (PadelBracket)')))));
 check('en schema.sql maakt ze zelf nergens', weg.every((f) => !functies.includes(f)));
 check('de tabellen account_items en site_admins gaan weg, en staan niet in de lijst',
   /drop table if exists public\.account_items;/.test(schema) && /drop table if exists public\.site_admins;/.test(schema)
