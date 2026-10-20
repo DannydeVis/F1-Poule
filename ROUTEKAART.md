@@ -1015,7 +1015,7 @@ hieronder en voor wat er verder bijkomt.
 | nieuwe content eerst in het Engels, Nederlands ernaast | afspraak |
 | de app zelf in meer talen dan NL en EN (de vertaaltabel `T()` is er al op ingericht; de voorpagina heeft er al zeven) | **gebouwd** (12 oktober): Duits, Frans, Spaans, Italiaans en Portugees, elk in `app/talen/`; ook de herinneringen |
 | de plaatjes van de app op de voorpagina in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #213): elke voorpagina toont de app in zijn eigen taal |
-| de mails van Supabase per taal (nu één Engels sjabloon voor iedereen) | open |
+| de mails van Supabase per taal (nu één Engels sjabloon voor iedereen) | **klaar** (20 oktober): de app zet de taal in het account (`user_metadata.taal`), de drie sjablonen in `docs/mail/` staan in zeven talen en kiezen op `{{ .Data.taal }}`, Engels als er geen taal is. Danny plakt ze opnieuw in Supabase (BEDIENING §5b) |
 | de racepagina's ook in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #214): alle zeven racepagina's en het overzicht in alle zeven talen, met de tijden ook in de tijd van dat land (Duitsland, Frankrijk, Spanje, Italië, Brazilië) |
 | de gidsen organiseren en puntentelling ook in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #215): elke voorpagina heeft nu het menu met de gidsen en de races |
 | de gids excel ook in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #218): de formule per taal met de functienamen van Excel in die taal (WENN, SI, SE; in het Italiaans ASS voor ABS, in het Portugees MÁXIMO voor MAX) en puntkomma's |

@@ -146,3 +146,24 @@ begin
   raise notice 'ok: een tweede run laat het maximum dat het beheer koos staan';
 end $$;
 
+
+-- De restanten van PadelBracket (20 oktober): weg, en de controletabel kent
+-- daarna alleen nog wat schema.sql maakt.
+do $$
+declare over text;
+begin
+  if to_regclass('public.account_items') is not null or to_regclass('public.site_admins') is not null then
+    raise exception 'gezakt: account_items of site_admins staat er nog';
+  end if;
+  if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace
+             and proname in ('admin_accounts','admin_dashboard','admin_gate','admin_day','admin_address',
+                             'is_admin','delete_my_account','account_items_cap','account_sync')) then
+    raise exception 'gezakt: er staat nog een functie van PadelBracket';
+  end if;
+  select uitkomst into over from public.poule_controle
+   where controle = 'functies en tabellen: alleen die uit schema.sql';
+  if over is distinct from 'ok' then
+    raise exception 'gezakt: de controletabel zegt over functies en tabellen "%"', over;
+  end if;
+  raise notice 'ok: de tabellen en functies van PadelBracket zijn weg, en de controletabel zegt ok';
+end $$;

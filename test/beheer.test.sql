@@ -29,12 +29,12 @@
 \set ON_ERROR_STOP on
 
 insert into auth.users (id, email, email_confirmed_at, is_anonymous, raw_app_meta_data) values
-  -- de beheerder, bevestigd via Google
-  ('dddddddd-0000-0000-0000-000000000001', 'devisser.danny@gmail.com', now(), false,
+  -- de beheerder, bevestigd via Google (een verzonnen adres)
+  ('dddddddd-0000-0000-0000-000000000001', 'beheerder@voorbeeld.nl', now(), false,
    '{"provider":"google","providers":["google"]}'),
-  -- iemand die een inloglink aanvroeg voor een adres dat niet van hem is: het
-  -- adres staat erbij (in andere hoofdletters), maar is nooit bevestigd
-  ('eeeeeeee-0000-0000-0000-000000000002', 'DeVisser.Danny@gmail.com', null, false,
+  -- iemand die een inloglink aanvroeg voor het adres van de beheerder, in
+  -- andere hoofdletters, en hem nooit bevestigde
+  ('eeeeeeee-0000-0000-0000-000000000002', 'Beheerder@Voorbeeld.nl', null, false,
    '{"provider":"email","providers":["email"]}'),
   -- een speler met een mailadres, een anonieme speler
   ('aaaaaaaa-0000-0000-0000-000000000003', 'anna@voorbeeld.nl', now(), false,
@@ -90,50 +90,54 @@ declare
   gelukt boolean;
 begin
   -- ---- 1. wie is beheerder -------------------------------------------------
+  -- site_beheerders is de enige bron (sinds 20 oktober). Zonder rij daar is
+  -- niemand beheerder, en zegt de controletabel dat.
   perform set_config('request.jwt.claims', '{"sub":"dddddddd-0000-0000-0000-000000000001"}', true);
-  if not public.ik_ben_beheerder() then
-    raise exception 'gezakt: het bevestigde beheeradres is geen beheerder';
+  if public.ik_ben_beheerder() then
+    raise exception 'gezakt: een account is beheerder zonder in site_beheerders te staan';
   end if;
-  raise notice 'ok: het bevestigde beheeradres is beheerder, zonder dat het ergens in een tabel staat';
+  select uitkomst into uit_tekst from public.poule_controle where controle = 'beheerders';
+  if uit_tekst not like 'GEEN:%' then
+    raise exception 'gezakt: zonder beheerders zegt de controletabel %', uit_tekst;
+  end if;
+  raise notice 'ok: zonder rij in site_beheerders is niemand beheerder, en de controletabel zegt GEEN';
 
+  insert into site_beheerders (user_id) values ('dddddddd-0000-0000-0000-000000000001');
+  if not public.ik_ben_beheerder() then
+    raise exception 'gezakt: een account in site_beheerders is geen beheerder';
+  end if;
+  raise notice 'ok: een account in site_beheerders is beheerder';
+
+  -- Een mailadres maakt niemand meer beheerder: niet hetzelfde adres in
+  -- andere hoofdletters, bevestigd of niet.
   perform set_config('request.jwt.claims', '{"sub":"eeeeeeee-0000-0000-0000-000000000002"}', true);
   if public.ik_ben_beheerder() then
-    raise exception 'gezakt: een onbevestigd adres is beheerder';
+    raise exception 'gezakt: een onbevestigd account met het adres van de beheerder is beheerder';
   end if;
-  raise notice 'ok: een onbevestigd adres niet, ook niet met hetzelfde adres';
-
-  -- Wie pas na het draaien van schema.sql voor het eerst inlogt, is het ook
-  -- meteen: het hangt niet af van een tabel die schema.sql vult. Met andere
-  -- hoofdletters ook: een mailadres is hetzelfde adres in welke letters ook.
   insert into auth.users (id, email, email_confirmed_at)
-  values ('ffffffff-0000-0000-0000-000000000009', 'DeVisser.Danny@Gmail.com', now());
+  values ('ffffffff-0000-0000-0000-000000000009', 'BEHEERDER@voorbeeld.nl', now());
   perform set_config('request.jwt.claims', '{"sub":"ffffffff-0000-0000-0000-000000000009"}', true);
-  if not public.ik_ben_beheerder() then
-    raise exception 'gezakt: wie na schema.sql voor het eerst inlogt met het beheeradres (andere hoofdletters), is geen beheerder';
+  if public.ik_ben_beheerder() then
+    raise exception 'gezakt: een tweede, bevestigd account met hetzelfde adres is beheerder';
   end if;
-  raise notice 'ok: wie pas na schema.sql inlogt met het beheeradres is ook beheerder, ook met andere hoofdletters';
   delete from auth.users where id = 'ffffffff-0000-0000-0000-000000000009';
+  raise notice 'ok: een ander account met hetzelfde mailadres is geen beheerder, bevestigd of niet';
+  if exists (select 1 from pg_proc where proname = 'beheer_adres') then
+    raise exception 'gezakt: beheer_adres() bestaat nog';
+  end if;
+  raise notice 'ok: beheer_adres() bestaat niet meer';
 
   -- Een extra beheerder via site_beheerders.
   insert into site_beheerders (user_id) values ('bbbbbbbb-0000-0000-0000-000000000004');
   perform set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000004"}', true);
   if not public.ik_ben_beheerder() then raise exception 'gezakt: een extra beheerder komt er niet in'; end if;
-  raise notice 'ok: ook als je pas na schema.sql inlogt, en een extra beheerder via site_beheerders';
-
-  -- De controletabel: het beheeradres zelf in site_beheerders (dat deed een
-  -- eerdere versie van schema.sql) is geen extra beheerder; een ander account wel.
-  insert into site_beheerders (user_id) values ('dddddddd-0000-0000-0000-000000000001');
   select uitkomst into uit_tekst from public.poule_controle where controle = 'beheerders';
-  if uit_tekst is distinct from 'devisser.danny@gmail.com (ingelogd) + 1 extra' then
+  if uit_tekst is distinct from '2' then
     raise exception 'gezakt: de controletabel telt de beheerders verkeerd: %', uit_tekst;
   end if;
+  if uit_tekst like '%@%' then raise exception 'gezakt: de controletabel noemt een mailadres'; end if;
   delete from site_beheerders where user_id = 'bbbbbbbb-0000-0000-0000-000000000004';
-  select uitkomst into uit_tekst from public.poule_controle where controle = 'beheerders';
-  if uit_tekst is distinct from 'devisser.danny@gmail.com (ingelogd)' then
-    raise exception 'gezakt: het beheeradres zelf telt in de controletabel als extra beheerder: %', uit_tekst;
-  end if;
-  delete from site_beheerders where user_id = 'dddddddd-0000-0000-0000-000000000001';
-  raise notice 'ok: de controletabel telt als extra beheerder alleen andere accounts dan het beheeradres';
+  raise notice 'ok: een extra beheerder via site_beheerders, en de controletabel telt ze zonder adres';
 
   -- ---- 2. de rest komt er niet in -----------------------------------------
   -- zonder sessie

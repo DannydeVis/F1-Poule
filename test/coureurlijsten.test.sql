@@ -30,8 +30,9 @@
 \set ON_ERROR_STOP on
 
 insert into auth.users (id, email, email_confirmed_at) values
-  ('c1000000-0000-0000-0000-000000000001', 'devisser.danny@gmail.com', now()),
+  ('c1000000-0000-0000-0000-000000000001', 'beheerder@voorbeeld.nl', now()),
   ('c2000000-0000-0000-0000-000000000002', 'speler@voorbeeld.nl', now());
+insert into public.site_beheerders (user_id) values ('c1000000-0000-0000-0000-000000000001');
 
 -- De lijst van de laatste race van 2026 (geleend) en de echte van 2027.
 create temp table lijsten (naam text primary key, lijst jsonb);

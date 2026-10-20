@@ -1,5 +1,6 @@
+{{ $t := printf "%v" (or .Data.taal "en") }}
 <style>a[x-apple-data-detectors]{color:inherit!important;text-decoration:none!important;font-size:inherit!important;font-family:inherit!important;font-weight:inherit!important;line-height:inherit!important}</style>
-<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f2f1ee;">Confirm your email and you're in. Your code is inside.</div>
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f2f1ee;">{{ if eq $t "nl" }}Bevestig je mailadres en je bent binnen. Je code staat erin.{{ else if eq $t "de" }}Bestätige deine E-Mail und du bist dabei. Dein Code steht drin.{{ else if eq $t "fr" }}Confirmez votre e-mail et c'est parti. Votre code est à l'intérieur.{{ else if eq $t "es" }}Confirma tu correo y ya estás dentro. Tu código está dentro.{{ else if eq $t "it" }}Conferma la tua email e sei dentro. Il codice è nel messaggio.{{ else if eq $t "pt" }}Confirme seu e-mail e pronto. Seu código está aqui dentro.{{ else }}Confirm your email and you're in. Your code is inside.{{ end }}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f2f1ee;font-family:Arial,Helvetica,sans-serif;">
   <tr>
     <td align="center" style="padding:32px 12px;">
@@ -17,28 +18,28 @@
         </tr>
         <tr>
           <td style="padding:28px 28px 0;">
-            <h1 style="margin:0;font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:34px;line-height:1;font-weight:700;text-transform:uppercase;color:#14151a;">Welcome</h1>
-            <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#61656d;">Confirm your email to create your Predict the Race account. Then join a pool with its code, or start your own. The link and the code work once, and expire after an hour.</p>
+            <h1 style="margin:0;font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;font-size:34px;line-height:1;font-weight:700;text-transform:uppercase;color:#14151a;">{{ if eq $t "nl" }}Welkom{{ else if eq $t "de" }}Willkommen{{ else if eq $t "fr" }}Bienvenue{{ else if eq $t "es" }}Bienvenido{{ else if eq $t "it" }}Benvenuto{{ else if eq $t "pt" }}Bem-vindo{{ else }}Welcome{{ end }}</h1>
+            <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#61656d;">{{ if eq $t "nl" }}Bevestig je mailadres om je account bij Predict the Race te maken. Doe daarna mee met een poule via de code, of begin er zelf een. De link en de code werken één keer, en verlopen na een uur.{{ else if eq $t "de" }}Bestätige deine E-Mail, um dein Konto bei Predict the Race zu erstellen. Tritt dann mit dem Code einer Tipprunde bei oder starte deine eigene. Link und Code funktionieren einmal und laufen nach einer Stunde ab.{{ else if eq $t "fr" }}Confirmez votre e-mail pour créer votre compte Predict the Race. Rejoignez ensuite une ligue avec son code, ou créez la vôtre. Le lien et le code ne fonctionnent qu'une fois et expirent au bout d'une heure.{{ else if eq $t "es" }}Confirma tu correo para crear tu cuenta de Predict the Race. Luego únete a una liga con su código o crea la tuya. El enlace y el código funcionan una vez y caducan al cabo de una hora.{{ else if eq $t "it" }}Conferma la tua email per creare il tuo account Predict the Race. Poi entra in una lega con il suo codice, o creane una tua. Il link e il codice funzionano una volta sola e scadono dopo un'ora.{{ else if eq $t "pt" }}Confirme seu e-mail para criar sua conta no Predict the Race. Depois entre em um bolão com o código dele, ou crie o seu. O link e o código funcionam uma vez e expiram após uma hora.{{ else }}Confirm your email to create your Predict the Race account. Then join a pool with its code, or start your own. The link and the code work once, and expire after an hour.{{ end }}</p>
           </td>
         </tr>
         <tr>
           <td style="padding:24px 28px 0;">
-            <a href="https://predicttherace.com/app/?token_hash={{ .TokenHash }}&amp;type=email" style="display:block;background:#d93d24;color:#ffffff;text-decoration:none;text-align:center;font-size:17px;font-weight:700;padding:16px 20px;border-radius:10px;">Confirm and sign in</a>
+            <a href="https://predicttherace.com/app/?token_hash={{ .TokenHash }}&amp;type=email" style="display:block;background:#d93d24;color:#ffffff;text-decoration:none;text-align:center;font-size:17px;font-weight:700;padding:16px 20px;border-radius:10px;">{{ if eq $t "nl" }}Bevestigen en inloggen{{ else if eq $t "de" }}Bestätigen und anmelden{{ else if eq $t "fr" }}Confirmer et se connecter{{ else if eq $t "es" }}Confirmar y entrar{{ else if eq $t "it" }}Conferma e accedi{{ else if eq $t "pt" }}Confirmar e entrar{{ else }}Confirm and sign in{{ end }}</a>
           </td>
         </tr>
         <tr>
           <td style="padding:24px 28px 0;">
-            <p style="margin:0 0 8px;font-family:'Courier New',Courier,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#696e75;">Or type this code in the app</p>
+            <p style="margin:0 0 8px;font-family:'Courier New',Courier,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#696e75;">{{ if eq $t "nl" }}Of tik deze code in de app{{ else if eq $t "de" }}Oder gib diesen Code in der App ein{{ else if eq $t "fr" }}Ou saisissez ce code dans l'app{{ else if eq $t "es" }}O escribe este código en la app{{ else if eq $t "it" }}Oppure inserisci questo codice nell'app{{ else if eq $t "pt" }}Ou digite este código no app{{ else }}Or type this code in the app{{ end }}</p>
             <div style="background:#f2f1ee;border:1px solid #dcdad5;border-radius:10px;padding:16px;text-align:center;font-family:'Courier New',Courier,monospace;font-size:30px;font-weight:700;letter-spacing:8px;color:#14151a;">{{ .Token }}</div>
           </td>
         </tr>
         <tr>
           <td style="padding:24px 28px 28px;">
-            <p style="margin:0;font-size:13px;line-height:1.5;color:#696e75;">Didn't ask for this? You can ignore this email. Nothing changes.</p>
+            <p style="margin:0;font-size:13px;line-height:1.5;color:#696e75;">{{ if eq $t "nl" }}Niet om gevraagd? Dan kun je deze mail negeren. Er verandert niets.{{ else if eq $t "de" }}Nicht angefordert? Dann kannst du diese E-Mail ignorieren. Es ändert sich nichts.{{ else if eq $t "fr" }}Vous n'avez rien demandé ? Ignorez simplement cet e-mail. Rien ne change.{{ else if eq $t "es" }}¿No lo has pedido? Puedes ignorar este correo. No cambia nada.{{ else if eq $t "it" }}Non lo hai chiesto tu? Puoi ignorare questa email. Non cambia nulla.{{ else if eq $t "pt" }}Não pediu isto? Pode ignorar este e-mail. Nada muda.{{ else }}Didn't ask for this? You can ignore this email. Nothing changes.{{ end }}</p>
           </td>
         </tr>
       </table>
-      <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#696e75;">Predict the Race &middot; the F1 prediction game for you and your friends<br><a href="https://predicttherace.com" style="color:#696e75;">predicttherace.com</a></p>
+      <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#696e75;">Predict the Race &middot; {{ if eq $t "nl" }}het F1-voorspelspel voor jou en je vrienden{{ else if eq $t "de" }}das F1-Tippspiel für dich und deine Freunde{{ else if eq $t "fr" }}le jeu de pronostics F1 pour vous et vos amis{{ else if eq $t "es" }}el juego de predicciones de F1 para ti y tus amigos{{ else if eq $t "it" }}il gioco di pronostici F1 per te e i tuoi amici{{ else if eq $t "pt" }}o jogo de palpites de F1 para você e seus amigos{{ else }}the F1 prediction game for you and your friends{{ end }}<br><a href="https://predicttherace.com" style="color:#696e75;">predicttherace.com</a></p>
     </td>
   </tr>
 </table>

@@ -2481,27 +2481,16 @@ grant usage on all sequences in schema public to anon, authenticated;
 -- ------------------------------------------------------------
 
 -- Wie beheerder is. Zonder policies: via de API is deze tabel voor niemand
--- te lezen of te schrijven. Iemand toevoegen gaat in de SQL editor.
+-- te lezen of te schrijven. Dit is de enige bron: er staat nergens meer een
+-- mailadres dat je beheerder maakt (dat stond tot 20 oktober in
+-- beheer_adres(), en zo stond een privé-adres in een openbare repo).
+-- Iemand toevoegen gaat in de SQL editor, met één regel; zie BEDIENING.md §16.
 create table if not exists public.site_beheerders (
   user_id    uuid primary key references auth.users(id) on delete cascade,
   toegevoegd timestamptz not null default now()
 );
 alter table public.site_beheerders enable row level security;
 revoke all on public.site_beheerders from anon, authenticated;
-
--- Het beheeradres: het contactadres uit de privacyverklaring. Elk account met
--- dit adres is beheerder, zodra het adres bevestigd is -- een Google-account
--- met dit adres, of een mailadres waarvan de inloglink is aangeklikt. Wie het
--- adres niet in handen heeft komt er dus niet in, ook niet door het ergens in
--- te tikken. En het hangt niet af van wanneer dit bestand gedraaid is: log in,
--- op welk toestel ook, en je bent binnen. Meer beheerders gaan in
--- site_beheerders (zie BEDIENING.md §16).
-create or replace function public.beheer_adres()
-returns text
-language sql
-immutable
-set search_path = ''
-as $$ select 'devisser.danny@gmail.com'::text $$;
 
 create or replace function public.ik_ben_beheerder()
 returns boolean
@@ -2510,13 +2499,39 @@ stable
 security definer
 set search_path = public
 as $$
-  select auth.uid() is not null and (
-    exists (select 1 from public.site_beheerders where user_id = auth.uid())
-    or exists (select 1 from auth.users u
-               where u.id = auth.uid()
-                 and lower(u.email) = public.beheer_adres()
-                 and u.email_confirmed_at is not null));
+  select auth.uid() is not null
+     and exists (select 1 from public.site_beheerders where user_id = auth.uid());
 $$;
+-- Het oude beheeradres. Pas weg nadat ik_ben_beheerder() hierboven het niet
+-- meer gebruikt.
+drop function if exists public.beheer_adres();
+
+-- Restanten van een andere app (PadelBracket) die in dezelfde database
+-- terechtkwamen: functies voor een beheer met toernooien die hier niet
+-- bestaan, en twee lege tabellen. Ze werkten niet eens (admin_dashboard()
+-- vroeg om tournament-tabellen), maar delete_my_account() wel: die was
+-- uitvoerbaar door elk ingelogd account en wiste het eigen account in
+-- auth.users rechtstreeks, buiten verwijder_mijn_account() om. Eerst de
+-- tabellen (daar hangt de trigger van account_items_cap() aan), dan de
+-- functies, op naam, wat hun argumenten ook zijn. Zonder cascade: hangt er
+-- onverwacht iets anders aan, dan stopt dit bestand liever met een fout.
+-- De regel "functies en tabellen: alleen die uit schema.sql" in de
+-- controletabel ziet het als er later weer zoiets bij komt.
+drop table if exists public.account_items;
+drop table if exists public.site_admins;
+do $$
+declare
+  f record;
+begin
+  for f in select p.oid::regprocedure as naam
+             from pg_proc p
+            where p.pronamespace = 'public'::regnamespace
+              and p.proname in ('admin_accounts', 'admin_dashboard', 'admin_gate', 'admin_day',
+                                'admin_address', 'is_admin', 'delete_my_account',
+                                'account_items_cap', 'account_sync') loop
+    execute format('drop function if exists %s', f.naam);
+  end loop;
+end $$;
 revoke all on function public.ik_ben_beheerder() from public;
 grant execute on function public.ik_ben_beheerder() to anon, authenticated;
 
@@ -3627,6 +3642,59 @@ select 'policies: alleen die uit schema.sql',
           'questions.questions_lezen',
           'races.races_lezen'] as namen) v
 union all
+-- Hetzelfde voor functies en tabellen. Zo stonden er tot 20 oktober nog
+-- functies en tabellen van een andere app in public, waaronder een
+-- delete_my_account() die elk ingelogd account kon aanroepen. Functies van
+-- een extensie tellen niet mee. Voeg je hierboven een functie of tabel toe,
+-- zet hem dan ook in deze lijst; test/schema-objecten.test.mjs zakt anders.
+select 'functies en tabellen: alleen die uit schema.sql',
+       coalesce(nullif(concat_ws(' · ',
+         'ONBEKENDE FUNCTIE: ' || (select string_agg(distinct p.proname, ', ' order by p.proname)
+                                     from pg_proc p
+                                    where p.pronamespace = 'public'::regnamespace
+                                      and not exists (select 1 from pg_depend d
+                                                       where d.objid = p.oid and d.deptype = 'e')
+                                      and p.proname <> all (v.functies)),
+         'ONBEKENDE TABEL: ' || (select string_agg(c.relname, ', ' order by c.relname)
+                                   from pg_class c
+                                  where c.relnamespace = 'public'::regnamespace
+                                    and c.relkind in ('r', 'v', 'm', 'p', 'f')
+                                    and not exists (select 1 from pg_depend d
+                                                     where d.objid = c.oid and d.deptype = 'e')
+                                    and c.relname <> all (v.tabellen)),
+         'ONTBREEKT: ' || (select string_agg(x, ', ' order by x)
+                             from unnest(v.functies || v.tabellen) x
+                            where x not in (select proname from pg_proc
+                                             where pronamespace = 'public'::regnamespace)
+                              and x not in (select relname from pg_class
+                                             where relnamespace = 'public'::regnamespace))
+       ), ''), 'ok')
+  from (select array[
+          'antwoord_open', 'antwoorden_omzetten', 'beheer_accountsoort',
+          'beheer_coureurs_zetten', 'beheer_lijst', 'beheer_overzicht', 'beheer_poort',
+          'beheer_poule_bijwerken', 'beheer_poule_verwijderen', 'beheer_poules',
+          'beheer_race_bijwerken', 'beheer_speler_bijwerken', 'beheer_speler_losmaken',
+          'beheer_speler_verwijderen', 'beheer_spelers', 'beheer_statistieken',
+          'beheer_sync', 'controle_seizoen', 'coureur_sleutel', 'eigen_antwoord_geven',
+          'eigen_vraag_open', 'eigen_vraag_opslaan', 'eigen_vraag_uitkomst',
+          'eigen_vraag_weghalen', 'ik_ben_beheerder', 'is_member', 'joker_open',
+          'lijst_omzetting', 'lijst_vervangen', 'mag_beheren', 'mag_logo_zetten',
+          'mag_voor_speler', 'mag_voor_speler_in', 'naam_netjes', 'naam_verboden',
+          'naam_voor_filter', 'omgezette_waarde', 'periode_opslaan', 'periode_weghalen',
+          'pool_members_bewaken', 'pool_members_woordfilter', 'pools_misbruik_bewaken',
+          'pools_profiel_bewaken', 'poule_aanmaken', 'poule_antwoord_deadline',
+          'poule_claim_speler', 'poule_deadline_bewaken', 'poule_joker_bewaken',
+          'poule_jokeraantal_bewaken', 'poule_meedoen', 'poule_ophalen',
+          'poule_seizoen_gestart', 'poule_seizoen_voorbij', 'poule_team_kiezen',
+          'poule_team_opslaan', 'poule_team_weghalen', 'publiek_profiel',
+          'sessie_deadline', 'speler_naam', 'sync_runs_opruimen', 'tel_bezoek',
+          'vereis_sessie', 'verwijder_mijn_account'] as functies,
+               array[
+          'aanmaak_log', 'actief', 'answers', 'bezoeken', 'jokers',
+          'pool_eigen_antwoorden', 'pool_eigen_vragen', 'pool_members', 'pool_periodes',
+          'pool_questions', 'pool_teams', 'pools', 'poule_controle', 'push_abonnementen',
+          'questions', 'races', 'site_beheerders', 'sync_runs', 'verboden_woorden'] as tabellen) v
+union all
 -- Premium (13 oktober): de vijf kolommen op pools, de bewaking erop, de teams
 -- (pool_teams en de functies erbij), en de vier regels van de bucket
 -- poulelogo in Storage. Zonder Storage (een kale
@@ -3813,23 +3881,13 @@ select 'daarbovenop: sprint / seizoen',
           (select coalesce(sum(punten), 0)::text from public.questions
            where sessie = 'seizoen'))
 union all
--- Wie de beheerpagina binnenlaat: het beheeradres, en wie er verder in
--- site_beheerders staat. Of het beheeradres al een bevestigd account heeft
--- staat erbij; zo niet, log dan één keer in op /beheer/ met Google.
--- Extra telt alleen andere accounts: een eerdere versie van dit bestand zette
--- het account van het beheeradres zelf ook in site_beheerders, en dat is
--- geen tweede beheerder.
+-- Wie de beheerpagina binnenlaat: de accounts in site_beheerders. Zonder
+-- adres: deze tabel komt ook in schermafdrukken terecht. Staat er niemand in,
+-- dan komt niemand het beheer in; BEDIENING.md §16 zegt hoe je jezelf toevoegt.
 select 'beheerders',
-       public.beheer_adres()
-       || case when exists (select 1 from auth.users
-                            where lower(email) = public.beheer_adres()
-                              and email_confirmed_at is not null)
-               then ' (ingelogd)' else ' (nog nooit ingelogd)' end
-       || coalesce((select ' + ' || count(*) || ' extra'
-                    from public.site_beheerders b
-                    left join auth.users u on u.id = b.user_id
-                    where lower(coalesce(u.email, '')) <> public.beheer_adres()
-                    having count(*) > 0), '')
+       case (select count(*) from public.site_beheerders)
+         when 0 then 'GEEN: voeg jezelf toe (BEDIENING.md §16)'
+         else (select count(*)::text from public.site_beheerders) end
 union all
 select 'winnaar ingevuld',
        (select count(*)::text from public.answers where question_id = 'winnaar')
