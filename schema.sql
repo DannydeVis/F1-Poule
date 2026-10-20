@@ -2502,9 +2502,6 @@ as $$
   select auth.uid() is not null
      and exists (select 1 from public.site_beheerders where user_id = auth.uid());
 $$;
--- Het oude beheeradres. Pas weg nadat ik_ben_beheerder() hierboven het niet
--- meer gebruikt.
-drop function if exists public.beheer_adres();
 
 -- Restanten van een andere app (PadelBracket) die in dezelfde database
 -- terechtkwamen: functies voor een beheer met toernooien die hier niet
@@ -3514,6 +3511,11 @@ as $$
 $$;
 
 drop view if exists public.poule_controle;
+-- Het oude beheeradres. Pas hier weg: de vorige versie van de controletabel
+-- (hierboven net weggegooid) gebruikte het, en ik_ben_beheerder() niet meer.
+-- Stond dit eerder in het bestand, dan zakte schema.sql in productie met
+-- "view poule_controle depends on function beheer_adres()" (20 oktober).
+drop function if exists public.beheer_adres();
 -- security_invoker: de view leest met de rechten van wie hem opvraagt, niet
 -- met die van de eigenaar. Jij in de SQL-editor mag alles, dus voor jou
 -- verandert er niets; iemand anders komt niet via deze view bij auth.users.

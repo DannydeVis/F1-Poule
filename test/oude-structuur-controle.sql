@@ -155,6 +155,9 @@ begin
   if to_regclass('public.account_items') is not null or to_regclass('public.site_admins') is not null then
     raise exception 'gezakt: account_items of site_admins staat er nog';
   end if;
+  if to_regprocedure('public.beheer_adres()') is not null then
+    raise exception 'gezakt: beheer_adres() staat er nog';
+  end if;
   if exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace
              and proname in ('admin_accounts','admin_dashboard','admin_gate','admin_day','admin_address',
                              'is_admin','delete_my_account','account_items_cap','account_sync')) then

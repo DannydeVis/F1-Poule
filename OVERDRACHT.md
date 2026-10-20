@@ -11133,3 +11133,19 @@ Bewuste keuzes:
    de regel functies en tabellen "ok", en beheerders "1".
 2. De drie sjablonen opnieuw in Supabase plakken, met het onderwerp erbij:
    BEDIENING §5b, de stappen onder "Zo plak je ze".
+
+**Nagekomen (20 oktober): schema.sql zakte op `beheer_adres()`.** Danny kreeg
+bij het draaien "cannot drop function beheer_adres() because other objects
+depend on it: view poule_controle". De oude controletabel in productie
+gebruikte die functie, en `schema.sql` gooide de functie weg vóórdat de view
+opnieuw gemaakt werd. Nu staat de drop direct na `drop view if exists
+public.poule_controle`. De tests zagen het niet, omdat geen enkele test een
+database had met de oude view; `test/oude-structuur.sql` zet die nu neer
+(een `beheer_adres()` en een view die hem gebruikt), en de controle erna
+kijkt of de functie weg is. Met de oude volgorde zakt die test met precies
+de fout van Danny. In Supabase gecontroleerd: verder hangt er niets aan wat
+`schema.sql` weggooit (de drie checks op `account_items` en de ene op
+`site_admins` horen bij die tabellen zelf). Wat de mislukte run al gedaan
+had, maakt niet uit: `schema.sql` kan altijd opnieuw.
+
+**Danny moet:** `schema.sql` opnieuw draaien.
