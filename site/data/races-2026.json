@@ -531,7 +531,83 @@
         ]
       },
       "uitslag": null,
-      "vrijeTrainingen": []
+      "vrijeTrainingen": [
+        {
+          "naam": "Practice 1",
+          "top": [
+            {
+              "plek": 1,
+              "nr": "16",
+              "code": "LEC",
+              "naam": "Charles Leclerc",
+              "team": "Ferrari"
+            },
+            {
+              "plek": 2,
+              "nr": "3",
+              "code": "VER",
+              "naam": "Max Verstappen",
+              "team": "Red Bull Racing"
+            },
+            {
+              "plek": 3,
+              "nr": "1",
+              "code": "NOR",
+              "naam": "Lando Norris",
+              "team": "McLaren"
+            },
+            {
+              "plek": 4,
+              "nr": "63",
+              "code": "RUS",
+              "naam": "George Russell",
+              "team": "Mercedes"
+            },
+            {
+              "plek": 5,
+              "nr": "12",
+              "code": "ANT",
+              "naam": "Kimi Antonelli",
+              "team": "Mercedes"
+            },
+            {
+              "plek": 6,
+              "nr": "44",
+              "code": "HAM",
+              "naam": "Lewis Hamilton",
+              "team": "Ferrari"
+            },
+            {
+              "plek": 7,
+              "nr": "81",
+              "code": "PIA",
+              "naam": "Oscar Piastri",
+              "team": "McLaren"
+            },
+            {
+              "plek": 8,
+              "nr": "5",
+              "code": "BOR",
+              "naam": "Gabriel Bortoleto",
+              "team": "Audi"
+            },
+            {
+              "plek": 9,
+              "nr": "41",
+              "code": "LIN",
+              "naam": "Arvid Lindblad",
+              "team": "Racing Bulls"
+            },
+            {
+              "plek": 10,
+              "nr": "30",
+              "code": "LAW",
+              "naam": "Liam Lawson",
+              "team": "Racing Bulls"
+            }
+          ]
+        }
+      ]
     },
     {
       "circuit": 65,
