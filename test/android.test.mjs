@@ -136,6 +136,19 @@ function afmetingenPng(pad) {
   check('de .aab en de winkel als bijlage, 30 dagen', /name: predicttherace-android-/.test(wf) && /name: predicttherace-winkel-/.test(wf)
     && (wf.match(/retention-days: 30/g) ?? []).length === 2);
   check('het versienummer is het aantal commits (loopt alleen op)', /fetch-depth: 0/.test(wf) && /-PversieCode="\$VERSIE"/.test(wf));
+
+  // Een merge door de automerge start "push" niet (GitHub start geen
+  // workflows vanuit een push van een workflow); de automerge start de
+  // workflow daarom zelf, voor dezelfde paden.
+  const am = lees('.github', 'workflows', 'automerge.yml');
+  const paden = (/push:\n\s+branches: \[main\]\n\s+paths:\n((?:\s+- '[^']+'\n)+)/.exec(wf)?.[1] ?? '')
+    .match(/'[^']+'/g)?.map((p) => p.slice(1, -1)) ?? [];
+  const re = new RegExp(/const android = \/(.+)\/;/.exec(am)?.[1] ?? '$^');
+  const voorbeeld = (p) => p.replace('**', 'app/build.gradle');
+  check('na een merge die de Android-app raakt start de automerge de workflow op main, voor dezelfde paden als push',
+    /actions: write/.test(am) && /createWorkflowDispatch\(\{ owner, repo, workflow_id: 'android\.yml', ref: 'main' \}\)/.test(am)
+      && paden.length >= 4 && paden.every((p) => re.test(voorbeeld(p))) && !re.test('site/teksten.mjs') && !re.test('app/index.html'),
+    paden.join(' '));
 }
 
 // ---- 5. de winkeltekst ------------------------------------------------------------------------

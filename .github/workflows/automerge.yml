@@ -20,6 +20,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # Voor het starten van de workflow "Android-app" na een merge (zie onderaan).
+  actions: write
 
 jobs:
   merge:
@@ -76,3 +78,17 @@ jobs:
               commit_title: `Merge pull request #${pr.number} from ${pr.head.label}`,
             });
             core.info(`#${pr.number} gemerged.`);
+
+            // Een push van een workflow (deze merge) start geen andere
+            // workflows; alleen workflow_dispatch mag dat wel. Raakte de pull
+            // request de Android-app, dan hier de workflow "Android-app" op
+            // main: die maakt de ondertekende .aab en de winkelbijlage
+            // (BEDIENING.md §21). Dezelfde paden als "push" in android.yml.
+            const bestanden = await github.paginate(github.rest.pulls.listFiles, {
+              owner, repo, pull_number: pr.number, per_page: 100,
+            });
+            const android = /^(android\/|\.github\/workflows\/android\.yml$|site\/winkel\.mjs$|scripts\/maak-winkel\.mjs$)/;
+            if (bestanden.some((b) => android.test(b.filename))) {
+              await github.rest.actions.createWorkflowDispatch({ owner, repo, workflow_id: 'android.yml', ref: 'main' });
+              core.info('Workflow "Android-app" gestart op main.');
+            }

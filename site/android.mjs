@@ -18,6 +18,9 @@
 // staat. null: nog niet.
 export const ANDROID = {
   pakket: 'com.predicttherace.app',
-  vingerafdrukken: [],
+  vingerafdrukken: [
+    // De uploadsleutel, gemaakt door de eerste run op main (24 oktober).
+    '09:65:9E:75:3B:A3:55:7C:C7:5A:94:9E:C5:27:04:EC:E6:96:62:B9:95:B1:6B:63:D5:AC:0A:8A:D4:3B:10:EC',
+  ],
   winkel: null,
 };

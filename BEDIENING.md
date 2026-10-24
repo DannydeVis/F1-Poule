@@ -2980,16 +2980,18 @@ naam, of een nieuwe eis van Google).
 - Het project in `android/` (gemaakt met Bubblewrap van Google,
   `scripts/maak-android.mjs`), pakketnaam `com.predicttherace.app`.
 - De workflow **Android-app** (`.github/workflows/android.yml`). Na elke merge
-  die `android/` raakt, en met de hand via Actions → Android-app → **Run
-  workflow**, maakt hij twee bijlagen bij de run:
+  die `android/` raakt (de automerge start hem dan), en met de hand via
+  Actions → Android-app → **Run workflow**, maakt hij twee bijlagen bij de
+  run:
   - `predicttherace-android-<nr>`: `predicttherace.aab` (voor de Play
     Console), `predicttherace.apk` (om zelf op een telefoon te zetten),
     `vingerafdruk.txt` en `uploadcertificaat.pem`;
   - `predicttherace-winkel-<nr>`: per taal de teksten en plaatjes voor de
     winkelpagina (`scripts/maak-winkel.mjs`).
-- De uploadsleutel. De eerste run maakt hem en bewaart hem in de privé-map
-  `android` in Supabase Storage (`scripts/android-sleutel.mjs`). Daar kan
-  alleen de sleutel bij die de workflows al gebruiken. Je hoeft er niets mee.
+- De uploadsleutel. De eerste run (24 oktober) heeft hem gemaakt en bewaard
+  in de privé-map `android` in Supabase Storage (`scripts/android-sleutel.mjs`).
+  Daar kan alleen de sleutel bij die de workflows al gebruiken. Je hoeft er
+  niets mee. Zijn vingerafdruk staat al in `site/android.mjs`.
 - `.well-known/assetlinks.json` op het domein, uit `site/android.mjs`.
 
 ### Stap 1. Een ontwikkelaarsaccount bij Google (één keer)
