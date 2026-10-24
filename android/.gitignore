@@ -1,0 +1,10 @@
+# Wat Gradle maakt, en nooit een sleutel: die staat in een privé-map in
+# Supabase (scripts/android-sleutel.mjs).
+.gradle/
+build/
+app/build/
+local.properties
+*.p12
+*.keystore
+*.jks
+winkel/

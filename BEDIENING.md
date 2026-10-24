@@ -2729,9 +2729,7 @@ Wat je zelf kunt doen:
 - **De QR-code** wijst naar `https://predicttherace.com/app/`. Alleen bij een
   ander domein opnieuw maken, met `scripts/maak-qr.py` (de uitleg staat
   bovenin dat bestand).
-- **In de Play Store**: kan later als aparte stap, met een
-  ontwikkelaarsaccount bij Google. Zeg het als je dat wilt; zie ROUTEKAART,
-  "De app in de stores".
+- **In de Play Store**: zie §21.
 
 ## 19. Premium: een eigen profiel voor een poule
 
@@ -2968,3 +2966,148 @@ workflow**. Of met de GitHub CLI: `gh workflow enable sync.yml` (en
    hierboven (de check aanklikken → **Change Schedule**).
 6. Eventueel een melding op je telefoon: **Integrations** → **Telegram** of
    **ntfy**, en koppel die aan de drie checks. Mail staat standaard aan.
+
+## 21. De Android-app in de Play Store
+
+Dezelfde app, in een Android-schil (een *Trusted Web Activity*): de schil
+opent `https://predicttherace.com/app/` in Chrome, zonder adresbalk. Alles wat
+er op de site verandert, staat dus meteen ook in de Android-app. Een nieuwe
+versie in de Play Store is alleen nodig als de schil zelf verandert (icoon,
+naam, of een nieuwe eis van Google).
+
+### Wat er al klaar staat
+
+- Het project in `android/` (gemaakt met Bubblewrap van Google,
+  `scripts/maak-android.mjs`), pakketnaam `com.predicttherace.app`.
+- De workflow **Android-app** (`.github/workflows/android.yml`). Na elke merge
+  die `android/` raakt, en met de hand via Actions → Android-app → **Run
+  workflow**, maakt hij twee bijlagen bij de run:
+  - `predicttherace-android-<nr>`: `predicttherace.aab` (voor de Play
+    Console), `predicttherace.apk` (om zelf op een telefoon te zetten),
+    `vingerafdruk.txt` en `uploadcertificaat.pem`;
+  - `predicttherace-winkel-<nr>`: per taal de teksten en plaatjes voor de
+    winkelpagina (`scripts/maak-winkel.mjs`).
+- De uploadsleutel. De eerste run maakt hem en bewaart hem in de privé-map
+  `android` in Supabase Storage (`scripts/android-sleutel.mjs`). Daar kan
+  alleen de sleutel bij die de workflows al gebruiken. Je hoeft er niets mee.
+- `.well-known/assetlinks.json` op het domein, uit `site/android.mjs`.
+
+### Stap 1. Een ontwikkelaarsaccount bij Google (één keer)
+
+1. Ga naar **play.google.com/console** en log in met het Google-account
+   waarmee je de app wilt beheren.
+2. Kies een **persoonlijk** account (of **organisatie**, alleen met een bedrijf
+   met een D-U-N-S-nummer).
+3. Betaal de eenmalige registratiekosten en doe de identiteitscontrole (een
+   foto van je ID en soms je telefoonnummer). Dat kan een paar dagen duren.
+
+Let op bij een persoonlijk account: Google wil eerst een **gesloten test met
+minstens 12 testers die 14 dagen achter elkaar meedoen**. Pas daarna kun je
+de app voor iedereen uitbrengen. Vraag dus 12 of meer mensen met een
+Android-telefoon (bijvoorbeeld uit je poule) om hun Gmail-adres. Een
+organisatie-account heeft die regel niet.
+
+### Stap 2. De app aanmaken
+
+Play Console → **App maken** (*Create app*):
+
+- Naam: **Predict the Race**
+- Standaardtaal: **Engels (Verenigde Staten)**; Nederlands en de andere talen
+  komen erbij als vertaling.
+- App of game: **App**. Gratis.
+- De verklaringen aanvinken.
+
+### Stap 3. De bestanden ophalen
+
+GitHub → **Actions** → **Android-app** → de bovenste groene run op main →
+onderaan bij **Artifacts** de twee bijlagen downloaden en uitpakken. Een
+bijlage blijft 30 dagen staan; daarna een nieuwe run starten met **Run
+workflow**.
+
+### Stap 4. De gesloten test
+
+1. **Testen en releasen** (*Test and release*) → **Testen** → **Gesloten
+   testen** (*Closed testing*) → een track maken.
+2. **Testers**: een e-maillijst met de adressen van je testers. Kopieer de
+   aanmeldlink en stuur die naar ze: via die link installeren ze de app.
+3. **Nieuwe release** → upload `predicttherace.aab`. Google vraagt of het de
+   sleutel voor app-ondertekening mag beheren: **ja** (Play App Signing).
+4. Bij de releaseopmerkingen: de tekst uit `changelogs/default.txt` per taal
+   (in de winkel-bijlage).
+5. Opslaan → Beoordelen → Uitrollen.
+6. **Stuur mij daarna de vingerafdruk van Google**: **Testen en releasen** →
+   **App-integriteit** (*App integrity*) → **App-ondertekening** (*App
+   signing*) → bij "Certificaat van sleutel
+   voor app-ondertekening" de regel **SHA-256**. Die is openbaar, geen geheim.
+   Ik zet hem in `site/android.mjs`; tot dan opent de app met een adresbalk.
+
+### Stap 5. De winkelpagina
+
+**Store-aanwezigheid** (*Store presence*) → **Hoofdvermelding in de Store**
+(*Main store listing*). Per taal (via
+**Vertalingen beheren**: nl-NL, de-DE, fr-FR, es-ES, it-IT, pt-BR) uit de map
+van die taal in de winkel-bijlage:
+
+| veld | bestand |
+|---|---|
+| App-naam | `title.txt` |
+| Korte beschrijving | `short_description.txt` |
+| Volledige beschrijving | `full_description.txt` |
+| App-icoon | `images/icon.png` |
+| Feature graphic | `images/featureGraphic.jpg` |
+| Screenshots telefoon | `images/phoneScreenshots/` (alle vier) |
+
+Bij **Store-instellingen**: categorie **Sport**, e-mail
+`contact@predicttherace.com`, website `https://predicttherace.com`.
+
+### Stap 6. App-content
+
+**Beleid** → **App-content** (*Policy* → *App content*), alles langs:
+
+- **Privacybeleid**: `https://predicttherace.com/en/privacy/`
+- **Advertenties**: nee.
+- **App-toegang**: alle functionaliteit is beschikbaar zonder speciale
+  toegang (de app maakt zelf een anoniem account; een poule maken of meedoen
+  met de open poule `80C98C` kan meteen).
+- **Contentclassificatie**: de vragenlijst. Geen geweld, geen gokken (er is
+  geen inleg en er zijn geen prijzen). Spelers zien elkaars naam in een poule;
+  er is geen chat.
+- **Doelgroep**: de leeftijden 16-17 en 18+.
+- **Account verwijderen**: in de app onder Profiel, en op het web:
+  `https://predicttherace.com/en/privacy/#how-long`.
+- **Gegevensveiligheid**, zoals de privacyverklaring het zegt:
+  - De app verzamelt gegevens, versleuteld onderweg, en je kunt ze laten
+    verwijderen.
+  - **Naam** (de naam in je poule): verplicht, voor de app zelf.
+  - **E-mailadres**: optioneel, alleen als je je account koppelt.
+  - **Gebruikers-ID's** (het anonieme account): verplicht, voor de app zelf.
+  - **App-activiteit** (je voorspellingen): verplicht, voor de app zelf.
+  - **App-interacties** (Google Analytics): optioneel, alleen met je ja, voor
+    analyse.
+  - **Apparaat-ID's** (het adres voor meldingen): optioneel, alleen als je
+    meldingen aanzet.
+  - Niets wordt gedeeld met anderen of verkocht.
+
+### Stap 7. Voor iedereen uitbrengen
+
+Na 14 dagen testen met 12 testers: **Dashboard** → **Productietoegang
+aanvragen** (*Apply for production*), de vragen beantwoorden en wachten op de beoordeling (meestal een
+paar dagen). Daarna **Productie** → **Nieuwe release** → dezelfde of een
+nieuwere `.aab` → uitrollen. **Zeg het mij als hij erin staat**: dan zet ik de
+link naar de Play Store op de site (`winkel` in `site/android.mjs`).
+
+### Een nieuwe versie
+
+Alleen bij een ander icoon of een andere naam, of als Google een nieuwe
+Android-versie verplicht (dat gebeurt elk jaar eind augustus). Ik werk
+`android/` bij; na de merge maakt de workflow een nieuwe `.aab` met een hoger
+versienummer, en die upload je bij een nieuwe release.
+
+### Als de uploadsleutel kwijt is
+
+Hij staat in Supabase → **Storage** → map `android` →
+`uploadsleutel.json`. Haal hem daar nooit weg. Is hij toch weg: in de Play
+Console → **App-integriteit** → **Reset van uploadsleutel aanvragen**. Start
+de workflow; die maakt een nieuwe sleutel en zet `uploadcertificaat.pem` in de
+bijlage. Dat bestand upload je bij de aanvraag. Google zet de nieuwe sleutel
+binnen een paar dagen aan.

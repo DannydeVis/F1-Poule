@@ -1032,11 +1032,14 @@ app is."
   aanbiedt, een QR-code op de computer), de vergelijkingspagina en llms.txt
   zeggen het niet meer als een gemis, en het beheer telt bezoeken vanaf het
   beginscherm apart. BEDIENING §18, "De app op je telefoon".
-- **Stap 2, wacht op Danny**: dezelfde app in de Google Play Store, als Trusted
-  Web Activity (de webapp in een Android-schil, zonder tweede codebasis). Nodig:
-  een ontwikkelaarsaccount bij Google (eenmalig betalen), een
-  `assetlinks.json` op het domein en een ondertekende build. Pas als Danny zegt
-  dat hij dat account wil.
+- **Stap 2, gebouwd** (24 oktober): dezelfde app voor de Google Play Store,
+  als Trusted Web Activity (de webapp in een Android-schil, zonder tweede
+  codebasis). Het project in `android/`, de workflow "Android-app" maakt een
+  ondertekende `.aab` en de winkelteksten en -plaatjes in zeven talen,
+  `.well-known/assetlinks.json` staat op het domein. Open bij Danny: het
+  ontwikkelaarsaccount, 12 testers voor 14 dagen, uploaden en invullen
+  (BEDIENING §21). Daarna bij mij: de vingerafdrukken in `site/android.mjs`
+  en de link naar de winkel op de site.
 - **De App Store**: niet als schil om de website. Apple wijst apps af die
   vooral een website in een venster zijn; dat vraagt een echte iPhone-app. Op
   een iPhone blijft het beginscherm de weg.
@@ -1132,3 +1135,10 @@ telling van bezoeken vanaf het beginscherm; BEDIENING §18. De database is al
 bijgewerkt via de Supabase-koppeling.
 Open bij Danny: niets. De Play Store (stap 2) pas als hij dat wil; zie "De app
 in de stores" hierboven.
+
+**De Android-app** (24 oktober). Gebouwd: het project voor de Play Store
+(`android/`), de workflow "Android-app" met een ondertekende `.aab` en de
+winkelbijlage in zeven talen, de uploadsleutel in een privé-map in Supabase en
+`.well-known/assetlinks.json` op het domein; BEDIENING §21.
+Open bij Danny: ontwikkelaarsaccount, gesloten test met 12 testers (14 dagen),
+uploaden, winkelpagina en App-content, productietoegang.

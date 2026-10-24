@@ -11328,3 +11328,77 @@ en `test/beheer.test.sql` (de nieuwe paden, de controleregel). `startSite()` in
 `test/hulp.mjs` kan nu een `userAgent` meekrijgen.
 
 **Danny moet:** niets. `schema.sql` draaien mag, maar hoeft niet voor deze PR.
+
+## De Android-app voor de Play Store (24 oktober)
+
+Stap 2 van "de app in de stores". Dezelfde webapp, als Trusted Web Activity
+(TWA): een Android-schil die `https://predicttherace.com/app/` in Chrome opent,
+zonder adresbalk zolang `.well-known/assetlinks.json` de sleutel van de app
+noemt. Geen tweede codebasis.
+
+- **Het project** (`android/`): gemaakt met `@bubblewrap/core` 1.27.0 (Google)
+  uit `android/twa-manifest.json`, met `scripts/maak-android.mjs`. Dat script
+  beantwoordt de downloads van Bubblewrap zelf uit `pictogrammen/` en
+  `manifest.webmanifest`, en past daarna drie dingen aan (`pasAan()`):
+  ondertekenen met de uploadsleutel als `ANDROID_SLEUTEL_PAD` gezet is, het
+  versienummer uit `-PversieCode`, en `mavenCentral()` in plaats van
+  `jcenter()`. Pakket `com.predicttherace.app`, Android 16 (API 36, verplicht
+  voor nieuwe apps sinds 31 augustus 2026), AGP 8.9.1, Gradle 8.11.1,
+  androidbrowserhelper 2.7.4, meldingen via de app (notification delegation,
+  `POST_NOTIFICATIONS`), portret, fallback naar Custom Tabs. Bouwen kan in deze
+  omgeving niet (de Android-servers van Google zijn geblokkeerd); dat doet de
+  workflow.
+- **De uploadsleutel** (`scripts/android-sleutel.mjs`): één JSON-bestand
+  (sleutel en wachtwoord samen) in de privé-map `android` in Supabase Storage,
+  alleen te lezen met de service_role-sleutel (`SUPABASE_KEY`). De eerste run
+  maakt hem (RSA 4096, 10000 dagen, alias `upload`), maar alleen als Storage
+  "bestaat niet" zegt; elke andere fout stopt de run, en `x-upsert: false`
+  voorkomt overschrijven. Het wachtwoord wordt gemaskeerd voordat er iets in de
+  log komt; pad en wachtwoord gaan via `GITHUB_ENV` naar Gradle. De map staat
+  in `schema.sql` (geen policies) en is via de Supabase-koppeling al gemaakt.
+  Ik kon geen GitHub-secrets zetten, en een sleutel in de repo of in de chat
+  mag niet; daarom Supabase.
+- **De workflow** (`.github/workflows/android.yml`): een pull request die
+  `android/` raakt bouwt zonder handtekening (`assembleDebug`, geen secrets).
+  Op main (na zo'n merge) en met de hand: `bundleRelease` en `assembleRelease`
+  ondertekend, de handtekening nagelopen tegen de vingerafdruk, en als bijlage
+  `predicttherace.aab`, `.apk`, `vingerafdruk.txt` en `uploadcertificaat.pem`.
+  Het versienummer is het aantal commits. Een tweede job maakt de
+  winkelbijlage.
+- **De koppeling met het domein**: `site/android.mjs` (pakket,
+  vingerafdrukken, en straks de link naar de winkel), en `maak-site.mjs` schrijft
+  `.well-known/assetlinks.json`. Jekyll laat mappen met een punt weg;
+  `_config.yml` heeft daarom `include: - .well-known`, en `test/hulp.mjs` leest
+  die lijst nu ook. `android/` staat in de exclude-lijst.
+- **De winkel** (`scripts/maak-winkel.mjs`, `site/winkel.mjs`): teksten in
+  zeven talen, samengesteld uit de voorpagina (de kop, de stappen, de functies,
+  "geen advertenties", de disclaimer), zodat de winkel nooit iets anders zegt
+  dan de site. Titel zonder "F1" (merk van een ander). Schermafdrukken van 1080
+  bij 1920 (races, voorspellen, uitslag, stand) en een banner van 1024 bij 500,
+  met de voorbeeldpoule die nu in `scripts/voorbeeldpoule.mjs` staat (gedeeld
+  met `maak-beelden.mjs`). In de indeling van fastlane supply. Niet in de repo,
+  alleen in de bijlage.
+- **Privacyverklaring**: elke sectie heeft nu een anker (`#how-long`), voor de
+  link "account verwijderen" die de Play Console vraagt.
+
+Feiten nagezocht op 24 oktober: Google Play wil voor een persoonlijk
+ontwikkelaarsaccount van na 13 november 2023 eerst een gesloten test met
+minstens 12 testers, 14 dagen achter elkaar
+([Play Console Help](https://support.google.com/googleplay/android-developer/answer/14151465));
+nieuwe apps moeten sinds 31 augustus 2026 op API 36 mikken
+([Play Console Help](https://support.google.com/googleplay/android-developer/answer/11926878)).
+
+Tests: `test/android.test.mjs` (project, assetlinks, workflow, winkelteksten,
+plaatjes) en `test/android-sleutel.test.mjs` (de sleutel tegen een nagebootste
+Storage, met de echte keytool). In `test/premium.test.sql` een blok voor de
+privé-map; `test/site.test.mjs` kijkt dat `.well-known` online komt en
+`android/` niet.
+
+**Danny moet** (BEDIENING §21): een ontwikkelaarsaccount bij Google, de app
+aanmaken, 12 testers zoeken, de `.aab` uploaden in een gesloten test, mij de
+SHA-256 van de app-ondertekening van Google sturen, de winkelpagina en
+App-content invullen, en na 14 dagen productietoegang aanvragen.
+
+**Ik moet daarna**: de vingerafdruk van de uploadsleutel (uit de eerste run op
+main) en die van Google in `site/android.mjs` zetten; als de app voor iedereen
+in de winkel staat de link op de site (`winkel`).

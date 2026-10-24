@@ -51,8 +51,9 @@ const { check, afronden } = maakControle('de landingspagina in zeven talen');
 // zakt hier, en een patroon dat te veel pakt (een lettertype, een plaatje van
 // de voorpagina) ook. De testservers passen dezelfde uitsluiting toe.
 {
-  const INTERN = (p) => /\.(md|sql)$/.test(p) || /^(docs|test|scripts|site\/bron|site\/data)\//.test(p)
-    || /^site\/[^/]+\.(mjs|json)$/.test(p) || /(^|\/)[._]/.test(p) || /^(CNAME|LICENSE|node_modules)(\/|$)/.test(p);
+  const INTERN = (p) => /\.(md|sql)$/.test(p) || /^(docs|test|scripts|android|site\/bron|site\/data)\//.test(p)
+    || /^site\/[^/]+\.(mjs|json)$/.test(p) || (/(^|\/)[._]/.test(p) && !p.startsWith('.well-known/'))
+    || /^(CNAME|LICENSE|node_modules)(\/|$)/.test(p);
   const bestanden = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'],
     { cwd: wortel, encoding: 'utf8' }).split('\n').filter(Boolean);
   const mis = bestanden.filter((p) => gepubliceerd(p) === INTERN(p));
@@ -67,6 +68,9 @@ const { check, afronden } = maakControle('de landingspagina in zeven talen');
     md.join(' '));
   check('en de plaatjes van de voorpagina blijven er wel',
     ['site/og/og-nl.jpg', 'site/beeld/stand-nl-licht.jpg'].every(gepubliceerd), UITGESLOTEN.join(', '));
+  check('.well-known/assetlinks.json komt online (voor de Android-app), het Android-project niet',
+    gepubliceerd('.well-known/assetlinks.json') && !gepubliceerd('android/app/build.gradle')
+      && !gepubliceerd('android/twa-manifest.json') && !gepubliceerd('.github/workflows/android.yml'));
 }
 
 const urlVan = (c) => `${BASIS}/${teksten[c].pad ? teksten[c].pad + '/' : ''}`;

@@ -19,6 +19,13 @@ export const wortel = join(hier, '..');
 // komt nooit online. De testservers hieronder serveren alleen wat hier door
 // komt, zodat een te ruim patroon de browsertests laat zakken in plaats van
 // pas op de echte site een plaatje of lettertype kwijt te raken.
+// En de include-lijst: wat daarin staat komt wel online, ook met een punt
+// ervoor (.well-known, voor de Android-app).
+export const INGESLOTEN = (() => {
+  const blok = readFileSync(join(wortel, '_config.yml'), 'utf8').match(/^include:\n((?:[ \t]+-[^\n]*\n?)+)/m);
+  return blok ? blok[1].split('\n').map((r) => r.replace(/^\s*-\s*/, '').trim().replace(/^["']|["']$/g, ''))
+    .filter(Boolean) : [];
+})();
 export const UITGESLOTEN = (() => {
   const tekst = readFileSync(join(wortel, '_config.yml'), 'utf8');
   const blok = tekst.match(/^exclude:\n((?:[ \t]+-[^\n]*\n?)+)/m);
@@ -31,6 +38,7 @@ const alsPatroon = (p) => new RegExp('^' + p.replace(/\/$/, '').split('').map((c
 const PATRONEN = UITGESLOTEN.map((p) => ({ tekst: p.replace(/\/$/, ''), re: alsPatroon(p) }));
 export const gepubliceerd = (pad) => {
   const rel = pad.replace(/^\/+/, '');
+  if (INGESLOTEN.some((i) => rel === i || rel.startsWith(`${i}/`))) return true;
   if (rel.split('/').some((deel) => /^[._#~]/.test(deel))) return false;
   return !PATRONEN.some(({ tekst, re }) => re.test(rel) || rel.startsWith(tekst));
 };
@@ -55,6 +63,8 @@ export function maakControle(titel) {
 // aanpassen() krijgt de broncode van de nabootsing en mag hem wijzigen,
 // zodat een test een kapotte database kan naspelen.
 //
+// schaal: de pixeldichtheid (deviceScaleFactor), voor scherpe schermafdrukken
+// in de Play Store (scripts/maak-winkel.mjs).
 // userAgent doet zich voor als een ander apparaat. Nodig voor de iOS-kant van
 // "zet op beginscherm": daar bestaat de installatieprompt van Chrome niet en
 // hangt het scherm dus aan wat navigator.userAgent zegt.
@@ -74,7 +84,7 @@ function zegNeeTegenMeten() {
   } catch { /* niets */ }
 }
 
-export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
+export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent, schaal,
                                    taal = 'nl', verhaal = false, toestemming = false, voorafAan } = {}) {
   const map = mkdtempSync(join(tmpdir(), 'poule-test-'));
 
@@ -132,7 +142,7 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent,
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
 
   const browser = await chromium.launch();
-  const page = await browser.newPage(userAgent ? { userAgent } : {});
+  const page = await browser.newPage({ ...(userAgent ? { userAgent } : {}), ...(schaal ? { deviceScaleFactor: schaal } : {}) });
   // De app kiest zijn taal uit de browser als niemand zelf iets gekozen heeft,
   // en een testbrowser staat op Engels. Alle testen hieronder letten op de
   // Nederlandse tekst, dus die keuze wordt hier gemaakt in plaats van per
