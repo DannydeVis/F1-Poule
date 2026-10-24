@@ -26,6 +26,29 @@
 <!-- display:standalone uit het manifest is wat een iPhone sinds 16.4 leest;
      dit is de oude schakelaar, voor toestellen die daar nog onder zitten. -->
 <meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Op het beginscherm van een iPhone loopt de app door tot de bovenrand,
+     onder de statusbalk door, zoals een gewone app. De gewone statusbalk is
+     een witte strook met zwarte letters, ook als de app donker is. De letters
+     zijn hier altijd wit; body::before legt er een strook onder (--statusbalk,
+     zie "de iPhone-beginschermapp" in de CSS). -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Het opstartscherm van de beginschermapp, per iPhone-maat: zonder dit is
+     het scherm wit tot de app er is. Gemaakt met scripts/maak-opstartbeelden.mjs,
+     dat ook dit blok schrijft. -->
+<!-- opstartbeelden -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-1320x2868.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-1260x2736.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-1290x2796.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-1284x2778.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-1242x2688.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-828x1792.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-1206x2622.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-1179x2556.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-1170x2532.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-1125x2436.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-1242x2208.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="../pictogrammen/opstart/opstart-750x1334.png">
+<!-- /opstartbeelden -->
 <!-- De app zelf hoort niet in zoekresultaten: de landingspagina in de
      hoofdmap is de pagina om gevonden te worden, en een uitnodigingslink met
      ?code= erin hoort al helemaal niet op straat. -->
@@ -124,6 +147,15 @@
      voor de lopende tekst. Licht en donker volgen het toestel.
      ========================================================== */
   :root{
+    /* De randen van het scherm die het toestel zelf gebruikt: de statusbalk
+       (en het eiland of de inkeping), het streepje onderin, en in liggende
+       stand de zijkanten. Overal 0, behalve in de beginschermapp op een
+       iPhone. Als variabele, zodat test/iphone.test.mjs ze kan nadoen. */
+    --boven:env(safe-area-inset-top,0px); --onder:env(safe-area-inset-bottom,0px);
+    --links:env(safe-area-inset-left,0px); --rechts:env(safe-area-inset-right,0px);
+    /* Wat er onder de statusbalk ligt. Die heeft witte letters, dus in het
+       licht donker; in het donker de kleur van de kop. */
+    --statusbalk:#0b0b0c;
     --bg:#f2f1ee; --paneel:#ffffff; --paneel2:#e9e8e4; --gedempt:#e0dedb;
     --lijn:#dcdad5; --stippel:#cfccc7;
     /* ink3 draagt de kleine labels (10-11px), en die hoorde op 4.5:1 te zitten.
@@ -176,6 +208,7 @@
      donker koos. */
   @media (prefers-color-scheme:dark){
     :root:not([data-thema="licht"]){
+      --statusbalk:#15161a;
       --bg:#0b0b0c; --paneel:#15161a; --paneel2:#1d1f24; --gedempt:#2b2e35;
       --lijn:#2b2e35; --stippel:#2b2e35;
       /* Zelfde verhaal in het donker: #656b74 haalde 3.36. Nu 4.61/5.01. */
@@ -196,6 +229,7 @@
     }
   }
   :root[data-thema="donker"]{
+    --statusbalk:#15161a;
     --bg:#0b0b0c; --paneel:#15161a; --paneel2:#1d1f24; --gedempt:#2b2e35;
     --lijn:#2b2e35; --stippel:#2b2e35;
     /* Zelfde verhaal in het donker: #656b74 haalde 3.36. Nu 4.61/5.01. */
@@ -236,6 +270,16 @@
     margin:0;background:var(--bg);color:var(--ink);
     font-family:var(--sans);font-size:16px;line-height:1.45;
   }
+  /* ---- de iPhone-beginschermapp ----------------------------
+     De statusbalk is doorzichtig (black-translucent, zie de kop). Alles
+     schuift dus --boven omlaag, en in liggende stand --links en --rechts
+     opzij; onder de statusbalk een vaste strook in --statusbalk, anders
+     staan de witte klok en batterij op een witte kop. In Safari en op
+     Android zijn die randen 0 en verandert hier niets. */
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{padding:var(--boven) var(--rechts) 0 var(--links)}
+  body::before{content:"";position:fixed;z-index:1000;top:0;left:0;right:0;height:var(--boven);
+    background:var(--statusbalk);pointer-events:none}
   button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
   :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
@@ -548,7 +592,7 @@
   /* ---- de app: zijbalk + inhoud --------------------------- */
   .shell{display:flex;flex-direction:column;min-height:100%}
   .zijbalk{
-    position:sticky;top:0;z-index:20;background:var(--paneel);
+    position:sticky;top:var(--boven);z-index:20;background:var(--paneel);
     border-bottom:1px solid var(--lijn);padding:12px 14px;
     display:flex;flex-direction:column;gap:12px;
   }
@@ -563,7 +607,7 @@
     position:fixed;left:0;right:0;bottom:0;z-index:30;
     display:flex;gap:6px;background:var(--paneel);
     border-top:1px solid var(--lijn);
-    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+    padding:8px calc(12px + var(--rechts)) calc(8px + var(--onder)) calc(12px + var(--links));
   }
   /* De navigatie is geen kop. Hij stond in condensed hoofdletters op 18 en 21
      pixels en schreeuwde daarmee even hard als de paginatitel ernaast -- en
@@ -592,9 +636,9 @@
   .kop{display:none}
   .kolommen{flex:1;display:block;min-height:0}
   /* Ruimte onderaan voor de vaste tabbalk, zodat die niets afdekt. */
-  .kol{padding:20px 16px calc(96px + env(safe-area-inset-bottom));
+  .kol{padding:20px 16px calc(96px + var(--onder));
     display:flex;flex-direction:column;gap:18px;min-width:0}
-  .shell.detail .kol{padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+  .shell.detail .kol{padding-bottom:calc(40px + var(--onder))}
   .kol.rechts{display:none}
   .shell.detail .kol.links{display:none}
   .shell.detail .kol.rechts{display:flex}
@@ -863,7 +907,7 @@
   .kiesblad-in{width:100%;max-width:560px;max-height:82vh;overflow-y:auto;
     display:flex;flex-direction:column;gap:12px;background:var(--bg);
     border:1px solid var(--lijn);border-radius:16px 16px 0 0;
-    padding:16px 16px calc(20px + env(safe-area-inset-bottom));
+    padding:16px 16px calc(20px + var(--onder));
     animation:omhoog .22s var(--soepel) both}
   .kiesblad-kop{display:flex;align-items:center;justify-content:space-between;gap:12px}
   /* Drie op een rij: klein genoeg om alle coureurs in beeld te houden. */
@@ -890,7 +934,7 @@
      eronder (een nieuwe uitslag, een ander tabblad) het niet weghaalt. */
   .deelvenster{position:fixed;inset:0;z-index:70;display:flex;align-items:center;
     justify-content:center;background:rgba(0,0,0,.72);animation:invagen .18s both;
-    padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+    padding:max(16px,var(--boven)) 16px max(16px,var(--onder))}
   .deelvenster-in{width:100%;max-width:420px;max-height:100%;overflow-y:auto;
     display:flex;flex-direction:column;gap:12px;background:var(--bg);
     border:1px solid var(--lijn);border-radius:16px;padding:16px;
@@ -921,7 +965,7 @@
     animation:invagen .2s both}
   .verhaal-in{position:relative;width:100%;max-width:480px;height:100%;overflow:hidden;
     display:flex;flex-direction:column;
-    padding:calc(12px + env(safe-area-inset-top)) 22px calc(20px + env(safe-area-inset-bottom))}
+    padding:calc(12px + var(--boven)) 22px calc(20px + var(--onder))}
   /* Een zachte gloed in het accent linksboven, zoals op de weekendkaart. */
   .verhaal-in::before{content:"";position:absolute;inset:-20% -40% auto auto;width:90%;height:60%;
     background:radial-gradient(closest-side,rgba(238,77,51,.18),transparent);pointer-events:none}
@@ -1093,8 +1137,10 @@
     padding-top:4px}
   .somregel .getal{font-family:var(--mono);font-size:28px}
 
+  /* padding-bottom: in de beginschermapp anders onder het streepje onderin,
+     waar een veeg de app sluit in plaats van Opslaan te raken. */
   .opslaanbalk{position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px;
-    padding-top:10px;background:linear-gradient(transparent,var(--bg) 40%)}
+    padding-top:10px;padding-bottom:var(--onder);background:linear-gradient(transparent,var(--bg) 40%)}
   .opslaanbalk .knop{min-height:56px}
   /* Wis alles hoort niet even zwaar te wegen als opslaan, tot hij vraagt of
      je het zeker weet — dan mag hij wel opvallen. */
@@ -1322,7 +1368,7 @@
   /* Trekken om te verversen (verversPoule): een rondje met een pijl dat
      meekomt met je vinger, en een woord eronder. Onder de statusbalk van de
      telefoon, boven alles. */
-  #trekker{position:fixed;left:50%;top:calc(env(safe-area-inset-top) - 44px);z-index:60;
+  #trekker{position:fixed;left:50%;top:calc(var(--boven) - 44px);z-index:60;
     display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;
     transform:translate(-50%, var(--trek, 0px));opacity:0;transition:opacity .15s}
   #trekker[data-stand="trekken"],#trekker[data-stand="klaar"],#trekker[data-stand="bezig"]{opacity:1}
@@ -1456,7 +1502,8 @@
   .knoptekst{background:none;border:0;padding:0;font:inherit;color:var(--accent);
     text-decoration:underline;cursor:pointer;text-align:left}
   .knoptekst:hover{color:var(--ink)}
-  .stillefout{position:fixed;left:12px;right:12px;bottom:12px;z-index:60;
+  .stillefout{position:fixed;left:calc(12px + var(--links));right:calc(12px + var(--rechts));
+    bottom:calc(12px + var(--onder));z-index:60;
     display:flex;gap:12px;align-items:center;justify-content:space-between;
     background:var(--paneel);border:1px solid var(--accent);border-radius:12px;
     padding:12px 14px;color:var(--ink2);font-size:13px;
@@ -1499,7 +1546,7 @@
     .zijbalk{
       position:static;width:248px;flex:none;border-bottom:0;
       border-right:1px solid var(--lijn);padding:22px 16px;gap:26px;
-      height:100vh;position:sticky;top:0;
+      height:calc(100vh - var(--boven));position:sticky;top:var(--boven);
     }
     /* Op een breed scherm andersom: de poulenaam staat al groot in de kop.
        Naam en ondertitel in een kolom naast het blok, zoals een merkblok

@@ -2731,6 +2731,17 @@ Wat je zelf kunt doen:
   bovenin dat bestand).
 - **In de Play Store**: zie §21.
 
+**Op het beginscherm van een iPhone** (sinds 24 oktober) loopt de app door
+tot de bovenrand, zoals een gewone app: achter de klok en de batterij een
+donkere strook (in het donker in de kleur van de kop), en niets meer onder het
+streepje onderin of, liggend, onder de inkeping. Bij het opstarten een donker
+scherm met het logo in plaats van een witte flits
+(`scripts/maak-opstartbeelden.mjs`, twaalf iPhone-maten). De statusbalk zie je
+bij de volgende keer openen. Het opstartscherm haalt een iPhone pas op als je
+de app opnieuw op je beginscherm zet; doe dat alleen als je account
+gekoppeld is (Profiel), want een iPhone gooit bij het weghalen alles van die
+app weg, ook wie je bent.
+
 ## 19. Premium: een eigen profiel voor een poule
 
 Voor bedrijven, clubs en grote groepen: een eigen logo, een eigen kleur en een
