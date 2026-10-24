@@ -2737,7 +2737,9 @@ licht, donker in het donker, ook als je zelf een thema kiest. Niets meer onder
 het streepje onderin of, liggend, onder de inkeping. (Eerst liep de app onder
 de statusbalk door; sinds iOS 26 legt de iPhone daar een grijze waas over, dus
 weer de gewone balk. Wie de app toen op het beginscherm zette, moet hem
-opnieuw zetten om dat kwijt te raken.) Bij het opstarten een donker
+opnieuw zetten om dat kwijt te raken.) Bij het openen het logo en de naam tot
+je poule er staat: iOS 27 toont de opstartbeelden niet meer, dus doet de app
+het zelf, alleen in de beginschermapp. Bij het opstarten een donker
 scherm met het logo in plaats van een witte flits
 (`scripts/maak-opstartbeelden.mjs`, alle iPhone-maten van de 8 tot de 17,
 de Air en de opvouwbare Duo: dicht, open, en open ook dwars). Van de Duo heeft

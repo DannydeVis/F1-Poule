@@ -32,6 +32,10 @@
 //   4. Zonder die randen (Safari, Android, een computer) verandert er niets.
 //   5. De opvouwbare iPhone Duo: dicht, open en open dwars past alles, met de
 //      tabbalk boven het streepje.
+//   6. Het opstartscherm in de app zelf (iOS 27 toont de opstartbeelden niet):
+//      in een browser onzichtbaar, in de beginschermapp het logo en de naam
+//      in de kleur van de kop (en dus van de statusbalk), en weg zodra de
+//      poule er staat.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -170,6 +174,32 @@ for (const [naam, b, h, css] of [['dicht', 466, 678, RANDEN.staand], ['open', 62
   check(`iPhone Duo ${naam}: niets steekt opzij uit en de tabbalk staat onderaan`, maat.over === 0
     && Math.abs(maat.navOnder - maat.hoog) < 1, JSON.stringify(maat));
   check(`geen javascriptfouten (Duo ${naam})`, jsFouten.length === 0, jsFouten.join(' | '));
+  await stoppen();
+}
+
+// ---- 6. het opstartscherm in de app ------------------------------------------------------
+{
+  check('het opstartscherm valt na zes seconden altijd weg, ook als het script misgaat',
+    /<div id="opstart" aria-hidden="true">[\s\S]*?<script>setTimeout\(function\(\)\{var o=document\.getElementById\('opstart'\);if\(o\)o\.classList\.add\('weg'\)\},6000\)<\/script>/.test(app));
+  const { page, jsFouten, stoppen } = await startPagina();
+  await page.setViewportSize({ width: 440, height: 956 });
+  await meedoen(page);
+  check('in een browser geen opstartscherm', (await stijl(page, '#opstart', 'display')) === 'none');
+  // Een testbrowser is geen beginschermapp: doe display-mode: standalone na.
+  await page.addStyleTag({ content: '#opstart{display:flex!important;transition:none!important}' });
+  check('in de beginschermapp is het weg zodra de poule er staat', await page.$eval('#opstart', (e) =>
+    e.classList.contains('weg') && getComputedStyle(e).visibility === 'hidden' && getComputedStyle(e).opacity === '0'));
+  await page.evaluate(() => document.getElementById('opstart').classList.remove('weg'));
+  const scherm = await page.evaluate(() => {
+    const o = document.getElementById('opstart'); const r = o.getBoundingClientRect();
+    const logo = o.querySelector('i').getBoundingClientRect();
+    return { vol: r.width === innerWidth && r.height === innerHeight, achter: getComputedStyle(o).backgroundColor,
+      bg: getComputedStyle(document.querySelector('.zijbalk')).backgroundColor, logo: logo.width > 50 && Math.abs(logo.left + logo.width / 2 - innerWidth / 2) < 1,
+      naam: o.querySelector('b').textContent, boven: document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.closest('#opstart') !== null };
+  });
+  check('daarvoor: het hele scherm, het logo in het midden en de naam, in de kleur van de kop en de statusbalk',
+    scherm.vol && scherm.achter === scherm.bg && scherm.logo && scherm.naam === 'Predict the Race' && scherm.boven, JSON.stringify(scherm));
+  check('geen javascriptfouten (opstartscherm)', jsFouten.length === 0, jsFouten.join(' | '));
   await stoppen();
 }
 
