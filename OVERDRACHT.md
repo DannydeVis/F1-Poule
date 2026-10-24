@@ -11455,6 +11455,20 @@ zonder randen geen verschil.
 **Danny moet:** niets. Wil hij het opstartscherm zien: de app opnieuw op het
 beginscherm zetten, maar alleen met een gekoppeld account.
 
+**Daarna: de statusbalk terug naar de gewone.** Danny stuurde een
+schermafdruk: bovenin een grijze waas met zwarte letters, lelijk. Sinds iOS
+26(.1) legt de iPhone over een beginschermapp met black-translucent zelf een
+waas, en CSS haalt die niet weg (WebKit-bugs 301108 en 317153). Nu
+`apple-mobile-web-app-status-bar-style` op `default`: de app begint onder de
+statusbalk, en die krijgt de kleur uit theme-color. Dat zijn nu twee
+metatags (licht #ffffff, donker #15161a, de kleur van de kop) met media, en
+`kleurStatusbalk()` zet ze allebei op de gekozen kleur als je zelf een thema
+kiest. De CSS voor de doorzichtige balk (--boven, body::before) blijft voor
+wie de app al zo op het beginscherm had; bij de gewone balk is --boven 0.
+Een iPhone leest de stijl alleen bij het op het beginscherm zetten. Het
+opstartscherm verscheen bij Danny ook niet; open: welk model, en staat
+Weergave op Groter (dan is de schermmaat anders en past geen plaatje).
+
 **Daarna: de iPhone Duo** (de opvouwbare, sinds 23 oktober te koop). Danny
 vroeg of de app daar ook goed op staat. De indeling past zich al aan elke
 breedte aan; nagelopen op het buitenscherm (466 x 678), het binnenscherm

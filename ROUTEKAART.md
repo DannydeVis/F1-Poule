@@ -1146,7 +1146,8 @@ Open bij Danny: ontwikkelaarsaccount, gesloten test met 12 testers (14 dagen),
 uploaden, winkelpagina en App-content, productietoegang.
 
 **De iPhone-beginschermapp** (24 oktober). Gebouwd: de app loopt door tot de
-bovenrand (doorzichtige statusbalk met een strook erachter), niets meer onder
+bovenrand (eerst met een doorzichtige statusbalk; sinds iOS 26 geeft dat een
+waas, dus nu de gewone in de kleur van de kop), niets meer onder
 het streepje onderin of de inkeping, en een donker opstartscherm per
 iPhone-maat, ook voor de opvouwbare iPhone Duo (dicht, open en open dwars;
 de maten zijn afgeleid uit Apples schermpixels); BEDIENING §18, "De app op je telefoon".

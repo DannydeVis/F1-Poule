@@ -2732,9 +2732,12 @@ Wat je zelf kunt doen:
 - **In de Play Store**: zie §21.
 
 **Op het beginscherm van een iPhone** (sinds 24 oktober) loopt de app door
-tot de bovenrand, zoals een gewone app: achter de klok en de batterij een
-donkere strook (in het donker in de kleur van de kop), en niets meer onder het
-streepje onderin of, liggend, onder de inkeping. Bij het opstarten een donker
+met de statusbalk (klok en batterij) in de kleur van de kop: wit in het
+licht, donker in het donker, ook als je zelf een thema kiest. Niets meer onder
+het streepje onderin of, liggend, onder de inkeping. (Eerst liep de app onder
+de statusbalk door; sinds iOS 26 legt de iPhone daar een grijze waas over, dus
+weer de gewone balk. Wie de app toen op het beginscherm zette, moet hem
+opnieuw zetten om dat kwijt te raken.) Bij het opstarten een donker
 scherm met het logo in plaats van een witte flits
 (`scripts/maak-opstartbeelden.mjs`, alle iPhone-maten van de 8 tot de 17,
 de Air en de opvouwbare Duo: dicht, open, en open ook dwars). Van de Duo heeft
