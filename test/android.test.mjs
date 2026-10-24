@@ -74,6 +74,12 @@ check('meldingen aan (de herinneringen voor deadlines), portret, sleutel met ali
   const sdk = (naam) => Number(new RegExp(`${naam}\\s+(\\d+)`).exec(gradle)?.[1]);
   check('Android 16 (API 36): verplicht voor nieuwe apps in de Play Store sinds 31 augustus 2026',
     sdk('targetSdkVersion') >= 36 && sdk('compileSdkVersion') >= 36, `${sdk('targetSdkVersion')} ${sdk('compileSdkVersion')}`);
+  // androidbrowserhelper 2.7.4 vraagt Android 7 (API 24); Bubblewrap vult
+  // standaard nog 21 in, en daarop zakte de tweede build op GitHub.
+  check('minimaal Android 7 (API 24), zoals androidbrowserhelper vraagt, en gelijk aan twa-manifest.json',
+    sdk('minSdkVersion') >= 24 && sdk('minSdkVersion') === twa.minSdkVersion, String(sdk('minSdkVersion')));
+  check('een versienaam (appVersion in twa-manifest.json, niet appVersionName)',
+    /^\d+\.\d+\.\d+$/.test(twa.appVersion) && gradle.includes(`versionName "${twa.appVersion}"`) && !('appVersionName' in twa));
   check('het versienummer komt van buitenaf (-PversieCode), zonder haakjes direct na versionCode (Groovy leest dat als aanroep)',
     /versionCode Integer\.parseInt\(String\.valueOf\(project\.findProperty\('versieCode'\) \?: '1'\)\)/.test(gradle)
       && !/versionCode \(/.test(gradle));

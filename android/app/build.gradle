@@ -55,10 +55,10 @@ android {
     namespace "com.predicttherace.app"
     defaultConfig {
         applicationId "com.predicttherace.app"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 36
         versionCode Integer.parseInt(String.valueOf(project.findProperty('versieCode') ?: '1'))
-        versionName ""
+        versionName "1.0.0"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name
