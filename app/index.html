@@ -21,17 +21,21 @@
      omheen. Het maskable pictogram hierboven komt daar dus klein uit met een
      brede rand; vandaar een eigen, vullende variant. -->
 <link rel="apple-touch-icon" href="../pictogrammen/predicttherace-apple-180.png">
-<meta name="theme-color" content="#0b0b0c">
+<!-- De kleur van de statusbalk in de iPhone-beginschermapp (en van de balk
+     van de browser op Android): die van de kop, licht of donker. Kies je zelf
+     een thema, dan zet kleurStatusbalk() beide op die kleur. -->
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" data-kleur="#ffffff">
+<meta name="theme-color" content="#15161a" media="(prefers-color-scheme: dark)" data-kleur="#15161a">
 <meta name="apple-mobile-web-app-title" content="Predict the Race">
 <!-- display:standalone uit het manifest is wat een iPhone sinds 16.4 leest;
      dit is de oude schakelaar, voor toestellen die daar nog onder zitten. -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<!-- Op het beginscherm van een iPhone loopt de app door tot de bovenrand,
-     onder de statusbalk door, zoals een gewone app. De gewone statusbalk is
-     een witte strook met zwarte letters, ook als de app donker is. De letters
-     zijn hier altijd wit; body::before legt er een strook onder (--statusbalk,
-     zie "de iPhone-beginschermapp" in de CSS). -->
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- De gewone statusbalk: de app begint eronder, in de kleur van theme-color
+     hierboven. Niet black-translucent (de app onder de statusbalk door): sinds
+     iOS 26 legt de iPhone daar zelf een grijze waas overheen met zwarte
+     letters, die je niet weg krijgt (24 oktober, schermafdruk van Danny).
+     Een iPhone leest dit alleen bij het op het beginscherm zetten. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <!-- Het opstartscherm van de beginschermapp, per iPhone-maat: zonder dit is
      het scherm wit tot de app er is. Gemaakt met scripts/maak-opstartbeelden.mjs,
      dat ook dit blok schrijft. -->
@@ -274,11 +278,11 @@
     font-family:var(--sans);font-size:16px;line-height:1.45;
   }
   /* ---- de iPhone-beginschermapp ----------------------------
-     De statusbalk is doorzichtig (black-translucent, zie de kop). Alles
-     schuift dus --boven omlaag, en in liggende stand --links en --rechts
-     opzij; onder de statusbalk een vaste strook in --statusbalk, anders
-     staan de witte klok en batterij op een witte kop. In Safari en op
-     Android zijn die randen 0 en verandert hier niets. */
+     Liggend schuift alles --links en --rechts opzij, weg van de inkeping.
+     De statusbalk is de gewone (zie de kop), dus --boven is 0. Alleen wie
+     de app nog met de doorzichtige statusbalk op het beginscherm heeft
+     (24 oktober) krijgt --boven omlaag en een strook in --statusbalk onder
+     de witte klok. In Safari en op Android zijn die randen 0. */
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   body{padding:var(--boven) var(--rechts) 0 var(--links)}
   body::before{content:"";position:fixed;z-index:1000;top:0;left:0;right:0;height:var(--boven);
@@ -7305,7 +7309,17 @@ function pasThemaToe(thema) {
     delete html.dataset.thema;
     html.style.colorScheme = '';
   }
+  kleurStatusbalk();
 }
+// De statusbalk in de kleur van de kop: zelf een thema gekozen, dan die
+// kleur; anders licht of donker zoals het toestel (de media op de metatags).
+function kleurStatusbalk() {
+  const thema = document.documentElement.dataset.thema;
+  for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+    meta.content = thema === 'donker' ? '#15161a' : thema === 'licht' ? '#ffffff' : meta.dataset.kleur;
+  }
+}
+kleurStatusbalk();
 function zetThema(thema) {
   const volgToestel = thema === toestelThema();
   try {

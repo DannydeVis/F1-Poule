@@ -6,13 +6,19 @@
 // onder het streepje onderin (waar een veeg de app sluit), en een witte flits
 // bij het opstarten.
 //
+// Daarna (zelfde dag, schermafdruk van Danny): de doorzichtige statusbalk
+// (black-translucent) gaf sinds iOS 26 een grijze waas met zwarte letters
+// bovenin. Nu de gewone statusbalk, in de kleur van de kop (theme-color).
+// Blok 2 blijft staan voor wie de app nog met de doorzichtige balk heeft.
+//
 // Een testbrowser heeft geen statusbalk of streepje. De app leest die randen
 // daarom uit variabelen (--boven, --onder, --links, --rechts, uit
 // env(safe-area-inset-*)), en deze test zet ze zelf, zoals een iPhone 15 ze
 // geeft: 59 boven, 34 onder; liggend 59 links en rechts.
 //
 // Wat hier vastligt:
-//   1. In de kop: de statusbalk doorzichtig (black-translucent), het scherm
+//   1. In de kop: de gewone statusbalk in de kleur van de kop (licht wit,
+//      donker #15161a, ook als je zelf een thema kiest), het scherm
 //      tot de rand (viewport-fit=cover), en een opstartbeeld per iPhone-maat
 //      dat precies zo groot is als dat scherm, staand, voor elke maat in
 //      scripts/maak-opstartbeelden.mjs. Ook voor de opvouwbare iPhone Duo,
@@ -36,8 +42,8 @@ const { check, afronden } = maakControle('de app op het beginscherm van een iPho
 const app = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
 
 // ---- 1. de kop -------------------------------------------------------------------------
-check('de statusbalk is doorzichtig (black-translucent)',
-  app.includes('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'));
+check('de gewone statusbalk, niet de doorzichtige (iOS 26 legt daar een waas over)',
+  app.includes('<meta name="apple-mobile-web-app-status-bar-style" content="default">') && !app.includes('black-translucent"'));
 check('het scherm loopt tot de rand (viewport-fit=cover)', /<meta name="viewport" content="[^"]*viewport-fit=cover/.test(app));
 check('de opstartbeelden in de kop zijn die van scripts/maak-opstartbeelden.mjs', app.includes(blok()));
 {
@@ -85,10 +91,21 @@ const contrastMetWit = (rgb) => {
   const donker = await stijl(page, 'body', 'backgroundColor', '::before');
   const kop = await stijl(page, '.zijbalk', 'backgroundColor');
   check('in het donker de kleur van de kop, dus één vlak tot de bovenrand', donker === kop && contrastMetWit(donker) >= 4.5, `${donker} ${kop}`);
+  // De gewone statusbalk: theme-color volgt de kop.
+  const kleuren = () => page.$$eval('meta[name="theme-color"]', (m) => m.map((x) => x.content).join(' '));
+  const rgb = (hex) => `rgb(${hex.match(/\w\w/g).map((x) => parseInt(x, 16)).join(', ')})`;
+  check('de statusbalk heeft in het donker de kleur van de kop', (await kleuren()) === '#ffffff #15161a'
+    && rgb('#15161a') === kop, await kleuren());
   await page.emulateMedia({ colorScheme: 'light' });
   await page.evaluate(() => { document.documentElement.dataset.thema = 'donker'; });
   check('ook als je zelf donker kiest op een licht toestel', (await stijl(page, 'body', 'backgroundColor', '::before')) === kop);
   await page.evaluate(() => { delete document.documentElement.dataset.thema; });
+  const lichteKop = await stijl(page, '.zijbalk', 'backgroundColor');
+  check('in het licht is de statusbalk wit, zoals de kop', lichteKop === rgb('#ffffff'), lichteKop);
+  await page.click('#themaknop');
+  check('kies je zelf donker (de maan), dan wordt de statusbalk donker', (await kleuren()) === '#15161a #15161a', await kleuren());
+  await page.click('#themaknop');
+  check('en terug naar licht: weer die van het toestel, dus wit', (await kleuren()) === '#ffffff #15161a', await kleuren());
 
   await page.evaluate(() => window.scrollTo(0, 600));
   const boven = await page.$eval('.zijbalk', (e) => e.getBoundingClientRect().top);
