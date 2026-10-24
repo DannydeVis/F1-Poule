@@ -1038,8 +1038,10 @@ app is."
   ondertekende `.aab` en de winkelteksten en -plaatjes in zeven talen,
   `.well-known/assetlinks.json` staat op het domein. Open bij Danny: het
   ontwikkelaarsaccount, 12 testers voor 14 dagen, uploaden en invullen
-  (BEDIENING §21). Daarna bij mij: de vingerafdrukken in `site/android.mjs`
-  en de link naar de winkel op de site.
+  (BEDIENING §21). De eerste ondertekende `.aab` staat klaar (run 4 op
+  main, 24 oktober) en de vingerafdruk van de uploadsleutel staat in
+  `site/android.mjs`. Daarna bij mij: de vingerafdruk van Google erbij, en de
+  link naar de winkel op de site.
 - **De App Store**: niet als schil om de website. Apple wijst apps af die
   vooral een website in een venster zijn; dat vraagt een echte iPhone-app. Op
   een iPhone blijft het beginscherm de weg.

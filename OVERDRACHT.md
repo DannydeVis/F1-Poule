@@ -11402,3 +11402,21 @@ App-content invullen, en na 14 dagen productietoegang aanvragen.
 **Ik moet daarna**: de vingerafdruk van de uploadsleutel (uit de eerste run op
 main) en die van Google in `site/android.mjs` zetten; als de app voor iedereen
 in de winkel staat de link op de site (`winkel`).
+
+**Na de merge (24 oktober).** De merge door de automerge startte de workflow
+niet: GitHub start geen workflows vanuit een push die een workflow met
+`GITHUB_TOKEN` doet, behalve via `workflow_dispatch`. Ik heb hem met de hand
+gestart (run 4): de uploadsleutel is gemaakt (`uploadsleutel.json`, 5,9 kB, in
+de privé-map), de `.aab` gebouwd en nagelopen, en de winkelbijlage gemaakt.
+De vingerafdruk van de uploadsleutel staat nu in `site/android.mjs`. De
+automerge start de workflow voortaan zelf na een merge die dezelfde paden raakt
+als "push" in `android.yml` (`actions: write`, `createWorkflowDispatch`);
+`test/android.test.mjs` houdt de paden gelijk. Dat werkt pas vanaf de merge
+van die wijziging, want de automerge draait met de versie op main.
+
+Onderweg zakte de build op de pull request twee keer, allebei in het project:
+`versionCode (a ?: b).toInteger()` leest Groovy als een aanroep met daarna
+`.toInteger()` op null (nu `Integer.parseInt(...)`), en androidbrowserhelper
+2.7.4 vraagt minSdk 24 terwijl Bubblewrap 21 invult. Ook stond de versienaam
+leeg: de sleutel in `twa-manifest.json` heet `appVersion`.
+
