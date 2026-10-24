@@ -2461,6 +2461,19 @@ begin
     using (bucket_id = 'poulelogo' and public.mag_logo_zetten((storage.foldername(name))[1]));
 end $$;
 
+-- De uploadsleutel van de Android-app (scripts/android-sleutel.mjs, sinds 24
+-- oktober): een privé-map zonder policies. anon en authenticated kunnen er
+-- dus niet bij, alleen de service_role-sleutel (het secret SUPABASE_KEY in
+-- GitHub). Eén bestand van een paar kB; 64 kB is ruim.
+do $$
+begin
+  if to_regclass('storage.buckets') is null then return; end if;
+  insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  values ('android', 'android', false, 65536, array['application/json'])
+  on conflict (id) do update set public = false,
+    file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+end $$;
+
 -- ------------------------------------------------------------
 --  Rechten op tabelniveau
 --  Supabase geeft anon en authenticated standaard alles op `public`. Dat is

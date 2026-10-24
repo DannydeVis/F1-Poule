@@ -1,0 +1,142 @@
+name: Android-app
+
+# De app voor de Play Store: het project in android/ (scripts/maak-android.mjs),
+# een Trusted Web Activity om https://predicttherace.com/app/. Zie BEDIENING.md
+# §21.
+#
+#   - Bij een pull request die het project raakt: bouwen zonder handtekening,
+#     alleen om te zien dat het nog bouwt. Geen secrets.
+#   - Op main (na zo'n merge) en met de hand (Actions > Android-app > Run
+#     workflow): een ondertekende .aab voor de Play Console en een .apk om zelf
+#     op een telefoon te zetten, als bijlage bij de run (30 dagen). De
+#     uploadsleutel komt uit de privé-map in Supabase
+#     (scripts/android-sleutel.mjs); de eerste run maakt hem. De vingerafdruk
+#     staat in de samenvatting van de run.
+#   - Daar ook, als tweede bijlage: de teksten en plaatjes voor de Play Store
+#     in zeven talen (scripts/maak-winkel.mjs).
+#
+# Het versienummer voor de Play Store is het aantal commits op main: dat loopt
+# alleen maar op, zoals Google Play wil.
+
+on:
+  pull_request:
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+      - 'scripts/android-sleutel.mjs'
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+      - 'site/winkel.mjs'
+      - 'scripts/maak-winkel.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Nooit twee runs tegelijk op main: de eerste maakt misschien de sleutel.
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bouwen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ONDERTEKENEN: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Android SDK 36
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" > /dev/null
+
+      - name: Uploadsleutel
+        if: env.ONDERTEKENEN == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scripts/android-sleutel.mjs
+
+      - name: Bouwen
+        working-directory: android
+        run: |
+          VERSIE=$(git rev-list --count HEAD)
+          echo "Versiecode $VERSIE"
+          if [ "$ONDERTEKENEN" = true ]; then
+            ./gradlew --no-daemon bundleRelease assembleRelease -PversieCode="$VERSIE"
+          else
+            ./gradlew --no-daemon assembleDebug -PversieCode="$VERSIE"
+          fi
+
+      # De .aab en de .apk moeten met de uploadsleutel ondertekend zijn, en met
+      # niets anders: anders weigert de Play Console hem.
+      - name: Handtekening nalopen
+        if: env.ONDERTEKENEN == 'true'
+        run: |
+          VERWACHT=$(cat "$RUNNER_TEMP/vingerafdruk.txt")
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          keytool -printcert -jarfile "$AAB" | grep -q "SHA256: $VERWACHT" || { echo "De .aab is niet met de uploadsleutel ondertekend"; exit 1; }
+          "$BT/apksigner" verify --print-certs "$APK" | grep -qi "SHA-256 digest: $(echo "$VERWACHT" | tr -d ':' | tr 'A-F' 'a-f')" || { echo "De .apk is niet met de uploadsleutel ondertekend"; exit 1; }
+          mkdir -p uit
+          cp "$AAB" uit/predicttherace.aab
+          cp "$APK" uit/predicttherace.apk
+          cp "$RUNNER_TEMP/vingerafdruk.txt" uit/
+          # Het openbare certificaat: nodig als de uploadsleutel ooit gereset
+          # moet worden in de Play Console (BEDIENING §21).
+          keytool -exportcert -rfc -keystore "$ANDROID_SLEUTEL_PAD" -storepass "$ANDROID_SLEUTEL_WACHTWOORD" \
+            -alias upload -file uit/uploadcertificaat.pem
+          echo "Versiecode $(git rev-list --count HEAD), $(du -h uit/predicttherace.aab | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Bijlage
+        if: env.ONDERTEKENEN == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: predicttherace-android-${{ github.run_number }}
+          path: uit/
+          retention-days: 30
+          if-no-files-found: error
+
+  winkel:
+    # De teksten en plaatjes voor de Play Store, in zeven talen
+    # (scripts/maak-winkel.mjs), met de nabootsing uit de tests.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Playwright installeren
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: Teksten en plaatjes
+        run: node scripts/maak-winkel.mjs uit/winkel --beelden
+
+      - name: Bijlage
+        uses: actions/upload-artifact@v4
+        with:
+          name: predicttherace-winkel-${{ github.run_number }}
+          path: uit/winkel/
+          retention-days: 30
+          if-no-files-found: error

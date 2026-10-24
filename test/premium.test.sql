@@ -19,6 +19,8 @@
 --      niet in een andere bucket, niet als speler en niet zonder premium. De
 --      lijst met bestanden is niet te lezen voor wie geen poulebaas is: de
 --      mappen zijn ids van poules, en met een id kom je een poule binnen.
+--      En de privé-map android (de uploadsleutel van de Android-app): niet
+--      openbaar, met of zonder account niet te lezen en niet te vullen.
 --   5. Wie met een code binnenkomt (poule_ophalen) krijgt het profiel mee,
 --      zodat het scherm waar je je naam kiest het logo kan tonen.
 
@@ -197,6 +199,29 @@ begin
   reset role;
   set local role authenticated;
   raise notice 'ok: de lijst met logo-bestanden (en dus de ids van poules) is niet te lezen voor wie geen poulebaas is';
+
+  -- De privé-map voor de uploadsleutel van de Android-app (24 oktober): niet
+  -- openbaar, en niemand met een account of zonder komt erin, ook een
+  -- poulebaas met premium niet.
+  reset role;
+  select count(*) into n from storage.buckets
+  where id = 'android' and not public and file_size_limit = 65536;
+  if n <> 1 then raise exception 'gezakt: de map android is er niet, of openbaar'; end if;
+  insert into storage.objects (bucket_id, name) values ('android', 'uploadsleutel.json');
+  n := 0;
+  for fout in select unnest(array['anon', 'authenticated']) loop
+    execute format('set local role %I', fout);
+    perform set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-0000000000a2"}', true);
+    if (select count(*) from storage.objects where bucket_id = 'android') = 0 then n := n + 1; end if;
+    begin
+      insert into storage.objects (bucket_id, name) values ('android', 'uploadsleutel.json');
+    exception when insufficient_privilege then n := n + 1;
+    end;
+    reset role;
+  end loop;
+  if n <> 4 then raise exception 'gezakt: de map android is open: % van de 4 pogingen geweigerd', n; end if;
+  set local role authenticated;
+  raise notice 'ok: de map android (de uploadsleutel) is privé: niet te lezen en niet te vullen met of zonder account';
 
   -- Bram kan het logo van Anna niet weggooien; Anna zelf wel.
   perform set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-0000000000a3"}', true);

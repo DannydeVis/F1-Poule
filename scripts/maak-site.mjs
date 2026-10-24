@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * Maakt de landingspagina's, de privacyverklaring, de sitemap, robots.txt,
- * llms.txt, 404.html en het sleutelbestand van IndexNow uit site/teksten.mjs
- * en site/privacy.mjs.
+ * llms.txt, 404.html, het sleutelbestand van IndexNow en
+ * .well-known/assetlinks.json uit site/teksten.mjs, site/privacy.mjs en
+ * site/android.mjs.
  *
  *   node scripts/maak-site.mjs              schrijft alles weg
  *   node scripts/maak-site.mjs --controle   zegt alleen of het nog klopt
@@ -44,6 +45,7 @@ import { knipUit } from './knipsel.mjs';
 import { uitersten, MIN_RACES } from './circuits.mjs';
 import { RACEPAGINAS } from './racepaginas.mjs';
 import { openPouleRegel, controleerCode } from './openpoule.mjs';
+import { ANDROID } from '../site/android.mjs';
 
 // "Geen groep? Speel mee in de open poule" onder de knop (scripts/openpoule.mjs).
 // Zonder code in site/teksten.mjs niets; een verkeerde code laat het maken zakken.
@@ -1240,6 +1242,12 @@ const PRIVACY_CSS = `
   .verklaring a{color:var(--accent-tekst);overflow-wrap:anywhere}
 `;
 
+// Een anker per sectie van de privacyverklaring ("Hoe lang" wordt #hoe-lang),
+// zodat er rechtstreeks naar gelinkt kan worden. De Play Console vraagt een
+// link naar hoe je je account verwijdert (BEDIENING §21).
+const anker = (kop) => kop.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
 function privacyPagina(taal) {
   const t = PRIVACY[taal];
   const ander = PRIVACY_TALEN.find((c) => c !== taal);
@@ -1287,7 +1295,7 @@ ${hreflang}
     <h1>${esc(t.kop)}</h1>
     <p class="inleiding">${esc(t.intro)}</p>
     <p class="label"><time datetime="${PRIVACY_BIJGEWERKT}">${esc(t.bijgewerkt)}</time></p>
-${t.secties.map(([kop, alineas]) => `    <section>
+${t.secties.map(([kop, alineas]) => `    <section id="${anker(kop)}">
       <h2>${esc(kop)}</h2>
 ${alineas.map((a) => `      <p>${alinea(a)}</p>`).join('\n')}
     </section>`).join('\n')}
@@ -2057,6 +2065,17 @@ bestanden.set('404.html', NIET_GEVONDEN);
 // Het sleutelbestand van IndexNow: de sleutel zelf, niets anders.
 if (!/^[0-9a-f]{32}$/.test(INDEXNOW_SLEUTEL)) throw new Error('INDEXNOW_SLEUTEL in site/teksten.mjs is geen 32 hex-tekens');
 bestanden.set(`${INDEXNOW_SLEUTEL}.txt`, INDEXNOW_SLEUTEL);
+// Digital Asset Links: welke Android-app dit domein mag openen zonder
+// adresbalk (site/android.mjs, BEDIENING §21). Zonder vingerafdruk een geldig
+// bestand dat niets toestaat; dan opent de app gewoon met een adresbalk.
+for (const v of ANDROID.vingerafdrukken) {
+  if (!/^[0-9A-F]{2}(:[0-9A-F]{2}){31}$/.test(v)) throw new Error(`site/android.mjs: geen SHA-256-vingerafdruk: ${v}`);
+}
+bestanden.set('.well-known/assetlinks.json', JSON.stringify([{
+  relation: ['delegate_permission/common.handle_all_urls'],
+  target: { namespace: 'android_app', package_name: ANDROID.pakket,
+    sha256_cert_fingerprints: ANDROID.vingerafdrukken },
+}], null, 2) + '\n');
 
 // De vergelijking noemt feiten over andere apps, en die veranderen. Na drie
 // maanden een waarschuwing om ze opnieuw op hun eigen site te controleren
