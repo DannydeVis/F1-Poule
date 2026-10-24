@@ -251,8 +251,9 @@ export const opPlek = (page, kies) =>
 //
 // De app krijgt ook hier de nabootsing in plaats van Supabase. Alles wat naar
 // een andere host wil, wordt geweigerd en onthouden in `extern`: de pagina's
-// horen niets van buiten te laden.
-export async function startSite({ voorafAan, taal = null, toestemming = false } = {}) {
+// horen niets van buiten te laden. userAgent: net als bij startPagina(), voor
+// een iPhone of Android (het blok "De app" op de voorpagina, appblok.test.mjs).
+export async function startSite({ voorafAan, taal = null, toestemming = false, userAgent } = {}) {
   const types = { '.html': 'text/html', '.mjs': 'text/javascript', '.js': 'text/javascript',
                   '.woff2': 'font/woff2', '.png': 'image/png', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg',
                   '.xml': 'application/xml', '.txt': 'text/plain', '.ics': 'text/calendar',
@@ -281,7 +282,7 @@ export async function startSite({ voorafAan, taal = null, toestemming = false } 
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const url = `http://127.0.0.1:${server.address().port}/`;
   const browser = await chromium.launch();
-  const context = await browser.newContext();
+  const context = await browser.newContext(userAgent ? { userAgent } : {});
   const extern = [];
   await context.route((u) => !u.href.startsWith(url), (route) => {
     extern.push(route.request().url());

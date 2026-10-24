@@ -12,7 +12,9 @@
   for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i)||'';
     if(k.indexOf('poule:')===0&&k!=='poule:taal')return naar()}
 }catch(e){}})();</script>
-<script>try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('beweegt')}catch(e){}</script>
+<script>try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('beweegt')}catch(e){}
+addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.ptrVraag=e;
+  var k=document.querySelector('[data-installeer]');if(k)k.hidden=false});</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gratis F1-poule met je vrienden | Predict the Race</title>
 <meta name="description" content="Voorspel per Formule 1-race de top 10 van kwalificatie en race en speel tegen je vrienden in je eigen poule. Uitslagen komen vanzelf binnen. Gratis.">
@@ -31,6 +33,7 @@
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" href="pictogrammen/predicttherace-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="pictogrammen/predicttherace-apple-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preload" href="lettertypen/barlow-condensed-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="lettertypen/barlow-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:type" content="website">
@@ -119,7 +122,7 @@
    "about": {
     "@id": "https://predicttherace.com/#app"
    },
-   "dateModified": "2026-10-17",
+   "dateModified": "2026-10-24",
    "primaryImageOfPage": "https://predicttherace.com/site/og/og-nl.jpg",
    "speakable": {
     "@type": "SpeakableSpecification",
@@ -189,6 +192,14 @@
     },
     {
      "@type": "Question",
+     "name": "Is er een app voor iPhone en Android?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Ja, maar niet in de App Store of Google Play. Je zet Predict the Race in twee tikken vanuit je browser op je beginscherm: op een iPhone via Deel en \"Zet op beginscherm\", op Android via \"App installeren\". Daarna opent hij als een gewone app, met een eigen icoon, en kun je meldingen voor je deadlines aanzetten. Op een computer speel je gewoon in de browser."
+     }
+    },
+    {
+     "@type": "Question",
      "name": "Hoe doe ik mee met een poule?",
      "acceptedAnswer": {
       "@type": "Answer",
@@ -241,14 +252,6 @@
      "acceptedAnswer": {
       "@type": "Answer",
       "text": "Met een joker tellen al je punten van één raceweekend dubbel. Je zet hem voordat het weekend begint; daarna ligt hij vast. De poulebaas bepaalt of jokers meedoen en hoeveel iedereen er krijgt."
-     }
-    },
-    {
-     "@type": "Question",
-     "name": "Werkt het op mijn telefoon?",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "Ja, op iPhone, Android en computer, gewoon in de browser. Je kunt de app op je beginscherm zetten, dan werkt hij als een gewone app."
      }
     },
     {
@@ -729,6 +732,25 @@
   .los p{margin:0;color:var(--ink2)}
   .los a{color:var(--accent-tekst)}
 
+  /* "De app": de kaart van jouw toestel vooraan (INSTALLEER). Met de knop
+     Installeer erbij krijgt "Open de app" alleen een rand. */
+  .appactie{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 30px}
+  .knop[hidden]{display:none}
+  .appactie [data-installeer]:not([hidden])~.knop{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--lijn)}
+  .toestellen{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+  .toestellen>li{display:flex;flex-direction:column;background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:24px}
+  .toestellen>li.jij{order:-1;border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+  .toestellen .jouw{display:none;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent-tekst);margin:0 0 8px}
+  .toestellen>li.jij .jouw{display:block}
+  .toestellen h3{margin:0 0 12px;font-size:22px}
+  .toestellen ol{margin:0;padding-left:1.2em;color:var(--ink2);font-size:16px}
+  .toestellen ol li+li{margin-top:6px}
+  .toestellen .qr{display:block;width:132px;height:132px;margin-top:18px;border-radius:10px;border:1px solid var(--lijn)}
+  .apptip{margin:22px 0 0;color:var(--ink2);max-width:44em;border-left:3px solid #ee4d33;padding-left:14px}
+  .naarapp{font-size:15px;margin:10px 0 0}
+  .naarapp a{color:var(--nacht-ink2);text-decoration:underline;text-underline-offset:3px}
+
   .faq{display:grid;gap:10px;max-width:880px}
   .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;transition:border-color .2s,box-shadow .2s}
   .faq details:hover{border-color:var(--ink3)}
@@ -780,6 +802,7 @@
     .functies{grid-template-columns:repeat(2,1fr)}
     .beelden{grid-template-columns:repeat(3,1fr)}
     .tabellen{grid-template-columns:1fr 1fr}
+    .toestellen{grid-template-columns:repeat(3,1fr)}
     .aanbod{left:auto;right:20px;bottom:20px;max-width:460px}
     .niveaulijst{grid-template-columns:repeat(3,1fr);align-items:start}
     .niveau.meest{transform:translateY(-10px)}
@@ -841,6 +864,7 @@
         </form>
       </div>
       <p class="openpoule">Geen groep? <a href="app/?code=80C98C">Speel mee in de open poule</a></p>
+      <p class="naarapp"><a href="#app">Liever een app? Zo zet je hem op je telefoon <span aria-hidden="true">↓</span></a></p>
       <ul class="vertrouwen"><li>Gratis</li><li>Geen wachtwoord</li><li>Geen advertenties</li><li>Op elke telefoon</li></ul>
     </div>
     <div class="telefoon">
@@ -985,6 +1009,37 @@
   </div>
 </section>
 
+<section class="blok" id="app">
+  <div class="binnen">
+    <div class="sectiekop onthul"><span class="label"><b>06</b>De app</span>
+    <h2>Op je beginscherm, zonder App Store.</h2></div>
+    <p class="inleiding onthul">Predict the Race werkt als een gewone app: een eigen icoon op je beginscherm, geen adresbalk en als je wilt een melding voor je deadlines. Je haalt hem niet uit de App Store of Google Play, maar zet hem in twee tikken vanuit je browser op je telefoon. Gratis, en altijd de nieuwste versie.</p>
+    <div class="appactie">
+      <button class="knop" type="button" data-installeer hidden>Installeer de app</button>
+      <a class="knop" href="app/">Open de app <span aria-hidden="true">→</span></a>
+    </div>
+    <ul class="toestellen">
+      <li class="onthul" data-toestel="iphone" style="--i:0">
+        <span class="jouw">jouw toestel</span>
+        <h3>iPhone en iPad</h3>
+        <ol><li>Open de app in Safari.</li><li>Tik op Deel, het vierkantje met het pijltje omhoog.</li><li>Kies &quot;Zet op beginscherm&quot; en tik op &quot;Voeg toe&quot;.</li></ol>
+      </li>
+      <li class="onthul" data-toestel="android" style="--i:1">
+        <span class="jouw">jouw toestel</span>
+        <h3>Android</h3>
+        <ol><li>Open de app in Chrome.</li><li>Tik op ⋮ rechtsboven.</li><li>Kies &quot;App installeren&quot; of &quot;Toevoegen aan startscherm&quot;.</li></ol>
+      </li>
+      <li class="onthul" data-toestel="computer" style="--i:2">
+        <span class="jouw">jouw toestel</span>
+        <h3>Computer</h3>
+        <ol><li>Scan de code met de camera van je telefoon.</li><li>Of installeer hem in Chrome of Edge met het pictogram rechts in de adresbalk.</li></ol>
+        <img class="qr" src="site/beeld/app-qr.svg" alt="QR-code naar de app van Predict the Race" width="132" height="132" loading="lazy" decoding="async">
+      </li>
+    </ul>
+    <p class="apptip onthul">Een iPhone onthoudt je in de app op je beginscherm los van Safari. Zet hem er dus op voordat je meedoet. Speel je al in Safari, koppel dan eerst je account onder Profiel.</p>
+  </div>
+</section>
+
 <section class="blok">
   <div class="binnen los">
     <article class="onthul"><h2>Geen advertenties</h2><p>Predict the Race heeft geen advertenties en verkoopt niets door. Je doet mee met een poulecode en een naam; een mailadres is alleen nodig als je je account zelf wilt meenemen naar een ander toestel. Bezoekstatistieken met Google Analytics komen er alleen bij als je daar zelf ja op zegt. <a href="privacy/">Lees de hele privacyverklaring</a></p></article>
@@ -993,10 +1048,11 @@
 
 <section class="blok" id="faq">
   <div class="binnen">
-    <div class="sectiekop onthul"><span class="label"><b>06</b>Vragen</span>
+    <div class="sectiekop onthul"><span class="label"><b>07</b>Vragen</span>
     <h2>Veelgestelde vragen</h2></div>
     <div class="faq onthul">
       <details><summary><h3>Is Predict the Race gratis?</h3></summary><p>Ja. Er is geen abonnement, geen betaalmuur en geen advertentie. Alle functies zijn voor iedereen beschikbaar.</p></details>
+      <details><summary><h3>Is er een app voor iPhone en Android?</h3></summary><p>Ja, maar niet in de App Store of Google Play. Je zet Predict the Race in twee tikken vanuit je browser op je beginscherm: op een iPhone via Deel en &quot;Zet op beginscherm&quot;, op Android via &quot;App installeren&quot;. Daarna opent hij als een gewone app, met een eigen icoon, en kun je meldingen voor je deadlines aanzetten. Op een computer speel je gewoon in de browser.</p></details>
       <details><summary><h3>Hoe doe ik mee met een poule?</h3></summary><p>Open de uitnodigingslink die je van de poulebaas kreeg, of vul de poulecode van zes tekens in. Daarna kies je je naam, of voeg je jezelf toe als nieuwe speler.</p></details>
       <details><summary><h3>Moet ik een account aanmaken?</h3></summary><p>Nee, en je hebt geen wachtwoord nodig. Wil je op meerdere toestellen spelen, dan kun je later inloggen met Google of met een link in je mail.</p></details>
       <details><summary><h3>Hoe werkt de puntentelling?</h3></summary><p>Voor elke coureur in je top 10 krijg je 5 punten als hij precies op die plek eindigt, 3 punten bij één plek verschil en 1 punt bij twee plekken verschil. Losse vragen zoals de winnaar en de pole position leveren extra punten op.</p></details>
@@ -1004,7 +1060,6 @@
       <details><summary><h3>Tot wanneer kan ik invullen?</h3></summary><p>Tot de sessie begint. De top 10 van de kwalificatie sluit bij de start van de kwalificatie, die van de race bij de start van de race.</p></details>
       <details><summary><h3>Wat als ik een race vergeet?</h3></summary><p>Dan vult de app willekeurig in wat je liet liggen, van de top 10 tot de losse vragen, elk weekend anders. In een nieuwe poule staat dat standaard aan. Heeft de poulebaas het uitgezet, dan scoor je voor dat weekend niets.</p></details>
       <details><summary><h3>Wat is een joker?</h3></summary><p>Met een joker tellen al je punten van één raceweekend dubbel. Je zet hem voordat het weekend begint; daarna ligt hij vast. De poulebaas bepaalt of jokers meedoen en hoeveel iedereen er krijgt.</p></details>
-      <details><summary><h3>Werkt het op mijn telefoon?</h3></summary><p>Ja, op iPhone, Android en computer, gewoon in de browser. Je kunt de app op je beginscherm zetten, dan werkt hij als een gewone app.</p></details>
       <details><summary><h3>In welke talen is de app er?</h3></summary><p>De app en deze pagina zijn er in het Nederlands, Engels, Duits, Frans, Spaans, Italiaans en Portugees. De app kiest vanzelf de taal van je toestel, en onder Profiel zet je hem vast.</p></details>
       <details><summary><h3>Speel je om geld?</h3></summary><p>Nee. Er zit geen geld in Predict the Race: geen inleg, geen pot en geen prijzen. Je speelt om de eer.</p></details>
       <details><summary><h3>Is dit een officiële Formule 1-app?</h3></summary><p>Nee. Predict the Race is een onafhankelijk fanproject en is niet verbonden aan de Formule 1, de FIA of een team. Het staat ook los van de voorspelspellen die teams zelf aanbieden, zoals dat van Red Bull Racing.</p></details>
@@ -1075,6 +1130,17 @@
   if(balk){var bij=function(){var max=h.scrollHeight-innerHeight;balk.style.transform='scaleX('+(max>0?Math.min(1,scrollY/max):0)+')'};
     addEventListener('scroll',bij,{passive:true});addEventListener('resize',bij);bij()}
 }catch(e){document.documentElement.classList.add('klaar');[].slice.call(document.querySelectorAll('.onthul')).forEach(function(el){el.classList.add('zichtbaar')})}})();</script>
+<script>(function(){try{
+  var blok=document.getElementById('app');if(!blok)return;
+  var ua=navigator.userAgent||'';
+  var t=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)?'iphone':/Android/.test(ua)?'android':'computer';
+  var kaart=blok.querySelector('[data-toestel="'+t+'"]');if(kaart)kaart.classList.add('jij');
+  var knop=blok.querySelector('[data-installeer]');if(!knop)return;
+  if(window.ptrVraag)knop.hidden=false;
+  knop.addEventListener('click',function(){var v=window.ptrVraag;if(!v)return;v.prompt();
+    Promise.resolve(v.userChoice).then(function(){window.ptrVraag=null;knop.hidden=true},function(){})});
+  addEventListener('appinstalled',function(){window.ptrVraag=null;knop.hidden=true});
+}catch(e){}})();</script>
 <script src="toestemming.js" defer></script>
 </body>
 </html>

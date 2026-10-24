@@ -21,7 +21,7 @@
 // Waar iemand terecht kan met een vraag over zijn gegevens. Staat ook in de
 // app (PRIVACY_CONTACT); de test houdt die twee gelijk.
 export const CONTACT = 'contact@predicttherace.com';
-export const PRIVACY_BIJGEWERKT = '2026-10-17';
+export const PRIVACY_BIJGEWERKT = '2026-10-24';
 
 export const PRIVACY = {
   nl: {
@@ -30,7 +30,7 @@ export const PRIVACY = {
     omschrijving: 'Wat Predict the Race van je bewaart, waar het staat, wie het ziet en hoe je het weer weg krijgt. Geen advertenties, statistieken alleen met je ja.',
     kop: 'Wat Predict the Race van je weet',
     intro: 'Predict the Race is een gratis F1-voorspelspel voor vriendengroepen. Het bewaart zo weinig mogelijk, en wat het bewaart staat hieronder, in gewone taal.',
-    bijgewerkt: 'Bijgewerkt op 17 oktober 2026',
+    bijgewerkt: 'Bijgewerkt op 24 oktober 2026',
     secties: [
       ['Wat er bewaard wordt', [
         'De naam die je in een poule kiest, je voorspellingen en je punten. En een anoniem account: een willekeurig nummer, zodat de database weet welke voorspellingen van jou zijn.',
@@ -59,7 +59,7 @@ export const PRIVACY = {
         'Als de app een account voor je maakt of je inlogt met je mailadres, kijkt Cloudflare Turnstile of er een mens achter het scherm zit. Meestal merk je daar niets van; twijfelt Turnstile, dan vraagt hij je een vakje aan te vinken. Cloudflare ziet daarbij je IP-adres en gegevens over je browser, gebruikt die alleen voor deze controle en zet geen cookies om je te volgen. Wij bewaren er niets van.',
       ]],
       ['Tellen', [
-        'Per dag telt de app hoe vaak hij geopend wordt, en welke accounts dat deden. Dat laatste alleen om te kunnen zien hoeveel mensen er meespelen, en het verdwijnt na vijf weken. Er komt geen cookie aan te pas en er wordt geen IP-adres bewaard.',
+        'Per dag telt de app hoe vaak hij geopend wordt, hoe vaak daarvan vanaf het beginscherm van een telefoon, en welke accounts dat deden. Dat laatste alleen om te kunnen zien hoeveel mensen er meespelen, en het verdwijnt na vijf weken. Er komt geen cookie aan te pas en er wordt geen IP-adres bewaard.',
       ]],
       ['Google Analytics', [
         'Alleen als je daar ja op zegt, meten we met Google Analytics hoe de site en de app gebruikt worden: welke pagina\'s je opent, hoe lang, met wat voor toestel en ongeveer vanuit welk land. Google zet daarvoor cookies, ziet je IP-adres en kan die gegevens buiten de EU verwerken. We gebruiken het alleen om te zien wat er gebeurt, niet voor advertenties.',
@@ -87,7 +87,7 @@ export const PRIVACY = {
     omschrijving: 'What Predict the Race keeps about you, where it lives, who sees it and how to get it removed. No ads, statistics only with your yes.',
     kop: 'What Predict the Race knows about you',
     intro: 'Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.',
-    bijgewerkt: 'Updated on 17 October 2026',
+    bijgewerkt: 'Updated on 24 October 2026',
     secties: [
       ['What is kept', [
         'The name you pick in a pool, your predictions and your points. And an anonymous account: a random number, so the database knows which predictions are yours.',
@@ -116,7 +116,7 @@ export const PRIVACY = {
         'When the app creates an account for you or signs you in with your email address, Cloudflare Turnstile checks that there is a person behind the screen. Usually you notice nothing; if Turnstile is unsure, it asks you to tick a box. Cloudflare sees your IP address and details about your browser, uses them only for this check and sets no cookies to follow you. We keep nothing of it.',
       ]],
       ['Counting', [
-        'Each day the app counts how often it is opened, and which accounts did so. The latter only to see how many people are playing, and it disappears after five weeks. No cookie is involved and no IP address is stored.',
+        'Each day the app counts how often it is opened, how many of those times were from a phone\'s home screen, and which accounts did so. The latter only to see how many people are playing, and it disappears after five weeks. No cookie is involved and no IP address is stored.',
       ]],
       ['Google Analytics', [
         'Only if you say yes to it, we measure with Google Analytics how the site and the app are used: which pages you open, for how long, on what kind of device and roughly from which country. Google sets cookies for this, sees your IP address and may process that data outside the EU. We only use it to see what happens, not for ads.',

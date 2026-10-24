@@ -2743,6 +2743,12 @@ revoke all on public.actief   from anon, authenticated;
 -- 'start' (het beginscherm) en 'app' (een poule). Tot 17 oktober nam hij elk
 -- pad dat op ^[a-z0-9/_-]{1,40}$ leek, en dan was de tabel vol te schrijven
 -- met verzonnen paden. Een ander pad wordt stil genegeerd.
+--
+-- Sinds 24 oktober kan er '-geinstalleerd' achter: dan is de app geopend
+-- vanaf het beginscherm van een telefoon, of als geïnstalleerde app op een
+-- computer. Zo is in het beheer te zien hoeveel mensen hem zo gebruiken, en
+-- of het blok "De app" op de voorpagina daar iets aan doet. Een gewone telling
+-- met één woord erbij; er komt niets over het toestel mee.
 create or replace function public.tel_bezoek(p_pad text)
 returns void
 language plpgsql
@@ -2751,7 +2757,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if p_pad is null or p_pad not in ('start', 'app') then return; end if;
+  if p_pad is null or p_pad not in ('start', 'app', 'start-geinstalleerd', 'app-geinstalleerd') then return; end if;
   insert into public.bezoeken (dag, pad, aantal) values (current_date, p_pad, 1)
     on conflict (dag, pad) do update set aantal = public.bezoeken.aantal + 1;
   if auth.uid() is not null and exists (select 1 from auth.users where id = auth.uid()) then
@@ -2789,6 +2795,10 @@ begin
     'actief_7d',         (select count(distinct user_id) from public.actief where dag > current_date - 7),
     'bezoeken_vandaag',  (select coalesce(sum(aantal), 0) from public.bezoeken where dag = current_date),
     'bezoeken_7d',       (select coalesce(sum(aantal), 0) from public.bezoeken where dag > current_date - 7),
+    'geinstalleerd_vandaag', (select coalesce(sum(aantal), 0) from public.bezoeken
+                               where dag = current_date and pad like '%-geinstalleerd'),
+    'geinstalleerd_7d',  (select coalesce(sum(aantal), 0) from public.bezoeken
+                           where dag > current_date - 7 and pad like '%-geinstalleerd'),
     'meldingen',         (select count(*) from public.push_abonnementen),
     'profielen',         (select count(*) from public.pool_members where profiel_code is not null),
     'seizoen',           public.controle_seizoen(),
@@ -3836,7 +3846,8 @@ select 'premium: kolommen, bewaking en logo-opslag',
 union all
 -- Misbruik tegengaan (17 oktober): zonder sessie geen speler of poule, de
 -- limieten, het woordfilter en de bezoekteller die alleen 'start' en 'app'
--- telt. Of de captcha (Turnstile) aanstaat, ziet de database niet: dat staat
+-- telt, elk ook vanaf het beginscherm ('-geinstalleerd', sinds 24 oktober).
+-- Of de captcha (Turnstile) aanstaat, ziet de database niet: dat staat
 -- in de instellingen van Supabase Auth. BEDIENING.md §7b zegt hoe je het
 -- nakijkt.
 select 'misbruik: sessie, limieten, woordfilter, teller',
@@ -3859,8 +3870,11 @@ select 'misbruik: sessie, limieten, woordfilter, teller',
          when not exists (select 1 from public.verboden_woorden where not uit)
            then 'WOORDFILTER ZONDER WOORDEN'
          when not exists (select 1 from pg_proc where proname = 'tel_bezoek'
-                            and prosrc like '%not in (''start'', ''app'')%')
+                            and prosrc like '%not in (''start'', ''app''%')
            then 'TELLER NEEMT ELK PAD: draai schema.sql opnieuw'
+         when not exists (select 1 from pg_proc where proname = 'tel_bezoek'
+                            and prosrc like '%''app-geinstalleerd''%')
+           then 'TELLER ZONDER BEGINSCHERM: draai schema.sql opnieuw'
          else 'ok (' || (select count(*) from public.verboden_woorden where not uit)
               || ' woorden; de captcha staat in Supabase Auth)' end
 union all

@@ -574,6 +574,8 @@ function overzichtTab() {
       ${tegel('Poules', getal(o.poules), `${getal(o.poules_openbaar)} openbaar`)}
       ${tegel('Actief vandaag', getal(o.actief_vandaag), `${getal(o.actief_7d)} in 7 dagen`)}
       ${tegel('Bezoeken vandaag', getal(o.bezoeken_vandaag), `${getal(o.bezoeken_7d)} in 7 dagen`)}
+      ${o.geinstalleerd_7d == null ? '' : tegel('Vanaf het beginscherm', getal(o.geinstalleerd_vandaag),
+        `${getal(o.geinstalleerd_7d)} in 7 dagen${o.bezoeken_7d ? `, ${Math.round(100 * o.geinstalleerd_7d / o.bezoeken_7d)}% van de bezoeken` : ''}`)}
       ${tegel('Inzendingen', getal(o.inzendingen_7d), 'in 7 dagen')}
       ${tegel('Gekoppelde accounts', getal(o.gekoppeld), `van ${getal(o.accounts)} accounts`)}
       ${(() => { const s = setTelling()[0];

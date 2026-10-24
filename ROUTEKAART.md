@@ -1020,6 +1020,27 @@ hieronder en voor wat er verder bijkomt.
 | de gidsen organiseren en puntentelling ook in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #215): elke voorpagina heeft nu het menu met de gidsen en de races |
 | de gids excel ook in DE, FR, ES, IT en PT | **gemerged** (13 oktober, PR #218): de formule per taal met de functienamen van Excel in die taal (WENN, SI, SE; in het Italiaans ASS voor ABS, in het Portugees MÁXIMO voor MAX) en puntkomma's |
 
+## De app in de stores (24 oktober)
+
+Danny: "Op dit moment heb ik nog geen IOS of Android app. Ik denk namelijk dat
+mensen daar wel echt naar zoeken en misschien skippen als ze zien dat er geen
+app is."
+
+- **Stap 1, gebouwd** (24 oktober): de vraag "Is er een app voor iPhone en
+  Android?" als tweede in de FAQ (zeven talen), het blok "De app" op de
+  voorpagina (stappen per toestel, een knop Installeer waar de browser dat
+  aanbiedt, een QR-code op de computer), de vergelijkingspagina en llms.txt
+  zeggen het niet meer als een gemis, en het beheer telt bezoeken vanaf het
+  beginscherm apart. BEDIENING §18, "De app op je telefoon".
+- **Stap 2, wacht op Danny**: dezelfde app in de Google Play Store, als Trusted
+  Web Activity (de webapp in een Android-schil, zonder tweede codebasis). Nodig:
+  een ontwikkelaarsaccount bij Google (eenmalig betalen), een
+  `assetlinks.json` op het domein en een ondertekende build. Pas als Danny zegt
+  dat hij dat account wil.
+- **De App Store**: niet als schil om de website. Apple wijst apps af die
+  vooral een website in een venster zijn; dat vraagt een echte iPhone-app. Op
+  een iPhone blijft het beginscherm de weg.
+
 ## Premium, later
 
 Eerst de gratis app goed; daarna premium in twee stappen.
@@ -1103,3 +1124,11 @@ einde van een sessie op te halen, daarna elke 30 minuten tot hij er is;
 BEDIENING §20.
 Open bij Danny: account, ping key, secret, de workflows één keer draaien,
 periode en grace per check.
+
+**De app op je telefoon** (24 oktober). Gebouwd: in de FAQ als tweede vraag
+"Is er een app voor iPhone en Android?", op de voorpagina het blok "De app" met
+de stappen per toestel, een knop Installeer en een QR-code, en in het beheer een
+telling van bezoeken vanaf het beginscherm; BEDIENING §18. De database is al
+bijgewerkt via de Supabase-koppeling.
+Open bij Danny: niets. De Play Store (stap 2) pas als hij dat wil; zie "De app
+in de stores" hierboven.

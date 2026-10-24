@@ -11271,3 +11271,60 @@ Tests: `test/bewaking.test.mjs` (nieuw) en een blok in
 een ping key, het secret `HC_PING_KEY`, "Uitslagen synchroniseren" en
 "Reservekopie" één keer met de hand draaien, en per check periode en grace
 zetten. Eventueel Telegram of ntfy voor een melding op je telefoon.
+
+## De app op je telefoon (24 oktober)
+
+Danny: mensen zoeken een app in de stores en haken misschien af als ze zien dat
+die er niet is. Stap 1 van het advies, met een meting erbij. Stap 2 (de Play
+Store als Trusted Web Activity) staat in ROUTEKAART, "De app in de stores", en
+wacht op Danny.
+
+- **FAQ**: "Is er een app voor iPhone en Android?" als tweede vraag, in zeven
+  talen (`site/teksten.mjs`). Hij vervangt "Werkt het op mijn telefoon?"; die
+  staat nu als variant in `site/vragen.mjs`. Het antwoord begint met "Ja, maar
+  niet in de App Store of Google Play".
+- **Het blok "De app"** op de voorpagina (`#app`, sectie 06; de FAQ is nu 07),
+  teksten in `teksten[taal].app`. Drie kaarten (iPhone, Android, computer) met
+  stappen; de QR-code `site/beeld/app-qr.svg` op de computerkaart (gemaakt met
+  `scripts/maak-qr.py`, segno, nagelopen met OpenCV); een tip dat een iPhone de
+  beginschermapp los van Safari onthoudt, met dezelfde woorden als in de app.
+  In de hero een link "Liever een app? Zo zet je hem op je telefoon".
+- **Het script** (`INSTALLEER_KOP` en `INSTALLEER` in `scripts/maak-site.mjs`):
+  in de kop bewaart het het aanbod van Chrome en Edge (`beforeinstallprompt`)
+  en onderdrukt het hun eigen balk; onderaan zet het de kaart van het toestel
+  vooraan (`.jij`, een iPad herkend zoals `isApple()` in de app) en zet het de
+  knop "Installeer de app" aan zolang er een aanbod is. Het aanbod kan komen
+  voordat de knop er is; daarom staat de luisteraar al in de kop.
+- **Manifest op de voorpagina's**: `<link rel="manifest">`, anders biedt Chrome
+  daar niets aan. `start_url` is `app/`, dus ook "Zet op beginscherm" vanaf de
+  voorpagina opent de app.
+- **Vergelijkingspagina en llms.txt**: "een app uit de store" staat er niet
+  meer als gemis, maar als "per se uit een store" ("It has to come from an app
+  store"), met erbij dat hij op je beginscherm een eigen icoon en meldingen
+  heeft. In llms.txt ook een regel bij "aanraden" voor wie een F1-app op zijn
+  telefoon zoekt.
+- **Meting**: `telBezoek()` in de app zet `-geinstalleerd` achter het pad als
+  de app vanaf het beginscherm of als geïnstalleerde app draait (display-mode
+  standalone of `navigator.standalone`). `tel_bezoek()` neemt
+  `start-geinstalleerd` en `app-geinstalleerd` aan; `beheer_overzicht()` geeft
+  `geinstalleerd_vandaag` en `geinstalleerd_7d`; het beheer toont de tegel
+  "Vanaf het beginscherm" (alleen als de database die getallen geeft). De
+  controletabel zegt "TELLER ZONDER BEGINSCHERM" bij een oude teller. De
+  privacyverklaring ("Tellen", NL en EN) zegt het erbij; bijgewerkt op 24
+  oktober.
+- **Database al bijgewerkt** via de Supabase-koppeling: `tel_bezoek()`,
+  `beheer_overzicht()` en de view `poule_controle`, in die volgorde, zodat de
+  huidige app gewoon bleef tellen. De koppeling blijft hangen op SQL met de
+  woorden voor weghalen en weggooien; die stonden daarom in een `execute` met
+  `replace()`, wat dezelfde functie en view oplevert als `schema.sql`. Lokaal
+  nagebootst op een database met het schema van main, daarna `schema.sql`
+  eroverheen. De controletabel in productie: alles ok.
+
+Tests: `test/appblok.test.mjs` (nieuw: zeven talen, de QR-code, de knop bij een
+nagebootst aanbod, ook als dat komt voordat de knop er is, iPhone en Android,
+de breedte op een telefoon), `test/beheer.test.mjs` (een bezoek vanaf het
+beginscherm en de tegel), `test/misbruik.test.mjs`, `test/misbruik.test.sql`
+en `test/beheer.test.sql` (de nieuwe paden, de controleregel). `startSite()` in
+`test/hulp.mjs` kan nu een `userAgent` meekrijgen.
+
+**Danny moet:** niets. `schema.sql` draaien mag, maar hoeft niet voor deze PR.
