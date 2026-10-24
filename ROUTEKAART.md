@@ -1144,3 +1144,10 @@ winkelbijlage in zeven talen, de uploadsleutel in een privé-map in Supabase en
 `.well-known/assetlinks.json` op het domein; BEDIENING §21.
 Open bij Danny: ontwikkelaarsaccount, gesloten test met 12 testers (14 dagen),
 uploaden, winkelpagina en App-content, productietoegang.
+
+**De iPhone-beginschermapp** (24 oktober). Gebouwd: de app loopt door tot de
+bovenrand (doorzichtige statusbalk met een strook erachter), niets meer onder
+het streepje onderin of de inkeping, en een donker opstartscherm per
+iPhone-maat; BEDIENING §18, "De app op je telefoon".
+Open bij Danny: niets.
+

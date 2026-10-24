@@ -11420,3 +11420,38 @@ Onderweg zakte de build op de pull request twee keer, allebei in het project:
 2.7.4 vraagt minSdk 24 terwijl Bubblewrap 21 invult. Ook stond de versienaam
 leeg: de sleutel in `twa-manifest.json` heet `appVersion`.
 
+## De app op het beginscherm van een iPhone (24 oktober)
+
+Danny: "Moeten we nog iets aanpassen voor de iPhones, zodat het scherm optimaal
+benut wordt?" Wel drie dingen:
+
+- **De statusbalk**: zonder `apple-mobile-web-app-status-bar-style` is die op
+  een iPhone een vaste witte strook met zwarte letters, ook boven een donkere
+  app. Nu `black-translucent`: de app loopt eronder door. Die letters zijn
+  altijd wit, dus `body::before` legt er een vaste strook onder in
+  `--statusbalk` (in het licht `#0b0b0c`, in het donker `#15161a`, de kleur
+  van de kop; ook bij een zelf gekozen thema). `body` krijgt `--boven`
+  bovenaan, de kop plakt op `--boven`.
+- **De randen**: `--boven`, `--onder`, `--links` en `--rechts` uit
+  `env(safe-area-inset-*)` op `:root`, en alle bestaande `env()` gebruiken die.
+  De knoppen Opslaan en Wis alles in een race (`.opslaanbalk`, sticky onderaan)
+  stonden onder het streepje onderin; nu `padding-bottom: var(--onder)`. Ook
+  de foutmelding onderin, en liggend de zijkanten (body en tabbalk). In Safari
+  en op Android zijn die randen 0: daar verandert niets.
+- **Het opstartscherm**: iOS maakt er geen uit het manifest, en liet een witte
+  flits zien. `scripts/maak-opstartbeelden.mjs` tekent er twaalf (donker, de P
+  en de naam), per iPhone-maat van de 8 tot en met de 17 en de Air, en schrijft
+  de links in `app/index.html` tussen `<!-- opstartbeelden -->`. 800 kB in
+  `pictogrammen/opstart/`; een browser haalt ze niet op, alleen een iPhone bij
+  het op het beginscherm zetten.
+
+Tests: `test/iphone.test.mjs` (nieuw): de kop van de app, de opstartbeelden
+(maat per toestel), en met de randen van een iPhone 15 nagedaan via de
+variabelen: alles onder de statusbalk, de strook met contrast voor witte
+letters in licht en donker, de kop die blijft plakken, tabbalk, knoppen in een
+race en foutmelding boven het streepje, liggend vrij van de inkeping, en
+zonder randen geen verschil.
+
+**Danny moet:** niets. Wil hij het opstartscherm zien: de app opnieuw op het
+beginscherm zetten, maar alleen met een gekoppeld account.
+

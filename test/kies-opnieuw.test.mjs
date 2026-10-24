@@ -103,7 +103,11 @@ async function zet(page, werk) {
   await page.click('[data-weergave="races"]');
   await zet(page, () => {
     const d = globalThis.__db;
-    const dag = (n, u) => new Date(Date.now() + n * 864e5 + u * 36e5).toISOString();
+    // Eén keer de klok lezen: de app wil precies 24 uur tussen kwalificatie en
+    // race, en twee keer Date.now() kan een milliseconde schelen (dan zakte
+    // deze test soms, als de machine het druk had).
+    const nu = Date.now();
+    const dag = (n, u) => new Date(nu + n * 864e5 + u * 36e5).toISOString();
     d.races.find((r) => r.id === 1).deadline_quali = dag(1, 0);
     d.races.find((r) => r.id === 1).deadline_race = dag(2, 0);
     // Vier races, drie met de kwalificatie precies 24 uur voor de race.
