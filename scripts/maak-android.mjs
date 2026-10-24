@@ -56,9 +56,12 @@ const ONDERTEKENEN = `    // Ondertekenen met de uploadsleutel, alleen in de wor
     }`;
 
 // De aanpassingen op app/build.gradle. Twee keer draaien verandert niets.
+// Niet "versionCode (a ?: b).toInteger()": Groovy leest dat als
+// versionCode(a ?: b) en roept .toInteger() aan op wat dat teruggeeft (de
+// eerste build op GitHub zakte daarop, 24 oktober).
 export function pasAan(gradle) {
   let uit = gradle.replace(/^(\s*)versionCode (\d+)$/m,
-    "$1versionCode (project.findProperty('versieCode') ?: '$2').toString().toInteger()");
+    "$1versionCode Integer.parseInt(String.valueOf(project.findProperty('versieCode') ?: '$2'))");
   if (!uit.includes('ANDROID_SLEUTEL_PAD')) {
     const oud = /    buildTypes \{\n        release \{\n            minifyEnabled true\n        \}\n    \}/;
     if (!oud.test(uit)) throw new Error('buildTypes in app/build.gradle niet gevonden: is de sjabloon van Bubblewrap veranderd?');

@@ -57,7 +57,7 @@ android {
         applicationId "com.predicttherace.app"
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode (project.findProperty('versieCode') ?: '1').toString().toInteger()
+        versionCode Integer.parseInt(String.valueOf(project.findProperty('versieCode') ?: '1'))
         versionName ""
 
         // The name for the application

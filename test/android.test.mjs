@@ -74,7 +74,9 @@ check('meldingen aan (de herinneringen voor deadlines), portret, sleutel met ali
   const sdk = (naam) => Number(new RegExp(`${naam}\\s+(\\d+)`).exec(gradle)?.[1]);
   check('Android 16 (API 36): verplicht voor nieuwe apps in de Play Store sinds 31 augustus 2026',
     sdk('targetSdkVersion') >= 36 && sdk('compileSdkVersion') >= 36, `${sdk('targetSdkVersion')} ${sdk('compileSdkVersion')}`);
-  check('het versienummer komt van buitenaf (-PversieCode)', /versionCode \(project\.findProperty\('versieCode'\)/.test(gradle));
+  check('het versienummer komt van buitenaf (-PversieCode), zonder haakjes direct na versionCode (Groovy leest dat als aanroep)',
+    /versionCode Integer\.parseInt\(String\.valueOf\(project\.findProperty\('versieCode'\) \?: '1'\)\)/.test(gradle)
+      && !/versionCode \(/.test(gradle));
   check('ondertekenen alleen met de uploadsleutel uit de workflow, nooit met een sleutel in de repo',
     /def sleutel = System\.getenv\('ANDROID_SLEUTEL_PAD'\)/.test(gradle) && /if \(sleutel\) signingConfig signingConfigs\.upload/.test(gradle)
       && !/storePassword ['"]/.test(gradle) && /\*\.p12/.test(lees('android', '.gitignore')));
