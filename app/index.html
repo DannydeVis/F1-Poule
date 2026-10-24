@@ -287,6 +287,21 @@
   body{padding:var(--boven) var(--rechts) 0 var(--links)}
   body::before{content:"";position:fixed;z-index:1000;top:0;left:0;right:0;height:var(--boven);
     background:var(--statusbalk);pointer-events:none}
+  /* ---- het opstartscherm ----------------------------------
+     Alleen in de beginschermapp (display-mode: standalone): in een browser
+     staat er al een pagina, en daar zou een logo ervoor alleen ophouden. In
+     de kleur van de kop, licht of donker: dat is ook de kleur van de
+     statusbalk erboven (theme-color), dus één vlak. */
+  #opstart{display:none;position:fixed;inset:0;z-index:2000;background:var(--paneel);
+    flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    transition:opacity .3s ease,visibility .3s ease}
+  @media (display-mode:standalone){#opstart{display:flex}}
+  #opstart i{width:min(28vw,120px);aspect-ratio:1;
+    background:url(../pictogrammen/predicttherace-logo.png) center/contain no-repeat}
+  #opstart b{font-family:var(--cond);font-size:26px;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;color:var(--ink)}
+  #opstart.weg{opacity:0;visibility:hidden;pointer-events:none}
+  @media (prefers-reduced-motion:reduce){#opstart{transition:none}}
   button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
   :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
@@ -1683,6 +1698,14 @@
 </style>
 </head>
 <body>
+<!-- Het opstartscherm van de beginschermapp: het logo en de naam tot de poule
+     er staat (opstartWeg() onderaan het script). Een iPhone met iOS 27 toont
+     de opstartbeelden uit de kop niet meer (24 oktober, bij Danny), dus doet
+     de app het zelf. Alleen in de beginschermapp; zie "het opstartscherm" in
+     de CSS. Gaat het script mis, dan haalt de regel hieronder het na zes
+     seconden alsnog weg: nooit een app achter een logo vast. -->
+<div id="opstart" aria-hidden="true"><i></i><b>Predict the Race</b></div>
+<script>setTimeout(function(){var o=document.getElementById('opstart');if(o)o.classList.add('weg')},6000)</script>
 <div id="app"></div>
 <!-- De omroep voor schermlezers. Staat met opzet buiten #app: de app vervangt
      app.innerHTML bij elke tik in zijn geheel, en een live region die op
@@ -14595,6 +14618,12 @@ if (DEMO) {
     if (!laatstePoule() && poules.length === 1) onthoudPoule(poules[0].id);
   }
   await hervat();
+}
+opstartWeg();
+
+// Het opstartscherm weg zodra er iets staat (zie #opstart bovenin de body).
+function opstartWeg() {
+  document.getElementById('opstart')?.classList.add('weg');
 }
 
 // Terug naar de poule die je het laatst gebruikte, zodat de poulecode niet

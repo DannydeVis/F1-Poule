@@ -11469,6 +11469,17 @@ Een iPhone leest de stijl alleen bij het op het beginscherm zetten. Het
 opstartscherm verscheen bij Danny ook niet; open: welk model, en staat
 Weergave op Groter (dan is de schermmaat anders en past geen plaatje).
 
+**Daarna: een opstartscherm in de app zelf.** Ook na opnieuw zetten geen
+opstartbeeld bij Danny (iPhone 17 Pro Max, iOS 27.0.1, Weergavezoom
+Standaard: de maat klopt dus). iOS 27 toont `apple-touch-startup-image` kennelijk
+niet meer. Nu `#opstart` bovenin de body: het logo en de naam op `--paneel`
+(de kleur van de kop en de statusbalk), alleen bij
+`display-mode: standalone`. `opstartWeg()` na het opstarten (na `hervat()`,
+de demo of geen verbinding) laat het wegvagen; een los scriptje haalt het na
+zes seconden altijd weg, ook als de module misgaat. Het wacht nergens op: het
+staat er alleen zolang de app toch laadt. De opstartbeelden blijven staan voor
+oudere iOS. Test: blok 6 in `test/iphone.test.mjs`.
+
 **Daarna: de iPhone Duo** (de opvouwbare, sinds 23 oktober te koop). Danny
 vroeg of de app daar ook goed op staat. De indeling past zich al aan elke
 breedte aan; nagelopen op het buitenscherm (466 x 678), het binnenscherm
