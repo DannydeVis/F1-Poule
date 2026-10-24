@@ -354,6 +354,20 @@ begin
   if (select count(*) from actief) <> 1 then
     raise exception 'gezakt: één account twee keer, en één keer zonder account, gaf % regels', (select count(*) from actief);
   end if;
+  -- Vanaf het beginscherm (sinds 24 oktober): een eigen pad, apart in het
+  -- overzicht en ook gewoon bij de bezoeken.
+  perform public.tel_bezoek('app-geinstalleerd');
+  perform public.tel_bezoek('start-geinstalleerd');
+  perform public.tel_bezoek('app-geinstalleerd-x');
+  perform public.tel_bezoek('-geinstalleerd');
+  perform set_config('request.jwt.claims', '{"sub":"dddddddd-0000-0000-0000-000000000001"}', true);
+  uit := public.beheer_overzicht();
+  if (uit ->> 'geinstalleerd_vandaag')::int <> 2 or (uit ->> 'geinstalleerd_7d')::int <> 2
+     or (uit ->> 'bezoeken_vandaag')::int <> 6 then
+    raise exception 'gezakt: vanaf het beginscherm telt verkeerd: %', uit;
+  end if;
+  raise notice 'ok: vanaf het beginscherm telt apart, en ook bij de bezoeken; een verzonnen pad niet';
+  perform set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000004"}', true);
   insert into actief (dag, user_id) values (current_date - 40, 'aaaaaaaa-0000-0000-0000-000000000003');
   perform public.tel_bezoek('app');
   if exists (select 1 from actief where dag < current_date - 35) then

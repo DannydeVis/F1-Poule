@@ -44,7 +44,7 @@
     "@id": "https://predicttherace.com/f1-poule-apps-vergeleken/#kruimel"
    },
    "datePublished": "2026-09-29",
-   "dateModified": "2026-10-12"
+   "dateModified": "2026-10-24"
   },
   {
    "@type": "Article",
@@ -56,7 +56,7 @@
     "@id": "https://predicttherace.com/f1-poule-apps-vergeleken/#pagina"
    },
    "datePublished": "2026-09-29",
-   "dateModified": "2026-10-12",
+   "dateModified": "2026-10-24",
    "author": {
     "@id": "https://predicttherace.com/#maker"
    },
@@ -479,6 +479,25 @@
   .los p{margin:0;color:var(--ink2)}
   .los a{color:var(--accent-tekst)}
 
+  /* "De app": de kaart van jouw toestel vooraan (INSTALLEER). Met de knop
+     Installeer erbij krijgt "Open de app" alleen een rand. */
+  .appactie{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 30px}
+  .knop[hidden]{display:none}
+  .appactie [data-installeer]:not([hidden])~.knop{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--lijn)}
+  .toestellen{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+  .toestellen>li{display:flex;flex-direction:column;background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:24px}
+  .toestellen>li.jij{order:-1;border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+  .toestellen .jouw{display:none;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent-tekst);margin:0 0 8px}
+  .toestellen>li.jij .jouw{display:block}
+  .toestellen h3{margin:0 0 12px;font-size:22px}
+  .toestellen ol{margin:0;padding-left:1.2em;color:var(--ink2);font-size:16px}
+  .toestellen ol li+li{margin-top:6px}
+  .toestellen .qr{display:block;width:132px;height:132px;margin-top:18px;border-radius:10px;border:1px solid var(--lijn)}
+  .apptip{margin:22px 0 0;color:var(--ink2);max-width:44em;border-left:3px solid #ee4d33;padding-left:14px}
+  .naarapp{font-size:15px;margin:10px 0 0}
+  .naarapp a{color:var(--nacht-ink2);text-decoration:underline;text-underline-offset:3px}
+
   .faq{display:grid;gap:10px;max-width:880px}
   .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;transition:border-color .2s,box-shadow .2s}
   .faq details:hover{border-color:var(--ink3)}
@@ -530,6 +549,7 @@
     .functies{grid-template-columns:repeat(2,1fr)}
     .beelden{grid-template-columns:repeat(3,1fr)}
     .tabellen{grid-template-columns:1fr 1fr}
+    .toestellen{grid-template-columns:repeat(3,1fr)}
     .aanbod{left:auto;right:20px;bottom:20px;max-width:460px}
     .niveaulijst{grid-template-columns:repeat(3,1fr);align-items:start}
     .niveau.meest{transform:translateY(-10px)}
@@ -643,7 +663,7 @@
       <li aria-current="page">De beste F1-poule-apps van 2026, vergeleken</li>
     </ol></nav>
     <h1>De beste F1-poule-apps van 2026, vergeleken</h1>
-    <p class="door">Door <a href="../over/" rel="author">Danny de Visser</a>, bijgewerkt op <time datetime="2026-10-12">12 oktober 2026</time>. Deze vergelijking is geschreven door de maker van Predict the Race.</p>
+    <p class="door">Door <a href="../over/" rel="author">Danny de Visser</a>, bijgewerkt op <time datetime="2026-10-24">24 oktober 2026</time>. Deze vergelijking is geschreven door de maker van Predict the Race.</p>
     <p class="kort inleiding">F1-poule-apps verschillen vooral in wat je doet: in F1 Fantasy stel je een team samen, in F1 Predict, GP Poule, poules.com, Superbru en Predict the Race voorspel je de uitslag. Daarna verschillen ze in wat het kost en of er prijzen zijn. Predict the Race is gratis en zonder account, maar heeft geen prijzen en geen app in de stores.</p>
 
     <section class="vraag" id="welke">
@@ -673,8 +693,8 @@
 
     <section class="vraag" id="anders">
       <h2>Wanneer past iets anders beter?</h2>
-      <p class="kort">Iets anders past beter als je groep een team wil samenstellen met een budget en transfers: neem dan F1 Fantasy. Wil je om prijzen spelen, dan is Predict the Race niets voor je, want prijzen zijn er niet. En wie een app uit de App Store of Google Play wil, moet ook verder kijken.</p>
-      <ul><li><b>Een team met een budget.</b> F1 Fantasy, het officiële fantasyspel van de Formule 1. Je stelt een team van coureurs en constructeurs samen en scoort op wat zij in het echt doen.</li><li><b>Om prijzen spelen.</b> F1 Predict en Superbru noemen allebei prijzen op hun site. Predict the Race heeft geen inleg, geen pot en geen prijzen.</li><li><b>Een app uit de store.</b> Superbru heeft een app voor iPhone en Android, en F1 Fantasy speel je ook in de officiële F1-app. Predict the Race is een web-app die je vanuit de browser op je beginscherm zet.</li><li><b>Een andere taal.</b> De app en de voorpagina zijn er alleen in het Nederlands, Engels, Duits, Frans, Spaans, Italiaans of Portugees. Wie een andere taal zoekt, moet verder kijken.</li><li><b>Alles zelf bepalen.</b> Een spreadsheet. Je spreekt zelf de regels af, maar iemand moet na elke sessie de uitslag overtypen.</li></ul>
+      <p class="kort">Iets anders past beter als je groep een team wil samenstellen met een budget en transfers: neem dan F1 Fantasy. Wil je om prijzen spelen, dan is Predict the Race niets voor je, want prijzen zijn er niet. Een app op je telefoon kan wel, alleen niet uit de App Store of Google Play.</p>
+      <ul><li><b>Een team met een budget.</b> F1 Fantasy, het officiële fantasyspel van de Formule 1. Je stelt een team van coureurs en constructeurs samen en scoort op wat zij in het echt doen.</li><li><b>Om prijzen spelen.</b> F1 Predict en Superbru noemen allebei prijzen op hun site. Predict the Race heeft geen inleg, geen pot en geen prijzen.</li><li><b>Per se een app uit de store.</b> Superbru heeft een app voor iPhone en Android, en F1 Fantasy speel je ook in de officiële F1-app. Predict the Race zet je vanuit de browser op je beginscherm: dan heb je een eigen icoon en meldingen voor je deadlines, maar hij staat niet in de App Store of Google Play.</li><li><b>Een andere taal.</b> De app en de voorpagina zijn er alleen in het Nederlands, Engels, Duits, Frans, Spaans, Italiaans of Portugees. Wie een andere taal zoekt, moet verder kijken.</li><li><b>Alles zelf bepalen.</b> Een spreadsheet. Je spreekt zelf de regels af, maar iemand moet na elke sessie de uitslag overtypen.</li></ul>
       <p>Predict the Race is bovendien jong: online sinds september 2026 en gemaakt door één persoon.</p>
     </section>
     <section class="leesook">

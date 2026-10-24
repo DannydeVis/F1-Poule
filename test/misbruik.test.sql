@@ -13,8 +13,9 @@
 --      omschrijving, met cijfertrucs, accenten en puntjes ertussen; niet in een
 --      gewone poule, niet midden in een ander woord, en een woord dat uit staat
 --      telt niet. Een woord dat je zelf toevoegt telt meteen.
---   6. tel_bezoek telt alleen 'start' en 'app'.
---   7. De regel in de controletabel ziet het als een slot ontbreekt.
+--   6. tel_bezoek telt alleen 'start' en 'app', elk ook met '-geinstalleerd'.
+--   7. De regel in de controletabel ziet het als een slot ontbreekt, of als de
+--      teller vanaf het beginscherm nog niet telt.
 
 \set ON_ERROR_STOP on
 
@@ -227,10 +228,12 @@ begin
   perform pg_temp.hint_van('anon', null, $q$select public.tel_bezoek('app')$q$);
   perform pg_temp.hint_van('anon', null, $q$select public.tel_bezoek('verzonnen-pad')$q$);
   perform pg_temp.hint_van('anon', null, $q$select public.tel_bezoek('app/x')$q$);
-  if (select string_agg(pad || '=' || aantal, ',' order by pad) from public.bezoeken) <> 'app=2,start=1' then
+  perform pg_temp.hint_van('anon', null, $q$select public.tel_bezoek('app-geinstalleerd')$q$);
+  perform pg_temp.hint_van('anon', null, $q$select public.tel_bezoek('verzonnen-geinstalleerd')$q$);
+  if (select string_agg(pad || '=' || aantal, ',' order by pad) from public.bezoeken) <> 'app=2,app-geinstalleerd=1,start=1' then
     raise exception 'gezakt: de teller telde %', (select string_agg(pad || '=' || aantal, ',' order by pad) from public.bezoeken);
   end if;
-  raise notice 'ok: de teller telt start en app, en negeert de rest';
+  raise notice 'ok: de teller telt start en app, ook vanaf het beginscherm, en negeert de rest';
 
   -- ---------------------------------------------------------------
   --  7. de controletabel
@@ -251,6 +254,22 @@ begin
   if h <> 'WOORDFILTER ZONDER WOORDEN' then raise exception 'gezakt: zonder woorden zegt de tabel "%"', h; end if;
   update public.verboden_woorden set uit = false;
   raise notice 'ok: de controletabel zegt ok, en ziet een ontbrekend filter of een lege lijst';
+end $$;
+
+-- Een teller van vóór 24 oktober, die vanaf het beginscherm niet telt.
+create or replace function public.tel_bezoek(p_pad text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_pad is null or p_pad not in ('start', 'app') then return; end if;
+end $$;
+do $$
+declare h text;
+begin
+  select uitkomst into h from public.poule_controle where controle = 'misbruik: sessie, limieten, woordfilter, teller';
+  if h <> 'TELLER ZONDER BEGINSCHERM: draai schema.sql opnieuw' then
+    raise exception 'gezakt: met een teller zonder beginscherm zegt de tabel "%"', h;
+  end if;
+  raise notice 'ok: een teller die vanaf het beginscherm niet telt ziet de tabel';
 end $$;
 
 -- Een oude poule_meedoen zonder sessiecontrole: de controletabel ziet het.

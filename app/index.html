@@ -7178,11 +7178,18 @@ const laatsteMetUitslag = () =>
 // scherm (het beginscherm of een poule). Zonder cookies en zonder IP-adres; zie
 // tel_bezoek() in schema.sql en "Tellen" in de privacyverklaring. Lukt het
 // niet, dan merkt niemand dat.
+// Vanaf het beginscherm (of als geïnstalleerde app op een computer) komt er
+// "-geinstalleerd" achter, zodat het beheer ziet hoeveel mensen de app zo
+// gebruiken. Dezelfde vraag als alGeinstalleerd(), maar hier uitgeschreven:
+// die staat verderop als const, en render() kan eerder komen.
 const GETELD = new Set();
 function telBezoek(pad) {
   if (DEMO || !db || GETELD.has(pad)) return;
   GETELD.add(pad);
-  Promise.resolve(db.rpc('tel_bezoek', { p_pad: pad })).catch(() => {});
+  let thuis = false;
+  try { thuis = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch {}
+  const p_pad = thuis ? `${pad}-geinstalleerd` : pad;
+  Promise.resolve(db.rpc('tel_bezoek', { p_pad })).catch(() => {});
 }
 
 function render() {

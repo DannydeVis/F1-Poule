@@ -1221,8 +1221,9 @@ Object.assign(functies, {
   ik_ben_beheerder() { return { data: ikBenBeheerder(), error: null }; },
 
   tel_bezoek({ p_pad } = {}) {
-    // Net als schema.sql: alleen de twee schermen die de app telt.
-    if (!['start', 'app'].includes(String(p_pad ?? ''))) return { data: null, error: null };
+    // Net als schema.sql: alleen de twee schermen die de app telt, elk ook
+    // vanaf het beginscherm.
+    if (!['start', 'app', 'start-geinstalleerd', 'app-geinstalleerd'].includes(String(p_pad ?? ''))) return { data: null, error: null };
     const sleutel = `${dag()}|${p_pad}`;
     store.bezoeken[sleutel] = (store.bezoeken[sleutel] ?? 0) + 1;
     const ik = wieBenIk();
@@ -1251,6 +1252,8 @@ Object.assign(functies, {
       actief_7d: new Set(store.actief.filter((a) => a.dag > sinds(7)).map((a) => a.user_id)).size,
       bezoeken_vandaag: bezoeken.filter(([k]) => k.startsWith(dag())).reduce((t, [, n]) => t + n, 0),
       bezoeken_7d: bezoeken.filter(([k]) => k.slice(0, 10) > sinds(7)).reduce((t, [, n]) => t + n, 0),
+      geinstalleerd_vandaag: bezoeken.filter(([k]) => k.startsWith(dag()) && k.endsWith('-geinstalleerd')).reduce((t, [, n]) => t + n, 0),
+      geinstalleerd_7d: bezoeken.filter(([k]) => k.slice(0, 10) > sinds(7) && k.endsWith('-geinstalleerd')).reduce((t, [, n]) => t + n, 0),
       meldingen: (store.push_abonnementen ?? []).length,
       profielen: store.pool_members.filter((m) => m.profiel_code).length,
       seizoen: 2026,

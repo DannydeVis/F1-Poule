@@ -649,6 +649,25 @@ const CSS = `
   .los p{margin:0;color:var(--ink2)}
   .los a{color:var(--accent-tekst)}
 
+  /* "De app": de kaart van jouw toestel vooraan (INSTALLEER). Met de knop
+     Installeer erbij krijgt "Open de app" alleen een rand. */
+  .appactie{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 30px}
+  .knop[hidden]{display:none}
+  .appactie [data-installeer]:not([hidden])~.knop{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--lijn)}
+  .toestellen{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+  .toestellen>li{display:flex;flex-direction:column;background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:24px}
+  .toestellen>li.jij{order:-1;border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+  .toestellen .jouw{display:none;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent-tekst);margin:0 0 8px}
+  .toestellen>li.jij .jouw{display:block}
+  .toestellen h3{margin:0 0 12px;font-size:22px}
+  .toestellen ol{margin:0;padding-left:1.2em;color:var(--ink2);font-size:16px}
+  .toestellen ol li+li{margin-top:6px}
+  .toestellen .qr{display:block;width:132px;height:132px;margin-top:18px;border-radius:10px;border:1px solid var(--lijn)}
+  .apptip{margin:22px 0 0;color:var(--ink2);max-width:44em;border-left:3px solid #ee4d33;padding-left:14px}
+  .naarapp{font-size:15px;margin:10px 0 0}
+  .naarapp a{color:var(--nacht-ink2);text-decoration:underline;text-underline-offset:3px}
+
   .faq{display:grid;gap:10px;max-width:880px}
   .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;transition:border-color .2s,box-shadow .2s}
   .faq details:hover{border-color:var(--ink3)}
@@ -700,6 +719,7 @@ const CSS = `
     .functies{grid-template-columns:repeat(2,1fr)}
     .beelden{grid-template-columns:repeat(3,1fr)}
     .tabellen{grid-template-columns:1fr 1fr}
+    .toestellen{grid-template-columns:repeat(3,1fr)}
     .aanbod{left:auto;right:20px;bottom:20px;max-width:460px}
     .niveaulijst{grid-template-columns:repeat(3,1fr);align-items:start}
     .niveau.meest{transform:translateY(-10px)}
@@ -775,6 +795,29 @@ const BEWEGING = `(function(){try{
   if(balk){var bij=function(){var max=h.scrollHeight-innerHeight;balk.style.transform='scaleX('+(max>0?Math.min(1,scrollY/max):0)+')'};
     addEventListener('scroll',bij,{passive:true});addEventListener('resize',bij);bij()}
 }catch(e){document.documentElement.classList.add('klaar');[].slice.call(document.querySelectorAll('.onthul')).forEach(function(el){el.classList.add('zichtbaar')})}})();`;
+
+// Het blok "De app" (#app). Predict the Race staat niet in de App Store of
+// Google Play; dit blok zegt hoe je hem toch als app op je telefoon zet.
+//   - In de kop: de vraag van Chrome en Edge om te installeren bewaren, zonder
+//     hun eigen balk. Die vraag kan komen voordat het blok er is, daarom al in
+//     de kop, en de knop gaat open zodra ze er allebei zijn.
+//   - Onderaan: welk toestel dit is, en die kaart vooraan met "jouw toestel".
+//     Een iPad meldt zich als een Mac; het aanraakscherm verraadt hem, net als
+//     in isApple() in de app.
+// Zonder JavaScript staan de drie kaarten er gewoon, alleen zonder knop.
+const INSTALLEER_KOP = `addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.ptrVraag=e;
+  var k=document.querySelector('[data-installeer]');if(k)k.hidden=false});`;
+const INSTALLEER = `(function(){try{
+  var blok=document.getElementById('app');if(!blok)return;
+  var ua=navigator.userAgent||'';
+  var t=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)?'iphone':/Android/.test(ua)?'android':'computer';
+  var kaart=blok.querySelector('[data-toestel="'+t+'"]');if(kaart)kaart.classList.add('jij');
+  var knop=blok.querySelector('[data-installeer]');if(!knop)return;
+  if(window.ptrVraag)knop.hidden=false;
+  knop.addEventListener('click',function(){var v=window.ptrVraag;if(!v)return;v.prompt();
+    Promise.resolve(v.userChoice).then(function(){window.ptrVraag=null;knop.hidden=true},function(){})});
+  addEventListener('appinstalled',function(){window.ptrVraag=null;knop.hidden=true});
+}catch(e){}})();`;
 const beeld = (code, scherm, thema) =>
   `${voor(code)}site/beeld/${scherm}-${code}-${thema}.jpg`;
 
@@ -932,7 +975,8 @@ function pagina(code, datum) {
 <html lang="${code}">
 <head>
 <meta charset="utf-8">
-${code === 'nl' ? `<script>${DOORSTUREN}</script>\n` : ''}<script>${BEWEGING_KOP}</script>
+${code === 'nl' ? `<script>${DOORSTUREN}</script>\n` : ''}<script>${BEWEGING_KOP}
+${INSTALLEER_KOP}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(t.titel)}</title>
 <meta name="description" content="${esc(t.omschrijving)}">
@@ -944,6 +988,7 @@ ${hreflang}
 <link rel="icon" href="${p}favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" href="${p}pictogrammen/predicttherace-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="${p}pictogrammen/predicttherace-apple-180.png">
+<link rel="manifest" href="${p}manifest.webmanifest">
 <link rel="preload" href="${p}lettertypen/barlow-condensed-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${p}lettertypen/barlow-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:type" content="website">
@@ -1002,6 +1047,7 @@ ${jsonLd(code, datum)}
           </div>
         </form>
       </div>${openPoule(code, app, '      ')}
+      <p class="naarapp"><a href="#app">${esc(t.app.hero)} <span aria-hidden="true">↓</span></a></p>
       <ul class="vertrouwen">${t.hero.vertrouwen.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
     </div>
     <div class="telefoon">
@@ -1103,6 +1149,26 @@ ${jsonLd(code, datum)}
   </div>
 </section>
 
+<section class="blok" id="app">
+  <div class="binnen">
+    ${sectiekop('06', t.app.label, esc(t.app.kop))}
+    <p class="inleiding onthul">${esc(t.app.intro)}</p>
+    <div class="appactie">
+      <button class="knop" type="button" data-installeer hidden>${esc(t.app.knop)}</button>
+      <a class="knop" href="${app}">${esc(t.app.open)} <span aria-hidden="true">→</span></a>
+    </div>
+    <ul class="toestellen">${['iphone', 'android', 'computer'].map((k, i) => `
+      <li class="onthul" data-toestel="${k}" style="--i:${i}">
+        <span class="jouw">${esc(t.app.jij)}</span>
+        <h3>${esc(t.app[k][0])}</h3>
+        <ol>${t.app[k][1].map((stap) => `<li>${esc(stap)}</li>`).join('')}</ol>${k === 'computer' ? `
+        <img class="qr" src="${p}site/beeld/app-qr.svg" alt="${esc(t.app.qrAlt)}" width="132" height="132" loading="lazy" decoding="async">` : ''}
+      </li>`).join('')}
+    </ul>
+    <p class="apptip onthul">${esc(t.app.tip)}</p>
+  </div>
+</section>
+
 <section class="blok">
   <div class="binnen los">
     <article class="onthul"><h2>${esc(t.privacy.kop)}</h2><p>${esc(t.privacy.tekst)} <a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.privacy.meer)}</a></p></article>
@@ -1111,7 +1177,7 @@ ${jsonLd(code, datum)}
 
 <section class="blok" id="faq">
   <div class="binnen">
-    ${sectiekop('06', t.nav.faq, esc(t.faq.kop))}
+    ${sectiekop('07', t.nav.faq, esc(t.faq.kop))}
     <div class="faq onthul">${faqItems(code).map(([vraag, antwoord]) => `
       <details><summary><h3>${esc(vraag)}</h3></summary><p>${metOpenPoule(code, esc(vul(antwoord, vars)),
         (x) => `<a href="${app}?code=${encodeURIComponent(OPEN_POULE)}">${esc(x)}</a>`)}</p></details>`).join('')}
@@ -1148,6 +1214,7 @@ ${jsonLd(code, datum)}
 </footer>
 <script>${taalScript(code)}</script>
 <script>${BEWEGING}</script>
+<script>${INSTALLEER}</script>
 <script src="${p}toestemming.js" defer></script>
 </body>
 </html>

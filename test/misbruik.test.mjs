@@ -312,8 +312,11 @@ const OPEN = 'db.pools[0].is_public = true;';
   const schema = readFileSync(join(wortel, 'schema.sql'), 'utf8');
   const geteld = [...new Set([...app.matchAll(/telBezoek\('([^']+)'\)/g)].map((x) => x[1]))].sort();
   const toegestaan = (schema.match(/p_pad not in \(([^)]+)\)/)?.[1] ?? '').match(/'[^']+'/g)?.map((x) => x.slice(1, -1)).sort() ?? [];
-  check('de app telt precies de schermen die tel_bezoek() aanneemt',
-    geteld.length > 0 && geteld.join() === toegestaan.join(), `app: ${geteld} · schema: ${toegestaan}`);
+  // Elk scherm ook met "-geinstalleerd": vanaf het beginscherm (sinds 24 oktober).
+  const verwacht = geteld.flatMap((p) => [p, `${p}-geinstalleerd`]).sort();
+  check('de app telt precies de schermen die tel_bezoek() aanneemt, elk ook vanaf het beginscherm',
+    geteld.length > 0 && verwacht.join() === toegestaan.join() && app.includes('`${pad}-geinstalleerd`'),
+    `app: ${verwacht} · schema: ${toegestaan}`);
   const privacy = readFileSync(join(wortel, 'site', 'privacy.mjs'), 'utf8');
   check('de privacyverklaring noemt Turnstile en Cloudflare', /Turnstile/.test(privacy) && /Cloudflare/.test(privacy));
   for (const pagina of ['privacy/index.html', 'en/privacy/index.html']) {

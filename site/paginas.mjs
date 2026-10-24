@@ -2085,11 +2085,11 @@ export const PAGINAS = [
           {
             id: 'anders',
             vraag: 'Wanneer past iets anders beter?',
-            kort: 'Iets anders past beter als je groep een team wil samenstellen met een budget en transfers: neem dan F1 Fantasy. Wil je om prijzen spelen, dan is Predict the Race niets voor je, want prijzen zijn er niet. En wie een app uit de App Store of Google Play wil, moet ook verder kijken.',
+            kort: 'Iets anders past beter als je groep een team wil samenstellen met een budget en transfers: neem dan F1 Fantasy. Wil je om prijzen spelen, dan is Predict the Race niets voor je, want prijzen zijn er niet. Een app op je telefoon kan wel, alleen niet uit de App Store of Google Play.',
             punten: [
               ['Een team met een budget', 'F1 Fantasy, het officiële fantasyspel van de Formule 1. Je stelt een team van coureurs en constructeurs samen en scoort op wat zij in het echt doen.'],
               ['Om prijzen spelen', 'F1 Predict en Superbru noemen allebei prijzen op hun site. Predict the Race heeft geen inleg, geen pot en geen prijzen.'],
-              ['Een app uit de store', 'Superbru heeft een app voor iPhone en Android, en F1 Fantasy speel je ook in de officiële F1-app. Predict the Race is een web-app die je vanuit de browser op je beginscherm zet.'],
+              ['Per se een app uit de store', 'Superbru heeft een app voor iPhone en Android, en F1 Fantasy speel je ook in de officiële F1-app. Predict the Race zet je vanuit de browser op je beginscherm: dan heb je een eigen icoon en meldingen voor je deadlines, maar hij staat niet in de App Store of Google Play.'],
               ['Een andere taal', 'De app en de voorpagina zijn er alleen in het Nederlands, Engels, Duits, Frans, Spaans, Italiaans of Portugees. Wie een andere taal zoekt, moet verder kijken.'],
               ['Alles zelf bepalen', 'Een spreadsheet. Je spreekt zelf de regels af, maar iemand moet na elke sessie de uitslag overtypen.'],
             ],
@@ -2156,11 +2156,11 @@ export const PAGINAS = [
           {
             id: 'something-else',
             vraag: 'When does something else fit better?',
-            kort: 'Something else fits better if your group wants a team with a budget and transfers: that is F1 Fantasy, or GridRival. If you want to play for prizes, Predict the Race is not for you, because it has none. The same goes if you want an app from the App Store or Google Play.',
+            kort: 'Something else fits better if your group wants a team with a budget and transfers: that is F1 Fantasy, or GridRival. If you want to play for prizes, Predict the Race is not for you, because it has none. An app on your phone works too, just not from the App Store or Google Play.',
             punten: [
               ['A team with a budget', 'F1 Fantasy, the official fantasy game of Formula 1, or GridRival, where you sign drivers on contracts and pocket it when their value goes up.'],
               ['Playing for prizes', 'F1 Predict and Superbru both mention prizes on their sites. Predict the Race has no entry fee, no pot and no prizes.'],
-              ['An app from the store', 'Superbru has apps for iPhone and Android, and F1 Fantasy can also be played in the official F1 app. Predict the Race is a web app that you add to your home screen from the browser.'],
+              ['It has to come from an app store', 'Superbru has apps for iPhone and Android, and F1 Fantasy can also be played in the official F1 app. You add Predict the Race to your home screen from the browser: it then has its own icon and reminders before your deadlines, but it is not in the App Store or Google Play.'],
               ['Another language', 'The app and the home page are only in English, Dutch, German, French, Spanish, Italian, or Portuguese. Anyone looking for another language has to look elsewhere.'],
               ['Race analysis', 'Podium Prophets has race pace charts, long-run data and qualifying breakdowns. Predict the Race sticks to the game.'],
               ['Setting every rule yourself', 'Kicktipp, where each round sets its own points, or a spreadsheet. In a spreadsheet, someone has to type in the results after every session.'],

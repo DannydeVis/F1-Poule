@@ -20,6 +20,7 @@
 //      leegmaken, afgelast. Onbereikbaar zegt dat ook.
 //   6. Statistieken: grafieken met een tooltip en een tabel eronder.
 //   7. De app telt bezoeken: één keer per bezoek, niet bij elke keer tekenen.
+//      Vanaf het beginscherm apart (sinds 24 oktober), met een eigen tegel.
 //   8. Installeerbaar: een eigen manifest met eigen pictogrammen.
 
 import { readFileSync } from 'node:fs';
@@ -53,6 +54,19 @@ const vandaag = new Date().toISOString().slice(0, 10);
   const d = await db();
   check('en het account van wie hem opende staat bij de actieven van vandaag, één keer',
     d.actief.filter((a) => a.dag === vandaag).length === 1, JSON.stringify(d.actief));
+
+  // Vanaf het beginscherm, zoals op een iPhone (navigator.standalone).
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('test:beginscherm'))
+      Object.defineProperty(Navigator.prototype, 'standalone', { get: () => true, configurable: true });
+  });
+  await page.evaluate(() => sessionStorage.setItem('test:beginscherm', '1'));
+  await page.reload();
+  await page.waitForSelector('[data-race]');
+  const t = await telling();
+  check('vanaf het beginscherm telt het bezoek apart, als app-geinstalleerd, en niet ook nog als app',
+    t[`${vandaag}|app-geinstalleerd`] === 1 && t[`${vandaag}|app`] === 2, JSON.stringify(t));
+  await page.evaluate(() => sessionStorage.removeItem('test:beginscherm'));
 }
 
 // ---- 1. binnenkomen ------------------------------------------------------------
@@ -213,6 +227,10 @@ check('de beheerder komt binnen, en ziet met welk account', (await tekst('.merk'
     [e.querySelector('.label').textContent.trim(), e.querySelector('.getal').textContent.trim()])));
   check('het overzicht telt de spelers en de poules',
     tegels.Spelers === String(d.pool_members.length) && tegels.Poules === '2', JSON.stringify(tegels));
+  const bezocht = Object.entries(d.bezoeken).filter(([k]) => k.startsWith(vandaag)).reduce((t, [, n]) => t + n, 0);
+  check('en de bezoeken vanaf het beginscherm, met hun deel van alle bezoeken',
+    tegels['Vanaf het beginscherm'] === '1' && tegels['Bezoeken vandaag'] === String(bezocht) && bezocht > 1
+      && (await tekst('.raster')).includes(`1 in 7 dagen, ${Math.round(100 / bezocht)}% van de bezoeken`), JSON.stringify(tegels));
   check('de sync draait: laatst 12 minuten geleden', (await tekst('#synckaart')).includes('Draait')
     && (await tekst('#synckaart')).includes('12 min geleden'), await tekst('#synckaart'));
   check('met een knop om hem met de hand te starten, in GitHub',

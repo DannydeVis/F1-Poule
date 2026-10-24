@@ -44,7 +44,7 @@
     "@id": "https://predicttherace.com/en/f1-prediction-games-compared/#kruimel"
    },
    "datePublished": "2026-09-29",
-   "dateModified": "2026-10-12"
+   "dateModified": "2026-10-24"
   },
   {
    "@type": "Article",
@@ -56,7 +56,7 @@
     "@id": "https://predicttherace.com/en/f1-prediction-games-compared/#pagina"
    },
    "datePublished": "2026-09-29",
-   "dateModified": "2026-10-12",
+   "dateModified": "2026-10-24",
    "author": {
     "@id": "https://predicttherace.com/#maker"
    },
@@ -479,6 +479,25 @@
   .los p{margin:0;color:var(--ink2)}
   .los a{color:var(--accent-tekst)}
 
+  /* "De app": de kaart van jouw toestel vooraan (INSTALLEER). Met de knop
+     Installeer erbij krijgt "Open de app" alleen een rand. */
+  .appactie{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 30px}
+  .knop[hidden]{display:none}
+  .appactie [data-installeer]:not([hidden])~.knop{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--lijn)}
+  .toestellen{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+  .toestellen>li{display:flex;flex-direction:column;background:var(--paneel);border:1px solid var(--lijn);border-radius:18px;padding:24px}
+  .toestellen>li.jij{order:-1;border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+  .toestellen .jouw{display:none;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent-tekst);margin:0 0 8px}
+  .toestellen>li.jij .jouw{display:block}
+  .toestellen h3{margin:0 0 12px;font-size:22px}
+  .toestellen ol{margin:0;padding-left:1.2em;color:var(--ink2);font-size:16px}
+  .toestellen ol li+li{margin-top:6px}
+  .toestellen .qr{display:block;width:132px;height:132px;margin-top:18px;border-radius:10px;border:1px solid var(--lijn)}
+  .apptip{margin:22px 0 0;color:var(--ink2);max-width:44em;border-left:3px solid #ee4d33;padding-left:14px}
+  .naarapp{font-size:15px;margin:10px 0 0}
+  .naarapp a{color:var(--nacht-ink2);text-decoration:underline;text-underline-offset:3px}
+
   .faq{display:grid;gap:10px;max-width:880px}
   .faq details{background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;transition:border-color .2s,box-shadow .2s}
   .faq details:hover{border-color:var(--ink3)}
@@ -530,6 +549,7 @@
     .functies{grid-template-columns:repeat(2,1fr)}
     .beelden{grid-template-columns:repeat(3,1fr)}
     .tabellen{grid-template-columns:1fr 1fr}
+    .toestellen{grid-template-columns:repeat(3,1fr)}
     .aanbod{left:auto;right:20px;bottom:20px;max-width:460px}
     .niveaulijst{grid-template-columns:repeat(3,1fr);align-items:start}
     .niveau.meest{transform:translateY(-10px)}
@@ -643,7 +663,7 @@
       <li aria-current="page">The best F1 prediction games of 2026, compared</li>
     </ol></nav>
     <h1>The best F1 prediction games of 2026, compared</h1>
-    <p class="door">By <a href="../../en/about/" rel="author">Danny de Visser</a>, updated <time datetime="2026-10-12">October 12, 2026</time>. This comparison was written by the maker of Predict the Race.</p>
+    <p class="door">By <a href="../../en/about/" rel="author">Danny de Visser</a>, updated <time datetime="2026-10-24">October 24, 2026</time>. This comparison was written by the maker of Predict the Race.</p>
     <p class="kort inleiding">F1 prediction games, also called race prediction games, come in two kinds. In F1 Fantasy and GridRival you build a team within a budget; in F1 Predict, Superbru, Kicktipp, Podium Prophets and Predict the Race you predict the results. Beyond that they differ in price, prizes and how much you predict. Predict the Race is free and needs no account, but has no prizes and no app in the stores.</p>
 
     <section class="vraag" id="which">
@@ -673,8 +693,8 @@
 
     <section class="vraag" id="something-else">
       <h2>When does something else fit better?</h2>
-      <p class="kort">Something else fits better if your group wants a team with a budget and transfers: that is F1 Fantasy, or GridRival. If you want to play for prizes, Predict the Race is not for you, because it has none. The same goes if you want an app from the App Store or Google Play.</p>
-      <ul><li><b>A team with a budget.</b> F1 Fantasy, the official fantasy game of Formula 1, or GridRival, where you sign drivers on contracts and pocket it when their value goes up.</li><li><b>Playing for prizes.</b> F1 Predict and Superbru both mention prizes on their sites. Predict the Race has no entry fee, no pot and no prizes.</li><li><b>An app from the store.</b> Superbru has apps for iPhone and Android, and F1 Fantasy can also be played in the official F1 app. Predict the Race is a web app that you add to your home screen from the browser.</li><li><b>Another language.</b> The app and the home page are only in English, Dutch, German, French, Spanish, Italian, or Portuguese. Anyone looking for another language has to look elsewhere.</li><li><b>Race analysis.</b> Podium Prophets has race pace charts, long-run data and qualifying breakdowns. Predict the Race sticks to the game.</li><li><b>Setting every rule yourself.</b> Kicktipp, where each round sets its own points, or a spreadsheet. In a spreadsheet, someone has to type in the results after every session.</li></ul>
+      <p class="kort">Something else fits better if your group wants a team with a budget and transfers: that is F1 Fantasy, or GridRival. If you want to play for prizes, Predict the Race is not for you, because it has none. An app on your phone works too, just not from the App Store or Google Play.</p>
+      <ul><li><b>A team with a budget.</b> F1 Fantasy, the official fantasy game of Formula 1, or GridRival, where you sign drivers on contracts and pocket it when their value goes up.</li><li><b>Playing for prizes.</b> F1 Predict and Superbru both mention prizes on their sites. Predict the Race has no entry fee, no pot and no prizes.</li><li><b>It has to come from an app store.</b> Superbru has apps for iPhone and Android, and F1 Fantasy can also be played in the official F1 app. You add Predict the Race to your home screen from the browser: it then has its own icon and reminders before your deadlines, but it is not in the App Store or Google Play.</li><li><b>Another language.</b> The app and the home page are only in English, Dutch, German, French, Spanish, Italian, or Portuguese. Anyone looking for another language has to look elsewhere.</li><li><b>Race analysis.</b> Podium Prophets has race pace charts, long-run data and qualifying breakdowns. Predict the Race sticks to the game.</li><li><b>Setting every rule yourself.</b> Kicktipp, where each round sets its own points, or a spreadsheet. In a spreadsheet, someone has to type in the results after every session.</li></ul>
       <p>Predict the Race is also young: online since September 2026 and made by one person.</p>
     </section>
     <section class="leesook">

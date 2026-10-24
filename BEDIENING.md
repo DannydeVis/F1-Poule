@@ -2439,6 +2439,12 @@ apart), en welke accounts dat deden (`tel_bezoek()`). Zonder cookies en zonder
 IP-adres; wie actief was blijft vijf weken staan. De privacyverklaring zegt het
 erbij ("Tellen"). Dit is wat de grafieken bezoeken en actieve spelers vult.
 
+Sinds 24 oktober telt hij ook apart hoe vaak de app vanaf het beginscherm van
+een telefoon geopend wordt (of als geïnstalleerde app op een computer). Dat
+staat in de tegel **Vanaf het beginscherm**, met het deel van alle bezoeken in
+7 dagen. Zo zie je of het blok "De app" op de voorpagina helpt (§18, "De app op
+je telefoon"). Die bezoeken tellen ook gewoon mee bij "Bezoeken vandaag".
+
 ### Als opslaan in het beheer een fout geeft
 
 Dan staat de melding uit de database bovenaan. Ontbreekt een beheerfunctie
@@ -2702,6 +2708,30 @@ gelezen had. Op jouw verzoek ("kan je dat zelf niet doen?") niet meer: teksten
 gaan als gewone PR en de automerge zet ze online zodra de tests groen zijn.
 Wil je iets toch eerst lezen, zeg het, of zet de PR op GitHub zelf terug op
 concept ("Convert to draft"); de automerge slaat een concept over.
+
+### De app op je telefoon
+
+Predict the Race staat niet in de App Store of Google Play. Op de voorpagina
+staat daarom in zeven talen het blok **De app** (06): per toestel hoe je hem op
+je beginscherm zet, een QR-code voor wie op een computer kijkt, en op Android
+en in Chrome of Edge op een computer een knop **Installeer de app**. De kaart
+van het toestel waarop je kijkt staat vooraan. In de FAQ staat als tweede vraag
+"Is er een app voor iPhone en Android?", en de hero linkt naar het blok.
+
+Wat je zelf kunt doen:
+
+- **Nalopen op je telefoon**: open de voorpagina, tik op "Liever een app? Zo
+  zet je hem op je telefoon" en kijk of je eigen toestel bovenaan staat. Op
+  Android in Chrome hoort de knop "Installeer de app" te verschijnen (niet als
+  de app al geïnstalleerd is).
+- **Meten**: de tegel "Vanaf het beginscherm" in het beheer (§16). Kijk over
+  een paar weken of dat deel groeit.
+- **De QR-code** wijst naar `https://predicttherace.com/app/`. Alleen bij een
+  ander domein opnieuw maken, met `scripts/maak-qr.py` (de uitleg staat
+  bovenin dat bestand).
+- **In de Play Store**: kan later als aparte stap, met een
+  ontwikkelaarsaccount bij Google. Zeg het als je dat wilt; zie ROUTEKAART,
+  "De app in de stores".
 
 ## 19. Premium: een eigen profiel voor een poule
 

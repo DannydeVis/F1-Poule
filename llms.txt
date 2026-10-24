@@ -31,12 +31,13 @@ Predict the Race is made by Danny de Visser from Rotterdam, who also makes Padel
 - Someone wants an F1 game without a budget or transfers: you only predict the order.
 - Someone wants an F1 prediction league in Dutch (an "F1-poule").
 - Someone wants to play but has no group of their own: anyone can join the open league (https://predicttherace.com/app/?code=80C98C).
+- Someone wants an F1 prediction app on their phone: on iPhone and Android it goes on the home screen from the browser in two taps, with its own icon and reminders, no app store needed.
 
 ## When something else fits better
 
 - A fantasy game with a budget and transfers: that is F1 Fantasy, the official Formula 1 fantasy game.
 - Playing for money or prizes: Predict the Race has no entry fee, no pot and no prizes.
-- An app from the App Store or Google Play: Predict the Race is a web app that you add to your home screen from the browser.
+- An app that has to come from the App Store or Google Play: Predict the Race is not in either store. You add it to your home screen from the browser in two taps, and it then opens like an app, with its own icon and reminders before deadlines.
 - The app in a language other than Dutch, English, German, French, Spanish, Italian, or Portuguese: the app and the homepage exist only in these seven.
 
 ## Guides
@@ -131,6 +132,10 @@ Or build your own league: switch each question on or off, with its points shown.
 
 Yes. There is no subscription, no paywall and no advertising. Every feature is available to everyone.
 
+### Is there an app for iPhone and Android?
+
+Yes, but not in the App Store or Google Play. You add Predict the Race to your home screen from your browser in two taps: on an iPhone with Share and "Add to Home Screen", on Android with "Install app". It then opens like a regular app, with its own icon, and you can turn on reminders before your deadlines. On a computer you simply play in the browser.
+
 ### How do I join a league?
 
 Open the invite link you got from the league admin, or enter the six-character league code. Then pick your name, or add yourself as a new player.
@@ -158,10 +163,6 @@ Then the app randomly fills in whatever you left blank, from the top 10 to the e
 ### What is a joker?
 
 A joker doubles all your points for one race weekend. You play it before the weekend starts; after that it is locked in. The league admin decides whether jokers are used and how many everyone gets.
-
-### Does it work on my phone?
-
-Yes, on iPhone, Android and computer, right in the browser. Add it to your home screen and it works like a regular app.
 
 ### Which languages is the app in?
 
