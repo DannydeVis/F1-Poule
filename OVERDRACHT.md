@@ -11455,3 +11455,14 @@ zonder randen geen verschil.
 **Danny moet:** niets. Wil hij het opstartscherm zien: de app opnieuw op het
 beginscherm zetten, maar alleen met een gekoppeld account.
 
+**Daarna: de iPhone Duo** (de opvouwbare, sinds 23 oktober te koop). Danny
+vroeg of de app daar ook goed op staat. De indeling past zich al aan elke
+breedte aan; nagelopen op het buitenscherm (466 x 678), het binnenscherm
+(626 x 890) en dat dwars (890 x 626): niets steekt uit, de tabbalk staat
+onderaan boven het streepje. Erbij: drie opstartbeelden (dicht, open, open
+dwars), dus vijftien in totaal (1,1 MB). Apple gaf alleen schermpixels
+(1398 x 2034 en 1878 x 2670); de CSS-maten zijn die gedeeld door 3, zoals bij
+alle iPhones sinds de X. Klopt dat op het toestel niet, dan blijft alleen het
+opstartscherm wit; verder gaat er niets mis. Test: blok 5 in
+`test/iphone.test.mjs`.
+

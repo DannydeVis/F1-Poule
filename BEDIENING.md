@@ -2736,7 +2736,11 @@ tot de bovenrand, zoals een gewone app: achter de klok en de batterij een
 donkere strook (in het donker in de kleur van de kop), en niets meer onder het
 streepje onderin of, liggend, onder de inkeping. Bij het opstarten een donker
 scherm met het logo in plaats van een witte flits
-(`scripts/maak-opstartbeelden.mjs`, twaalf iPhone-maten). De statusbalk zie je
+(`scripts/maak-opstartbeelden.mjs`, alle iPhone-maten van de 8 tot de 17,
+de Air en de opvouwbare Duo: dicht, open, en open ook dwars). Van de Duo heeft
+Apple alleen de schermpixels gegeven; de maten in het script zijn die gedeeld
+door 3. Blijft het opstartscherm op een Duo toch wit, dan klopt die maat niet:
+pas hem daar aan. De statusbalk zie je
 bij de volgende keer openen. Het opstartscherm haalt een iPhone pas op als je
 de app opnieuw op je beginscherm zet; doe dat alleen als je account
 gekoppeld is (Profiel), want een iPhone gooit bij het weghalen alles van die
