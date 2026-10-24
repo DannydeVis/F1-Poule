@@ -12,9 +12,16 @@
  * Opnieuw draaien bij een nieuwe iPhone-maat of een ander logo; zet wat eruit
  * komt in de repo. test/iphone.test.mjs kijkt of blok en plaatjes kloppen.
  *
- * Alleen staand: de app is een staande app (manifest.webmanifest). Een
- * iPhone die er niet tussen staat krijgt geen plaatje, en dus weer de witte
- * flits; verder gaat er niets mis.
+ * Staand: de app is een staande app (manifest.webmanifest). Behalve het
+ * grote binnenscherm van de opvouwbare iPhone Duo: dat is bijna vierkant en
+ * houd je net zo vaak dwars, dus daar ook liggend. Een iPhone die er niet
+ * tussen staat krijgt geen plaatje, en dus weer de witte flits; verder gaat er
+ * niets mis.
+ *
+ * De maten van de Duo (oktober 2026) heeft Apple alleen in schermpixels
+ * gegeven (dicht 1398 x 2034, open 1878 x 2670); de maten hieronder zijn die
+ * gedeeld door 3. Klopt dat niet met wat het toestel zelf zegt
+ * (screen.width, screen.height, devicePixelRatio), pas het hier aan.
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -23,8 +30,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-// [breedte en hoogte in CSS-pixels, pixeldichtheid, welke iPhones]
+// [breedte en hoogte in CSS-pixels (staand), pixeldichtheid, welke iPhones,
+//  en 'liggend' voor het plaatje als je hem dwars houdt]
 export const IPHONES = [
+  [626, 890, 3, 'Duo, open'],
+  [626, 890, 3, 'Duo, open', 'liggend'],
+  [466, 678, 3, 'Duo, dicht'],
   [440, 956, 3, '16 Pro Max, 17 Pro Max'],
   [420, 912, 3, 'Air'],
   [430, 932, 3, '14 Pro Max, 15 Plus en Pro Max, 16 Plus'],
@@ -39,11 +50,17 @@ export const IPHONES = [
   [375, 667, 2, '8, SE 2 en 3'],
 ];
 
-export const bestandVan = ([b, h, d]) => `opstart-${b * d}x${h * d}.png`;
+// De maat van het plaatje in CSS-pixels: liggend breedte en hoogte omgedraaid.
+export const maatVan = ([b, h, , , stand]) => (stand === 'liggend' ? [h, b] : [b, h]);
+export const bestandVan = (iphone) => {
+  const [b, h] = maatVan(iphone);
+  return `opstart-${b * iphone[2]}x${h * iphone[2]}.png`;
+};
 export const linkVan = (iphone) => {
-  const [b, h, d] = iphone;
+  const [b, h, d, , stand] = iphone;
   return `<link rel="apple-touch-startup-image" media="screen and (device-width: ${b}px) and (device-height: ${h}px)`
-    + ` and (-webkit-device-pixel-ratio: ${d}) and (orientation: portrait)" href="../pictogrammen/opstart/${bestandVan(iphone)}">`;
+    + ` and (-webkit-device-pixel-ratio: ${d}) and (orientation: ${stand === 'liggend' ? 'landscape' : 'portrait'})"`
+    + ` href="../pictogrammen/opstart/${bestandVan(iphone)}">`;
 };
 export const blok = () => `<!-- opstartbeelden -->\n${IPHONES.map(linkVan).join('\n')}\n<!-- /opstartbeelden -->`;
 
@@ -55,8 +72,8 @@ async function maak() {
   mkdirSync(join(wortel, 'pictogrammen', 'opstart'), { recursive: true });
   const browser = await chromium.launch();
   for (const iphone of IPHONES) {
-    const [b, h, d] = iphone;
-    const page = await browser.newPage({ viewport: { width: b, height: h }, deviceScaleFactor: d });
+    const [b, h] = maatVan(iphone);
+    const page = await browser.newPage({ viewport: { width: b, height: h }, deviceScaleFactor: iphone[2] });
     // Donker zoals de app, het logo in het midden en de naam eronder.
     await page.setContent(`<!DOCTYPE html><html><head><style>
       @font-face{font-family:K;src:url(${letter})}

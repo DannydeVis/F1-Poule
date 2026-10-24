@@ -1148,6 +1148,7 @@ uploaden, winkelpagina en App-content, productietoegang.
 **De iPhone-beginschermapp** (24 oktober). Gebouwd: de app loopt door tot de
 bovenrand (doorzichtige statusbalk met een strook erachter), niets meer onder
 het streepje onderin of de inkeping, en een donker opstartscherm per
-iPhone-maat; BEDIENING §18, "De app op je telefoon".
+iPhone-maat, ook voor de opvouwbare iPhone Duo (dicht, open en open dwars;
+de maten zijn afgeleid uit Apples schermpixels); BEDIENING §18, "De app op je telefoon".
 Open bij Danny: niets.
 

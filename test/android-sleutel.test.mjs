@@ -27,6 +27,10 @@ const KEY = 'service-role-nep';
 const tmp = () => mkdtempSync(join(tmpdir(), 'android-sleutel-'));
 
 // Een Storage zoals die van Supabase, zo ver als het script hem gebruikt.
+// Elke verbinding gaat na het antwoord dicht: anders sluit de server een
+// verbinding na 5 seconden stilte, terwijl fetch hem na het maken van een
+// sleutel (ook een paar seconden) net weer wil gebruiken: "fetch failed".
+const KOP = { 'content-type': 'application/json', connection: 'close' };
 function nepStorage({ bucket = true, storing = false } = {}) {
   const bestanden = new Map();
   const verzoeken = [];
@@ -34,7 +38,7 @@ function nepStorage({ bucket = true, storing = false } = {}) {
     let body = '';
     for await (const stuk of req) body += stuk;
     verzoeken.push({ methode: req.method, url: req.url, kop: req.headers, body });
-    const stuur = (code, data) => { res.writeHead(code, { 'content-type': 'application/json' }); res.end(JSON.stringify(data)); };
+    const stuur = (code, data) => { res.writeHead(code, KOP); res.end(JSON.stringify(data)); };
     if (req.headers.authorization !== `Bearer ${KEY}` || req.headers.apikey !== KEY) return stuur(401, { error: 'Unauthorized' });
     if (storing) return stuur(500, { error: 'internal' });
     const m = /^\/storage\/v1\/object\/([^/]+)\/(.+)$/.exec(req.url);
@@ -42,7 +46,7 @@ function nepStorage({ bucket = true, storing = false } = {}) {
     if (!bucket || m[1] !== MAP) return stuur(400, { statusCode: '404', error: 'Bucket not found', message: 'Bucket not found' });
     if (req.method === 'GET') {
       if (!bestanden.has(m[2])) return stuur(400, { statusCode: '404', error: 'not_found', message: 'Object not found' });
-      res.writeHead(200, { 'content-type': 'application/json' });
+      res.writeHead(200, KOP);
       return res.end(bestanden.get(m[2]));
     }
     if (req.method === 'POST') {
