@@ -1408,7 +1408,7 @@
     border:1px solid color-mix(in srgb, currentColor 45%, transparent)}
   .uitleg .pt.v5{color:var(--paars)} .uitleg .pt.v3{color:var(--groen)} .uitleg .pt.v1{color:var(--amber)}
   /* Een poule met alleen jou: de code en één knop om hem te delen. */
-  .legepoule{display:flex;flex-direction:column;gap:12px;padding:16px;
+  .legepoule,.meldingkaart{display:flex;flex-direction:column;gap:12px;padding:16px;
     border:1px solid var(--lijn);border-left:3px solid var(--accent);background:var(--eigen)}
   .legepoule .knop svg{vertical-align:-3px;margin-right:8px}
   .rest{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px 0 13px;
@@ -2541,6 +2541,32 @@ const ENGELS = Object.fromEntries([
    'You can still link your account later, under Profile.'],
   ['De app op je beginscherm zetten kan later nog, onder Profiel.',
    'You can still add the app to your home screen later, under Profile.'],
+  ['Je account koppelen, de app op je beginscherm zetten en meldingen aanzetten kan later nog, onder Profiel.',
+   'You can still link your account, add the app to your home screen and turn on notifications later, under Profile.'],
+  ['Je account koppelen en meldingen aanzetten kan later nog, onder Profiel.',
+   'You can still link your account and turn on notifications later, under Profile.'],
+  ['De app op je beginscherm zetten en meldingen aanzetten kan later nog, onder Profiel.',
+   'You can still add the app to your home screen and turn on notifications later, under Profile.'],
+  ['Meldingen aanzetten kan later nog, onder Profiel.',
+   'You can still turn on notifications later, under Profile.'],
+  ['Mis geen deadline',
+   'Never miss a deadline'],
+  ['Krijg een seintje als een deadline nadert en je nog niets hebt ingevuld. Hooguit één per sessie, en alleen als er echt iets openstaat.',
+   'Get a nudge when a deadline is close and you have not filled anything in. At most one per session, and only if something is really open.'],
+  ['Daar kan hij je ook een seintje geven als een deadline nadert en je nog niets hebt ingevuld. Zet meldingen aan zodra je hem vanaf je beginscherm opent.',
+   'There it can also give you a nudge when a deadline is close and you have not filled anything in. Turn on notifications as soon as you open it from your home screen.'],
+  ['vergeten in te vullen?',
+   'forgot to fill in?'],
+  ['Bij {race} koos de app willekeurig voor je, omdat je niets had ingevuld.',
+   'At {race} the app picked at random for you, because you had not filled anything in.'],
+  ['Met meldingen aan krijg je een seintje als een deadline nadert en je nog niets hebt ingevuld.',
+   'With notifications on you get a nudge when a deadline is close and you have not filled anything in.'],
+  ['Nu Predict the Race op je beginscherm staat, kan hij je een seintje geven als een deadline nadert en je nog niets hebt ingevuld.',
+   'Now that Predict the Race is on your home screen, it can give you a nudge when a deadline is close and you have not filled anything in.'],
+  ['Op een iPhone werkt dat alleen als Predict the Race op je beginscherm staat.',
+   'On an iPhone this only works if Predict the Race is on your home screen.'],
+  ['Zo zet je hem op je beginscherm',
+   'How to put it on your home screen'],
 
   // ---- de schil: navigatie en kop ------------------------------
   ['Races',
@@ -7597,6 +7623,7 @@ function toonApp() {
   knoopMail();
   knoopInstall(() => render());
   knoopMelding();
+  knoopMeldingKaart();
   knoopTaal();
   knoopTaalKeuze();
   knoopVerhaal();
@@ -7674,6 +7701,7 @@ function racesPagina(volgend) {
     ${seizoenBalk()}
     ${vorigSeizoenKaart()}
     ${legePouleBlok()}
+    ${meldingKaart()}
     ${volgend ? hero(volgend) : ''}
     <span class="label">${T('kalender')}</span>
     <div class="kalender">${komend.map(x => kalenderRij(x.r, x.st)).join('') || leeg}</div>
@@ -7738,6 +7766,117 @@ function legePouleBlok() {
     <textarea class="veld tekstblok hide" id="deelcodeveld" readonly rows="3"
       aria-label="${T('Uitnodiging om zelf te kopiëren')}"></textarea>
   </div>`;
+}
+
+// ---- meldingen aanzetten, op het goede moment -----------------
+// "Als mensen hun poule niet hebben ingevuld en random krijgen. Dan ook een
+// reminder. Vergeten in te vullen? Zet notificaties aan." (26 oktober)
+//
+// Twee momenten waarop een speler het meest geneigd is ja te zeggen:
+//
+//   gemist  de app vulde in de laatste race een top 10 voor je in, omdat je
+//           hem vergat. Alleen als je eerder in deze poule wel zelf iets
+//           invulde: wie net meedoet en een race van vóór zijn komst
+//           automatisch kreeg, is niets vergeten.
+//   app     je opent Predict the Race vanaf je beginscherm. Op een iPhone kan
+//           het pas daar, en de beginscherm-stap van de rondleiding zei al dat
+//           het daar kan.
+//
+// Alleen als meldingen op dit toestel uit staan en het kan. In Safari op een
+// iPhone kan het niet; daar wijst de kaart bij een gemiste race naar het
+// beginscherm. Nu niet onthoudt dit toestel: bij een gemiste race tot de
+// volgende gemiste race, bij de app voorgoed (onder Profiel kan het altijd).
+const GEMISTWEG = 'poule:gemistweg';
+const MELDINGAPPWEG = 'poule:meldingappweg';
+
+function gemisteRace() {
+  if (!S.ik || !S.poule?.autofill_vanaf) return null;
+  // De race met de laatste deadline die voorbij is.
+  let laatste = null, toen = -Infinity;
+  for (const r of S.races) {
+    if (r.afgelast) continue;
+    for (const w of weekendSessies(r)) {
+      const t = Date.parse(r[SESSIES[w].deadline]);
+      if (t < Date.now() && t > toen) { toen = t; laatste = r; }
+    }
+  }
+  if (!laatste) return null;
+  const pred = vindPred(laatste.id, S.ik.id);
+  if (!weekendSessies(laatste).some(w => autoMoment(laatste, w) && isAuto(pred, w))) return null;
+  const eerder = (r) => !!r && (Number(r.season) < Number(laatste.season)
+    || (zelfde(r.season, laatste.season) && Number(r.round) < Number(laatste.round)));
+  const meeGedaan = S.antwoorden.some(a => zelfde(a.member_id, S.ik.id)
+    && eerder(S.alleRaces.find(r => zelfde(r.id, a.race_id))));
+  return meeGedaan ? laatste : null;
+}
+
+// Waarom de kaart er zou staan, los van of meldingen aan staan: dat weet de app
+// pas na een vraag aan de browser (pushInlezen()), en die stelt hij alleen als
+// hier iets uitkomt.
+function meldingKaartReden() {
+  if (DEMO || !S.ik || S.race || S.weergave !== 'races') return null;
+  const gemist = gemisteRace();
+  if (gemist && !zelfde(lees(GEMISTWEG), gemist.id)) return { soort: 'gemist', race: gemist };
+  if (alGeinstalleerd() && !lees(MELDINGAPPWEG)) return { soort: 'app' };
+  return null;
+}
+
+function meldingKaart() {
+  const reden = meldingKaartReden();
+  if (!reden) return '';
+  const safari = pushNaBeginscherm();
+  if (safari ? reden.soort !== 'gemist'
+    : !(pushKan() && S.push === 'uit' && Notification.permission !== 'denied')) return '';
+  const tekst = reden.soort === 'gemist'
+    ? `<span class="label">${T('vergeten in te vullen?')}</span>
+       <p class="zacht" style="margin:0">${T('Bij {race} koos de app willekeurig voor je, '
+         + 'omdat je niets had ingevuld.', { race: esc(reden.race.name) })} ${T('Met meldingen '
+         + 'aan krijg je een seintje als een deadline nadert en je nog niets hebt ingevuld.')}</p>`
+    : `<span class="label">${T('herinneringen')}</span>
+       <p class="zacht" style="margin:0">${T('Nu Predict the Race op je beginscherm staat, '
+         + 'kan hij je een seintje geven als een deadline nadert en je nog niets hebt '
+         + 'ingevuld.')}</p>`;
+  const knop = safari
+    ? `<p class="zacht" style="margin:0">${T('Op een iPhone werkt dat alleen als Predict the '
+        + 'Race op je beginscherm staat.')}</p>
+       <button class="knop spook" id="kaartbeginscherm">${T('Zo zet je hem op je beginscherm')}</button>`
+    : `<button class="knop primair" id="kaartmelding">${T('Zet meldingen aan')}</button>
+       ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}`;
+  return `<div class="meldingkaart" data-meldingkaart="${reden.soort}"${
+    reden.race ? ` data-race-gemist="${esc(reden.race.id)}"` : ''}>
+    ${tekst}
+    ${knop}
+    <button class="knop klein" id="kaartmeldingweg">${T('Nu niet')}</button>
+  </div>`;
+}
+
+function knoopMeldingKaart() {
+  const kaart = app.querySelector('[data-meldingkaart]');
+  // Of meldingen aanstaan is een vraag aan de browser. Eén keer stellen als er
+  // een reden voor de kaart is, en dan opnieuw tekenen met het antwoord.
+  if (S.push === null && !kaart && meldingKaartReden()) { pushInlezen().then(render); return; }
+  if (!kaart) return;
+  app.querySelector('#kaartmeldingweg').onclick = () => {
+    if (kaart.dataset.meldingkaart === 'gemist') schrijf(GEMISTWEG, kaart.dataset.raceGemist);
+    else schrijf(MELDINGAPPWEG, 'weg');
+    render();
+  };
+  const aan = app.querySelector('#kaartmelding');
+  if (aan) aan.onclick = async () => {
+    aan.disabled = true; S.pushFout = '';
+    try { await pushAanzetten(); }
+    catch (e) { S.pushFout = Notification.permission === 'granted' ? e.message : ''; }
+    render();
+  };
+  const scherm = app.querySelector('#kaartbeginscherm');
+  if (scherm) scherm.onclick = () => {
+    S.weergave = 'profiel';
+    render();
+    requestAnimationFrame(() => {
+      try { app.querySelector('[data-beginscherm]')?.scrollIntoView({ block: 'start' }); }
+      catch { /* dan staat hij gewoon iets lager */ }
+    });
+  };
 }
 
 function knoopLegePoule() {
@@ -13459,17 +13598,22 @@ function keuzeOverzicht(r, pred, welk) {
 //  beginscherm". Precies de mensen voor wie die twee bedoeld waren zagen ze
 //  dus nooit.
 //
-//  Nu zijn het hooguit drie stappen, elk op een eigen scherm:
+//  Nu zijn het hooguit vier stappen, elk op een eigen scherm:
 //
 //    spel         zo werkt het, met de vragen van déze poule
 //    account      Google of je mailadres koppelen (stond er al)
 //    beginscherm  de app op je beginscherm, per toestel uitgelegd
+//    meldingen    een seintje als een deadline nadert (26 oktober: "mensen
+//                 moeten er achter komen dat er notificaties zijn")
 //
 //  Een stap die niets toevoegt valt weg: wie al gekoppeld is krijgt geen
 //  account-stap, een toestel dat de app niet kan installeren (of hem al als
 //  app draait) geen beginscherm-stap, en wie al in een andere poule speelt
-//  of al ingelogd is hoeft niet opnieuw te horen hoe het spel werkt. Blijft
-//  er niets over, dan is er geen rondleiding.
+//  of al ingelogd is hoeft niet opnieuw te horen hoe het spel werkt. De
+//  meldingen-stap staat er alleen als dit toestel het nu kan vragen: een
+//  iPhone in Safari kan dat niet (daar noemt de beginscherm-stap het), en een
+//  browser die al ja of nee zei heeft niets meer te vragen. Blijft er niets
+//  over, dan is er geen rondleiding.
 //
 //  Overslaan kan altijd: rechtsboven staat Overslaan (alles), en elke stap
 //  met een actie heeft een eigen Nu niet. Wat je oversloeg staat daarna
@@ -13518,6 +13662,7 @@ function startRondleiding(bron) {
   if (bron === 'claim' && !terugkerend) stappen.push('spel');
   if (!kanTerugkomen()) stappen.push('account');
   if (beginschermKan() && !lees(INSTALLWEG)) stappen.push('beginscherm');
+  if (meldingStapKan()) stappen.push('meldingen');
   if (!stappen.length) return false;
   S.rondleiding = { pool: S.poule.id, stappen, stap: stappen[0],
                     overgeslagen: [], sinds: Date.now() };
@@ -13568,11 +13713,24 @@ function rondleidingKlaar({ alles = false } = {}) {
   const rest = alles ? r.stappen.slice(r.stappen.indexOf(r.stap)) : r.overgeslagen;
   const account = rest.includes('account') && !kanTerugkomen();
   const scherm = rest.includes('beginscherm') && beginschermKan();
-  S.melding = account && scherm
-    ? T('Je account koppelen en de app op je beginscherm zetten kan later nog, onder Profiel.')
-    : account ? T('Je account koppelen kan later nog, onder Profiel.')
-    : scherm ? T('De app op je beginscherm zetten kan later nog, onder Profiel.')
-    : '';
+  // Een weigering zet de toestemming op 'denied'; dan kan het onder Profiel ook
+  // niet meer, en zeggen we dat dus niet.
+  const melding = rest.includes('meldingen') && meldingStapKan();
+  const later = [account && 'account', scherm && 'scherm', melding && 'melding']
+    .filter(Boolean).join('+');
+  // Niets overgeslagen: dan blijft staan wat er al stond, zoals "Meldingen
+  // staan aan op dit toestel." van de laatste stap.
+  S.melding = {
+    'account+scherm+melding': T('Je account koppelen, de app op je beginscherm zetten en '
+      + 'meldingen aanzetten kan later nog, onder Profiel.'),
+    'account+scherm': T('Je account koppelen en de app op je beginscherm zetten kan later nog, onder Profiel.'),
+    'account+melding': T('Je account koppelen en meldingen aanzetten kan later nog, onder Profiel.'),
+    'scherm+melding': T('De app op je beginscherm zetten en meldingen aanzetten kan later '
+      + 'nog, onder Profiel.'),
+    account: T('Je account koppelen kan later nog, onder Profiel.'),
+    scherm: T('De app op je beginscherm zetten kan later nog, onder Profiel.'),
+    melding: T('Meldingen aanzetten kan later nog, onder Profiel.'),
+  }[later] ?? S.melding;
   naarBoven();
 }
 
@@ -13598,6 +13756,7 @@ function rondleidingScherm() {
             T('stap {n} van {totaal}', { n, totaal: r.stappen.length })}</span>` : ''}
           ${r.stap === 'spel' ? spelStap(verder)
             : r.stap === 'account' ? accountStap(verder)
+            : r.stap === 'meldingen' ? meldingStap()
             : beginschermStap(verder)}
         </div>
       </div>
@@ -13615,6 +13774,20 @@ function rondleidingScherm() {
   // net zo goed overgeslagen.
   knoopInstall((uitkomst) => rondleidingVerder({ overgeslagen: uitkomst === 'dismissed' }));
   knoopMail();
+  const melding = app.querySelector('#rondmelding');
+  if (melding) melding.onclick = async () => {
+    melding.disabled = true; S.pushFout = '';
+    try {
+      await pushAanzetten();
+      rondleidingVerder();
+    } catch (e) {
+      // Wie de vraag van de browser wegklikt of weigert, heeft de stap net zo
+      // goed overgeslagen (zoals bij de installatieprompt). Ging er iets anders
+      // mis, dan blijft de stap staan, met de fout erbij.
+      if (Notification.permission !== 'granted') rondleidingVerder({ overgeslagen: true });
+      else { S.pushFout = e.message; render(); }
+    }
+  };
 }
 
 // ---- stap 1: zo werkt het -----------------------------------
@@ -13726,10 +13899,34 @@ function beginschermStap(verder) {
           { naam: esc(S.ik.naam) })}</div>
          ${S.rondleiding.stappen.includes('account') ? `<button class="knop spook" id="rondkoppel">${
            T('Eerst je account koppelen')}</button>` : ''}`;
+  // Een iPhone geeft meldingen alleen aan de app op het beginscherm. Hier kan
+  // de meldingen-stap dus niet; zeggen dat het daar wel kan, wel.
+  const meldingen = pushNaBeginscherm()
+    ? `<p class="zacht" style="margin:0" data-meldingen-later>${T('Daar kan hij je ook een '
+        + 'seintje geven als een deadline nadert en je nog niets hebt ingevuld. Zet meldingen '
+        + 'aan zodra je hem vanaf je beginscherm opent.')}</p>` : '';
   return `${kop}
     ${beginschermStappen()}
     ${iphone}
+    ${meldingen}
     <button class="knop primair" id="rondverder">${verder}</button>`;
+}
+
+// ---- stap 4: meldingen --------------------------------------
+// Alleen op een toestel dat het nu kan vragen (meldingStapKan()). De vraag van
+// de browser komt pas na een tik op de knop: een browser onthoudt een
+// weigering, dus een vraag op het verkeerde moment kost je die kans.
+const meldingStapKan = () => pushKan() && Notification.permission === 'default';
+
+function meldingStap() {
+  return `
+    <h1 class="middel">${T('Mis geen deadline')}</h1>
+    <p class="zacht" style="margin:0">${T('Krijg een seintje als een deadline nadert en je '
+      + 'nog niets hebt ingevuld. Hooguit één per sessie, en alleen als er echt iets '
+      + 'openstaat.')}</p>
+    <button class="knop primair" id="rondmelding">${T('Zet meldingen aan')}</button>
+    ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}
+    <button class="knop klein" id="rondnunniet">${T('Nu niet')}</button>`;
 }
 
 // ============================================================

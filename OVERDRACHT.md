@@ -11515,3 +11515,54 @@ tabel geen grant heeft, of als die na een revoke van die tabel staat.
 **Bij een nieuwe tabel:** de grant er direct onder, anders zakt die test.
 
 **Danny moet:** niets.
+
+## Meldingen op het goede moment vragen (26 oktober)
+
+**Aanleiding.** Danny: "mensen moeten er achter komen dat er notificaties
+zijn. Dus met de onboarding vragen om notificaties", en: "als mensen hun poule
+niet hebben ingevuld en random krijgen. Dan ook een reminder. Vergeten in te
+vullen? Zet notificaties aan." Tot nu toe stond de knop alleen onder Profiel.
+
+**Gebouwd, in `app/index.html`:**
+
+- **Rondleiding, stap 4 `meldingen`** ("Mis geen deadline"), als laatste.
+  Alleen als `meldingStapKan()`: push kan op dit toestel en
+  `Notification.permission` is nog `default`. De knop roept `pushAanzetten()`
+  aan, dezelfde weg als onder Profiel; de vraag van de browser komt dus pas na
+  de tik. Weigeren of wegklikken telt als overslaan. `rondleidingKlaar()`
+  noemt overgeslagen meldingen erbij (vier nieuwe zinnen, met het account en
+  het beginscherm), maar niet na een weigering, want dan kan het onder Profiel
+  ook niet meer. Niets overgeslagen: dan blijft "Meldingen staan aan op dit
+  toestel." staan.
+- **Een iPhone in Safari** heeft geen PushManager, dus geen stap; de
+  beginscherm-stap zegt nu dat de app je vanaf het beginscherm een seintje kan
+  geven (`data-meldingen-later`).
+- **`meldingKaart()` op het racesscherm**, onder de kaart van een lege poule.
+  Twee redenen (`meldingKaartReden()`): `gemist` (de app vulde in de race met
+  de laatste voorbije deadline een top 10 voor je in, en je vulde eerder in
+  deze poule wel zelf iets in; `gemisteRace()`) en `app` (je draait de app
+  vanaf het beginscherm). Alleen als meldingen op dit toestel uit staan en het
+  kan; daarvoor vraagt `knoopMeldingKaart()` één keer `pushInlezen()` als er
+  een reden is. In Safari op een iPhone wijst de kaart bij `gemist` naar de
+  stappen onder Profiel. Nu niet: `poule:gemistweg` (het race-id, dus terug bij
+  de volgende gemiste race) of `poule:meldingappweg` (voorgoed).
+- 13 nieuwe zinnen in ENGELS en de vijf taalbestanden.
+
+**Beheer.** `beheer_overzicht()` geeft ook `meldingen_spelers` (spelers met
+minstens één toestel) en `meldingen_7d` (toestellen van de laatste zeven
+dagen). De tegel **Meldingen aan** laat het aantal spelers zien, hun deel van
+alle spelers en de nieuwe toestellen. In productie gezet via MCP (alleen die
+functie); alle regels van de controletabel staan goed.
+
+**Tests:** `test/meldingen-vragen.test.mjs` (nieuw, 50 controles), met een
+nagebootste pushdienst die zijn toestand bewaart over herladen heen. Acht
+mutaties op de nieuwe code zakken allemaal. `test/beheer.test.mjs` en
+`test/beheer.test.sql` tellen de meldingen in het overzicht.
+
+**Bewust niet:** de vraag van de browser meteen bij binnenkomst (dat kost de
+kans voorgoed als iemand nee zegt), en de kaart na een gemiste losse vraag
+(de herinnering kijkt alleen naar de top 10, dus daar had een melding niet
+geholpen).
+
+**Danny moet:** niets. **Volgende:** "iemand een tik geven", als premium
+(ROUTEKAART, Een seintje op je telefoon).
