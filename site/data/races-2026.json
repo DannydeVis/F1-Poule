@@ -603,235 +603,80 @@
             "team": "Racing Bulls"
           }
         ],
-        "race": null
+        "race": [
+          {
+            "plek": 1,
+            "nr": "12",
+            "code": "ANT",
+            "naam": "Kimi Antonelli",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 2,
+            "nr": "16",
+            "code": "LEC",
+            "naam": "Charles Leclerc",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 3,
+            "nr": "3",
+            "code": "VER",
+            "naam": "Max Verstappen",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 4,
+            "nr": "44",
+            "code": "HAM",
+            "naam": "Lewis Hamilton",
+            "team": "Ferrari"
+          },
+          {
+            "plek": 5,
+            "nr": "1",
+            "code": "NOR",
+            "naam": "Lando Norris",
+            "team": "McLaren"
+          },
+          {
+            "plek": 6,
+            "nr": "6",
+            "code": "HAD",
+            "naam": "Isack Hadjar",
+            "team": "Red Bull Racing"
+          },
+          {
+            "plek": 7,
+            "nr": "81",
+            "code": "PIA",
+            "naam": "Oscar Piastri",
+            "team": "McLaren"
+          },
+          {
+            "plek": 8,
+            "nr": "63",
+            "code": "RUS",
+            "naam": "George Russell",
+            "team": "Mercedes"
+          },
+          {
+            "plek": 9,
+            "nr": "30",
+            "code": "LAW",
+            "naam": "Liam Lawson",
+            "team": "Racing Bulls"
+          },
+          {
+            "plek": 10,
+            "nr": "10",
+            "code": "GAS",
+            "naam": "Pierre Gasly",
+            "team": "Alpine"
+          }
+        ]
       },
-      "vrijeTrainingen": [
-        {
-          "naam": "Practice 1",
-          "top": [
-            {
-              "plek": 1,
-              "nr": "16",
-              "code": "LEC",
-              "naam": "Charles Leclerc",
-              "team": "Ferrari"
-            },
-            {
-              "plek": 2,
-              "nr": "3",
-              "code": "VER",
-              "naam": "Max Verstappen",
-              "team": "Red Bull Racing"
-            },
-            {
-              "plek": 3,
-              "nr": "1",
-              "code": "NOR",
-              "naam": "Lando Norris",
-              "team": "McLaren"
-            },
-            {
-              "plek": 4,
-              "nr": "63",
-              "code": "RUS",
-              "naam": "George Russell",
-              "team": "Mercedes"
-            },
-            {
-              "plek": 5,
-              "nr": "12",
-              "code": "ANT",
-              "naam": "Kimi Antonelli",
-              "team": "Mercedes"
-            },
-            {
-              "plek": 6,
-              "nr": "44",
-              "code": "HAM",
-              "naam": "Lewis Hamilton",
-              "team": "Ferrari"
-            },
-            {
-              "plek": 7,
-              "nr": "81",
-              "code": "PIA",
-              "naam": "Oscar Piastri",
-              "team": "McLaren"
-            },
-            {
-              "plek": 8,
-              "nr": "5",
-              "code": "BOR",
-              "naam": "Gabriel Bortoleto",
-              "team": "Audi"
-            },
-            {
-              "plek": 9,
-              "nr": "41",
-              "code": "LIN",
-              "naam": "Arvid Lindblad",
-              "team": "Racing Bulls"
-            },
-            {
-              "plek": 10,
-              "nr": "30",
-              "code": "LAW",
-              "naam": "Liam Lawson",
-              "team": "Racing Bulls"
-            }
-          ]
-        },
-        {
-          "naam": "Practice 2",
-          "top": [
-            {
-              "plek": 1,
-              "nr": "16",
-              "code": "LEC",
-              "naam": "Charles Leclerc",
-              "team": "Ferrari"
-            },
-            {
-              "plek": 2,
-              "nr": "12",
-              "code": "ANT",
-              "naam": "Kimi Antonelli",
-              "team": "Mercedes"
-            },
-            {
-              "plek": 3,
-              "nr": "3",
-              "code": "VER",
-              "naam": "Max Verstappen",
-              "team": "Red Bull Racing"
-            },
-            {
-              "plek": 4,
-              "nr": "44",
-              "code": "HAM",
-              "naam": "Lewis Hamilton",
-              "team": "Ferrari"
-            },
-            {
-              "plek": 5,
-              "nr": "63",
-              "code": "RUS",
-              "naam": "George Russell",
-              "team": "Mercedes"
-            },
-            {
-              "plek": 6,
-              "nr": "30",
-              "code": "LAW",
-              "naam": "Liam Lawson",
-              "team": "Racing Bulls"
-            },
-            {
-              "plek": 7,
-              "nr": "1",
-              "code": "NOR",
-              "naam": "Lando Norris",
-              "team": "McLaren"
-            },
-            {
-              "plek": 8,
-              "nr": "81",
-              "code": "PIA",
-              "naam": "Oscar Piastri",
-              "team": "McLaren"
-            },
-            {
-              "plek": 9,
-              "nr": "6",
-              "code": "HAD",
-              "naam": "Isack Hadjar",
-              "team": "Red Bull Racing"
-            },
-            {
-              "plek": 10,
-              "nr": "87",
-              "code": "BEA",
-              "naam": "Oliver Bearman",
-              "team": "Haas F1 Team"
-            }
-          ]
-        },
-        {
-          "naam": "Practice 3",
-          "top": [
-            {
-              "plek": 1,
-              "nr": "44",
-              "code": "HAM",
-              "naam": "Lewis Hamilton",
-              "team": "Ferrari"
-            },
-            {
-              "plek": 2,
-              "nr": "3",
-              "code": "VER",
-              "naam": "Max Verstappen",
-              "team": "Red Bull Racing"
-            },
-            {
-              "plek": 3,
-              "nr": "16",
-              "code": "LEC",
-              "naam": "Charles Leclerc",
-              "team": "Ferrari"
-            },
-            {
-              "plek": 4,
-              "nr": "12",
-              "code": "ANT",
-              "naam": "Kimi Antonelli",
-              "team": "Mercedes"
-            },
-            {
-              "plek": 5,
-              "nr": "63",
-              "code": "RUS",
-              "naam": "George Russell",
-              "team": "Mercedes"
-            },
-            {
-              "plek": 6,
-              "nr": "81",
-              "code": "PIA",
-              "naam": "Oscar Piastri",
-              "team": "McLaren"
-            },
-            {
-              "plek": 7,
-              "nr": "27",
-              "code": "HUL",
-              "naam": "Nico Hulkenberg",
-              "team": "Audi"
-            },
-            {
-              "plek": 8,
-              "nr": "1",
-              "code": "NOR",
-              "naam": "Lando Norris",
-              "team": "McLaren"
-            },
-            {
-              "plek": 9,
-              "nr": "10",
-              "code": "GAS",
-              "naam": "Pierre Gasly",
-              "team": "Alpine"
-            },
-            {
-              "plek": 10,
-              "nr": "6",
-              "code": "HAD",
-              "naam": "Isack Hadjar",
-              "team": "Red Bull Racing"
-            }
-          ]
-        }
-      ]
+      "vrijeTrainingen": []
     },
     {
       "circuit": 65,
