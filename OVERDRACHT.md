@@ -11491,3 +11491,27 @@ alle iPhones sinds de X. Klopt dat op het toestel niet, dan blijft alleen het
 opstartscherm wit; verder gaat er niets mis. Test: blok 5 in
 `test/iphone.test.mjs`.
 
+## Rechten per tabel in schema.sql (26 oktober)
+
+**Aanleiding.** Mail van Supabase: vanaf 30 oktober 2026 krijgt een nieuwe
+tabel in public niet meer vanzelf rechten voor anon, authenticated en
+service_role. Zonder grant zegt de app "permission denied". Bestaande tabellen
+houden hun rechten; het raakt een nieuwe tabel, en het opnieuw opbouwen van de
+database uit `schema.sql` (een nieuw project na een ramp).
+
+**Gedaan.** Direct na elke `create table` in `schema.sql` een `grant all on
+table`. De acht tabellen die de app leest (pools, pool_members, races,
+questions, pool_questions, answers, jokers, push_abonnementen) voor anon,
+authenticated en service_role, zoals Supabase het deed; de tien voor de sync
+en het beheer alleen voor service_role, en poule_controle ook. De bestaande
+revokes verderop halen weg wat niet mag, dus de uitkomst is precies wat er in
+productie staat (nagekeken met information_schema.role_table_grants). In
+productie hoefde niets te veranderen.
+
+`test/auth-nabootsing.sql` maakt nu ook de rol service_role (Supabase heeft
+die, gewone PostgreSQL niet). `test/schema-objecten.test.mjs` zakt als een
+tabel geen grant heeft, of als die na een revoke van die tabel staat.
+
+**Bij een nieuwe tabel:** de grant er direct onder, anders zakt die test.
+
+**Danny moet:** niets.

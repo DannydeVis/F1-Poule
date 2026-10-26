@@ -9,6 +9,11 @@
 // elkaar, zodat een nieuwe functie zonder plek in de lijst hier zakt in plaats
 // van in productie "ONBEKENDE FUNCTIE" te melden.
 //
+// En: elke tabel krijgt zijn rechten (grant) in schema.sql zelf. Vanaf 30
+// oktober 2026 geeft Supabase een nieuwe tabel in public die niet meer
+// vanzelf; zonder grant zegt de app "permission denied", ook bij het opnieuw
+// opbouwen van de database uit schema.sql.
+//
 // En: geen privé-mailadres meer in de repo. Tot 20 oktober stond het
 // beheeradres in beheer_adres(); site_beheerders is nu de enige bron.
 
@@ -63,5 +68,23 @@ const met = bestanden.filter((f) => {
   catch { return false; }
 });
 check('het oude beheeradres staat in geen enkel bestand in de repo', met.length === 0, met.join(', '));
+
+// ---- rechten per tabel ----------------------------------------------------------------
+{
+  const zonder = [];
+  const teLaat = [];
+  for (const t of gemaakt(/create table if not exists\s+public\.([a-z_0-9]+)/gi)) {
+    const maak = schema.search(new RegExp(`create table if not exists\\s+public\\.${t}\\b`, 'i'));
+    const g = schema.search(new RegExp(`grant all on table public\\.${t} to [^;]*service_role;`));
+    if (g < 0) { zonder.push(t); continue; }
+    // De grant vóór elke revoke van die tabel: anders zet hij terug wat weg moest.
+    const revoke = schema.search(new RegExp(`revoke [^;]* on public\\.${t}\\b`));
+    if (g < maak || (revoke >= 0 && revoke < g)) teLaat.push(t);
+  }
+  check('elke tabel krijgt zijn rechten in schema.sql (Supabase doet het na 30 oktober 2026 niet meer)', zonder.length === 0, zonder.join(', '));
+  check('direct na het maken, vóór de revoke die er weer iets afhaalt', teLaat.length === 0, teLaat.join(', '));
+  check('de controletabel ook, alleen voor service_role',
+    /revoke all on public\.poule_controle from public, anon, authenticated;\ngrant all on public\.poule_controle to service_role;/.test(schema));
+}
 
 process.exit(afronden() ? 0 : 1);

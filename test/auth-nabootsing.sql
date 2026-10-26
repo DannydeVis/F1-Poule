@@ -19,6 +19,12 @@
 
 \set ON_ERROR_STOP on
 
+-- De rol van de sync en het beheer. Supabase heeft hem standaard, gewone
+-- PostgreSQL niet; schema.sql geeft hem rechten op elke tabel (grant).
+do $r$ begin
+  if not exists (select from pg_roles where rolname = 'service_role') then create role service_role; end if;
+end $r$;
+
 create schema if not exists auth;
 
 -- Alleen de kolommen die wij aanraken. De echte tabel heeft er tientallen.
