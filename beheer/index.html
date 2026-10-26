@@ -578,6 +578,8 @@ function overzichtTab() {
         `${getal(o.geinstalleerd_7d)} in 7 dagen${o.bezoeken_7d ? `, ${Math.round(100 * o.geinstalleerd_7d / o.bezoeken_7d)}% van de bezoeken` : ''}`)}
       ${tegel('Inzendingen', getal(o.inzendingen_7d), 'in 7 dagen')}
       ${tegel('Gekoppelde accounts', getal(o.gekoppeld), `van ${getal(o.accounts)} accounts`)}
+      ${o.meldingen_spelers == null ? '' : tegel('Meldingen aan', getal(o.meldingen_spelers),
+        `${o.spelers ? `${Math.round(100 * o.meldingen_spelers / o.spelers)}% van de spelers, ` : ''}${getal(o.meldingen_7d)} nieuw in 7 dagen`)}
       ${(() => { const s = setTelling()[0];
         return s ? tegel('Meest gekozen vragenset', esc(s.naam), `${getal(s.aantal)} van ${getal(B.poules.length)} poules`) : ''; })()}
     </div>

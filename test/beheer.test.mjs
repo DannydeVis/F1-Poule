@@ -9,8 +9,9 @@
 //   1. Binnenkomen: zonder sessie inloggen met Google of een inloglink; een
 //      anoniem account van de app wordt niet vervangen (dan raakt de speler op
 //      dat toestel zijn account kwijt); een gewoon account ziet niets.
-//   2. Het overzicht: de getallen, de status van de sync, en wat aandacht
-//      nodig heeft (een sessie zonder uitslag), met een weg naar die race.
+//   2. Het overzicht: de getallen (sinds 26 oktober ook hoeveel spelers
+//      meldingen aan hebben), de status van de sync, en wat aandacht nodig
+//      heeft (een sessie zonder uitslag), met een weg naar die race.
 //   3. Poules: zoeken, bijwerken (naam, openbaar, poulebaas), en verwijderen
 //      pas nadat je de naam hebt overgetikt.
 //   4. Spelers: het soort account, filteren op poule, hernoemen, losmaken en
@@ -211,6 +212,10 @@ await page.evaluate(() => {
     deadline_race: new Date(Date.now() - 10 * 36e5).toISOString(),
     quali_result: ['1', '4', '16', '63', '81', '44', '12', '14', '10', '18'] });
   d.answers.push({ pool_id: 'pool-2', race_id: r.id, member_id: 'lid-8', question_id: 'winnaar', waarde: '1' });
+  // Sanne heeft meldingen aan op twee toestellen: een van vorige maand, een van gisteren.
+  d.push_abonnementen = [
+    { endpoint: 'https://push.voorbeeld/1', member_id: 'lid-7', pool_id: 'pool-2', created_at: geleden(24 * 30) },
+    { endpoint: 'https://push.voorbeeld/2', member_id: 'lid-7', pool_id: 'pool-2', created_at: geleden(24) }];
   d.sync_runs = [{ gestart: new Date(Date.now() - 12 * 6e4).toISOString(), klaar: new Date(Date.now() - 11 * 6e4).toISOString(),
                    ok: true, bijgewerkt: 1, samenvatting: 'Ronde 1 Melbourne: quali_result', fouten: null }];
   sessionStorage.setItem('nabootsing:db', JSON.stringify(d));
@@ -231,6 +236,9 @@ check('de beheerder komt binnen, en ziet met welk account', (await tekst('.merk'
   check('en de bezoeken vanaf het beginscherm, met hun deel van alle bezoeken',
     tegels['Vanaf het beginscherm'] === '1' && tegels['Bezoeken vandaag'] === String(bezocht) && bezocht > 1
       && (await tekst('.raster')).includes(`1 in 7 dagen, ${Math.round(100 / bezocht)}% van de bezoeken`), JSON.stringify(tegels));
+  check('en hoeveel spelers meldingen aan hebben, met hun deel en de nieuwe toestellen van deze week',
+    tegels['Meldingen aan'] === '1' && (await tekst('.raster'))
+      .includes(`${Math.round(100 / d.pool_members.length)}% van de spelers, 1 nieuw in 7 dagen`), JSON.stringify(tegels));
   check('de sync draait: laatst 12 minuten geleden', (await tekst('#synckaart')).includes('Draait')
     && (await tekst('#synckaart')).includes('12 min geleden'), await tekst('#synckaart'));
   check('met een knop om hem met de hand te starten, in GitHub',

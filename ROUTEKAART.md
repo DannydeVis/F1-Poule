@@ -699,6 +699,18 @@ Wat het wél kan en de agenda niet: kijken of jíj nog iets open hebt staan. Een
 agenda-item geldt voor iedereen; een melding gaat alleen naar wie zijn top 10
 nog niet heeft ingeleverd.
 
+**Erom vragen op het goede moment** (Danny, 26 oktober: "mensen moeten er
+achter komen dat er notificaties zijn"). Gebouwd: een stap "Mis geen deadline"
+in de rondleiding, een kaart "vergeten in te vullen?" na een race waarin de app
+een top 10 voor je invulde, en een kaart in de app op het beginscherm. Het
+beheer telt hoeveel spelers meldingen aan hebben (tegel **Meldingen aan**).
+Zie BEDIENING §11c.
+
+**Iemand een tik geven** (Danny, 26 oktober; wordt premium): bij een speler
+die nog niets invulde een knop die hem een melding stuurt, één per speler per
+race, en zonder meldingen bij die speler een bericht voor de groepsapp. De
+herinnerknop van de poulebaas (premium) gaat daarin op. Nog niet gebouwd.
+
 Drie dingen om te weten als je hier verder bouwt:
 
 - **Het rekenwerk is nagerekend, niet vertrouwd.** Web push is drie RFC's, en

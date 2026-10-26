@@ -15,7 +15,8 @@
 --      poulebaas. Niet een lege lijst: een fout.
 --   3. De tabellen erachter (beheerders, sync-log, bezoeken) zijn voor anon en
 --      authenticated dicht.
---   4. Wat de beheerder ziet klopt: tellingen, het soort account, de sync.
+--   4. Wat de beheerder ziet klopt: tellingen (ook van de meldingen), het soort
+--      account, de sync.
 --   5. Wat de beheerder doet klopt: een poule of speler bijwerken, losmaken of
 --      weggooien (ook met inzendingen voor een race die al dicht is), een
 --      uitslag overnemen of leegmaken, een race afgelasten.
@@ -68,6 +69,15 @@ insert into pool_members (member_id, pool_id, display_name, user_id) values
 
 update pools set owner_member_id = 'aaaa1111-0000-0000-0000-000000000051'
 where id = '11111111-0000-0000-0000-000000000051';
+
+-- Meldingen: Anna op twee toestellen (een ervan van vorige maand), Bram op één.
+insert into push_abonnementen (endpoint, member_id, pool_id, p256dh, auth, created_at) values
+  ('https://push.voorbeeld/anna-1', 'aaaa1111-0000-0000-0000-000000000051',
+   '11111111-0000-0000-0000-000000000051', 'p', 'a', now() - interval '30 days'),
+  ('https://push.voorbeeld/anna-2', 'aaaa1111-0000-0000-0000-000000000051',
+   '11111111-0000-0000-0000-000000000051', 'p', 'a', now()),
+  ('https://push.voorbeeld/bram-1', 'bbbb2222-0000-0000-0000-000000000052',
+   '11111111-0000-0000-0000-000000000051', 'p', 'a', now() - interval '1 day');
 
 -- Een inzending voor de race die al dicht is gaat er via de deadline-trigger
 -- niet meer in, dus even buiten de trigger om, zoals hij er vóór de deadline
@@ -191,6 +201,11 @@ begin
     raise exception 'gezakt: het overzicht heeft de laatste sync niet: %', uit -> 'laatste_sync';
   end if;
   raise notice 'ok: het overzicht telt poules, spelers, accounts en inzendingen, en kent de laatste sync';
+  if (uit ->> 'meldingen')::int <> 3 or (uit ->> 'meldingen_spelers')::int <> 2
+     or (uit ->> 'meldingen_7d')::int <> 2 then
+    raise exception 'gezakt: het overzicht telt de meldingen verkeerd: %', uit;
+  end if;
+  raise notice 'ok: het overzicht telt de toestellen met meldingen, de spelers erachter en de nieuwe van deze week';
 
   uit := public.beheer_poules();
   select count(*) into n from jsonb_array_elements(uit) p

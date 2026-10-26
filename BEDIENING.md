@@ -313,11 +313,12 @@ keer een korte rondleiding, elke stap op een eigen scherm:
 |---|---|---|
 | zo werkt het | wat je per race invult, met de vragen van déze poule (de sprint en het aantal losse vragen alleen als die meedoen); 5, 3 of 1 punt per plek; invullen tot de sessie begint, daarna zie je wat de anderen kozen | je al in een andere poule speelt, of al ingelogd bent; en altijd bij een poule die je net zelf maakte |
 | je account | Google (de grote knop met het logo) of je mailadres koppelen | je account al gekoppeld is |
-| op je beginscherm | op Android de knop van de browser, of de weg via het menu; op een iPhone of iPad de drie stappen via Deel | de app al als app draait, het toestel het niet kan (een computer zonder prompt), of je op het beginscherm al Nu niet koos |
+| op je beginscherm | op Android de knop van de browser, of de weg via het menu; op een iPhone of iPad de drie stappen via Deel, en dat de app je vanaf daar een seintje kan geven | de app al als app draait, het toestel het niet kan (een computer zonder prompt), of je op het beginscherm al Nu niet koos |
+| meldingen (sinds 26 oktober) | "Mis geen deadline": een knop die meldingen aanzet, en Nu niet; de vraag van de browser komt pas na de tik, en wie die wegklikt of weigert gaat gewoon door | het toestel het nu niet kan vragen: een iPhone in Safari, of een browser die al ja of nee zei (zie §11c) |
 
 Rechtsboven staat altijd **Overslaan** (alles), en elke stap met een actie
 heeft een eigen **Nu niet**. Wat je oversloeg vind je onder Profiel, en de
-melding na afloop zegt dat ook. Blijft er van de drie niets over, dan is er
+melding na afloop zegt dat ook. Blijft er van de vier niets over, dan is er
 geen rondleiding.
 
 Een paar dingen die vastliggen:
@@ -1643,6 +1644,32 @@ De regel, en vooral wat hij niet doet:
 - De melding komt **in de taal van dat toestel**: dezelfde taal waarin je de
   app gebruikte toen je hem aanzette. Wissel je later van taal, dan gaat de
   melding mee. Zie §11e.
+
+### Waar de app erom vraagt (sinds 26 oktober)
+
+Alleen onder Profiel was te stil: bijna niemand wist dat het kon. Nu vraagt de
+app het op drie momenten, en nooit met de vraag van de browser zelf voordat
+iemand op een knop tikt (een browser onthoudt een weigering voorgoed).
+
+- **In de rondleiding** voor een nieuwe speler, als laatste stap: "Mis geen
+  deadline", met een knop om ze aan te zetten en Nu niet. Alleen als dit
+  toestel het nu kan vragen. Een iPhone in Safari kan dat niet; daar zegt de
+  beginscherm-stap dat het in de app op het beginscherm wel kan.
+- **Na een gemiste race** een kaart bovenaan de races: "vergeten in te vullen?
+  Bij Austin koos de app willekeurig voor je". Alleen als de app in de laatste
+  race een top 10 voor je invulde, alleen als je eerder in die poule wel zelf
+  iets invulde (wie net meedoet is niets vergeten), en alleen als meldingen op
+  dat toestel uit staan en het kan. Nu niet houdt de kaart weg tot de volgende
+  gemiste race. In Safari op een iPhone wijst de kaart naar de stappen voor het
+  beginscherm.
+- **In de app op het beginscherm**, zolang meldingen daar uit staan: "Nu
+  Predict the Race op je beginscherm staat, kan hij je een seintje geven". Nu
+  niet haalt hem daar voorgoed weg.
+
+Hoeveel spelers meldingen aan hebben staat in het beheer, op de tegel
+**Meldingen aan**: het aantal spelers, hun deel van alle spelers, en hoeveel
+toestellen er de laatste zeven dagen bij kwamen. Zo zie je of het vragen iets
+doet.
 
 ### Inrichten (gedaan op 18 oktober 2026)
 

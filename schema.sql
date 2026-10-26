@@ -2840,6 +2840,12 @@ begin
     'geinstalleerd_7d',  (select coalesce(sum(aantal), 0) from public.bezoeken
                            where dag > current_date - 7 and pad like '%-geinstalleerd'),
     'meldingen',         (select count(*) from public.push_abonnementen),
+    -- Hoeveel spelers meldingen aan hebben, en hoeveel toestellen er deze week
+    -- bij kwamen: om te zien of de vraag in de rondleiding en na een gemiste
+    -- race iets doet (26 oktober).
+    'meldingen_spelers', (select count(distinct member_id) from public.push_abonnementen),
+    'meldingen_7d',      (select count(*) from public.push_abonnementen
+                           where created_at > now() - interval '7 days'),
     'profielen',         (select count(*) from public.pool_members where profiel_code is not null),
     'seizoen',           public.controle_seizoen(),
     'laatste_sync',      (select to_jsonb(s) from public.sync_runs s order by gestart desc limit 1)

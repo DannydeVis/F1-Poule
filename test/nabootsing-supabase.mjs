@@ -1255,6 +1255,8 @@ Object.assign(functies, {
       geinstalleerd_vandaag: bezoeken.filter(([k]) => k.startsWith(dag()) && k.endsWith('-geinstalleerd')).reduce((t, [, n]) => t + n, 0),
       geinstalleerd_7d: bezoeken.filter(([k]) => k.slice(0, 10) > sinds(7) && k.endsWith('-geinstalleerd')).reduce((t, [, n]) => t + n, 0),
       meldingen: (store.push_abonnementen ?? []).length,
+      meldingen_spelers: new Set((store.push_abonnementen ?? []).map((x) => String(x.member_id))).size,
+      meldingen_7d: (store.push_abonnementen ?? []).filter((x) => !x.created_at || Date.parse(x.created_at) > week).length,
       profielen: store.pool_members.filter((m) => m.profiel_code).length,
       seizoen: 2026,
       laatste_sync: kopie(store.sync_runs.at(-1) ?? null),
