@@ -1961,6 +1961,12 @@ onomkeerbaar:
 | `leegmaken.sql` | gooit poules, spelers en inzendingen weg, laat de rest staan | een schone start met dezelfde kalender |
 | `reset.sql` | sloopt alle tabellen | alleen als `schema.sql` de boel niet meer recht krijgt |
 
+`schema.sql` geeft elke tabel zelf zijn rechten (grant). Sinds 30 oktober
+2026 doet Supabase dat niet meer vanzelf voor een nieuwe tabel; zonder grant
+zegt de app "permission denied". Daardoor werkt `schema.sql` ook op een nieuw,
+leeg project. Komt er een tabel bij, dan hoort de grant er direct onder (een
+test bewaakt dat).
+
 ### leegmaken.sql: schone start, kalender blijft
 
 Voor "ik wil opnieuw beginnen met de poules". Weg gaan de poules, de spelers,
