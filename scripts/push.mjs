@@ -108,6 +108,15 @@ export function vapidKop(endpoint, onderwerp, priveSleutel, { nu = Date.now() } 
   };
 }
 
+// De publieke helft bij een privésleutel. De sync zet ze samen in de Vault van
+// Supabase, voor de functie `tik`: WebCrypto (supabase/functions/tik/push-web.mjs)
+// kan zonder de publieke helft niets met de privésleutel.
+export function publiekeSleutel(priveSleutel) {
+  const ecdh = createECDH('prime256v1');
+  ecdh.setPrivateKey(vanB64u(priveSleutel));
+  return b64u(ecdh.getPublicKey());
+}
+
 // Een nieuw VAPID-sleutelpaar. Eén keer per project; de private helft gaat als
 // repository-secret in GitHub, de publieke in index.html.
 export function nieuwSleutelpaar() {

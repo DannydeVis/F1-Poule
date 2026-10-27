@@ -35,7 +35,7 @@ import { pathToFileURL } from 'node:url';
 export const TABELLEN = [
   'races', 'questions', 'pools', 'pool_teams', 'pool_members', 'pool_questions',
   'answers', 'jokers', 'pool_eigen_vragen', 'pool_eigen_antwoorden', 'pool_periodes',
-  'push_abonnementen', 'site_beheerders', 'sync_runs', 'bezoeken', 'actief',
+  'push_abonnementen', 'tikken', 'site_beheerders', 'sync_runs', 'bezoeken', 'actief',
   'verboden_woorden', 'aanmaak_log',
 ];
 
@@ -127,9 +127,9 @@ export function terugzetSql(kopie) {
     if (!rijen.length) continue;
     regels.push(`insert into public.${t} select * from jsonb_populate_recordset(null::public.${t}, $${tag}$${JSON.stringify(rijen)}$${tag}$::jsonb) on conflict do nothing;`);
   }
-  // races en sync_runs nummeren zelf door. Na het terugzetten moet de teller
-  // voorbij het hoogste nummer staan, anders botst de volgende nieuwe rij.
-  for (const t of ['races', 'sync_runs']) {
+  // races, sync_runs en tikken nummeren zelf door. Na het terugzetten moet de
+  // teller voorbij het hoogste nummer staan, anders botst de volgende nieuwe rij.
+  for (const t of ['races', 'sync_runs', 'tikken']) {
     regels.push(`select setval(pg_get_serial_sequence('public.${t}', 'id'), greatest((select max(id) from public.${t}), 1));`);
   }
   regels.push('commit;');

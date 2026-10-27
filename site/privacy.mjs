@@ -21,7 +21,7 @@
 // Waar iemand terecht kan met een vraag over zijn gegevens. Staat ook in de
 // app (PRIVACY_CONTACT); de test houdt die twee gelijk.
 export const CONTACT = 'contact@predicttherace.com';
-export const PRIVACY_BIJGEWERKT = '2026-10-24';
+export const PRIVACY_BIJGEWERKT = '2026-10-26';
 
 export const PRIVACY = {
   nl: {
@@ -45,6 +45,9 @@ export const PRIVACY = {
       ]],
       ['Als je meldingen aanzet', [
         'Dan komt er één regel bij per toestel: het adres waar je pushdienst (Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee sleutels van dat toestel. Geen naam en geen mailadres. Die regel gaat weg zodra je meldingen uitzet.',
+      ]],
+      ['Als iemand je aantikt', [
+        'In een poule met premium kun je een medespeler aantikken die nog niets invulde; die krijgt dan een melding. We bewaren wie wie aantikte, voor welke race en wanneer, zodat niemand twee keer per race wordt aangetikt. Na twee maanden gaat dat weg.',
       ]],
       ['Waar het staat', [
         'In een database bij Supabase. De app en deze site staan bij GitHub Pages, dat net als elke webserver je IP-adres ziet als je een pagina opent. De kalender, de coureurs en de uitslagen komen van OpenF1; daar staat niets van jou in.',
@@ -102,6 +105,9 @@ export const PRIVACY = {
       ]],
       ['If you turn notifications on', [
         'Then one row is added per device: the address your push service (Google, Apple or Mozilla) can send a notification to, plus two keys from that device. No name and no email address. That row goes away as soon as you turn notifications off.',
+      ]],
+      ['If someone nudges you', [
+        'In a pool with premium you can nudge a fellow player who has not filled anything in yet; they then get a notification. We store who nudged whom, for which race and when, so that nobody gets nudged twice per race. That is removed after two months.',
       ]],
       ['Where it lives', [
         'In a database at Supabase. The app and this site are hosted on GitHub Pages, which, like any web server, sees your IP address when you open a page. The calendar, the drivers and the results come from OpenF1; nothing of yours is in there.',

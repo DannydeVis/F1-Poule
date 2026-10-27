@@ -35,6 +35,7 @@ import { maakAgenda } from './agenda.mjs';
 import { wieKrijgtEenSeintje, volgendeWekker, SEIZOENVRAGEN } from './herinneringen.mjs';
 import { uitslagWekker, teLateUitslagen, teLaatTekst, vroegste } from './bewaking.mjs';
 import { stuur as stuurPush } from './push.mjs';
+import { sleutelInVault } from './vault-sleutel.mjs';
 import { seizoenPlan, agendaSeizoenen, lijstKanWachten } from './seizoenen.mjs';
 import { OpenF1Dicht, vanwegeSessie, UITLEG as DICHT_UITLEG } from './openf1-dicht.mjs';
 
@@ -833,6 +834,23 @@ async function herinneringen(races) {
 }
 
 // ------------------------------------------------------------
+//  De sleutel ook in de Vault, voor de tik (scripts/vault-sleutel.mjs). Lukt
+//  het niet (een database zonder Vault), dan gaat de sync gewoon door.
+// ------------------------------------------------------------
+
+async function vaultBijwerken() {
+  try {
+    const uit = await sleutelInVault({ prive: VAPID_PRIVE, contact: PUSH_CONTACT, sb });
+    if (uit === 'gezet') {
+      console.log('De sleutel van de meldingen staat nu ook in de Vault (voor de tik)');
+      noteer('Sleutel van de meldingen in de Vault gezet (voor de tik)');
+    }
+  } catch (e) {
+    console.log(`Sleutel niet in de Vault gezet: ${String(e.message).slice(0, 200)}`);
+  }
+}
+
+// ------------------------------------------------------------
 //  Automatisch doorschuiven naar het volgende seizoen
 //  De regel staat in de database (seizoenen_doorschuiven() in schema.sql): een
 //  openbare poule meteen als het seizoen klaar is en de kalender van volgend
@@ -912,6 +930,7 @@ try {
   zetWekker(lopend, { herinneren: await heeftAbonnementen() });
   bewaakUitslagen(lopend);
   await herinneringen(lopend);
+  await vaultBijwerken();
   await schrijfLogboek(true);
 } catch (e) {
   console.error('Mislukt:', e.message);
