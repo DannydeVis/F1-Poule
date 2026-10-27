@@ -316,9 +316,6 @@
   .groepsapphulp{display:flex;flex-direction:column;gap:8px}
   .wachtop .herinner{margin-left:6px;min-height:32px;padding:0 12px;vertical-align:middle}
   /* De tik (premium): een knop per speler die nog niets invulde. */
-  .tikrij{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-  .tikrij .knop.tik{width:auto;flex:0 0 auto;min-height:32px;padding:0 12px}
-  .tikrij .getikt{font-family:var(--mono);font-size:12px;color:var(--ink3);padding:0 4px}
   /* Afdrukken van de stand (premium): alleen de tabel, zwart op wit. */
   #afdruk{display:none}
   @media print{
@@ -1236,6 +1233,8 @@
   .vragentegel > .winnaarblok{border:0;border-top:1px solid var(--lijn);border-radius:0;
     background:transparent;padding:14px 18px 16px}
   .pouleregel .klaarteken{width:22px;display:grid;place-items:center;flex:none;color:var(--groen)}
+  /* De tik (premium): een kleine knop waar anders "nog niet" staat. */
+  .pouleregel .knop.tik{width:auto;flex:none;min-height:32px;padding:0 12px;margin:0}
   .pouleregel.klaar .zacht{color:var(--groen)}
 
   /* Je punten, groot, over de hele breedte. De geblokte vlag rechts is
@@ -3891,22 +3890,24 @@ const ENGELS = Object.fromEntries([
   ['totaal', 'total'],
   ['Herinner ze', 'Remind them'],
   // De tik (premium, 26 oktober).
-  ['tik aan',
-   'nudge'],
+  ['Tik aan',
+   'Nudge'],
   ['Tik {naam} aan',
    'Nudge {naam}'],
-  ['{naam} is aangetikt',
-   '{naam} has been nudged'],
+  ['aangetikt',
+   'nudged'],
+  ['Stuur bericht',
+   'Send message'],
   ['Stuur {naam} een berichtje',
    'Send {naam} a message'],
   ['{naam} krijgt een seintje.',
    '{naam} is getting a nudge.'],
-  ['{naam} heeft geen meldingen aan. Met ✉ stuur je zelf een berichtje.',
-   '{naam} has notifications off. With ✉ you send a message yourself.'],
+  ['{naam} heeft geen meldingen aan. Met "Stuur bericht" laat je het zelf weten.',
+   '{naam} has notifications off. Use "Send message" to let them know yourself.'],
   ['{naam} is voor deze race al aangetikt.',
    '{naam} has already been nudged for this race.'],
-  ['Aantikken lukt nog niet. Met ✉ stuur je {naam} zelf een berichtje.',
-   'Nudging does not work yet. With ✉ you send {naam} a message yourself.'],
+  ['Aantikken lukt nog niet. Met "Stuur bericht" laat je {naam} het zelf weten.',
+   'Nudging does not work yet. Use "Send message" to let {naam} know yourself.'],
   ['Die speler heeft de top 10 net ingevuld.',
    'That player has just filled in the top 10.'],
   ['Voor deze sessie kun je nu niemand meer aantikken.',
@@ -7039,6 +7040,15 @@ function weekendOverwinningen() {
 
 // Wie heeft er voor de nog openstaande lijst nog niks ingeleverd? Jezelf
 // laten we weg: daarvoor staat de knop "Top 10 invullen" er al.
+// Bij een grote poule geen honderd namen op de weekendkaart: de eerste vijf en
+// hoeveel er nog meer zijn (Danny, 27 oktober: "wat als er nou 100 man in
+// zo'n poule zitten"). Wie het precies wil weten, ziet de hele lijst op het
+// racescherm. Eén naam meer dan vijf schrijft hij gewoon uit.
+const KORT_WIE = 5;
+const kortWie = (lijst) => lijst.length <= KORT_WIE + 1
+  ? lijst.map(l => esc(l.display_name)).join(', ')
+  : `${lijst.slice(0, KORT_WIE).map(l => esc(l.display_name)).join(', ')} ${T('en nog {n}', { n: lijst.length - KORT_WIE })}`;
+
 function nogNietIngevuld(race, welk) {
   const kolom = SESSIES[welk].vraag;
   return S.leden.filter(l => !zelfde(l.member_id, S.ik.id))
@@ -7261,21 +7271,21 @@ const HANDVLAG = Object.fromEntries(
 // uitslag als tekst klaarzet moet iemand actief de site openen om te zien
 // hoe het ging, en dat doet niemand na race vier nog uit zichzelf.
 //
-// Het podium krijgt medailles, want dat is waar de groep naar kijkt. Daaronder
-// de grootste stijger in de stand: "Danny van P6 naar P3" is waar het gesprek
+// Het podium bovenaan, want dat is waar de groep naar kijkt. Daaronder de
+// grootste stijger in de stand: "Danny van P6 naar P3" is waar het gesprek
 // over gaat, niet wie er vierde werd. Uit het feedbackrapport van 10 oktober.
-const MEDAILLE = ['🥇', '🥈', '🥉'];
-
+// Zonder emoji (Danny, 27 oktober: "Ik wil echt geen emojis"): op het podium
+// stonden eerst medailles, nu gewoon de plek.
 function groepsappTekst(race) {
   const rijen = weekendUitslag(race);
   if (!rijen?.length) return '';
   const seizoen = standRijen();
   const plekken = gedeeldePlekken(rijen);
   const stijger = grootsteStijger(race);
-  return `🏁 ${race.name}, ${T('uitslag {poule}', { poule: S.poule?.name ?? '' })}\n\n`
-    + rijen.map((r, i) => `${MEDAILLE[plekken[i] - 1] ?? `${plekken[i]}.`} ${r.naam}  ${r.punten}`).join('\n')
-    + (stijger ? `\n\n📈 ${T('Grootste stijger: {wie}', { wie: stijger })}` : '')
-    + `\n\n🏆 ${T('Seizoen: {stand}', { stand: seizoen.map(r => `${r.naam} ${r.punten}`).join(', ') })}`;
+  return `${race.name}, ${T('uitslag {poule}', { poule: S.poule?.name ?? '' })}\n\n`
+    + rijen.map((r, i) => `${plekken[i]}. ${r.naam}  ${r.punten}`).join('\n')
+    + (stijger ? `\n\n${T('Grootste stijger: {wie}', { wie: stijger })}` : '')
+    + `\n\n${T('Seizoen: {stand}', { stand: seizoen.map(r => `${r.naam} ${r.punten}`).join(', ') })}`;
 }
 
 // Wie er in de stand het meest omhoog ging door dit weekend, met van welke
@@ -7815,39 +7825,38 @@ function legePouleBlok() {
 // "Een tik functie als iemand nog niet z'n poule heeft ingevuld. Dat er een
 // notificatie word gegeven aan die persoon." (Danny, 26 oktober: premium.)
 //
-// In een poule met premium staat op de weekendkaart bij elke speler die zijn
-// top 10 nog niet invulde een knop. Die vraagt de functie `tik`
-// (supabase/functions/tik) hem een melding te sturen. De regels staan in de
-// database (tik_geven() in schema.sql); de app volgt ze alleen om geen knop te
-// tonen die toch niets doet. Eén tik per speler per race, van wie dan ook:
-// daarna staat er een vinkje bij zijn naam. Heeft hij geen meldingen aan (of
-// zijn de meldingen nog niet ingericht), dan wordt de knop een bericht om hem
-// zelf te sturen.
+// In een poule met premium staat op het racescherm, in de lijst "De poule",
+// bij elke speler die zijn top 10 voor dat tabblad nog niet invulde een knop
+// "Tik aan" waar anders "nog niet" staat. Op de weekendkaart stond hij eerst
+// (26 oktober); Danny: "wat als er nou 100 man in zo'n poule zitten", dus
+// staat hij nu in de lijst die er al voor iedereen is. De knop vraagt de
+// functie `tik` (supabase/functions/tik) hem een melding te sturen. De regels
+// staan in de database (tik_geven() in schema.sql); de app volgt ze alleen om
+// geen knop te tonen die toch niets doet. Eén tik per speler per race, van wie
+// dan ook: daarna staat er "aangetikt". Heeft hij geen meldingen aan (of zijn
+// de meldingen nog niet ingericht), dan wordt de knop "Stuur bericht", om hem
+// zelf een bericht te sturen. Zonder emoji (Danny, 27 oktober).
 const TIK_HORIZON = 7 * 864e5;   // tik_geven(): de sessie sluit binnen zeven dagen
-const tikKan = (volgend) => !DEMO && !!S.ik && !!mijnUid && premiumActief()
-  && Date.parse(volgend.iso) - Date.now() <= TIK_HORIZON;
+const tikKan = (r, welk) => {
+  const tot = Date.parse(r?.[SESSIES[welk]?.deadline]) - Date.now();
+  return !DEMO && !!S.ik && !!mijnUid && premiumActief() && top10Actief(welk)
+    && tot > 0 && tot <= TIK_HORIZON;
+};
 const alGetikt = (raceId, memberId) => (S.tikken ?? [])
   .some(t => zelfde(t.race_id, raceId) && zelfde(t.aan, memberId));
 
-function tikRij(volgend, wacht) {
-  const r = volgend.race;
-  return `<div class="tikrij" data-tikrij>
-    <span class="label">${T('tik aan')}</span>
-    ${wacht.map(l => {
-      const naam = esc(l.display_name);
-      const id = esc(l.member_id);
-      if (S.tikDelen?.[`${r.id}|${l.member_id}`]) {
-        return `<button class="knop klein tik" data-tik-deel="${id}"
-          aria-label="${T('Stuur {naam} een berichtje', { naam })}">✉ ${naam}</button>`;
-      }
-      if (alGetikt(r.id, l.member_id)) {
-        return `<span class="getikt" data-getikt="${id}" title="${
-          T('{naam} is aangetikt', { naam })}">✓ ${naam}</span>`;
-      }
-      return `<button class="knop klein tik" data-tik="${id}" data-tik-race="${esc(r.id)}"
-        data-tik-sessie="${esc(volgend.welk)}" aria-label="${T('Tik {naam} aan', { naam })}">👉 ${naam}</button>`;
-    }).join('')}
-  </div>`;
+// Wat er in de lijst staat bij een speler die nog niets inleverde.
+function tikKnop(r, welk, lid) {
+  const naam = esc(lid.naam);
+  const id = esc(lid.id);
+  const waar = `data-tik-race="${esc(r.id)}" data-tik-sessie="${esc(welk)}"`;
+  if (S.tikDelen?.[`${r.id}|${lid.id}`]) {
+    return `<button class="knop klein tik" data-tik-deel="${id}" ${waar}
+      aria-label="${T('Stuur {naam} een berichtje', { naam })}">${T('Stuur bericht')}</button>`;
+  }
+  if (alGetikt(r.id, lid.id)) return `<span class="zacht" data-getikt="${id}">${T('aangetikt')}</span>`;
+  return `<button class="knop klein tik" data-tik="${id}" ${waar}
+    aria-label="${T('Tik {naam} aan', { naam })}">${T('Tik aan')}</button>`;
 }
 
 // Wat de database terugzegt, in de taal van de app. De hint is vast; de tekst
@@ -7877,12 +7886,12 @@ async function tikGeven(knop) {
     S.melding = T('{naam} krijgt een seintje.', { naam });
   } else if (uit) {
     S.tikDelen = { ...S.tikDelen, [sleutel]: true };
-    S.melding = T('{naam} heeft geen meldingen aan. Met ✉ stuur je zelf een berichtje.', { naam });
+    S.melding = T('{naam} heeft geen meldingen aan. Met "Stuur bericht" laat je het zelf weten.', { naam });
   } else if (hint === 'tik_al') {
     S.melding = T('{naam} is voor deze race al aangetikt.', { naam });
   } else if (hint === 'tik_niet_ingericht') {
     S.tikDelen = { ...S.tikDelen, [sleutel]: true };
-    S.melding = T('Aantikken lukt nog niet. Met ✉ stuur je {naam} zelf een berichtje.', { naam });
+    S.melding = T('Aantikken lukt nog niet. Met "Stuur bericht" laat je {naam} het zelf weten.', { naam });
   } else {
     S.melding = TIK_FOUT[hint]?.() ?? T('Aantikken lukte niet. Probeer het zo nog eens.');
   }
@@ -7890,19 +7899,21 @@ async function tikGeven(knop) {
 }
 
 // Het bericht als er geen melding uit kon: voor de groepsapp of een appje.
-function tikDeelTekst(memberId) {
-  const volgend = eerstvolgende();
-  if (!volgend) return '';
+function tikDeelTekst(memberId, raceId, welk) {
+  const r = S.races.find(x => zelfde(x.id, raceId));
+  const iso = r?.[SESSIES[welk]?.deadline];
+  if (!iso) return '';
   const naam = S.leden.find(l => zelfde(l.member_id, memberId))?.display_name ?? '';
-  return `👉 ${T('{naam}, de top 10 voor {sessie} van {race} sluit {wanneer} en je hebt nog niets ingevuld.', {
-    naam, sessie: T(SESSIES[volgend.welk].wat), race: volgend.race.name, wanneer: sluitTekst(volgend.iso) })}\n`
+  return `${T('{naam}, de top 10 voor {sessie} van {race} sluit {wanneer} en je hebt nog niets ingevuld.', {
+    naam, sessie: T(SESSIES[welk].wat), race: r.name, wanneer: sluitTekst(iso) })}\n`
     + `${linkBasis()}?code=${S.poule.join_code}`;
 }
 
 function knoopTik() {
   app.querySelectorAll('[data-tik]').forEach(knop => { knop.onclick = () => tikGeven(knop); });
   app.querySelectorAll('[data-tik-deel]').forEach(knop => {
-    knop.onclick = () => deelTekst(tikDeelTekst(knop.dataset.tikDeel), knop);
+    const { tikDeel, tikRace, tikSessie } = knop.dataset;
+    knop.onclick = () => deelTekst(tikDeelTekst(tikDeel, tikRace, tikSessie), knop);
   });
 }
 
@@ -8153,11 +8164,9 @@ function hero(volgend) {
             : esc(x.naam)}</span>`).join('')}</div>
       ${S.leden.length > 1 ? `<div class="wachtop mono ${wacht.length ? 'amber' : 'groen'}">${
         wacht.length
-          ? T('nog geen top 10: {wie}', {
-              wie: wacht.map(l => esc(l.display_name)).join(', ') })
+          ? T('nog geen top 10: {wie}', { wie: kortWie(wacht) })
           : T('iedereen heeft zijn top 10')}${wacht.length && groepsappHulp()
           ? ` <button class="knop klein herinner" data-herinner>${T('Herinner ze')}</button>` : ''}</div>` : ''}
-      ${wacht.length && tikKan(volgend) ? tikRij(volgend, wacht) : ''}
       <button class="knop primair" data-naar-race="${esc(r.id)}">${
         !teDoen ? T('Je inzending bekijken')
         : teDoen.staat === 'deels'
@@ -10005,7 +10014,7 @@ function periodesBlok() {
               : klaar ? T('afgelopen') : T('bezig')}</span></div>
           <p class="zacht klein" style="margin:0">${T('ronde {van} tot en met {tot}', { van: x.van_ronde, tot: x.tot_ronde })}${
             x.prijs ? ` · ${T('prijs: {prijs}', { prijs: esc(x.prijs) })}` : ''}</p>
-          ${winnaars.length ? `<p class="periodewinnaar" data-periodewinnaar>🏆 ${
+          ${winnaars.length ? `<p class="periodewinnaar" data-periodewinnaar>${
             T('{naam} wint', { naam: esc(winnaars.map(w => w.naam).join(', ')) })}${x.prijs ? `: ${esc(x.prijs)}` : ''}</p>` : ''}
           ${gestart ? `<div class="groep">${toon.map(r => `<div class="strij ${r.mij ? 'zelf' : ''}">
             <span class="p">${plekVan(rijen, r.id)}</span>
@@ -10139,46 +10148,46 @@ async function deelTekst(tekst, knop) {
   else S.melding = T('Kopiëren lukt niet');
 }
 
-// "⏰ Monaco: de race sluit zo 15:00. Nog niets ingevuld: Bram, Eva."
+// "Monaco: de top 10 voor de race sluit zo 15:00. Nog niets ingevuld: Bram, Eva."
 function herinnerTekst() {
   const volgend = eerstvolgende();
   if (!volgend) return '';
   const wacht = nogNietIngevuld(volgend.race, volgend.welk);
   if (!wacht.length) return '';
-  return `⏰ ${T('{race}: de top 10 voor {sessie} sluit {wanneer}.', { race: volgend.race.name,
+  return `${T('{race}: de top 10 voor {sessie} sluit {wanneer}.', { race: volgend.race.name,
     sessie: T(SESSIES[volgend.welk].wat), wanneer: sluitTekst(volgend.iso) })}\n`
     + `${T('Nog niets ingevuld: {wie}', { wie: wacht.map(l => l.display_name).join(', ') })}\n`
-    + `👉 ${linkBasis()}?code=${S.poule.join_code}`;
+    + `${linkBasis()}?code=${S.poule.join_code}`;
 }
 
 // De samenvatting van een weekend: wie won, wie steeg, de top 5 van de stand,
 // het beste team, de tussenklassementen, en wanneer de volgende sluit.
 function samenvattingTekst(race = laatsteMetUitslag()) {
   if (!race) return '';
-  const regels = [`🏁 ${race.name} · ${S.poule?.name ?? ''}`];
+  const regels = [`${race.name} · ${S.poule?.name ?? ''}`];
   const winnaars = weekendWinnaars(race);
-  if (winnaars.length) regels.push(`🏆 ${T('Weekendwinnaar: {wie} ({n} punten)', {
+  if (winnaars.length) regels.push(`${T('Weekendwinnaar: {wie} ({n} punten)', {
     wie: winnaars.map(w => w.naam).join(', '), n: winnaars[0].punten })}`);
   const stijger = grootsteStijger(race);
-  if (stijger) regels.push(`📈 ${T('Grootste stijger: {wie}', { wie: stijger })}`);
+  if (stijger) regels.push(T('Grootste stijger: {wie}', { wie: stijger }));
   const stand = standRijen();
   const plekken = gedeeldePlekken(stand);
-  regels.push('', `📊 ${T('Stand na {n} van de {totaal} races', { n: gereden(), totaal: S.races.length })}`);
-  stand.slice(0, 5).forEach((r, i) => regels.push(`${MEDAILLE[plekken[i] - 1] ?? `${plekken[i]}.`} ${r.naam}  ${r.punten}`));
+  regels.push('', T('Stand na {n} van de {totaal} races', { n: gereden(), totaal: S.races.length }));
+  stand.slice(0, 5).forEach((r, i) => regels.push(`${plekken[i]}. ${r.naam}  ${r.punten}`));
   if (stand.length > 5) regels.push(T('en nog {n}', { n: stand.length - 5 }));
   const team = teamRijen(stand)[0];
-  if (team) regels.push('', `👥 ${T('Beste team: {team} ({n} per speler)', { team: team.naam, n: komma(team.gemiddeld) })}`);
+  if (team) regels.push('', T('Beste team: {team} ({n} per speler)', { team: team.naam, n: komma(team.gemiddeld) }));
   for (const x of periodesVan(seizoen()).filter(x => race.round >= x.van_ronde && race.round <= x.tot_ronde)) {
     const { rijen, klaar } = periodeStand(x);
     const top = rijen[0]?.punten ?? 0;
     if (!top) continue;
     const wie = rijen.filter(r => r.punten === top).map(r => r.naam).join(', ');
-    regels.push(`🎯 ${x.naam}: ${klaar ? T('{naam} wint', { naam: wie }) + (x.prijs ? ` (${x.prijs})` : '')
+    regels.push(`${x.naam}: ${klaar ? T('{naam} wint', { naam: wie }) + (x.prijs ? ` (${x.prijs})` : '')
       : T('{naam} leidt', { naam: wie })}`);
   }
   const volgend = eerstvolgende();
-  if (volgend) regels.push('', `⏭️ ${T('Volgende: {race}, sluit {wanneer}', { race: volgend.race.name, wanneer: sluitTekst(volgend.iso) })}`);
-  regels.push(`👉 ${linkBasis()}?code=${S.poule.join_code}`);
+  if (volgend) regels.push('', T('Volgende: {race}, sluit {wanneer}', { race: volgend.race.name, wanneer: sluitTekst(volgend.iso) }));
+  regels.push(`${linkBasis()}?code=${S.poule.join_code}`);
   return regels.join('\n');
 }
 
@@ -11801,6 +11810,9 @@ function pouleKaart(r, { open = false } = {}) {
   });
   if (open) rijen.sort((a, b) => b.deed - a.deed);
   else rijen.sort((a, b) => (b.punten ?? -1) - (a.punten ?? -1));
+  // De tik (premium): bij wie zijn top 10 voor dit tabblad nog niet invulde.
+  const tikbaar = open && tikKan(r, S.tab)
+    ? new Set(nogNietIngevuld(r, S.tab).map(l => String(l.member_id))) : new Set();
   const status = (x) => open ? (x.deed ? T('ingeleverd') : T('nog niet'))
     : x.deed ? (x.mij ? '' : T('bekijken'))
     : x.auto ? T('automatisch ingevuld') : T('niets ingevuld');
@@ -11808,7 +11820,7 @@ function pouleKaart(r, { open = false } = {}) {
     const inhoud = `<span class="avatar">${esc(String(x.naam).trim().charAt(0).toUpperCase() || '?')}</span>
       <span class="nm">${esc(x.naam)}${x.mij ? ` <span class="jij">(${T('jij')})</span>` : ''}${
         x.joker ? ` <span class="jokervlag" title="${T('joker: dit weekend telt dubbel')}">2×</span>` : ''}</span>
-      <span class="zacht">${status(x)}</span>
+      ${!x.deed && tikbaar.has(String(x.id)) ? tikKnop(r, S.tab, x) : `<span class="zacht">${status(x)}</span>`}
       ${open ? `<span class="klaarteken">${x.deed ? VINKJE : ''}</span>`
         : `<span class="t">${x.punten ?? '—'}</span>${x.punten === null ? '' : `<span class="eenheid">${T('pt')}</span>`}`}`;
     // Je eigen regel is geen knop: je eigen inzending staat al op het scherm.
@@ -12613,7 +12625,7 @@ function standTekst() {
   if (!rijen.length) return '';
   const plekken = gedeeldePlekken(rijen);
   const breed = Math.max(...rijen.map(r => String(r.naam).length));
-  return `🏆 ${S.poule?.name ?? T('Stand')}, ${T('na {n} van de {totaal} races', { n: gereden(), totaal: S.races.length })}\n\n`
+  return `${S.poule?.name ?? T('Stand')}, ${T('na {n} van de {totaal} races', { n: gereden(), totaal: S.races.length })}\n\n`
     + rijen.map((r, i) => `${plekken[i]}. ${String(r.naam).padEnd(breed + 2)}${r.punten}`).join('\n');
 }
 
@@ -13290,7 +13302,7 @@ function seizoenTekst() {
   const o = seizoenOverzicht();
   if (!o) return '';
   return [
-    `🏁 ${T('Mijn seizoen {jaar} in {poule}', { jaar: o.jaar, poule: S.poule?.name ?? '' })}`,
+    T('Mijn seizoen {jaar} in {poule}', { jaar: o.jaar, poule: S.poule?.name ?? '' }),
     o.samen ? T('{plek} van {n}, {punten} punten', { plek: rang(o.plek), n: o.spelers, punten: o.punten })
       : T('{n} punten', { n: o.punten }),
     `${T('jouw beste weekend')}: ${o.beste.race.name} (${T('{n} ptn', { n: o.beste.punten })})`,

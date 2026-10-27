@@ -2888,8 +2888,12 @@ poulebaas:
   er ook als **Herinner ze** in de kaart bovenaan, naast "nog geen top 10".
   Heeft iedereen ingevuld, dan staat er alleen een regel.
 - **Samenvatting van (race).** De weekendwinnaar, de grootste stijger, de top
-  5 van de stand met medailles, het beste team, wie een tussenklassement leidt
-  of won, wanneer de volgende race sluit, en de link.
+  5 van de stand, het beste team, wie een tussenklassement leidt of won,
+  wanneer de volgende race sluit, en de link.
+
+Geen emoji in deze berichten, en nergens anders in de app (Danny, 27 oktober:
+"Ik wil echt geen emojis"). `test/geen-emoji.test.mjs` zakt als er een
+terugkomt; het sterretje van de joker (★) is een teken en mag.
 - **Stand als CSV (Excel, Sheets).** Plek, naam, team, totaal en een kolom per
   gereden race (en de seizoensvragen als die gescoord zijn). In het Engels met
   komma's, in de andere talen met puntkomma's, zodat Excel het meteen in
@@ -2905,16 +2909,22 @@ al ziet. Daarom staat de premiumgrens hier alleen in de app.
 
 ### Iemand aantikken (sinds 26 oktober)
 
-Met premium staat op de weekendkaart onder "nog geen top 10" een rij **tik
-aan**: een knop per speler die zijn top 10 voor de eerstvolgende sessie nog
-niet invulde, voor iedereen in de poule (niet alleen de poulebaas). Een tik
-stuurt die speler meteen een melding: "Danny tikt je aan", met de sessie, de
-race en wanneer hij sluit, op al zijn toestellen en in hun taal.
+Met premium staat op het racescherm, onderaan in **De poule**, een knop
+**Tik aan** bij elke speler die zijn top 10 voor dat tabblad nog niet
+invulde, op de plek waar anders "nog niet" staat. Voor iedereen in de poule,
+niet alleen de poulebaas. Een tik stuurt die speler meteen een melding: "Danny
+tikt je aan", met de sessie, de race en wanneer hij sluit, op al zijn
+toestellen en in hun taal. Eerst (26 oktober) stond de rij op de weekendkaart;
+Danny, 27 oktober: "wat als er nou 100 man in zo'n poule zitten", dus staat
+hij nu in de lijst die er al voor iedereen is. Om dezelfde reden noemt "nog
+geen top 10" op de weekendkaart bij een grote poule de eerste vijf namen en
+"en nog 95".
 
-- **Eén tik per speler per race**, van wie dan ook. Daarna staat er een vinkje
-  bij zijn naam, voor iedereen.
+- **Eén tik per speler per race**, van wie dan ook. Daarna staat er
+  "aangetikt" bij zijn naam, voor iedereen.
 - **Geen meldingen aan** bij die speler (of nog niet ingericht, zie hieronder):
-  dan wordt de knop ✉, een berichtje om hem zelf te sturen, met de link.
+  dan wordt de knop **Stuur bericht**, een berichtje om hem zelf te sturen,
+  met de link.
 - Alleen voor een sessie die **binnen zeven dagen** sluit, en niet bij jezelf.
 
 Hoe het werkt: de app vraagt de functie `tik` bij Supabase

@@ -11606,10 +11606,11 @@ functie staat. Uitgerold via MCP, verify_jwt aan.
 vingerafdruk anders is. Zolang hij er niet staat zegt de app "aantikken lukt
 nog niet" en biedt hij een berichtje aan; er wordt dan niets vastgelegd.
 
-**App.** `tikRij()` op de weekendkaart (alleen met premium, alleen als de
-sessie binnen zeven dagen sluit), `tikGeven()` via `db.functions.invoke('tik')`,
-een vinkje voor wie getikt is (`S.tikken`), en ✉ (`S.tikDelen`) als er geen
-melding uit kon. De premium-uitleg noemt de tik; de privacyverklaring (app en
+**App.** Eerst `tikRij()` op de weekendkaart; sinds 27 oktober `tikKnop()` in
+de lijst De poule op het racescherm (zie hieronder). Alleen met premium, alleen
+als de sessie binnen zeven dagen sluit; `tikGeven()` via
+`db.functions.invoke('tik')`, "aangetikt" voor wie getikt is (`S.tikken`), en
+"Stuur bericht" (`S.tikDelen`) als er geen melding uit kon. De premium-uitleg noemt de tik; de privacyverklaring (app en
 `site/privacy.mjs`) zegt wat er bewaard wordt en dat het na twee maanden
 weggaat. 13 + 1 nieuwe zinnen in zeven talen.
 
@@ -11660,6 +11661,42 @@ alleen om terug te zetten. Bijgewerkt op 27 oktober.
 `privacypagina.test.mjs` leest `retention-days` uit `reservekopie.yml` en eist
 dat app en site dat getal noemen. Beide mutaties (zin weg, ander getal)
 gevangen.
+
+**Danny moet:** niets.
+
+## De tik op het racescherm, en geen emoji (27 oktober)
+
+**Aanleiding.** Danny, met een schermafdruk van de weekendkaart en van het
+racescherm: "Ik wil echt geen emojis. En wat als er nou 100 man in zo'n poule
+zitten. Kan je niet beter hier de tik optie zetten. Bij de race onderop."
+
+**De tik.** Weg van de weekendkaart (daar stond een rij knoppen met een
+handje, één per speler; bij honderd man een muur). Nu in `pouleKaart()` op het
+racescherm, in de lijst De poule die er al voor iedereen was: bij wie zijn top
+10 voor dat tabblad nog niet invulde staat **Tik aan** waar anders "nog niet"
+staat. Daarna "aangetikt", of **Stuur bericht** als er geen melding uit kon.
+`tikKan(r, welk)` kijkt naar de deadline van dat tabblad (en of de poule die
+top 10 stelt), niet meer naar de eerstvolgende sessie; het bericht van Stuur
+bericht noemt die race en sessie. "Herinner ze" op de weekendkaart blijft (dat
+is het groepsbericht van de poulebaas). En "nog geen top 10" op de weekendkaart
+noemt bij een grote poule de eerste vijf en "en nog 95" (`kortWie()`; zes
+schrijft hij nog uit); de hele lijst staat op het racescherm. Nieuwe zinnen: Tik aan, aangetikt,
+Stuur bericht, en de twee meldingen zonder het envelopje, in zeven talen.
+
+**Geen emoji.** Ook niet in de berichten voor de groepsapp (de uitslag, de
+stand, de samenvatting, de herinnering, je seizoen): de medailles werden het
+plekgetal, en de finishvlag, de beker, de grafiekjes, de poppetjes, de roos,
+de wekker, het handje en het pijltje vooruit zijn weg. De winnaar van een
+tussenklassement op het scherm heeft geen beker meer. Tekens die als tekst
+getekend worden (✓ ✕ ☆ → en het sterretje van de joker) blijven.
+`test/geen-emoji.test.mjs` bewaakt de app, de vertalingen, de meldingen, de
+mails, het beheer en de site.
+
+**Tests.** `tik.test.mjs` herschreven voor het racescherm (23 controles; zes
+mutaties gevangen: zonder premium, zonder zeven dagen, ook bij jezelf,
+"aangetikt" vergeten, een emoji terug op de knop, alle namen op de
+weekendkaart). De groepsapptests
+(`groepsapp`, `uitslag-delen`, `groepsapp-hulp`) verwachten geen emoji meer.
 
 **Danny moet:** niets.
 
