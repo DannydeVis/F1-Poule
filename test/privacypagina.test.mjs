@@ -59,9 +59,15 @@ const platteTekst = (html) => html.replace(/<(script|style)[\s\S]*?<\/\1>/g, ' '
   // Wie er iets van je te zien krijgt. Een nieuwe dienst in de app hoort hier
   // bij te komen; dan zakt deze test tot hij ook op de pagina staat.
   const DIENSTEN = ['Supabase', 'OpenF1', 'esm.sh', 'GitHub Pages', 'Google', 'Apple', 'Mozilla', 'Google Analytics'];
+  // Hoe lang de reservekopie blijft staan, uit de workflow zelf: gaat dat
+  // getal omhoog of omlaag, dan zakt deze test tot de verklaring het ook zegt.
+  const bewaard = readFileSync(join(wortel, '.github', 'workflows', 'reservekopie.yml'), 'utf8')
+    .match(/retention-days:\s*(\d+)/)?.[1];
   const ZINNEN = {
-    nl: ['IP-adres', 'alleen als je het zelf koppelt', 'Google Analytics alleen als je daar ja op zegt', 'niet terug te draaien'],
-    en: ['IP address', 'only if you link it yourself', 'Google Analytics only if you say yes to it', 'cannot be undone'],
+    nl: ['IP-adres', 'alleen als je het zelf koppelt', 'Google Analytics alleen als je daar ja op zegt', 'niet terug te draaien',
+      `hoogstens ${bewaard} dagen`],
+    en: ['IP address', 'only if you link it yourself', 'Google Analytics only if you say yes to it', 'cannot be undone',
+      `at most ${bewaard} days`],
   };
   for (const taal of PAGINAS) {
     const pagina = platteTekst(leesPagina(taal));

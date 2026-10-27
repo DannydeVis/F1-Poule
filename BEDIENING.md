@@ -2051,6 +2051,11 @@ iedereen met een GitHub-account downloaden. Zonder het wachtwoord is het
 ruis; met een verkeerd wachtwoord, of als er met het bestand geknoeid is,
 weigert het script het.
 
+De privacyverklaring (app en site) zegt het ook: alles staat nog hoogstens 90
+dagen in zo'n kopie, ook wat iemand verwijdert. Verander je `retention-days`
+in de workflow, pas dan die zin aan; `test/privacypagina.test.mjs` zakt tot hij
+hetzelfde getal noemt.
+
 **Terugzetten:**
 
 1. Download de bijlage van de nacht vóór het misging en pak de zip uit.
