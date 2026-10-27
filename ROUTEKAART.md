@@ -707,7 +707,9 @@ beheer telt hoeveel spelers meldingen aan hebben (tegel **Meldingen aan**).
 Zie BEDIENING §11c.
 
 **Iemand een tik geven** (Danny, 26 oktober; premium). Gebouwd: op de
-weekendkaart een knop bij elke speler die zijn top 10 nog niet invulde, voor
+racescherm, in de lijst De poule (eerst op de weekendkaart; verhuisd op 27
+oktober, voor een poule met honderd man), een knop bij elke speler die zijn
+top 10 nog niet invulde, voor
 iedereen in een premiumpoule. De melding gaat direct via de functie `tik` bij
 Supabase, met de sleutel die de sync in de Vault zet; één tik per speler per
 race, en zonder meldingen bij die speler een berichtje om zelf te sturen. De

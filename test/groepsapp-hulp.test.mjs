@@ -7,9 +7,9 @@
 //      race, de sessie, wie nog niets invulde (en niet wie al wel) en de link.
 //      Met de deelknop van het toestel; zonder naar het klembord; lukt dat ook
 //      niet, dan in beeld.
-//   3. De samenvatting: de weekendwinnaar, de top 5 van de stand met
-//      medailles, het beste team, het tussenklassement, de volgende race en de
-//      link.
+//   3. De samenvatting: de weekendwinnaar, de top 5 van de stand, het beste
+//      team, het tussenklassement, de volgende race en de link. Zonder emoji
+//      (Danny, 27 oktober).
 //   4. De stand als CSV: een BOM, puntkomma's (komma's in het Engels), een
 //      kolom per race, en een naam die Excel als formule zou lezen krijgt een
 //      apostrof.
@@ -81,7 +81,7 @@ await page.click('.wachtop [data-herinner]');
 await page.waitForTimeout(150);
 {
   const t = await gedeeld();
-  check('het bericht noemt de race, de sessie en wanneer hij sluit', /^⏰ Shanghai: de top 10 voor de race sluit .+\./.test(t ?? ''), t);
+  check('het bericht noemt de race, de sessie en wanneer hij sluit', /^Shanghai: de top 10 voor de race sluit .+\./.test(t ?? ''), t);
   check('wie nog niets invulde, en niet wie al wel', t?.includes('Nog niets ingevuld: =SOM(1)') && !t.includes('Bram'), t);
   check('en de link naar de poule', t?.includes('?code=RTM026'), t);
 }
@@ -97,7 +97,7 @@ await page.evaluate(() => {
 });
 await page.click('[data-herinner]');
 await page.waitForTimeout(150);
-check('zonder deelknop gaat het naar het klembord', (await page.evaluate(() => window.__klembord.at(-1)))?.startsWith('⏰ Shanghai')
+check('zonder deelknop gaat het naar het klembord', (await page.evaluate(() => window.__klembord.at(-1)))?.startsWith('Shanghai')
   && (await page.textContent('[data-herinner]')).trim() === 'Gekopieerd');
 // En als ook dat niet lukt: in beeld.
 await page.evaluate(() => {
@@ -108,7 +108,7 @@ await page.waitForTimeout(2600);
 await page.click('[data-herinner]');
 await page.waitForTimeout(150);
 check('lukt ook dat niet, dan staat de tekst in beeld', await page.isVisible('#groepsappveld')
-  && (await page.inputValue('#groepsappveld')).startsWith('⏰ Shanghai'));
+  && (await page.inputValue('#groepsappveld')).startsWith('Shanghai'));
 
 // Iedereen ingevuld: geen knop, wel de melding.
 await db(`d.answers.push({ pool_id: 'pool-1', race_id: d.races[1].id, member_id: 'lid-som', question_id: 'race_top10', waarde: a[0] });`, [UIT]);
@@ -130,12 +130,13 @@ await page.waitForTimeout(150);
 {
   const t = (await gedeeld()) ?? '';
   const regels = t.split('\n');
-  check('de samenvatting begint met de race en de poule', regels[0] === '🏁 Melbourne · Vrijdagmiddagpoule', regels[0]);
-  check('met de weekendwinnaar', regels[1] === '🏆 Weekendwinnaar: Danny (100 punten)', regels[1]);
-  check('de stand met medailles, gelijke plekken gelijk', t.includes('📊 Stand na 1 van de 3 races\n🥇 Danny  100\n🥈 =SOM(1)  0\n🥈 Bram  0'), t);
-  check('het beste team', t.includes('👥 Beste team: Kantoor (100,0 per speler)'), t);
-  check('het tussenklassement: wie leidt', t.includes('🎯 Voorjaar: Danny leidt'), t);
-  check('de volgende race, en de link', /⏭️ Volgende: Shanghai, sluit .+\n👉 .+\?code=RTM026$/.test(t), t);
+  check('de samenvatting begint met de race en de poule', regels[0] === 'Melbourne · Vrijdagmiddagpoule', regels[0]);
+  check('met de weekendwinnaar', regels[1] === 'Weekendwinnaar: Danny (100 punten)', regels[1]);
+  check('de stand, gelijke plekken gelijk', t.includes('Stand na 1 van de 3 races\n1. Danny  100\n2. =SOM(1)  0\n2. Bram  0'), t);
+  check('het beste team', t.includes('Beste team: Kantoor (100,0 per speler)'), t);
+  check('het tussenklassement: wie leidt', t.includes('Voorjaar: Danny leidt'), t);
+  check('de volgende race, en de link', /Volgende: Shanghai, sluit .+\nhttps?:\/\/.+\?code=RTM026$/.test(t), t);
+  check('zonder emoji', !/[\p{Extended_Pictographic}\u{FE0F}]/u.test(t), t);
 }
 
 // ---- 4. de stand als CSV --------------------------------------------------------------

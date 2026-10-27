@@ -210,10 +210,10 @@ await page.waitForFunction(() => window.__klembord.length >= 2);
   check('het plaatje kan ook naar het klembord, voor WhatsApp Web',
     klembord[0]?.soort === 'plaatje' && klembord[0].types.includes('image/png'), JSON.stringify(klembord[0]));
   check('en de tekst van vroeger kan nog steeds',
-    klembord[1]?.soort === 'tekst' && klembord[1].t.startsWith('🏁 Shanghai, uitslag Vrijdagmiddagpoule'), klembord[1]?.t.split('\n')[0]);
-  // Het podium met medailles (zie groepsapp.test.mjs); gedeeld eerste is
-  // allebei goud, en wie gedeeld zevende is heeft geen medaille maar een plek.
-  check('ook daarin gelijke punten, gelijke plek', /\n🥇 Fatima/.test(klembord[1]?.t ?? '')
+    klembord[1]?.soort === 'tekst' && klembord[1].t.startsWith('Shanghai, uitslag Vrijdagmiddagpoule'), klembord[1]?.t.split('\n')[0]);
+  // Het podium (zie groepsapp.test.mjs); gedeeld eerste staat allebei op 1,
+  // en wie gedeeld zevende is allebei op 7.
+  check('ook daarin gelijke punten, gelijke plek', /\n1\. Fatima/.test(klembord[1]?.t ?? '')
     && /\n7\. Anouk/.test(klembord[1]?.t ?? ''), klembord[1]?.t.split('\n').slice(2, 4).join(' / '));
 }
 
@@ -328,7 +328,7 @@ await page.click('.deelvenster [data-kopieer-tekst]');
 await page.waitForFunction(() => window.__klembord.length >= 1);
 {
   const tekst = (await page.evaluate(() => window.__klembord[0]?.t)) ?? '';
-  check('de stand kan ook als tekst', tekst.startsWith('🏆 Vrijdagmiddagpoule, na 2 van de 3 races')
+  check('de stand kan ook als tekst', tekst.startsWith('Vrijdagmiddagpoule, na 2 van de 3 races')
     && /\n6\. Tim\s+192/.test(tekst) && /\n7\. Anouk\s+184\n7\. Joey/.test(tekst),
     tekst.split('\n').slice(0, 3).join(' / '));
 }

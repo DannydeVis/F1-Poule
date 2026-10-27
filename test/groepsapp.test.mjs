@@ -1,8 +1,9 @@
 // Het groepsapp-bericht, een poule met alleen jou, en de kleuren in de uitleg.
 //
 // Uit het feedbackrapport van 10 oktober, drie kleine dingen:
-//   1. De tekst van "Deel de uitslag" krijgt een podium met medailles en de
+//   1. De tekst van "Deel de uitslag" begint met het podium en noemt de
 //      grootste stijger in de stand. Daar gaat het gesprek in de groep over.
+//      Sinds 27 oktober zonder medailles of andere emoji: Danny wil er geen.
 //   2. Wie net een poule maakte en er alleen in staat, krijgt bovenaan één
 //      blok met één knop: deel de code in je groepsapp.
 //   3. De 5, 3 en 1 in de puntenuitleg staan in de kleuren van het racescherm
@@ -92,24 +93,24 @@ await zet(page, ['lid-1', 'lid-m0']);
 await page.reload();
 const shanghai = await tekstVan(page, 'Shanghai');
 const regels = shanghai.split('\n');
-check('de kop noemt de race en de poule', regels[0] === '🏁 Shanghai, uitslag Vrijdagmiddagpoule', regels[0]);
+check('de kop noemt de race en de poule', regels[0] === 'Shanghai, uitslag Vrijdagmiddagpoule', regels[0]);
 // Danny en Mede0 allebei 100, de andere twee 12: gedeeld eerste is twee keer
-// goud, en wie daarna komt is derde, dus brons, niet zilver.
-check('het podium heeft medailles, gedeeld eerste allebei goud',
-  regels.includes('🥇 Danny  100') && regels.includes('🥇 Mede0  100'), regels.slice(2, 6).join(' / '));
-check('wie daarna gedeeld derde is, krijgt brons',
-  regels.includes('🥉 Mede1  12') && regels.includes('🥉 Mede2  12') && !shanghai.includes('🥈'),
+// een 1, en wie daarna komt is derde, niet tweede.
+check('het podium bovenaan, gedeeld eerste allebei op 1',
+  regels.includes('1. Danny  100') && regels.includes('1. Mede0  100'), regels.slice(2, 6).join(' / '));
+check('wie daarna gedeeld derde is, staat op 3',
+  regels.includes('3. Mede1  12') && regels.includes('3. Mede2  12') && !/^2\. /m.test(shanghai),
   regels.slice(2, 6).join(' / '));
-check('de medaille staat in plaats van het plekgetal', !/^[123]\. /m.test(shanghai), shanghai);
-const stijger = regels.find((r) => r.startsWith('📈')) ?? '';
+check('zonder medailles of andere emoji', !/[\p{Extended_Pictographic}\u{FE0F}]/u.test(shanghai), shanghai);
+const stijger = regels.find((r) => r.startsWith('Grootste stijger')) ?? '';
 check('onder het podium de grootste stijger, met van en naar welke plek; gelijk gestegen allebei',
-  stijger === '📈 Grootste stijger: Danny (P3 → P1) en Mede0 (P3 → P1)', stijger);
+  stijger === 'Grootste stijger: Danny (P3 → P1) en Mede0 (P3 → P1)', stijger);
 check('en als laatste de stand van het seizoen',
-  regels.at(-1) === '🏆 Seizoen: Danny 112, Mede0 112, Mede1 112, Mede2 112', regels.at(-1));
+  regels.at(-1) === 'Seizoen: Danny 112, Mede0 112, Mede1 112, Mede2 112', regels.at(-1));
 
 const melbourne = await tekstVan(page, 'Melbourne');
 check('na het eerste weekend is er nog geen stijger: er valt niets te vergelijken',
-  !melbourne.includes('📈') && melbourne.startsWith('🏁 Melbourne'), melbourne);
+  !melbourne.includes('Grootste stijger') && melbourne.startsWith('Melbourne'), melbourne);
 
 // Niemand stijgt: dan ook geen regel. Shanghai precies als Melbourne.
 await page.evaluate(() => {
@@ -122,7 +123,7 @@ await page.evaluate(() => {
 });
 await page.reload();
 const stil = await tekstVan(page, 'Shanghai');
-check('als niemand steeg, staat er geen stijger', !stil.includes('📈'), stil);
+check('als niemand steeg, staat er geen stijger', !stil.includes('Grootste stijger'), stil);
 
 // ---- 2. een poule met alleen jou ---------------------------------------------------
 await naarLijst(page);
@@ -180,9 +181,9 @@ await stoppen();
   const t = await tekstVan(page, 'Shanghai');
   const r = t.split('\n');
   check('en het bericht in het Engels',
-    r[0] === '🏁 Shanghai, Vrijdagmiddagpoule results'
-      && r.includes('📈 Biggest climber: Danny (P4 → P1)')
-      && r.at(-1).startsWith('🏆 Season: '), t);
+    r[0] === 'Shanghai, Vrijdagmiddagpoule results'
+      && r.includes('Biggest climber: Danny (P4 → P1)')
+      && r.at(-1).startsWith('Season: '), t);
   check('geen javascriptfouten in het Engels', jsFouten.length === 0, jsFouten.join(' | '));
   await stoppen();
 }
