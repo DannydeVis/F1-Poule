@@ -20,9 +20,12 @@
 \set ON_ERROR_STOP on
 
 -- De rol van de sync en het beheer. Supabase heeft hem standaard, gewone
--- PostgreSQL niet; schema.sql geeft hem rechten op elke tabel (grant).
+-- PostgreSQL niet; schema.sql geeft hem rechten op elke tabel (grant). Net als
+-- bij Supabase gaat hij langs de beveiliging per rij heen (bypassrls).
 do $r$ begin
-  if not exists (select from pg_roles where rolname = 'service_role') then create role service_role; end if;
+  if not exists (select from pg_roles where rolname = 'service_role') then
+    create role service_role bypassrls;
+  end if;
 end $r$;
 
 create schema if not exists auth;
@@ -105,4 +108,40 @@ grant select, insert, update, delete on storage.objects to anon, authenticated;
 grant select on storage.buckets to anon, authenticated;
 grant execute on function storage.foldername(text) to anon, authenticated;
 
-do $$ begin raise notice 'ok: auth-nabootsing klaar (auth.users + auth.uid() + storage)'; end $$;
+-- De Vault van Supabase (supabase_vault): versleutelde geheimen, alleen voor
+-- de server. Hier zonder versleuteling, met dezelfde namen als de echte:
+-- vault.create_secret(), vault.update_secret() en vault.decrypted_secrets.
+-- schema.sql bewaart er de sleutel van de meldingen in (push_sleutel_zetten()).
+create schema if not exists vault;
+create table if not exists vault.secrets (
+  id          uuid primary key default gen_random_uuid(),
+  name        text unique,
+  description text not null default '',
+  secret      text not null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create or replace function vault.create_secret(new_secret text, new_name text default null,
+  new_description text default '', new_key_id uuid default null)
+returns uuid
+language sql
+as $$
+  insert into vault.secrets (secret, name, description)
+  values (new_secret, new_name, coalesce(new_description, '')) returning id;
+$$;
+create or replace function vault.update_secret(secret_id uuid, new_secret text default null,
+  new_name text default null, new_description text default null, new_key_id uuid default null)
+returns void
+language sql
+as $$
+  update vault.secrets set secret = coalesce(new_secret, secret), name = coalesce(new_name, name),
+    description = coalesce(new_description, description), updated_at = now()
+  where id = secret_id;
+$$;
+create or replace view vault.decrypted_secrets as
+  select id, name, description, secret, secret as decrypted_secret, created_at, updated_at
+  from vault.secrets;
+-- Net als bij Supabase: anon en authenticated kunnen er niet bij.
+revoke all on schema vault from public;
+
+do $$ begin raise notice 'ok: auth-nabootsing klaar (auth.users + auth.uid() + storage + vault)'; end $$;

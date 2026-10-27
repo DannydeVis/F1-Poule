@@ -907,6 +907,9 @@ const functies = {
         const v = (store.pool_eigen_vragen ?? []).find((x) => gelijk(x.id, a.vraag_id));
         return v && gelijk(v.pool_id, poule.id) && (!eigenVraagOpen(v.race_id) || magVoorSpeler(a.member_id));
       }).map(({ vraag_id, member_id, keuze }) => ({ vraag_id, member_id, keuze })),
+      // Wie er voor een open sessie al getikt is (premium), niet door wie.
+      tikken: (store.tikken ?? []).filter((t) => gelijk(t.pool_id, poule.id) && tikSessieOpen(t))
+        .map(({ race_id, sessie, aan_member }) => ({ race_id, sessie, aan: aan_member })),
     }, error: null };
   },
 
@@ -1518,4 +1521,69 @@ const storage = {
   },
 };
 
-export const createClient = () => ({ from: maakQuery, auth, rpc, storage });
+// ---- de functie `tik` (premium) ------------------------------------------------
+// Wat supabase/functions/tik doet, met de regels van tik_geven() in schema.sql
+// (test/tik.test.sql) en zonder echte pushdienst: een melding komt in
+// store.tik_meldingen. store.tik_niet_ingericht doet alsof de sleutel nog niet
+// in de Vault staat. Een fout komt terug zoals supabase-js hem geeft: een
+// error met de Response erin (context), waar de app de hint uit leest.
+const TIK_VRAAG = { quali: 'quali_top10', race: 'race_top10', sprint: 'sprint_top10' };
+const TIK_DEADLINE = { quali: 'deadline_quali', race: 'deadline_race', sprint: 'deadline_sprint' };
+function tikSessieOpen(t) {
+  const r = store.races.find((x) => gelijk(x.id, t.race_id));
+  const iso = r?.[TIK_DEADLINE[t.sessie]];
+  return !!iso && Date.parse(iso) > Date.now();
+}
+const functions = {
+  async invoke(naam, { body } = {}) {
+    globalThis.__tikVerzoeken = [...(globalThis.__tikVerzoeken ?? []), { naam, body }];
+    const weiger = (status, fout, hint) => ({ data: null, error: {
+      name: 'FunctionsHttpError', message: 'Edge Function returned a non-2xx status code',
+      context: new Response(JSON.stringify({ fout, hint }), { status, headers: { 'Content-Type': 'application/json' } }) } });
+    if (naam !== 'tik') return weiger(404, 'onbekende functie', null);
+    const wie = wieBenIk();
+    if (!wie) return weiger(401, 'Niet aangemeld.', 'geen_sessie');
+    if (store.tik_niet_ingericht) return weiger(503, 'De meldingen zijn nog niet ingericht.', 'tik_niet_ingericht');
+    const { race, sessie, aan } = body ?? {};
+    const ontvanger = store.pool_members.find((m) => gelijk(m.member_id, aan));
+    if (!ontvanger) return weiger(400, 'Die speler bestaat niet meer.', 'tik_weg');
+    const van = store.pool_members.find((m) => gelijk(m.pool_id, ontvanger.pool_id) && m.user_id && gelijk(m.user_id, wie));
+    if (!van) return weiger(400, 'Je speelt niet in deze poule.', 'tik_geen_lid');
+    if (gelijk(van.member_id, ontvanger.member_id)) return weiger(400, 'Jezelf aantikken kan niet.', 'tik_zelf');
+    const poule = store.pools.find((p) => gelijk(p.id, ontvanger.pool_id));
+    if (!(poule?.premium_tot && Date.parse(poule.premium_tot) > Date.now())) {
+      return weiger(400, 'Aantikken kan alleen in een poule met premium.', 'tik_premium');
+    }
+    const r = store.races.find((x) => gelijk(x.id, race));
+    const iso = r?.[TIK_DEADLINE[sessie]];
+    const vraag = TIK_VRAAG[sessie];
+    const vragen = (store.pool_questions ?? []).filter((x) => gelijk(x.pool_id, poule.id)).map((x) => x.question_id);
+    if (!vraag || !iso || Date.parse(iso) <= Date.now() || Date.parse(iso) > Date.now() + 7 * 864e5
+        || (vragen.length && !vragen.includes(vraag))) {
+      return weiger(400, 'Voor deze sessie kun je nu niemand aantikken.', 'tik_dicht');
+    }
+    if ((store.answers ?? []).some((a) => gelijk(a.pool_id, poule.id) && gelijk(a.race_id, race)
+        && gelijk(a.member_id, aan) && a.question_id === vraag)) {
+      return weiger(400, 'Die speler heeft zijn top 10 al ingevuld.', 'tik_ingevuld');
+    }
+    store.tikken ??= [];
+    if (store.tikken.some((t) => gelijk(t.race_id, race) && gelijk(t.aan_member, aan))) {
+      return weiger(400, 'Iemand heeft die speler voor deze race al aangetikt.', 'tik_al');
+    }
+    const tik = { id: store.tikken.length + 1, pool_id: poule.id, race_id: race, sessie,
+                  van_member: van.member_id, aan_member: ontvanger.member_id, gemaakt: new Date().toISOString() };
+    store.tikken.push(tik);
+    const leden = store.pool_members.filter((m) => gelijk(m.member_id, ontvanger.member_id)
+      || (ontvanger.user_id && m.user_id && gelijk(m.user_id, ontvanger.user_id))).map((m) => String(m.member_id));
+    const toestellen = (store.push_abonnementen ?? []).filter((x) => leden.includes(String(x.member_id)));
+    store.tik_meldingen ??= [];
+    for (const t of toestellen) {
+      store.tik_meldingen.push({ endpoint: t.endpoint, van: van.display_name, race: r.name, sessie, taal: t.taal ?? 'nl' });
+    }
+    tik.verstuurd = toestellen.length;
+    bewaren();
+    return { data: { verstuurd: toestellen.length, aan: ontvanger.display_name }, error: null };
+  },
+};
+
+export const createClient = () => ({ from: maakQuery, auth, rpc, storage, functions });

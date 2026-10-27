@@ -14,8 +14,8 @@
 //      weer precies kloppen;
 //   5. nog een keer terugzetten verandert niets (vult aan, dubbelt niet);
 //   6. een rij die na de kopie veranderde, blijft zoals hij nu is;
-//   7. de teller van races staat voorbij het hoogste nummer: een nieuwe race
-//      zonder id botst niet.
+//   7. de tellers van races en tikken staan voorbij het hoogste nummer: een
+//      nieuwe rij zonder id botst niet.
 
 import { spawnSync } from 'node:child_process';
 import { writeFileSync, mkdtempSync } from 'node:fs';
@@ -71,6 +71,8 @@ insert into public.pool_periodes (pool_id, seizoen, naam, van_ronde, tot_ronde, 
   ('00000000-0000-0000-0000-0000000000b1', 2026, 'Voorjaar', 1, 6, 'Een taart');
 insert into public.push_abonnementen (endpoint, member_id, pool_id, p256dh, auth) values
   ('https://push.voorbeeld/1', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000b1', 'sleutel', 'geheim');
+insert into public.tikken (id, pool_id, race_id, sessie, van_member, aan_member, verstuurd) values
+  (9001, '00000000-0000-0000-0000-0000000000b1', 102, 'quali', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000d2', 1);
 insert into public.site_beheerders (user_id) values ('00000000-0000-0000-0000-0000000000a1');
 insert into public.sync_runs (id, ok, bijgewerkt, samenvatting) values (7001, true, 3, 'Melbourne nagekeken');
 insert into public.bezoeken (dag, pad, aantal) values (current_date, '/app/', 12);
@@ -123,6 +125,10 @@ check('een rij die na de kopie veranderde, blijft zoals hij nu is',
 // ---- 7. de teller ------------------------------------------------------------------
 const id = psql(`insert into public.races (season, round, name) values (2026, 3, 'Suzuka') returning id;`);
 check('een nieuwe race na het terugzetten krijgt een nummer voorbij het hoogste', Number(id) > 102, id);
+const tik = psql(`insert into public.tikken (pool_id, race_id, sessie, van_member, aan_member)
+  values ('00000000-0000-0000-0000-0000000000b1', 101, 'race', '00000000-0000-0000-0000-0000000000d2',
+          '00000000-0000-0000-0000-0000000000d1') returning id;`);
+check('en een nieuwe tik ook', Number(tik) > 9001, tik);
 
 console.log(fouten ? `${fouten} fout(en)` : 'reservekopie terugzetten: alles klopt');
 process.exit(fouten ? 1 : 0);

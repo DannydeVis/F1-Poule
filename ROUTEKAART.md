@@ -706,10 +706,13 @@ een top 10 voor je invulde, en een kaart in de app op het beginscherm. Het
 beheer telt hoeveel spelers meldingen aan hebben (tegel **Meldingen aan**).
 Zie BEDIENING §11c.
 
-**Iemand een tik geven** (Danny, 26 oktober; wordt premium): bij een speler
-die nog niets invulde een knop die hem een melding stuurt, één per speler per
-race, en zonder meldingen bij die speler een bericht voor de groepsapp. De
-herinnerknop van de poulebaas (premium) gaat daarin op. Nog niet gebouwd.
+**Iemand een tik geven** (Danny, 26 oktober; premium). Gebouwd: op de
+weekendkaart een knop bij elke speler die zijn top 10 nog niet invulde, voor
+iedereen in een premiumpoule. De melding gaat direct via de functie `tik` bij
+Supabase, met de sleutel die de sync in de Vault zet; één tik per speler per
+race, en zonder meldingen bij die speler een berichtje om zelf te sturen. De
+herinnerknop van de poulebaas (een bericht voor de groepsapp) blijft ernaast
+staan. Zie BEDIENING §19, Iemand aantikken.
 
 Drie dingen om te weten als je hier verder bouwt:
 

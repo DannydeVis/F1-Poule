@@ -34,6 +34,10 @@ export const SEIZOENVRAGEN = ['kampioen', 'constructeur', 'winnaars', 'vierde_te
 // hele lijst. `taal` komt uit de kolom op push_abonnementen: de taal van de
 // app op dat toestel. Een waarde die hier niet staat (een oud abonnement, een
 // kapotte waarde) krijgt Nederlands, de brontaal.
+//
+// `tik` is de titel als iemand je aantikt (premium, 26 oktober). Die melding
+// komt niet van de sync maar van de functie `tik` (supabase/functions/tik), met
+// een kopie van dit bestand ernaast; test/tik-versturen.test.mjs houdt ze gelijk.
 const WOORDEN = {
   nl: {
     sprint: 'sprint', quali: 'kwalificatie', race: 'race',
@@ -43,6 +47,7 @@ const WOORDEN = {
     tekst: 'Je hebt hier nog niets ingevuld.',
     seizoen: 'Je seizoensvragen staan ook nog open.',
     alleenSeizoen: 'Je seizoensvragen staan nog open.',
+    tik: (naam) => `${naam} tikt je aan`,
   },
   en: {
     sprint: 'sprint', quali: 'qualifying', race: 'race',
@@ -52,6 +57,7 @@ const WOORDEN = {
     tekst: 'You have not filled anything in here yet.',
     seizoen: 'Your season questions are still open too.',
     alleenSeizoen: 'Your season questions are still open.',
+    tik: (naam) => `${naam} nudged you`,
   },
   de: {
     sprint: 'Sprint', quali: 'Qualifying', race: 'Rennen',
@@ -61,6 +67,7 @@ const WOORDEN = {
     tekst: 'Du hast hier noch nichts getippt.',
     seizoen: 'Deine Saisonfragen sind auch noch offen.',
     alleenSeizoen: 'Deine Saisonfragen sind noch offen.',
+    tik: (naam) => `${naam} stupst dich an`,
   },
   fr: {
     sprint: 'sprint', quali: 'qualifications', race: 'course',
@@ -70,6 +77,7 @@ const WOORDEN = {
     tekst: 'Vous n\u2019avez encore rien pronostiqué ici.',
     seizoen: 'Vos questions de la saison sont aussi encore ouvertes.',
     alleenSeizoen: 'Vos questions de la saison sont encore ouvertes.',
+    tik: (naam) => `${naam} vous fait signe`,
   },
   es: {
     sprint: 'sprint', quali: 'clasificación', race: 'carrera',
@@ -79,6 +87,7 @@ const WOORDEN = {
     tekst: 'Todavía no has hecho tu predicción aquí.',
     seizoen: 'Tus preguntas de la temporada también siguen abiertas.',
     alleenSeizoen: 'Tus preguntas de la temporada siguen abiertas.',
+    tik: (naam) => `${naam} te ha dado un toque`,
   },
   it: {
     sprint: 'sprint', quali: 'qualifiche', race: 'gara',
@@ -88,6 +97,7 @@ const WOORDEN = {
     tekst: 'Non hai ancora inserito nulla qui.',
     seizoen: 'Anche le tue domande della stagione sono ancora aperte.',
     alleenSeizoen: 'Le tue domande della stagione sono ancora aperte.',
+    tik: (naam) => `${naam} ti dà un colpetto`,
   },
   pt: {
     sprint: 'sprint', quali: 'classificação', race: 'corrida',
@@ -97,6 +107,7 @@ const WOORDEN = {
     tekst: 'Você ainda não deu seu palpite aqui.',
     seizoen: 'Suas perguntas da temporada também ainda estão abertas.',
     alleenSeizoen: 'Suas perguntas da temporada ainda estão abertas.',
+    tik: (naam) => `${naam} te cutucou`,
   },
 };
 export const woorden = (taal) => WOORDEN[taal] ?? WOORDEN.nl;

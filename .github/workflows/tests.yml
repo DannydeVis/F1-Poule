@@ -252,6 +252,16 @@ jobs:
           psql -d teams -v ON_ERROR_STOP=1 -f schema.sql
           psql -d teams -v ON_ERROR_STOP=1 -f test/teams.test.sql
 
+      # De tik (premium): alleen de server tikt, met premium, binnen de poule,
+      # voor een open sessie, één per ontvanger per race; de toestellen van de
+      # ontvanger, en de sleutel in de Vault.
+      - name: "tik: iemand aantikken die nog niets invulde"
+        run: |
+          createdb tik
+          psql -d tik -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d tik -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d tik -v ON_ERROR_STOP=1 -f test/tik.test.sql
+
       # Eigen vragen van de poulebaas (premium): zetten alleen de poulebaas met
       # premium voor de start, antwoorden voor jezelf voor de start, geheim tot
       # de start, de uitkomst pas daarna.

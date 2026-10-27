@@ -315,6 +315,10 @@
   .hide{display:none!important}
   .groepsapphulp{display:flex;flex-direction:column;gap:8px}
   .wachtop .herinner{margin-left:6px;min-height:32px;padding:0 12px;vertical-align:middle}
+  /* De tik (premium): een knop per speler die nog niets invulde. */
+  .tikrij{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .tikrij .knop.tik{width:auto;flex:0 0 auto;min-height:32px;padding:0 12px}
+  .tikrij .getikt{font-family:var(--mono);font-size:12px;color:var(--ink3);padding:0 4px}
   /* Afdrukken van de stand (premium): alleen de tabel, zwart op wit. */
   #afdruk{display:none}
   @media print{
@@ -3502,6 +3506,8 @@ const ENGELS = Object.fromEntries([
    + 'Apple or Mozilla) can send a notification to, plus two keys from that '
    + 'device. No name and no email address. That row goes away as soon as you '
    + 'turn notifications off.'],
+  ['<b>Als iemand je aantikt</b><br>In een poule met premium kun je een medespeler aantikken die nog niets invulde; die krijgt dan een melding. We bewaren wie wie aantikte, voor welke race en wanneer, zodat niemand twee keer per race wordt aangetikt. Na twee maanden gaat dat weg.',
+   '<b>If someone nudges you</b><br>In a pool with premium you can nudge a fellow player who has not filled anything in yet; they then get a notification. We store who nudged whom, for which race and when, so that nobody gets nudged twice per race. That is removed after two months.'],
   ['<b>Hoe lang</b><br>'
    + 'Zolang de poule bestaat. Hieronder kun je er zelf een eind aan maken.',
    '<b>How long</b><br>'
@@ -3880,6 +3886,33 @@ const ENGELS = Object.fromEntries([
   ['team', 'team'],
   ['totaal', 'total'],
   ['Herinner ze', 'Remind them'],
+  // De tik (premium, 26 oktober).
+  ['tik aan',
+   'nudge'],
+  ['Tik {naam} aan',
+   'Nudge {naam}'],
+  ['{naam} is aangetikt',
+   '{naam} has been nudged'],
+  ['Stuur {naam} een berichtje',
+   'Send {naam} a message'],
+  ['{naam} krijgt een seintje.',
+   '{naam} is getting a nudge.'],
+  ['{naam} heeft geen meldingen aan. Met ✉ stuur je zelf een berichtje.',
+   '{naam} has notifications off. With ✉ you send a message yourself.'],
+  ['{naam} is voor deze race al aangetikt.',
+   '{naam} has already been nudged for this race.'],
+  ['Aantikken lukt nog niet. Met ✉ stuur je {naam} zelf een berichtje.',
+   'Nudging does not work yet. With ✉ you send {naam} a message yourself.'],
+  ['Die speler heeft de top 10 net ingevuld.',
+   'That player has just filled in the top 10.'],
+  ['Voor deze sessie kun je nu niemand meer aantikken.',
+   'You can no longer nudge anyone for this session.'],
+  ['Aantikken kan alleen in een poule met premium.',
+   'Nudging only works in a pool with premium.'],
+  ['Aantikken lukte niet. Probeer het zo nog eens.',
+   'Nudging did not work. Try again in a moment.'],
+  ['{naam}, de top 10 voor {sessie} van {race} sluit {wanneer} en je hebt nog niets ingevuld.',
+   '{naam}, the top 10 for {sessie} at {race} closes {wanneer} and you have not filled anything in yet.'],
   // Het seizoen als verhaal.
   ['Bekijk je seizoen {jaar}', 'See your {jaar} season'],
   ['jouw seizoen', 'your season'],
@@ -4251,8 +4284,8 @@ const ENGELS = Object.fromEntries([
    'outcome of "{vraag}"'],
   ['Zet een eigen vraag bij dit weekend, met 2 tot 6 antwoorden om uit te kiezen.',
    'Add your own question to this weekend, with 2 to 6 answers to choose from.'],
-  ['Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met prijzen, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.',
-   'A league for your company, club or society? With premium it gets teams that play against each other, its own questions every weekend, interim standings with prizes, reminders and summaries for the group chat, the standings as a file, its own logo, its own colour and a sponsor line with a link. Email {adres} to turn it on.'],
+  ['Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met prijzen, een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.',
+   'A league for your company, club or society? With premium it gets teams that play against each other, its own questions every weekend, interim standings with prizes, a nudge for anyone who has not filled anything in, reminders and summaries for the group chat, the standings as a file, its own logo, its own colour and a sponsor line with a link. Email {adres} to turn it on.'],
   ['tussenklassementen',
    'interim standings'],
   ['ronde {van} tot en met {tot}',
@@ -5488,6 +5521,8 @@ const S = {
   seizoenkeuze: null, seizoenFout: '',   // de seizoenslaag, zolang die openstaat
   antwoorden: [], vragen: [], poulevragen: [], jokers: [],
   ingeleverd: [],       // open antwoorden van medespelers: alleen dát ze er zijn
+  tikken: [],           // wie er voor een open sessie al getikt is (premium)
+  tikDelen: {},         // 'race|speler': aangetikt zonder melding, dus zelf een berichtje sturen
   geladenOp: 0,         // wanneer laad() de poule voor het laatst ophaalde
   race:  null, tab: 'quali',
   keuze: { quali: [], race: [], winnaar: '', pole: '', duels: [],
@@ -6618,6 +6653,7 @@ async function laad() {
     S.antwoorden = demoAntwoorden();
     S.jokers = demoJokers;
     S.ingeleverd = [];
+    S.tikken = [];
     bouwPreds();
     return;
   }
@@ -6645,6 +6681,7 @@ async function laad() {
   S.leden = inhoud.data.leden ?? [];
   S.antwoorden = inhoud.data.antwoorden ?? [];
   S.ingeleverd = inhoud.data.ingeleverd ?? [];
+  S.tikken = inhoud.data.tikken ?? [];
   S.poulevragen = inhoud.data.poulevragen ?? [];
   S.jokers = inhoud.data.jokers ?? [];
   S.teams = inhoud.data.teams ?? [];
@@ -7624,6 +7661,7 @@ function toonApp() {
   knoopInstall(() => render());
   knoopMelding();
   knoopMeldingKaart();
+  knoopTik();
   knoopTaal();
   knoopTaalKeuze();
   knoopVerhaal();
@@ -7666,6 +7704,7 @@ function naarStartscherm() {
   vergeetPoule();
   S.poule = null; S.ik = null; S.races = []; S.leden = []; S.preds = [];
   S.antwoorden = []; S.ingeleverd = []; S.poulevragen = []; S.beheer = null; S.beheerFout = '';
+  S.tikken = []; S.tikDelen = {};
   S.omschrijving = null; S.omschrijvingFout = '';
   S.race = null; S.weergave = 'races';
   render();
@@ -7766,6 +7805,101 @@ function legePouleBlok() {
     <textarea class="veld tekstblok hide" id="deelcodeveld" readonly rows="3"
       aria-label="${T('Uitnodiging om zelf te kopiëren')}"></textarea>
   </div>`;
+}
+
+// ---- de tik (premium) -------------------------------------------
+// "Een tik functie als iemand nog niet z'n poule heeft ingevuld. Dat er een
+// notificatie word gegeven aan die persoon." (Danny, 26 oktober: premium.)
+//
+// In een poule met premium staat op de weekendkaart bij elke speler die zijn
+// top 10 nog niet invulde een knop. Die vraagt de functie `tik`
+// (supabase/functions/tik) hem een melding te sturen. De regels staan in de
+// database (tik_geven() in schema.sql); de app volgt ze alleen om geen knop te
+// tonen die toch niets doet. Eén tik per speler per race, van wie dan ook:
+// daarna staat er een vinkje bij zijn naam. Heeft hij geen meldingen aan (of
+// zijn de meldingen nog niet ingericht), dan wordt de knop een bericht om hem
+// zelf te sturen.
+const TIK_HORIZON = 7 * 864e5;   // tik_geven(): de sessie sluit binnen zeven dagen
+const tikKan = (volgend) => !DEMO && !!S.ik && !!mijnUid && premiumActief()
+  && Date.parse(volgend.iso) - Date.now() <= TIK_HORIZON;
+const alGetikt = (raceId, memberId) => (S.tikken ?? [])
+  .some(t => zelfde(t.race_id, raceId) && zelfde(t.aan, memberId));
+
+function tikRij(volgend, wacht) {
+  const r = volgend.race;
+  return `<div class="tikrij" data-tikrij>
+    <span class="label">${T('tik aan')}</span>
+    ${wacht.map(l => {
+      const naam = esc(l.display_name);
+      const id = esc(l.member_id);
+      if (S.tikDelen?.[`${r.id}|${l.member_id}`]) {
+        return `<button class="knop klein tik" data-tik-deel="${id}"
+          aria-label="${T('Stuur {naam} een berichtje', { naam })}">✉ ${naam}</button>`;
+      }
+      if (alGetikt(r.id, l.member_id)) {
+        return `<span class="getikt" data-getikt="${id}" title="${
+          T('{naam} is aangetikt', { naam })}">✓ ${naam}</span>`;
+      }
+      return `<button class="knop klein tik" data-tik="${id}" data-tik-race="${esc(r.id)}"
+        data-tik-sessie="${esc(volgend.welk)}" aria-label="${T('Tik {naam} aan', { naam })}">👉 ${naam}</button>`;
+    }).join('')}
+  </div>`;
+}
+
+// Wat de database terugzegt, in de taal van de app. De hint is vast; de tekst
+// van de database is Nederlands.
+const TIK_FOUT = {
+  tik_ingevuld: () => T('Die speler heeft de top 10 net ingevuld.'),
+  tik_dicht: () => T('Voor deze sessie kun je nu niemand meer aantikken.'),
+  tik_premium: () => T('Aantikken kan alleen in een poule met premium.'),
+  geen_sessie: () => T('De app kon je niet aanmelden. Herlaad de pagina en probeer het opnieuw.'),
+};
+
+async function tikGeven(knop) {
+  const { tik: aan, tikRace: race, tikSessie: sessie } = knop.dataset;
+  const naam = S.leden.find(l => zelfde(l.member_id, aan))?.display_name ?? '';
+  const sleutel = `${race}|${aan}`;
+  knop.disabled = true;
+  let uit = null, hint = '';
+  try {
+    const { data, error } = await db.functions.invoke('tik', { body: { race: Number(race), sessie, aan } });
+    if (error) {
+      // supabase-js geeft bij een weigering de Response mee; daarin staat de hint.
+      try { hint = (await error.context?.json?.())?.hint ?? ''; } catch { hint = ''; }
+    } else uit = data;
+  } catch { uit = null; }
+  if (uit || hint === 'tik_al') S.tikken = [...(S.tikken ?? []), { race_id: race, sessie, aan }];
+  if (uit && uit.verstuurd > 0) {
+    S.melding = T('{naam} krijgt een seintje.', { naam });
+  } else if (uit) {
+    S.tikDelen = { ...S.tikDelen, [sleutel]: true };
+    S.melding = T('{naam} heeft geen meldingen aan. Met ✉ stuur je zelf een berichtje.', { naam });
+  } else if (hint === 'tik_al') {
+    S.melding = T('{naam} is voor deze race al aangetikt.', { naam });
+  } else if (hint === 'tik_niet_ingericht') {
+    S.tikDelen = { ...S.tikDelen, [sleutel]: true };
+    S.melding = T('Aantikken lukt nog niet. Met ✉ stuur je {naam} zelf een berichtje.', { naam });
+  } else {
+    S.melding = TIK_FOUT[hint]?.() ?? T('Aantikken lukte niet. Probeer het zo nog eens.');
+  }
+  render();
+}
+
+// Het bericht als er geen melding uit kon: voor de groepsapp of een appje.
+function tikDeelTekst(memberId) {
+  const volgend = eerstvolgende();
+  if (!volgend) return '';
+  const naam = S.leden.find(l => zelfde(l.member_id, memberId))?.display_name ?? '';
+  return `👉 ${T('{naam}, de top 10 voor {sessie} van {race} sluit {wanneer} en je hebt nog niets ingevuld.', {
+    naam, sessie: T(SESSIES[volgend.welk].wat), race: volgend.race.name, wanneer: sluitTekst(volgend.iso) })}\n`
+    + `${linkBasis()}?code=${S.poule.join_code}`;
+}
+
+function knoopTik() {
+  app.querySelectorAll('[data-tik]').forEach(knop => { knop.onclick = () => tikGeven(knop); });
+  app.querySelectorAll('[data-tik-deel]').forEach(knop => {
+    knop.onclick = () => deelTekst(tikDeelTekst(knop.dataset.tikDeel), knop);
+  });
 }
 
 // ---- meldingen aanzetten, op het goede moment -----------------
@@ -8019,6 +8153,7 @@ function hero(volgend) {
               wie: wacht.map(l => esc(l.display_name)).join(', ') })
           : T('iedereen heeft zijn top 10')}${wacht.length && groepsappHulp()
           ? ` <button class="knop klein herinner" data-herinner>${T('Herinner ze')}</button>` : ''}</div>` : ''}
+      ${wacht.length && tikKan(volgend) ? tikRij(volgend, wacht) : ''}
       <button class="knop primair" data-naar-race="${esc(r.id)}">${
         !teDoen ? T('Je inzending bekijken')
         : teDoen.staat === 'deels'
@@ -9419,6 +9554,10 @@ function privacyBlok() {
         + '(Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee '
         + 'sleutels van dat toestel. Geen naam en geen mailadres. Die regel gaat weg '
         + 'zodra je meldingen uitzet.')}</p>` : ''}
+      ${premiumActief() ? `<p style="margin:0 0 10px" data-privacy-tik>${
+        T('<b>Als iemand je aantikt</b><br>In een poule met premium kun je een medespeler aantikken die nog '
+        + 'niets invulde; die krijgt dan een melding. We bewaren wie wie aantikte, voor welke race en wanneer, '
+        + 'zodat niemand twee keer per race wordt aangetikt. Na twee maanden gaat dat weg.')}</p>` : ''}
       <p style="margin:0 0 10px">${T('<b>Hoe lang</b><br>'
         + 'Zolang de poule bestaat. Hieronder kun je er zelf een eind aan maken.')}</p>
       <p style="margin:0">${T('<b>Inzien</b><br>'
@@ -9643,7 +9782,8 @@ function profielBlok() {
     <span class="label">${T('eigen logo en kleur')}</span>
     <p class="zacht" style="margin:0" data-premium-uitleg>${T('Een poule voor je bedrijf, club of '
       + 'vereniging? Met premium krijgt hij teams die tegen elkaar spelen, eigen vragen per weekend, '
-      + 'tussenklassementen met prijzen, herinneringen en samenvattingen voor de groepsapp, de stand als '
+      + 'tussenklassementen met prijzen, een tik voor wie nog niets invulde, herinneringen en '
+      + 'samenvattingen voor de groepsapp, de stand als '
       + 'bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} '
       + 'om het aan te zetten.', { adres: mail })}</p>`;
   }

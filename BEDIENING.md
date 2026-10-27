@@ -1680,7 +1680,8 @@ klaarstaat. Ontbreekt die, dan klaagt er niets, maar komt er ook niets.
 Wat er nodig is:
 
 1. Secret `VAPID_PRIVE`: de privéhelft van het paar. Die staat nergens in de
-   repo; Danny heeft hem.
+   repo; Danny heeft hem. Sinds 26 oktober zet de sync hem ook versleuteld in
+   de Vault van Supabase, voor de tik (§19, Iemand aantikken).
 2. Secret `PUSH_CONTACT`: `mailto:contact@predicttherace.com`.
 
 Hoe dat paar ooit gemaakt is, en hoe je een nieuw maakt:
@@ -2896,6 +2897,43 @@ de groep gebruikt); op een computer gaat de tekst naar het klembord.
 
 Er wordt niets opgeslagen: het is alleen opmaak van wat elke speler in de app
 al ziet. Daarom staat de premiumgrens hier alleen in de app.
+
+### Iemand aantikken (sinds 26 oktober)
+
+Met premium staat op de weekendkaart onder "nog geen top 10" een rij **tik
+aan**: een knop per speler die zijn top 10 voor de eerstvolgende sessie nog
+niet invulde, voor iedereen in de poule (niet alleen de poulebaas). Een tik
+stuurt die speler meteen een melding: "Danny tikt je aan", met de sessie, de
+race en wanneer hij sluit, op al zijn toestellen en in hun taal.
+
+- **Eén tik per speler per race**, van wie dan ook. Daarna staat er een vinkje
+  bij zijn naam, voor iedereen.
+- **Geen meldingen aan** bij die speler (of nog niet ingericht, zie hieronder):
+  dan wordt de knop ✉, een berichtje om hem zelf te sturen, met de link.
+- Alleen voor een sessie die **binnen zeven dagen** sluit, en niet bij jezelf.
+
+Hoe het werkt: de app vraagt de functie `tik` bij Supabase
+(`supabase/functions/tik`, een Edge Function) om de melding. Die kijkt wie je
+bent, legt de tik vast met `tik_geven()` in de database (daar staan de regels:
+premium, dezelfde poule, open sessie, nog niets ingevuld, één per race) en
+verstuurt de melding met de sleutel uit de Vault. Wie wie aantikte staat in de
+tabel `tikken` en gaat na twee maanden weg (privacyverklaring). Het beheer
+hoeft er niets voor te doen.
+
+**De sleutel.** Een melding versturen kan alleen met de privésleutel van de
+meldingen (`VAPID_PRIVE`). Die staat als GitHub-secret; de sync zet hem sinds
+26 oktober ook versleuteld in de **Vault** van Supabase, met de publieke helft
+en het contact (Danny: "Ja, ook in Supabase"). Alleen de server kan hem daar
+lezen. Na een nieuwe sleutel zet de volgende sync de nieuwe erin. Staat hij er
+nog niet, dan zegt de app "aantikken lukt nog niet" en biedt hij het berichtje
+aan; er wordt dan niets vastgelegd.
+
+**De functie uitrollen** (na een wijziging in `supabase/functions/tik`): via de
+MCP van Supabase (`deploy_edge_function`, naam `tik`, verify_jwt aan, met
+`index.ts`, `tik-kern.mjs`, `push-web.mjs` en `herinneringen.mjs`), of met de
+Supabase CLI: `supabase functions deploy tik`. `herinneringen.mjs` is een kopie
+van `scripts/herinneringen.mjs`; `test/tik-versturen.test.mjs` zakt als ze
+uit elkaar lopen.
 
 ### Waar je het ziet
 
