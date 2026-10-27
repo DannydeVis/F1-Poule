@@ -3512,6 +3512,10 @@ const ENGELS = Object.fromEntries([
    + 'Zolang de poule bestaat. Hieronder kun je er zelf een eind aan maken.',
    '<b>How long</b><br>'
    + 'As long as the pool exists. Below you can put an end to it yourself.'],
+  ['Voor als er iets misgaat, wordt alles elke nacht versleuteld gekopieerd, naar GitHub. '
+   + 'Die kopie wordt na 90 dagen weggegooid; wat je verwijdert, staat daar dus nog hoogstens 90 dagen in.',
+   'In case something goes wrong, everything is copied every night, encrypted, to GitHub. '
+   + 'That copy is deleted after 90 days, so anything you delete stays in it for at most 90 days.'],
   ['<b>Inzien</b><br>'
    + 'Alles wat de app van je weet staat in de app zelf: je naam, je '
    + 'voorspellingen en je punten.',
@@ -9558,8 +9562,10 @@ function privacyBlok() {
         T('<b>Als iemand je aantikt</b><br>In een poule met premium kun je een medespeler aantikken die nog '
         + 'niets invulde; die krijgt dan een melding. We bewaren wie wie aantikte, voor welke race en wanneer, '
         + 'zodat niemand twee keer per race wordt aangetikt. Na twee maanden gaat dat weg.')}</p>` : ''}
-      <p style="margin:0 0 10px">${T('<b>Hoe lang</b><br>'
-        + 'Zolang de poule bestaat. Hieronder kun je er zelf een eind aan maken.')}</p>
+      <p style="margin:0 0 10px" data-privacy-kopie>${T('<b>Hoe lang</b><br>'
+        + 'Zolang de poule bestaat. Hieronder kun je er zelf een eind aan maken.')} ${
+        T('Voor als er iets misgaat, wordt alles elke nacht versleuteld gekopieerd, naar GitHub. '
+        + 'Die kopie wordt na 90 dagen weggegooid; wat je verwijdert, staat daar dus nog hoogstens 90 dagen in.')}</p>
       <p style="margin:0">${T('<b>Inzien</b><br>'
         + 'Alles wat de app van je weet staat in de app zelf: je naam, je '
         + 'voorspellingen en je punten.')}${PRIVACY_CONTACT ? `<br>

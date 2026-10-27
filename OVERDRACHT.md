@@ -11636,8 +11636,30 @@ weigert PostgreSQL de eigen nummers bij het terugzetten); `schema.sql` zet dat
 ook om in een database die de eerste versie al had, en in productie is het
 gedaan. `test/reservekopie-terugzetten.mjs` vult en controleert nu ook een tik.
 Let op: de reservekopie bewaart 90 dagen, langer dan de twee maanden van een
-tik (en de vijf weken van `actief`). De privacyverklaring noemt de reservekopie
-niet; dat was al zo.
+tik (en de vijf weken van `actief`). Sinds 27 oktober zegt de
+privacyverklaring dat ook (hieronder).
 
 **Danny moet:** niets. **Na de merge:** de sync één keer draaien, dan staat de
 sleutel in de Vault.
+
+## De reservekopie in de privacyverklaring (27 oktober)
+
+**Aanleiding.** Bij de tik bleek dat de verklaring "na twee maanden weg", "na
+vijf weken" en "niet terug te draaien" belooft, terwijl de nachtelijke
+reservekopie (BEDIENING §13a) alles 90 dagen bewaart, ook wat iemand
+verwijdert. Die kopie draait echt: elke nacht een bijlage van ongeveer 20 kB.
+
+**Wat er nu staat.** In de app, onder "Hoe lang": "Voor als er iets misgaat,
+wordt alles elke nacht versleuteld gekopieerd, naar GitHub. Die kopie wordt na
+90 dagen weggegooid; wat je verwijdert, staat daar dus nog hoogstens 90 dagen
+in." (zeven talen; zonder het woord database, voor `gewone-taal.test.mjs`). Op
+de site (NL en EN) hetzelfde met iets meer uitleg: versleuteld, bij GitHub,
+alleen om terug te zetten. Bijgewerkt op 27 oktober.
+
+**Tests.** `privacy.test.mjs` kijkt of de zin in de app staat;
+`privacypagina.test.mjs` leest `retention-days` uit `reservekopie.yml` en eist
+dat app en site dat getal noemen. Beide mutaties (zin weg, ander getal)
+gevangen.
+
+**Danny moet:** niets.
+

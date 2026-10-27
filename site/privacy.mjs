@@ -21,7 +21,7 @@
 // Waar iemand terecht kan met een vraag over zijn gegevens. Staat ook in de
 // app (PRIVACY_CONTACT); de test houdt die twee gelijk.
 export const CONTACT = 'contact@predicttherace.com';
-export const PRIVACY_BIJGEWERKT = '2026-10-26';
+export const PRIVACY_BIJGEWERKT = '2026-10-27';
 
 export const PRIVACY = {
   nl: {
@@ -30,7 +30,7 @@ export const PRIVACY = {
     omschrijving: 'Wat Predict the Race van je bewaart, waar het staat, wie het ziet en hoe je het weer weg krijgt. Geen advertenties, statistieken alleen met je ja.',
     kop: 'Wat Predict the Race van je weet',
     intro: 'Predict the Race is een gratis F1-voorspelspel voor vriendengroepen. Het bewaart zo weinig mogelijk, en wat het bewaart staat hieronder, in gewone taal.',
-    bijgewerkt: 'Bijgewerkt op 24 oktober 2026',
+    bijgewerkt: 'Bijgewerkt op 27 oktober 2026',
     secties: [
       ['Wat er bewaard wordt', [
         'De naam die je in een poule kiest, je voorspellingen en je punten. En een anoniem account: een willekeurig nummer, zodat de database weet welke voorspellingen van jou zijn.',
@@ -70,6 +70,7 @@ export const PRIVACY = {
       ]],
       ['Hoe lang', [
         'Zolang de poule bestaat. Je kunt er zelf een eind aan maken in de app, onder Profiel, bij "wat de app van je weet". Daar staan twee knoppen. "Mijn account verwijderen" haalt je account en je mailadres weg; je spelers blijven met naam en punten in de poule staan, zodat de stand van de anderen blijft kloppen. "Alles verwijderen" haalt ook je spelers en al je voorspellingen weg, in elke poule. Dat is niet terug te draaien.',
+        'Voor als er iets misgaat, wordt de database elke nacht gekopieerd. Die reservekopie is versleuteld, staat bij GitHub en wordt na 90 dagen weggegooid. Hij is er alleen om de database mee terug te zetten. Wat je verwijdert, staat daar dus nog hoogstens 90 dagen in.',
       ]],
       ['Inzien, vragen en klagen', [
         'Alles wat de app van je weet staat in de app zelf: je naam, je voorspellingen en je punten. Een vraag, of wil je dat er iets gecorrigeerd of weggehaald wordt? Mail naar {contact}.',
@@ -90,7 +91,7 @@ export const PRIVACY = {
     omschrijving: 'What Predict the Race keeps about you, where it lives, who sees it and how to get it removed. No ads, statistics only with your yes.',
     kop: 'What Predict the Race knows about you',
     intro: 'Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.',
-    bijgewerkt: 'Updated on 24 October 2026',
+    bijgewerkt: 'Updated on 27 October 2026',
     secties: [
       ['What is kept', [
         'The name you pick in a pool, your predictions and your points. And an anonymous account: a random number, so the database knows which predictions are yours.',
@@ -130,6 +131,7 @@ export const PRIVACY = {
       ]],
       ['How long', [
         'As long as the pool exists. You can put an end to it yourself in the app, under Profile, at "what the app knows about you". There are two buttons there. "Delete my account" removes your account and your email address; your players stay in the pool with their name and points, so the standings of the others stay right. "Delete everything" also removes your players and all your predictions, in every pool. That cannot be undone.',
+        'In case something goes wrong, the database is copied every night. That backup is encrypted, stored at GitHub and deleted after 90 days. It is only there to restore the database. So anything you delete stays in it for at most 90 days.',
       ]],
       ['Access, questions and complaints', [
         'Everything the app knows about you is in the app itself: your name, your predictions and your points. A question, or want something corrected or removed? Email {contact}.',

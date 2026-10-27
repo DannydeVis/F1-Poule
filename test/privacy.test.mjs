@@ -44,6 +44,10 @@ check('en dat de lettertypen in de app zelf zitten',
   verklaring.includes('lettertypen staan in de app zelf'));
 check('en het is eerlijk over het enige dat nog van buiten komt',
   verklaring.includes('esm.sh') && verklaring.includes('IP-adres'));
+// De reservekopie (scripts/reservekopie.mjs) bewaart alles 90 dagen, ook wat je
+// verwijdert. Dat hoort erbij te staan, anders belooft "weg" meer dan waar is.
+check('en dat de nachtelijke reservekopie 90 dagen bewaard blijft',
+  (await tekst('[data-privacy-kopie]')).includes('Die kopie wordt na 90 dagen weggegooid'));
 // De verklaring mag dit pas beweren zolang het waar is. Deze controle kijkt
 // naar de markup: geen <link>, <script src> of <img> naar een vreemde host.
 // Zou er weer een verwijzing naar Google Fonts in sluipen, dan valt deze test
