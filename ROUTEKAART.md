@@ -706,6 +706,12 @@ een top 10 voor je invulde, en een kaart in de app op het beginscherm. Het
 beheer telt hoeveel spelers meldingen aan hebben (tegel **Meldingen aan**).
 Zie BEDIENING §11c.
 
+**Toegang** (Danny, 28 oktober: "Moet dat niet beter afgeschermd worden?",
+over de code in de uitnodigingslink). Gebouwd, voor iedereen: de poulebaas
+maakt onder Poule een nieuwe code (de oude en oude links werken dan niet meer)
+of zet de poule op slot (niemand kan er meer bij, ook niet met de code). Zie
+BEDIENING §5a2.
+
 **Iemand een tik geven** (Danny, 26 oktober; premium). Gebouwd: op de
 racescherm, in de lijst De poule (eerst op de weekendkaart; verhuisd op 27
 oktober, voor een poule met honderd man), een knop bij elke speler die zijn

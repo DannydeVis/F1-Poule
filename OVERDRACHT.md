@@ -11733,3 +11733,45 @@ zonder naar boven, en "Tik aan" zonder `knoopTik()` in het paneel.
 
 **Danny moet:** niets.
 
+## Toegang: een nieuwe code, of op slot (28 oktober)
+
+**Aanleiding.** Danny, bij de herinnering in WhatsApp met de link erin: "de
+code staat heel duidelijk in de link. Is dit geen lek oid? Moet dat niet beter
+afgeschermd worden?" Mijn antwoord: geen lek, de code is de uitnodiging (wie hem
+heeft kan meekijken en meedoen, niet meer), maar de poulebaas mist een uitweg
+als hij ergens belandt waar hij niet hoort. Danny: "Ja" op allebei.
+
+**Database (`schema.sql`).**
+- `pools.op_slot` (standaard uit) en `pools_slot_niet_openbaar`: openbaar en op
+  slot tegelijk kan niet.
+- `poule_nieuwe_code(p_pool)`: alleen de poulebaas (`mag_beheren`), met een
+  sessie, niet voor de open poule (`code_vast`). Zes tekens uit
+  `gen_random_uuid()`, nooit een code die al bestaat.
+- `pools_misbruik_bewaken()` weigert een andere `join_code` via de API
+  (`code_via_functie`): eerst kon een poulebaas zelf elke code zetten.
+- `poule_meedoen()` weigert op slot (`poule_op_slot`), ook een extra speler.
+- `poule_ophalen()` geeft wie er niet in zit (en er geen speler in zette) van
+  een poule op slot alleen `{"op_slot": true}`: geen naam, geen spelers.
+- `poule_claim_speler()` weigert op slot ook (`poule_op_slot`), behalve voor wie
+  de poule toch al ziet. Anders kwam iemand die de poule bekeek toen hij nog
+  open was er alsnog in, met het member_id van een speler zonder account.
+- De controletabel: "toegang: nieuwe code en op slot".
+- In productie gezet via MCP.
+
+**App.** `toegangBlok()` onder Poule voor de poulebaas, na "vindbaar voor
+iedereen": **Maak een nieuwe code** (twee keer tikken, net als account
+verwijderen) en **Zet op slot** / **Haal van het slot** (zet ook `is_public`
+uit). Op slot staat bij de code dat er niemand meer bij kan in plaats van de
+uitnodigingslink, en kan openbaar niet. `pouleBij()` geeft `opSlot` door, zodat
+de code intikken, een link, het opstarten en het wisselen van poule zeggen dat
+de poule op slot is in plaats van dat de code niet bestaat. `laad()` houdt de
+code in het lijstje van je poules bij (`werkCodeInLijstBij()`). 17 nieuwe zinnen
+in zeven talen.
+
+**Tests.** `test/toegang.test.sql` (24 controles, in tests.yml; tien mutaties
+op de database gevangen) en `test/toegang.test.mjs` (22, in de browser; zeven
+mutaties op de app gevangen). De nagebootste Supabase kent `op_slot` (ook bij
+claimen) en `poule_nieuwe_code()`.
+
+**Danny moet:** niets.
+

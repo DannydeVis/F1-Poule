@@ -404,6 +404,37 @@ Let op wat dit lijstje **niet** is: het staat in `localStorage`, dus het is per
 toestel. Wie op zijn telefoon én op zijn laptop speelt heeft twee lijstjes. Eén
 lijst over al je toestellen vraagt om een login; zie OVERDRACHT.md.
 
+### 5a2. Toegang: een nieuwe code, of op slot (sinds 28 oktober)
+
+De code (en de link met `?code=`) is de uitnodiging: wie hem heeft, kan
+meekijken en meedoen. Belandt hij waar hij niet hoort, dan heeft de poulebaas
+onder **Poule**, bij **toegang**, twee knoppen:
+
+- **Maak een nieuwe code.** Twee keer tikken. De oude code en elke link met de
+  oude code werken daarna niet meer; wie al meedoet merkt er niets van (de app
+  haalt een poule op met zijn id). De database kiest de code
+  (`poule_nieuwe_code()`, zes tekens); rechtstreeks via de API een code zetten
+  kan niet meer. De open poule (80C98C) houdt zijn code, want die staat op de
+  site.
+- **Zet op slot.** Dan kan niemand meer meedoen, ook niet met de code en ook
+  niet als extra speler vanaf een toestel dat al meedoet, en ziet wie er niet
+  in zit er niets meer van (`poule_ophalen()` geeft dan alleen `op_slot`). Een
+  speler zonder account overnemen kan dan ook alleen nog vanaf een toestel dat
+  de poule ziet (`poule_claim_speler()`). Wie met de code of een link komt,
+  krijgt te horen dat de poule op slot is. Een
+  openbare poule op slot zetten maakt hem meteen ook privé: allebei kan niet
+  (`pools_slot_niet_openbaar`). **Haal van het slot** zet de deur weer open.
+
+Voor iedereen gratis. De controletabel heeft er een regel voor: "toegang:
+nieuwe code en op slot".
+
+Moet het voor een poule zonder dat de poulebaas iets doet (bijvoorbeeld als
+hij niet reageert): in de SQL-editor van Supabase
+`update pools set op_slot = true, is_public = false where join_code = 'XXXXXX';`
+of een nieuwe code met
+`update pools set join_code = upper(substr(md5(gen_random_uuid()::text), 1, 6)) where join_code = 'XXXXXX';`
+(de SQL-editor mag dat wel; de app en de API niet).
+
 ### 5b. De inlog op het beginscherm
 
 Onder het codeveld staat een blok **inloggen**: een Google-knop met het

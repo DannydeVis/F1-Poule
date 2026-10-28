@@ -67,7 +67,8 @@ begin
                       'jokeraantal: grens en bewaking',
                       'spelers: niemand gebruikt andermans speler of naam',
                       'voorspellingen geheim tot de deadline',
-                      'premium: kolommen, bewaking en logo-opslag');
+                      'premium: kolommen, bewaking en logo-opslag',
+                      'toegang: nieuwe code en op slot');
   if gevonden is not null then
     raise exception 'gezakt: deze regels zeggen geen ok: %', gevonden;
   end if;
