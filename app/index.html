@@ -3176,6 +3176,41 @@ const ENGELS = Object.fromEntries([
    'The pool is public now.'],
   ['De poule is weer privé.',
    'The pool is private again.'],
+  // Toegang (28 oktober): een nieuwe code, en op slot.
+  ['Deze poule is op slot: er kan niemand meer bij. Vraag de poulebaas om hem van het slot te halen.',
+   'This pool is locked: nobody else can join. Ask the pool owner to unlock it.'],
+  ['Alleen de poulebaas kan een nieuwe code maken.',
+   'Only the pool owner can make a new code.'],
+  ['De code van de open poule staat op de site en blijft dezelfde.',
+   'The code of the open pool is on the website and stays the same.'],
+  ['toegang',
+   'access'],
+  ['Staat de uitnodiging of de code ergens waar hij niet hoort? Maak een nieuwe code: de oude code en elke link met de oude code werken dan niet meer. Wie al meedoet, merkt er niets van.',
+   'Has the invitation or the code ended up somewhere it does not belong? Make a new code: the old code and every link with it stop working. Players who already joined will not notice a thing.'],
+  ['Maak een nieuwe code',
+   'Make a new code'],
+  ['Nieuwe code maken? Tik nog een keer',
+   'Make a new code? Tap again'],
+  ['Nieuwe code: {code}. De oude code en oude links werken niet meer.',
+   'New code: {code}. The old code and old links no longer work.'],
+  ['De poule is op slot: er kan niemand meer bij, ook niet met de code.',
+   'The pool is locked: nobody else can join, not even with the code.'],
+  ['Op slot kan er niemand meer bij, ook niet met de code, en ziet wie er niet in zit er niets meer van. Wie al meedoet, merkt er niets van.',
+   'When locked, nobody else can join, not even with the code, and people outside the pool can no longer see it. Players who already joined will not notice a thing.'],
+  ['Hij staat dan ook niet meer in de lijst met openbare poules.',
+   'It will also no longer be in the list of public pools.'],
+  ['Zet op slot',
+   'Lock'],
+  ['Haal van het slot',
+   'Unlock'],
+  ['De poule is nu op slot.',
+   'The pool is now locked.'],
+  ['De poule is weer open voor wie de code heeft.',
+   'The pool is open again to anyone with the code.'],
+  ['De poule is op slot: er kan niemand meer bij. De poulebaas kan hem van het slot halen.',
+   'The pool is locked: nobody else can join. The pool owner can unlock it.'],
+  ['Een poule op slot kan niet openbaar. Haal hem eerst van het slot.',
+   'A locked pool cannot be public. Unlock it first.'],
   ['Die poule bestaat niet meer.',
    'That pool no longer exists.'],
   ['Je bent nu de poulebaas van deze poule.',
@@ -5908,6 +5943,11 @@ function uitleg(error) {
   if (hint === 'woordfilter') {
     return T('Die naam kan niet in een openbare poule. Kies een andere.');
   }
+  // Toegang (28 oktober): op slot, en een nieuwe code (schema.sql,
+  // poule_meedoen() en poule_nieuwe_code()).
+  if (hint === 'poule_op_slot') return opSlotTekst();
+  if (hint === 'geen_poulebaas') return T('Alleen de poulebaas kan een nieuwe code maken.');
+  if (hint === 'code_vast') return T('De code van de open poule staat op de site en blijft dezelfde.');
   // De trigger pools_seizoen_bewaken() in schema.sql.
   if (hint === 'seizoen_stap') return T('Een poule gaat één seizoen tegelijk vooruit.');
   if (hint === 'seizoen_niet_klaar') {
@@ -6681,6 +6721,7 @@ async function laad() {
   const stuk = [races, vragen, inhoud].find(r => r.error);
   if (stuk) throw new Error(uitleg(stuk.error));
   if (!inhoud.data) throw new Error(T('Deze poule bestaat niet meer.'));
+  if (!inhoud.data.poule && inhoud.data.op_slot) throw new Error(opSlotTekst());
   S.alleRaces = races.data ?? [];
   S.vragen = vragen.data ?? [];
   S.leden = inhoud.data.leden ?? [];
@@ -6696,7 +6737,7 @@ async function laad() {
   S.geladenOp = Date.now();
   // De poule zelf komt mee, dus een omschrijving die iemand anders net
   // aanpaste staat er meteen goed bij.
-  if (inhoud.data.poule) S.poule = inhoud.data.poule;
+  if (inhoud.data.poule) { S.poule = inhoud.data.poule; werkCodeInLijstBij(S.poule); }
   kiesSeizoen(S.seizoen);
   bouwPreds();
 }
@@ -6737,11 +6778,27 @@ function gespeeldeSeizoenen() {
 // uitleg boven poule_ophalen() in schema.sql.
 const pouleOphalen = (argumenten) => db.rpc('poule_ophalen', argumenten);
 
-// Alleen de poule zelf, voor de schermen die verder niets nodig hebben.
+// Alleen de poule zelf, voor de schermen die verder niets nodig hebben. Is
+// hij op slot en zit jij er niet in, dan komt alleen dát mee (zie
+// poule_ophalen() in schema.sql): `opSlot`, zodat het scherm dat kan zeggen
+// in plaats van "die code bestaat niet".
 async function pouleBij(argumenten) {
   const { data, error } = await pouleOphalen(argumenten);
   if (error) return { data: null, error };
-  return { data: data?.poule ?? null, error: null };
+  return { data: data?.poule ?? null, opSlot: !data?.poule && !!data?.op_slot, error: null };
+}
+const opSlotTekst = () => T('Deze poule is op slot: er kan niemand meer bij. '
+  + 'Vraag de poulebaas om hem van het slot te halen.');
+
+// De code in het lijstje van je poules ("Andere poule") gelijk houden met de
+// poule zelf, zonder de volgorde te veranderen. Na een nieuwe code (of als
+// de poulebaas er een maakte op een ander toestel).
+function werkCodeInLijstBij(poule) {
+  const lijst = mijnPoules();
+  const i = lijst.findIndex(p => zelfde(p.id, poule?.id));
+  if (i < 0 || lijst[i].join_code === poule.join_code) return;
+  lijst[i] = { ...lijst[i], join_code: poule.join_code };
+  schrijf(POULES, JSON.stringify(lijst));
 }
 
 async function bewaar() {
@@ -7703,6 +7760,7 @@ function toonApp() {
   knoopPeriodes();
   knoopGroepsapp();
   knoopOpenbaar();
+  knoopToegang();
   knoopAutofill();
   knoopJokers();
   knoopContrair();
@@ -8813,11 +8871,13 @@ function poulePagina(rijen) {
     <div class="hero">
       <span class="label">${T('poulecode')}</span>
       <div class="veld code" style="display:grid;place-items:center">${esc(S.poule.join_code ?? '—')}</div>
-      <p class="zacht" style="margin:0">${T('Deel deze code met wie mee wil doen, of '
+      ${S.poule.op_slot ? `<p class="zacht" style="margin:0" data-op-slot>${
+        T('De poule is op slot: er kan niemand meer bij. De poulebaas kan hem van het slot halen.')}</p>`
+      : `<p class="zacht" style="margin:0">${T('Deel deze code met wie mee wil doen, of '
         + 'stuur de link hieronder — dan hoeft niemand hem over te tikken.')}</p>
       <button class="knop klein" id="uitnodiging">${T('Kopieer uitnodigingslink')}</button>
       <textarea class="veld tekstblok hide" id="uitnodigingveld" readonly rows="3"
-        aria-label="${T('Uitnodiging om zelf te kopiëren')}"></textarea>
+        aria-label="${T('Uitnodiging om zelf te kopiëren')}"></textarea>`}
     </div>
     <span class="label">${T('spelers')}</span>
     ${rijen.length ? `<div class="groep">${rijen.map((r, i) => spelerRij(r, i)).join('')}</div>`
@@ -8832,6 +8892,7 @@ function poulePagina(rijen) {
     ${periodesBeheer()}
     ${groepsappBlok()}
     ${openbaarBlok()}
+    ${toegangBlok()}
     ${autofillBlok()}
     ${jokersBlok()}
     ${contrairBlok()}
@@ -10390,6 +10451,14 @@ function knoopProfiel() {
 function openbaarBlok() {
   if (!magBeheren()) return '';
   const aan = !!S.poule.is_public;
+  // Openbaar betekent dat iedereen erbij kan; op slot juist niet
+  // (pools_slot_niet_openbaar in schema.sql).
+  if (S.poule.op_slot) {
+    return `
+    <div class="scheiding"></div>
+    <span class="label">${T('vindbaar voor iedereen')}</span>
+    <p class="zacht" style="margin:0">${T('Een poule op slot kan niet openbaar. Haal hem eerst van het slot.')}</p>`;
+  }
   return `
     <div class="scheiding"></div>
     <span class="label">${T('vindbaar voor iedereen')}</span>
@@ -10400,6 +10469,83 @@ function openbaarBlok() {
         + 'ook vindbaar zonder code.')}</p>
     <button class="knop klein" id="openbaarKnop">${
       aan ? T('Maak weer privé') : T('Maak openbaar')}</button>`;
+}
+
+// ---- toegang: een nieuwe code, of op slot ------------------------
+// Danny, 28 oktober, over de code in de uitnodigingslink: "Moet dat niet
+// beter afgeschermd worden?" De code is de uitnodiging. Belandt hij waar hij
+// niet hoort, dan maakt de poulebaas hier een nieuwe (de oude code en elke
+// link met de oude werken dan niet meer), of zet hij de poule op slot: dan
+// kan er niemand meer bij en ziet wie er niet in zit er niets meer van. Wie al
+// meedoet merkt van allebei niets. De regels staan in de database
+// (poule_nieuwe_code(), en op_slot in poule_meedoen() en poule_ophalen()).
+// De open poule houdt zijn code: die staat op de site.
+const OPEN_POULE = '80C98C';
+function toegangBlok() {
+  if (!magBeheren()) return '';
+  const slot = !!S.poule.op_slot;
+  return `
+    <div class="scheiding"></div>
+    <span class="label">${T('toegang')}</span>
+    ${S.poule.join_code === OPEN_POULE ? '' : `<p class="zacht" style="margin:0">${
+      T('Staat de uitnodiging of de code ergens waar hij niet hoort? Maak een nieuwe code: '
+        + 'de oude code en elke link met de oude code werken dan niet meer. Wie al meedoet, '
+        + 'merkt er niets van.')}</p>
+    <button class="knop klein" id="nieuweCode">${T('Maak een nieuwe code')}</button>`}
+    <p class="zacht" style="margin:0" data-slot>${slot
+      ? T('De poule is op slot: er kan niemand meer bij, ook niet met de code.')
+      : T('Op slot kan er niemand meer bij, ook niet met de code, en ziet wie er niet in zit '
+        + 'er niets meer van. Wie al meedoet, merkt er niets van.')
+        + (S.poule.is_public ? ` ${T('Hij staat dan ook niet meer in de lijst met openbare poules.')}` : '')}</p>
+    <button class="knop klein" id="slotKnop">${slot ? T('Haal van het slot') : T('Zet op slot')}</button>`;
+}
+
+function knoopToegang() {
+  const code = app.querySelector('#nieuweCode');
+  if (code) code.onclick = async () => {
+    // Eerst vragen: wie op een oude link vertrouwt, staat daarna voor een
+    // dichte deur. Net als bij het verwijderen van je account.
+    if (code.dataset.zeker !== 'ja') {
+      code.dataset.zeker = 'ja';
+      code.textContent = T('Nieuwe code maken? Tik nog een keer');
+      setTimeout(() => {
+        if (!code.isConnected) return;
+        code.dataset.zeker = ''; code.textContent = T('Maak een nieuwe code');
+      }, 6000);
+      return;
+    }
+    code.disabled = true;
+    try {
+      let nieuw = '';
+      if (DEMO) nieuw = Math.random().toString(16).slice(2, 8).toUpperCase();
+      else {
+        const { data, error } = await db.rpc('poule_nieuwe_code', { p_pool: S.poule.id });
+        if (error) throw new Error(uitleg(error));
+        nieuw = data;
+      }
+      S.poule = { ...S.poule, join_code: nieuw };
+      werkCodeInLijstBij(S.poule);
+      S.melding = T('Nieuwe code: {code}. De oude code en oude links werken niet meer.', { code: nieuw });
+    } catch (e) { S.melding = e.message; }
+    render();
+  };
+  const slot = app.querySelector('#slotKnop');
+  if (slot) slot.onclick = async () => {
+    slot.disabled = true;
+    const nu = !S.poule.op_slot;
+    // Op slot is niet openbaar: allebei in één keer, anders weigert de
+    // database het (pools_slot_niet_openbaar).
+    const wijziging = nu ? { op_slot: true, is_public: false } : { op_slot: false };
+    try {
+      if (!DEMO) {
+        const { error } = await db.from('pools').update(wijziging).eq('id', S.poule.id);
+        if (error) throw new Error(uitleg(error));
+      }
+      S.poule = { ...S.poule, ...wijziging };
+      S.melding = nu ? T('De poule is nu op slot.') : T('De poule is weer open voor wie de code heeft.');
+    } catch (e) { S.melding = e.message; }
+    render();
+  };
 }
 
 // De poulebaas zet automatisch invullen aan. Nadrukkelijk met de datum
@@ -10845,11 +10991,11 @@ const pouleKnop = (p) => `
 // plaats van uit het lijstje gelezen: de naam kan veranderd zijn, en de poule
 // kan weg zijn — dan moet hij ook uit het lijstje.
 async function naarPoule(poolId) {
-  const { data, error } = await pouleBij({ p_id: poolId });
+  const { data, error, opSlot } = await pouleBij({ p_id: poolId });
   if (error || !data) {
     vergeetUitLijst(poolId);
     if (zelfde(laatstePoule(), poolId)) vergeetPoule();
-    S.melding = T('Die poule bestaat niet meer.');
+    S.melding = opSlot ? opSlotTekst() : T('Die poule bestaat niet meer.');
     if (S.poule) { render(); } else { toonStart(); }
     return;
   }
@@ -14952,7 +15098,8 @@ function toonStart() {
 
   app.querySelector('#mee').onclick = async () => {
     const code = app.querySelector('#code').value.trim().toUpperCase();
-    const { data, error } = await pouleBij({ p_code: code });
+    const { data, error, opSlot } = await pouleBij({ p_code: code });
+    if (opSlot) { fout(opSlotTekst()); return; }
     if (error || !data) { fout(T('Die poulecode bestaat niet')); return; }
     S.poule = data;
     onthoudPoule(S.poule.id); onthoudInLijst(S.poule);
@@ -15046,7 +15193,13 @@ async function hervat() {
   if (uitLink) {
     const spelerLink = spelerUitLink();
     vergeetLinkCode();
-    const { data } = await pouleBij({ p_code: uitLink });
+    const { data, opSlot } = await pouleBij({ p_code: uitLink });
+    if (opSlot) {
+      S.linkCode = '';
+      S.linkFout = opSlotTekst();
+      toonStart();
+      return;
+    }
     if (data) {
       S.poule = data;
       onthoudPoule(data.id); onthoudInLijst(data);
@@ -15085,8 +15238,13 @@ async function hervat() {
   const id = laatstePoule();
   if (!id) { toonStart(); return; }
 
-  const { data, error } = await pouleBij({ p_id: id });
-  if (error || !data) { vergeetPoule(); toonStart(); return; }
+  const { data, error, opSlot } = await pouleBij({ p_id: id });
+  if (error || !data) {
+    vergeetPoule();
+    if (opSlot) S.linkFout = opSlotTekst();
+    toonStart();
+    return;
+  }
 
   S.poule = data;
   try { await laad(); }

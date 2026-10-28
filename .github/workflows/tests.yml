@@ -262,6 +262,16 @@ jobs:
           psql -d tik -v ON_ERROR_STOP=1 -f schema.sql
           psql -d tik -v ON_ERROR_STOP=1 -f test/tik.test.sql
 
+      # Toegang (voor iedereen): een nieuwe code maakt alleen de poulebaas, en
+      # op slot kan niemand meer meedoen of een speler claimen, en ziet wie er
+      # niet in zit alleen dat hij op slot is.
+      - name: "toegang: een nieuwe poulecode, en op slot"
+        run: |
+          createdb toegang
+          psql -d toegang -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d toegang -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d toegang -v ON_ERROR_STOP=1 -f test/toegang.test.sql
+
       # Eigen vragen van de poulebaas (premium): zetten alleen de poulebaas met
       # premium voor de start, antwoorden voor jezelf voor de start, geheim tot
       # de start, de uitkomst pas daarna.

@@ -250,6 +250,16 @@ alter table public.pools        drop constraint if exists pools_sponsor_url;
 alter table public.pools         add constraint pools_sponsor_url
   check (sponsor_url is null or (sponsor_tekst is not null and char_length(sponsor_url) <= 300
          and sponsor_url ~ '^https://[A-Za-z0-9.-]+([/?#][^[:space:]<>"''`]*)?$'));
+-- Op slot (28 oktober): de poulebaas laat niemand meer meedoen, ook niet met
+-- de code, en wie er niet in zit ziet er niets meer van. Wie al meedoet merkt
+-- er niets van. Danny, over de code in de uitnodigingslink: "Moet dat niet
+-- beter afgeschermd worden?" Een openbare poule kan niet op slot: openbaar
+-- betekent juist dat iedereen erbij kan. Zie poule_meedoen() en
+-- poule_ophalen(); een nieuwe code staat bij poule_nieuwe_code().
+alter table public.pools        add column if not exists op_slot boolean not null default false;
+alter table public.pools        drop constraint if exists pools_slot_niet_openbaar;
+alter table public.pools         add constraint pools_slot_niet_openbaar
+  check (not (op_slot and is_public));
 
 -- Premium: teams binnen een poule (13 oktober). Afdelingen, clubs of families
 -- tegen elkaar: naast de stand van de spelers een teamstand. De poulebaas maakt
@@ -1834,7 +1844,17 @@ as $$
         or (p_id   is not null and id        = p_id)
      limit 1
   )
-  select case when not exists (select 1 from poule) then null else jsonb_build_object(
+  select case when not exists (select 1 from poule) then null
+    -- Op slot (28 oktober): wie er niet in zit, ziet er niets meer van, ook niet
+    -- met de code. Alleen dát hij op slot is, zodat de app dat kan zeggen in
+    -- plaats van "die code bestaat niet". Geen naam: ook die hoort er dan niet
+    -- meer bij. Wel voor een toestel dat er een speler in zette.
+    when (select op_slot from poule)
+         and not public.is_member((select id from poule))
+         and not exists (select 1 from public.pool_members m, poule p
+                          where m.pool_id = p.id and m.aangemaakt_door = auth.uid())
+      then jsonb_build_object('op_slot', true)
+    else jsonb_build_object(
     'poule',      (select to_jsonb(p) from poule p),
     -- profiel_code en profiel alleen voor je eigen speler: dat is wat het
     -- deelscherm nodig heeft. Die van je medespelers gaan je niet aan -- een
@@ -2095,6 +2115,9 @@ grant execute on function public.naam_netjes(text) to anon, authenticated;
 --     openbaar, dan ook de namen van wie er al in zit.
 --   * max_spelers zet alleen het beheer (beheer_poule_bijwerken), niet de
 --     poulebaas: die zou zijn poule anders zelf groter maken.
+--   * De code verandert alleen via poule_nieuwe_code() (28 oktober), die een
+--     willekeurige kiest. Anders kon een poulebaas via de API een korte of
+--     makkelijk te raden code zetten.
 create or replace function public.pools_misbruik_bewaken()
 returns trigger
 language plpgsql
@@ -2106,6 +2129,10 @@ begin
   if tg_op = 'UPDATE' and current_user in ('anon', 'authenticated')
      and new.max_spelers is distinct from old.max_spelers then
     raise exception 'het maximum aantal spelers zet alleen het beheer';
+  end if;
+  if tg_op = 'UPDATE' and current_user in ('anon', 'authenticated')
+     and new.join_code is distinct from old.join_code then
+    raise exception 'een nieuwe poulecode gaat via poule_nieuwe_code()' using hint = 'code_via_functie';
   end if;
   if new.is_public then
     if tg_op = 'INSERT' or new.name is distinct from old.name
@@ -2232,12 +2259,18 @@ declare
   naam  text := public.speler_naam(p_naam);
   ik    uuid := public.vereis_sessie();
   grens int;
+  slot  boolean;
 begin
   -- De rij van de poule op slot tot het einde van deze transactie: twee
   -- tegelijke aanmeldingen tellen anders allebei 199 en komen er allebei in.
-  select max_spelers into grens from public.pools where id = p_pool for update;
+  select max_spelers, op_slot into grens, slot from public.pools where id = p_pool for update;
   if not found then
     raise exception 'die poule bestaat niet';
+  end if;
+  -- Op slot: niemand kan er nog bij, ook niet als extra speler vanaf een
+  -- toestel dat al meedoet. De poulebaas kan hem van het slot halen.
+  if slot then
+    raise exception 'Deze poule is op slot: er kan niemand meer bij.' using hint = 'poule_op_slot';
   end if;
   if (select count(*) from public.pool_members where pool_id = p_pool) >= grens then
     raise exception 'Deze poule is vol: er mogen hoogstens % spelers in.', grens
@@ -2268,6 +2301,41 @@ begin
                             'user_id', nieuw.user_id);
 end;
 $$;
+
+-- Een nieuwe poulecode (28 oktober). Belandt de uitnodiging of de code waar
+-- hij niet hoort, dan maakt de poulebaas een nieuwe: de oude code en elke link
+-- met de oude code werken dan niet meer. Wie al meedoet merkt er niets van, want
+-- de app haalt een poule op met zijn id en niet met zijn code. Alleen de
+-- poulebaas (mag_beheren), en niet voor de open poule (80C98C): die code staat
+-- op de site. Zes tekens zoals bij het aanmaken, maar uit gen_random_uuid() in
+-- plaats van random(), en nooit een code die al bestaat.
+create or replace function public.poule_nieuwe_code(p_pool uuid)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  oud   text;
+  nieuw text;
+begin
+  perform public.vereis_sessie();
+  select join_code into oud from public.pools where id = p_pool for update;
+  if not found or not public.mag_beheren(p_pool) then
+    raise exception 'Alleen de poulebaas kan een nieuwe code maken.' using hint = 'geen_poulebaas';
+  end if;
+  if oud = '80C98C' then
+    raise exception 'De code van de open poule staat op de site en blijft dezelfde.' using hint = 'code_vast';
+  end if;
+  loop
+    nieuw := upper(substr(md5(gen_random_uuid()::text), 1, 6));
+    exit when not exists (select 1 from public.pools where join_code = nieuw);
+  end loop;
+  update public.pools set join_code = nieuw where id = p_pool;
+  return nieuw;
+end $$;
+revoke all on function public.poule_nieuwe_code(uuid) from public;
+grant execute on function public.poule_nieuwe_code(uuid) to anon, authenticated;
 
 -- Een poule aanmaken: de poule, jezelf als eerste speler, het baasschap en
 -- de vragenset, in één keer.
@@ -2372,9 +2440,22 @@ security definer
 set search_path = public
 as $$
 declare
-  ik public.pool_members%rowtype;
+  ik    public.pool_members%rowtype;
+  poule uuid;
+  slot  boolean;
 begin
   if auth.uid() is null then return null; end if;
+  -- Op slot (28 oktober): wie de poule niet ziet (zie poule_ophalen()), claimt
+  -- er ook niemand. Anders kwam iemand die de poule bekeek toen hij nog open
+  -- was er alsnog in, met het member_id van een speler zonder account.
+  select m.pool_id, p.op_slot into poule, slot
+    from public.pool_members m join public.pools p on p.id = m.pool_id
+   where m.member_id = p_member;
+  if slot and not public.is_member(poule)
+     and not exists (select 1 from public.pool_members
+                      where pool_id = poule and aangemaakt_door = auth.uid()) then
+    raise exception 'Deze poule is op slot: er kan niemand meer bij.' using hint = 'poule_op_slot';
+  end if;
   begin
     update public.pool_members
        set user_id = auth.uid()
@@ -4052,7 +4133,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'pool_members_bewaken', 'pool_members_woordfilter', 'pools_misbruik_bewaken',
           'pools_profiel_bewaken', 'poule_aanmaken', 'poule_antwoord_deadline',
           'poule_claim_speler', 'poule_deadline_bewaken', 'poule_joker_bewaken',
-          'poule_jokeraantal_bewaken', 'poule_meedoen', 'poule_ophalen',
+          'poule_jokeraantal_bewaken', 'poule_meedoen', 'poule_nieuwe_code', 'poule_ophalen',
           'poule_seizoen_gestart', 'poule_seizoen_voorbij', 'poule_team_kiezen',
           'poule_team_opslaan', 'poule_team_weghalen', 'publiek_profiel',
           'push_sleutel', 'push_sleutel_vingerafdruk', 'push_sleutel_zetten',
@@ -4097,6 +4178,26 @@ select 'premium: kolommen, bewaking en logo-opslag',
                where schemaname = 'storage' and tablename = 'objects'
                  and policyname in ('poulelogo_zetten', 'poulelogo_vervangen', 'poulelogo_weghalen', 'poulelogo_lezen')) <> 4
            then 'LOGO-OPSLAG ONTBREEKT: draai schema.sql opnieuw'
+         else 'ok' end
+union all
+-- Toegang (28 oktober): de poulebaas maakt een nieuwe code of zet de poule op
+-- slot. De kolom en de grens met openbaar, de bewaking op de code, en de drie
+-- functies die op het slot letten.
+select 'toegang: nieuwe code en op slot',
+       case
+         when not exists (select 1 from information_schema.columns
+                          where table_schema = 'public' and table_name = 'pools' and column_name = 'op_slot')
+           or not exists (select 1 from pg_constraint
+                          where conrelid = 'public.pools'::regclass and conname = 'pools_slot_niet_openbaar')
+           then 'OP SLOT ONTBREEKT: draai schema.sql opnieuw'
+         when not exists (select 1 from pg_proc where proname = 'poule_nieuwe_code')
+           or not exists (select 1 from pg_proc where proname = 'pools_misbruik_bewaken'
+                            and prosrc like '%join_code%')
+           then 'NIEUWE CODE ONTBREEKT: draai schema.sql opnieuw'
+         when not exists (select 1 from pg_proc where proname = 'poule_meedoen' and prosrc like '%poule_op_slot%')
+           or not exists (select 1 from pg_proc where proname = 'poule_ophalen' and prosrc like '%op_slot%')
+           or not exists (select 1 from pg_proc where proname = 'poule_claim_speler' and prosrc like '%poule_op_slot%')
+           then 'SLOT WORDT NIET BEWAAKT: draai schema.sql opnieuw'
          else 'ok' end
 union all
 -- Misbruik tegengaan (17 oktober): zonder sessie geen speler of poule, de

@@ -210,6 +210,7 @@ function profielFout(p) {
   if (p.sponsor_tekst != null && !(String(p.sponsor_tekst).trim().length >= 1 && String(p.sponsor_tekst).trim().length <= 80)) return 'pools_sponsor_tekst';
   if (p.sponsor_url != null && !(p.sponsor_tekst != null && p.sponsor_url.length <= 300
       && /^https:\/\/[A-Za-z0-9.-]+([/?#][^\s<>"'`]*)?$/.test(p.sponsor_url))) return 'pools_sponsor_url';
+  if (p.op_slot && p.is_public) return 'pools_slot_niet_openbaar';
   return null;
 }
 
@@ -875,6 +876,12 @@ const functies = {
     // profiel_code en profiel alleen voor je eigen speler, net als in
     // schema.sql: die van je medespelers gaan je niet aan.
     const ik = wieBenIk();
+    // Op slot (28 oktober): wie er niet in zit (en er geen speler in zette),
+    // krijgt alleen dát hij op slot is.
+    if (poule.op_slot && !store.pool_members.some((m) => gelijk(m.pool_id, poule.id)
+        && ik && (gelijk(m.user_id, ik) || gelijk(m.aangemaakt_door, ik)))) {
+      return { data: { op_slot: true }, error: null };
+    }
     const leden = store.pool_members.filter((m) => gelijk(m.pool_id, poule.id))
       .map((m) => ({
         member_id: m.member_id, display_name: m.display_name, user_id: m.user_id,
@@ -1078,6 +1085,25 @@ const functies = {
     return { data: null, error: null };
   },
 
+  // Een nieuwe poulecode (28 oktober), met de regels van schema.sql: alleen
+  // de poulebaas, met een sessie, niet voor de open poule.
+  poule_nieuwe_code({ p_pool } = {}) {
+    if (!wieBenIk()) return GEEN_SESSIE;
+    const poule = store.pools.find((p) => gelijk(p.id, p_pool));
+    if (!poule || !magBeheren(p_pool)) {
+      return misbruik('geen_poulebaas', 'Alleen de poulebaas kan een nieuwe code maken.');
+    }
+    if (poule.join_code === '80C98C') {
+      return misbruik('code_vast', 'De code van de open poule staat op de site en blijft dezelfde.');
+    }
+    let nieuw;
+    do { nieuw = Math.random().toString(16).slice(2, 8).toUpperCase().padEnd(6, '0'); }
+    while (store.pools.some((p) => p.join_code === nieuw));
+    poule.join_code = nieuw;
+    bewaren();
+    return { data: nieuw, error: null };
+  },
+
   publiek_profiel({ p_code } = {}) {
     const lid = store.pool_members.find((m) => p_code && m.profiel_code === p_code && m.profiel);
     return { data: lid ? kopie(lid.profiel) : null, error: null };
@@ -1088,6 +1114,7 @@ const functies = {
     if (!ik) return GEEN_SESSIE;
     const poule = store.pools.find((p) => gelijk(p.id, p_pool));
     if (!poule) return { data: null, error: { message: 'die poule bestaat niet' } };
+    if (poule.op_slot) return misbruik('poule_op_slot', 'Deze poule is op slot: er kan niemand meer bij.');
     const grens = poule.max_spelers ?? 500;
     if (store.pool_members.filter((m) => gelijk(m.pool_id, p_pool)).length >= grens) {
       return misbruik(`poule_vol:${grens}`, `Deze poule is vol: er mogen hoogstens ${grens} spelers in.`);
@@ -1121,6 +1148,12 @@ const functies = {
     const ik = wieBenIk();
     if (!ik) return { data: null, error: null };
     const lid = store.pool_members.find((m) => gelijk(m.member_id, p_member));
+    // Op slot: wie de poule niet ziet, claimt er ook niemand (schema.sql).
+    const poule = lid && store.pools.find((p) => gelijk(p.id, lid.pool_id));
+    if (poule?.op_slot && !store.pool_members.some((m) => gelijk(m.pool_id, poule.id)
+        && (gelijk(m.user_id, ik) || gelijk(m.aangemaakt_door, ik)))) {
+      return misbruik('poule_op_slot', 'Deze poule is op slot: er kan niemand meer bij.');
+    }
     if (!lid || lid.user_id) return { data: null, error: null };
     if (store.pool_members.some((m) =>
         gelijk(m.pool_id, lid.pool_id) && gelijk(m.user_id, ik))) {
