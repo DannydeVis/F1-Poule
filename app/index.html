@@ -7346,18 +7346,58 @@ function telBezoek(pad) {
   Promise.resolve(db.rpc('tel_bezoek', { p_pad })).catch(() => {});
 }
 
+// ---- een nieuw scherm begint bovenaan -------------------------
+// Danny, 28 oktober: "Als ik schroll naar beneden en ik druk ergens op dan
+// staat de pagina niet bovenaan. Maar op de plek wat ik heen scrolde." Op een
+// telefoon scrolt de hele pagina, en die blijft staan waar hij stond als de
+// app de inhoud vervangt. Dus: een ander scherm (een race openen, een tabblad
+// onderin, iemands inzending) begint bovenaan. Een hertekening van hetzelfde
+// scherm (een coureur kiezen, iemand aantikken, nieuwe gegevens) laat de plek
+// met rust. En met de pijl terug kom je weer waar je was: wie in de kalender
+// naar ronde 21 scrolde, die race opende en teruggaat, wil niet opnieuw zoeken.
+const schermPlekken = new Map();   // waar je stond, per scherm
+let schermNu = null;
+let terugNaarVorige = false;       // gezet door de pijl terug
+// Een ander tabblad (kwalificatie, race) is ook nieuwe inhoud, en begint dus
+// ook bovenaan.
+const welkScherm = () => S.maak ? 'maak' : !S.poule ? 'start' : !S.ik ? 'kies'
+  : JSON.stringify([S.poule.id, S.weergave, S.race?.id ?? null,
+      S.race ? S.tab : null, S.race ? S.bekijk ?? null : null]);
+addEventListener('scroll', () => { if (schermNu) schermPlekken.set(schermNu, window.scrollY); },
+  { passive: true });
+
+function scrolBijNieuwScherm() {
+  const sleutel = welkScherm();
+  const terug = terugNaarVorige;
+  terugNaarVorige = false;
+  if (sleutel === schermNu) return;
+  const eerste = schermNu === null;
+  schermNu = sleutel;
+  if (eerste) return;
+  const plek = terug ? (schermPlekken.get(sleutel) ?? 0) : 0;
+  const zet = () => {
+    try { window.scrollTo(0, plek); } catch { /* niets */ }
+    // Op een breed scherm scrolt niet de pagina maar de kolom.
+    if (!terug) for (const kol of app.querySelectorAll('.kol')) kol.scrollTop = 0;
+  };
+  zet();
+  // herstelFocus() zet na het tekenen de focus op de nieuwe inhoud, en dat kan
+  // de pagina nog een stukje laten meescrollen (zie naarBoven()).
+  requestAnimationFrame(zet);
+}
+
 function render() {
   // Eenmaal vastgelopen blijft het vangnet staan. Zonder dit zou de eerste de
   // beste achtergebleven handler het scherm overtekenen met precies dezelfde
   // fout, en is de uitweg onbereikbaar.
   if (kapot) return;
   try {
-    if (S.maak)   { maakPagina(); return; }
-    if (!S.poule) { toonStart(); return; }
-    if (!S.ik)    { kiesSpeler(); return; }
-    if (hervatRondleiding()) { rondleidingScherm(); return; }
-    telBezoek('app');
-    toonApp();
+    if (S.maak)        maakPagina();
+    else if (!S.poule) toonStart();
+    else if (!S.ik)    kiesSpeler();
+    else if (hervatRondleiding()) rondleidingScherm();
+    else { telBezoek('app'); toonApp(); }
+    scrolBijNieuwScherm();
   } catch (fout) {
     // De fout blijft een fout. Hij hoort in de console en daarmee in de
     // testen, en niet stilletjes opgeslokt omdat er nu een net onder hangt --
@@ -7642,7 +7682,7 @@ function toonApp() {
   app.querySelectorAll('[data-race]').forEach(b => b.onclick = () => openRace(b.dataset.race, b.dataset.sessie ?? null));
   app.querySelectorAll('[data-naar-race]').forEach(b => b.onclick = () => openRace(b.dataset.naarRace));
   const terug = app.querySelector('#terug');
-  if (terug) terug.onclick = () => { S.race = null; render(); };
+  if (terug) terug.onclick = () => { S.race = null; terugNaarVorige = true; render(); };
   // Escape sluit een open race, zoals een venster. Niet als je in een veld
   // typt, en niet als er een ander venster (het deelplaatje) bovenop ligt.
   document.onkeydown = (ev) => {
@@ -11403,6 +11443,10 @@ function invulWeergave(paneel, r, dicht) {
     ? tweeKolommen({ hoofd, zij: vragen + poule + afsluiting })
     : hoofd + vragen + poule + afsluiting) + kiesblad(r);
   knoopBekijk(paneel);
+  // De tik-knoppen staan in dit paneel (pouleKaart), en het paneel wordt bij
+  // elke keuze opnieuw getekend zonder de rest van de app. Zonder dit deed
+  // "Tik aan" niets meer nadat je een coureur koos.
+  knoopTik();
 
   const sluitBlad = () => { S.kiesplek = null; invulWeergave(paneel, r, dicht); };
   paneel.querySelectorAll('[data-plek]').forEach(b => b.onclick = () => {
@@ -13552,6 +13596,7 @@ function knoopBekijk(paneel) {
   paneel.querySelectorAll('[data-bekijk]').forEach(b => b.onclick = () => {
     S.bekijk = b.dataset.bekijk;
     vulPaneel();
+    scrolBijNieuwScherm();
   });
   paneel.querySelectorAll('[data-naar-stand]').forEach(b => b.onclick = () => {
     S.race = null; S.bekijk = null; S.weergave = 'stand';
@@ -13574,7 +13619,11 @@ function bekijkWeergave(paneel, r) {
       ${werkelijk ? `<span class="t">${scoreTabMetJoker(pred, r, S.tab)}</span>` : ''}
     </div>
     ${keuzeOverzicht(r, pred, S.tab)}`;
-  paneel.querySelector('#inkijkterug').onclick = () => { S.bekijk = null; vulPaneel(); };
+  paneel.querySelector('#inkijkterug').onclick = () => {
+    S.bekijk = null; terugNaarVorige = true;
+    vulPaneel();
+    scrolBijNieuwScherm();
+  };
 }
 
 // ============================================================
