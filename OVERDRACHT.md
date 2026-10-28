@@ -11700,3 +11700,36 @@ weekendkaart). De groepsapptests
 
 **Danny moet:** niets.
 
+## Een nieuw scherm begint bovenaan (28 oktober)
+
+**Aanleiding.** Danny: "Als ik schroll naar beneden en ik druk ergens op dan
+staat de pagina niet bovenaan. Maar op de plek wat ik heen scrolde." Op een
+telefoon scrolt de hele pagina, en die bleef staan als de app de inhoud
+verving: een race openen onderaan de kalender gaf het racescherm halverwege.
+
+**De oplossing.** `scrolBijNieuwScherm()`, aangeroepen aan het eind van
+`render()` en na het openen en sluiten van iemands inzending (die tekent
+alleen het paneel). `welkScherm()` is de sleutel van een scherm: de poule, de
+weergave onderin, de race, het tabblad en wiens inzending. Is die anders dan
+bij de vorige keer tekenen, dan naar boven (de pagina, en op een breed scherm
+de kolommen); zo niet, dan blijft alles staan, zodat een coureur kiezen of
+iemand aantikken onderaan niet terugspringt. Ook een ander tabblad van de race
+begint bovenaan (dat deed de app al, via het invliegen van het paneel; nu met
+opzet). Een scroll-luisteraar onthoudt per scherm waar je stond, en de pijl
+terug (`terugNaarVorige`) en "terug" bij een inzending zetten je daar weer neer.
+Opslaan brengt je naar de lijst, en die begint bovenaan, waar de melding staat.
+Na het tekenen zet `herstelFocus()` de focus op de nieuwe inhoud; dat kan nog
+een stukje scrollen, vandaar ook een keer in het volgende beeld (zoals
+`naarBoven()` bij de rondleiding).
+
+**Meegevonden.** "Tik aan" deed niets meer nadat je een coureur koos: het
+paneel wordt dan opnieuw getekend zonder `knoopTik()`. Nu roept
+`invulWeergave()` die zelf aan; `tik.test.mjs` kiest eerst een coureur.
+
+**Tests.** `test/scrollen.test.mjs` (19 controles; op de oude app zakken er
+vijf, waaronder "het racescherm begint bovenaan: 642"). Mutaties gevangen:
+terug zonder de oude plek, bij elke hertekening naar boven, een inzending
+zonder naar boven, en "Tik aan" zonder `knoopTik()` in het paneel.
+
+**Danny moet:** niets.
+

@@ -14,7 +14,7 @@
 //      meer dan zeven dagen sluit.
 //   2. Een tik vraagt de functie `tik` om een melding; daarna staat er
 //      "aangetikt" bij die speler, ook na herladen, en zegt de app dat hij een
-//      seintje krijgt.
+//      seintje krijgt. Ook als je eerst een coureur koos.
 //   3. Heeft hij geen meldingen aan, dan wordt de knop "Stuur bericht" (het
 //      deelmenu), met de sessie, de race, de deadline en de link.
 //   4. Wat de functie weigert, in gewone taal: al aangetikt (dan ook
@@ -26,7 +26,7 @@
 //   8. In een grote poule noemt de weekendkaart niet iedereen bij naam, maar
 //      de eerste vijf en hoeveel er nog meer zijn.
 
-import { maakControle, startPagina, meedoen, openRace, naarLijst } from './hulp.mjs';
+import { maakControle, startPagina, meedoen, openRace, naarLijst, kiesVoor } from './hulp.mjs';
 
 const { check, afronden } = maakControle('de tik in de app');
 
@@ -90,6 +90,9 @@ check('voor deze race en het tabblad dat openstaat', (await page.getAttribute('[
   && (await page.getAttribute('[data-tik="lid-2"]', 'data-tik-race')) === '1');
 
 // ---- 2. Kees aantikken ---------------------------------------------------------------
+// Eerst een coureur kiezen: dan tekent de app alleen het racepaneel opnieuw,
+// en ook daarna moet "Tik aan" het doen (tot 28 oktober deed hij dan niets).
+await kiesVoor(page, '.slot.leegplek');
 await page.click('[data-tik="lid-2"]');
 await page.waitForSelector('[data-getikt="lid-2"]');
 const verzoek = await page.evaluate(() => globalThis.__tikVerzoeken?.at(-1));
