@@ -11800,6 +11800,13 @@ alsnog een download. Twee keer tikken opent het één keer.
 Weg: `standAfdrukken()`, de afdruk-CSS (`#afdruk`) en `window.print()`. De
 knop heet nu `data-stand-pdf`; de tekst op de knop is dezelfde.
 
+**Dezelfde ochtend, na de eerste versie.** Danny kreeg het deelmenu met de PDF
+(2 KB), maar wie op het voorbeeld tikte zag een scherm "tekst" met alleen de
+naam van de poule. De app gaf de poulenaam als `title` mee aan
+`navigator.share()`, en zijn iPhone maakte daar een los item van. Nu gaat
+alleen het bestand mee. Het bestand zelf was goed: poppler, pdf.js en PDFium
+(de PDF-lezer van Chrome) lezen en tekenen het zonder fouten.
+
 **Tests.** `test/groepsapp-hulp.test.mjs` leest de PDF terug zonder
 bibliotheek: de opbouw (xref, /Size, /Count, /Length, startxref) en de tekst
 per regel. Download, deelmenu, wegtikken, mislukken, twee keer tikken, een
