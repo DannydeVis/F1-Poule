@@ -316,18 +316,6 @@
   .groepsapphulp{display:flex;flex-direction:column;gap:8px}
   .wachtop .herinner{margin-left:6px;min-height:32px;padding:0 12px;vertical-align:middle}
   /* De tik (premium): een knop per speler die nog niets invulde. */
-  /* Afdrukken van de stand (premium): alleen de tabel, zwart op wit. */
-  #afdruk{display:none}
-  @media print{
-    body.afdrukken{background:#fff!important}
-    body.afdrukken > *:not(#afdruk){display:none!important}
-    body.afdrukken #afdruk{display:block;color:#000;font:11pt/1.4 system-ui,sans-serif}
-    #afdruk h1{font-size:20pt;margin:0 0 4pt}
-    #afdruk table{width:100%;border-collapse:collapse;margin-top:10pt}
-    #afdruk th,#afdruk td{border-bottom:1px solid #bbb;padding:4pt 6pt;text-align:left}
-    #afdruk .n{text-align:right}
-    #afdruk .voet{margin-top:14pt;color:#555;font-size:9pt}
-  }
 
   /* Een knop is een knop en geen kop. In condensed hoofdletters op 22 pixels
      over de volle breedte woog de opslaanknop zwaarder dan de racenaam
@@ -10199,8 +10187,8 @@ function knoopPeriodes() {
 // ---- premium: de groepsapp en de stand als bestand ---------------------------
 // Drie kleine dingen voor de poulebaas met premium: een herinnering voor wie
 // nog niets invulde, een kant-en-klare samenvatting van het weekend, en de
-// stand als CSV (voor Excel of Google Sheets) of op papier (of als PDF, via
-// afdrukken). Er gaat niets naar de database: het is opmaak van wat elke
+// stand als CSV (voor Excel of Google Sheets) of als PDF (om af te drukken of
+// te delen). Er gaat niets naar de database: het is opmaak van wat elke
 // speler in de app al ziet. Daarom staat de premiumgrens hier alleen in de app;
 // in de database valt niets af te schermen.
 //
@@ -10226,7 +10214,7 @@ function groepsappBlok() {
       ${laatste ? `<button class="knop klein" data-samenvatting>${
         T('Samenvatting van {race}', { race: esc(laatste.name) })}</button>` : ''}
       ${gereden() ? `<button class="knop klein" data-export-csv>${T('Stand als CSV (Excel, Sheets)')}</button>
-      <button class="knop klein" data-afdrukken>${T('Stand afdrukken of als PDF')}</button>` : ''}
+      <button class="knop klein" data-stand-pdf>${T('Stand afdrukken of als PDF')}</button>` : ''}
     </div>
     <textarea class="veld tekstblok hide" id="groepsappveld" readonly rows="8"
       aria-label="${T('Tekst om zelf te kopiëren')}"></textarea>`;
@@ -10325,33 +10313,200 @@ function bewaarBestand(inhoud, naam, soort) {
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
-// Afdrukken: een eenvoudige tabel, zwart op wit, met alleen de stand. Via het
-// afdrukvenster kan iedere browser er ook een PDF van maken.
-function standAfdrukken() {
-  document.querySelector('#afdruk')?.remove();
+// ---- de stand als PDF --------------------------------------------------------
+// Danny, 29 oktober: "De pdf knop werkt niet." De knop opende met
+// window.print() het afdrukvenster, en dat doet in een app op het beginscherm
+// van een iPhone niets: geen venster, geen fout. Nu maakt de app zelf een PDF,
+// zonder bibliotheek erbij: de stand als tabel, zwart op wit. Op een telefoon
+// gaat hij naar het deelmenu (Afdrukken, Bewaar in Bestanden, de groepsapp);
+// op een computer wordt het een download, die je opent en afdrukt.
+//
+// Helvetica en Helvetica-Bold zijn twee van de veertien lettertypen die elke
+// PDF-lezer zelf heeft, dus er hoeft er geen in het bestand. Hieronder de
+// breedte van de tekens 32 tot en met 126, in duizendsten van de
+// lettergrootte, uit hun AFM-bestanden: nodig om getallen rechts uit te
+// lijnen en een te lange naam af te kappen.
+const PDF_BREEDTE = {
+  F1: [278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278,
+    556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556,
+    1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778,
+    667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556,
+    333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556,
+    556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584],
+  F2: [278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278,
+    556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611,
+    975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778,
+    667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556,
+    333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611,
+    611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584],
+};
+// WinAnsiEncoding: tot en met 126 en van 160 tot en met 255 gelijk aan
+// Unicode, daartussen deze tekens.
+const WINANSI = new Map([[0x20ac, 0x80], [0x201a, 0x82], [0x0192, 0x83], [0x201e, 0x84], [0x2026, 0x85],
+  [0x2020, 0x86], [0x2021, 0x87], [0x02c6, 0x88], [0x2030, 0x89], [0x0160, 0x8a], [0x2039, 0x8b],
+  [0x0152, 0x8c], [0x017d, 0x8e], [0x2018, 0x91], [0x2019, 0x92], [0x201c, 0x93], [0x201d, 0x94],
+  [0x2022, 0x95], [0x2013, 0x96], [0x2014, 0x97], [0x02dc, 0x98], [0x2122, 0x99], [0x0161, 0x9a],
+  [0x203a, 0x9b], [0x0153, 0x9c], [0x017e, 0x9e], [0x0178, 0x9f]]);
+// Letters zonder WinAnsi die ook niet in letter plus accent uiteenvallen.
+const ZONDER_ACCENT = { 'Ł': 'L', 'ł': 'l', 'Đ': 'D', 'đ': 'd', 'ı': 'i', 'Ħ': 'H', 'ħ': 'h' };
+const A4 = { b: 595.28, h: 841.89 };
+
+// Een tekst als WinAnsi, één teken per byte. Wat er niet in staat, komt er
+// zonder accent in (ő wordt o, ł wordt l) of als vraagteken.
+function pdfTekst(tekst) {
+  const byte = (c) => {
+    const n = c.codePointAt(0);
+    return (n >= 32 && n <= 126) || (n >= 160 && n <= 255) ? n : WINANSI.get(n);
+  };
+  let uit = '';
+  for (const c of String(tekst ?? '')) {
+    let b = byte(c);
+    if (b === undefined) {
+      const kaal = ZONDER_ACCENT[c] ?? c.normalize('NFD').replace(/[̀-ͯ]/g, '');
+      b = (kaal.length === 1 && byte(kaal)) || (c.codePointAt(0) < 32 ? 32 : 63);
+    }
+    uit += String.fromCharCode(b);
+  }
+  return uit;
+}
+
+// De breedte in punten van een tekst die al WinAnsi is. Een letter met een
+// accent is zo breed als zonder; van de rest is alleen het weglatingsteken
+// echt breder dan gemiddeld.
+function pdfBreedte(tekst, letter, grootte) {
+  let som = 0;
+  for (let i = 0; i < tekst.length; i++) {
+    const b = tekst.charCodeAt(i);
+    const kaal = b >= 160 ? String.fromCharCode(b).normalize('NFD').charCodeAt(0) : b;
+    som += kaal >= 32 && kaal <= 126 ? PDF_BREEDTE[letter][kaal - 32] : b === 0x85 ? 1000 : 556;
+  }
+  return som * grootte / 1000;
+}
+
+// Te lang voor zijn kolom: afkappen, met een weglatingsteken erachter.
+function pdfPassend(tekst, letter, grootte, max) {
+  if (pdfBreedte(tekst, letter, grootte) <= max) return tekst;
+  let t = tekst;
+  while (t && pdfBreedte(`${t}\x85`, letter, grootte) > max) t = t.slice(0, -1);
+  return `${t.trimEnd()}\x85`;
+}
+
+const pdfString = (t) => `(${t.replace(/[\\()]/g, '\\$&')})`;
+
+// Een PDF van deze pagina's op A4 (hun inhoud als PDF-opdrachten in WinAnsi),
+// als bytes. Een kale opbouw: de catalogus, de lijst met pagina's, de twee
+// lettertypen, per pagina een object en zijn inhoud, en achteraan de tabel
+// met waar elk object begint (xref), want daarmee vindt een lezer ze.
+function maakPdf(paginas, titel) {
+  const objecten = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    `<< /Type /Pages /Kids [${paginas.map((_, i) => `${5 + 2 * i} 0 R`).join(' ')}] /Count ${paginas.length} >>`,
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
+    ...paginas.flatMap((inhoud, i) => [
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${A4.b} ${A4.h}] `
+        + `/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${6 + 2 * i} 0 R >>`,
+      `<< /Length ${inhoud.length} >>\nstream\n${inhoud}\nendstream`]),
+    `<< /Title ${pdfString(titel)} /Producer (Predict the Race) >>`,
+  ];
+  let pdf = '%PDF-1.4\n%\xe2\xe3\xcf\xd3\n';
+  const begin = [];
+  objecten.forEach((o, i) => { begin.push(pdf.length); pdf += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+  const xref = pdf.length;
+  pdf += `xref\n0 ${objecten.length + 1}\n0000000000 65535 f \n`
+    + begin.map(p => `${String(p).padStart(10, '0')} 00000 n \n`).join('')
+    + `trailer\n<< /Size ${objecten.length + 1} /Root 1 0 R /Info ${objecten.length} 0 R >>\n`
+    + `startxref\n${xref}\n%%EOF\n`;
+  return Uint8Array.from(pdf, c => c.charCodeAt(0));
+}
+
+// De stand als PDF: de naam van de poule, na hoeveel races, en een regel per
+// speler met plek, naam, team, weekendzeges en punten. Past hij niet op één
+// pagina, dan staan de koppen van de tabel op elke pagina, en onderaan
+// welke pagina het is.
+function standPdf() {
   const stand = standRijen();
   const plekken = gedeeldePlekken(stand);
   const teams = teamsActief();
   const zeges = new Map(weekendOverwinningen().map(w => [w.naam, w.aantal]));
-  const el = document.createElement('div');
-  el.id = 'afdruk';
-  el.innerHTML = `
-    <h1>${esc(S.poule?.name ?? T('Stand'))}</h1>
-    <p>${T('Stand na {n} van de {totaal} races', { n: gereden(), totaal: S.races.length })} · ${
-      T('seizoen {jaar}', { jaar: seizoen() })} · ${esc(datumKort(new Date().toISOString()))}</p>
-    <table>
-      <thead><tr><th>${T('plek')}</th><th>${T('naam')}</th>${teams ? `<th>${T('team')}</th>` : ''}<th class="n">${
-        T('weekendzeges')}</th><th class="n">${T('punten')}</th></tr></thead>
-      <tbody>${stand.map((r, i) => `<tr><td>${plekken[i]}</td><td>${esc(r.naam)}</td>${teams ? `<td>${
-        esc(S.teams.find(t => zelfde(t.id, teamVan(r.id)))?.naam ?? '')}</td>` : ''}<td class="n">${
-        zeges.get(r.naam) ?? 0}</td><td class="n">${r.punten}</td></tr>`).join('')}</tbody>
-    </table>
-    <p class="voet">${T('voorspel mee op {adres}', { adres: esc(location.host || 'Predict the Race') })}</p>`;
-  document.body.appendChild(el);
-  document.body.classList.add('afdrukken');
-  const weg = () => { document.body.classList.remove('afdrukken'); el.remove(); };
-  window.addEventListener('afterprint', weg, { once: true });
-  window.print();
+  const L = 50, R = A4.b - 50;
+  const tekst = (x, y, letter, grootte, t) =>
+    `BT /${letter} ${grootte} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td ${pdfString(t)} Tj ET\n`;
+  const rechts = (x, y, letter, grootte, t) => tekst(x - pdfBreedte(t, letter, grootte), y, letter, grootte, t);
+  const lijn = (y, grijs, dik) => `${grijs} G ${dik} w ${L} ${y.toFixed(2)} m ${R} ${y.toFixed(2)} l S\n`;
+
+  const kop = pdfTekst(S.poule?.name ?? T('Stand'));
+  const onder = pdfTekst(`${T('Stand na {n} van de {totaal} races', { n: gereden(), totaal: S.races.length })} · ${
+    T('seizoen {jaar}', { jaar: seizoen() })} · ${datumKort(new Date().toISOString())}`);
+  const voet = pdfTekst(T('voorspel mee op {adres}', { adres: location.host || 'Predict the Race' }));
+  const k = { plek: pdfTekst(T('plek')), naam: pdfTekst(T('naam')), team: pdfTekst(T('team')),
+              zeges: pdfTekst(T('weekendzeges')), punten: pdfTekst(T('punten')) };
+
+  // De kolommen: de plek links, de punten en de weekendzeges rechts
+  // uitgelijnd, en wat ertussen overblijft voor de naam (en het team).
+  const getal = pdfBreedte('0000', 'F1', 11);
+  const naamX = L + Math.max(pdfBreedte(k.plek, 'F2', 10), getal) + 12;
+  const zegesR = R - Math.max(pdfBreedte(k.punten, 'F2', 10), getal) - 16;
+  const ruimte = zegesR - Math.max(pdfBreedte(k.zeges, 'F2', 10), getal) - 16 - naamX;
+  const teamX = naamX + ruimte * 0.6;
+  const regels = stand.map((r, i) => ({
+    plek: String(plekken[i]),
+    naam: pdfPassend(pdfTekst(r.naam), 'F1', 11, teams ? ruimte * 0.6 - 12 : ruimte),
+    team: teams ? pdfPassend(pdfTekst(S.teams.find(t => zelfde(t.id, teamVan(r.id)))?.naam ?? ''),
+      'F1', 11, ruimte * 0.4) : '',
+    zeges: String(zeges.get(r.naam) ?? 0),
+    punten: String(r.punten),
+  }));
+  const rij = (y, letter, grootte, r) => tekst(L, y, letter, grootte, r.plek) + tekst(naamX, y, letter, grootte, r.naam)
+    + (teams ? tekst(teamX, y, letter, grootte, r.team) : '')
+    + rechts(zegesR, y, letter, grootte, r.zeges) + rechts(R, y, letter, grootte, r.punten);
+
+  const paginas = [];
+  let i = 0;
+  do {
+    let y = A4.h - 50;
+    let s = '';
+    if (!paginas.length) {
+      let grootte = 20;
+      while (grootte > 12 && pdfBreedte(kop, 'F2', grootte) > R - L) grootte -= 1;
+      y -= grootte;
+      s += tekst(L, y, 'F2', grootte, pdfPassend(kop, 'F2', grootte, R - L));
+      y -= 18;
+      s += `0.33 g\n${tekst(L, y, 'F1', 10, pdfPassend(onder, 'F1', 10, R - L))}0 g\n`;
+      y -= 32;
+    } else y -= 10;
+    s += rij(y, 'F2', 10, k) + lijn(y - 7, 0, 0.8);
+    for (y -= 25; i < regels.length && y >= 64; i++, y -= 18) {
+      s += rij(y, 'F1', 11, regels[i]) + lijn(y - 7, 0.73, 0.5);
+    }
+    paginas.push(s);
+  } while (i < regels.length);
+  return maakPdf(paginas.map((s, n) => `${s}0.33 g\n${tekst(L, 36, 'F1', 9, voet)}${
+    paginas.length > 1 ? rechts(R, 36, 'F1', 9, `${n + 1}/${paginas.length}`) : ''}0 g\n`), kop);
+}
+
+// Op een telefoon het deelmenu; op een computer heeft dat geen Opslaan of
+// Afdrukken, dus daar een download. In de app op het beginscherm van een
+// iPhone (navigator.standalone) altijd het deelmenu, ook met een muis erbij.
+let pdfDelen = false;
+function standAlsPdf() {
+  if (pdfDelen) return;
+  const naam = deelBestandsnaam(`stand ${S.poule?.name ?? ''}`).replace(/\.png$/, '.pdf');
+  const pdf = standPdf();
+  const bestand = new File([pdf], naam, { type: 'application/pdf' });
+  let delen = false;
+  try {
+    delen = (matchMedia('(pointer: coarse)').matches || navigator.standalone === true)
+      && !!navigator.canShare?.({ files: [bestand] });
+  } catch { delen = false; }
+  if (!delen) { bewaarBestand(pdf, naam, 'application/pdf'); return; }
+  // Meteen, zonder eerst iets af te wachten: een telefoon laat het deelmenu
+  // alleen toe direct na een tik. Wegtikken is geen fout; al het andere wordt
+  // alsnog een download.
+  pdfDelen = true;
+  navigator.share({ files: [bestand], title: S.poule?.name ?? T('Stand') })
+    .catch((e) => { if (e?.name !== 'AbortError') bewaarBestand(pdf, naam, 'application/pdf'); })
+    .finally(() => { pdfDelen = false; });
 }
 
 function knoopGroepsapp() {
@@ -10361,8 +10516,8 @@ function knoopGroepsapp() {
   const csv = app.querySelector('[data-export-csv]');
   if (csv) csv.onclick = () => bewaarBestand(standCsv(),
     deelBestandsnaam(`stand ${S.poule?.name ?? ''}`).replace(/\.png$/, '.csv'), 'text/csv;charset=utf-8');
-  const druk = app.querySelector('[data-afdrukken]');
-  if (druk) druk.onclick = standAfdrukken;
+  const pdf = app.querySelector('[data-stand-pdf]');
+  if (pdf) pdf.onclick = standAlsPdf;
 }
 
 // Dezelfde regel als pools_sponsor_url in schema.sql.
