@@ -2929,12 +2929,17 @@ terugkomt; het sterretje van de joker (★) is een teken en mag.
   gereden race (en de seizoensvragen als die gescoord zijn). In het Engels met
   komma's, in de andere talen met puntkomma's, zodat Excel het meteen in
   kolommen zet.
-- **Stand afdrukken of als PDF.** Een PDF met de stand, zwart op wit: plek,
-  naam, team, weekendzeges en punten, bij een grote poule op meer pagina's.
-  Op een telefoon opent het deelmenu, met daarin Afdrukken, Bewaar in
-  Bestanden en de groepsapp; op een computer wordt het een download. Tot 29
-  oktober ging dit via het afdrukvenster, en dat opent niet in de app op het
-  beginscherm van een iPhone.
+- **Stand afdrukken of als PDF.** Een PDF met de stand in de stijl van het
+  deelplaatje, op wit papier: het logo met PREDICT THE RACE, de schuine
+  strepen rechtsboven, de naam van de poule groot, de koploper, en een regel
+  per speler met plek, naam, team, weekendzeges en punten; bij een grote
+  poule op meer pagina's. In de letters van de site (Barlow Condensed en
+  Space Mono, die in het bestand zitten). Met premium de strepen in de kleur
+  van de poule, en het logo en de sponsor onderaan. Op een telefoon opent het
+  deelmenu, met daarin Afdrukken, Bewaar in Bestanden en de groepsapp; op een
+  computer wordt het een download. Tot 29 oktober ging dit via het
+  afdrukvenster, en dat opent niet in de app op het beginscherm van een
+  iPhone.
 
 Delen gaat met de deelknop van de telefoon (WhatsApp, Telegram, Signal, wat
 de groep gebruikt); op een computer gaat de tekst naar het klembord.

@@ -10317,29 +10317,41 @@ function bewaarBestand(inhoud, naam, soort) {
 // Danny, 29 oktober: "De pdf knop werkt niet." De knop opende met
 // window.print() het afdrukvenster, en dat doet in een app op het beginscherm
 // van een iPhone niets: geen venster, geen fout. Nu maakt de app zelf een PDF,
-// zonder bibliotheek erbij: de stand als tabel, zwart op wit. Op een telefoon
-// gaat hij naar het deelmenu (Afdrukken, Bewaar in Bestanden, de groepsapp);
-// op een computer wordt het een download, die je opent en afdrukt.
+// zonder bibliotheek erbij. Op een telefoon gaat hij naar het deelmenu
+// (Afdrukken, Bewaar in Bestanden, de groepsapp); op een computer wordt het
+// een download, die je opent en afdrukt.
 //
-// Helvetica en Helvetica-Bold zijn twee van de veertien lettertypen die elke
-// PDF-lezer zelf heeft, dus er hoeft er geen in het bestand. Hieronder de
-// breedte van de tekens 32 tot en met 126, in duizendsten van de
-// lettergrootte, uit hun AFM-bestanden: nodig om getallen rechts uit te
-// lijnen en een te lange naam af te kappen.
-const PDF_BREEDTE = {
-  F1: [278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278,
-    556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556,
-    1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778,
-    667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556,
-    333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556,
-    556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584],
-  F2: [278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278,
-    556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611,
-    975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778,
-    667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556,
-    333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611,
-    611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584],
+// Dezelfde ochtend: "Kunnen we niet het mooier maken zoals in de stijl van de
+// site enzo met het logo?" Nu is hij het deelplaatje van de stand, maar op wit
+// papier: de schuine strepen rechtsboven, het logo met PREDICT THE RACE, de
+// naam van de poule groot in Barlow Condensed met het streepje eronder, de
+// koploper in een vlak, labels in Space Mono en de geblokte vlag onderaan. Met
+// premium de strepen in de kleur van de poule, en zijn logo en sponsor in de
+// voet, net als op het deelplaatje.
+//
+// De letters (lettertypen/pdf/, gemaakt met scripts/maak-pdf-letters.py) en
+// het logo gaan mee in het bestand. pdfVoorbereiden() haalt ze alvast op
+// zodra de knop er staat: het deelmenu mag alleen direct na een tik open, dus
+// bij de tik moet alles er al zijn. Lukt het ophalen niet, dan dezelfde
+// opmaak in Helvetica en Courier, die elke PDF-lezer zelf heeft.
+
+// Per rol het lettertype van de site, en wat er in de plaats komt als dat er
+// niet is.
+const PDF_LETTERS = {
+  kop: { bestand: 'barlow-condensed-700.ttf', naam: 'BarlowCondensed-Bold', reserve: 'Helvetica-Bold', vet: true },
+  naam: { bestand: 'barlow-condensed-600.ttf', naam: 'BarlowCondensed-SemiBold', reserve: 'Helvetica-Bold', vet: true },
+  mono: { bestand: 'space-mono-400.ttf', naam: 'SpaceMono-Regular', reserve: 'Courier', vast: true },
+  monoVet: { bestand: 'space-mono-700.ttf', naam: 'SpaceMono-Bold', reserve: 'Courier-Bold', vast: true, vet: true },
 };
+// Voor als die letters er niet zijn: de breedte van de tekens 32 tot en met 126
+// in Helvetica-Bold, in duizendsten van de lettergrootte (uit zijn
+// AFM-bestand). Courier is een schrijfmachineletter: elk teken 600.
+const HELVETICA_VET = [278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278,
+  556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611,
+  975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778,
+  667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556,
+  333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611,
+  611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584];
 // WinAnsiEncoding: tot en met 126 en van 160 tot en met 255 gelijk aan
 // Unicode, daartussen deze tekens.
 const WINANSI = new Map([[0x20ac, 0x80], [0x201a, 0x82], [0x0192, 0x83], [0x201e, 0x84], [0x2026, 0x85],
@@ -10347,6 +10359,7 @@ const WINANSI = new Map([[0x20ac, 0x80], [0x201a, 0x82], [0x0192, 0x83], [0x201e
   [0x0152, 0x8c], [0x017d, 0x8e], [0x2018, 0x91], [0x2019, 0x92], [0x201c, 0x93], [0x201d, 0x94],
   [0x2022, 0x95], [0x2013, 0x96], [0x2014, 0x97], [0x02dc, 0x98], [0x2122, 0x99], [0x0161, 0x9a],
   [0x203a, 0x9b], [0x0153, 0x9c], [0x017e, 0x9e], [0x0178, 0x9f]]);
+const WINANSI_TERUG = new Map([...WINANSI].map(([u, b]) => [b, u]));
 // Letters zonder WinAnsi die ook niet in letter plus accent uiteenvallen.
 const ZONDER_ACCENT = { 'Ł': 'L', 'ł': 'l', 'Đ': 'D', 'đ': 'd', 'ı': 'i', 'Ħ': 'H', 'ħ': 'h' };
 const A4 = { b: 595.28, h: 841.89 };
@@ -10370,119 +10383,368 @@ function pdfTekst(tekst) {
   return uit;
 }
 
-// De breedte in punten van een tekst die al WinAnsi is. Een letter met een
-// accent is zo breed als zonder; van de rest is alleen het weglatingsteken
-// echt breder dan gemiddeld.
-function pdfBreedte(tekst, letter, grootte) {
-  let som = 0;
-  for (let i = 0; i < tekst.length; i++) {
-    const b = tekst.charCodeAt(i);
-    const kaal = b >= 160 ? String.fromCharCode(b).normalize('NFD').charCodeAt(0) : b;
-    som += kaal >= 32 && kaal <= 126 ? PDF_BREEDTE[letter][kaal - 32] : b === 0x85 ? 1000 : 556;
-  }
-  return som * grootte / 1000;
-}
-
-// Te lang voor zijn kolom: afkappen, met een weglatingsteken erachter.
-function pdfPassend(tekst, letter, grootte, max) {
-  if (pdfBreedte(tekst, letter, grootte) <= max) return tekst;
-  let t = tekst;
-  while (t && pdfBreedte(`${t}\x85`, letter, grootte) > max) t = t.slice(0, -1);
-  return `${t.trimEnd()}\x85`;
-}
-
 const pdfString = (t) => `(${t.replace(/[\\()]/g, '\\$&')})`;
 
-// Een PDF van deze pagina's op A4 (hun inhoud als PDF-opdrachten in WinAnsi),
-// als bytes. Een kale opbouw: de catalogus, de lijst met pagina's, de twee
-// lettertypen, per pagina een object en zijn inhoud, en achteraan de tabel
-// met waar elk object begint (xref), want daarmee vindt een lezer ze.
-function maakPdf(paginas, titel) {
-  const objecten = [
-    '<< /Type /Catalog /Pages 2 0 R >>',
-    `<< /Type /Pages /Kids [${paginas.map((_, i) => `${5 + 2 * i} 0 R`).join(' ')}] /Count ${paginas.length} >>`,
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
-    ...paginas.flatMap((inhoud, i) => [
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${A4.b} ${A4.h}] `
-        + `/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${6 + 2 * i} 0 R >>`,
-      `<< /Length ${inhoud.length} >>\nstream\n${inhoud}\nendstream`]),
-    `<< /Title ${pdfString(titel)} /Producer (Predict the Race) >>`,
-  ];
+// Bytes als tekst, één teken per byte, net als de rest van het bestand.
+function alsTekst(bytes) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 8192) s += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  return s;
+}
+
+// Inpakken met deflate (FlateDecode in een PDF). Kan de browser dat niet, dan
+// gaat het er onverpakt in: groter, maar net zo goed.
+async function pdfInpakken(bytes) {
+  try {
+    const stroom = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate'));
+    return { data: alsTekst(new Uint8Array(await new Response(stroom).arrayBuffer())), ingepakt: true };
+  } catch { return { data: alsTekst(bytes), ingepakt: false }; }
+}
+
+// Wat een PDF-lezer over een TrueType-letter moet weten: hoe breed elk teken
+// van WinAnsi is (in duizendsten), welke tekens erin staan, en de maten voor
+// de FontDescriptor. Uit de tabellen head, hhea, hmtx, OS/2 en cmap (het deel
+// voor Unicode, formaat 4).
+function ttfMaten(bytes) {
+  const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const tabel = {};
+  for (let i = 0, n = v.getUint16(4); i < n; i++) {
+    const o = 12 + 16 * i;
+    tabel[String.fromCharCode(...bytes.subarray(o, o + 4))] = v.getUint32(o + 8);
+  }
+  const { head, hhea, hmtx, cmap } = tabel;
+  const os2 = tabel['OS/2'];
+  const em = v.getUint16(head + 18);
+  const schaal = (w) => Math.round(w * 1000 / em);
+  let deel = 0;
+  for (let i = 0, n = v.getUint16(cmap + 2); i < n; i++) {
+    const o = cmap + 4 + 8 * i;
+    if (v.getUint16(o) === 3 && v.getUint16(o + 2) === 1) deel = cmap + v.getUint32(o + 4);
+  }
+  if (!deel || v.getUint16(deel) !== 4) throw new Error('geen cmap voor Unicode in formaat 4');
+  const seg = v.getUint16(deel + 6);
+  const eind = deel + 14, begin = eind + seg + 2, delta = begin + seg, bereik = delta + seg;
+  const glyph = (u) => {
+    for (let s = 0; s < seg; s += 2) {
+      if (u > v.getUint16(eind + s)) continue;
+      const b = v.getUint16(begin + s);
+      if (u < b) return 0;
+      const d = v.getUint16(delta + s), r = v.getUint16(bereik + s);
+      if (!r) return (u + d) & 0xffff;
+      const g = v.getUint16(bereik + s + r + 2 * (u - b));
+      return g ? (g + d) & 0xffff : 0;
+    }
+    return 0;
+  };
+  const aantal = v.getUint16(hhea + 34);
+  const breedtes = [];
+  const heeft = new Set();
+  for (let c = 32; c <= 255; c++) {
+    const g = glyph(c < 127 || c >= 160 ? c : WINANSI_TERUG.get(c) ?? 0);
+    if (g) heeft.add(c);
+    breedtes.push(schaal(v.getUint16(hmtx + 4 * Math.min(g, aantal - 1))));
+  }
+  const stijg = schaal(v.getInt16(hhea + 4));
+  return { breedtes, heeft, stijg, daal: schaal(v.getInt16(hhea + 6)),
+    hoofd: os2 && v.getUint16(os2) >= 2 ? schaal(v.getInt16(os2 + 88)) : stijg,
+    bbox: [36, 38, 40, 42].map(o => schaal(v.getInt16(head + o))) };
+}
+
+// Een plaatje voor in de PDF: de kleuren en de doorzichtigheid apart (een PDF
+// kent geen RGBA), allebei ingepakt. Hooguit `max` pixels breed of hoog.
+async function pdfBeeld(src, cors, max) {
+  const img = await laadBeeld(src, cors);
+  if (!img?.naturalWidth) return null;
+  try {
+    const schaal = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const breed = Math.max(1, Math.round(img.naturalWidth * schaal));
+    const hoog = Math.max(1, Math.round(img.naturalHeight * schaal));
+    const doek = document.createElement('canvas');
+    doek.width = breed; doek.height = hoog;
+    const x = doek.getContext('2d');
+    x.drawImage(img, 0, 0, breed, hoog);
+    const punten = x.getImageData(0, 0, breed, hoog).data;
+    const kleur = new Uint8Array(breed * hoog * 3), alfa = new Uint8Array(breed * hoog);
+    for (let i = 0, j = 0; i < punten.length; i += 4, j++) {
+      kleur.set(punten.subarray(i, i + 3), j * 3);
+      alfa[j] = punten[i + 3];
+    }
+    const [rgb, masker] = await Promise.all([pdfInpakken(kleur), pdfInpakken(alfa)]);
+    return { breed, hoog, rgb, alfa: masker };
+  } catch { return null; }
+}
+
+// Alles wat de PDF meeneemt, alvast opgehaald. De letters en het logo één
+// keer; het logo van de poule (premium) per poule. Klaar als de belofte die
+// terugkomt klaar is.
+let pdfBronnen = null;
+let pdfLaden = null;
+let pdfPoulelogo = { url: null, beeld: null, laden: null };
+function pdfVoorbereiden() {
+  const url = logoUrl();
+  if (url && pdfPoulelogo.url !== url) {
+    pdfPoulelogo = { url, beeld: null, laden: null };
+    pdfPoulelogo.laden = pdfBeeld(url, true, 256).then((b) => { if (pdfPoulelogo.url === url) pdfPoulelogo.beeld = b; });
+  }
+  pdfLaden ??= (async () => {
+    const letters = {};
+    await Promise.all(Object.entries(PDF_LETTERS).map(async ([rol, l]) => {
+      try {
+        const antwoord = await fetch(new URL(`../lettertypen/pdf/${l.bestand}`, location.href));
+        if (!antwoord.ok) throw new Error(`${l.bestand}: ${antwoord.status}`);
+        const bytes = new Uint8Array(await antwoord.arrayBuffer());
+        letters[rol] = { maten: ttfMaten(bytes), lengte: bytes.length, ...(await pdfInpakken(bytes)) };
+      } catch { letters[rol] = null; }
+    }));
+    const logo = await pdfBeeld(new URL('../pictogrammen/predicttherace-logo.png', location.href).href, false, 128);
+    pdfBronnen = { letters, logo };
+  })();
+  return Promise.all([pdfLaden, url ? pdfPoulelogo.laden : null]);
+}
+
+// Een PDF van deze pagina's op A4 (hun inhoud als PDF-opdrachten, één teken
+// per byte), met de letters en plaatjes die ze gebruiken, als bytes. De
+// catalogus, de lijst met pagina's, per letter het bestand, de beschrijving en
+// de breedtes, per plaatje de kleuren en de doorzichtigheid, per pagina de
+// inhoud en de pagina zelf, en achteraan de tabel met waar elk object begint
+// (xref), want daarmee vindt een lezer ze.
+function maakPdf({ paginas, letters, beelden, titel }) {
+  const objecten = ['', ''];
+  const voeg = (inhoud) => objecten.push(inhoud);
+  const stroom = (data, extra = '') => `<< /Length ${data.length}${extra} >>\nstream\n${data}\nendstream`;
+  const ingepakt = (d) => (d.ingepakt ? ' /Filter /FlateDecode' : '');
+  const letterRefs = Object.values(letters).map((l) => {
+    if (!l.ttf) {
+      return `/${l.pdf} ${voeg(`<< /Type /Font /Subtype /Type1 /BaseFont /${l.reserve} /Encoding /WinAnsiEncoding >>`)} 0 R`;
+    }
+    const m = l.ttf.maten;
+    const bestand = voeg(stroom(l.ttf.data, ` /Length1 ${l.ttf.lengte}${ingepakt(l.ttf)}`));
+    const beschrijving = voeg(`<< /Type /FontDescriptor /FontName /${l.naam} /Flags ${l.vast ? 33 : 32} `
+      + `/FontBBox [${m.bbox.join(' ')}] /ItalicAngle 0 /Ascent ${m.stijg} /Descent ${m.daal} `
+      + `/CapHeight ${m.hoofd} /StemV ${l.vet ? 120 : 80} /FontFile2 ${bestand} 0 R >>`);
+    return `/${l.pdf} ${voeg(`<< /Type /Font /Subtype /TrueType /BaseFont /${l.naam} /FirstChar 32 /LastChar 255 `
+      + `/Widths [${m.breedtes.join(' ')}] /Encoding /WinAnsiEncoding /FontDescriptor ${beschrijving} 0 R >>`)} 0 R`;
+  });
+  const beeldRefs = beelden.map((b) => {
+    const soort = ` /Type /XObject /Subtype /Image /Width ${b.breed} /Height ${b.hoog} /BitsPerComponent 8`;
+    const masker = voeg(stroom(b.alfa.data, `${soort} /ColorSpace /DeviceGray${ingepakt(b.alfa)}`));
+    return `/${b.pdf} ${voeg(stroom(b.rgb.data, `${soort} /ColorSpace /DeviceRGB /SMask ${masker} 0 R${ingepakt(b.rgb)}`))} 0 R`;
+  });
+  const bronnen = `<< /Font << ${letterRefs.join(' ')} >>${beeldRefs.length ? ` /XObject << ${beeldRefs.join(' ')} >>` : ''} >>`;
+  const kinderen = paginas.map((inhoud) => {
+    const c = voeg(stroom(inhoud));
+    return voeg(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${A4.b} ${A4.h}] /Resources ${bronnen} /Contents ${c} 0 R >>`);
+  });
+  objecten[0] = '<< /Type /Catalog /Pages 2 0 R >>';
+  objecten[1] = `<< /Type /Pages /Kids [${kinderen.map(k => `${k} 0 R`).join(' ')}] /Count ${kinderen.length} >>`;
+  const info = voeg(`<< /Title ${pdfString(titel)} /Producer (Predict the Race) >>`);
   let pdf = '%PDF-1.4\n%\xe2\xe3\xcf\xd3\n';
   const begin = [];
   objecten.forEach((o, i) => { begin.push(pdf.length); pdf += `${i + 1} 0 obj\n${o}\nendobj\n`; });
   const xref = pdf.length;
   pdf += `xref\n0 ${objecten.length + 1}\n0000000000 65535 f \n`
     + begin.map(p => `${String(p).padStart(10, '0')} 00000 n \n`).join('')
-    + `trailer\n<< /Size ${objecten.length + 1} /Root 1 0 R /Info ${objecten.length} 0 R >>\n`
+    + `trailer\n<< /Size ${objecten.length + 1} /Root 1 0 R /Info ${info} 0 R >>\n`
     + `startxref\n${xref}\n%%EOF\n`;
   return Uint8Array.from(pdf, c => c.charCodeAt(0));
 }
 
-// De stand als PDF: de naam van de poule, na hoeveel races, en een regel per
-// speler met plek, naam, team, weekendzeges en punten. Past hij niet op één
-// pagina, dan staan de koppen van de tabel op elke pagina, en onderaan
-// welke pagina het is.
-function standPdf() {
+// De stand als PDF. Bovenaan wat er op het deelplaatje staat (de poule, na
+// hoeveel races, de koploper), dan een regel per speler met plek, naam, team,
+// weekendzeges en punten. Past hij niet op één pagina, dan staan de koppen van
+// de tabel op elke pagina, en onderaan welke pagina het is.
+function standPdf(bronnen = pdfBronnen) {
   const stand = standRijen();
   const plekken = gedeeldePlekken(stand);
   const teams = teamsActief();
   const zeges = new Map(weekendOverwinningen().map(w => [w.naam, w.aantal]));
-  const L = 50, R = A4.b - 50;
-  const tekst = (x, y, letter, grootte, t) =>
-    `BT /${letter} ${grootte} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td ${pdfString(t)} Tj ET\n`;
-  const rechts = (x, y, letter, grootte, t) => tekst(x - pdfBreedte(t, letter, grootte), y, letter, grootte, t);
-  const lijn = (y, grijs, dik) => `${grijs} G ${dik} w ${L} ${y.toFixed(2)} m ${R} ${y.toFixed(2)} l S\n`;
+  const koplopers = S.leden.length > 1 ? stand.filter((r, i) => plekken[i] === 1) : [];
+  const { b: B, h: H } = A4;
+  const rand = 44, R = B - rand, breed = R - rand;
+  // De kleuren van het lichte thema van de app.
+  const K = { ink: '#14151a', ink2: '#61656d', ink3: '#696e75', lijn: '#dcdad5', vlak: '#f2f1ee',
+              accent: '#d93d24', accentTekst: '#bf3219' };
+  const strepen = merkKleur() ?? K.accent;
+  const letters = Object.fromEntries(Object.entries(PDF_LETTERS).map(([rol, l], i) => {
+    const ttf = bronnen?.letters?.[rol] ?? null;
+    // Een letter met een accent is in Helvetica zo breed als zonder.
+    const reserve = (c) => {
+      if (l.reserve.startsWith('Courier')) return 600;
+      const kaal = c >= 160 ? String.fromCharCode(c).normalize('NFD').charCodeAt(0) : c;
+      return kaal >= 32 && kaal <= 126 ? HELVETICA_VET[kaal - 32] : c === 0x85 ? 1000 : 556;
+    };
+    return [rol, { ...l, ttf, pdf: `F${i + 1}`,
+      breedte: ttf ? (c) => ttf.maten.breedtes[c - 32] ?? 0 : reserve,
+      heeft: (c) => !ttf || ttf.maten.heeft.has(c) }];
+  }));
+  const beelden = [];
+  const beeld = (b) => (b ? (beelden.push({ ...b, pdf: `Im${beelden.length + 1}` }), beelden.at(-1)) : null);
+  const logo = beeld(bronnen?.logo);
+  const poulelogo = beeld(logoUrl() && pdfPoulelogo.url === logoUrl() ? pdfPoulelogo.beeld : null);
+  const sponsor = premiumActief() && S.poule?.sponsor_tekst ? S.poule.sponsor_tekst : null;
 
-  const kop = pdfTekst(S.poule?.name ?? T('Stand'));
-  const onder = pdfTekst(`${T('Stand na {n} van de {totaal} races', { n: gereden(), totaal: S.races.length })} · ${
-    T('seizoen {jaar}', { jaar: seizoen() })} · ${datumKort(new Date().toISOString())}`);
-  const voet = pdfTekst(T('voorspel mee op {adres}', { adres: location.host || 'Predict the Race' }));
-  const k = { plek: pdfTekst(T('plek')), naam: pdfTekst(T('naam')), team: pdfTekst(T('team')),
-              zeges: pdfTekst(T('weekendzeges')), punten: pdfTekst(T('punten')) };
+  const rgb = (hex) => [1, 3, 5].map(i => (parseInt(hex.slice(i, i + 2), 16) / 255).toFixed(3)).join(' ');
+  // Een kleur half doorzichtig op wit, zonder doorzichtigheid in de PDF.
+  const opWit = (hex, deel) => `#${[1, 3, 5].map(i => Math.round(255 - (255 - parseInt(hex.slice(i, i + 2), 16)) * deel)
+    .toString(16).padStart(2, '0')).join('')}`;
+  const Y = (y) => (H - y).toFixed(2);
+  const lees = (rol, t) => [...pdfTekst(t)].map(c => (letters[rol].heeft(c.charCodeAt(0)) ? c : '?')).join('');
+  const breedte = (rol, t, maat, tc = 0) => {
+    let som = 0;
+    for (let i = 0; i < t.length; i++) som += letters[rol].breedte(t.charCodeAt(i));
+    return som * maat / 1000 + tc * Math.max(0, t.length - 1);
+  };
+  const passend = (rol, t, maat, max, tc) => {
+    if (breedte(rol, t, maat, tc) <= max) return t;
+    let s = t;
+    while (s && breedte(rol, `${s}\x85`, maat, tc) > max) s = s.slice(0, -1);
+    return `${s.trimEnd()}\x85`;
+  };
+  const tekst = (x, y, rol, maat, ruw, { kleur = K.ink, tc = 0, rechts = false, max = 0 } = {}) => {
+    let t = lees(rol, ruw);
+    if (!t) return '';
+    if (max) t = passend(rol, t, maat, max, tc);
+    const px = rechts ? x - breedte(rol, t, maat, tc) : x;
+    return `BT /${letters[rol].pdf} ${maat} Tf ${rgb(kleur)} rg ${tc} Tc ${px.toFixed(2)} ${Y(y)} Td ${pdfString(t)} Tj ET\n`;
+  };
+  const label = (x, y, ruw, opties = {}) =>
+    tekst(x, y, 'mono', 8, String(ruw).toUpperCase(), { kleur: K.ink3, tc: 1.28, ...opties });
+  const vlak = (x, y, w, h, kleur) => `${rgb(kleur)} rg ${x.toFixed(2)} ${Y(y + h)} ${w.toFixed(2)} ${h.toFixed(2)} re f\n`;
+  const veelhoek = (punten, kleur) =>
+    `${rgb(kleur)} rg ${punten.map(([px, py], i) => `${px.toFixed(2)} ${Y(py)} ${i ? 'l' : 'm'}`).join(' ')} h f\n`;
+  const lijn = (y, kleur = K.lijn, dik = 0.6) =>
+    `${rgb(kleur)} RG ${dik} w ${rand.toFixed(2)} ${Y(y)} m ${R.toFixed(2)} ${Y(y)} l S\n`;
+  const plaatje = (b, x, y, w, h) => `q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${Y(y + h)} cm /${b.pdf} Do Q\n`;
+
+  // De naam van de poule zo groot als hij in twee regels past, net als op het
+  // deelplaatje.
+  const kopRegels = (ruw) => {
+    const woorden = ruw.split(/\s+/).filter(Boolean);
+    let regels = [];
+    for (let maat = 54; maat >= 26; maat -= 2) {
+      regels = [];
+      let regel = '';
+      for (const w of woorden) {
+        const proef = regel ? `${regel} ${w}` : w;
+        if (!regel || breedte('kop', lees('kop', proef), maat) <= breed) regel = proef;
+        else { regels.push(regel); regel = w; }
+      }
+      if (regel) regels.push(regel);
+      if (regels.length <= 2 && regels.every(r => breedte('kop', lees('kop', r), maat) <= breed)) return { maat, regels };
+    }
+    return { maat: 26, regels: [regels[0] ?? '', regels.slice(1).join(' ')].filter(Boolean) };
+  };
 
   // De kolommen: de plek links, de punten en de weekendzeges rechts
   // uitgelijnd, en wat ertussen overblijft voor de naam (en het team).
-  const getal = pdfBreedte('0000', 'F1', 11);
-  const naamX = L + Math.max(pdfBreedte(k.plek, 'F2', 10), getal) + 12;
-  const zegesR = R - Math.max(pdfBreedte(k.punten, 'F2', 10), getal) - 16;
-  const ruimte = zegesR - Math.max(pdfBreedte(k.zeges, 'F2', 10), getal) - 16 - naamX;
-  const teamX = naamX + ruimte * 0.6;
-  const regels = stand.map((r, i) => ({
-    plek: String(plekken[i]),
-    naam: pdfPassend(pdfTekst(r.naam), 'F1', 11, teams ? ruimte * 0.6 - 12 : ruimte),
-    team: teams ? pdfPassend(pdfTekst(S.teams.find(t => zelfde(t.id, teamVan(r.id)))?.naam ?? ''),
-      'F1', 11, ruimte * 0.4) : '',
-    zeges: String(zeges.get(r.naam) ?? 0),
-    punten: String(r.punten),
-  }));
-  const rij = (y, letter, grootte, r) => tekst(L, y, letter, grootte, r.plek) + tekst(naamX, y, letter, grootte, r.naam)
-    + (teams ? tekst(teamX, y, letter, grootte, r.team) : '')
-    + rechts(zegesR, y, letter, grootte, r.zeges) + rechts(R, y, letter, grootte, r.punten);
+  const k = { spelers: T('{n} spelers', { n: stand.length }), team: T('team'), zeges: T('weekendzeges'), punten: T('ptn') };
+  const kolom = (ruw, rol, maat) => Math.max(breedte('mono', lees('mono', ruw.toUpperCase()), 8, 1.28),
+    breedte(rol, '0000', maat));
+  const naamX = rand + 44;
+  const zegesR = R - kolom(k.punten, 'monoVet', 11) - 20;
+  const ruimte = zegesR - kolom(k.zeges, 'mono', 10) - 20 - naamX;
+  const teamX = naamX + ruimte * 0.62;
+  const regels = stand.map((r, i) => ({ plek: String(plekken[i]), naam: r.naam,
+    team: teams ? S.teams.find(t => zelfde(t.id, teamVan(r.id)))?.naam ?? '' : '',
+    zeges: String(zeges.get(r.naam) ?? 0), punten: String(r.punten) }));
 
+  const kopStuk = (eerste) => {
+    // De schuine strepen rechtsboven (de livrei van de app), en het logo met
+    // de naam.
+    let s = veelhoek([[B - 138, 0], [B - 94, 0], [B, 94], [B, 138]], opWit(strepen, 0.9))
+      + veelhoek([[B - 77, 0], [B - 61, 0], [B, 61], [B, 77]], opWit(strepen, 0.35));
+    const maat = eerste ? 26 : 18;
+    s += logo ? plaatje(logo, rand, 36, maat, maat) : vlak(rand, 39, maat - 6, maat - 6, K.accent);
+    s += tekst(rand + maat + 9, 36 + maat * 0.76, 'kop', eerste ? 17 : 12, 'PREDICT THE RACE', { tc: eerste ? 1 : 0.7 });
+    return s;
+  };
+  const tabelKop = (y) => label(rand, y, k.spelers) + (teams ? label(teamX, y, k.team) : '')
+    + label(zegesR, y, k.zeges, { rechts: true }) + label(R, y, k.punten, { rechts: true });
+  const rij = (r, y) => {
+    let s = '';
+    if (r.plek === '1' && koplopers.length) s += vlak(rand, y + 2, breed, 20, opWit(K.accent, 0.07)) + vlak(rand, y + 2, 3, 20, K.accent);
+    // Alles in een regel op één basislijn, ook al is de naam groter.
+    const lijnY = y + 17;
+    s += tekst(rand + 12, lijnY, 'monoVet', 10, r.plek, { kleur: r.plek === '1' ? K.accent : K.ink3 });
+    s += tekst(naamX, lijnY, 'naam', 15, r.naam, { max: teams ? ruimte * 0.62 - 12 : ruimte });
+    if (teams) s += tekst(teamX, lijnY, 'naam', 12, r.team, { kleur: K.ink2, max: ruimte * 0.38 });
+    s += tekst(zegesR, lijnY, 'mono', 10, r.zeges, { kleur: K.ink2, rechts: true });
+    s += tekst(R, lijnY, 'monoVet', 11, r.punten, { rechts: true });
+    return s + lijn(y + 24);
+  };
+  const voetStuk = (n, totaal) => {
+    const vy = H - 34;
+    let s = lijn(H - 58, K.lijn, 1);
+    // De geblokte vlag rechtsonder.
+    const vak = 5.5, vx = R - 6 * vak, vtop = vy - 2 * vak + 2;
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 6; c++) if ((r + c) % 2) s += vlak(vx + c * vak, vtop + r * vak, vak, vak, K.ink);
+    s += `${rgb(K.ink)} RG 0.6 w ${vx.toFixed(2)} ${Y(vtop + 2 * vak)} ${(6 * vak).toFixed(2)} ${(2 * vak).toFixed(2)} re S\n`;
+    let rechts = vx - 12;
+    if (totaal > 1) {
+      s += label(rechts, vy, `${n}/${totaal}`, { rechts: true });
+      rechts -= breedte('mono', `${n}/${totaal}`, 8, 1.28) + 16;
+    }
+    const adres = T('voorspel mee op {adres}', { adres: location.host || 'Predict the Race' });
+    if (!poulelogo && !sponsor) return s + label(rand, vy, adres, { kleur: K.ink2, max: rechts - rand - 12 });
+    // Premium: links het logo en de sponsor, het adres schuift naar rechts.
+    let links = rand;
+    if (poulelogo) {
+      const hoog = 22, w = Math.min(hoog * 3, poulelogo.breed / poulelogo.hoog * hoog);
+      s += plaatje(poulelogo, links, vy + 3 - hoog, w, hoog);
+      links += w + 12;
+    }
+    if (sponsor) {
+      const boven = T('mogelijk gemaakt door {sponsor}', { sponsor: '' }).trim();
+      s += label(links, vy - 11, boven);
+      s += tekst(links, vy + 2, 'naam', 12, sponsor, { max: 160 });
+      links += Math.max(breedte('mono', lees('mono', boven.toUpperCase()), 8, 1.28),
+        Math.min(160, breedte('naam', lees('naam', sponsor), 12)));
+    }
+    return s + label(rechts, vy, adres, { kleur: K.ink2, rechts: true, max: rechts - links - 16 });
+  };
+
+  const naam = String(S.poule?.name ?? T('Stand')).toUpperCase();
   const paginas = [];
   let i = 0;
   do {
-    let y = A4.h - 50;
-    let s = '';
-    if (!paginas.length) {
-      let grootte = 20;
-      while (grootte > 12 && pdfBreedte(kop, 'F2', grootte) > R - L) grootte -= 1;
-      y -= grootte;
-      s += tekst(L, y, 'F2', grootte, pdfPassend(kop, 'F2', grootte, R - L));
-      y -= 18;
-      s += `0.33 g\n${tekst(L, y, 'F1', 10, pdfPassend(onder, 'F1', 10, R - L))}0 g\n`;
-      y -= 32;
-    } else y -= 10;
-    s += rij(y, 'F2', 10, k) + lijn(y - 7, 0, 0.8);
-    for (y -= 25; i < regels.length && y >= 64; i++, y -= 18) {
-      s += rij(y, 'F1', 11, regels[i]) + lijn(y - 7, 0.73, 0.5);
+    const eerste = !paginas.length;
+    let s = kopStuk(eerste);
+    let y;
+    if (eerste) {
+      y = 96;
+      s += label(rand, y, `${T('stand')} · ${T('seizoen {jaar}', { jaar: seizoen() })}`);
+      const kop = kopRegels(naam);
+      y += 8;
+      for (const regel of kop.regels) {
+        y += kop.maat * 0.88;
+        s += tekst(rand, y, 'kop', kop.maat, regel, { max: breed });
+      }
+      y += 12;
+      s += vlak(rand, y, 52, 4.5, K.accent);
+      y += 26;
+      s += label(rand, y, `${T('na {n} van de {totaal} races', { n: gereden(), totaal: S.races.length })} · ${
+        datumKort(new Date().toISOString())}`, { kleur: K.accentTekst });
+      if (koplopers.length && koplopers[0].punten > 0) {
+        y += 16;
+        s += vlak(rand, y, breed, 70, K.vlak) + vlak(rand, y, 4.5, 70, K.accent);
+        s += label(rand + 22, y + 24, T('koploper'));
+        const getal = String(koplopers[0].punten);
+        s += tekst(R - 20, y + 55, 'kop', 46, getal, { kleur: K.accent, rechts: true });
+        s += tekst(rand + 22, y + 55, 'kop', 28, opsomming(koplopers.map(r => r.naam)),
+          { max: breed - breedte('kop', getal, 46) - 70 });
+        y += 70;
+      }
+    } else {
+      y = 92;
+      s += tekst(rand, y, 'kop', 22, naam, { max: breed - 60 });
     }
+    y += 34;
+    s += tabelKop(y);
+    for (y += 10; i < regels.length && y + 24 <= H - 70; i++, y += 24) s += rij(regels[i], y);
     paginas.push(s);
   } while (i < regels.length);
-  return maakPdf(paginas.map((s, n) => `${s}0.33 g\n${tekst(L, 36, 'F1', 9, voet)}${
-    paginas.length > 1 ? rechts(R, 36, 'F1', 9, `${n + 1}/${paginas.length}`) : ''}0 g\n`), kop);
+  return maakPdf({ paginas: paginas.map((s, n) => s + voetStuk(n + 1, paginas.length)), letters, beelden,
+    titel: pdfTekst(S.poule?.name ?? T('Stand')) });
 }
 
 // Op een telefoon het deelmenu; op een computer heeft dat geen Opslaan of
@@ -10491,6 +10753,7 @@ function standPdf() {
 let pdfDelen = false;
 function standAlsPdf() {
   if (pdfDelen) return;
+  pdfVoorbereiden();
   const naam = deelBestandsnaam(`stand ${S.poule?.name ?? ''}`).replace(/\.png$/, '.pdf');
   const pdf = standPdf();
   const bestand = new File([pdf], naam, { type: 'application/pdf' });
@@ -10518,8 +10781,13 @@ function knoopGroepsapp() {
   const csv = app.querySelector('[data-export-csv]');
   if (csv) csv.onclick = () => bewaarBestand(standCsv(),
     deelBestandsnaam(`stand ${S.poule?.name ?? ''}`).replace(/\.png$/, '.csv'), 'text/csv;charset=utf-8');
+  // De letters en het logo voor de PDF alvast ophalen: bij de tik moet alles
+  // er al zijn (zie pdfVoorbereiden()). data-klaar zegt dat ze er zijn.
   const pdf = app.querySelector('[data-stand-pdf]');
-  if (pdf) pdf.onclick = standAlsPdf;
+  if (pdf) {
+    pdf.onclick = standAlsPdf;
+    pdfVoorbereiden().then(() => { pdf.dataset.klaar = ''; });
+  }
 }
 
 // Dezelfde regel als pools_sponsor_url in schema.sql.
