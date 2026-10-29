@@ -11817,3 +11817,50 @@ plaatjes zien er netjes uit.
 
 **Danny moet:** niets.
 
+## De stand als PDF in de stijl van de site (29 oktober)
+
+**Aanleiding.** Danny, met de werkende PDF op zijn iPhone: "Kunnen we niet het
+mooier maken zoals in de stijl van de site enzo met het logo. Of is dat te veel
+moeite?"
+
+**Wat het nu is.** Het deelplaatje van de stand (`tekenStandplaatje()`), maar
+op A4 en op wit papier, zodat afdrukken geen pot inkt kost: de schuine strepen
+rechtsboven (in het accent, of met premium in `merkKleur()`), het logo met
+PREDICT THE RACE, het label "stand · seizoen", de naam van de poule in Barlow
+Condensed zo groot als hij in twee regels past met het streepje eronder, "na
+18 van de 25 races" met de datum in het accent, de koploper in een vlak, dan de
+tabel (labels en getallen in Space Mono, namen in Barlow Condensed, de eerste
+plek met een accentstreep) en onderaan het adres en de geblokte vlag. Met
+premium ook het logo en de sponsor van de poule in de voet, zoals `deelVoet()`.
+Volgende pagina's krijgen een kleine kop met de naam van de poule. Kleuren uit
+het lichte thema van de app.
+
+**De letters.** Een PDF kan geen WOFF2 bevatten, en de bestanden in
+`lettertypen/` zijn bovendien in latin en latin-ext geknipt. Daarom
+`scripts/maak-pdf-letters.py` (fontTools): de originelen van Google Fonts
+(Barlow Condensed 700 en 600, Space Mono 400 en 700), teruggebracht tot de
+tekens van WinAnsi, zonder hints en opmaaktabellen, in `lettertypen/pdf/` met
+de licentie ernaast (SIL OFL, inbedden mag). Samen 85 kB. De app leest de
+breedtes zelf uit het bestand (`ttfMaten()`: head, hhea, hmtx, OS/2, cmap
+formaat 4) en bedt ze in als TrueType met FontFile2, ingepakt met
+CompressionStream als de browser dat kan.
+
+**Alvast ophalen.** Het deelmenu mag alleen direct na een tik open, dus bij de
+tik moet alles er al zijn. `pdfVoorbereiden()` haalt de letters, het logo en
+het logo van de poule op zodra de knop er staat, en zet dan `data-klaar` op de
+knop (handig voor de test). Is het er bij de tik nog niet, of lukt het niet,
+dan dezelfde opmaak in Helvetica en Courier, zonder logo als dat ook niet
+lukte. Een PDF van één pagina is zo'n 75 kB.
+
+**Tests.** `test/groepsapp-hulp.test.mjs`: de vier letters ingebed, met de
+breedtes uit de lettertypen zelf, het logo met zijn doorzichtigheid, de
+strepen in het accent, de kop, de koploper, de tabel, de getallen rechts
+uitgelijnd (Space Mono, 0,612 per teken), de vlag, vier pagina's voor 83
+spelers met de naam van de poule op elke; premium: de strepen in de kleur van
+de poule, het logo en de sponsor in de voet, het adres er heel naast; zonder
+letters Helvetica en Courier; en in het Engels. Veertien mutaties op de app
+gevangen. Lokaal nagelopen met poppler (pdfinfo, pdffonts, pdfimages,
+pdftoppm), pdf.js en PDFium: alle drie lezen en tekenen het zonder fouten.
+
+**Danny moet:** niets.
+
