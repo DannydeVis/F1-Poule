@@ -11775,3 +11775,38 @@ claimen) en `poule_nieuwe_code()`.
 
 **Danny moet:** niets.
 
+## De stand als PDF (29 oktober)
+
+**Aanleiding.** Danny, met een schermafdruk van Poule op zijn iPhone: "De pdf
+knop werkt niet." **Stand afdrukken of als PDF** riep `window.print()` aan, en
+in een app op het beginscherm van een iPhone opent dat geen afdrukvenster: er
+gebeurt niets, zonder fout. De test zag het niet, omdat hij `window.print`
+zelf verving.
+
+**Wat het nu doet.** De app maakt zelf een PDF (`standPdf()`, zonder
+bibliotheek): A4, Helvetica en Helvetica-Bold (die heeft elke PDF-lezer, dus
+er zit geen lettertype in het bestand), de naam van de poule, na hoeveel
+races, en een tabel met plek, naam, team, weekendzeges en punten. Getallen
+staan rechts uitgelijnd met de tekenbreedtes uit de AFM-bestanden
+(`PDF_BREEDTE`); een te lange naam wordt afgekapt met een weglatingsteken.
+Tekst gaat als WinAnsi; een letter die daar niet in staat, komt er zonder
+accent in (ł wordt l) of als vraagteken. Past het niet op één pagina, dan
+staan de koppen op elke pagina en onderaan "2/3". `standAlsPdf()`: op een
+telefoon (en altijd in de app op het beginscherm) het deelmenu met het
+bestand, met daarin Afdrukken, Bewaar in Bestanden en de groepsapp; op een
+computer een download. Wegtikken is geen fout; lukt het deelmenu niet, dan
+alsnog een download. Twee keer tikken opent het één keer.
+
+Weg: `standAfdrukken()`, de afdruk-CSS (`#afdruk`) en `window.print()`. De
+knop heet nu `data-stand-pdf`; de tekst op de knop is dezelfde.
+
+**Tests.** `test/groepsapp-hulp.test.mjs` leest de PDF terug zonder
+bibliotheek: de opbouw (xref, /Size, /Count, /Length, startxref) en de tekst
+per regel. Download, deelmenu, wegtikken, mislukken, twee keer tikken, een
+poule van 83 spelers op drie pagina's, letters zonder accent, een los haakje,
+afkappen, en in het Engels. Vijftien mutaties op de app gevangen. Lokaal ook
+nagelopen met poppler (pdfinfo, pdftotext, pdftoppm): geen fouten, en de
+plaatjes zien er netjes uit.
+
+**Danny moet:** niets.
+
