@@ -10502,9 +10502,11 @@ function standAlsPdf() {
   if (!delen) { bewaarBestand(pdf, naam, 'application/pdf'); return; }
   // Meteen, zonder eerst iets af te wachten: een telefoon laat het deelmenu
   // alleen toe direct na een tik. Wegtikken is geen fout; al het andere wordt
-  // alsnog een download.
+  // alsnog een download. Alleen het bestand, zonder titel: daar maakt een
+  // iPhone een los item "tekst" van, en wie dan op het voorbeeld tikt, ziet
+  // alleen de naam van de poule (Danny, 29 oktober).
   pdfDelen = true;
-  navigator.share({ files: [bestand], title: S.poule?.name ?? T('Stand') })
+  navigator.share({ files: [bestand] })
     .catch((e) => { if (e?.name !== 'AbortError') bewaarBestand(pdf, naam, 'application/pdf'); })
     .finally(() => { pdfDelen = false; });
 }

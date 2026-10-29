@@ -244,7 +244,7 @@ const deelmenu = (gedrag) => page.evaluate((g) => {
     const bytes = new Uint8Array(await f.arrayBuffer());
     let bin = '';
     for (const b of bytes) bin += String.fromCharCode(b);
-    window.__pdfGedeeld.push({ titel: d.title, naam: f.name, soort: f.type, bytes: btoa(bin) });
+    window.__pdfGedeeld.push({ velden: Object.keys(d).sort().join(','), naam: f.name, soort: f.type, bytes: btoa(bin) });
     if (g === 'weg') throw new DOMException('weggetikt', 'AbortError');
     if (g === 'mis') throw new DOMException('mag niet', 'NotAllowedError');
     if (g === 'traag') await new Promise((klaar) => setTimeout(klaar, 400));
@@ -257,8 +257,11 @@ await page.waitForFunction(() => window.__pdfGedeeld.length === 1);
   const g = await page.evaluate(() => window.__pdfGedeeld[0]);
   const pdf = pdfLezen(Buffer.from(g.bytes, 'base64'));
   check('in de app op het beginscherm van een iPhone het deelmenu, met de PDF', g.naam === 'predict-the-race-stand-vrijdagmiddagpoule.pdf'
-    && g.soort === 'application/pdf' && g.titel === 'Vrijdagmiddagpoule' && pdf.fouten.length === 0
+    && g.soort === 'application/pdf' && pdf.fouten.length === 0
     && pdf.paginas[0]?.[3] === '1|Danny|Kantoor|1|100' && downloads === 0, JSON.stringify({ ...g, bytes: undefined, downloads }));
+  // Danny, 29 oktober: met een titel erbij maakte zijn iPhone daar een los
+  // item "tekst" van, en wie op het voorbeeld tikte zag alleen de poulenaam.
+  check('alleen het bestand, zonder titel of tekst erbij', g.velden === 'files', g.velden);
 }
 await deelmenu('weg');
 await page.click('[data-stand-pdf]');
