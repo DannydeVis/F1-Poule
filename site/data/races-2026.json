@@ -1082,9 +1082,9 @@
             {
               "plek": 9,
               "nr": "30",
-              "code": "LAW",
-              "naam": "Liam Lawson",
-              "team": "Racing Bulls"
+              "code": null,
+              "naam": null,
+              "team": null
             },
             {
               "plek": 10,
