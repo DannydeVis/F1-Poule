@@ -132,3 +132,9 @@ van Danny de Visser. Niets hiervan mag gekopieerd, hergebruikt, aangepast of
 verspreid worden zonder zijn schriftelijke toestemming. Spelen op
 predicttherace.com is gratis; dat geeft geen enkel recht op de code of de
 rest van deze repository. Zie `LICENSE`.
+
+Een uitzondering: de racegegevens. De kalender, de deelnemers en de uitslagen
+komen van [OpenF1](https://openf1.org) en vallen onder
+[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Wat
+Predict the Race daaruit afleidt (de cijfers op de racepagina's en in
+`site/data`) valt onder dezelfde licentie.

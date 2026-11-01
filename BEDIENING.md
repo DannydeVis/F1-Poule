@@ -1412,12 +1412,45 @@ Dus: geen inleg, geen pot, geen betaallink, geen "wie wint krijgt". Wie met
 zijn vrienden geld afspreekt doet dat in de groepsapp, buiten deze app om.
 
 Hier hangt nog iets aan vast: **OpenF1 is alleen gratis voor
-niet-commercieel gebruik**. Advertenties of een betaalde variant breken die
+niet-commercieel gebruik**. Hun data valt onder CC BY-NC-SA 4.0 (de LICENSE
+in github.com/br-g/openf1). Advertenties of een betaalde variant breken die
 voorwaarde. Premium (§19) is nu nog gratis en met de hand aangezet; zodra er
 voor de extra's betaald kan worden (ROUTEKAART, Premium stap 2) is Predict
-the Race commercieel. Vóór betalen aanstaat heb je dus toestemming of een
-licentie van OpenF1 nodig, of een andere databron voor de kalender, de
-deelnemers en de uitslagen. Lees op dat moment de voorwaarden op openf1.org.
+the Race commercieel.
+
+**Het besluit** (1 november; Danny: "bepaal maar"):
+
+- Betalen gaat pas aan met schriftelijke toestemming van OpenF1. Een
+  commerciële licentie staat nergens te koop. Het betaalde account op hun
+  site is voor realtime data, en dat hebben we niet nodig: de sync wacht tot
+  na een sessie (§11).
+- De aanvraag gaat via het formulier op openf1.org/contact (een mailadres
+  noemen ze niet), op het moment dat betalen echt begint. Plak er deze tekst
+  in:
+
+  > Hello, I make Predict the Race (predicttherace.com), a free F1 prediction
+  > game for groups of friends. It uses the historical OpenF1 endpoints
+  > (sessions, drivers, session_result, laps, pit and race_control), credited
+  > on the site and in the app as "Results via OpenF1 (CC BY-NC-SA 4.0)".
+  > Playing is and will stay free. I would like to offer optional paid extras
+  > for big leagues and companies, such as team standings, custom questions
+  > and a league logo. Since that would be commercial use, I would like to ask
+  > for your permission, or for a commercial license. Is that possible, and on
+  > what terms? Kind regards, Danny de Visser
+
+- Overstappen helpt niet: Jolpica (de opvolger van Ergast) heeft dezelfde
+  licentie, en de officiële F1-data is alleen met een dure licentie te
+  krijgen.
+- Zegt OpenF1 nee, of vraagt het een bedrag dat niet past, dan blijft premium
+  gratis en met de hand aangezet, en gaat de regel over extra's tegen betaling
+  van de site en uit de app (`test/gratis-belofte.test.mjs` gaat dan mee).
+  Zegt het ja: bewaar de mail en zet de datum hier.
+- Nu al, bij gratis gebruik, vraagt de licentie om naamsvermelding met de
+  licentie erbij: op elke pagina van de site die OpenF1 noemt, in llms.txt, in
+  de README en in de app onder Profiel (`test/openf1-licentie.test.mjs`). Wat we
+  zelf uit hun data maken (de racecijfers op de racepagina's en in
+  `site/data`) valt onder dezelfde licentie; de README zegt dat erbij.
+
 Zie §11.
 
 Wat de site en de app over geld zeggen, staat sinds 1 november overal

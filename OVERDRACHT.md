@@ -12066,3 +12066,58 @@ uitleg in het Nederlands en Engels, en dat het label de extra's noemt),
 OpenF1 lezen en toestemming of een licentie regelen (ROUTEKAART, Premium stap
 2). Ik kon ze vanuit deze omgeving niet nalezen: openf1.org is hier niet
 bereikbaar.
+
+## OpenF1: het besluit over betalen, en de bron met de licentie (1 november)
+
+Danny, op de vraag of hij de voorwaarden van OpenF1 wilde lezen: "Ik ga niks
+lezen. Bepaal maar." Het contactadres in de FAQ over premium mag blijven.
+
+**Wat er vaststaat.** De LICENSE in github.com/br-g/openf1 is CC BY-NC-SA 4.0:
+gratis, alleen niet-commercieel, met naamsvermelding, en wat je eruit afleidt
+onder dezelfde licentie. Hun documentatie zegt dat historische data gratis is
+zonder account, en dat realtime data een betaald abonnement vraagt. Een
+commerciële licentie staat nergens te koop; voor speciale vragen is er een
+formulier op openf1.org/contact (geen mailadres). Jolpica, de opvolger van
+Ergast, heeft dezelfde licentie (commercieel via admin@jolpi.ca). openf1.org
+zelf is vanuit deze omgeving niet bereikbaar; de repository wel.
+
+**Het besluit** (BEDIENING §10, ROUTEKAART Premium stap 2):
+
+- Betalen gaat pas aan met schriftelijke toestemming van OpenF1. De aanvraag
+  gaat via het formulier, op het moment dat betalen echt begint; de Engelse
+  tekst staat klaar in BEDIENING §10.
+- Geen overstap: een andere gratis bron heeft dezelfde beperking.
+- Zegt OpenF1 nee, of vraagt het een bedrag dat niet past, dan blijft premium
+  gratis en met de hand aangezet, en gaat de regel over extra's tegen betaling
+  van de site en uit de app.
+- Het betaalde account van OpenF1 is niet nodig: de sync wacht tot na een
+  sessie (BEDIENING §11).
+
+**Wat er nu al veranderd is: de naamsvermelding.** De licentie vraagt de bron
+én de licentie te noemen. Dat stond alleen in de voet van de zeven
+voorpagina's, en zonder licentie. Nu:
+
+- in de voet van elke pagina van de site (ook de gidsen, de racepagina's, de
+  over-pagina's en de privacyverklaring): "Uitslagen via OpenF1
+  (CC BY-NC-SA 4.0)", met een link naar openf1.org en naar de licentie
+  (`rel="license"`);
+- in llms.txt een regel "Data license", ook voor de racecijfers die de site
+  eruit afleidt;
+- in de README: de racegegevens en wat eruit afgeleid is (de cijfers op de
+  racepagina's en in `site/data`) vallen onder CC BY-NC-SA 4.0, niet onder
+  "alle rechten voorbehouden". LICENSE zelf noemt alleen code, teksten,
+  ontwerp en afbeeldingen, dus die bleef zoals hij was;
+- in de app onder Profiel, bij "over Predict the Race", een regel in kleine
+  letters: "De kalender en de uitslagen komen van OpenF1, onder de licentie
+  CC BY-NC-SA 4.0", met links in een nieuw venster, in zeven talen.
+  `test/gewone-taal.test.mjs` verbiedt OpenF1 in de teksten van de app; deze
+  regel is daar nu een uitzondering, net als de privacyverklaring, omdat de
+  licentie erom vraagt. Het is geen melding over hoe de uitslag binnenkomt.
+
+**Tests.** Nieuw: `test/openf1-licentie.test.mjs` (18 controles): de voet van
+de zo'n 90 pagina's, llms.txt, de README, het besluit in BEDIENING en
+ROUTEKAART, en de regel in de app in vier talen in de browser. Elf mutanten,
+alle gevangen.
+
+**Danny moet:** niets, tot betalen echt begint. Dan plak je de tekst uit
+BEDIENING §10 in het formulier op openf1.org/contact.
