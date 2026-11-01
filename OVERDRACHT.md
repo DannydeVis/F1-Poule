@@ -11960,3 +11960,32 @@ eerste sync na de merge pas komen. De eerste echte melding is die van de race
 in Mexico, op 1 november.
 
 **Danny moet:** niets.
+
+## De balk met Opslaan op een iPad (1 november)
+
+Danny, op een iPad liggend: "Klein venster om alles te kijken, die knoppen
+staan niet goed." Opslaan, "Opslaan, ook in je andere poules" en Wis alles
+stonden onder elkaar, elk over de hele breedte, net als op een telefoon. Met de
+kop erbij bleef er op 1000 bij 700 pixels zo'n driehonderd pixels over om je
+top 10 in te zien. Daarbij scrolt vanaf 960 pixels de kolom en niet de pagina,
+en die kolom had onderaan veertig pixels ruimte: de balk plakte daarboven, met
+de inhoud die eronder doorschoof en door de doorzichtige bovenkant heen te zien
+was.
+
+**Nu.** Vanaf 600 pixels staan de knoppen naast elkaar: Wis alles links, "ook
+in je andere poules" met een rand (op een telefoon is dat een tekstknop), en
+Opslaan, die de rest van de ruimte vult; past hij er niet naast (de smalle
+rechterkolom op een groot scherm, of net boven 600 pixels), dan een eigen regel
+over de hele breedte. "Nog open" staat erboven. Alleen met CSS (`order` en
+`flex`), dus in de volgorde van de pagina staat Opslaan nog vooraan. Vanaf 960
+pixels heeft de kolom met een opslaanbalk geen ruimte meer onderaan
+(`.kol:has(.opslaanbalk)`), en heeft de balk zelf een dichte achtergrond, een
+lijn erboven en de ruimte onderaan. Op een iPad liggend is de balk nu 125 pixels
+hoog (met "nog open") in plaats van 246, en het venster ruim 480 pixels. Op een
+telefoon is niets veranderd.
+
+**Tests.** `test/opslaanbalk.test.mjs` (25 controles) op 1000 bij 700, 1440 bij
+900, 744 (iPad mini staand), 600 en een telefoon. Tien mutaties op de CSS, alle
+gevangen.
+
+**Danny moet:** niets.

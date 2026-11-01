@@ -1164,6 +1164,26 @@
      gewone knop, net als Wis alles. */
   .opslaanbalk .eldersknop{min-height:48px}
   .wisknop.zeker{color:var(--accent);border-color:var(--accent)}
+  /* Vanaf een tablet één rij in plaats van drie knoppen onder elkaar, elk over
+     de hele breedte. Op een iPad liggend bleef er tussen de kop en de balk een
+     venster van zo'n driehonderd pixels over om je top 10 in te zien (Danny,
+     1 november). Wis alles links, Opslaan rechts, "nog open" erboven. In de
+     volgorde van de pagina staat Opslaan nog steeds vooraan. */
+  @media (min-width:600px){
+    .opslaanbalk{flex-direction:row;flex-wrap:wrap;align-items:center;
+      justify-content:flex-end;gap:8px 10px}
+    .opslaanbalk .knop{width:auto;padding:0 22px}
+    .opslaanbalk .knop,.opslaanbalk .wisknop,.opslaanbalk .eldersknop{min-height:48px}
+    .opslaanbalk .nogopen,.opslaanbalk .err{flex:1 1 100%}
+    .opslaanbalk .wisknop{order:1;margin-right:auto}
+    .opslaanbalk .eldersknop{order:2;border:1px solid var(--lijn)}
+    /* Opslaan vult de ruimte die overblijft; past het niet naast de andere
+       twee (de smalle rechterkolom op een groot scherm), dan krijgt hij een
+       eigen regel over de hele breedte. */
+    .opslaanbalk #opslaan{order:3;flex:1 1 180px}
+    .opslaanbalk .err{order:4}
+    .opslaanbalk .err:empty{display:none}
+  }
   #paneel{display:flex;flex-direction:column;gap:14px;min-width:0}
   /* Twee kolommen voor een race op een breed scherm (zie de media query voor
      1280 pixels). Smaller dan dat vallen de kolommen weg en staat alles onder
@@ -1670,7 +1690,14 @@
     .shell.detail .terug{display:inline-block}
     .coureurs{grid-template-columns:1fr 1fr 1fr}
     .drv .tm,.wknop .tm{display:none}
-    .opslaanbalk{background:linear-gradient(transparent,var(--bg) 40%)}
+    /* Hier scrolt de kolom en niet de pagina, en de balk plakte boven de
+       ruimte onderaan de kolom: veertig pixels erboven, met de inhoud die
+       eronder zichtbaar doorschoof en door de doorzichtige bovenkant heen
+       te zien was. Nu sluit hij aan op de onderrand, dicht, met een lijn
+       erboven; de ruimte onderaan zit in de balk zelf. */
+    .shell.detail .kol:has(.opslaanbalk){padding-bottom:0}
+    .opslaanbalk{background:var(--bg);border-top:1px solid var(--lijn);
+      padding-bottom:calc(14px + var(--onder))}
   }
   @media (min-width:1280px){
     .zijbalk{width:264px;padding:24px 18px}

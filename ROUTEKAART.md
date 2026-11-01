@@ -725,6 +725,12 @@ een eigen blok met een gestippelde amber plek; zodra je iets kiest staat bij
 Opslaan wat er nog open is; de bevestiging noemt het; en de weekendkaart wijst
 naar een open losse vraag zodra je top 10 af is.
 
+**De balk met Opslaan op een iPad** (Danny, 1 november: "Klein venster om
+alles te kijken, die knoppen staan niet goed"). Gebouwd: vanaf 600 pixels
+staan de knoppen naast elkaar in plaats van onder elkaar, en op een iPad sluit
+de balk aan op de onderrand, met een dichte achtergrond. Het venster om je top
+10 in te zien werd anderhalf keer zo hoog.
+
 **Iemand een tik geven** (Danny, 26 oktober; premium). Gebouwd: op de
 racescherm, in de lijst De poule (eerst op de weekendkaart; verhuisd op 27
 oktober, voor een poule met honderd man), een knop bij elke speler die zijn
