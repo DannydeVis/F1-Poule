@@ -266,7 +266,7 @@ Bovenaan de pagina, vóór het korte antwoord: "Deze vergelijking is geschreven 
 | id | kern van het korte antwoord |
 |---|---|
 | wie | Danny de Visser uit Rotterdam, ook de maker van PadelBracket, begonnen voor zijn eigen vriendenpoule. Danny controleert de formulering. |
-| gratis | Geen advertenties en geen abonnement. Hoe de kosten gedekt worden schrijft Danny zelf. |
+| gratis | Meespelen is en blijft gratis, zonder advertenties; alles voor een poule met vrienden zit erin. Voor grote poules en bedrijven komen er later extra's tegen betaling, zonder prijs zolang betalen niet aanstaat (Danny, 1 november). Hoe de kosten gedekt worden schrijft Danny zelf. |
 | techniek | Uitslagen van OpenF1 via een GitHub Action, database op Supabase, hosting op GitHub Pages, broncode openbaar op GitHub. |
 
 ### 3.3 Racepagina's (tijdens SEO fase 4)

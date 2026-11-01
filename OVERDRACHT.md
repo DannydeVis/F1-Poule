@@ -11989,3 +11989,80 @@ telefoon is niets veranderd.
 gevangen.
 
 **Danny moet:** niets.
+
+## Gratis meespelen, extra's later: de teksten gelijk (1 november)
+
+Danny: "De site en de app beloven dat alles gratis is, maar er zijn
+premiumfuncties (eigen profiel, teams, eigen vragen, tussenklassementen,
+aantikken). Trek de teksten gelijk." De lijn, nu overal hetzelfde: meespelen is
+en blijft gratis, zonder advertenties. Alles wat je nodig hebt voor een poule
+met vrienden zit erin. Voor grote poules en bedrijven komen er later extra's
+tegen betaling. Geen prijs zolang betalen niet live staat. Eerst in het Engels
+geschreven, daarna de andere zes talen.
+
+**Wat er stond en wat er nu staat.**
+
+- **Voorpagina, zeven talen.** Het cijfer bij de 0 beloofde dat het voor altijd
+  zo bleef; nu "0 euro om mee te spelen" (en "euros to play", "Euro zum
+  Mitspielen", enzovoort). De FAQ "Is Predict the Race gratis?" zei dat elke
+  functie voor iedereen beschikbaar was; nu de lijn hierboven. Nieuw: de FAQ
+  "Wat kost premium en wat krijg je?", met wat er nu in zit (teams, eigen
+  vragen, tussenklassementen, de tik, hulp voor de groepsapp, de stand als
+  bestand, logo, kleur en sponsorregel), dat betalen nog niet aanstaat en dat
+  je het tot die tijd aanvraagt bij het contactadres. In `site/teksten.mjs`
+  staat daar `{contact}`: op de pagina wordt dat een maillink, in de JSON-LD en
+  llms.txt het adres als tekst. De FAQ over geld zegt in het Nederlands, Engels
+  en Portugees nu "je speelt niet om geld" in plaats van "er zit geen geld in":
+  met betaalde extra's zit er straks wel geld in het product, alleen niet in
+  het spel.
+- **De gids over organiseren, de werkpoule, zeven talen.** Er stond dat een
+  poule geen maximum aantal spelers heeft en dat er geen zakelijk tarief is.
+  Dat eerste klopte al niet (standaard 500, `pools.max_spelers`), het tweede
+  straks niet meer. Nu: iedereen speelt gratis mee, ook met het hele bedrijf,
+  en extra's als teams per afdeling, eigen vragen en een eigen logo komen later
+  tegen betaling; om mee te spelen heb je ze niet nodig.
+- **Vergelijking (NL, EN):** "Gratis meespelen, zonder advertenties en zonder
+  prijzen; later betaalde extra's voor grote poules".
+- **Over (NL, EN):** "fanproject zonder verdienmodel, geen betaalde functies,
+  iedereen kan alles gebruiken" werd de lijn, met "betalen staat nog niet aan".
+- **llms.txt:** de regel "Price:" volgt de lijn. De JSON-LD houdt
+  `price: '0'` en `isAccessibleForFree: true`: meespelen kost niets, en zolang
+  betalen niet aanstaat komt er geen tweede aanbod met een prijs.
+- **README, de pitch** in `docs/zoekplan/3-geo.md` (NL, EN, ook daar stonden het
+  maximum en het zakelijk tarief) en de rij over gratis in
+  `docs/zoekplan/2-aeo.md`.
+- **De app, zeven talen.** De poulebaas van een poule zonder premium ziet onder
+  Poule nu "premium: extra's voor grote poules" (was "eigen logo en kleur"),
+  met "Meespelen blijft gratis, en alles voor een poule met vrienden zit al in
+  de app", de lijst met extra's en "Betalen kan nog niet. Wil je de extra's nu
+  al? Mail dan ...". De melding als aantikken niet mag: "Aantikken is een extra
+  van premium, en dat staat in deze poule niet aan." In het welkomstblok:
+  "Gratis om mee te spelen, en je hebt geen wachtwoord nodig. Je speelt niet om
+  geld: ...". De andere premiumfuncties (teams, eigen vragen,
+  tussenklassementen, hulp voor de groepsapp, de tik) zijn zonder premium niet
+  te zien, en niets ervan staat gratis spelen in de weg.
+- **ROUTEKAART (Premium, stap 2) en BEDIENING §10:** OpenF1 is alleen gratis
+  voor niet-commercieel gebruik. Met betaalde extra's is Predict the Race
+  commercieel, dus vóór betalen aanstaat is toestemming of een licentie van
+  OpenF1 nodig, of een andere databron voor kalender, deelnemers en uitslagen.
+
+**Tests.** Nieuw: `test/gratis-belofte.test.mjs` (73 controles, zonder
+browser). Hij doorzoekt de hele repo (zo'n 400 tekstbestanden, ook de docs) op
+de oude beloftes en hun vertalingen in zeven talen, met hele woorden: dat elke
+functie gratis is, of dat het tot in de eeuwigheid zo blijft. Wat online staat (de site,
+llms.txt, de app en zijn vertalingen, de README) mag daarbij ook niet zeggen
+dat alles gratis is; in de docs mag dat wel, als citaat, want zo begint
+Danny's eigen zin hierboven. Verder het cijfer, de twee FAQ's per taal op de
+pagina, in de JSON-LD en in llms.txt, de maillink, dat er nergens een bedrag
+bij premium staat en dat de JSON-LD één aanbod van 0 heeft, en de teksten in
+de app in zeven talen. Negentien mutanten (de oude zinnen terug, "alles
+gratis" op de site of in de app, een prijs in de FAQ of de app, een tweede
+aanbod in de JSON-LD, de maillink weg, een FAQ weg, een vertaling zonder "nog
+niet"), alle gevangen. Bijgewerkt: `premium.test.mjs` (de nieuwe
+uitleg in het Nederlands en Engels, en dat het label de extra's noemt),
+`periodes.test.mjs` en `geo.test.mjs` (de regel "Price:").
+
+**Danny moet:** niets voor deze PR. Vóór betalen live gaat: de voorwaarden van
+OpenF1 lezen en toestemming of een licentie regelen (ROUTEKAART, Premium stap
+2). Ik kon ze vanuit deze omgeving niet nalezen: openf1.org is hier niet
+bereikbaar.

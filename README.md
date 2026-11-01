@@ -13,8 +13,10 @@ Punten per plek: **5** exact, **3** één plek ernaast, **1** twee plekken
 ernaast. De uitslagen komen automatisch binnen, dus niemand hoeft ze bij te
 houden.
 
-Gratis, geen wachtwoord, en er zit geen geld in — geen inleg, geen pot, geen
-prijzen. Je speelt om de eer.
+Meespelen is en blijft gratis, zonder advertenties en zonder wachtwoord. Alles
+wat je nodig hebt voor een poule met vrienden zit erin; voor grote poules en
+bedrijven komen er later extra's tegen betaling. Je speelt niet om geld: geen
+inleg, geen pot, geen prijzen. Je speelt om de eer.
 
 **[predicttherace.com](https://predicttherace.com)** — de app staat op
 [predicttherace.com/app/](https://predicttherace.com/app/).

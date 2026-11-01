@@ -61,7 +61,7 @@ const zonder = { beheer: await bestaat('#nieuweperiode'), stand: false };
 await naar('stand'); zonder.stand = await bestaat('[data-periodes]');
 check('zonder premium geen tussenklassementen', !zonder.beheer && !zonder.stand, JSON.stringify(zonder));
 await naar('poule');
-check('de uitleg over premium noemt de tussenklassementen', (await tekst('[data-premium-uitleg]')).includes('tussenklassementen met prijzen'),
+check('de uitleg over premium noemt de tussenklassementen', (await tekst('[data-premium-uitleg]')).includes('tussenklassementen met een eigen winnaar'),
   await tekst('[data-premium-uitleg]'));
 
 // ---- 2. met premium: periodes zetten -------------------------------------------------

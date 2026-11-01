@@ -2358,10 +2358,8 @@ const ENGELS = Object.fromEntries([
    'Points per position: <b>5</b> spot on, <b>3</b> one place off, '
    + '<b>1</b> two places off. Results come in by themselves, so nobody has '
    + 'to keep score.'],
-  ['Gratis, geen wachtwoord, en er zit geen '
-   + 'geld in — geen inleg, geen pot, geen prijzen. Je speelt om de eer.',
-   'Free, no password, and there is no money in it — no stake, no pot, no '
-   + 'prizes. You play for the bragging rights.'],
+  ['Gratis om mee te spelen, en je hebt geen wachtwoord nodig. Je speelt niet om geld: geen inleg, geen pot, geen prijzen. Je speelt om de eer.',
+   'Free to play, and you do not need a password. You do not play for money: no stake, no pot, no prizes. You play for the bragging rights.'],
 
   // ---- inloggen op het beginscherm -----------------------------
   ['je mailadres',
@@ -3974,8 +3972,8 @@ const ENGELS = Object.fromEntries([
    'That player has just filled in the top 10.'],
   ['Voor deze sessie kun je nu niemand meer aantikken.',
    'You can no longer nudge anyone for this session.'],
-  ['Aantikken kan alleen in een poule met premium.',
-   'Nudging only works in a pool with premium.'],
+  ['Aantikken is een extra van premium, en dat staat in deze poule niet aan.',
+   'Nudging is a premium extra, and premium is not on in this league.'],
   ['Aantikken lukte niet. Probeer het zo nog eens.',
    'Nudging did not work. Try again in a moment.'],
   ['{naam}, de top 10 voor {sessie} van {race} sluit {wanneer} en je hebt nog niets ingevuld.',
@@ -4351,8 +4349,8 @@ const ENGELS = Object.fromEntries([
    'outcome of "{vraag}"'],
   ['Zet een eigen vraag bij dit weekend, met 2 tot 6 antwoorden om uit te kiezen.',
    'Add your own question to this weekend, with 2 to 6 answers to choose from.'],
-  ['Een poule voor je bedrijf, club of vereniging? Met premium krijgt hij teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met prijzen, een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} om het aan te zetten.',
-   'A league for your company, club or society? With premium it gets teams that play against each other, its own questions every weekend, interim standings with prizes, a nudge for anyone who has not filled anything in, reminders and summaries for the group chat, the standings as a file, its own logo, its own colour and a sponsor line with a link. Email {adres} to turn it on.'],
+  ["Meespelen blijft gratis, en alles voor een poule met vrienden zit al in de app. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen: teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met een eigen winnaar, een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.",
+   'Playing stays free, and everything a league with friends needs is already in the app. Big leagues, companies and clubs can add extras: teams that play against each other, their own questions every weekend, interim standings with their own winner, a nudge for anyone who has not filled anything in, reminders and summaries for the group chat, the standings as a file, their own logo, their own colour and a sponsor line with a link. Paying is not possible yet. Want the extras now? Email {adres}.'],
   ['tussenklassementen',
    'interim standings'],
   ['ronde {van} tot en met {tot}',
@@ -4385,8 +4383,8 @@ const ENGELS = Object.fromEntries([
    'Remove interim standings {naam}'],
   ['mogelijk gemaakt door {sponsor}',
    'brought to you by {sponsor}'],
-  ['eigen logo en kleur',
-   'your own logo and colour'],
+  ["premium: extra's voor grote poules",
+   'premium: extras for big leagues'],
   ['eigen profiel',
    'league profile'],
   ['Premium tot {datum}. Het logo, de kleur en de sponsorregel staan in de app, op het deelplaatje en bij de uitnodiging.',
@@ -7990,7 +7988,7 @@ function tikKnop(r, welk, lid) {
 const TIK_FOUT = {
   tik_ingevuld: () => T('Die speler heeft de top 10 net ingevuld.'),
   tik_dicht: () => T('Voor deze sessie kun je nu niemand meer aantikken.'),
-  tik_premium: () => T('Aantikken kan alleen in een poule met premium.'),
+  tik_premium: () => T('Aantikken is een extra van premium, en dat staat in deze poule niet aan.'),
   geen_sessie: () => T('De app kon je niet aanmelden. Herlaad de pagina en probeer het opnieuw.'),
 };
 
@@ -9927,7 +9925,9 @@ async function omschrijvingBewaren(tekst) {
 // ---- eigen profiel (premium) ----------------------------------
 // Alleen voor de poulebaas. Zonder premium een regel over wat het is en hoe je
 // eraan komt: mailen, want betalen in de app komt pas later (ROUTEKAART,
-// premium stap 2). Met premium het logo, de kleur en de sponsorregel, met een
+// premium stap 2). In gewone taal dat het extra's zijn en dat meespelen gratis
+// blijft (Danny, 1 november: de site en de app beloofden dat elke functie gratis
+// was; test/gratis-belofte.test.mjs). Met premium het logo, de kleur en de sponsorregel, met een
 // voorbeeld van hoe het eruitziet. De database controleert alles nog een keer
 // (pools_profiel_bewaken, de checks op pools, de policies op poulelogo); de
 // controles hier zijn er alleen voor een duidelijke melding.
@@ -9938,13 +9938,13 @@ function profielBlok() {
       encodeURIComponent(`Premium: ${S.poule.name}`)}">${esc(PRIVACY_CONTACT)}</a>`;
     return `
     <div class="scheiding"></div>
-    <span class="label">${T('eigen logo en kleur')}</span>
-    <p class="zacht" style="margin:0" data-premium-uitleg>${T('Een poule voor je bedrijf, club of '
-      + 'vereniging? Met premium krijgt hij teams die tegen elkaar spelen, eigen vragen per weekend, '
-      + 'tussenklassementen met prijzen, een tik voor wie nog niets invulde, herinneringen en '
-      + 'samenvattingen voor de groepsapp, de stand als '
-      + 'bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Mail {adres} '
-      + 'om het aan te zetten.', { adres: mail })}</p>`;
+    <span class="label">${T("premium: extra's voor grote poules")}</span>
+    <p class="zacht" style="margin:0" data-premium-uitleg>${T('Meespelen blijft gratis, en alles voor een '
+      + "poule met vrienden zit al in de app. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen: "
+      + 'teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met een eigen winnaar, '
+      + 'een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als '
+      + 'bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Betalen kan nog '
+      + "niet. Wil je de extra's nu al? Mail dan {adres}.", { adres: mail })}</p>`;
   }
   const P = S.profiel ?? {};
   const kleur = P.kleur ?? S.poule.merk_kleur ?? '#ee4d33';
@@ -15419,8 +15419,8 @@ function watIsDitBlok() {
       <div class="uitleg">${kleurPunten(T('Punten per plek: <b>5</b> exact, <b>3</b> één plek '
         + 'ernaast, <b>1</b> twee plekken ernaast. De uitslagen komen vanzelf '
         + 'binnen, dus niemand hoeft ze bij te houden.'))}</div>
-      <p class="zacht" style="margin:0">${T('Gratis, geen wachtwoord, en er zit geen '
-        + 'geld in — geen inleg, geen pot, geen prijzen. Je speelt om de eer.')}</p>
+      <p class="zacht" style="margin:0">${T('Gratis om mee te spelen, en je hebt geen wachtwoord nodig. '
+        + 'Je speelt niet om geld: geen inleg, geen pot, geen prijzen. Je speelt om de eer.')}</p>
     </div>`;
 }
 

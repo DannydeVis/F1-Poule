@@ -63,8 +63,14 @@ await naarPoule();
 {
   const uitleg = await page.$eval('[data-premium-uitleg]', (p) => ({ tekst: p.textContent.replace(/\s+/g, ' ').trim(),
     mail: p.querySelector('a[href^="mailto:"]')?.getAttribute('href') })).catch(() => null);
+  // In gewone taal dat het extra's zijn en dat meespelen gratis blijft (Danny, 1 november).
   check('zonder premium: de poulebaas leest wat het is en hoe hij eraan komt',
-    uitleg?.tekst.includes('Met premium krijgt hij teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met prijzen, een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo') && uitleg.mail?.startsWith('mailto:contact@predicttherace.com'),
+    uitleg?.tekst.includes('Grote poules, bedrijven en clubs kunnen er extra\'s bij krijgen: teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met een eigen winnaar, een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo') && uitleg.mail?.startsWith('mailto:contact@predicttherace.com'),
+    JSON.stringify(uitleg));
+  check('zonder premium: er staat dat meespelen gratis blijft en dat betalen nog niet kan',
+    uitleg?.tekst.startsWith('Meespelen blijft gratis') && uitleg.tekst.includes('Betalen kan nog niet')
+      && (await page.$eval('[data-premium-uitleg]', (p) => p.previousElementSibling?.textContent ?? ''))
+        .includes('extra\'s voor grote poules'),
     JSON.stringify(uitleg));
   check('en ziet geen velden, en nergens een logo of sponsorregel',
     !(await page.$('#profiellogo')) && !(await page.$('[data-poulelogo]')) && !(await page.$('[data-sponsor]')));
@@ -356,7 +362,7 @@ await stoppen();
   await en.click('[data-weergave="poule"]');
   await en.waitForSelector('[data-premium-uitleg]');
   const t = (await en.textContent('[data-premium-uitleg]')).replace(/\s+/g, ' ');
-  check('in het Engels: de uitleg in het Engels', t.includes('With premium it gets teams that play against each other, its own questions every weekend, interim standings with prizes, a nudge for anyone who has not filled anything in, reminders and summaries for the group chat, the standings as a file, its own logo'), t);
+  check('in het Engels: de uitleg in het Engels', t.startsWith('Playing stays free') && t.includes('Big leagues, companies and clubs can add extras: teams that play against each other, their own questions every weekend, interim standings with their own winner, a nudge for anyone who has not filled anything in, reminders and summaries for the group chat, the standings as a file, their own logo') && t.includes('Paying is not possible yet'), t);
   check('geen javascriptfouten in het Engels', fouten.length === 0, fouten.join(' | '));
   await stop();
 }
