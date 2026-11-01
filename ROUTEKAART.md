@@ -712,6 +712,19 @@ maakt onder Poule een nieuwe code (de oude en oude links werken dan niet meer)
 of zet de poule op slot (niemand kan er meer bij, ook niet met de code). Zie
 BEDIENING §5a2.
 
+**Een seintje als de uitslag binnen is** (Danny, 1 november: "zou ik graag een
+notificatie willen als de resultaten bekend zijn"). Gebouwd: wie meldingen aan
+heeft, krijgt per sessie één melding zodra de uitslag er is ("Mexico City:
+uitslag kwalificatie binnen"), binnen een dag na het begin, alleen voor poules
+die op die sessie iets spelen. Het kost niets: de pushdiensten van Apple,
+Google en Mozilla rekenen niet per melding. Zie BEDIENING §11c.
+
+**De pole valt op** (Danny, 1 november: "Ik miste nu de vraag pole omdat ik
+vind dat dit niet duidelijk te zien is"). Gebouwd: een losse coureurvraag is
+een eigen blok met een gestippelde amber plek; zodra je iets kiest staat bij
+Opslaan wat er nog open is; de bevestiging noemt het; en de weekendkaart wijst
+naar een open losse vraag zodra je top 10 af is.
+
 **Iemand een tik geven** (Danny, 26 oktober; premium). Gebouwd: op de
 racescherm, in de lijst De poule (eerst op de weekendkaart; verhuisd op 27
 oktober, voor een poule met honderd man), een knop bij elke speler die zijn

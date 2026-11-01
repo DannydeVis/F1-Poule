@@ -11864,3 +11864,99 @@ pdftoppm), pdf.js en PDFium: alle drie lezen en tekenen het zonder fouten.
 
 **Danny moet:** niets.
 
+
+## De pole valt op (1 november)
+
+Danny: "Ik miste nu de vraag pole omdat ik vind dat dit niet duidelijk te zien
+is." Bij de kwalificatie van Mexico vulde hij zijn top 10 in, sloeg op, en
+kreeg een automatische pole (PIA, werd P13). Drie dingen werkten samen:
+
+- de pole was één grijze regel ("pole · kies · 10") onderin de tegel Losse
+  vragen, onder de top 10;
+- de balk met Opslaan plakt onderaan het scherm, dus wie zijn top 10 invult en
+  opslaat, scrolt nooit naar die regel;
+- de weekendkaart zette daarna een vinkje bij de kwalificatie, met "Je
+  inzending bekijken".
+
+**Wat er nu staat.** Een coureurvraag (pole, winnaar, snelste ronde, snelste
+pitstop) is een eigen blok zoals de safety cars: de vraag en de punten erboven,
+een plek in de vorm van de top 10 (`.vraagslot`, de letter van de vraag
+vooraan) met een gestippelde amber rand zolang hij leeg is, en daaronder in
+amber "nog niets gekozen · hier liggen 10 punten". Kiezen gaat nog steeds in
+het keuzeblad. Een eigen klasse en niet `.slot`: in de tests is `.slot` de top
+10.
+
+Zodra je iets kiest, staat in de balk met Opslaan wat er nog open is ("nog
+open: pole · 10 punten", of "nog 6 losse vragen open · 92 punten"). Die balk
+plakt, dus die regel zie je terwijl je je top 10 invult. Een tik opent bij één
+open coureurvraag meteen het keuzeblad; anders schuift het scherm naar de
+eerste open vraag en krijgt die de focus. Opslaan houdt hij niet tegen: de
+losse vragen zijn bewust niet verplicht. De bevestiging na opslaan noemt wat er
+nog open is (tot drie bij naam, daarboven het aantal). En de weekendkaart: is je
+top 10 af maar staat er een losse vraag open in een sessie die nog niet dicht
+is, dan zegt de knop "Nog invullen: pole" of "Losse vragen race invullen", en
+opent hij de race op dat tabblad (`data-naar-tab`, `openRace(id, startTab)`).
+
+`losseVragenOpen()` rekent uit wat er open is, met de duels als één (net als de
+teller "N van M ingevuld"); `mijnLosseOpen()` doet dat voor wat je opsloeg, en
+telt een antwoord dat de database alleen als "ingeleverd" meegeeft niet als
+open. De uitleg onder Profiel en in de rondleiding over meldingen noemt nu ook
+de melding bij de uitslag (zie hieronder). De vertalingen schreef Claude Code.
+
+**Tests.** Nieuw: `test/losse-vragen-in-beeld.test.mjs` (50 controles), en
+`test/wis-alles.test.mjs` zoekt bij een gewiste vraag "tik om te kiezen" in
+plaats van "kies". 19 mutaties op de app, alle gevangen. Daarbij bleek dat
+`page.click()` een plakkend element eerst naar zijn plek onderaan de inhoud
+schuift; de test tikt de regel daarom aan zoals een telefoon, met een klik in
+de pagina zelf.
+
+**Danny moet:** niets.
+
+## Een seintje als de uitslag binnen is (1 november)
+
+Danny: "En gaan notificaties uiteindelijk geld kosten? Want zo niet zou ik
+graag een notificatie willen als de resultaten bekend zijn."
+
+**Kosten: geen.** De meldingen gaan van de sync (GitHub Actions, gratis voor een
+openbare repo) en de functie `tik` (Supabase, ruim binnen het gratis deel)
+rechtstreeks naar de pushdienst van het toestel (Apple, Google, Mozilla), met
+eigen code in `scripts/push.mjs`. Geen betaalde dienst ertussen, en de
+pushdiensten rekenen niets per melding.
+
+**De regel** (`scripts/uitslagmeldingen.mjs`, zonder netwerk, net als de
+herinneringen): de laatste sessie met een uitslag, alleen binnen een dag na het
+begin ervan, één melding per toestel per sessie, niet bij een afgelaste race,
+en alleen voor poules die op die sessie iets spelen (`SESSIEVRAGEN`: de top 10
+en de losse vragen met dezelfde deadline). Of je zelf iets invulde maakt niet
+uit. De melding: "Mexico City: uitslag kwalificatie binnen", "Bekijk je punten
+en de stand.", in de taal van het toestel, met de tag `uitslag:<race>:<sessie>`
+en de link naar de app. Niet in `herinneringen.mjs`: daar staat een kopie van
+naast de functie `tik`, en die hoeft hiervoor niet opnieuw uitgerold.
+
+**Het versturen** staat in `scripts/sync.mjs` (`uitslagMeldingen()`), direct na
+de herinneringen, met dezelfde lus (`verstuur(lijst, veld)`). Wat er gestuurd
+is, staat per toestel in de nieuwe kolom `push_abonnementen.uitslag_laatst`,
+los van `laatst`: op een sprintweekend lopen een uitslag en de herinnering
+voor de volgende sessie door elkaar, en een gedeelde kolom zou die herinnering
+een tweede keer laten gaan. Mist de kolom (een database waar schema.sql nog
+niet opnieuw op draaide), dan stuurt de sync niets en zegt hij dat in de log;
+anders ging dezelfde melding elk kwartier opnieuw. De regel kijkt naar de
+database en niet naar wat deze ronde schreef, dus een uitslag die de beheerder
+met de hand invulde gaat ook mee.
+
+Geen aparte knop om alleen deze uit te zetten: wie ze niet wil, zet meldingen
+uit. De privacyverklaring hoeft niet anders: er komt geen gegeven over jou bij,
+alleen welke uitslag dat toestel al kreeg.
+
+**Tests.** `test/uitslagmeldingen.test.mjs` (47 controles): de regel, en de
+échte sync tegen een nagebootste Supabase en pushdienst. De test ontsleutelt
+de melding zoals een browser dat doet (RFC 8291 andersom), en ziet zo de titel,
+de tekst, de tag en de link. 16 mutaties op de regel en de sync, alle gevangen.
+
+**In productie** gezet via de MCP: de kolom `uitslag_laatst`. Voor de zes
+toestellen die er al waren staat hij op `uitslag:20:quali`: de kwalificatie in
+Mexico was op dat moment al twaalf uur oud, en een melding daarover zou bij de
+eerste sync na de merge pas komen. De eerste echte melding is die van de race
+in Mexico, op 1 november.
+
+**Danny moet:** niets.

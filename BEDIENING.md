@@ -1657,8 +1657,9 @@ Twee dingen om te weten:
 ## 11c. Een seintje op je telefoon
 
 Onder **Profiel** staat "herinneringen": zet je dat aan, dan krijgt dat toestel
-een melding als een deadline nadert en jij nog niets hebt ingevuld. Anders dan
-de agenda hierboven kan dit wél naar jou persoonlijk kijken.
+een melding als een deadline nadert en jij nog niets hebt ingevuld, en sinds 1
+november ook een als de uitslag binnen is (zie hieronder). Anders dan de agenda
+hierboven kan dit wél naar jou persoonlijk kijken.
 
 De regel, en vooral wat hij niet doet:
 
@@ -1675,6 +1676,37 @@ De regel, en vooral wat hij niet doet:
 - De melding komt **in de taal van dat toestel**: dezelfde taal waarin je de
   app gebruikte toen je hem aanzette. Wissel je later van taal, dan gaat de
   melding mee. Zie §11e.
+
+### Een seintje als de uitslag binnen is (sinds 1 november)
+
+Danny: "zou ik graag een notificatie willen als de resultaten bekend zijn".
+Wie meldingen aan heeft, krijgt zodra de uitslag van een sessie er is
+"Mexico City: uitslag kwalificatie binnen", met "Bekijk je punten en de stand."
+Een tik opent de app.
+
+- **Eén per toestel per sessie**: de sync onthoudt het in de kolom
+  `uitslag_laatst` van `push_abonnementen`, los van `laatst` (de
+  herinneringen).
+- Over de **laatste** sessie met een uitslag, en alleen binnen **een dag** na
+  het begin ervan. Komen er twee tegelijk binnen (de sprint en de
+  kwalificatie), dan één melding, over de laatste.
+- Ook een uitslag die je in het beheer met de hand invult, gaat zo mee bij de
+  volgende sync.
+- Alleen voor poules die op die sessie iets spelen (de top 10 of een losse
+  vraag die eraan hangt). Of je zelf iets invulde maakt niet uit.
+- Niet bij een afgelaste race. In de taal van het toestel, net als de
+  herinneringen.
+
+De regel staat in `scripts/uitslagmeldingen.mjs`, het versturen in
+`scripts/sync.mjs`, direct na de herinneringen. Zonder de kolom (een database
+waar `schema.sql` nog niet opnieuw op draaide) stuurt de sync niets en zegt
+hij dat in de log. Er is geen aparte knop om alleen deze uit te zetten: wie ze
+niet wil, zet meldingen uit.
+
+**Wat het kost: niets.** Een melding gaat van de sync (GitHub Actions, gratis
+voor een openbare repo) of de functie `tik` (Supabase, ruim binnen het gratis
+deel) naar de pushdienst van het toestel: Apple, Google of Mozilla. Die
+rekenen niets per melding. Er zit geen betaalde dienst tussen.
 
 ### Waar de app erom vraagt (sinds 26 oktober)
 
