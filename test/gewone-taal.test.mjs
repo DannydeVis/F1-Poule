@@ -9,7 +9,8 @@
 // Wat hier vastligt:
 //   1. Geen enkele tekst in de app noemt OpenF1, Supabase, de sync, de
 //      database, schema.sql, RLS of een tabel. Behalve de privacyverklaring:
-//      die hoort te zeggen waar je gegevens staan en wie ze ziet.
+//      die hoort te zeggen waar je gegevens staan en wie ze ziet. En de
+//      bronvermelding onder Profiel, die de licentie van OpenF1 vraagt.
 //   2. Een gesloten tabblad zegt wanneer de uitslag er ongeveer is: tijdens de
 //      sessie hoe laat hij afgelopen is, daarna "binnen een paar uur", en als
 //      het echt lang duurt dat hij vanzelf komt.
@@ -35,8 +36,13 @@ const ENGELS = blok ? (0, eval)(blok[1]) : {};
 const TECHNIEK = /openf1|supabase|\bsync\b|database|schema\.sql|\bsql\b|\brls\b|postgrest|policy|pool_id|member_id/i;
 // De privacyverklaring noemt ze met opzet: waar je gegevens staan en wie ze ziet.
 const PRIVACY = /^<b>(Wat er bewaard wordt|Waar het staat|Wat er niet gebeurt)<\/b>/;
+// En de bronvermelding onder Profiel ("over Predict the Race") noemt OpenF1 met
+// opzet: de licentie van hun data (CC BY-NC-SA 4.0) vraagt om de bron en de
+// licentie te noemen (BEDIENING §10, test/openf1-licentie.test.mjs). Het is een
+// regel kleine letters, geen melding over hoe de uitslag binnenkomt.
+const BRON = /^De kalender en de uitslagen komen van \{openf1\}, onder de licentie \{licentie\}\.$/;
 const fout = Object.entries(ENGELS)
-  .filter(([nl]) => !PRIVACY.test(nl))
+  .filter(([nl]) => !PRIVACY.test(nl) && !BRON.test(nl))
   .filter(([nl, en]) => TECHNIEK.test(nl) || TECHNIEK.test(en))
   .map(([nl]) => nl.slice(0, 80));
 check('de teksten zijn gevonden', Object.keys(ENGELS).length > 400, String(Object.keys(ENGELS).length));

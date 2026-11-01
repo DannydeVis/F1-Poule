@@ -66,6 +66,12 @@ const metOpenPoule = (code, antwoord, link) => {
 // Het contactadres in een FAQ-antwoord ({contact}, de vraag over premium) is op
 // het scherm een mailto-link. In de JSON-LD en llms.txt blijft het tekst.
 const metMailLink = (html) => html.replaceAll(esc(CONTACT), `<a href="mailto:${esc(CONTACT)}">${esc(CONTACT)}</a>`);
+// OpenF1 met zijn licentie. De data van OpenF1 valt onder CC BY-NC-SA 4.0, en
+// die vraagt om de bron én de licentie te noemen (BEDIENING §10). Daarom in de
+// voet van elke pagina die OpenF1 noemt; test/openf1-licentie.test.mjs.
+export const OPENF1_LICENTIE = 'https://creativecommons.org/licenses/by-nc-sa/4.0/';
+const openf1Bron = (tekst) => `<a href="https://openf1.org" rel="noopener">${esc(tekst)}</a> `
+  + `(<a href="${OPENF1_LICENTIE}" rel="license noopener">CC BY-NC-SA 4.0</a>)`;
 const openPoule = (code, app, inspring) => {
   const regel = openPouleRegel(OPEN_POULE, code, app);
   return regel ? `\n${inspring}${regel}` : '';
@@ -1211,7 +1217,7 @@ ${jsonLd(code, datum)}
       <li><a href="${p}${overIn(code).pad}/">${esc(PAGINA_UI[code].over)}</a></li>` : ''}${racesIn(code) ? `
       <li><a href="${p}${racesIn(code).pad}/">${esc(racesIn(code).voet)}</a></li>` : ''}
       <li><a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.voet.privacy)}</a></li>
-      <li><a href="https://openf1.org" rel="noopener">${esc(t.voet.data)}</a></li>
+      <li>${openf1Bron(t.voet.data)}</li>
       <li><a href="#" data-toestemming hidden>${esc(t.voet.cookies)}</a></li>
     </ul>
     <small>${esc(t.voet.disclaimer)}</small>
@@ -1310,6 +1316,7 @@ ${alineas.map((a) => `      <p>${alinea(a)}</p>`).join('\n')}
       <li><a href="${thuis}">${esc(t.terug)}</a></li>
       <li><a href="${app}">${esc(t.app)}</a></li>
       <li><a href="${p}${PRIVACY[ander].pad}/" hreflang="${ander}" lang="${ander}">${esc(t.ander)}</a></li>
+      <li>${openf1Bron(teksten[taal].voet.data)}</li>
       <li><a href="#" data-toestemming hidden>${esc(teksten[taal].voet.cookies)}</a></li>
     </ul>
     <small>${esc(teksten[taal].voet.disclaimer)}</small>
@@ -1746,6 +1753,7 @@ ${leesOok.length ? `    <section class="leesook">
       <li><a href="${p}${overIn(code).pad}/">${esc(ui.over)}</a></li>` : ''}${racesIn(code) && pg.id !== 'races' ? `
       <li><a href="${p}${racesIn(code).pad}/">${esc(racesIn(code).voet)}</a></li>` : ''}
       <li><a href="${p}${PRIVACY[privacyTaal(code)].pad}/">${esc(ui.privacy)}</a></li>
+      <li>${openf1Bron(teksten[code].voet.data)}</li>
       <li><a href="#" data-toestemming hidden>${esc(teksten[code].voet.cookies)}</a></li>
     </ul>
     <small>${esc(teksten[code].voet.disclaimer)}</small>
@@ -1897,6 +1905,7 @@ ${llmsVars.openPoule ? `- Open league: anyone without a group of their own can j
   paginaGroepen.map((g) => `; ${g}`).join('')}${
   raceTalen.length ? `; the race pages in ${opsomming(raceTalen.map(taalNaamEn))}` : ''}
 - Results: the calendar, the entry list and the official results come automatically from OpenF1 (https://openf1.org)
+- Data license: the OpenF1 data is licensed CC BY-NC-SA 4.0 (${OPENF1_LICENTIE}); the race statistics on this site are derived from it and fall under the same license
 - Made by: ${MAKER.naam} from ${MAKER.plaats} (${overUrl('en')})
 - Online since: ${LLMS.online}
 - Visitor statistics: Google Analytics, only after the visitor says yes; without that, nothing is measured

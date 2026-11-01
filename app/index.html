@@ -3619,6 +3619,8 @@ const ENGELS = Object.fromEntries([
    'How the game works, the scoring and the frequently asked questions are on the home page.'],
   ['Naar de voorpagina',
    'To the home page'],
+  ['De kalender en de uitslagen komen van {openf1}, onder de licentie {licentie}.',
+   'The calendar and the results come from {openf1}, under the {licentie} licence.'],
   ['Deze verklaring staat ook als {link} op de site, voor wie de app nog niet heeft.',
    'This statement is also on the site as a {link}, for anyone who does not have the app yet.'],
   ['losse pagina',
@@ -9007,12 +9009,20 @@ function vraagOfBeheerder() {
 // lukt dat: het doorstuurscriptje op / laat iedereen staan die van een eigen
 // pagina komt, ook in een app op het beginscherm van een iPhone.
 const voorpagina = () => new URL(TAAL === 'nl' ? '../' : `../${TAAL}/`, linkBasis()).href;
+// De bron met zijn licentie: de data van OpenF1 valt onder CC BY-NC-SA 4.0, en
+// die vraagt om de bron én de licentie te noemen (BEDIENING §10). Op de site
+// staat dezelfde regel in de voet; test/openf1-licentie.test.mjs.
+const OPENF1_LICENTIE = 'https://creativecommons.org/licenses/by-nc-sa/4.0/';
 function voorpaginaBlok() {
   return `<div class="scheiding"></div>
     <span class="label">${T('over Predict the Race')}</span>
     <p class="zacht" style="margin:0">${T('Hoe het spel werkt, de punten en de '
       + 'veelgestelde vragen staan op de voorpagina.')}</p>
-    <a class="knop klein" id="voorpagina" href="${esc(voorpagina())}">${T('Naar de voorpagina')}</a>`;
+    <a class="knop klein" id="voorpagina" href="${esc(voorpagina())}">${T('Naar de voorpagina')}</a>
+    <p class="zacht" data-bron style="margin:0;font-size:13px">${T('De kalender en de uitslagen komen van '
+      + '{openf1}, onder de licentie {licentie}.', {
+        openf1: '<a href="https://openf1.org" rel="noopener" target="_blank">OpenF1</a>',
+        licentie: `<a href="${OPENF1_LICENTIE}" rel="license noopener" target="_blank">CC BY-NC-SA 4.0</a>` })}</p>`;
 }
 
 // ---- herinneringen voor de deadline -------------------------

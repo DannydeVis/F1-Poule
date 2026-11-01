@@ -1,443 +1,443 @@
 {
   "https://predicttherace.com/": {
     "datum": "2026-11-01",
-    "hash": "bf18b96a5974b43e"
+    "hash": "b8a56402263baaf3"
   },
   "https://predicttherace.com/de/": {
     "datum": "2026-11-01",
-    "hash": "cbe4b4cf39eb6c7c"
+    "hash": "00886b49e984e297"
   },
   "https://predicttherace.com/de/f1-tippspiel-excel/": {
-    "datum": "2026-10-13",
-    "hash": "a07ac4bda51d7b29",
+    "datum": "2026-11-01",
+    "hash": "41e684ed8618c602",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/f1-tippspiel-organisieren/": {
     "datum": "2026-11-01",
-    "hash": "5bb401c5cf37f616",
+    "hash": "6af3555707e713f4",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/f1-tippspiel-punktesystem/": {
-    "datum": "2026-10-26",
-    "hash": "2591bf18fee67e0f",
+    "datum": "2026-11-01",
+    "hash": "b3d4f6cf7231fa30",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/rennen/": {
-    "datum": "2026-10-13",
-    "hash": "d2dcbf41eded02ee",
+    "datum": "2026-11-01",
+    "hash": "a27c5d4948c5957d",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/rennen/2026/abu-dhabi/": {
-    "datum": "2026-10-26",
-    "hash": "303ac5f5c0caef42",
+    "datum": "2026-11-01",
+    "hash": "46000dad26792c4d",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/rennen/2026/austin/": {
-    "datum": "2026-10-26",
-    "hash": "b5736a476a3d8b39",
+    "datum": "2026-11-01",
+    "hash": "ba9b0224a0727b9a",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/rennen/2026/las-vegas/": {
-    "datum": "2026-10-26",
-    "hash": "fa2a9189f31b455e",
+    "datum": "2026-11-01",
+    "hash": "a00f4c4946da10c0",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/rennen/2026/mexico-city/": {
-    "datum": "2026-10-31",
-    "hash": "3ce1ef24bbb57ddb",
+    "datum": "2026-11-01",
+    "hash": "c2ab0ac6c16fe160",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/rennen/2026/qatar/": {
-    "datum": "2026-10-26",
-    "hash": "4ddb6258b89f3050",
+    "datum": "2026-11-01",
+    "hash": "cb1e5089a362f5ca",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/rennen/2026/sao-paulo/": {
-    "datum": "2026-10-26",
-    "hash": "47cbc84129200ecb",
+    "datum": "2026-11-01",
+    "hash": "c377323518cc6596",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/de/rennen/2026/singapore/": {
-    "datum": "2026-10-26",
-    "hash": "1e8461c072ca9766",
+    "datum": "2026-11-01",
+    "hash": "4f686547d76abf0e",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/en/": {
     "datum": "2026-11-01",
-    "hash": "c90c05eae386c47c"
+    "hash": "a0edf2a0493f61f6"
   },
   "https://predicttherace.com/en/about/": {
     "datum": "2026-11-01",
-    "hash": "096b5482aaadc563",
+    "hash": "37b1636b4a0cf8bb",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/en/f1-prediction-games-compared/": {
     "datum": "2026-11-01",
-    "hash": "1fe6a348197ed137",
+    "hash": "70f7c1b0c04fed8d",
     "sinds": "2026-09-29"
   },
   "https://predicttherace.com/en/f1-prediction-league-spreadsheet/": {
-    "datum": "2026-10-13",
-    "hash": "680c15dbf56fc227",
+    "datum": "2026-11-01",
+    "hash": "ffbbe01bb20b093a",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/f1-prediction-scoring-system/": {
-    "datum": "2026-10-26",
-    "hash": "2d735b389df98a1e",
+    "datum": "2026-11-01",
+    "hash": "2f12ace0280de9f3",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/how-to-run-an-f1-prediction-league/": {
     "datum": "2026-11-01",
-    "hash": "5dafbd252f23a08d",
+    "hash": "dff69dec8a181505",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/en/privacy/": {
-    "datum": "2026-10-27",
-    "hash": "d37be2aa4f8709aa"
+    "datum": "2026-11-01",
+    "hash": "95a72e94f6b3d498"
   },
   "https://predicttherace.com/en/races/": {
-    "datum": "2026-10-13",
-    "hash": "c8bf0e5f10b6f587",
+    "datum": "2026-11-01",
+    "hash": "fbf0eabd8a3f2c91",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/en/races/2026/abu-dhabi/": {
-    "datum": "2026-10-26",
-    "hash": "4aeec1aadf658d32",
+    "datum": "2026-11-01",
+    "hash": "52de0a7fbb9861c7",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/en/races/2026/austin/": {
-    "datum": "2026-10-26",
-    "hash": "928619d279230d8d",
+    "datum": "2026-11-01",
+    "hash": "14a3bf1465114048",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/en/races/2026/las-vegas/": {
-    "datum": "2026-10-26",
-    "hash": "50e4290cb7a0d2d4",
+    "datum": "2026-11-01",
+    "hash": "896ed4c86455ee34",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/en/races/2026/mexico-city/": {
-    "datum": "2026-10-31",
-    "hash": "3f08db9655ec2312",
+    "datum": "2026-11-01",
+    "hash": "03b8e3fc2f9d22e1",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/en/races/2026/qatar/": {
-    "datum": "2026-10-26",
-    "hash": "30b6dbfc8c62ad05",
+    "datum": "2026-11-01",
+    "hash": "f0d4ade709aeda70",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/en/races/2026/sao-paulo/": {
-    "datum": "2026-10-26",
-    "hash": "9dce9d3faa1fc1dd",
+    "datum": "2026-11-01",
+    "hash": "c074efd2802bce2e",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/en/races/2026/singapore/": {
-    "datum": "2026-10-26",
-    "hash": "a5528dc8bf29ed91",
+    "datum": "2026-11-01",
+    "hash": "cd25727f792d5a12",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/es/": {
     "datum": "2026-11-01",
-    "hash": "afd43fae223e3bb0"
+    "hash": "96cedf46893f380b"
   },
   "https://predicttherace.com/es/carreras/": {
-    "datum": "2026-10-13",
-    "hash": "40120002006081bc",
+    "datum": "2026-11-01",
+    "hash": "e8511f4ce844ccaa",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/es/carreras/2026/abu-dhabi/": {
-    "datum": "2026-10-26",
-    "hash": "dc00add68db16120",
+    "datum": "2026-11-01",
+    "hash": "7ca32fe7e4c25fa5",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/es/carreras/2026/austin/": {
-    "datum": "2026-10-26",
-    "hash": "7da1c984ccf6f86d",
+    "datum": "2026-11-01",
+    "hash": "91b4d46dc6420149",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/es/carreras/2026/las-vegas/": {
-    "datum": "2026-10-26",
-    "hash": "1f94b2895d3f9f9a",
+    "datum": "2026-11-01",
+    "hash": "690499427e382d38",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/es/carreras/2026/mexico-city/": {
-    "datum": "2026-10-31",
-    "hash": "dd1eb61fa548a974",
+    "datum": "2026-11-01",
+    "hash": "e1654c7fbf10f61a",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/es/carreras/2026/qatar/": {
-    "datum": "2026-10-26",
-    "hash": "745e4670e3eadc71",
+    "datum": "2026-11-01",
+    "hash": "95eea4858e268094",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/es/carreras/2026/sao-paulo/": {
-    "datum": "2026-10-26",
-    "hash": "8ca332fc0eb2a0d4",
+    "datum": "2026-11-01",
+    "hash": "290bfe5b2d636efa",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/es/carreras/2026/singapore/": {
-    "datum": "2026-10-26",
-    "hash": "dad0f450a5e2373a",
+    "datum": "2026-11-01",
+    "hash": "4569176ece31bf42",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/es/organizar-porra-f1/": {
     "datum": "2026-11-01",
-    "hash": "8581645716bdc7bc",
+    "hash": "10b40a4f455fee53",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/es/porra-f1-excel/": {
-    "datum": "2026-10-13",
-    "hash": "66225c10241419d0",
+    "datum": "2026-11-01",
+    "hash": "13e48bd2bbf6d7cd",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/es/puntuacion-porra-f1/": {
-    "datum": "2026-10-26",
-    "hash": "b9b4e7936ee65795",
+    "datum": "2026-11-01",
+    "hash": "4aaa003cd2f5f067",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/f1-poule-apps-vergeleken/": {
     "datum": "2026-11-01",
-    "hash": "c5c3337db7fabb7c",
+    "hash": "fd734166eb751813",
     "sinds": "2026-09-29"
   },
   "https://predicttherace.com/f1-poule-excel/": {
-    "datum": "2026-10-13",
-    "hash": "883a4d5f859ca7b1",
+    "datum": "2026-11-01",
+    "hash": "07648d604c064443",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/f1-poule-organiseren/": {
     "datum": "2026-11-01",
-    "hash": "f82dbb43e4d88b49",
+    "hash": "7761337e579c92b5",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/f1-poule-puntentelling/": {
-    "datum": "2026-10-26",
-    "hash": "64c2cb5bc1797c30",
+    "datum": "2026-11-01",
+    "hash": "e137092d2c58a9d1",
     "sinds": "2026-09-26"
   },
   "https://predicttherace.com/fr/": {
     "datum": "2026-11-01",
-    "hash": "1268a5dce01c5851"
+    "hash": "609af27d190a97a8"
   },
   "https://predicttherace.com/fr/bareme-pronostics-f1/": {
-    "datum": "2026-10-26",
-    "hash": "f6b1654e303cd316",
+    "datum": "2026-11-01",
+    "hash": "fe1185466d19a69e",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/fr/courses/": {
-    "datum": "2026-10-13",
-    "hash": "5f5117801c84c2a3",
+    "datum": "2026-11-01",
+    "hash": "bef11e8c43991283",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/fr/courses/2026/abu-dhabi/": {
-    "datum": "2026-10-26",
-    "hash": "a65c99b467893abd",
+    "datum": "2026-11-01",
+    "hash": "bad9e79a6b039bae",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/fr/courses/2026/austin/": {
-    "datum": "2026-10-26",
-    "hash": "29de7372ae48faff",
+    "datum": "2026-11-01",
+    "hash": "d53e661d9f289e53",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/fr/courses/2026/las-vegas/": {
-    "datum": "2026-10-26",
-    "hash": "b4c330859a1aedb1",
+    "datum": "2026-11-01",
+    "hash": "f028bfdd508f0fdd",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/fr/courses/2026/mexico-city/": {
-    "datum": "2026-10-31",
-    "hash": "e0a74e36b5953b18",
+    "datum": "2026-11-01",
+    "hash": "f20f09d6edb52294",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/fr/courses/2026/qatar/": {
-    "datum": "2026-10-26",
-    "hash": "4a766acc4e51662e",
+    "datum": "2026-11-01",
+    "hash": "436cafe77cd87d90",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/fr/courses/2026/sao-paulo/": {
-    "datum": "2026-10-26",
-    "hash": "94e342396d705d9d",
+    "datum": "2026-11-01",
+    "hash": "14613efbdda63884",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/fr/courses/2026/singapore/": {
-    "datum": "2026-10-26",
-    "hash": "5f97bf1c9f80ccc7",
+    "datum": "2026-11-01",
+    "hash": "5c52346188e40337",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/fr/organiser-pronostics-f1/": {
     "datum": "2026-11-01",
-    "hash": "52bfa2a41f0ad93e",
+    "hash": "1069117d3562ff18",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/fr/pronostics-f1-excel/": {
-    "datum": "2026-10-13",
-    "hash": "58ddc41ecd6a24c2",
+    "datum": "2026-11-01",
+    "hash": "3f7582951e9da370",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/": {
     "datum": "2026-11-01",
-    "hash": "8851cdf3d4d3cf9f"
+    "hash": "8e70819c29d0406d"
   },
   "https://predicttherace.com/it/gare/": {
-    "datum": "2026-10-13",
-    "hash": "5f5b20137f4a23cd",
+    "datum": "2026-11-01",
+    "hash": "59c2f85b333c151d",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/gare/2026/abu-dhabi/": {
-    "datum": "2026-10-26",
-    "hash": "10f757433439b944",
+    "datum": "2026-11-01",
+    "hash": "3bc991a92c6a0129",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/gare/2026/austin/": {
-    "datum": "2026-10-26",
-    "hash": "096188f2847c5e39",
+    "datum": "2026-11-01",
+    "hash": "55cb77e6ce849766",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/gare/2026/las-vegas/": {
-    "datum": "2026-10-26",
-    "hash": "0f2e3348960dbb94",
+    "datum": "2026-11-01",
+    "hash": "afdf01fe8768cd56",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/gare/2026/mexico-city/": {
-    "datum": "2026-10-31",
-    "hash": "787b90bff7083831",
+    "datum": "2026-11-01",
+    "hash": "cf15a58ac21ed9df",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/gare/2026/qatar/": {
-    "datum": "2026-10-26",
-    "hash": "0621e1264415bef6",
+    "datum": "2026-11-01",
+    "hash": "8ec2ee5ae9a4c4d5",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/gare/2026/sao-paulo/": {
-    "datum": "2026-10-26",
-    "hash": "967d1696f336fcf5",
+    "datum": "2026-11-01",
+    "hash": "dccd799e7bb10f20",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/gare/2026/singapore/": {
-    "datum": "2026-10-26",
-    "hash": "550dfeaa64f47a3b",
+    "datum": "2026-11-01",
+    "hash": "551b4fd1c1cc713e",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/organizzare-pronostici-f1/": {
     "datum": "2026-11-01",
-    "hash": "955a613a91a2fe09",
+    "hash": "50458510e3fbca99",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/pronostici-f1-excel/": {
-    "datum": "2026-10-13",
-    "hash": "02562be4f59aba8d",
+    "datum": "2026-11-01",
+    "hash": "a41bc2feca1f7efd",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/it/punteggio-pronostici-f1/": {
-    "datum": "2026-10-26",
-    "hash": "61a50403ab4c17f1",
+    "datum": "2026-11-01",
+    "hash": "bae11b444956ccaf",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/over/": {
     "datum": "2026-11-01",
-    "hash": "95464901b9505d90",
+    "hash": "a8b36572717926f5",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/privacy/": {
-    "datum": "2026-10-27",
-    "hash": "c31b165c3f6e6561"
+    "datum": "2026-11-01",
+    "hash": "f3a973ea2cdff16b"
   },
   "https://predicttherace.com/pt/": {
     "datum": "2026-11-01",
-    "hash": "03203f1c4df27d26"
+    "hash": "a7283e7b8290ee2e"
   },
   "https://predicttherace.com/pt/bolao-f1-excel/": {
-    "datum": "2026-10-13",
-    "hash": "a27f7d212e953942",
+    "datum": "2026-11-01",
+    "hash": "ff484e0a2e499545",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/corridas/": {
-    "datum": "2026-10-13",
-    "hash": "f602b5cba1576e52",
+    "datum": "2026-11-01",
+    "hash": "a0b536851536b9de",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/corridas/2026/abu-dhabi/": {
-    "datum": "2026-10-26",
-    "hash": "db1f15c501337a62",
+    "datum": "2026-11-01",
+    "hash": "c7f2231208987681",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/corridas/2026/austin/": {
-    "datum": "2026-10-26",
-    "hash": "e324290fd2693a19",
+    "datum": "2026-11-01",
+    "hash": "35b61836e114d43c",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/corridas/2026/las-vegas/": {
-    "datum": "2026-10-26",
-    "hash": "04433db583450e62",
+    "datum": "2026-11-01",
+    "hash": "e6d8f4ef255d0605",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/corridas/2026/mexico-city/": {
-    "datum": "2026-10-31",
-    "hash": "5b487b6cb8594536",
+    "datum": "2026-11-01",
+    "hash": "e2e993ca2df3667d",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/corridas/2026/qatar/": {
-    "datum": "2026-10-26",
-    "hash": "b6ebfc596470ce9e",
+    "datum": "2026-11-01",
+    "hash": "e54d4c9236353282",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/corridas/2026/sao-paulo/": {
-    "datum": "2026-10-26",
-    "hash": "38f12f6f548314ef",
+    "datum": "2026-11-01",
+    "hash": "b0379933144cce1e",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/corridas/2026/singapore/": {
-    "datum": "2026-10-26",
-    "hash": "311a118f1ca41d59",
+    "datum": "2026-11-01",
+    "hash": "69d6156eeae1ac42",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/organizar-bolao-f1/": {
     "datum": "2026-11-01",
-    "hash": "f8bb3a138c6bf7d8",
+    "hash": "1e98d5d4e49a0a7f",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/pt/pontuacao-bolao-f1/": {
-    "datum": "2026-10-26",
-    "hash": "abdf534262b36962",
+    "datum": "2026-11-01",
+    "hash": "3afb35754a8ff2af",
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/races/": {
-    "datum": "2026-10-13",
-    "hash": "8e69295ee4464d4a",
+    "datum": "2026-11-01",
+    "hash": "33ce4f801110c4e7",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/races/2026/abu-dhabi/": {
-    "datum": "2026-10-26",
-    "hash": "f748c4ba66e447a6",
+    "datum": "2026-11-01",
+    "hash": "7b9081ed07bc00c2",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/races/2026/austin/": {
-    "datum": "2026-10-26",
-    "hash": "9a58e5056ca63a66",
+    "datum": "2026-11-01",
+    "hash": "38693eec7d56f587",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/races/2026/las-vegas/": {
-    "datum": "2026-10-26",
-    "hash": "6a133f8ba89b83d9",
+    "datum": "2026-11-01",
+    "hash": "72c84ff3d004bd33",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/races/2026/mexico-city/": {
-    "datum": "2026-10-31",
-    "hash": "63d15644d29f7091",
+    "datum": "2026-11-01",
+    "hash": "2521339cd6be3786",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/races/2026/qatar/": {
-    "datum": "2026-10-26",
-    "hash": "4f64acd751738e9a",
+    "datum": "2026-11-01",
+    "hash": "16b4964f43947364",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/races/2026/sao-paulo/": {
-    "datum": "2026-10-26",
-    "hash": "cacd4a7a135b0c22",
+    "datum": "2026-11-01",
+    "hash": "082f5a2db3df4449",
     "sinds": "2026-09-27"
   },
   "https://predicttherace.com/races/2026/singapore/": {
-    "datum": "2026-10-26",
-    "hash": "c19f45abb2b79d47",
+    "datum": "2026-11-01",
+    "hash": "0391c48f989f3d1f",
     "sinds": "2026-09-27"
   }
 }
