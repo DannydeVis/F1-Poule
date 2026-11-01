@@ -12121,3 +12121,92 @@ alle gevangen.
 
 **Danny moet:** niets, tot betalen echt begint. Dan plak je de tekst uit
 BEDIENING §10 in het formulier op openf1.org/contact.
+
+## Een extra moment per weekend, PR 1: snelle winst (1 november)
+
+Danny: "Spelers komen nu alleen naar de app om in te vullen en de uitslag te
+zien. Geef ze een extra moment per weekend, en stuur de momenten die er al zijn
+via de site." In de bezoeken van de laatste dertig dagen is vrijdag de stilste
+dag: 25 van de 476 app-bezoeken, tegen 116 op zaterdag en 102 op zondag. Twee
+PR's; dit is de eerste. Het plan staat in ROUTEKAART, "Een extra moment per
+weekend".
+
+**1. Een link in alles wat naar buiten gaat.** De tekst van Deel de uitslag
+(`groepsappTekst()`) en die van de stand (`standTekst()`) eindigen met een
+korte link naar de racepagina van die GP, in de taal van de speler, met
+`?ref=groepsapp`. Zonder racepagina: de voorpagina in die taal. In
+kalender.ics wijst de URL van elk item naar de racepagina (`?ref=kalender`),
+met de app-link in de beschrijving. Op het uitslagscherm staat naast Deel de
+uitslag de knop "Tijden en cijfers van deze GP" (`?ref=app`, nieuw venster),
+alleen als er een pagina is. Welke race een pagina heeft, zet de sync in de
+nieuwe kolom `races.pagina` (`scripts/racepagina.mjs`: uit
+`site/data/races-<jaar>.json`, en alleen als `races/<jaar>/<slug>/index.html`
+echt in de repo staat). De app maakt er de url van met `RACEMAP`, dezelfde
+mappen als `RACE_TEKST` in `site/races.mjs` (een test houdt die gelijk).
+
+**2. De vrije trainingen in de app.** De sync zet per weekend het rooster van
+de vrije trainingen in de nieuwe kolom `races.vrije_trainingen`, en een half
+uur na het einde van een training de top 10 (`session_result`, met code en naam
+uit de deelnemerslijst). De regels staan in `scripts/vrijetrainingen.mjs`.
+Een 401 of 404 slaat hij over; na de race haalt hij niets meer op. jsonb geeft
+de sleutels in een andere volgorde terug, dus `zelfdeRooster()` vergelijkt met
+gesorteerde sleutels, anders schreef de sync elke run hetzelfde rooster weg.
+Op het invulscherm de tegel Vrije trainingen: per training de top 10, rechts
+jouw plek nu (of een streepje), de nieuwste training open.
+
+**3. Eén melding op vrijdagavond.** Na VT2, op een sprintweekend na VT1: "VT2
+is binnen: Norris was het snelst. Je top 10 kan nog tot zaterdag 19:00." Ook
+voor wie al ingevuld heeft. Hooguit één per toestel per weekend (kolom
+`training_laatst`, tag `training:<race>`), alleen als de poule nog een top 10
+open heeft met minstens een uur te gaan, met de deadline van de eerste top 10
+die de poule speelt. De tijd in de tijdzone van het toestel (nieuwe kolom
+`tijdzone`): de app schrijft hem bij het aanzetten, bij een taalwissel, en
+één keer bij het openen als hij anders is dan wat dit toestel het laatst
+wegschreef (`poule:tijdzone` in localStorage); zo krijgen ook de toestellen
+die meldingen al aan hadden hem. Zonder tijdzone noemt de melding de sessie.
+De wekker: `trainingWekker()` in `scripts/bewaking.mjs`, 35 minuten na het
+einde, daarna elk half uur tot vier uur. De regel in
+`scripts/trainingmeldingen.mjs`, in zeven talen.
+
+**4. Meldingen per soort.** Onder Profiel, als meldingen aan staan, drie
+vinkjes: deadline, uitslag, training. Nieuwe kolommen `meld_deadline`,
+`meld_uitslag` en `meld_training`, standaard `true`, dus wie meldingen al aan
+had krijgt de nieuwe soort ook, en zet hem met één tik uit. De sync slaat een
+toestel over als die soort uit staat. `scripts/herinneringen.mjs` bleef
+ongemoeid: `supabase/functions/tik` heeft er een kopie van die gelijk moet
+blijven. Het filter voor de deadline staat daarom in `sync.mjs`.
+
+**5. Meten.** `teller.js` (gemaakt door `scripts/maak-site.mjs`, met de url en
+de publieke sleutel van de app) staat op elke pagina van de site en roept
+`tel_pagina()` aan: alleen het pad en de ref. Geen cookie, geen opslag, geen
+IP-adres. Alleen paden uit de sitemap tellen: de sync zet ze in `site_paden`.
+Een ref anders dan groepsapp, kalender of app wordt "anders". Het beheer toont
+de kaart Bezoeken op de site (per pagina, per ref, 30 dagen). De
+privacyverklaring zegt het onder "Tellen" (site, NL en EN, bijgewerkt op 1
+november), en de regel over meldingen noemt nu ook de taal, de tijdzone en de
+soorten (site en app, zeven talen).
+
+**Schema.** Al in productie gezet via de Supabase-koppeling (twee migraties:
+de kolommen, tabellen en functies, en daarna `poule_controle`). Eerst
+gerepeteerd op een kopie van het oude schema: daarna gelijk aan een verse
+`schema.sql`, ook nog een keer gedraaid zonder fouten. In productie zijn de
+md5's van de view en de nieuwe functies gelijk aan die van een verse bouw, en
+staat de controletabel overal op ok. Zes toestellen hebben meldingen aan; ze
+hebben nu alle drie de soorten aan.
+
+**Tests.** Nieuw: `test/trainingmeldingen.test.mjs` (44 controles, met de
+echte sync tegen een nagebootste OpenF1, Supabase en pushdienst),
+`test/racepagina-links.test.mjs` (32, in de browser) en
+`test/sitebezoeken.test.sql` (een eigen stap in tests.yml). Bijgewerkt:
+`test/groepsapp.test.mjs` (het bericht eindigt nu met de link) en de
+nabootsing kent `maybeSingle()`. De twee nieuwe tabellen zitten in de
+nachtelijke reservekopie (`scripts/reservekopie.mjs`), en de terugzettest
+vult ze. Zestien mutanten, allemaal gevangen; daarbij bleek een controle in de
+SQL-test met `<>` stil te slagen als een rij ontbrak (null), nu met
+`is distinct from`.
+
+**Danny moet:** niets. Na de merge vult de eerstvolgende sync `site_paden` en
+`races.pagina`, en telt de site vanaf dat moment. Wil je het zien werken:
+vrijdag 6 november, na VT2 in São Paulo (20:00 tot 21:00 Nederlandse tijd),
+komt de eerste melding, op zijn vroegst om 21:35, en vanaf VT1 staat de top 10
+op het invulscherm.

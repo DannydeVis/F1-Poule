@@ -105,8 +105,12 @@ check('zonder medailles of andere emoji', !/[\p{Extended_Pictographic}\u{FE0F}]/
 const stijger = regels.find((r) => r.startsWith('Grootste stijger')) ?? '';
 check('onder het podium de grootste stijger, met van en naar welke plek; gelijk gestegen allebei',
   stijger === 'Grootste stijger: Danny (P3 → P1) en Mede0 (P3 → P1)', stijger);
-check('en als laatste de stand van het seizoen',
-  regels.at(-1) === 'Seizoen: Danny 112, Mede0 112, Mede1 112, Mede2 112', regels.at(-1));
+check('daaronder de stand van het seizoen',
+  regels.at(-3) === 'Seizoen: Danny 112, Mede0 112, Mede1 112, Mede2 112', regels.at(-3));
+// Sinds 1 november eindigt het bericht met een link naar de site (?ref=groepsapp
+// voor de teller). Deze race heeft geen racepagina, dus de voorpagina.
+check('en als laatste een link naar de site, met ?ref=groepsapp',
+  regels.at(-2) === '' && /^https?:\/\/[^/]+\/\?ref=groepsapp$/.test(regels.at(-1)), regels.at(-1));
 
 const melbourne = await tekstVan(page, 'Melbourne');
 check('na het eerste weekend is er nog geen stijger: er valt niets te vergelijken',
@@ -183,7 +187,7 @@ await stoppen();
   check('en het bericht in het Engels',
     r[0] === 'Shanghai, Vrijdagmiddagpoule results'
       && r.includes('Biggest climber: Danny (P4 → P1)')
-      && r.at(-1).startsWith('Season: '), t);
+      && r.at(-3).startsWith('Season: ') && /\/en\/\?ref=groepsapp$/.test(r.at(-1)), t);
   check('geen javascriptfouten in het Engels', jsFouten.length === 0, jsFouten.join(' | '));
   await stoppen();
 }

@@ -68,10 +68,14 @@ const SESSIES = [
 
 /**
  * @param races  rijen uit de races-tabel
- * @param opties  { url } waar de app staat, komt in elk item te staan
+ * @param opties  { url } waar de app staat, komt in de beschrijving van elk
+ *                item; { pagina } geeft voor een race de url van zijn
+ *                racepagina, of null (1 november: de URL van het item wijst
+ *                naar de racepagina, met de tijden en de cijfers; zonder
+ *                pagina naar de app)
  * @returns de complete inhoud van kalender.ics
  */
-export function maakAgenda(races = [], { url = '', naam = 'F1 Poule' } = {}) {
+export function maakAgenda(races = [], { url = '', naam = 'F1 Poule', pagina = () => null } = {}) {
   const regels = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -112,7 +116,8 @@ export function maakAgenda(races = [], { url = '', naam = 'F1 Poule' } = {}) {
           + (url ? `\n\n${url}` : ''))}`),
         vouw(`LOCATION:${ontsnap([naamRace, race.country].filter(Boolean).join(', '))}`),
       );
-      if (url) regels.push(vouw(`URL:${url}`));
+      const link = pagina(race) ?? url;
+      if (link) regels.push(vouw(`URL:${link}`));
       // Een afgelaste race blijft in het bestand staan, maar dan als
       // afgezegd. Weglaten zou het item in de agenda van de abonnee laten
       // staan alsof er niets aan de hand is.

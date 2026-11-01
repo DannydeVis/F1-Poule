@@ -27,6 +27,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 }
 
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast,
          deelnemersUit, lijstDekt, opnieuwNakijken, zelfdeWaarde, veiligeVervanging,
          rondeIndeling, dubbeleRaces, voorlopigeLijst }
@@ -34,13 +35,20 @@ import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast
 import { maakAgenda } from './agenda.mjs';
 import { wieKrijgtEenSeintje, volgendeWekker, SEIZOENVRAGEN } from './herinneringen.mjs';
 import { laatsteUitslag, wieKrijgtEenUitslag } from './uitslagmeldingen.mjs';
-import { uitslagWekker, teLateUitslagen, teLaatTekst, vroegste } from './bewaking.mjs';
+import { trainingNieuws, wieKrijgtEenTraining } from './trainingmeldingen.mjs';
+import { trainingRooster, teHalen, trainingTop10, zelfdeRooster } from './vrijetrainingen.mjs';
+import { leesRacePaginas, sitemapPaden } from './racepagina.mjs';
+import { uitslagWekker, trainingWekker, teLateUitslagen, teLaatTekst, vroegste } from './bewaking.mjs';
 import { stuur as stuurPush } from './push.mjs';
 import { sleutelInVault } from './vault-sleutel.mjs';
 import { seizoenPlan, agendaSeizoenen, lijstKanWachten } from './seizoenen.mjs';
 import { OpenF1Dicht, vanwegeSessie, UITLEG as DICHT_UITLEG } from './openf1-dicht.mjs';
 
 const API = process.env.OPENF1_URL?.replace(/\/+$/, '') ?? 'https://api.openf1.org/v1';
+// De racepagina's die de site heeft (scripts/racepagina.mjs): race_key naar het
+// stuk url. Uit de repo waarin de sync draait.
+const PAGINAS = leesRacePaginas(fileURLToPath(new URL('..', import.meta.url)));
+const heeft = (rij, kolom) => Object.prototype.hasOwnProperty.call(rij, kolom);
 const REST = `${SUPABASE_URL}/rest/v1`;
 const kop = {
   apikey: SUPABASE_KEY,
@@ -471,6 +479,33 @@ async function uitslagen(races, jaar, vorig = []) {
           + ' OpenF1 heeft ze nog niet');
       }
     }
+    // De racepagina op de site (1 november), voor de links in de app en in de
+    // agenda. Alleen als de database de kolom al kent: een patch met een
+    // onbekende kolom weigert PostgREST helemaal.
+    if (heeft(race, 'pagina')) patch.pagina = PAGINAS.get(String(race.race_key)) ?? null;
+
+    // De vrije trainingen (1 november): het rooster zodra het weekend bekend
+    // is, en de top 10 van elke training zodra hij een half uur voorbij is.
+    // Voor het invulscherm, de wekker en de melding op vrijdagavond. Zie
+    // scripts/vrijetrainingen.mjs.
+    if (heeft(race, 'vrije_trainingen')) {
+      const rooster = trainingRooster(sessiesVanRace(race, weekenden), race.vrije_trainingen);
+      for (const t of teHalen(rooster, race)) {
+        try {
+          t.top = trainingTop10(await openf1(`session_result?session_key=${t.sessie}`),
+            patch.drivers ?? race.drivers);
+          await wacht(700);
+        } catch (e) {
+          // Nog niet op te halen (404), of OpenF1 is dicht rond een sessie
+          // (401): de volgende ronde opnieuw. Al het andere hoort in de log.
+          if (!/ 404 |\b404\b/.test(e.message) && !vanwegeSessie(e)) {
+            console.log(`  ronde ${race.round} ${race.name}: ${t.naam} niet opgehaald (${e.message})`);
+          }
+        }
+      }
+      if (rooster.length) patch.vrije_trainingen = rooster;
+    }
+
     // Vlak na de race en een dag erna kijken we alles nog een keer na, ook wat
     // we al hebben. Zie opnieuwNakijken(): een tijdstraf of een geschrapte
     // ronde verandert de klassering achteraf, en dat is de punten van iedereen
@@ -636,7 +671,9 @@ async function uitslagen(races, jaar, vorig = []) {
     // er niets gebeurd is — en dan is die melding niets meer waard op het
     // moment dat er wél iets verandert.
     for (const veld of Object.keys(patch)) {
-      if (!zelfdeWaarde(patch[veld], race[veld])) {
+      const zelfde = veld === 'vrije_trainingen'
+        ? zelfdeRooster(patch[veld], race[veld]) : zelfdeWaarde(patch[veld], race[veld]);
+      if (!zelfde) {
         // Dit is het geval waar de herkeuring voor bestaat, en het is groot
         // nieuws: de punten van iedereen in de poule schuiven mee. Dus zegt de
         // log wat er stond en wat er nu staat, niet alleen dát het veranderde.
@@ -726,7 +763,13 @@ function schrijfAgenda(races) {
     return false;
   }
   // Zonder jaartal: rond de jaarwisseling staan er twee seizoenen in.
-  const nieuw = maakAgenda(races, { url: APP_URL, naam: 'Predict the Race' });
+  // De URL van een item wijst naar de racepagina (1 november), in het
+  // Nederlands net als de rest van de agenda, met ?ref=kalender voor de teller
+  // op de site. Zonder pagina blijft het de app; die staat ook in de
+  // beschrijving.
+  const nieuw = maakAgenda(races, { url: APP_URL, naam: 'Predict the Race',
+    pagina: (race) => (race.pagina
+      ? new URL(`../races/${race.season}/${race.pagina}/?ref=kalender`, APP_URL).href : null) });
   let oud = '';
   try { oud = readFileSync(AGENDA_PAD, 'utf8'); } catch { /* bestaat nog niet */ }
   if (oud === nieuw) {
@@ -764,9 +807,13 @@ const uitvoer = (regel) => {
 function zetWekker(races, { herinneren }) {
   const herinnering = herinneren ? volgendeWekker({ races }) : null;
   const uitslag = uitslagWekker({ races });
-  const om = vroegste(herinnering, uitslag);
+  // De vrije trainingen (1 november): voor het invulscherm en de melding op
+  // vrijdagavond. Altijd, net als de uitslag: de top 10 staat ook in de app.
+  const training = trainingWekker({ races });
+  const om = vroegste(herinnering, uitslag, training);
   if (!om) return;
-  console.log(`Wekker: ${om} (${om === uitslag ? 'uitslag ophalen' : 'herinnering'})`);
+  console.log(`Wekker: ${om} (${om === uitslag ? 'uitslag ophalen'
+    : om === training ? 'vrije training ophalen' : 'herinnering'})`);
   uitvoer(`wekker=${om}`);
 }
 
@@ -790,7 +837,9 @@ async function heeftAbonnementen() {
 
 async function herinneringen(races) {
   if (!VAPID_PRIVE || !races.length) return;
-  const abonnementen = await sb('push_abonnementen?select=*');
+  // Wie de herinnering voor de deadline onder Profiel uitzette, slaan we over
+  // (1 november). Een rij zonder de kolom (een oude database) telt als aan.
+  const abonnementen = (await sb('push_abonnementen?select=*'))?.filter((ab) => ab.meld_deadline !== false);
   if (!abonnementen?.length) return;
 
   // De top tienen: dat zijn de vragen waar een herinnering over gaat. De
@@ -867,6 +916,52 @@ async function uitslagMeldingen(races) {
   console.log(`Uitslagmeldingen: ${gelukt} verstuurd`
     + (opgeruimd ? `, ${opgeruimd} verlopen abonnement(en) opgeruimd` : ''));
   if (gelukt) noteer(`${gelukt} uitslagmelding(en) verstuurd`);
+}
+
+// ------------------------------------------------------------
+//  Een seintje op vrijdagavond: de vrije training is binnen
+//  (scripts/trainingmeldingen.mjs, 1 november). Na het ophalen van de
+//  trainingen, dus in dezelfde ronde die de top 10 binnenhaalt.
+// ------------------------------------------------------------
+
+async function trainingMeldingen(races) {
+  if (!VAPID_PRIVE || !trainingNieuws({ races })) return;
+  const abonnementen = await sb('push_abonnementen?select=*');
+  if (!abonnementen?.length) return;
+  // Zonder die kolom weet de sync niet wat hij al stuurde. Dan liever niets.
+  if (!('training_laatst' in abonnementen[0])) {
+    console.log('Trainingsmeldingen: de kolom training_laatst ontbreekt nog (schema.sql), niets verstuurd');
+    return;
+  }
+  const poulevragen = await sb('pool_questions?select=pool_id,question_id');
+  const lijst = wieKrijgtEenTraining({ races, abonnementen, poulevragen: poulevragen ?? [] });
+  if (!lijst.length) { console.log('Geen trainingsmeldingen te sturen'); return; }
+
+  const { gelukt, opgeruimd } = await verstuur(lijst, 'training_laatst');
+  console.log(`Trainingsmeldingen: ${gelukt} verstuurd`
+    + (opgeruimd ? `, ${opgeruimd} verlopen abonnement(en) opgeruimd` : ''));
+  if (gelukt) noteer(`${gelukt} trainingsmelding(en) verstuurd`);
+}
+
+// ------------------------------------------------------------
+//  De paden voor de teller op de site (tel_pagina in schema.sql, 1 november):
+//  alleen wat in sitemap.xml staat telt. Alleen wat er nog niet stond gaat
+//  erheen. Lukt het niet (een database zonder de tabel), dan gaat de run door.
+// ------------------------------------------------------------
+
+async function sitePaden() {
+  try {
+    const paden = sitemapPaden(readFileSync(new URL('../sitemap.xml', import.meta.url), 'utf8'));
+    if (!paden.length) return;
+    const er = new Set(((await sb('site_paden?select=pad')) ?? []).map((r) => r.pad));
+    const nieuw = paden.filter((p) => !er.has(p));
+    if (!nieuw.length) return;
+    await sb('site_paden', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates' },
+      body: JSON.stringify(nieuw.map((pad) => ({ pad }))) });
+    console.log(`Teller op de site: ${nieuw.length} nieuwe pagina(s) uit de sitemap`);
+  } catch (e) {
+    console.log(`Paden voor de teller niet bijgewerkt: ${String(e.message).slice(0, 200)}`);
+  }
 }
 
 // ------------------------------------------------------------
@@ -967,6 +1062,8 @@ try {
   bewaakUitslagen(lopend);
   await herinneringen(lopend);
   await uitslagMeldingen(lopend);
+  await trainingMeldingen(lopend);
+  await sitePaden();
   await vaultBijwerken();
   await schrijfLogboek(true);
 } catch (e) {

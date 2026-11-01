@@ -520,7 +520,7 @@
   <div class="binnen">
     <h1>Wat Predict the Race van je weet</h1>
     <p class="inleiding">Predict the Race is een gratis F1-voorspelspel voor vriendengroepen. Het bewaart zo weinig mogelijk, en wat het bewaart staat hieronder, in gewone taal.</p>
-    <p class="label"><time datetime="2026-10-27">Bijgewerkt op 27 oktober 2026</time></p>
+    <p class="label"><time datetime="2026-11-01">Bijgewerkt op 27 oktober 2026</time></p>
     <section id="wat-er-bewaard-wordt">
       <h2>Wat er bewaard wordt</h2>
       <p>De naam die je in een poule kiest, je voorspellingen en je punten. En een anoniem account: een willekeurig nummer, zodat de database weet welke voorspellingen van jou zijn.</p>
@@ -537,7 +537,7 @@
     </section>
     <section id="als-je-meldingen-aanzet">
       <h2>Als je meldingen aanzet</h2>
-      <p>Dan komt er één regel bij per toestel: het adres waar je pushdienst (Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee sleutels van dat toestel. Geen naam en geen mailadres. Die regel gaat weg zodra je meldingen uitzet.</p>
+      <p>Dan komt er één regel bij per toestel: het adres waar je pushdienst (Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee sleutels van dat toestel, de taal en de tijdzone van het toestel (voor de tijd in de melding), en welke meldingen je wilt. Geen naam en geen mailadres. Die regel gaat weg zodra je meldingen uitzet.</p>
     </section>
     <section id="als-iemand-je-aantikt">
       <h2>Als iemand je aantikt</h2>
@@ -562,6 +562,7 @@
     <section id="tellen">
       <h2>Tellen</h2>
       <p>Per dag telt de app hoe vaak hij geopend wordt, hoe vaak daarvan vanaf het beginscherm van een telefoon, en welke accounts dat deden. Dat laatste alleen om te kunnen zien hoeveel mensen er meespelen, en het verdwijnt na vijf weken. Er komt geen cookie aan te pas en er wordt geen IP-adres bewaard.</p>
+      <p>Ook de pagina's van deze site tellen we, zonder cookie: per dag per pagina een aantal, en waar je vandaan kwam als de link dat zegt (bijvoorbeeld een uitslag die in een groepsapp gedeeld is, of je agenda). Je browser stuurt daarvoor alleen het adres van de pagina naar onze database bij Supabase. We bewaren geen IP-adres, geen account en niets wat naar jou terug te leiden is.</p>
     </section>
     <section id="google-analytics">
       <h2>Google Analytics</h2>
@@ -597,5 +598,6 @@
   </div>
 </footer>
 <script src="../toestemming.js" defer></script>
+<script src="../teller.js" defer></script>
 </body>
 </html>

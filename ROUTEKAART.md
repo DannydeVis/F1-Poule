@@ -1088,6 +1088,24 @@ app is."
   vooral een website in een venster zijn; dat vraagt een echte iPhone-app. Op
   een iPhone blijft het beginscherm de weg.
 
+## Een extra moment per weekend (1 november)
+
+Danny: "Spelers komen nu alleen naar de app om in te vullen en de uitslag te
+zien. Geef ze een extra moment per weekend, en stuur de momenten die er al
+zijn via de site." In de bezoeken van de laatste dertig dagen is vrijdag de
+stilste dag: 25 van de 476 app-bezoeken, tegen 116 op zaterdag en 102 op
+zondag. Twee PR's.
+
+| Stap | Wat | Stand |
+|---|---|---|
+| PR 1, snelle winst | een link naar de racepagina in de deelteksten (`?ref=groepsapp`), in kalender.ics (`?ref=kalender`) en een knop op het uitslagscherm (`?ref=app`); de top 10 van de vrije trainingen op het invulscherm, met jouw plek ernaast; een melding op vrijdagavond na VT2 (sprint: VT1), ook voor wie al invulde; de meldingen per soort aan of uit onder Profiel; de pagina's van de site tellen zonder cookie, per pagina en per ref in het beheer | **gebouwd** (1 november), BEDIENING §2, §11, §11b, §11c en §16 |
+| PR 2, hoe deed jij het tegen iedereen | anonieme cijfers over alle poules na elke sessie (de verdeling van de scores op de top 10, wie de winnaar en de pole goed had, de best en slechtst voorspelde coureur, de grootste verrassing), alleen na de deadline en vanaf 50 spelers uit 5 poules; "Beter dan p% van alle spelers" in de app en de uitslagmelding; een blok op de racepagina, in de JSON-LD en in llms.txt; een pagina met de voorspelde wereldkampioen van december tot de eerste race | volgt |
+
+Meten: in het beheer staat per pagina van de site hoeveel bezoeken er via de
+groepsapp, de agenda of de app binnenkwamen. Over een paar weekenden is te
+zien of vrijdag drukker wordt (de grafiek bezoeken per dag) en of de links
+iets doen (de kaart Bezoeken op de site).
+
 ## Premium, later
 
 Eerst de gratis app goed; daarna premium in twee stappen.

@@ -174,7 +174,20 @@ create table if not exists public.push_abonnementen (
   -- lopen een uitslag en de herinnering voor de volgende sessie door elkaar,
   -- en een uitslag die `laatst` overschreef zou die herinnering een tweede
   -- keer laten gaan.
-  uitslag_laatst text
+  uitslag_laatst text,
+  -- Welke soorten meldingen dit toestel wil (1 november): de herinnering voor
+  -- een deadline, de uitslag, en de vrije trainingen op vrijdagavond. Alles
+  -- staat standaard aan, ook voor wie meldingen al aan had; uitzetten kan per
+  -- soort onder Profiel.
+  meld_deadline  boolean not null default true,
+  meld_uitslag   boolean not null default true,
+  meld_training  boolean not null default true,
+  -- Over welk weekend dit toestel de trainingsmelding al kreeg
+  -- (scripts/trainingmeldingen.mjs): hooguit één per weekend.
+  training_laatst text,
+  -- De tijdzone van het toestel, zodat de trainingsmelding de deadline in
+  -- zijn eigen tijd noemt. Zonder tijdzone noemt hij de sessie.
+  tijdzone text
 );
 grant all on table public.push_abonnementen to anon, authenticated, service_role;
 
@@ -497,6 +510,26 @@ alter table public.races        add column if not exists rode_vlag_handmatig    
 
 alter table public.push_abonnementen add column if not exists taal text not null default 'nl';
 alter table public.push_abonnementen add column if not exists uitslag_laatst text;
+alter table public.push_abonnementen add column if not exists meld_deadline  boolean not null default true;
+alter table public.push_abonnementen add column if not exists meld_uitslag   boolean not null default true;
+alter table public.push_abonnementen add column if not exists meld_training  boolean not null default true;
+alter table public.push_abonnementen add column if not exists training_laatst text;
+alter table public.push_abonnementen add column if not exists tijdzone text;
+alter table public.push_abonnementen drop constraint if exists push_tijdzone;
+alter table public.push_abonnementen  add constraint push_tijdzone
+  check (tijdzone is null or tijdzone ~ '^[A-Za-z0-9_+/-]{1,64}$');
+-- De racepagina van een weekend op de site (1 november): het laatste stuk van
+-- de url, /races/<seizoen>/<pagina>/ (en per taal de map uit site/races.mjs).
+-- De sync zet hem zodra de pagina gepubliceerd is (racePaginas() in
+-- scripts/sync.mjs). Leeg is geen pagina: dan wijst een link naar de voorpagina.
+alter table public.races        add column if not exists pagina text;
+alter table public.races       drop constraint if exists races_pagina;
+alter table public.races        add constraint races_pagina
+  check (pagina is null or pagina ~ '^[a-z0-9-]{1,40}$');
+-- De vrije trainingen van een weekend (1 november): per training de naam en de
+-- tijden, en zodra hij gereden is de top 10 zoals OpenF1 hem geeft. Voor het
+-- invulscherm en de melding op vrijdagavond. Alleen de sync schrijft hem.
+alter table public.races        add column if not exists vrije_trainingen jsonb;
 
 -- ------------------------------------------------------------
 --  De vragenlijst
@@ -3100,6 +3133,52 @@ end $$;
 revoke all on function public.tel_bezoek(text) from public;
 grant execute on function public.tel_bezoek(text) to anon, authenticated;
 
+-- ---- de sitepagina's tellen (1 november) ---------------------------------
+-- Naast de app ook de pagina's van de site: per dag per pagina een aantal,
+-- en waar de bezoeker vandaan kwam als de link dat zegt (?ref=groepsapp in een
+-- gedeelde uitslag, ?ref=kalender in de agenda, ?ref=app vanaf het
+-- uitslagscherm). Geen cookie, geen IP-adres, geen account: teller.js stuurt
+-- alleen het pad en de ref. De privacyverklaring zegt het erbij.
+--
+-- Alleen paden uit de sitemap (site_paden, door de sync bijgehouden uit
+-- sitemap.xml) en een vaste lijst refs. Een ander pad wordt stil genegeerd,
+-- een onbekende ref telt als 'anders'. Zo is de tabel niet vol te schrijven
+-- met verzonnen paden.
+create table if not exists public.site_paden (
+  pad text primary key check (pad ~ '^/[a-z0-9/_-]{0,120}$')
+);
+create table if not exists public.site_bezoeken (
+  dag    date not null default current_date,
+  pad    text not null,
+  ref    text not null default '',
+  aantal int  not null default 0,
+  primary key (dag, pad, ref)
+);
+grant all on table public.site_paden to service_role;
+grant all on table public.site_bezoeken to service_role;
+alter table public.site_paden    enable row level security;
+alter table public.site_bezoeken enable row level security;
+revoke all on public.site_paden    from anon, authenticated;
+revoke all on public.site_bezoeken from anon, authenticated;
+
+create or replace function public.tel_pagina(p_pad text, p_ref text default null)
+returns void
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+declare
+  v_ref text := coalesce(p_ref, '');
+begin
+  if p_pad is null or not exists (select 1 from public.site_paden where pad = p_pad) then return; end if;
+  if v_ref not in ('', 'groepsapp', 'kalender', 'app') then v_ref := 'anders'; end if;
+  insert into public.site_bezoeken (dag, pad, ref, aantal) values (current_date, p_pad, v_ref, 1)
+    on conflict (dag, pad, ref) do update set aantal = public.site_bezoeken.aantal + 1;
+end $$;
+revoke all on function public.tel_pagina(text, text) from public;
+grant execute on function public.tel_pagina(text, text) to anon, authenticated;
+
 -- ---- wat de beheerpagina te zien krijgt --------------------------------
 
 -- De getallen bovenaan: hoe groot, hoe actief, en draait de sync.
@@ -3441,6 +3520,20 @@ begin
                'actief', (select count(*) from public.actief a where a.dag = d::date))
              order by d)
       from generate_series(current_date - 29, current_date, interval '1 day') d),
+    -- De pagina's van de site, de afgelopen dertig dagen (tel_pagina, 1
+    -- november): per pagina het totaal en per ref, en per ref het totaal.
+    -- '' is zonder ref: gewoon binnengekomen, via een zoekmachine of getypt.
+    'site_per_pagina', coalesce((
+      select jsonb_agg(jsonb_build_object('pad', p.pad, 'aantal', p.n, 'per_ref', p.refs)
+                       order by p.n desc, p.pad)
+      from (select pad, sum(n) n, jsonb_object_agg(ref, n) refs
+              from (select pad, ref, sum(aantal) n from public.site_bezoeken
+                     where dag > current_date - 30 group by pad, ref) x
+             group by pad) p), '[]'::jsonb),
+    'site_per_ref', coalesce((
+      select jsonb_agg(jsonb_build_object('ref', ref, 'aantal', n) order by n desc, ref)
+      from (select ref, sum(aantal) n from public.site_bezoeken
+             where dag > current_date - 30 group by ref) x), '[]'::jsonb),
     -- Per race van dit seizoen: hoeveel spelers er iets inleverden, tegen
     -- hoeveel er toen in een poule van dit seizoen zaten. De seizoensvragen
     -- tellen niet mee: die hangen aan de eerste race en zouden die opblazen.
@@ -4146,14 +4239,14 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'push_sleutel', 'push_sleutel_vingerafdruk', 'push_sleutel_zetten',
           'seizoen_klaar', 'seizoenen_doorschuiven', 'pools_seizoen_bewaken',
           'sessie_deadline', 'speler_naam', 'sync_runs_opruimen', 'tel_bezoek',
-          'tik_geven', 'tik_ontvangers',
+          'tel_pagina', 'tik_geven', 'tik_ontvangers',
           'vereis_sessie', 'verwijder_mijn_account'] as functies,
                array[
           'aanmaak_log', 'actief', 'answers', 'bezoeken', 'jokers',
           'pool_eigen_antwoorden', 'pool_eigen_vragen', 'pool_members', 'pool_periodes',
           'pool_questions', 'pool_teams', 'pools', 'poule_controle', 'push_abonnementen',
-          'questions', 'races', 'site_beheerders', 'sync_runs', 'tikken',
-          'verboden_woorden'] as tabellen) v
+          'questions', 'races', 'site_beheerders', 'site_bezoeken', 'site_paden',
+          'sync_runs', 'tikken', 'verboden_woorden'] as tabellen) v
 union all
 -- Premium (13 oktober): de vijf kolommen op pools, de bewaking erop, de teams
 -- (pool_teams en de functies erbij), en de vier regels van de bucket

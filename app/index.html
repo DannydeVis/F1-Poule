@@ -1242,6 +1242,19 @@
   .vragentegel > .winnaarblok{border:0;border-top:1px solid var(--lijn);border-radius:0;
     background:transparent;padding:14px 18px 16px}
   .pouleregel .klaarteken{width:22px;display:grid;place-items:center;flex:none;color:var(--groen)}
+  /* De vrije trainingen op het invulscherm (1 november): per training de top
+     10, en rechts waar jij die coureur nu hebt staan. De nieuwste staat open. */
+  .trainingtegel details{border-top:1px solid var(--lijn)}
+  .trainingtegel summary{cursor:pointer;padding:12px 18px;font-weight:600}
+  .trainingtop{list-style:none;margin:0;padding:0 18px 14px;display:grid;gap:4px}
+  .trainingtop li{display:grid;grid-template-columns:2.6em 1fr auto;gap:10px;align-items:center;
+    font-size:14px;border-left:3px solid var(--team);padding-left:8px}
+  .trainingtop .pos,.trainingtop .jijplek{font-family:var(--mono);font-size:13px;color:var(--ink2)}
+  .trainingtop .jijplek.gekozen{color:var(--ink);font-weight:700}
+  /* Welke meldingen onder Profiel (1 november): drie vinkjes. */
+  .meldsoorten{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .meldsoorten legend{padding:0;margin-bottom:2px}
+  .meldsoorten label{display:flex;gap:10px;align-items:center;font-size:14px}
   /* De tik (premium): een kleine knop waar anders "nog niet" staat. */
   .pouleregel .knop.tik{width:auto;flex:none;min-height:32px;padding:0 12px;margin:0}
   .pouleregel.klaar .zacht{color:var(--groen)}
@@ -2976,6 +2989,18 @@ const ENGELS = Object.fromEntries([
    'tap to pick'],
   ['Losse vragen',
    'Extra questions'],
+  ['Vrije trainingen',
+   'Free practice'],
+  ['rechts: jouw plek nu',
+   'right: your spot now'],
+  ['niet in jouw top 10',
+   'not in your top 10'],
+  ['VT1',
+   'FP1'],
+  ['VT2',
+   'FP2'],
+  ['VT3',
+   'FP3'],
   ['{n} van {totaal} ingevuld',
    '{n} of {totaal} answered'],
   ['ingeleverd',
@@ -3338,22 +3363,22 @@ const ENGELS = Object.fromEntries([
    'Your browser has blocked notifications for this site. The app cannot undo '
    + 'that itself — it is in your browser settings, under this site. Your calendar '
    + 'can do this too, by the way: see the button under Pool.'],
-  ['Dit toestel krijgt een seintje als een '
-   + 'deadline nadert en jij nog niets hebt ingevuld, en als de uitslag binnen '
-   + 'is. Meer niet.',
-   'This device gets a nudge when a deadline is close and you have not filled '
-   + 'anything in, and when the results are in. Nothing more.'],
+  ['Dit toestel krijgt een seintje voor wat hieronder aanstaat. Meer niet.',
+   'This device gets a nudge for whatever is switched on below. Nothing more.'],
   ['Zet meldingen uit',
    'Turn notifications off'],
-  ['Krijg een seintje op dit toestel als een '
-   + 'deadline nadert en je nog niets hebt ingevuld, en als de uitslag binnen '
-   + 'is. Op een iPhone werkt dat alleen als Predict the Race op je beginscherm '
-   + 'staat.',
-   'Get a nudge on this device when a deadline is close and you have not filled '
-   + 'anything in, and when the results are in. On an iPhone this only works if '
-   + 'Predict the Race is on your home screen.'],
+  ['Krijg een seintje op dit toestel als een deadline nadert en je nog niets hebt ingevuld, als de uitslag binnen is, en op vrijdagavond na de vrije training. Op een iPhone werkt dat alleen als Predict the Race op je beginscherm staat.',
+   'Get a nudge on this device when a deadline is close and you have not filled anything in, when the results are in, and on Friday evening after free practice. On an iPhone this only works if Predict the Race is on your home screen.'],
   ['Zet meldingen aan',
    'Turn notifications on'],
+  ['een seintje als',
+   'a nudge when'],
+  ['een deadline nadert en je nog niets hebt ingevuld',
+   'a deadline is close and you have not filled anything in'],
+  ['de uitslag binnen is',
+   'the results are in'],
+  ['de vrije training binnen is, op vrijdagavond',
+   'free practice is in, on Friday evening'],
   ['je seizoen delen',
    'share your season'],
   ['Zet dit aan en je krijgt een link naar '
@@ -3558,13 +3583,15 @@ const ENGELS = Object.fromEntries([
   ['<b>Als je meldingen aanzet</b><br>'
    + 'Dan komt er één regel bij per toestel: het adres waar je pushdienst '
    + '(Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee '
-   + 'sleutels van dat toestel. Geen naam en geen mailadres. Die regel gaat weg '
-   + 'zodra je meldingen uitzet.',
+   + 'sleutels van dat toestel, de taal en de tijdzone van het toestel (voor de '
+   + 'tijd in de melding), en welke meldingen je wilt. Geen naam en geen '
+   + 'mailadres. Die regel gaat weg zodra je meldingen uitzet.',
    '<b>If you turn notifications on</b><br>'
    + 'Then one row is added per device: the address your push service (Google, '
    + 'Apple or Mozilla) can send a notification to, plus two keys from that '
-   + 'device. No name and no email address. That row goes away as soon as you '
-   + 'turn notifications off.'],
+   + 'device, its language and time zone (for the time in the notification), '
+   + 'and which notifications you want. No name and no email address. That row '
+   + 'goes away as soon as you turn notifications off.'],
   ['<b>Als iemand je aantikt</b><br>In een poule met premium kun je een medespeler aantikken die nog niets invulde; die krijgt dan een melding. We bewaren wie wie aantikte, voor welke race en wanneer, zodat niemand twee keer per race wordt aangetikt. Na twee maanden gaat dat weg.',
    '<b>If someone nudges you</b><br>In a pool with premium you can nudge a fellow player who has not filled anything in yet; they then get a notification. We store who nudged whom, for which race and when, so that nobody gets nudged twice per race. That is removed after two months.'],
   ['<b>Hoe lang</b><br>'
@@ -3892,6 +3919,8 @@ const ENGELS = Object.fromEntries([
   ['voorspellen', 'predict'],
   // Het deelplaatje van een weekend, en het venster eromheen.
   ['Deel de uitslag', 'Share the result'],
+  ['Tijden en cijfers van deze GP',
+   'Times and stats for this GP'],
   ['ronde {n}', 'round {n}'],
   ['uitslag poule', 'pool result'],
   ['tussenstand · na de kwalificatie', 'so far · after qualifying'],
@@ -7369,7 +7398,10 @@ function groepsappTekst(race) {
   return `${race.name}, ${T('uitslag {poule}', { poule: S.poule?.name ?? '' })}\n\n`
     + rijen.map((r, i) => `${plekken[i]}. ${r.naam}  ${r.punten}`).join('\n')
     + (stijger ? `\n\n${T('Grootste stijger: {wie}', { wie: stijger })}` : '')
-    + `\n\n${T('Seizoen: {stand}', { stand: seizoen.map(r => `${r.naam} ${r.punten}`).join(', ') })}`;
+    + `\n\n${T('Seizoen: {stand}', { stand: seizoen.map(r => `${r.naam} ${r.punten}`).join(', ') })}`
+    // Een korte link naar de racepagina van dit weekend (1 november): wie in de
+    // groepsapp meeleest komt zo op de site, en de teller ziet het (?ref).
+    + `\n\n${racePaginaUrl(race, 'groepsapp')}`;
 }
 
 // Wie er in de stand het meest omhoog ging door dit weekend, met van welke
@@ -7430,6 +7462,18 @@ function telBezoek(pad) {
   Promise.resolve(db.rpc('tel_bezoek', { p_pad })).catch(() => {});
 }
 
+// De tijdzone bij de meldingen (1 november): een toestel dat meldingen al aan
+// had, heeft er nog geen, en wie op reis gaat krijgt een andere. Eén keer per
+// keer openen kijkt de app het na (pushTijdzoneNakijken). Via setTimeout:
+// render() kan komen voordat het deel van het script met de meldingen gelezen
+// is.
+let tijdzoneGedaan = false;
+function tijdzoneLater() {
+  if (tijdzoneGedaan || DEMO) return;
+  tijdzoneGedaan = true;
+  setTimeout(() => { pushTijdzoneNakijken(); }, 0);
+}
+
 // ---- een nieuw scherm begint bovenaan -------------------------
 // Danny, 28 oktober: "Als ik schroll naar beneden en ik druk ergens op dan
 // staat de pagina niet bovenaan. Maar op de plek wat ik heen scrolde." Op een
@@ -7480,7 +7524,7 @@ function render() {
     else if (!S.poule) toonStart();
     else if (!S.ik)    kiesSpeler();
     else if (hervatRondleiding()) rondleidingScherm();
-    else { telBezoek('app'); toonApp(); }
+    else { telBezoek('app'); tijdzoneLater(); toonApp(); }
     scrolBijNieuwScherm();
   } catch (fout) {
     // De fout blijft een fout. Hij hoort in de console en daarmee in de
@@ -9009,6 +9053,23 @@ function vraagOfBeheerder() {
 // lukt dat: het doorstuurscriptje op / laat iedereen staan die van een eigen
 // pagina komt, ook in een app op het beginscherm van een iPhone.
 const voorpagina = () => new URL(TAAL === 'nl' ? '../' : `../${TAAL}/`, linkBasis()).href;
+
+// De racepagina van een weekend op de site (1 november): de tijden, de vrije
+// trainingen en de circuitcijfers. races.pagina is het laatste stuk van de url
+// (de sync zet hem, scripts/racepagina.mjs); de map per taal is die uit
+// site/races.mjs (RACE_TEKST.pad), test/racepagina-links.test.mjs houdt ze
+// gelijk. Zonder pagina de voorpagina in jouw taal. `ref` zegt de teller op de
+// site waar je vandaan kwam (tel_pagina in schema.sql).
+const RACEMAP = { nl: 'races', en: 'en/races', de: 'de/rennen', fr: 'fr/courses',
+  es: 'es/carreras', it: 'it/gare', pt: 'pt/corridas' };
+function racePaginaUrl(race, ref) {
+  const pagina = race?.pagina && /^[a-z0-9-]{1,40}$/.test(race.pagina) && race.season
+    ? `../${RACEMAP[TAAL] ?? RACEMAP.en}/${race.season}/${race.pagina}/`
+    : (TAAL === 'nl' ? '../' : `../${TAAL}/`);
+  const url = new URL(pagina, linkBasis());
+  if (ref) url.searchParams.set('ref', ref);
+  return url.href;
+}
 // De bron met zijn licentie: de data van OpenF1 valt onder CC BY-NC-SA 4.0, en
 // die vraagt om de bron én de licentie te noemen (BEDIENING §10). Op de site
 // staat dezelfde regel in de voet; test/openf1-licentie.test.mjs.
@@ -9054,6 +9115,17 @@ async function pushInlezen() {
     const reg = await navigator.serviceWorker.getRegistration();
     const ab = reg ? await reg.pushManager.getSubscription() : null;
     S.push = ab ? 'aan' : 'uit';
+    // Welke soorten dit toestel aan heeft (1 november). Lukt het lezen niet,
+    // dan blijven de vinkjes weg en blijft de knop voor alles.
+    S.pushSoorten = null;
+    if (ab && db) {
+      const { data, error } = await db.from('push_abonnementen')
+        .select('meld_deadline,meld_uitslag,meld_training').eq('endpoint', ab.endpoint).maybeSingle();
+      if (!error && data) {
+        S.pushSoorten = { deadline: data.meld_deadline !== false, uitslag: data.meld_uitslag !== false,
+          training: data.meld_training !== false };
+      }
+    }
   } catch { S.push = 'kan niet'; }
 }
 
@@ -9068,9 +9140,9 @@ function meldingBlok() {
   if (pushNaBeginscherm()) {
     return `<div class="scheiding"></div><span class="label">${T('herinneringen')}</span>
       <p class="zacht" style="margin:0">${T('Krijg een seintje op dit toestel als een '
-        + 'deadline nadert en je nog niets hebt ingevuld, en als de uitslag binnen '
-        + 'is. Op een iPhone werkt dat alleen als Predict the Race op je beginscherm '
-        + 'staat.')}</p>
+        + 'deadline nadert en je nog niets hebt ingevuld, als de uitslag binnen is, '
+        + 'en op vrijdagavond na de vrije training. Op een iPhone werkt dat alleen als '
+        + 'Predict the Race op je beginscherm staat.')}</p>
       <button class="knop klein" id="meldingAan">${T('Zet meldingen aan')}</button>
       ${S.pushFout ? `<p class="zacht" id="meldingBeginscherm" style="margin:0">${esc(S.pushFout)}</p>` : ''}`;
   }
@@ -9085,18 +9157,28 @@ function meldingBlok() {
         + 'ook: zie de knop onder Poule.')}</p>`;
   }
   if (S.push === 'aan') {
+    // Per soort aan of uit (1 november). Wie meldingen al aan had, heeft ze
+    // alle drie aan; uitzetten is één tik. Kon de app de soorten niet lezen
+    // (een database zonder de kolommen), dan alleen de knop voor alles.
+    const soort = (id, tekst) => `<label><input type="checkbox" data-meldsoort="${id}"${
+      S.pushSoorten?.[id] === false ? '' : ' checked'}> ${tekst}</label>`;
     return `${kop}
-      <p class="zacht" style="margin:0">${T('Dit toestel krijgt een seintje als een '
-        + 'deadline nadert en jij nog niets hebt ingevuld, en als de uitslag binnen '
-        + 'is. Meer niet.')}</p>
+      <p class="zacht" style="margin:0">${T('Dit toestel krijgt een seintje voor wat hieronder '
+        + 'aanstaat. Meer niet.')}</p>
+      ${S.pushSoorten ? `<fieldset class="meldsoorten" data-meldsoorten>
+        <legend class="zacht">${T('een seintje als')}</legend>
+        ${soort('deadline', T('een deadline nadert en je nog niets hebt ingevuld'))}
+        ${soort('uitslag', T('de uitslag binnen is'))}
+        ${soort('training', T('de vrije training binnen is, op vrijdagavond'))}
+      </fieldset>` : ''}
       <button class="knop klein" id="meldingUit">${T('Zet meldingen uit')}</button>
       ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}`;
   }
   return `${kop}
     <p class="zacht" style="margin:0">${T('Krijg een seintje op dit toestel als een '
-      + 'deadline nadert en je nog niets hebt ingevuld, en als de uitslag binnen '
-      + 'is. Op een iPhone werkt dat alleen als Predict the Race op je beginscherm '
-      + 'staat.')}</p>
+      + 'deadline nadert en je nog niets hebt ingevuld, als de uitslag binnen is, '
+      + 'en op vrijdagavond na de vrije training. Op een iPhone werkt dat alleen als '
+      + 'Predict the Race op je beginscherm staat.')}</p>
     <button class="knop klein" id="meldingAan">${T('Zet meldingen aan')}</button>
     ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}`;
 }
@@ -9123,6 +9205,57 @@ function knoopMelding() {
     catch (e) { S.pushFout = e.message; }
     render();
   };
+  app.querySelectorAll('[data-meldsoort]').forEach(vak => vak.onchange = async () => {
+    const id = vak.dataset.meldsoort, aan = vak.checked;
+    vak.disabled = true; S.pushFout = '';
+    try { await pushSoortZetten(id, aan); }
+    catch (e) { S.pushFout = e.message; vak.checked = !aan; }
+    render();
+  });
+}
+
+// Eén soort melding aan of uit, op de rij van dit toestel (1 november). De
+// sync slaat een soort over die hier uit staat.
+const MELDKOLOM = { deadline: 'meld_deadline', uitslag: 'meld_uitslag', training: 'meld_training' };
+async function pushSoortZetten(id, aan) {
+  const reg = await navigator.serviceWorker.getRegistration();
+  const ab = reg ? await reg.pushManager.getSubscription() : null;
+  if (!ab || !MELDKOLOM[id]) return;
+  const { error } = await db.from('push_abonnementen').update({ [MELDKOLOM[id]]: aan }).eq('endpoint', ab.endpoint);
+  if (error) throw new Error(uitleg(error));
+  S.pushSoorten = { ...(S.pushSoorten ?? {}), [id]: aan };
+}
+
+// De tijdzone van dit toestel, voor de trainingsmelding ("je top 10 kan nog
+// tot zaterdag 16:00"). Apart weggeschreven en zonder foutmelding: een
+// database zonder de kolom mag het aanzetten niet tegenhouden.
+const tijdzoneNu = () => {
+  try {
+    const z = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return /^[A-Za-z0-9_+/-]{1,64}$/.test(z ?? '') ? z : null;
+  } catch { return null; }
+};
+async function pushTijdzoneBijwerken(endpoint) {
+  const tijdzone = tijdzoneNu();
+  if (!tijdzone) return;
+  try {
+    const { error } = await db.from('push_abonnementen').update({ tijdzone }).eq('endpoint', endpoint);
+    if (!error) schrijf(TIJDZONESLEUTEL, tijdzone);
+  } catch { /* niets */ }
+}
+// Welke tijdzone dit toestel het laatst wegschreef. Alleen als die anders is
+// dan nu, en er op dit toestel meldingen aan staan, gaat er iets naar de
+// database: zo kost het nakijken bij het openen meestal niets.
+const TIJDZONESLEUTEL = 'poule:tijdzone';
+async function pushTijdzoneNakijken() {
+  try {
+    if (!pushKan() || !db || Notification.permission !== 'granted') return;
+    const tijdzone = tijdzoneNu();
+    if (!tijdzone || lees(TIJDZONESLEUTEL) === tijdzone) return;
+    const reg = await navigator.serviceWorker.getRegistration();
+    const ab = reg ? await reg.pushManager.getSubscription() : null;
+    if (ab) await pushTijdzoneBijwerken(ab.endpoint);
+  } catch { /* dan noemt de melding de sessie in plaats van de tijd */ }
 }
 
 async function pushAanzetten() {
@@ -9148,7 +9281,9 @@ async function pushAanzetten() {
     p256dh: j.keys.p256dh, auth: j.keys.auth, laatst: null, taal: TAAL,
   }, { onConflict: 'endpoint' });
   if (error) throw new Error(uitleg(error));
+  await pushTijdzoneBijwerken(j.endpoint);
   S.push = 'aan';
+  S.pushSoorten = { deadline: true, uitslag: true, training: true };
   S.melding = T('Meldingen staan aan op dit toestel.');
 }
 
@@ -9162,6 +9297,7 @@ async function pushTaalBijwerken() {
     const ab = reg ? await reg.pushManager.getSubscription() : null;
     if (!ab) return;
     await db.from('push_abonnementen').update({ taal: TAAL }).eq('endpoint', ab.endpoint);
+    await pushTijdzoneBijwerken(ab.endpoint);
   } catch { /* een herinnering in de vorige taal is geen reden om iets te melden */ }
 }
 
@@ -9717,8 +9853,9 @@ function privacyBlok() {
         T('<b>Als je meldingen aanzet</b><br>'
         + 'Dan komt er één regel bij per toestel: het adres waar je pushdienst '
         + '(Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee '
-        + 'sleutels van dat toestel. Geen naam en geen mailadres. Die regel gaat weg '
-        + 'zodra je meldingen uitzet.')}</p>` : ''}
+        + 'sleutels van dat toestel, de taal en de tijdzone van het toestel (voor de '
+        + 'tijd in de melding), en welke meldingen je wilt. Geen naam en geen '
+        + 'mailadres. Die regel gaat weg zodra je meldingen uitzet.')}</p>` : ''}
       ${premiumActief() ? `<p style="margin:0 0 10px" data-privacy-tik>${
         T('<b>Als iemand je aantikt</b><br>In een poule met premium kun je een medespeler aantikken die nog '
         + 'niets invulde; die krijgt dan een melding. We bewaren wie wie aantikte, voor welke race en wanneer, '
@@ -12088,9 +12225,10 @@ function invulWeergave(paneel, r, dicht) {
           { wie: esc(drv(r, weg[0]).code) })
       : T('{wie} staan niet meer in de deelnemerslijst en leveren zo niets op. Kies opnieuw en sla op.',
           { wie: esc(opsomming(weg.map(nr => drv(r, nr).code))) })}</div>` : '';
-  paneel.innerHTML = kiesOpnieuw + (hoofd && (vragen || poule)
-    ? tweeKolommen({ hoofd, zij: vragen + poule + afsluiting })
-    : hoofd + vragen + poule + afsluiting) + kiesblad(r);
+  const trainingen = trainingKaart(r);
+  paneel.innerHTML = kiesOpnieuw + (hoofd && (vragen || poule || trainingen)
+    ? tweeKolommen({ hoofd, zij: vragen + trainingen + poule + afsluiting })
+    : hoofd + vragen + trainingen + poule + afsluiting) + kiesblad(r);
   knoopBekijk(paneel);
   // De tik-knoppen staan in dit paneel (pouleKaart), en het paneel wordt bij
   // elke keuze opnieuw getekend zonder de rest van de app. Zonder dit deed
@@ -12418,6 +12556,39 @@ function duelKiezer(r) {
 
 // Twee kolommen op een breed scherm, onder elkaar op een telefoon (de CSS bij
 // .kolom2): eerst de linkerkolom, dan de rechter.
+// ---- de vrije trainingen op het invulscherm (1 november) ----------------
+// Per training de top 10, met bij elke coureur waar jij hem nu hebt staan in
+// je top 10 van dit tabblad. Wie al ingevuld heeft, ziet zo of hij wil
+// schuiven. Uit wat er nu op het scherm staat, dus ook wat je net koos. De
+// nieuwste training staat open, de eerdere dicht. De sync zet ze in
+// races.vrije_trainingen (scripts/vrijetrainingen.mjs).
+const TRAININGLABEL = { 'Practice 1': 'VT1', 'Practice 2': 'VT2', 'Practice 3': 'VT3' };
+function trainingKaart(r) {
+  const lijst = (r.vrije_trainingen ?? []).filter(t => t?.top?.length && TRAININGLABEL[t.naam]);
+  if (!lijst.length || !top10Actief(S.tab)) return '';
+  const mijn = (S.keuze[S.tab] ?? []).map(x => (x == null ? null : String(x)));
+  return `
+    <section class="tegel trainingtegel" data-trainingen>
+      <div class="tegelkop"><h2>${T('Vrije trainingen')}</h2>
+        <span class="tegelsub">${T('rechts: jouw plek nu')}</span></div>
+      ${lijst.map((t, i) => `<details data-training="${esc(t.naam)}"${i === lijst.length - 1 ? ' open' : ''}>
+        <summary>${T(TRAININGLABEL[t.naam])}</summary>
+        <ol class="trainingtop">${t.top.map(x => {
+          const d = drv(r, x.nr);
+          const plek = mijn.indexOf(String(x.nr));
+          return `<li style="--team:${esc(d?.kleur ?? 'var(--lijn)')}" data-trainingrij="${esc(x.nr)}">
+            <span class="pos">P${esc(x.plek)}</span>
+            <span><b class="code">${esc(d?.code ?? x.code ?? x.nr)}</b> ${esc(achternaam(d ?? { naam: x.naam, code: x.code }))}</span>
+            ${plek >= 0
+              ? `<span class="jijplek gekozen" data-jij="${plek + 1}"><span class="alleenlezer">${T('jij')} </span>P${plek + 1}</span>`
+              : `<span class="jijplek" data-jij=""><span aria-hidden="true">-</span><span class="alleenlezer">${
+                  T('niet in jouw top 10')}</span></span>`}
+          </li>`;
+        }).join('')}</ol>
+      </details>`).join('')}
+    </section>`;
+}
+
 function tweeKolommen({ hoofd, zij }) {
   return `<div class="kolom2">
     <div class="k2-hoofd">${hoofd}</div>
@@ -12684,6 +12855,8 @@ function weekendVoet(r) {
         ${r.race_result?.length && heeftVoorspeld(r, S.ik.id) ? `<button class="knop spook" data-verhaal="${
           esc(r.id)}">${SPEELICOON}${T('Speel het weekend af')}</button>` : ''}
         <button class="knop spook" data-deel="${esc(r.id)}">${DEELICOON}${T('Deel de uitslag')}</button>
+        ${r.pagina ? `<a class="knop spook" data-racepagina href="${esc(racePaginaUrl(r, 'app'))}"
+          target="_blank" rel="noopener">${T('Tijden en cijfers van deze GP')}</a>` : ''}
       </div>
     </section>`;
 }
@@ -13389,7 +13562,9 @@ function standTekst() {
   const plekken = gedeeldePlekken(rijen);
   const breed = Math.max(...rijen.map(r => String(r.naam).length));
   return `${S.poule?.name ?? T('Stand')}, ${T('na {n} van de {totaal} races', { n: gereden(), totaal: S.races.length })}\n\n`
-    + rijen.map((r, i) => `${plekken[i]}. ${String(r.naam).padEnd(breed + 2)}${r.punten}`).join('\n');
+    + rijen.map((r, i) => `${plekken[i]}. ${String(r.naam).padEnd(breed + 2)}${r.punten}`).join('\n')
+    // De racepagina van het laatste weekend met een uitslag, anders de voorpagina.
+    + `\n\n${racePaginaUrl(laatsteMetUitslag(), 'groepsapp')}`;
 }
 
 // Het venster met het plaatje. Twee stappen in plaats van meteen het

@@ -298,6 +298,22 @@ export async function startSite({ voorafAan, taal = null, toestemming = false, u
     extern.push(route.request().url());
     return route.abort();
   });
+  // De teller van de site (teller.js, 1 november) gaat wel naar buiten, naar
+  // tel_pagina() bij Supabase. Die vangen we hier op in plaats van hem af te
+  // breken: zo zien de tests wat er geteld wordt, en telt hij niet als "iets
+  // van een andere website". Later geregistreerd, dus deze gaat voor.
+  const tellers = [];
+  const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS' };
+  await context.route((u) => /\/rest\/v1\/rpc\/tel_pagina$/.test(u.pathname) && !u.href.startsWith(url), (route) => {
+    const verzoek = route.request();
+    if (verzoek.method() === 'POST') {
+      let body = null;
+      try { body = JSON.parse(verzoek.postData() ?? 'null'); } catch { /* niets */ }
+      tellers.push({ url: verzoek.url(), body });
+    }
+    return route.fulfill({ status: 204, headers: cors, body: '' });
+  });
   if (taal) await context.addInitScript((t) => {
     try { localStorage.setItem('poule:taal', t); } catch { /* niets */ }
   }, taal);
@@ -307,7 +323,7 @@ export async function startSite({ voorafAan, taal = null, toestemming = false, u
   const jsFouten = [];
   page.on('pageerror', (e) => jsFouten.push(String(e)));
   return {
-    page, context, url, extern, jsFouten,
+    page, context, url, extern, tellers, jsFouten,
     async stoppen() { await browser.close(); server.close(); },
   };
 }
