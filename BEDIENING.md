@@ -110,6 +110,15 @@ je top 10 met een teller en een balkje dat volloopt, de losse vragen met
 hoeveel je er al hebt, en wie van de poule al iets heeft ingeleverd voor dat
 tabblad (niet wát: dat blijft geheim tot de deadline).
 
+**De vrije trainingen** (sinds 1 november). Is er dit weekend een vrije
+training gereden, dan staat bij het invullen van een top 10 de tegel **Vrije
+trainingen**: per training de top 10, en rechts bij elke coureur waar jij hem
+nu hebt staan (P3), of een streepje als hij niet in jouw top 10 staat. De
+laatste training staat open, de eerdere klap je open. Schuif je een coureur,
+dan schuift het getal mee. Wie al ingevuld heeft, ziet zo of hij nog wil
+schuiven. Op een sprintweekend is er alleen VT1. De top 10 komt van OpenF1,
+via de sync (§11, "De vrije trainingen").
+
 Vanaf 1280 pixels breed staan de tegels in twee kolommen, tot 1240 pixels:
 bij een uitslag je voorspelling links en de poule rechts; bij het invullen de
 top 10 links en de vragen, de poule en Opslaan rechts.
@@ -130,6 +139,17 @@ ziet het eerst in een venster, met daaronder:
 
 Past niet iedereen op het plaatje, dan staat er "en nog 4", en sta jij er
 toch op, onderaan. Het adres onderaan komt uit de adresbalk, niet uit de code.
+
+**Een link in alles wat naar buiten gaat** (sinds 1 november). De tekst van
+Kopieer als tekst, en die van de stand (onder Stand), eindigt met een korte
+link naar de racepagina van die GP op de site, in de taal van de speler, met
+`?ref=groepsapp` erachter. Heeft die GP (nog) geen racepagina, dan de
+voorpagina in die taal. Naast Deel de uitslag staat de knop **Tijden en
+cijfers van deze GP** naar dezelfde pagina (met `?ref=app`), alleen als de
+pagina er is. Daar staan de sessietijden, de top 10 van de vrije trainingen
+en de cijfers van het circuit. Welke race een pagina heeft, zet de sync in
+`races.pagina` (§11). Wat die links opleveren zie je in het beheer (§16, "De
+eigen bezoekersteller").
 
 Bovenin dat venster kies je **Bericht** (het plaatje hierboven, voor de
 groepsapp) of **Story**: een staand plaatje van 1080 bij 1920 voor je
@@ -1480,6 +1500,7 @@ elk uur. Niemand hoeft iets in te voeren.
 | Snelste pitstop | `pit`, de kortste `pit_duration` |
 | Safety cars | `race_control` |
 | Rode vlag | `race_control` |
+| Top 10 van de vrije trainingen (sinds 1 november) | `session_result` |
 
 **Sprintweekenden.** Zes weekenden per seizoen hebben een derde sessie. De
 sync herkent hem aan `session_name = 'Sprint'` en vult `deadline_sprint` en
@@ -1660,6 +1681,26 @@ Actions → *Klopt de stand?* na te kijken; die draait ook
 `scripts/controle-coureurs.mjs`, dat per race naast elkaar zet wat er in de
 database staat en wat OpenF1 er nu over zegt.
 
+**De vrije trainingen** (sinds 1 november). De sync zet per weekend het
+rooster van de vrije trainingen in `races.vrije_trainingen` (naam, sessie,
+begin en einde), en een half uur na het einde van een training de top 10 zoals
+OpenF1 hem geeft: plek, nummer, code en naam. Alleen de sync schrijft die
+kolom, met de service_role key; de app leest hem, voor de tegel op het
+invulscherm (§2, Races) en de melding op vrijdagavond (§11c). Een 401 tijdens
+een sessie of een 404 omdat de uitslag er nog niet is, slaat hij over: de
+volgende run probeert het opnieuw. Is de race gereden, dan haalt hij de
+trainingen niet meer op. De regels staan in `scripts/vrijetrainingen.mjs`. De
+site haalt dezelfde top 10 apart op voor de racepagina's
+(`scripts/racedata.mjs`), maar alleen voor de races met een pagina.
+
+**De racepagina** (sinds 1 november). Welke race een pagina op de site heeft,
+zet de sync in `races.pagina`: het laatste stuk van de url, zoals
+`sao-paulo`. Hij leest daarvoor `site/data/races-<jaar>.json` en kijkt of
+`races/<jaar>/<pagina>/index.html` echt in de repo staat
+(`scripts/racepagina.mjs`). De app maakt er per taal de link van, met de map
+uit `site/races.mjs` (`/en/races/`, `/de/rennen/` enzovoort). Leeg is geen
+pagina: dan wijst een link naar de voorpagina in de taal van de speler.
+
 ---
 
 ## 11b. De deadlines in je agenda
@@ -1686,6 +1727,11 @@ Wees eerlijk over wat het niet kan: een agenda-item geldt voor iedereen en kan
 dus niet zeggen "jij hebt nog niets ingevuld". Het bereikt je wél, en dat is
 precies wat de app tot nu toe niet deed.
 
+Sinds 1 november wijst de url van elk item naar de racepagina van die GP op
+de site (met `?ref=kalender`), want daar staan de sessietijden en de vrije
+trainingen. De link naar de app staat in de beschrijving. Heeft een GP geen
+racepagina, dan wijst de url naar de app, zoals eerst.
+
 Twee dingen om te weten:
 
 - **Elk item heeft een melding een uur van tevoren** (`VALARM`, stond op twee
@@ -1702,9 +1748,10 @@ Twee dingen om te weten:
 ## 11c. Een seintje op je telefoon
 
 Onder **Profiel** staat "herinneringen": zet je dat aan, dan krijgt dat toestel
-een melding als een deadline nadert en jij nog niets hebt ingevuld, en sinds 1
-november ook een als de uitslag binnen is (zie hieronder). Anders dan de agenda
-hierboven kan dit wél naar jou persoonlijk kijken.
+een melding als een deadline nadert en jij nog niets hebt ingevuld. Sinds 1
+november ook een als de uitslag binnen is, en een op vrijdagavond na de vrije
+training (zie hieronder). Elke soort zet je daar apart aan of uit. Anders dan
+de agenda hierboven kan dit wél naar jou persoonlijk kijken.
 
 De regel, en vooral wat hij niet doet:
 
@@ -1745,13 +1792,61 @@ Een tik opent de app.
 De regel staat in `scripts/uitslagmeldingen.mjs`, het versturen in
 `scripts/sync.mjs`, direct na de herinneringen. Zonder de kolom (een database
 waar `schema.sql` nog niet opnieuw op draaide) stuurt de sync niets en zegt
-hij dat in de log. Er is geen aparte knop om alleen deze uit te zetten: wie ze
-niet wil, zet meldingen uit.
+hij dat in de log. Wie ze niet wil, haalt onder Profiel het vinkje "de uitslag
+binnen is" weg (zie "Per soort aan of uit" hieronder).
 
 **Wat het kost: niets.** Een melding gaat van de sync (GitHub Actions, gratis
 voor een openbare repo) of de functie `tik` (Supabase, ruim binnen het gratis
 deel) naar de pushdienst van het toestel: Apple, Google of Mozilla. Die
 rekenen niets per melding. Er zit geen betaalde dienst tussen.
+
+### Een seintje op vrijdagavond, na de vrije training (sinds 1 november)
+
+Danny: spelers komen alleen naar de app om in te vullen en de uitslag te zien.
+Vrijdag is de stilste dag (25 van de 476 app-bezoeken in de laatste dertig
+dagen, tegen 116 op zaterdag en 102 op zondag). Daarom één melding op
+vrijdagavond: "VT2 is binnen: Norris was het snelst", met "Je top 10 kan nog
+tot zaterdag 16:00." Een tik opent de app, en op het invulscherm staat dan de
+top 10 van die training naast die van jou (§2, Races).
+
+- Na **VT2**; op een sprintweekend na **VT1**, want daar is er maar één en
+  sluit de sprint al op zaterdag.
+- **Ook voor wie al ingevuld heeft**: juist die kan nog schuiven.
+- **Hooguit één per toestel per weekend**: de sync onthoudt het in de kolom
+  `training_laatst` van `push_abonnementen`.
+- Alleen als jouw poule dat weekend nog een top 10 open heeft, met **minstens
+  een uur** te gaan. De deadline in de melding is die van de eerste top 10
+  die jouw poule speelt (sprint, kwalificatie of race). Korter dan een uur en
+  de gewone herinnering neemt het over.
+- De tijd staat er **in de tijdzone van het toestel**: de app zet die erbij als
+  je meldingen aanzet (kolom `tijdzone`). Zonder tijdzone (een toestel dat
+  meldingen aanzette voor 1 november en de app sindsdien niet opende) noemt
+  hij de sessie: "Je top 10 kan nog tot de start van de kwalificatie."
+- Wanneer hij komt: een half uur na het einde van de training staat de top 10
+  bij OpenF1. De wekker (zie "Op tijd" hieronder) start de sync dan, en daarna
+  elk half uur nog eens, tot vier uur na het einde. Niet bij een afgelaste
+  race. In de taal van het toestel.
+
+De regel staat in `scripts/trainingmeldingen.mjs`, het ophalen van de top 10 in
+`scripts/vrijetrainingen.mjs` (zie §11, "De vrije trainingen"), het versturen
+in `scripts/sync.mjs`, na de uitslagmeldingen. Zonder de kolom
+`training_laatst` (een database waar `schema.sql` nog niet opnieuw op draaide)
+stuurt de sync niets en zegt hij dat in de log.
+
+### Per soort aan of uit (sinds 1 november)
+
+Staan meldingen aan, dan staan onder Profiel, onder "een seintje als", drie
+vinkjes: "een deadline nadert en je nog niets hebt ingevuld", "de uitslag
+binnen is" en "de vrije training binnen is, op vrijdagavond". Ze staan
+standaard aan, ook voor wie meldingen al aan had voor deze soorten bestonden:
+de kolommen `meld_deadline`, `meld_uitslag` en `meld_training` van
+`push_abonnementen` beginnen op `true`. Uitzetten is één tik, en geldt voor
+dat toestel. **Zet meldingen uit** eronder blijft alles in één keer uitzetten.
+
+De sync slaat een toestel over als de kolom van die soort op `false` staat
+(de herinneringen in `scripts/sync.mjs`, de uitslag in
+`scripts/uitslagmeldingen.mjs`, de training in `scripts/trainingmeldingen.mjs`).
+De Testmelding (hieronder) kijkt er niet naar: die stuur je zelf.
 
 ### Waar de app erom vraagt (sinds 26 oktober)
 
@@ -1840,7 +1935,9 @@ sync kiest steeds het vroegste moment. In het Actions-tabblad zie je hem als
 "Wekker voor herinneringen en uitslagen", soms uren "bezig": dat is slapen, en
 dat kost niets in een openbare repo. Voor de herinneringen gaat de wekker
 alleen als er minstens één toestel meldingen aan heeft; sinds 21 oktober zet
-de sync hem ook altijd voor een uitslag die op te halen is (§20, Bewaking).
+de sync hem ook altijd voor een uitslag die op te halen is (§20, Bewaking), en
+sinds 1 november voor een vrije training die net gereden is (35 minuten na
+het einde, daarna elk half uur, tot vier uur na het einde).
 
 Sleutel kwijt? Maak een nieuw paar. Alle bestaande abonnementen vervallen dan —
 iedereen moet opnieuw op "Zet meldingen aan" tikken — maar er gaat niets anders
@@ -1849,7 +1946,9 @@ verloren.
 ### Wat er van je opgeslagen wordt
 
 Eén rij per toestel in `push_abonnementen`: het adres dat de pushdienst uitdeelt
-en twee sleutels van dat toestel, plus in welke taal de melding moet. Geen
+en twee sleutels van dat toestel, plus in welke taal de melding moet, welke
+soorten je wilt, en (sinds 1 november) de tijdzone van het toestel, zoals
+"Europe/Amsterdam", voor de tijd in de melding op vrijdagavond. Geen
 mailadres, geen naam. Die rij is alleen voor jou leesbaar (en voor de sync), en
 verdwijnt zodra je meldingen uitzet, je speler weggaat of de pushdienst zegt
 dat het abonnement niet meer bestaat.
@@ -1959,9 +2058,15 @@ Wat de verklaring zegt, en waarom het waar is:
   je punten, je plek en je beste weekend. Alleen als je het zelf aanzet, en weg
   zodra je het weer uitzet.
 - **Eén regel per toestel als je meldingen aanzet** (§11c): het adres waar de
-  pushdienst een melding naartoe kan sturen plus twee sleutels van dat toestel.
-  Geen naam, geen mailadres, en weg zodra je ze weer uitzet. Die regel staat
-  alleen in de verklaring als de app meldingen ook echt kan aanbieden.
+  pushdienst een melding naartoe kan sturen plus twee sleutels van dat toestel,
+  en sinds 1 november ook de taal en de tijdzone van het toestel en welke
+  soorten meldingen je wilt. Geen naam, geen mailadres, en weg zodra je ze
+  weer uitzet. Die regel staat alleen in de verklaring als de app meldingen ook
+  echt kan aanbieden.
+- **De pagina's van de site tellen, zonder cookie** (sinds 1 november, §16):
+  per dag per pagina een aantal, en de ref uit de link. Geen IP-adres, geen
+  account. Dat staat op de site onder "Tellen"; in de app niet, want de app
+  zelf telt zo niets.
 - **Geen advertenties, analytics of trackers.** Er zit niets van dien aard in
   `index.html`; dat is te controleren.
 - **De lettertypen komen uit de app zelf.** Die stonden eerst bij Google Fonts;
@@ -2591,6 +2696,23 @@ een telefoon geopend wordt (of als geïnstalleerde app op een computer). Dat
 staat in de tegel **Vanaf het beginscherm**, met het deel van alle bezoeken in
 7 dagen. Zo zie je of het blok "De app" op de voorpagina helpt (§18, "De app op
 je telefoon"). Die bezoeken tellen ook gewoon mee bij "Bezoeken vandaag".
+
+**De pagina's van de site** (sinds 1 november). Elke pagina van de site laadt
+`teller.js` (de generator maakt hem, met de url en de publieke sleutel van de
+app), en die telt één bezoek met `tel_pagina()`: alleen het pad, zoals
+`/races/2026/sao-paulo/`, en de ref uit de link (`?ref=groepsapp`,
+`?ref=kalender` of `?ref=app`; een andere ref wordt "anders", geen ref is
+leeg). Geen cookie, geen opslag in de browser, geen IP-adres, geen account.
+Alleen paden uit de sitemap tellen: de sync zet die bij elke run in
+`site_paden`, en een pad dat daar niet in staat, telt niet. Zo kan niemand de
+tabel volschrijven met verzonnen paden.
+
+In het beheer staat het onder Statistieken, in de kaart **Bezoeken op de
+site**: per pagina het aantal bezoeken in de laatste dertig dagen (met per
+pagina hoeveel er via een link kwamen), en bovenaan per ref het totaal, dus
+hoeveel er via de groepsapp, de agenda of de app binnenkwamen. Zo zie je of de links uit §2 ("Een link in
+alles wat naar buiten gaat") iets doen. De tabellen `site_paden` en
+`site_bezoeken` zijn alleen voor de service_role key en het beheer leesbaar.
 
 ### Als opslaan in het beheer een fout geeft
 

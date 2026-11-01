@@ -997,12 +997,35 @@ function statistiekenTab() {
           <span class="spoor" style="width:${B.poules.length ? (100 * v.aantal / B.poules.length).toFixed(1) : 0}%"></span>
           <span class="getal">${getal(v.aantal)}</span></div>`).join('')}</div>
     </section>
+    ${siteKaart(st)}
     <section class="kaart">
       <div class="kaartkop"><h2>Accounts achter de spelers</h2><span class="zacht klein">wie zijn browser leegmaakt zonder koppeling is zijn speler kwijt</span></div>
       <div class="balken">${['google', 'mail', 'anoniem', 'geen', 'weg'].filter((k) => accounts[k]).map((k) => `
         <div class="balk"><span>${esc(ACCOUNT[k])}</span>
           <span class="spoor" style="width:${(100 * accounts[k] / totaalAcc).toFixed(1)}%"></span>
           <span class="getal">${getal(accounts[k])}</span></div>`).join('') || '<p class="zacht">Nog geen spelers.</p>'}</div>
+    </section>`;
+}
+
+// De pagina's van de site (tel_pagina, 1 november): per pagina het totaal van
+// de afgelopen dertig dagen, met per ref (groepsapp, kalender, app, anders)
+// hoeveel daarvan via zo'n link kwamen, en per ref het totaal. "zonder ref" is
+// gewoon binnengekomen: via een zoekmachine, een bladwijzer of getypt.
+const REFNAAM = { '': 'zonder ref', groepsapp: 'groepsapp', kalender: 'kalender', app: 'app', anders: 'anders' };
+function siteKaart(st) {
+  const paginas = st.site_per_pagina ?? [];
+  const refs = st.site_per_ref ?? [];
+  const max = Math.max(1, ...paginas.map((p) => p.aantal));
+  return `
+    <section class="kaart" data-sitebezoeken>
+      <div class="kaartkop"><h2>Bezoeken op de site</h2><span class="zacht klein">per pagina, 30 dagen, zonder cookie</span></div>
+      <p class="zacht klein" style="margin:0" data-site-per-ref>${refs.map((r) =>
+        `${esc(REFNAAM[r.ref] ?? r.ref)}: ${getal(r.aantal)}`).join(' · ') || 'Nog niets geteld.'}</p>
+      <div class="balken">${paginas.map((p) => `
+        <div class="balk" data-sitepad="${esc(p.pad)}"><span>${esc(p.pad)}${Object.entries(p.per_ref ?? {})
+          .filter(([ref]) => ref).map(([ref, n]) => ` <span class="zacht klein">${esc(REFNAAM[ref] ?? ref)} ${getal(n)}</span>`).join('')}</span>
+          <span class="spoor" style="width:${(100 * p.aantal / max).toFixed(1)}%"></span>
+          <span class="getal">${getal(p.aantal)}</span></div>`).join('')}</div>
     </section>`;
 }
 

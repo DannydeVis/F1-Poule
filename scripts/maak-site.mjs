@@ -1227,6 +1227,7 @@ ${jsonLd(code, datum)}
 <script>${BEWEGING}</script>
 <script>${INSTALLEER}</script>
 <script src="${p}toestemming.js" defer></script>
+<script src="${p}teller.js" defer></script>
 </body>
 </html>
 `;
@@ -1323,6 +1324,7 @@ ${alineas.map((a) => `      <p>${alinea(a)}</p>`).join('\n')}
   </div>
 </footer>
 <script src="${p}toestemming.js" defer></script>
+<script src="${p}teller.js" defer></script>
 </body>
 </html>
 `;
@@ -1760,6 +1762,7 @@ ${leesOok.length ? `    <section class="leesook">
   </div>
 </footer>
 <script src="${p}toestemming.js" defer></script>
+<script src="${p}teller.js" defer></script>
 </body>
 </html>
 `;
@@ -2054,6 +2057,38 @@ function metDatum(url, maak) {
 }
 
 // ------------------------------------------------------------
+//  De teller van de site (1 november)
+//  Per bezoek alleen het pad en de ref uit de link naar tel_pagina() in
+//  schema.sql, die alleen paden uit de sitemap telt. Geen cookie, niets in de
+//  browser bewaard. Het adres en de publieke sleutel komen uit de app, zodat
+//  ze nooit uit elkaar lopen. Zie "Tellen" in de privacyverklaring.
+// ------------------------------------------------------------
+
+function teller() {
+  const url = appBron.match(/const SUPABASE_URL = '([^']+)';/)?.[1];
+  const sleutel = appBron.match(/const SUPABASE_ANON_KEY = '([^']+)';/)?.[1];
+  if (!url || !sleutel) throw new Error('app/index.html: SUPABASE_URL of SUPABASE_ANON_KEY niet gevonden voor teller.js');
+  return `// De teller van de site. Gemaakt door scripts/maak-site.mjs: niet met de hand
+// bewerken. Per bezoek alleen het pad van de pagina en, als de link dat zegt,
+// waar je vandaan kwam (?ref=groepsapp, kalender of app). Geen cookie, niets
+// in je browser bewaard, geen IP-adres in de database: tel_pagina() in
+// schema.sql telt alleen paden uit de sitemap. Zie "Tellen" in de
+// privacyverklaring.
+(function () {
+  try {
+    var ref = new URLSearchParams(location.search).get('ref');
+    fetch(${JSON.stringify(`${url}/rest/v1/rpc/tel_pagina`)}, {
+      method: 'POST',
+      headers: { apikey: ${JSON.stringify(sleutel)}, Authorization: ${JSON.stringify(`Bearer ${sleutel}`)},
+        'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_pad: location.pathname, p_ref: ref && /^[a-z]{1,20}$/.test(ref) ? ref : null })
+    }).catch(function () {});
+  } catch (e) { /* tellen mag nooit iets breken */ }
+})();
+`;
+}
+
+// ------------------------------------------------------------
 //  Wegschrijven of nakijken
 // ------------------------------------------------------------
 
@@ -2074,6 +2109,7 @@ bestanden.set('sitemap.xml', sitemap());
 bestanden.set('robots.txt', ROBOTS);
 bestanden.set('llms.txt', llms());
 bestanden.set('404.html', NIET_GEVONDEN);
+bestanden.set('teller.js', teller());
 // Het sleutelbestand van IndexNow: de sleutel zelf, niets anders.
 if (!/^[0-9a-f]{32}$/.test(INDEXNOW_SLEUTEL)) throw new Error('INDEXNOW_SLEUTEL in site/teksten.mjs is geen 32 hex-tekens');
 bestanden.set(`${INDEXNOW_SLEUTEL}.txt`, INDEXNOW_SLEUTEL);

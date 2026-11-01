@@ -506,6 +506,8 @@ function uitvoeren(tabel, q) {
   const uit = kopie(rijen.filter((r) =>
     magLezen(tabel, r) && q._filters.every((f) => past(r, f))));
   if (q._single) {
+    // maybeSingle(): geen rij is geen fout, maar null.
+    if (q._misschien && uit.length === 0) return { data: null, error: null };
     if (uit.length !== 1) {
       return { data: null, error: { code: 'PGRST116', message: 'geen of meerdere rijen' } };
     }
@@ -529,6 +531,7 @@ function maakQuery(tabel) {
     delete() { q._weg = true; return q; },
     order() { return q; },
     single() { q._single = true; return q; },
+    maybeSingle() { q._single = true; q._misschien = true; return q; },
     insert(r) { q._insert = Array.isArray(r) ? r : [r]; return q; },
     upsert(r, o) { q._upsert = Array.isArray(r) ? r : [r]; q._opties = o; return q; },
     then(res, rej) { return Promise.resolve().then(() => uitvoeren(tabel, q)).then(res, rej); },

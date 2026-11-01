@@ -106,6 +106,8 @@ export function wieKrijgtEenUitslag({ races = [], abonnementen = [], poulevragen
 
   const uit = [];
   for (const ab of abonnementen) {
+    // Uitgezet onder Profiel (1 november). Een rij zonder de kolom telt als aan.
+    if (ab.meld_uitslag === false) continue;
     if (!speelt(ab.pool_id)) continue;
     // Deze had hij al. De sync komt elk kwartier langs, en de uitslag staat
     // er dan nog steeds.

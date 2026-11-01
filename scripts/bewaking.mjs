@@ -79,6 +79,35 @@ export function uitslagWekker({ races = [], nu = Date.now(), horizon = 12 } = {}
   return vroegst === null ? null : new Date(vroegst).toISOString();
 }
 
+// De wekker voor de vrije trainingen (1 november). Hetzelfde ritme als bij een
+// uitslag: 35 minuten na het einde van een training, en zolang zijn top 10
+// er niet is elke 30 minuten opnieuw, tot 4 uur na het einde. Het einde staat
+// in races.vrije_trainingen: de sync zet daar het rooster van het weekend in
+// zodra het bekend is (scripts/vrijetrainingen.mjs). Zo staat de top 10 van
+// VT2 op vrijdagavond in de app, en gaat de melding erover op tijd
+// (scripts/trainingmeldingen.mjs). Na de race niet meer.
+export const TRAINING_TOT_UREN = 4;
+export function trainingWekker({ races = [], nu = Date.now(), horizon = 12 } = {}) {
+  let vroegst = null;
+  for (const race of races) {
+    if (race.afgelast || race.race_result?.length) continue;
+    for (const t of race.vrije_trainingen ?? []) {
+      if (!t?.eind || t.top?.length) continue;
+      const einde = Date.parse(t.eind);
+      if (!Number.isFinite(einde)) continue;
+      const eerste = einde + UITSLAG_WEKKER_MIN * 60e3;
+      const tot = einde + TRAINING_TOT_UREN * 3600e3;
+      let om;
+      if (nu < eerste) om = eerste;
+      else if (nu < tot) om = nu + UITSLAG_OPNIEUW_MIN * 60e3;
+      else continue;
+      if (om - nu > horizon * 3600e3) continue;
+      if (vroegst === null || om < vroegst) vroegst = om;
+    }
+  }
+  return vroegst === null ? null : new Date(vroegst).toISOString();
+}
+
 // Hoogstens één wekker tegelijk: de vroegste wint.
 export function vroegste(...tijden) {
   const geldig = tijden.filter(Boolean).map((t) => Date.parse(t)).filter(Number.isFinite);

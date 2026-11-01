@@ -21,7 +21,7 @@
 // Waar iemand terecht kan met een vraag over zijn gegevens. Staat ook in de
 // app (PRIVACY_CONTACT); de test houdt die twee gelijk.
 export const CONTACT = 'contact@predicttherace.com';
-export const PRIVACY_BIJGEWERKT = '2026-10-27';
+export const PRIVACY_BIJGEWERKT = '2026-11-01';
 
 export const PRIVACY = {
   nl: {
@@ -44,7 +44,7 @@ export const PRIVACY = {
         'Deel je je seizoen, dan komt er een pagina met je naam, je punten, je plek en je beste weekend. Niet je poule, niet je medespelers en niet wat iemand heeft ingevuld. Haal je hem weg, dan zijn die gegevens ook weg.',
       ]],
       ['Als je meldingen aanzet', [
-        'Dan komt er één regel bij per toestel: het adres waar je pushdienst (Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee sleutels van dat toestel. Geen naam en geen mailadres. Die regel gaat weg zodra je meldingen uitzet.',
+        'Dan komt er één regel bij per toestel: het adres waar je pushdienst (Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee sleutels van dat toestel, de taal en de tijdzone van het toestel (voor de tijd in de melding), en welke meldingen je wilt. Geen naam en geen mailadres. Die regel gaat weg zodra je meldingen uitzet.',
       ]],
       ['Als iemand je aantikt', [
         'In een poule met premium kun je een medespeler aantikken die nog niets invulde; die krijgt dan een melding. We bewaren wie wie aantikte, voor welke race en wanneer, zodat niemand twee keer per race wordt aangetikt. Na twee maanden gaat dat weg.',
@@ -63,6 +63,7 @@ export const PRIVACY = {
       ]],
       ['Tellen', [
         'Per dag telt de app hoe vaak hij geopend wordt, hoe vaak daarvan vanaf het beginscherm van een telefoon, en welke accounts dat deden. Dat laatste alleen om te kunnen zien hoeveel mensen er meespelen, en het verdwijnt na vijf weken. Er komt geen cookie aan te pas en er wordt geen IP-adres bewaard.',
+        'Ook de pagina\'s van deze site tellen we, zonder cookie: per dag per pagina een aantal, en waar je vandaan kwam als de link dat zegt (bijvoorbeeld een uitslag die in een groepsapp gedeeld is, of je agenda). Je browser stuurt daarvoor alleen het adres van de pagina naar onze database bij Supabase. We bewaren geen IP-adres, geen account en niets wat naar jou terug te leiden is.',
       ]],
       ['Google Analytics', [
         'Alleen als je daar ja op zegt, meten we met Google Analytics hoe de site en de app gebruikt worden: welke pagina\'s je opent, hoe lang, met wat voor toestel en ongeveer vanuit welk land. Google zet daarvoor cookies, ziet je IP-adres en kan die gegevens buiten de EU verwerken. We gebruiken het alleen om te zien wat er gebeurt, niet voor advertenties.',
@@ -105,7 +106,7 @@ export const PRIVACY = {
         'If you share your season, there is a page with your name, your points, your position and your best weekend. Not your pool, not your fellow players and not what anyone filled in. Take it down and that data is gone too.',
       ]],
       ['If you turn notifications on', [
-        'Then one row is added per device: the address your push service (Google, Apple or Mozilla) can send a notification to, plus two keys from that device. No name and no email address. That row goes away as soon as you turn notifications off.',
+        'Then one row is added per device: the address your push service (Google, Apple or Mozilla) can send a notification to, plus two keys from that device, its language and time zone (for the time in the notification), and which notifications you want. No name and no email address. That row goes away as soon as you turn notifications off.',
       ]],
       ['If someone nudges you', [
         'In a pool with premium you can nudge a fellow player who has not filled anything in yet; they then get a notification. We store who nudged whom, for which race and when, so that nobody gets nudged twice per race. That is removed after two months.',
@@ -124,6 +125,7 @@ export const PRIVACY = {
       ]],
       ['Counting', [
         'Each day the app counts how often it is opened, how many of those times were from a phone\'s home screen, and which accounts did so. The latter only to see how many people are playing, and it disappears after five weeks. No cookie is involved and no IP address is stored.',
+        'We also count the pages of this site, without a cookie: a number per page per day, and where you came from if the link says so (for example a result shared in a group chat, or your calendar). For this your browser only sends the address of the page to our database at Supabase. We store no IP address, no account and nothing that can be traced back to you.',
       ]],
       ['Google Analytics', [
         'Only if you say yes to it, we measure with Google Analytics how the site and the app are used: which pages you open, for how long, on what kind of device and roughly from which country. Google sets cookies for this, sees your IP address and may process that data outside the EU. We only use it to see what happens, not for ads.',

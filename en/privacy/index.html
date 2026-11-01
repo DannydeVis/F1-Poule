@@ -520,7 +520,7 @@
   <div class="binnen">
     <h1>What Predict the Race knows about you</h1>
     <p class="inleiding">Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.</p>
-    <p class="label"><time datetime="2026-10-27">Updated on 27 October 2026</time></p>
+    <p class="label"><time datetime="2026-11-01">Updated on 27 October 2026</time></p>
     <section id="what-is-kept">
       <h2>What is kept</h2>
       <p>The name you pick in a pool, your predictions and your points. And an anonymous account: a random number, so the database knows which predictions are yours.</p>
@@ -537,7 +537,7 @@
     </section>
     <section id="if-you-turn-notifications-on">
       <h2>If you turn notifications on</h2>
-      <p>Then one row is added per device: the address your push service (Google, Apple or Mozilla) can send a notification to, plus two keys from that device. No name and no email address. That row goes away as soon as you turn notifications off.</p>
+      <p>Then one row is added per device: the address your push service (Google, Apple or Mozilla) can send a notification to, plus two keys from that device, its language and time zone (for the time in the notification), and which notifications you want. No name and no email address. That row goes away as soon as you turn notifications off.</p>
     </section>
     <section id="if-someone-nudges-you">
       <h2>If someone nudges you</h2>
@@ -562,6 +562,7 @@
     <section id="counting">
       <h2>Counting</h2>
       <p>Each day the app counts how often it is opened, how many of those times were from a phone's home screen, and which accounts did so. The latter only to see how many people are playing, and it disappears after five weeks. No cookie is involved and no IP address is stored.</p>
+      <p>We also count the pages of this site, without a cookie: a number per page per day, and where you came from if the link says so (for example a result shared in a group chat, or your calendar). For this your browser only sends the address of the page to our database at Supabase. We store no IP address, no account and nothing that can be traced back to you.</p>
     </section>
     <section id="google-analytics">
       <h2>Google Analytics</h2>
@@ -597,5 +598,6 @@
   </div>
 </footer>
 <script src="../../toestemming.js" defer></script>
+<script src="../../teller.js" defer></script>
 </body>
 </html>
