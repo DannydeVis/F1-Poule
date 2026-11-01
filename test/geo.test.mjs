@@ -171,7 +171,9 @@ const graaf = (html) => [...html.matchAll(/<script type="application\/ld\+json">
   const over = PAGINAS.find((pg) => pg.id === 'over');
   const overEn = over ? `${BASIS}/${over.talen.en.pad}/` : MAKER.url;
   const mis = [
-    ['prijs', /^- Price: free, no ads, no money involved$/m],
+    // De lijn van Danny (1 november): meespelen gratis, extra's later tegen
+    // betaling, en geen prijs zolang betalen niet aanstaat.
+    ['prijs', /^- Price: playing is free and will stay free, without ads\. Everything a league with friends needs is included\. Paid extras for big leagues and companies \(premium\) will come later; paying is not switched on yet, so there is no price yet\. Nobody plays for money: no entry fee, no pot, no prizes$/m],
     ['account', /^- Account: not needed, and no password\./m],
     ['talen van de app', new RegExp(`^- App languages: ${new Intl.ListFormat('en').format(appTalen.map(naam))}$`, 'm')],
     ['talen van de site', /^- Website languages: the homepage in /m],

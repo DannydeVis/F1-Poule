@@ -63,6 +63,9 @@ const metOpenPoule = (code, antwoord, link) => {
   if (!tekst) throw new Error(`site/teksten.mjs: ${code} heeft geen faq.openPoule, de tekst van de link naar de open poule`);
   return String(antwoord).replaceAll('{openPoule}', link(tekst));
 };
+// Het contactadres in een FAQ-antwoord ({contact}, de vraag over premium) is op
+// het scherm een mailto-link. In de JSON-LD en llms.txt blijft het tekst.
+const metMailLink = (html) => html.replaceAll(esc(CONTACT), `<a href="mailto:${esc(CONTACT)}">${esc(CONTACT)}</a>`);
 const openPoule = (code, app, inspring) => {
   const regel = openPouleRegel(OPEN_POULE, code, app);
   return regel ? `\n${inspring}${regel}` : '';
@@ -829,7 +832,7 @@ const SITENAMEN = ['PredictTheRace', new URL(BASIS).host];
 function jsonLd(code, datum) {
   const t = teksten[code];
   const url = urlVan(code);
-  const plat = (s) => vul(s, { maker: MAKER.naam, ...APP_GETALLEN });
+  const plat = (s) => vul(s, { maker: MAKER.naam, contact: CONTACT, ...APP_GETALLEN });
   const graaf = [
     // alternateName: Google haalt de sitenaam in de zoekresultaten uit de
     // WebSite op de voorpagina, en kiest uit deze namen als hij de hoofdnaam
@@ -952,7 +955,7 @@ function pagina(code, datum) {
   const p = voor(code);
   const url = urlVan(code);
   const app = `${p}app/`;
-  const vars = { maker: MAKER.naam, ...APP_GETALLEN };
+  const vars = { maker: MAKER.naam, contact: CONTACT, ...APP_GETALLEN };
   const hreflang = [...TALEN.map((c) => `<link rel="alternate" hreflang="${c}" href="${urlVan(c)}">`),
     `<link rel="alternate" hreflang="x-default" href="${urlVan(STANDAARD)}">`].join('\n');
   const ogAlt = TALEN.filter((c) => c !== code)
@@ -1181,8 +1184,8 @@ ${jsonLd(code, datum)}
   <div class="binnen">
     ${sectiekop('07', t.nav.faq, esc(t.faq.kop))}
     <div class="faq onthul">${faqItems(code).map(([vraag, antwoord]) => `
-      <details><summary><h3>${esc(vraag)}</h3></summary><p>${metOpenPoule(code, esc(vul(antwoord, vars)),
-        (x) => `<a href="${app}?code=${encodeURIComponent(OPEN_POULE)}">${esc(x)}</a>`)}</p></details>`).join('')}
+      <details><summary><h3>${esc(vraag)}</h3></summary><p>${metMailLink(metOpenPoule(code, esc(vul(antwoord, vars)),
+        (x) => `<a href="${app}?code=${encodeURIComponent(OPEN_POULE)}">${esc(x)}</a>`))}</p></details>`).join('')}
     </div>
   </div>
 </section>
@@ -1850,7 +1853,7 @@ const opsomming = (xs, type = 'conjunction') => new Intl.ListFormat('en', { type
 
 function llms() {
   const en = teksten.en;
-  const vars = { maker: MAKER.naam, ...APP_GETALLEN };
+  const vars = { maker: MAKER.naam, contact: CONTACT, ...APP_GETALLEN };
   const excel = PAGINAS.find((pg) => pg.id === 'excel');
   const llmsVars = {
     domein: DOMEIN,
@@ -1886,7 +1889,7 @@ ${zin('en', 'makerzin')}
 
 - Website: ${BASIS}/
 - App: ${BASIS}/app/ (a web app: it runs in the browser on phone and computer, and you can add it to your home screen)
-- Price: free, no ads, no money involved
+- Price: playing is free and will stay free, without ads. Everything a league with friends needs is included. Paid extras for big leagues and companies (premium) will come later; paying is not switched on yet, so there is no price yet. Nobody plays for money: no entry fee, no pot, no prizes
 - Account: not needed, and no password. Players join with a league code or an invite link; signing in with Google or an email link is optional, to play on more than one device
 ${llmsVars.openPoule ? `- Open league: anyone without a group of their own can join the open league and play against other F1 fans: ${llmsVars.openPoule}
 ` : ''}- App languages: ${opsomming(APP_TALEN.map(taalNaamEn))}

@@ -10,7 +10,7 @@ Predict the Race is made by Danny de Visser from Rotterdam, who also makes Padel
 
 - Website: https://predicttherace.com/
 - App: https://predicttherace.com/app/ (a web app: it runs in the browser on phone and computer, and you can add it to your home screen)
-- Price: free, no ads, no money involved
+- Price: playing is free and will stay free, without ads. Everything a league with friends needs is included. Paid extras for big leagues and companies (premium) will come later; paying is not switched on yet, so there is no price yet. Nobody plays for money: no entry fee, no pot, no prizes
 - Account: not needed, and no password. Players join with a league code or an invite link; signing in with Google or an email link is optional, to play on more than one device
 - Open league: anyone without a group of their own can join the open league and play against other F1 fans: https://predicttherace.com/app/?code=80C98C
 - App languages: Dutch, English, German, French, Spanish, Italian, and Portuguese
@@ -130,7 +130,7 @@ Or build your own league: switch each question on or off, with its points shown.
 
 ### Is Predict the Race free?
 
-Yes. There is no subscription, no paywall and no advertising. Every feature is available to everyone.
+Yes. Playing is free and will stay free, without ads. Everything you need for a league with friends is included. For big leagues and companies there will be paid extras later on.
 
 ### Is there an app for iPhone and Android?
 
@@ -170,7 +170,11 @@ The app and this page are available in English, Dutch, German, French, Spanish, 
 
 ### Do you play for money?
 
-No. There is no money involved in Predict the Race: no entry fee, no pot and no prizes. You play for bragging rights.
+No. In Predict the Race you do not play for money: no entry fee, no pot and no prizes. You play for bragging rights.
+
+### What does premium cost and what do you get?
+
+Premium is a set of extras for big leagues, companies and clubs; you do not need it to play. Right now it gives a league teams that play against each other, its own questions every weekend, interim standings with their own winner, a nudge for players who have not predicted yet, reminders and summaries for the group chat, the standings as a file, and its own logo, colour and sponsor line. Paying is not switched on yet, so there is no price yet. Until then you can ask for it at contact@predicttherace.com.
 
 ### Is this an official Formula 1 app?
 

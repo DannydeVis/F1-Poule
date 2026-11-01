@@ -1110,6 +1110,16 @@ Eerst de gratis app goed; daarna premium in twee stappen.
    poule. Wat Danny eerst regelt: een KvK-inschrijving, voorwaarden en een
    aanvulling op de privacyverklaring. Prijsidee: € 2,99 per poule per
    seizoen.
+   **En vóór er betaald kan worden: OpenF1.** OpenF1 is alleen gratis voor
+   niet-commercieel gebruik. Met betaalde extra's is Predict the Race
+   commercieel, dus vóór betalen aanstaat heeft Danny toestemming of een
+   licentie van OpenF1 nodig, of een andere databron voor de kalender, de
+   deelnemers en de uitslagen (BEDIENING §10 en §11). Lees dan eerst de
+   voorwaarden zoals ze op dat moment op openf1.org staan.
+   Tot betalen live staat noemen de site en de app geen prijs: meespelen is
+   en blijft gratis, zonder advertenties, en voor grote poules en bedrijven
+   komen er later extra's tegen betaling (Danny, 1 november;
+   `test/gratis-belofte.test.mjs`).
 
 **Premium uitbreiden** (Danny, 13 oktober: "Ja ik wil alles"). Logo, kleur en
 sponsor alleen is voor een vriendengroep niet genoeg; premium moet het spel

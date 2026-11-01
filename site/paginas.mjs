@@ -149,11 +149,11 @@ export const PAGINAS = [
           {
             id: 'werk',
             vraag: 'Hoe organiseer je een F1-poule op je werk?',
-            kort: 'Een F1-poule op je werk zet je op zoals elke andere, maar houd de drempel laag: kies Simpel met alleen de twee top 10\'s, deel de code in de chat van je team en speel om de eer. Predict the Race is gratis, ook voor een grote poule op het werk. Niemand hoeft een account aan te maken of een app te installeren, want het werkt in de browser op elke telefoon of computer.',
+            kort: 'Een F1-poule op je werk zet je op zoals elke andere, maar houd de drempel laag: kies Simpel met alleen de twee top 10\'s, deel de code in de chat van je team en speel om de eer. Meespelen is gratis, ook in een grote poule op het werk. Niemand hoeft een account aan te maken of een app te installeren, want het werkt in de browser op elke telefoon of computer.',
             punten: [
               ['Simpel houdt iedereen erbij', 'Niet elke collega kijkt elke race. Met twee top 10\'s ben je in een minuut klaar, en wie meer wil, kan in een eigen poule met vrienden Gevorderd spelen.'],
               ['Om de eer', 'De app kent geen inleg, pot of prijzen. Er valt dus niets te innen of uit te betalen, en niemand hoeft na te denken over geld op het werk.'],
-              ['Gratis, hoe groot ook', 'Een poule heeft geen maximum aantal spelers en er is geen zakelijk tarief. Doet de hele afdeling of het hele bedrijf mee, dan blijft het gratis.'],
+              ['Gratis meespelen, hoe groot ook', 'Iedereen speelt gratis mee, ook als de hele afdeling of het hele bedrijf meedoet. Voor grote poules en bedrijven komen er later extra\'s tegen betaling, zoals teams per afdeling, eigen vragen en een eigen logo. Om mee te spelen heb je die niet nodig.'],
               ['Automatisch invullen aan', 'Wie op vakantie is of een weekend vergeet, krijgt een willekeurige invulling in plaats van nul punten, en haakt niet af.'],
               ['Een omschrijving erbij', 'Zet er iets bij als "met de collega\'s, om de eer". Wie ook een poule met vrienden heeft, ziet bij het wisselen meteen welke het is.'],
             ],
@@ -250,11 +250,11 @@ export const PAGINAS = [
           {
             id: 'at-work',
             vraag: 'How do you run an F1 prediction league at work?',
-            kort: 'Run an office league like any other, but keep it easy to join: pick Simple with just the two top 10s, share the code in your team chat and play for bragging rights. Predict the Race is free, even for a big league at work. Nobody needs an account or an app store download, because it runs in the browser on any phone or computer.',
+            kort: 'Run an office league like any other, but keep it easy to join: pick Simple with just the two top 10s, share the code in your team chat and play for bragging rights. Playing is free, even in a big league at work. Nobody needs an account or an app store download, because it runs in the browser on any phone or computer.',
             punten: [
               ['Simple keeps everyone in', 'Not every colleague watches every race. Two top 10s take a minute, and the fans can play Advanced in a league of their own with friends.'],
               ['Bragging rights only', 'There is no entry fee, pot or prize in the app. Nothing to collect or pay out, and nobody has to think about money at work.'],
-              ['Free at any size', 'A league has no player limit and there is no business pricing. If the whole department or the whole company joins, it is still free.'],
+              ['Free to play at any size', 'Everyone plays for free, even if the whole department or the whole company joins. For big leagues and companies there will be paid extras later on, such as teams per department, your own questions and your own logo. You do not need them to play.'],
               ['Switch on auto-fill', 'Whoever is on holiday or forgets a weekend gets a random entry instead of zero points, and does not drop out.'],
               ['Add a description', 'Something like "work league, for glory". Anyone who is also in a league with friends sees at once which one is which when they switch.'],
             ],
@@ -351,11 +351,11 @@ export const PAGINAS = [
           {
             id: 'buero',
             vraag: 'Wie organisiert man ein F1-Tippspiel im Büro?',
-            kort: 'Ein Tippspiel im Büro läuft wie jedes andere, nur sollte der Einstieg leicht sein: Nimm Einfach mit den beiden Top 10, teile den Code im Team-Chat und spielt um die Ehre. Predict the Race ist kostenlos, auch für eine große Tipprunde im Büro. Niemand braucht ein Konto oder einen App-Store, denn es läuft im Browser auf jedem Handy und Computer.',
+            kort: 'Ein Tippspiel im Büro läuft wie jedes andere, nur sollte der Einstieg leicht sein: Nimm Einfach mit den beiden Top 10, teile den Code im Team-Chat und spielt um die Ehre. Mitspielen ist kostenlos, auch in einer großen Tipprunde im Büro. Niemand braucht ein Konto oder einen App-Store, denn es läuft im Browser auf jedem Handy und Computer.',
             punten: [
               ['Einfach hält alle dabei', 'Nicht jeder Kollege schaut jedes Rennen. Zwei Top 10 dauern eine Minute, und die Fans spielen Fortgeschritten in einer eigenen Tipprunde mit Freunden.'],
               ['Nur um die Ehre', 'In der App gibt es keinen Einsatz, keinen Pott und keinen Preis. Nichts einzusammeln oder auszuzahlen, und niemand muss bei der Arbeit an Geld denken.'],
-              ['Kostenlos bei jeder Größe', 'Eine Tipprunde hat keine Spielergrenze, und es gibt keine Firmenpreise. Macht die ganze Abteilung oder die ganze Firma mit, bleibt es kostenlos.'],
+              ['Kostenlos mitspielen, egal wie groß', 'Alle spielen kostenlos mit, auch wenn die ganze Abteilung oder die ganze Firma dabei ist. Für große Tipprunden und Firmen kommen später kostenpflichtige Extras, etwa Teams pro Abteilung, eigene Fragen und ein eigenes Logo. Zum Mitspielen braucht man sie nicht.'],
               ['Automatisches Ausfüllen einschalten', 'Wer im Urlaub ist oder ein Wochenende vergisst, bekommt einen zufälligen Tipp statt null Punkte und fällt nicht raus.'],
               ['Eine Beschreibung dazuschreiben', 'Etwa "Büro-Tipprunde, um die Ehre". Wer auch mit Freunden in einer Tipprunde ist, sieht beim Wechseln sofort, welche welche ist.'],
             ],
@@ -451,11 +451,11 @@ export const PAGINAS = [
           {
             id: 'bureau',
             vraag: 'Comment organiser des pronostics F1 au bureau ?',
-            kort: 'Une ligue au bureau s\'organise comme les autres, mais doit rester facile à rejoindre : choisissez Simple avec les deux top 10, partagez le code dans le chat de l\'équipe et jouez pour la gloire. Predict the Race est gratuit, même pour une grande ligue au travail. Personne n\'a besoin de compte ni de store, car tout fonctionne dans le navigateur, sur tout téléphone ou ordinateur.',
+            kort: 'Une ligue au bureau s\'organise comme les autres, mais doit rester facile à rejoindre : choisissez Simple avec les deux top 10, partagez le code dans le chat de l\'équipe et jouez pour la gloire. Jouer est gratuit, même dans une grande ligue au travail. Personne n\'a besoin de compte ni de store, car tout fonctionne dans le navigateur, sur tout téléphone ou ordinateur.',
             punten: [
               ['Simple garde tout le monde', 'Tous les collègues ne regardent pas chaque course. Deux top 10 prennent une minute, et les passionnés peuvent jouer en Avancé dans leur propre ligue entre amis.'],
               ['Pour la gloire seulement', 'Il n\'y a ni mise, ni cagnotte, ni prix dans l\'appli. Rien à collecter ni à reverser, et personne n\'a à penser à l\'argent au travail.'],
-              ['Gratuit quelle que soit la taille', 'Une ligue n\'a pas de limite de joueurs et il n\'y a pas de tarif entreprise. Si tout le service ou toute l\'entreprise participe, c\'est toujours gratuit.'],
+              ['Jouer gratuitement, quelle que soit la taille', 'Tout le monde joue gratuitement, même si tout le service ou toute l\'entreprise participe. Pour les grandes ligues et les entreprises, des extras payants viendront plus tard, comme des équipes par service, vos propres questions et votre propre logo. Ils ne sont pas nécessaires pour jouer.'],
               ['Activez le remplissage automatique', 'Celui qui est en vacances ou oublie un week-end reçoit un pronostic au hasard au lieu de zéro point, et ne décroche pas.'],
               ['Ajoutez une description', 'Par exemple "ligue du bureau, pour la gloire". Ceux qui jouent aussi dans une ligue entre amis voient tout de suite laquelle est laquelle quand ils changent.'],
             ],
@@ -551,11 +551,11 @@ export const PAGINAS = [
           {
             id: 'oficina',
             vraag: '¿Cómo se organiza una porra de F1 en la oficina?',
-            kort: 'Una porra en la oficina se organiza como cualquier otra, pero tiene que ser fácil entrar: elige Sencillo con los dos top 10, comparte el código en el chat del equipo y jugad por la gloria. Predict the Race es gratis, incluso para una liga grande en el trabajo. Nadie necesita cuenta ni tienda de apps, porque funciona en el navegador de cualquier móvil u ordenador.',
+            kort: 'Una porra en la oficina se organiza como cualquier otra, pero tiene que ser fácil entrar: elige Sencillo con los dos top 10, comparte el código en el chat del equipo y jugad por la gloria. Jugar es gratis, incluso en una liga grande en el trabajo. Nadie necesita cuenta ni tienda de apps, porque funciona en el navegador de cualquier móvil u ordenador.',
             punten: [
               ['Sencillo mantiene a todos', 'No todos los compañeros ven cada carrera. Dos top 10 llevan un minuto, y los fans pueden jugar Avanzado en su propia liga con amigos.'],
               ['Solo por la gloria', 'En la app no hay cuota, ni bote, ni premio. Nada que recaudar ni que repartir, y nadie tiene que pensar en dinero en el trabajo.'],
-              ['Gratis sea cual sea el tamaño', 'Una liga no tiene límite de jugadores y no hay precio para empresas. Si se apunta todo el departamento o toda la empresa, sigue siendo gratis.'],
+              ['Jugar gratis, sea cual sea el tamaño', 'Todos juegan gratis, aunque se apunte todo el departamento o toda la empresa. Para ligas grandes y empresas habrá extras de pago más adelante, como equipos por departamento, preguntas propias y un logo propio. No hacen falta para jugar.'],
               ['Activa el relleno automático', 'Quien está de vacaciones u olvida un fin de semana recibe una predicción al azar en vez de cero puntos, y no se descuelga.'],
               ['Añade una descripción', 'Algo como "porra de la oficina, por la gloria". Quien también juega en una liga con amigos ve enseguida cuál es cuál al cambiar.'],
             ],
@@ -651,11 +651,11 @@ export const PAGINAS = [
           {
             id: 'ufficio',
             vraag: 'Come si organizzano i pronostici F1 in ufficio?',
-            kort: 'Una lega in ufficio si organizza come le altre, ma deve restare facile entrarci: scegli Semplice con le due top 10, condividi il codice nella chat del team e giocate per la gloria. Predict the Race è gratis, anche per una lega grande al lavoro. Nessuno ha bisogno di account o di scaricare app, perché funziona nel browser di qualsiasi telefono o computer.',
+            kort: 'Una lega in ufficio si organizza come le altre, ma deve restare facile entrarci: scegli Semplice con le due top 10, condividi il codice nella chat del team e giocate per la gloria. Giocare è gratis, anche in una lega grande al lavoro. Nessuno ha bisogno di account o di scaricare app, perché funziona nel browser di qualsiasi telefono o computer.',
             punten: [
               ['Semplice tiene dentro tutti', 'Non tutti i colleghi guardano ogni gara. Due top 10 richiedono un minuto, e gli appassionati possono giocare in Avanzato in una lega loro con gli amici.'],
               ['Solo per la gloria', 'Nell\'app non ci sono quote, né montepremi, né premi. Niente da raccogliere o da pagare, e nessuno deve pensare ai soldi al lavoro.'],
-              ['Gratis a qualsiasi dimensione', 'Una lega non ha limite di giocatori e non ci sono prezzi per aziende. Se partecipa tutto il reparto o tutta l\'azienda, resta gratis.'],
+              ['Si gioca gratis, a qualsiasi dimensione', 'Tutti giocano gratis, anche se partecipa tutto il reparto o tutta l\'azienda. Per le leghe grandi e le aziende arriveranno più avanti degli extra a pagamento, come squadre per reparto, domande proprie e un logo proprio. Per giocare non servono.'],
               ['Attiva la compilazione automatica', 'Chi è in ferie o si dimentica un weekend riceve un pronostico a caso invece di zero punti, e non resta indietro.'],
               ['Aggiungi una descrizione', 'Per esempio "lega dell\'ufficio, per la gloria". Chi gioca anche in una lega con gli amici vede subito quale è quale quando cambia.'],
             ],
@@ -751,11 +751,11 @@ export const PAGINAS = [
           {
             id: 'trabalho',
             vraag: 'Como organizar um bolão de F1 no trabalho?',
-            kort: 'Um bolão no trabalho se organiza como qualquer outro, mas precisa ser fácil de entrar: escolha o Simples com os dois top 10, compartilhe o código no chat da equipe e joguem pela glória. O Predict the Race é grátis, até para um bolão grande no trabalho. Ninguém precisa de conta nem de loja de apps, porque funciona no navegador de qualquer celular ou computador.',
+            kort: 'Um bolão no trabalho se organiza como qualquer outro, mas precisa ser fácil de entrar: escolha o Simples com os dois top 10, compartilhe o código no chat da equipe e joguem pela glória. Jogar é grátis, até em um bolão grande no trabalho. Ninguém precisa de conta nem de loja de apps, porque funciona no navegador de qualquer celular ou computador.',
             punten: [
               ['O Simples mantém todo mundo', 'Nem todo colega assiste a todas as corridas. Dois top 10 levam um minuto, e os fãs podem jogar no Avançado num bolão próprio com os amigos.'],
               ['Só pela glória', 'No app não há taxa de entrada, nem vaquinha, nem prêmio. Nada para recolher ou pagar, e ninguém precisa pensar em dinheiro no trabalho.'],
-              ['Grátis de qualquer tamanho', 'Um bolão não tem limite de jogadores e não há preço para empresas. Se o departamento inteiro ou a empresa inteira entrar, continua grátis.'],
+              ['Jogar grátis, de qualquer tamanho', 'Todos jogam de graça, mesmo que o departamento inteiro ou a empresa inteira entre. Para bolões grandes e empresas, haverá extras pagos mais adiante, como times por departamento, perguntas próprias e um logo próprio. Para jogar, ninguém precisa deles.'],
               ['Ligue o preenchimento automático', 'Quem está de férias ou esquece um fim de semana recebe um palpite ao acaso em vez de zero, e não fica para trás.'],
               ['Coloque uma descrição', 'Algo como "bolão do trabalho, pela glória". Quem também joga num bolão com os amigos vê na hora qual é qual ao trocar.'],
             ],
@@ -2049,7 +2049,7 @@ export const PAGINAS = [
               bijschrift: 'F1-poule-apps en Excel naast elkaar, volgens hun eigen site op {gecontroleerd}',
               kop: ['App', 'Wat je doet', 'Wat het kost', 'Met je eigen groep'],
               rijen: [
-                { naam: 'Predict the Race', cellen: ['De top 10 van kwalificatie en race voorspellen, plus losse vragen zoals de winnaar', 'Gratis, zonder advertenties en zonder prijzen', 'Een eigen poule met een code, zonder account'] },
+                { naam: 'Predict the Race', cellen: ['De top 10 van kwalificatie en race voorspellen, plus losse vragen zoals de winnaar', 'Gratis meespelen, zonder advertenties en zonder prijzen; later betaalde extra\'s voor grote poules', 'Een eigen poule met een code, zonder account'] },
                 { naam: 'F1 Predict', url: 'https://f1predict.formula1.com/', cellen: ['Vragen over elke Grand Prix beantwoorden', 'Gratis, met prijzen voor wie bovenaan het klassement eindigt', 'Leagues maken en er lid van worden'] },
                 { naam: 'F1 Fantasy', url: 'https://fantasy.formula1.com/', cellen: ['Binnen een budget een team van coureurs en constructeurs samenstellen', 'Gratis', 'Een league met een code, na inloggen'] },
                 { naam: 'GP Poule', url: 'https://www.gppoule.nl/', cellen: ['De top 10 van elke Grand Prix en sprint voorspellen, plus voorspellingen voor het hele seizoen', 'Gratis, met een betaald premium-lidmaatschap ernaast', 'Een eigen poule, of de landelijke poule'] },
@@ -2119,7 +2119,7 @@ export const PAGINAS = [
               bijschrift: 'F1 prediction games and a spreadsheet side by side, as their own sites described them on {gecontroleerd}',
               kop: ['Game', 'What you do', 'What it costs', 'With your own group'],
               rijen: [
-                { naam: 'Predict the Race', cellen: ['Predict the top 10 of qualifying and the race, plus extra questions such as the winner', 'Free, no ads, no prizes', 'A private league with a code, no account needed'] },
+                { naam: 'Predict the Race', cellen: ['Predict the top 10 of qualifying and the race, plus extra questions such as the winner', 'Free to play, no ads, no prizes; paid extras for big leagues later', 'A private league with a code, no account needed'] },
                 { naam: 'F1 Predict', url: 'https://f1predict.formula1.com/', cellen: ['Answer questions about each Grand Prix', 'Free, with prizes for the top of the leaderboard', 'Create and join leagues'] },
                 { naam: 'F1 Fantasy', url: 'https://fantasy.formula1.com/', cellen: ['Build a team of drivers and constructors within a budget', 'Free', 'A league with a code, after logging in'] },
                 { naam: 'Superbru', url: 'https://www.superbru.com/f1/', cellen: ['Predict pole, the podium, places 4 to 10 and the fastest lap', 'Free; ad-free with a paid season ticket', 'A private pool'] },
@@ -2189,7 +2189,7 @@ export const PAGINAS = [
       nl: {
         pad: 'over',
         titel: 'Over de gratis F1-poule en de maker | Predict the Race',
-        omschrijving: 'Wie Predict the Race maakt en waarom, hoe de gratis F1-poule zonder advertenties en abonnement werkt, en waar de uitslagen vandaan komen.',
+        omschrijving: 'Wie Predict the Race maakt en waarom, hoe meespelen gratis en zonder advertenties blijft, wat premium is, en waar de uitslagen vandaan komen.',
         kop: 'Over Predict the Race',
         kort: '{kernzin}',
         secties: [
@@ -2204,7 +2204,7 @@ export const PAGINAS = [
           {
             id: 'gratis',
             vraag: 'Hoe blijft Predict the Race gratis?',
-            kort: 'Predict the Race is een fanproject zonder verdienmodel: geen advertenties, geen abonnement, geen betaalde functies, en er worden geen gegevens doorverkocht. Iedereen kan alles gebruiken, zonder account. Er zit ook geen geld in het spel: geen inleg, geen pot en geen prijzen.',
+            kort: 'Meespelen is en blijft gratis, zonder advertenties, en er worden geen gegevens doorverkocht. Alles wat je nodig hebt voor een poule met vrienden zit erin, zonder account. Voor grote poules en bedrijven komen er later extra\'s tegen betaling; betalen staat nog niet aan. Er zit ook geen geld in het spel: geen inleg, geen pot en geen prijzen.',
             tekst: [
               'Bezoekstatistieken met Google Analytics komen er alleen bij als je daar zelf ja op zegt. Wat er precies bewaard wordt, staat in de privacyverklaring.',
             ],
@@ -2226,7 +2226,7 @@ export const PAGINAS = [
       en: {
         pad: 'en/about',
         titel: 'About this free F1 prediction game | Predict the Race',
-        omschrijving: 'Who makes Predict the Race and why, how the free F1 prediction game stays free of ads and subscriptions, and where the results come from.',
+        omschrijving: 'Who makes Predict the Race and why, how playing stays free and without ads, what premium is, and where the results come from.',
         kop: 'About Predict the Race',
         kort: '{kernzin}',
         secties: [
@@ -2241,7 +2241,7 @@ export const PAGINAS = [
           {
             id: 'free',
             vraag: 'How does Predict the Race stay free?',
-            kort: 'Predict the Race is a fan project with no business model: no ads, no subscription, no paid features, and no data sold on. Everyone can use everything, without an account. There is no money in the game either: no entry fee, no pot and no prizes.',
+            kort: 'Playing is free and will stay free, without ads, and no data is sold on. Everything you need for a league with friends is included, without an account. For big leagues and companies there will be paid extras later on; paying is not switched on yet. There is no money in the game either: no entry fee, no pot and no prizes.',
             tekst: [
               'Visitor statistics with Google Analytics are only added if you say yes to them yourself. What is stored exactly is in the privacy statement.',
             ],

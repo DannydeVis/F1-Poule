@@ -57,6 +57,10 @@ export const VRAGEN = [
   { vraag: 'In welke talen is de app er?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   // Andere poulesites leggen uit hoe je een pot afspreekt (poules.com).
   { vraag: 'Speel je om geld?', taal: 'nl', varianten: ['f1 poule inleg'], bron: 'zoekresultaat', doel: 'voorpagina#faq', status: 'beantwoord' },
+  // Danny, 1 november: de site beloofde dat elke functie gratis was, terwijl er
+  // premiumfuncties zijn. Deze vraag zegt wat premium nu is en dat betalen
+  // nog niet aanstaat; test/gratis-belofte.test.mjs bewaakt de lijn.
+  { vraag: 'Wat kost premium en wat krijg je?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Is dit een officiële Formule 1-app?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   // Sinds AEO fase 3.1, in alle zeven talen.
   { vraag: 'Hoeveel punten kun je per weekend halen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
@@ -166,6 +170,7 @@ export const VRAGEN = [
   { vraag: 'Is there an app for iPhone and Android?', taal: 'en', varianten: ['Does it work on my phone?', 'f1 prediction app', 'f1 prediction league app'], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Which languages is the app in?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Do you play for money?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
+  { vraag: 'What does premium cost and what do you get?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Is this an official Formula 1 app?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'How many points can you score per weekend?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   // "F1 Prediction Game vs Fantasy F1: What's the Difference?" (podiumprophets.com).
@@ -267,6 +272,7 @@ export const VRAGEN = [
   { vraag: 'Gibt es eine App für iPhone und Android?', taal: 'de', varianten: ['Funktioniert es auf meinem Handy?', 'f1 tippspiel app'], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'In welchen Sprachen gibt es die App?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Spielt man um Geld?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
+  { vraag: 'Was kostet Premium und was bekommt man?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Ist das eine offizielle Formel-1-App?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Wie viele Punkte kann man pro Wochenende holen?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Was ist der Unterschied zu F1 Fantasy?', taal: 'de', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
@@ -317,6 +323,7 @@ export const VRAGEN = [
   { vraag: 'Y a-t-il une appli pour iPhone et Android ?', taal: 'fr', varianten: ['Est-ce que ça marche sur mon téléphone ?', 'appli pronostics f1'], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'En quelles langues est l\'appli ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Joue-t-on de l\'argent ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
+  { vraag: 'Combien coûte premium et que contient-il ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Est-ce une application officielle de la Formule 1 ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Combien de points peut-on marquer par week-end ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Quelle est la différence avec F1 Fantasy ?', taal: 'fr', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
@@ -367,6 +374,7 @@ export const VRAGEN = [
   { vraag: '¿Hay una app para iPhone y Android?', taal: 'es', varianten: ['¿Funciona en mi móvil?', 'app porra f1'], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: '¿En qué idiomas está la app?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: '¿Se juega con dinero?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
+  { vraag: '¿Cuánto cuesta premium y qué incluye?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: '¿Es una app oficial de la Fórmula 1?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: '¿Cuántos puntos se pueden sumar por fin de semana?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: '¿En qué se diferencia de F1 Fantasy?', taal: 'es', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
@@ -417,6 +425,7 @@ export const VRAGEN = [
   { vraag: 'C\'è un\'app per iPhone e Android?', taal: 'it', varianten: ['Funziona sul mio telefono?', 'app pronostici f1'], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'In che lingue è l\'app?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Si gioca con soldi?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
+  { vraag: 'Quanto costa premium e cosa offre?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'È un\'app ufficiale della Formula 1?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Quanti punti si possono fare a weekend?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Che differenza c\'è con F1 Fantasy?', taal: 'it', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
@@ -467,6 +476,7 @@ export const VRAGEN = [
   { vraag: 'Tem app para iPhone e Android?', taal: 'pt', varianten: ['Funciona no meu celular?', 'app bolão f1'], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Em quais idiomas está o app?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Joga-se valendo dinheiro?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
+  { vraag: 'Quanto custa o premium e o que ele inclui?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'É um app oficial da Fórmula 1?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Quantos pontos dá para fazer por fim de semana?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },
   { vraag: 'Qual é a diferença para o F1 Fantasy?', taal: 'pt', varianten: [], bron: 'hypothese', doel: 'voorpagina#faq', status: 'beantwoord' },

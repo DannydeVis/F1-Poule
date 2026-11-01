@@ -1411,9 +1411,21 @@ is, want de functie kost niets om weg te laten.
 Dus: geen inleg, geen pot, geen betaallink, geen "wie wint krijgt". Wie met
 zijn vrienden geld afspreekt doet dat in de groepsapp, buiten deze app om.
 
-Hier hangt nog iets aan vast: **OpenF1 is voor niet-commercieel gebruik**.
-Advertenties of een betaalde variant breken die voorwaarde en dwingen je naar
-een betaalde databron. Zie §11.
+Hier hangt nog iets aan vast: **OpenF1 is alleen gratis voor
+niet-commercieel gebruik**. Advertenties of een betaalde variant breken die
+voorwaarde. Premium (§19) is nu nog gratis en met de hand aangezet; zodra er
+voor de extra's betaald kan worden (ROUTEKAART, Premium stap 2) is Predict
+the Race commercieel. Vóór betalen aanstaat heb je dus toestemming of een
+licentie van OpenF1 nodig, of een andere databron voor de kalender, de
+deelnemers en de uitslagen. Lees op dat moment de voorwaarden op openf1.org.
+Zie §11.
+
+Wat de site en de app over geld zeggen, staat sinds 1 november overal
+hetzelfde: meespelen is en blijft gratis, zonder advertenties; alles voor een
+poule met vrienden zit erin; voor grote poules en bedrijven komen er later
+extra's tegen betaling. Geen prijs zolang betalen niet live staat, en geen
+belofte dat elke functie voor iedereen gratis is of dat het dat altijd blijft;
+`test/gratis-belofte.test.mjs` zakt als zo'n zin ergens terugkomt.
 
 De kolommen `pools.inleg`, `pools.betaallink` en `pool_members.betaald` worden
 door `schema.sql` actief verwijderd. Dat is onomkeerbaar en met opzet: je wilt
