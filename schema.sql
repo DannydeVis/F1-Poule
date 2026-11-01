@@ -168,7 +168,13 @@ create table if not exists public.push_abonnementen (
   -- maar een push komt uit scripts/sync.mjs en die heeft geen browser -- dus
   -- moet de keuze hier staan. Per abonnement en niet per speler: dezelfde
   -- persoon kan zijn telefoon op Engels en zijn laptop op Nederlands hebben.
-  taal       text not null default 'nl'
+  taal       text not null default 'nl',
+  -- Over welke uitslag dit toestel al een melding kreeg (1 november, zie
+  -- scripts/uitslagmeldingen.mjs). Apart van `laatst`: op een sprintweekend
+  -- lopen een uitslag en de herinnering voor de volgende sessie door elkaar,
+  -- en een uitslag die `laatst` overschreef zou die herinnering een tweede
+  -- keer laten gaan.
+  uitslag_laatst text
 );
 grant all on table public.push_abonnementen to anon, authenticated, service_role;
 
@@ -490,6 +496,7 @@ alter table public.races        add column if not exists safety_cars_handmatig  
 alter table public.races        add column if not exists rode_vlag_handmatig       boolean not null default false;
 
 alter table public.push_abonnementen add column if not exists taal text not null default 'nl';
+alter table public.push_abonnementen add column if not exists uitslag_laatst text;
 
 -- ------------------------------------------------------------
 --  De vragenlijst

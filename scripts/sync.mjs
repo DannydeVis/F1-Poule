@@ -33,6 +33,7 @@ import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast
   from './uitslagen.mjs';
 import { maakAgenda } from './agenda.mjs';
 import { wieKrijgtEenSeintje, volgendeWekker, SEIZOENVRAGEN } from './herinneringen.mjs';
+import { laatsteUitslag, wieKrijgtEenUitslag } from './uitslagmeldingen.mjs';
 import { uitslagWekker, teLateUitslagen, teLaatTekst, vroegste } from './bewaking.mjs';
 import { stuur as stuurPush } from './push.mjs';
 import { sleutelInVault } from './vault-sleutel.mjs';
@@ -806,6 +807,15 @@ async function herinneringen(races) {
     antwoorden: antwoorden ?? [], poulevragen: poulevragen ?? [] });
   if (!lijst.length) { console.log('Geen herinneringen te sturen'); return; }
 
+  const { gelukt, opgeruimd } = await verstuur(lijst, 'laatst');
+  console.log(`Herinneringen: ${gelukt} verstuurd`
+    + (opgeruimd ? `, ${opgeruimd} verlopen abonnement(en) opgeruimd` : ''));
+  if (gelukt) noteer(`${gelukt} herinnering(en) verstuurd`);
+}
+
+// Een lijst meldingen versturen, en per toestel in `veld` onthouden wat het
+// kreeg (de herinneringen in `laatst`, de uitslagen in `uitslag_laatst`).
+async function verstuur(lijst, veld) {
   let gelukt = 0, opgeruimd = 0;
   for (const { abonnement, bericht, tag } of lijst) {
     const uit = await stuurPush(abonnement, { ...bericht, url: APP_URL },
@@ -816,8 +826,8 @@ async function herinneringen(races) {
       // opnieuw. Mislukt dit, dan is een dubbele melding het ergste wat er
       // gebeurt -- dus geen reden om de ronde te laten zakken.
       await sb(`push_abonnementen?endpoint=eq.${encodeURIComponent(abonnement.endpoint)}`,
-        { method: 'PATCH', body: JSON.stringify({ laatst: tag }) })
-        .catch((e) => console.log(`  kon 'laatst' niet bijwerken: ${e.message}`));
+        { method: 'PATCH', body: JSON.stringify({ [veld]: tag }) })
+        .catch((e) => console.log(`  kon '${veld}' niet bijwerken: ${e.message}`));
     } else if (uit.weg) {
       // De telefoon is opnieuw ingesteld of de app is verwijderd. Geen fout,
       // gewoon een rij die weg kan.
@@ -828,9 +838,35 @@ async function herinneringen(races) {
       console.log(`  push mislukt (${uit.status}): ${String(uit.tekst).slice(0, 120)}`);
     }
   }
-  console.log(`Herinneringen: ${gelukt} verstuurd`
+  return { gelukt, opgeruimd };
+}
+
+// ------------------------------------------------------------
+//  Een seintje als de uitslag binnen is (scripts/uitslagmeldingen.mjs)
+//
+//  Na het ophalen van de uitslagen, dus in dezelfde ronde die hem binnenhaalt.
+//  Ook een uitslag die de beheerder met de hand invulde gaat zo mee: de regel
+//  kijkt naar wat er in de database staat, niet naar wat deze ronde schreef.
+// ------------------------------------------------------------
+
+async function uitslagMeldingen(races) {
+  if (!VAPID_PRIVE || !laatsteUitslag({ races })) return;
+  const abonnementen = await sb('push_abonnementen?select=*');
+  if (!abonnementen?.length) return;
+  // Zonder die kolom (schema.sql nog niet bijgewerkt) weet de sync niet wat hij
+  // al stuurde, en ging dezelfde melding elk kwartier opnieuw. Dan liever niets.
+  if (!('uitslag_laatst' in abonnementen[0])) {
+    console.log('Uitslagmeldingen: de kolom uitslag_laatst ontbreekt nog (schema.sql), niets verstuurd');
+    return;
+  }
+  const poulevragen = await sb('pool_questions?select=pool_id,question_id');
+  const lijst = wieKrijgtEenUitslag({ races, abonnementen, poulevragen: poulevragen ?? [] });
+  if (!lijst.length) { console.log('Geen uitslagmeldingen te sturen'); return; }
+
+  const { gelukt, opgeruimd } = await verstuur(lijst, 'uitslag_laatst');
+  console.log(`Uitslagmeldingen: ${gelukt} verstuurd`
     + (opgeruimd ? `, ${opgeruimd} verlopen abonnement(en) opgeruimd` : ''));
-  if (gelukt) noteer(`${gelukt} herinnering(en) verstuurd`);
+  if (gelukt) noteer(`${gelukt} uitslagmelding(en) verstuurd`);
 }
 
 // ------------------------------------------------------------
@@ -930,6 +966,7 @@ try {
   zetWekker(lopend, { herinneren: await heeftAbonnementen() });
   bewaakUitslagen(lopend);
   await herinneringen(lopend);
+  await uitslagMeldingen(lopend);
   await vaultBijwerken();
   await schrijfLogboek(true);
 } catch (e) {

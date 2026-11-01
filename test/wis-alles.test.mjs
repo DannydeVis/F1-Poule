@@ -57,7 +57,8 @@ await page.click('#wisalles');
 check('na de tweede tik is de top 10 leeg',
   (await page.textContent('.topkop .mono')).trim() === '0/10');
 check('en de losse vraag ook',
-  (await page.textContent('[data-vraagplek="pole"]')).includes('kies'));
+  (await opPlek(page, '[data-vraagplek="pole"]')) === ''
+    && (await page.textContent('[data-vraagplek="pole"]')).includes('tik om te kiezen'));
 check('de knop is weer verdwenen, want er valt niets meer te wissen',
   (await page.$('#wisalles')) === null);
 check('en opslaan kan niet meer',
@@ -80,7 +81,8 @@ await page.click('#wisalles');
 await page.click('#wisalles');
 check('de race is leeg', (await page.textContent('.topkop .mono')).trim() === '0/10');
 check('de winnaar is weg',
-  (await page.textContent('[data-vraagplek="winnaar"]')).includes('kies'));
+  (await opPlek(page, '[data-vraagplek="winnaar"]')) === ''
+    && (await page.textContent('[data-vraagplek="winnaar"]')).includes('tik om te kiezen'));
 check('en het duel ook', (await page.$('.duelknop.gekozen')) === null);
 
 await page.click('[data-tab="quali"]');

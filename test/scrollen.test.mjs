@@ -56,6 +56,11 @@ const scrolNaar = async (doel) => {
   await page.evaluate(() => new Promise((klaar) => requestAnimationFrame(() => requestAnimationFrame(klaar))));
 };
 const naTekenen = () => page.evaluate(() => new Promise((klaar) => requestAnimationFrame(() => requestAnimationFrame(klaar))));
+// Een nieuw scherm zet de pagina bovenaan, en in het volgende beeld nog een
+// keer (scrolBijNieuwScherm in de app). Wie daarvóór al scrolt, wordt dus
+// teruggezet. Een mens scrolt nooit binnen dat ene beeld, een test wel: met de
+// Chromium van de CI (Playwright 1.56) zakte deze test op 1 november zo, op
+// twee plekken. Dus na een nieuw scherm eerst dat beeld afwachten.
 
 // ---- 1. een race openen onderaan de kalender --------------------------------------------
 await scrolNaar('onder');
@@ -94,6 +99,7 @@ check('en terug naar Races ook: bovenaan', (await y()) === 0, String(await y()))
 // midden in beeld: dan hoort er niets te bewegen.
 await page.click('[data-race="1"]');
 await page.waitForSelector('.slot.leegplek');
+await naTekenen();
 await page.locator('.slot.leegplek').last().evaluate((e) => e.scrollIntoView({ block: 'center' }));
 await scrolNaar(await y());
 const bijP10 = await y();
@@ -118,6 +124,7 @@ await naTekenen();
 check('een ander tabblad: bovenaan', (await y()) === 0, String(await y()));
 await page.click('[data-tab="quali"]');
 await page.waitForSelector('[data-tab="quali"][aria-selected="true"]');
+await naTekenen();
 
 // Iemand aantikken (premium) tekent het hele scherm opnieuw, en daar sta je
 // onderaan in de lijst van de poule. Dan hoort de pagina te blijven staan.
@@ -149,6 +156,7 @@ await page.click('[data-race="2"]');
 await page.waitForSelector('#paneel');
 if (await page.$('[data-tab="quali"]')) await page.click('[data-tab="quali"]');
 await page.waitForSelector('[data-bekijk="lid-x29"]');
+await naTekenen();
 await page.locator('[data-bekijk="lid-x29"]').evaluate((e) => e.scrollIntoView({ block: 'center' }));
 await scrolNaar(await y());
 const bijPoule = await y();

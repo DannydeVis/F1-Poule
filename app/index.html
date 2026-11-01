@@ -893,22 +893,6 @@
   .seizoenvraag.klaar{grid-template-columns:1fr auto}
   .seizoenvraag .ptn.groen{color:var(--groen)}
 
-  /* Een vraag als één regel: naam, keuze, punten. Twaalf coureurknoppen per
-     vraag maakte het scherm onbruikbaar lang op een telefoon. */
-  .kiesregel{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;
-    min-height:52px;padding:0 16px;text-align:left;background:transparent;border:0;
-    transition:background .15s}
-  .kiesregel:hover{background:var(--zweef)}
-  .kiesregel .nm{font-size:15px;font-weight:600;color:var(--ink2)}
-  .kiesregel.vol .nm{color:var(--ink)}
-  /* De teamkleur als streepje vóór de code, zoals in de uitslag. */
-  .kiesregel .code{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.03em;
-    border-left:3px solid var(--team,var(--lijn));padding-left:8px;line-height:1.1}
-  .kiesregel .nogleeg{font-family:var(--mono);font-size:11px;text-transform:uppercase;
-    letter-spacing:.08em;color:var(--accent)}
-  .kiesregel .ptn{font-family:var(--mono);font-size:12px;color:var(--ink3);min-width:22px;
-    text-align:right}
-
   .topkop{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 
   /* Het keuzeblad. Het legt zich over het scherm zodat je na het kiezen weer
@@ -1052,13 +1036,16 @@
   .grid10{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
   .slotrij{display:flex}
   .slotrij.rechts{justify-content:flex-end}
-  .slot{
+  /* .vraagslot is een losse vraag (pole, winnaar, ...) in dezelfde vorm als
+     een plek in de top 10, maar over de volle breedte en zonder zigzag. */
+  :is(.slot,.vraagslot){
     width:86%;display:flex;align-items:center;gap:12px;min-height:48px;
     padding:0 12px;border-radius:10px;border:1px solid var(--lijn);
     border-left:3px solid var(--lijn);background:var(--paneel);
     text-align:left;transition:background .15s,border-color .15s;
   }
-  .slot:hover{background:var(--zweef)}
+  .vraagslot{width:100%;min-height:52px}
+  :is(.slot,.vraagslot):hover{background:var(--zweef)}
   /* Alleen de plek die net gevuld is rijdt binnen (zie markeerNieuw). Dit
      stond op elke gevulde plek, en omdat het scherm na elke keuze opnieuw
      getekend wordt reed de hele grid bij elke tik opnieuw binnen. */
@@ -1069,15 +1056,20 @@
      plek als op een gevulde plek. */
   .slot.leegplek{background:transparent;border:1px dashed var(--stippel);padding-left:14px}
   .slot.leegplek:hover{border-color:var(--ink3)}
-  .slot.leegplek .who{font-size:13px;color:var(--ink3)}
+  /* Een losse vraag die nog open is, valt op: een amber stippelrand, de
+     kleur van "hier liggen nog punten" (de regel eronder). */
+  .vraagslot.open{background:transparent;border:1px dashed var(--amber);padding-left:14px}
+  .vraagslot.open:hover{background:var(--amber-vlak)}
+  :is(.slot.leegplek,.vraagslot.open) .who{font-size:13px;color:var(--ink3)}
+  .vraagslot.open .who{color:var(--ink2)}
   .slot .who .code{font-size:21px}
-  .slot .pos{font-family:var(--mono);font-size:13px;font-weight:700;
+  :is(.slot,.vraagslot) .pos{font-family:var(--mono);font-size:13px;font-weight:700;
     color:var(--ink3);min-width:32px;flex:none}
-  .slot .who{flex:1;display:flex;align-items:baseline;gap:10px;min-width:0;
+  :is(.slot,.vraagslot) .who{flex:1;display:flex;align-items:baseline;gap:10px;min-width:0;
     color:var(--ink3);font-size:14px}
-  .slot .who .code{font-family:var(--cond);font-size:24px;font-weight:700;
+  :is(.slot,.vraagslot) .who .code{font-family:var(--cond);font-size:24px;font-weight:700;
     letter-spacing:.04em;color:var(--ink);flex:none}
-  .slot .who small{flex:1;font-size:13px;color:var(--ink2);overflow:hidden;
+  :is(.slot,.vraagslot) .who small{flex:1;font-size:13px;color:var(--ink2);overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
   .x{width:34px;height:34px;border-radius:8px;background:var(--gedempt);
     color:var(--ink2);font-size:17px;line-height:1;flex:none;
@@ -1153,6 +1145,18 @@
   .opslaanbalk{position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px;
     padding-top:10px;padding-bottom:var(--onder);background:linear-gradient(transparent,var(--bg) 40%)}
   .opslaanbalk .knop{min-height:56px}
+  /* Wat er van de losse vragen nog openstaat (nogOpen in invulWeergave). In
+     de amber van de losse vragen en een stuk lichter dan Opslaan: hij wijst
+     de weg, maar houdt niemand tegen. */
+  .nogopen{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    min-height:44px;padding:8px 14px;border-radius:10px;text-align:left;
+    font-family:var(--mono);font-size:12px;line-height:1.35;color:var(--amber);
+    background:var(--paneel);border:1px dashed var(--amber)}
+  /* Bij aanwijzen een doorgetrokken rand en niet een amber vlak: de regel
+     ligt over de inhoud die eronder doorschuift, dus de achtergrond blijft
+     dicht, en amber op een amber waas haalt de contrastdrempel niet. */
+  .nogopen:hover{border-style:solid}
+  .nogopen .pijl{flex:none;font-size:15px}
   /* Wis alles hoort niet even zwaar te wegen als opslaan, tot hij vraagt of
      je het zeker weet — dan mag hij wel opvallen. */
   .opslaanbalk .wisknop{min-height:48px}
@@ -1215,9 +1219,6 @@
     background:var(--gedempt)}
   .voortgang i{display:block;height:100%;background:var(--amber);transition:width .3s}
   .voortgang.af i{background:var(--groen)}
-  .vragentegel > .kiesregels{border:0;border-top:1px solid var(--lijn);border-radius:0;
-    background:transparent}
-  .vragentegel .kiesregel{padding:0 18px}
   .vragentegel > .winnaarblok{border:0;border-top:1px solid var(--lijn);border-radius:0;
     background:transparent;padding:14px 18px 16px}
   .pouleregel .klaarteken{width:22px;display:grid;place-items:center;flex:none;color:var(--groen)}
@@ -1541,11 +1542,11 @@
      De regels zelf (.race, .strij, .rest, .speler, ...) hebben daarom geen
      achtergrond en geen rand; die komen van hier. Deze regels staan onderaan
      omdat de haarlijn anders verliest van de border:0 van een regel. */
-  :is(.groep,.kalender,.strip,.kiesregels,.vragenlijst){
+  :is(.groep,.kalender,.strip,.vragenlijst){
     display:flex;flex-direction:column;gap:0;margin:0;padding:0;list-style:none;
     background:var(--paneel);border:1px solid var(--lijn);border-radius:14px;
     overflow:hidden;flex:none}
-  :is(.groep,.kalender,.strip,.kiesregels,.vragenlijst) > :not(:first-child){
+  :is(.groep,.kalender,.strip,.vragenlijst) > :not(:first-child){
     border-top:1px solid var(--lijn)}
   /* Een lege lijst of een melding ín de kaart heeft de kaart al om zich heen. */
   :is(.groep,.kalender) > :is(.leeg,p){border-radius:0;border-left:0;border-right:0;
@@ -2542,8 +2543,8 @@ const ENGELS = Object.fromEntries([
    'You can still turn on notifications later, under Profile.'],
   ['Mis geen deadline',
    'Never miss a deadline'],
-  ['Krijg een seintje als een deadline nadert en je nog niets hebt ingevuld. Hooguit één per sessie, en alleen als er echt iets openstaat.',
-   'Get a nudge when a deadline is close and you have not filled anything in. At most one per session, and only if something is really open.'],
+  ['Krijg een seintje als een deadline nadert en je nog niets hebt ingevuld, en als de uitslag binnen is. Meer niet.',
+   'Get a nudge when a deadline is close and you have not filled anything in, and when the results are in. Nothing more.'],
   ['Daar kan hij je ook een seintje geven als een deadline nadert en je nog niets hebt ingevuld. Zet meldingen aan zodra je hem vanaf je beginscherm opent.',
    'There it can also give you a nudge when a deadline is close and you have not filled anything in. Turn on notifications as soon as you open it from your home screen.'],
   ['vergeten in te vullen?',
@@ -2602,6 +2603,10 @@ const ENGELS = Object.fromEntries([
    'Finish the {sessie} top 10'],
   ['Top 10 {sessie} invullen',
    'Fill in the {sessie} top 10'],
+  ['Nog invullen: {wat}',
+   'Still to fill in: {wat}'],
+  ['Losse vragen {sessie} invullen',
+   'Fill in the {sessie} extra questions'],
 
   // ---- waar sta ik ---------------------------------------------
   ['van {n}',
@@ -3209,6 +3214,10 @@ const ENGELS = Object.fromEntries([
    'The question set has been updated.'],
   ['Voorspelling voor {race} opgeslagen.',
    'Prediction for {race} saved.'],
+  ['Nog open: {wat}.',
+   'Still open: {wat}.'],
+  ['Nog {aantal} losse vragen open.',
+   '{aantal} extra questions still open.'],
   ['Welkom terug, {naam}.',
    'Welcome back, {naam}.'],
   ['Automatisch invullen staat aan, vanaf nu.',
@@ -3225,8 +3234,6 @@ const ENGELS = Object.fromEntries([
    'Your joker is on {race}. This weekend counts double.'],
 
   // ---- het keuzeblad -------------------------------------------
-  ['kies',
-   'pick'],
   ['wie wordt P{n}?',
    'who finishes P{n}?'],
   ['Sluiten',
@@ -3239,6 +3246,10 @@ const ENGELS = Object.fromEntries([
    '{n} points'],
   ['nog niets gekozen · hier liggen {n} punten',
    'nothing picked yet · {n} points on the table'],
+  ['nog open: {wat} · {n} punten',
+   'still open: {wat} · {n} points'],
+  ['nog {aantal} losse vragen open · {n} punten',
+   '{aantal} extra questions still open · {n} points'],
   ['jouw antwoord: {wat}',
    'your answer: {wat}'],
   [' · eentje ernaast levert nog de helft op',
@@ -3303,18 +3314,19 @@ const ENGELS = Object.fromEntries([
    + 'that itself — it is in your browser settings, under this site. Your calendar '
    + 'can do this too, by the way: see the button under Pool.'],
   ['Dit toestel krijgt een seintje als een '
-   + 'deadline nadert en jij nog niets hebt ingevuld. Hooguit één per sessie, '
-   + 'en alleen als er echt iets open staat.',
+   + 'deadline nadert en jij nog niets hebt ingevuld, en als de uitslag binnen '
+   + 'is. Meer niet.',
    'This device gets a nudge when a deadline is close and you have not filled '
-   + 'anything in. At most one per session, and only if something is really open.'],
+   + 'anything in, and when the results are in. Nothing more.'],
   ['Zet meldingen uit',
    'Turn notifications off'],
   ['Krijg een seintje op dit toestel als een '
-   + 'deadline nadert en je nog niets hebt ingevuld. Op een iPhone werkt dat '
-   + 'alleen als Predict the Race op je beginscherm staat.',
+   + 'deadline nadert en je nog niets hebt ingevuld, en als de uitslag binnen '
+   + 'is. Op een iPhone werkt dat alleen als Predict the Race op je beginscherm '
+   + 'staat.',
    'Get a nudge on this device when a deadline is close and you have not filled '
-   + 'anything in. On an iPhone this only works if Predict the Race is on your home '
-   + 'screen.'],
+   + 'anything in, and when the results are in. On an iPhone this only works if '
+   + 'Predict the Race is on your home screen.'],
   ['Zet meldingen aan',
    'Turn notifications on'],
   ['je seizoen delen',
@@ -7725,7 +7737,8 @@ function toonApp() {
     naarPoule(b.dataset.naarPoule);
   });
   app.querySelectorAll('[data-race]').forEach(b => b.onclick = () => openRace(b.dataset.race, b.dataset.sessie ?? null));
-  app.querySelectorAll('[data-naar-race]').forEach(b => b.onclick = () => openRace(b.dataset.naarRace));
+  app.querySelectorAll('[data-naar-race]').forEach(b => b.onclick = () =>
+    openRace(b.dataset.naarRace, b.dataset.naarTab ?? null));
   const terug = app.querySelector('#terug');
   if (terug) terug.onclick = () => { S.race = null; terugNaarVorige = true; render(); };
   // Escape sluit een open race, zoals een venster. Niet als je in een veld
@@ -8231,6 +8244,14 @@ function hero(volgend) {
     .filter(w => top10Actief(w) && !dicht[w])
     .map(w => sessieStatus(r, w))
     .find(x => x.staat !== 'klaar');
+  // Is de top 10 af maar staat er van de losse vragen nog iets open, dan
+  // wijst de knop daarheen, en opent hij de race op dat tabblad. Er stond
+  // "Je inzending bekijken" met een vinkje bij de kwalificatie, en zo bleef
+  // Danny's pole liggen (31 oktober).
+  const losOpen = teDoen ? null : gespeeldeSessies(r)
+    .filter(w => !dicht[w])
+    .map(w => ({ w, open: mijnLosseOpen(r, w) }))
+    .find(x => x.open.length) ?? null;
   return `
     <div class="hero" data-ronde="${esc(String(r.round).padStart(2, '0'))}">
       <div class="hero-kop">
@@ -8253,8 +8274,13 @@ function hero(volgend) {
           ? T('nog geen top 10: {wie}', { wie: kortWie(wacht) })
           : T('iedereen heeft zijn top 10')}${wacht.length && groepsappHulp()
           ? ` <button class="knop klein herinner" data-herinner>${T('Herinner ze')}</button>` : ''}</div>` : ''}
-      <button class="knop primair" data-naar-race="${esc(r.id)}">${
-        !teDoen ? T('Je inzending bekijken')
+      <button class="knop primair" data-naar-race="${esc(r.id)}"${
+        losOpen ? ` data-naar-tab="${esc(losOpen.w)}"` : ''}>${
+        losOpen
+          ? losOpen.open.length === 1
+            ? T('Nog invullen: {wat}', { wat: esc(losseNaam(losOpen.open[0])) })
+            : T('Losse vragen {sessie} invullen', { sessie: esc(T(SESSIES[losOpen.w].naam)) })
+        : !teDoen ? T('Je inzending bekijken')
         : teDoen.staat === 'deels'
           ? T('Top 10 {sessie} afmaken', { sessie: esc(teDoen.naam) })
           : T('Top 10 {sessie} invullen', { sessie: esc(teDoen.naam) })}</button>
@@ -9007,8 +9033,9 @@ function meldingBlok() {
   if (pushNaBeginscherm()) {
     return `<div class="scheiding"></div><span class="label">${T('herinneringen')}</span>
       <p class="zacht" style="margin:0">${T('Krijg een seintje op dit toestel als een '
-        + 'deadline nadert en je nog niets hebt ingevuld. Op een iPhone werkt dat '
-        + 'alleen als Predict the Race op je beginscherm staat.')}</p>
+        + 'deadline nadert en je nog niets hebt ingevuld, en als de uitslag binnen '
+        + 'is. Op een iPhone werkt dat alleen als Predict the Race op je beginscherm '
+        + 'staat.')}</p>
       <button class="knop klein" id="meldingAan">${T('Zet meldingen aan')}</button>
       ${S.pushFout ? `<p class="zacht" id="meldingBeginscherm" style="margin:0">${esc(S.pushFout)}</p>` : ''}`;
   }
@@ -9025,15 +9052,16 @@ function meldingBlok() {
   if (S.push === 'aan') {
     return `${kop}
       <p class="zacht" style="margin:0">${T('Dit toestel krijgt een seintje als een '
-        + 'deadline nadert en jij nog niets hebt ingevuld. Hooguit één per sessie, '
-        + 'en alleen als er echt iets open staat.')}</p>
+        + 'deadline nadert en jij nog niets hebt ingevuld, en als de uitslag binnen '
+        + 'is. Meer niet.')}</p>
       <button class="knop klein" id="meldingUit">${T('Zet meldingen uit')}</button>
       ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}`;
   }
   return `${kop}
     <p class="zacht" style="margin:0">${T('Krijg een seintje op dit toestel als een '
-      + 'deadline nadert en je nog niets hebt ingevuld. Op een iPhone werkt dat '
-      + 'alleen als Predict the Race op je beginscherm staat.')}</p>
+      + 'deadline nadert en je nog niets hebt ingevuld, en als de uitslag binnen '
+      + 'is. Op een iPhone werkt dat alleen als Predict the Race op je beginscherm '
+      + 'staat.')}</p>
     <button class="knop klein" id="meldingAan">${T('Zet meldingen aan')}</button>
     ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}`;
 }
@@ -11548,8 +11576,9 @@ async function vragenBewaren(gekozen) {
 
 // ---- racedetail ---------------------------------------------
 
-// startTab: alleen gebruikt om een onthouden tab terug te zetten (zie
-// herstelScherm hierboven). Zonder opgave kiest hij zelf het tabblad dat nog
+// startTab: om een onthouden tab terug te zetten (zie herstelScherm
+// hierboven), en vanaf de knop op de weekendkaart als daar een losse vraag
+// openstaat (zie hero). Zonder opgave kiest hij zelf het tabblad dat nog
 // openstaat, zoals altijd.
 function openRace(id, startTab = null) {
   const r = S.races.find(x => zelfde(x.id, id));
@@ -11957,22 +11986,33 @@ function invulWeergave(paneel, r, dicht) {
       </div>
     </section>` : '';
   // Hoeveel van de losse vragen je al hebt: de duels tellen als één, want
-  // die hoef je niet allemaal te doen.
-  const losse = [
-    ...coureurVragen(S.tab).map(id => !!S.keuze[id]),
-    ...extraVragen(S.tab).map(id => !leegAntwoord(S.keuze[id])),
-    ...(S.tab === 'race' && duelKiezer(r) ? [S.keuze.duels.length > 0] : []),
-  ];
+  // die hoef je niet allemaal te doen (zie losseVragenOpen).
+  const losse = [...coureurVragen(S.tab), ...extraVragen(S.tab),
+    ...(S.tab === 'race' && duelKiezer(r) ? ['teamgenoot_duels'] : [])];
+  const open = losseVragenOpen(r, S.tab, S.keuze);
   const vragen = losse.length ? `
     <section class="tegel vragentegel">
       <div class="tegelkop"><h2>${T('Losse vragen')}</h2>
         <span class="tegelsub">${T('{n} van {totaal} ingevuld', {
-          n: losse.filter(Boolean).length, totaal: losse.length })}</span></div>
-      ${coureurVragen(S.tab).length ? `<div class="kiesregels">${
-        coureurVragen(S.tab).map(id => coureurKiezer(r, id)).join('')}</div>` : ''}
+          n: losse.length - open.length, totaal: losse.length })}</span></div>
+      ${coureurVragen(S.tab).map(id => coureurKiezer(r, id)).join('')}
       ${extraVragen(S.tab).map(id => extraKiezer(r, id)).join('')}
       ${S.tab === 'race' ? duelKiezer(r) : ''}
     </section>` : '';
+  // Wat er van de losse vragen nog openstaat, in de balk met Opslaan. Die
+  // plakt onderaan het scherm, dus dit staat in beeld terwijl je je top 10
+  // invult, en niet pas als je toevallig doorscrolt. Pas als je iets gekozen
+  // hebt: op een leeg scherm staat alles nog open, en dat zie je zelf wel.
+  const openPunten = open.reduce((som, id) => som + puntenVoor(id), 0);
+  const nogOpen = open.length && (klaar > 0 || losGekozen) ? `
+    <button class="nogopen" id="nogopen" data-nog-open="${esc(open[0])}">
+      <span>${open.length === 1
+        ? T('nog open: {wat} · {n} punten',
+            { wat: esc(losseNaam(open[0])), n: openPunten })
+        : T('nog {aantal} losse vragen open · {n} punten',
+            { aantal: open.length, n: openPunten })}</span>
+      <span class="pijl" aria-hidden="true">→</span>
+    </button>` : '';
   const poule = pouleKaart(r, { open: true });
   // Een volle top 10 kan in één keer ook naar je andere poules. Alleen als
   // die er zijn, en alleen met een volle top 10: een halve gaat nergens in.
@@ -11985,6 +12025,7 @@ function invulWeergave(paneel, r, dicht) {
     ${elders ? `<p class="zacht" style="margin:0">${T('Je top 10 gaat ook naar je andere poules, maar alleen waar je {wat} nog '
       + 'niet hebt ingevuld. Wat daar al staat, blijft staan.', { wat: T(SESSIES[S.tab].wat) })}</p>` : ''}
     <div class="opslaanbalk">
+      ${nogOpen}
       <button class="knop primair" id="opslaan" ${magOpslaan ? '' : 'disabled'}>${
         magOpslaan ? T('Opslaan')
           : top10Actief(S.tab) && klaar
@@ -12072,6 +12113,25 @@ function invulWeergave(paneel, r, dicht) {
     if (!alGekozen) S.keuze.duels.push(duel);
     invulWeergave(paneel, r, dicht);
   });
+  // Eén coureurvraag open: meteen het keuzeblad, dat scheelt een tik. Anders
+  // naar de eerste open vraag toe. Een getal of ja/nee kies je daar met één
+  // tik, en bij meer open vragen zie je ze dan onder elkaar staan.
+  const nogOpenKnop = paneel.querySelector('#nogopen');
+  if (nogOpenKnop) nogOpenKnop.onclick = () => {
+    const id = nogOpenKnop.dataset.nogOpen;
+    if (open.length === 1 && COUREURVRAAG[id]) {
+      S.kiesplek = { soort: 'vraag', id };
+      invulWeergave(paneel, r, dicht);
+      return;
+    }
+    const blok = paneel.querySelector(`[data-vraagblok="${id}"]`);
+    if (!blok) return;
+    try {
+      blok.scrollIntoView({ block: 'center',
+        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    } catch { /* dan staat hij gewoon iets lager */ }
+    blok.querySelector('button')?.focus({ preventScroll: true });
+  };
   const kop = paneel.querySelector('#kopieer');
   if (kop) kop.onclick = () => { S.keuze.race = [...S.keuze.quali]; invulWeergave(paneel, r, dicht); };
   // Opnieuw beginnen zonder tien keer een kruisje te zoeken. Wist alleen dit
@@ -12114,6 +12174,10 @@ function invulWeergave(paneel, r, dicht) {
     try {
       const welk = S.tab;
       const lijst = [...S.keuze[welk]];
+      // Wat er na het opslaan nog openstaat, staat in de bevestiging. Die
+      // lees je op de racelijst, waar de vraag zelf niet meer te zien is. Tot
+      // drie bij naam; meer is een opsomming die niemand uitleest.
+      const nogLeeg = losseVragenOpen(r, welk, S.keuze);
       await bewaar();
       // Pas na het eigen opslaan: lukt dat niet, dan gaat hij ook nergens
       // anders heen.
@@ -12123,7 +12187,10 @@ function invulWeergave(paneel, r, dicht) {
       // het scherm daarna nog de oude, lege stand.
       await laad();
       S.melding = [T('Voorspelling voor {race} opgeslagen.', { race: r.name }),
-        eldersTekst(elders, welk)].filter(Boolean).join(' ');
+        eldersTekst(elders, welk),
+        nogLeeg.length > 3 ? T('Nog {aantal} losse vragen open.', { aantal: nogLeeg.length })
+          : nogLeeg.length ? T('Nog open: {wat}.', { wat: opsomming(nogLeeg.map(losseNaam)) }) : '',
+      ].filter(Boolean).join(' ');
       S.race = null; S.weergave = 'races';
       render();
     } catch (e) {
@@ -12136,25 +12203,69 @@ function invulWeergave(paneel, r, dicht) {
   if (ookElders) ookElders.onclick = (ev) => opslaan(ev, { ookElders: true });
 }
 
-// De grootste losse keuze van het weekend, dus die staat bovenaan en niet
-// verstopt onder de top 10. Bewust niet verplicht: niemand hoort te blijven
-// hangen op een knop die niet werkt.
-// Een vraag waarbij je één coureur aanwijst, als één regel. Twaalf knoppen
-// per vraag maakte het scherm onbruikbaar lang; het kiezen gebeurt nu in het
-// keuzeblad, dat pas opengaat als je de regel aantikt.
+// Een vraag waarbij je één coureur aanwijst. Bewust niet verplicht: niemand
+// hoort te blijven hangen op een knop die niet werkt.
+//
+// Tot 1 november was dit één grijze regel ("pole · kies · 10") onderin de
+// tegel, en die zag je over het hoofd: Danny vulde zijn top 10 in, sloeg op,
+// en kreeg een automatische pole (31 oktober, Mexico). Nu een eigen blok zoals
+// de safety cars: de vraag erboven, een plek in de vorm van de top 10 met een
+// gestippelde amber rand zolang hij leeg is, en daaronder wat er te halen
+// valt. Kiezen gaat nog steeds in het keuzeblad; twaalf knoppen per vraag
+// maakte het scherm onbruikbaar lang. Een eigen klasse en niet .slot: in de
+// tests is .slot de top 10 (tien keer .slot.vol, de eerste .slot.leegplek).
 function coureurKiezer(r, id) {
   if (!vraagActief(id)) return '';
   const v = COUREURVRAAG[id];
+  const punten = puntenVoor(id);
   const gekozen = S.keuze[id];
   const d = gekozen ? drv(r, gekozen) : null;
   return `
-    <button class="kiesregel ${d ? 'vol' : ''}" data-vraagplek="${esc(id)}"
-      style="--team:${d ? esc(d.kleur) : 'var(--lijn)'}">
-      <span class="nm">${esc(T(v.label))}</span>
-      ${d ? `<span class="code">${esc(d.code)}</span>`
-          : `<span class="nogleeg">${T('kies')}</span>`}
-      <span class="ptn">${puntenVoor(id)}</span>
-    </button>`;
+    <div class="winnaarblok" data-vraagblok="${esc(id)}">
+      <div class="winnaarkop">
+        <span class="label">${esc(T(v.kop))}</span>
+        <span class="mono" style="color:var(--ink3)">${T('{n} punten', { n: punten })}</span>
+      </div>
+      <button class="vraagslot ${d ? 'vol' : 'open'}" data-vraagplek="${esc(id)}"
+        style="border-left-color:${d ? esc(d.kleur) : 'var(--amber)'}"
+        aria-label="${esc(T(v.label))}${d
+          ? T(', nu {wie}', { wie: esc(d.naam) }) : T(', nog leeg')}">
+        <span class="pos">${esc(v.letter)}</span>
+        ${d
+          ? `<span class="who"><b class="code">${esc(d.code)}</b><small>${esc(d.naam)}</small></span>`
+          : `<span class="who">${T('tik om te kiezen')}</span>`}
+      </button>
+      ${d ? '' : `<p class="mono amber" style="margin:0">${
+        T('nog niets gekozen · hier liggen {n} punten', { n: punten })}</p>`}
+    </div>`;
+}
+
+// De naam van een losse vraag, voor "nog open".
+const losseNaam = (id) =>
+  T(COUREURVRAAG[id]?.label ?? EXTRAVRAAG[id]?.label ?? 'teamgenoot-duels');
+
+// Welke losse vragen van deze sessie nog leeg zijn, in de volgorde van het
+// scherm. `keuze` heeft de vorm van S.keuze: wat er op het invulscherm staat,
+// of een opgeslagen voorspelling die zo is omgezet (mijnLosseOpen). De duels
+// tellen als één, net als in de teller boven de losse vragen: wie er één
+// kiest doet mee, de rest mag je laten staan.
+function losseVragenOpen(r, welk, keuze) {
+  return [
+    ...coureurVragen(welk).filter(id => !keuze[id]),
+    ...extraVragen(welk).filter(id => leegAntwoord(keuze[id])),
+    ...(welk === 'race' && vraagActief('teamgenoot_duels') && teamParen(r.drivers).length
+        && !keuze.duels?.length ? ['teamgenoot_duels'] : []),
+  ];
+}
+
+// Hetzelfde voor wat je hebt opgeslagen, voor de knop op de weekendkaart.
+// Wat de database alleen als "ingeleverd" meegeeft (S.ingeleverd, als je
+// speelt als een speler die aan een ander account hangt) staat niet open.
+function mijnLosseOpen(r, welk) {
+  const mijn = vindPred(r.id, S.ik.id);
+  const opgeslagen = { ...mijn, winnaar: mijn?.race_winnaar, duels: mijn?.teamgenoot_duels };
+  return losseVragenOpen(r, welk, opgeslagen)
+    .filter(id => !verborgenIngeleverd(r.id, S.ik.id, [id]));
 }
 
 // Het keuzeblad: één plek of één vraag, en de coureurs om uit te kiezen.
@@ -12217,7 +12328,7 @@ function extraKiezer(r, id) {
   const punten = puntenVoor(id);
   const gekozen = S.keuze[id];
   return `
-    <div class="winnaarblok">
+    <div class="winnaarblok" data-vraagblok="${esc(id)}">
       <div class="winnaarkop">
         <span class="label">${esc(T(v.kop))}</span>
         <span class="mono" style="color:var(--ink3)">${T('{n} punten', { n: punten })}</span>
@@ -12245,7 +12356,7 @@ function duelKiezer(r) {
   const isGekozen = (nr) => gekozen.some(g => zelfde(g, nr));
   const klaar = paren.filter(p => isGekozen(p.a.nr) || isGekozen(p.b.nr)).length;
   return `
-    <div class="winnaarblok">
+    <div class="winnaarblok" data-vraagblok="teamgenoot_duels">
       <div class="winnaarkop">
         <span class="label">${T('wie verslaat zijn teamgenoot?')}</span>
         <span class="mono" style="color:var(--ink3)">${T('{n} punten', { n: punten })}</span>
@@ -14700,8 +14811,7 @@ function meldingStap() {
   return `
     <h1 class="middel">${T('Mis geen deadline')}</h1>
     <p class="zacht" style="margin:0">${T('Krijg een seintje als een deadline nadert en je '
-      + 'nog niets hebt ingevuld. Hooguit één per sessie, en alleen als er echt iets '
-      + 'openstaat.')}</p>
+      + 'nog niets hebt ingevuld, en als de uitslag binnen is. Meer niet.')}</p>
     <button class="knop primair" id="rondmelding">${T('Zet meldingen aan')}</button>
     ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}
     <button class="knop klein" id="rondnunniet">${T('Nu niet')}</button>`;
