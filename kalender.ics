@@ -1240,7 +1240,7 @@ SUMMARY:Kwalificatie Marina Bay — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
  wijzigen.\n\nhttps://predicttherace.com/app/
 LOCATION:Marina Bay\, Singapore
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/singapore/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1257,7 +1257,7 @@ SUMMARY:Race Marina Bay — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
  .\n\nhttps://predicttherace.com/app/
 LOCATION:Marina Bay\, Singapore
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/singapore/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1308,7 +1308,7 @@ SUMMARY:Kwalificatie Austin — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
  wijzigen.\n\nhttps://predicttherace.com/app/
 LOCATION:Austin\, United States
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/austin/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1325,7 +1325,7 @@ SUMMARY:Race Austin — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
  .\n\nhttps://predicttherace.com/app/
 LOCATION:Austin\, United States
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/austin/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1376,7 +1376,7 @@ SUMMARY:Kwalificatie Mexico City — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
  wijzigen.\n\nhttps://predicttherace.com/app/
 LOCATION:Mexico City\, Mexico
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/mexico-city/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1393,7 +1393,7 @@ SUMMARY:Race Mexico City — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
  .\n\nhttps://predicttherace.com/app/
 LOCATION:Mexico City\, Mexico
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/mexico-city/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1444,7 +1444,7 @@ SUMMARY:Kwalificatie São Paulo — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
  wijzigen.\n\nhttps://predicttherace.com/app/
 LOCATION:São Paulo\, Brazil
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/sao-paulo/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1461,7 +1461,7 @@ SUMMARY:Race São Paulo — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
  .\n\nhttps://predicttherace.com/app/
 LOCATION:São Paulo\, Brazil
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/sao-paulo/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1512,7 +1512,7 @@ SUMMARY:Kwalificatie Las Vegas — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
  wijzigen.\n\nhttps://predicttherace.com/app/
 LOCATION:Las Vegas\, United States
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/las-vegas/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1529,7 +1529,7 @@ SUMMARY:Race Las Vegas — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
  .\n\nhttps://predicttherace.com/app/
 LOCATION:Las Vegas\, United States
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/las-vegas/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1580,7 +1580,7 @@ SUMMARY:Kwalificatie Lusail — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
  wijzigen.\n\nhttps://predicttherace.com/app/
 LOCATION:Lusail\, Qatar
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/qatar/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1597,7 +1597,7 @@ SUMMARY:Race Lusail — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
  .\n\nhttps://predicttherace.com/app/
 LOCATION:Lusail\, Qatar
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/qatar/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1648,7 +1648,7 @@ SUMMARY:Kwalificatie Yas Marina — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de kwalificatie niet meer 
  wijzigen.\n\nhttps://predicttherace.com/app/
 LOCATION:Yas Marina\, United Arab Emirates
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/abu-dhabi/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
@@ -1665,7 +1665,7 @@ SUMMARY:Race Yas Marina — invullen sluit
 DESCRIPTION:Vanaf nu kun je je voorspelling voor de race niet meer wijzigen
  .\n\nhttps://predicttherace.com/app/
 LOCATION:Yas Marina\, United Arab Emirates
-URL:https://predicttherace.com/app/
+URL:https://predicttherace.com/races/2026/abu-dhabi/?ref=kalender
 STATUS:CONFIRMED
 BEGIN:VALARM
 ACTION:DISPLAY
