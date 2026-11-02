@@ -26,18 +26,20 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
-import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { telSafetyCars, hadRodeVlag, snelsteRonde, snelstePitstop, lijktAfgelast,
          deelnemersUit, lijstDekt, opnieuwNakijken, zelfdeWaarde, veiligeVervanging,
          rondeIndeling, dubbeleRaces, voorlopigeLijst }
   from './uitslagen.mjs';
 import { maakAgenda } from './agenda.mjs';
-import { wieKrijgtEenSeintje, volgendeWekker, SEIZOENVRAGEN } from './herinneringen.mjs';
+import { wieKrijgtEenSeintje, volgendeWekker, SEIZOENVRAGEN, SESSIES, SESSIEVOLGORDE } from './herinneringen.mjs';
 import { laatsteUitslag, wieKrijgtEenUitslag } from './uitslagmeldingen.mjs';
 import { trainingNieuws, wieKrijgtEenTraining } from './trainingmeldingen.mjs';
 import { trainingRooster, teHalen, trainingTop10, zelfdeRooster } from './vrijetrainingen.mjs';
 import { leesRacePaginas, sitemapPaden } from './racepagina.mjs';
+import { sessieCijfers, teBerekenen, seizoenCijfers, komendSeizoen, seizoenStart, beterDan, topPunten,
+         echteLijst, zelfdeCijfers, sitebestand, UITSLAG, SEIZOENSCIJFERS } from './spelerscijfers.mjs';
 import { uitslagWekker, trainingWekker, teLateUitslagen, teLaatTekst, vroegste } from './bewaking.mjs';
 import { stuur as stuurPush } from './push.mjs';
 import { sleutelInVault } from './vault-sleutel.mjs';
@@ -909,13 +911,137 @@ async function uitslagMeldingen(races) {
     return;
   }
   const poulevragen = await sb('pool_questions?select=pool_id,question_id');
-  const lijst = wieKrijgtEenUitslag({ races, abonnementen, poulevragen: poulevragen ?? [] });
+  const lijst = wieKrijgtEenUitslag({ races, abonnementen, poulevragen: poulevragen ?? [],
+    beterDan: (ab, nieuws) => jouwPlek(ab, nieuws.race, nieuws.welk) });
   if (!lijst.length) { console.log('Geen uitslagmeldingen te sturen'); return; }
 
   const { gelukt, opgeruimd } = await verstuur(lijst, 'uitslag_laatst');
   console.log(`Uitslagmeldingen: ${gelukt} verstuurd`
     + (opgeruimd ? `, ${opgeruimd} verlopen abonnement(en) opgeruimd` : ''));
   if (gelukt) noteer(`${gelukt} uitslagmelding(en) verstuurd`);
+}
+
+// ------------------------------------------------------------
+//  Hoe deed jij het tegen iedereen (scripts/spelerscijfers.mjs, 1 november).
+//  Na elke sessie de cijfers over alle spelers samen in de openbare tabel
+//  spelerscijfers, en de seizoensvragen van het komende seizoen voor de
+//  pagina "wie wordt wereldkampioen". Daarna site/data/spelers-<jaar>.json
+//  voor de site; sync.yml maakt dan de pagina's opnieuw.
+//
+//  Wat hier binnenkomt (poules en spelers, om te tellen en voor de melding
+//  van één speler), blijft in het geheugen van deze run. In de tabel en het
+//  bestand staan alleen aantallen.
+// ------------------------------------------------------------
+
+// Alles van een vraag, ook boven de duizend rijen (de grens van PostgREST).
+async function alles(pad) {
+  const uit = [];
+  for (let vanaf = 0; ; vanaf += 1000) {
+    const deel = (await sb(`${pad}&limit=1000&offset=${vanaf}`)) ?? [];
+    uit.push(...deel);
+    if (deel.length < 1000) return uit;
+  }
+}
+
+const TOPVRAGEN = SESSIEVOLGORDE.map((w) => SESSIES[w].vraag).join(',');
+const topAntwoorden = new Map();
+const antwoordenVan = async (race) => {
+  if (!topAntwoorden.has(race.id)) {
+    topAntwoorden.set(race.id, await alles(`answers?select=pool_id,member_id,question_id,waarde`
+      + `&race_id=eq.${race.id}&question_id=in.(${TOPVRAGEN})&order=pool_id,member_id,question_id`));
+  }
+  return topAntwoorden.get(race.id);
+};
+// Wat er na deze run in de tabel staat: `${seizoen}:${ronde}:${sessie}` naar de rij.
+const cijferRijen = new Map();
+const rijSleutel = (r) => `${r.seizoen}:${r.ronde}:${r.sessie}`;
+
+async function cijfersZetten(rij, oud) {
+  if (oud && oud.spelers === rij.spelers && oud.poules === rij.poules && zelfdeCijfers(oud.cijfers, rij.cijfers)) return false;
+  await sb('spelerscijfers?on_conflict=seizoen,ronde,sessie', {
+    method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
+    body: JSON.stringify([{ ...rij, bijgewerkt: new Date().toISOString() }]),
+  });
+  return true;
+}
+const cijfersWeg = (r) => sb(`spelerscijfers?seizoen=eq.${r.seizoen}&ronde=eq.${r.ronde}&sessie=eq.${r.sessie}`,
+  { method: 'DELETE' });
+
+async function spelersCijfers(lopend, alle) {
+  let bestaand;
+  try {
+    bestaand = (await sb('spelerscijfers?select=seizoen,ronde,sessie,spelers,poules,cijfers')) ?? [];
+  } catch (e) {
+    console.log(`Spelerscijfers: niet berekend (${String(e.message).slice(0, 120)}); draai schema.sql opnieuw`);
+    return;
+  }
+  for (const r of bestaand) cijferRijen.set(rijSleutel(r), r);
+  let gezet = 0, weg = 0;
+  const jaren = new Set();
+
+  // De sessies van de afgelopen week. Onder de drempel: weg als hij er stond.
+  for (const { race, sessie } of teBerekenen(lopend)) {
+    const uit = sessieCijfers({ race, sessie, antwoorden: await antwoordenVan(race) });
+    const k = { seizoen: race.season, ronde: race.round, sessie };
+    const oud = cijferRijen.get(rijSleutel(k));
+    if (uit) {
+      const rij = { ...k, ...uit };
+      if (await cijfersZetten(rij, oud)) { gezet++; jaren.add(race.season); }
+      cijferRijen.set(rijSleutel(k), rij);
+    } else if (oud) {
+      await cijfersWeg(k); weg++; jaren.add(race.season);
+      cijferRijen.delete(rijSleutel(k));
+    }
+  }
+
+  // De seizoensvragen van het komende seizoen, van december tot de eerste race.
+  const seizoen = komendSeizoen(alle);
+  if (seizoen) {
+    const { race } = seizoenStart(alle, seizoen);
+    const antwoorden = await alles(`answers?select=pool_id,question_id,waarde&race_id=eq.${race.id}`
+      + `&question_id=in.(${SEIZOENSCIJFERS.join(',')})&order=pool_id,member_id,question_id`);
+    const uit = seizoenCijfers({ antwoorden });
+    const k = { seizoen, ronde: 0, sessie: 'seizoen' };
+    const oud = cijferRijen.get(rijSleutel(k));
+    if (uit) {
+      const rij = { ...k, ...uit };
+      if (await cijfersZetten(rij, oud)) { gezet++; jaren.add(seizoen); }
+      cijferRijen.set(rijSleutel(k), rij);
+    } else if (oud) {
+      await cijfersWeg(k); weg++; jaren.add(seizoen);
+      cijferRijen.delete(rijSleutel(k));
+    }
+  }
+  if (gezet || weg) {
+    console.log(`Spelerscijfers: ${gezet} bijgewerkt, ${weg} weggehaald (onder de drempel)`);
+    noteer(`Spelerscijfers: ${gezet} bijgewerkt${weg ? `, ${weg} weggehaald` : ''}`);
+  }
+
+  // Het bestand voor de site, per seizoen met cijfers (of dat er een had).
+  const rijen = [...cijferRijen.values()];
+  for (const r of rijen) jaren.add(r.seizoen);
+  for (const jaar of jaren) {
+    const pad = new URL(`../site/data/spelers-${jaar}.json`, import.meta.url);
+    const metRijen = rijen.filter((r) => r.seizoen === jaar);
+    if (!metRijen.length && !existsSync(pad)) continue;
+    const tekst = `${JSON.stringify(sitebestand({ jaar, rijen: metRijen, races: alle }), null, 1)}\n`;
+    let oud = '';
+    try { oud = readFileSync(pad, 'utf8'); } catch { /* nog niet */ }
+    if (oud !== tekst) {
+      writeFileSync(pad, tekst);
+      console.log(`Spelerscijfers voor de site: site/data/spelers-${jaar}.json bijgewerkt`);
+    }
+  }
+}
+
+// "Beter dan p% van alle spelers" voor de speler achter dit toestel, in de
+// uitslagmelding. Alleen met een eigen lijst en als de cijfers er zijn.
+function jouwPlek(ab, race, sessie) {
+  const rij = cijferRijen.get(rijSleutel({ seizoen: race.season, ronde: race.round, sessie }));
+  const antwoord = (topAntwoorden.get(race.id) ?? []).find((a) => a.member_id === ab.member_id
+    && a.pool_id === ab.pool_id && a.question_id === SESSIES[sessie].vraag);
+  if (!rij || !echteLijst(antwoord?.waarde)) return null;
+  return beterDan(rij.cijfers?.verdeling, topPunten(antwoord.waarde, race[UITSLAG[sessie]] ?? [], sessie));
 }
 
 // ------------------------------------------------------------
@@ -1060,6 +1186,13 @@ try {
   schrijfAgenda(alle.filter((r) => inAgenda.includes(r.season)));
   zetWekker(lopend, { herinneren: await heeftAbonnementen() });
   bewaakUitslagen(lopend);
+  // Lukt het niet, dan gaat de run door: de uitslagen en de meldingen zijn
+  // belangrijker dan deze cijfers.
+  try {
+    await spelersCijfers(lopend, alle);
+  } catch (e) {
+    console.log(`Spelerscijfers niet bijgewerkt: ${String(e.message).slice(0, 200)}`);
+  }
   await herinneringen(lopend);
   await uitslagMeldingen(lopend);
   await trainingMeldingen(lopend);

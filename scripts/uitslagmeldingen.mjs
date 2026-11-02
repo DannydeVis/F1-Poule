@@ -42,21 +42,32 @@ export const SESSIEVRAGEN = {
 // De zinnen. De naam van de sessie komt uit herinneringen.mjs, zodat een
 // sessie in beide meldingen hetzelfde heet. Een taal die hier niet staat
 // krijgt Nederlands, net als daar.
+// `beter` (1 november): hoe jouw top 10 het deed tegen alle spelers samen,
+// als die cijfers er zijn (scripts/spelerscijfers.mjs). Het procentteken
+// zoals elke taal het schrijft; in het Duits, Frans en Spaans met een harde
+// spatie ervoor.
 const ZINNEN = {
   nl: { titel: (race, sessie) => `${race}: uitslag ${sessie} binnen`,
-        tekst: 'Bekijk je punten en de stand.' },
+        tekst: 'Bekijk je punten en de stand.',
+        beter: (p) => `Je top 10: beter dan ${p}% van alle spelers.` },
   en: { titel: (race, sessie) => `${race}: ${sessie} result is in`,
-        tekst: 'See your points and the standings.' },
+        tekst: 'See your points and the standings.',
+        beter: (p) => `Your top 10: better than ${p}% of all players.` },
   de: { titel: (race, sessie) => `${race}: Ergebnis ${sessie} ist da`,
-        tekst: 'Sieh dir deine Punkte und die Tabelle an.' },
+        tekst: 'Sieh dir deine Punkte und die Tabelle an.',
+        beter: (p) => `Deine Top 10: besser als ${p}\u00a0% aller Spieler.` },
   fr: { titel: (race, sessie) => `${race} : résultat disponible (${sessie})`,
-        tekst: 'Découvrez vos points et le classement.' },
+        tekst: 'Découvrez vos points et le classement.',
+        beter: (p) => `Votre top 10 : meilleur que ${p}\u00a0% des joueurs.` },
   es: { titel: (race, sessie) => `${race}: ya está el resultado (${sessie})`,
-        tekst: 'Mira tus puntos y la clasificación.' },
+        tekst: 'Mira tus puntos y la clasificación.',
+        beter: (p) => `Tu top 10: mejor que el ${p}\u00a0% de los jugadores.` },
   it: { titel: (race, sessie) => `${race}: risultato disponibile (${sessie})`,
-        tekst: 'Guarda i tuoi punti e la classifica.' },
+        tekst: 'Guarda i tuoi punti e la classifica.',
+        beter: (p) => `La tua top 10: meglio del ${p}% dei giocatori.` },
   pt: { titel: (race, sessie) => `${race}: resultado disponível (${sessie})`,
-        tekst: 'Veja seus pontos e a classificação.' },
+        tekst: 'Veja seus pontos e a classificação.',
+        beter: (p) => `Seu top 10: melhor que ${p}% dos jogadores.` },
 };
 export const uitslagZinnen = (taal) => ZINNEN[taal] ?? ZINNEN.nl;
 
@@ -88,8 +99,14 @@ export function laatsteUitslag({ races = [], nu = Date.now() } = {}) {
  * @param poulevragen  rijen {pool_id, question_id}; een poule zonder rijen doet alles
  * @param nu           tijdstip in ms
  */
+/**
+ * @param beterDan (abonnement, nieuws) => een percentage of null: "beter dan
+ *                 p% van alle spelers" voor de speler achter dat toestel. De
+ *                 sync rekent het uit (jouwPlek() in sync.mjs); zonder cijfers
+ *                 blijft de melding zoals hij was.
+ */
 export function wieKrijgtEenUitslag({ races = [], abonnementen = [], poulevragen = [],
-                                      nu = Date.now() } = {}) {
+                                      nu = Date.now(), beterDan = () => null } = {}) {
   const nieuws = laatsteUitslag({ races, nu });
   if (!nieuws) return [];
 
@@ -113,13 +130,14 @@ export function wieKrijgtEenUitslag({ races = [], abonnementen = [], poulevragen
     // er dan nog steeds.
     if (ab.uitslag_laatst === nieuws.tag) continue;
     const z = uitslagZinnen(ab.taal);
+    const p = beterDan(ab, nieuws);
     uit.push({
       abonnement: ab,
       tag: nieuws.tag,
       bericht: {
         // De racenaam komt van OpenF1 en blijft zoals hij is.
         titel: z.titel(nieuws.race.name, woorden(ab.taal)[nieuws.welk]),
-        tekst: z.tekst,
+        tekst: Number.isInteger(p) && p >= 1 && p <= 100 ? `${z.beter(p)} ${z.tekst}` : z.tekst,
         tag: nieuws.tag,
       },
     });

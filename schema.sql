@@ -3179,6 +3179,83 @@ end $$;
 revoke all on function public.tel_pagina(text, text) from public;
 grant execute on function public.tel_pagina(text, text) to anon, authenticated;
 
+-- ---- hoe deed jij het tegen iedereen (1 november) -------------------------
+-- Danny: "De sync rekent na elke sessie anonieme cijfers uit over alle
+-- poules. Alleen na de deadline, en pas vanaf 50 spelers uit minstens 5
+-- poules per sessie; daaronder niets tonen. Nooit per poule, nooit namen of
+-- id's. In een tabel die iedereen mag lezen."
+--
+-- Eén rij per sessie (sprint, kwalificatie, race) van een ronde, en per
+-- seizoen één rij met de seizoensvragen (ronde 0). De sync rekent ze uit
+-- (scripts/spelerscijfers.mjs) en schrijft ze met de service_role key; de app
+-- en de site lezen ze. Er staat alleen in wat over alle spelers samen is
+-- opgeteld: hoeveel spelers en poules, de verdeling van de punten op de top
+-- 10, en per coureur of team een aantal. Geen kolom voor een poule, een
+-- speler of een account.
+--
+-- De regels staan hier ook en niet alleen in de sync: een rij onder de
+-- drempel, met iets wat op een id lijkt, of van een sessie die nog open is,
+-- weigert de database. Ook een sync met een fout zet dus niets openbaar wat
+-- er niet hoort.
+create table if not exists public.spelerscijfers (
+  seizoen    int   not null,
+  ronde      int   not null,
+  sessie     text  not null,
+  spelers    int   not null,
+  poules     int   not null,
+  cijfers    jsonb not null,
+  bijgewerkt timestamptz not null default now(),
+  primary key (seizoen, ronde, sessie)
+);
+grant all on table public.spelerscijfers to anon, authenticated, service_role;
+alter table public.spelerscijfers drop constraint if exists spelerscijfers_sessie;
+alter table public.spelerscijfers add constraint spelerscijfers_sessie
+  check (sessie in ('sprint', 'quali', 'race', 'seizoen') and (sessie = 'seizoen') = (ronde = 0));
+alter table public.spelerscijfers drop constraint if exists spelerscijfers_drempel;
+alter table public.spelerscijfers add constraint spelerscijfers_drempel
+  check (spelers >= 50 and poules >= 5 and poules <= spelers);
+-- Geen id van wat dan ook: een uuid in de cijfers weigert hij.
+alter table public.spelerscijfers drop constraint if exists spelerscijfers_zonder_id;
+alter table public.spelerscijfers add constraint spelerscijfers_zonder_id
+  check (cijfers::text !~* '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}');
+
+-- Een sessie pas na haar deadline. De seizoensvragen mogen ervoor: daar gaat
+-- de pagina over (wie wordt kampioen), en het is alleen het totaal over alle
+-- spelers.
+create or replace function public.spelerscijfers_bewaken()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_deadline timestamptz;
+begin
+  if new.sessie = 'seizoen' then return new; end if;
+  select case new.sessie when 'sprint' then r.deadline_sprint
+                         when 'quali'  then r.deadline_quali
+                         else r.deadline_race end
+    into v_deadline
+    from public.races r
+   where r.season = new.seizoen and r.round = new.ronde;
+  if v_deadline is null or v_deadline > now() then
+    raise exception 'De cijfers van een sessie komen pas na de deadline'
+      using hint = 'spelerscijfers_voor_deadline';
+  end if;
+  return new;
+end $$;
+drop trigger if exists spelerscijfers_bewaken on public.spelerscijfers;
+create trigger spelerscijfers_bewaken
+  before insert or update on public.spelerscijfers
+  for each row execute function public.spelerscijfers_bewaken();
+
+-- Lezen mag iedereen, net als races en questions; schrijven alleen de sync.
+alter table public.spelerscijfers enable row level security;
+revoke all on public.spelerscijfers from anon, authenticated;
+grant select on public.spelerscijfers to anon, authenticated;
+drop policy if exists spelerscijfers_lezen on public.spelerscijfers;
+create policy spelerscijfers_lezen on public.spelerscijfers
+  for select to anon, authenticated using (true);
+
 -- ---- wat de beheerpagina te zien krijgt --------------------------------
 
 -- De getallen bovenaan: hoe groot, hoe actief, en draait de sync.
@@ -4189,7 +4266,8 @@ select 'policies: alleen die uit schema.sql',
           'pools.pools_bijwerken', 'pools.pools_lezen',
           'push_abonnementen.push_eigen',
           'questions.questions_lezen',
-          'races.races_lezen'] as namen) v
+          'races.races_lezen',
+          'spelerscijfers.spelerscijfers_lezen'] as namen) v
 union all
 -- Hetzelfde voor functies en tabellen. Zo stonden er tot 20 oktober nog
 -- functies en tabellen van een andere app in public, waaronder een
@@ -4238,14 +4316,14 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'poule_team_opslaan', 'poule_team_weghalen', 'publiek_profiel',
           'push_sleutel', 'push_sleutel_vingerafdruk', 'push_sleutel_zetten',
           'seizoen_klaar', 'seizoenen_doorschuiven', 'pools_seizoen_bewaken',
-          'sessie_deadline', 'speler_naam', 'sync_runs_opruimen', 'tel_bezoek',
+          'sessie_deadline', 'speler_naam', 'spelerscijfers_bewaken', 'sync_runs_opruimen', 'tel_bezoek',
           'tel_pagina', 'tik_geven', 'tik_ontvangers',
           'vereis_sessie', 'verwijder_mijn_account'] as functies,
                array[
           'aanmaak_log', 'actief', 'answers', 'bezoeken', 'jokers',
           'pool_eigen_antwoorden', 'pool_eigen_vragen', 'pool_members', 'pool_periodes',
           'pool_questions', 'pool_teams', 'pools', 'poule_controle', 'push_abonnementen',
-          'questions', 'races', 'site_beheerders', 'site_bezoeken', 'site_paden',
+          'questions', 'races', 'site_beheerders', 'site_bezoeken', 'site_paden', 'spelerscijfers',
           'sync_runs', 'tikken', 'verboden_woorden'] as tabellen) v
 union all
 -- Premium (13 oktober): de vijf kolommen op pools, de bewaking erop, de teams

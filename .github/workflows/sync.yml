@@ -81,8 +81,8 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    # Voor het vastleggen van kalender.ics hieronder. Verder schrijft deze
-    # workflow niets in de repo.
+    # Voor het vastleggen van kalender.ics en de spelerscijfers voor de site
+    # hieronder. Verder schrijft deze workflow niets in de repo.
     permissions:
       contents: write
       # Voor de wekker hieronder: een workflow starten.
@@ -131,18 +131,27 @@ jobs:
       # deze stap doet meestal niets. Wie zich op die agenda geabonneerd heeft
       # krijgt een verschoven sessie zo vanzelf binnen.
       #
+      # Sinds 1 november ook de cijfers over alle spelers voor de site
+      # (site/data/spelers-<jaar>.json, scripts/spelerscijfers.mjs), ook alleen
+      # als ze veranderd zijn. Dan maakt maak-site de racepagina's en de pagina
+      # "wie wordt wereldkampioen" opnieuw (met hun datum, de sitemap en
+      # llms.txt), en gaat alles in één commit mee.
+      #
       # De pull --rebase is er voor de zeldzame samenloop dat automerge net een
       # pull request in main zet terwijl deze run bezig is.
-      - name: De agenda vastleggen als hij veranderd is
+      - name: De agenda en de spelerscijfers vastleggen als ze veranderd zijn
         run: |
-          if git diff --quiet -- kalender.ics; then
-            echo "Agenda ongewijzigd, niets vast te leggen"
+          if [ -n "$(git status --porcelain -- 'site/data/spelers-*.json')" ]; then
+            node scripts/maak-site.mjs
+          fi
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Agenda en spelerscijfers ongewijzigd, niets vast te leggen"
             exit 0
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add kalender.ics
-          git commit -m "Agenda bijgewerkt door de sync"
+          git add -A
+          git commit -m "Agenda of spelerscijfers bijgewerkt door de sync"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
 

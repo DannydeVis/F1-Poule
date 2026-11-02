@@ -17,13 +17,14 @@
  * gegevens.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { RACE_JAAR, RACES, RACE_TEKST } from '../site/races.mjs';
+import { RACE_JAAR, RACES, RACE_TEKST, KAMPIOEN_TEKST } from '../site/races.mjs';
 import { TALEN } from '../site/teksten.mjs';
 import { PAGINAS } from '../site/paginas.mjs';
 import { uitersten } from './circuits.mjs';
+import { DREMPEL } from './spelerscijfers.mjs';
 
 const wortel = join(dirname(fileURLToPath(import.meta.url)), '..');
 const lees = (pad) => (existsSync(join(wortel, pad)) ? JSON.parse(readFileSync(join(wortel, pad), 'utf8')) : null);
@@ -72,13 +73,13 @@ function topTabellen(T, top, jaar) {
 // De ankers per taal. safety-cars en pole zijn overal hetzelfde: zo heten ze
 // ook in de gids over de puntentelling.
 export const RACE_IDS = {
-  nl: { tijden: 'tijden', training: 'vrije-trainingen', uitslag: 'uitslag', vorig: 'vorig-jaar', safety: 'safety-cars', pole: 'pole' },
-  en: { tijden: 'times', training: 'practice', uitslag: 'result', vorig: 'last-year', safety: 'safety-cars', pole: 'pole' },
-  de: { tijden: 'zeiten', training: 'freies-training', uitslag: 'ergebnis', vorig: 'vorjahr', safety: 'safety-cars', pole: 'pole' },
-  fr: { tijden: 'horaires', training: 'essais-libres', uitslag: 'resultat', vorig: 'annee-derniere', safety: 'safety-cars', pole: 'pole' },
-  es: { tijden: 'horarios', training: 'libres', uitslag: 'resultado', vorig: 'ano-pasado', safety: 'safety-cars', pole: 'pole' },
-  it: { tijden: 'orari', training: 'prove-libere', uitslag: 'risultato', vorig: 'anno-scorso', safety: 'safety-cars', pole: 'pole' },
-  pt: { tijden: 'horarios', training: 'treinos-livres', uitslag: 'resultado', vorig: 'ano-passado', safety: 'safety-cars', pole: 'pole' },
+  nl: { tijden: 'tijden', training: 'vrije-trainingen', uitslag: 'uitslag', vorig: 'vorig-jaar', safety: 'safety-cars', pole: 'pole', spelers: 'spelers' },
+  en: { tijden: 'times', training: 'practice', uitslag: 'result', vorig: 'last-year', safety: 'safety-cars', pole: 'pole', spelers: 'players' },
+  de: { tijden: 'zeiten', training: 'freies-training', uitslag: 'ergebnis', vorig: 'vorjahr', safety: 'safety-cars', pole: 'pole', spelers: 'spieler' },
+  fr: { tijden: 'horaires', training: 'essais-libres', uitslag: 'resultat', vorig: 'annee-derniere', safety: 'safety-cars', pole: 'pole', spelers: 'joueurs' },
+  es: { tijden: 'horarios', training: 'libres', uitslag: 'resultado', vorig: 'ano-pasado', safety: 'safety-cars', pole: 'pole', spelers: 'jugadores' },
+  it: { tijden: 'orari', training: 'prove-libere', uitslag: 'risultato', vorig: 'anno-scorso', safety: 'safety-cars', pole: 'pole', spelers: 'giocatori' },
+  pt: { tijden: 'horarios', training: 'treinos-livres', uitslag: 'resultado', vorig: 'ano-passado', safety: 'safety-cars', pole: 'pole', spelers: 'jogadores' },
 };
 // De link naar de tabel van alle circuits alleen in een taal waarin de gids
 // over de puntentelling er is.
@@ -88,8 +89,66 @@ const puntentellingIn = (code) => !!PAGINAS.find((pg) => pg.id === 'puntentellin
 // ouder circuits.json zonder die velden geeft een lege lijst: dan geen sectie.
 const metPole = (perRace = []) => perRace.filter((x) => typeof x.poleWon === 'boolean');
 
+// ---- hoe de spelers het voorspelden (1 november) ---------------------------------
+// Uit site/data/spelers-<jaar>.json (de sync schrijft dat, zie
+// scripts/spelerscijfers.mjs): alle spelers samen, alleen na de deadline en
+// alleen vanaf 50 spelers uit vijf poules. Een racepagina krijgt het blok pas
+// na het weekend: als de uitslag van de race er is.
+const procent = (code, x) => new Intl.NumberFormat(code, { style: 'percent', maximumFractionDigits: 0 }).format(x);
+const SESSIENAAM = { sprint: 'Sprint', quali: 'Qualifying', race: 'Race' };
+const wie = (x) => x?.naam ?? x?.code ?? `#${x?.nr}`;
+// De verdeling in vijf banden: 0 tot 9, 10 tot 19 ... 40 tot 50 (op een
+// sprint de helft).
+export function banden(verdeling = {}, max = 50) {
+  const breed = max / 5;
+  return [0, 1, 2, 3, 4].map((i) => {
+    const van = i * breed, tot = i === 4 ? max : (i + 1) * breed - 1;
+    const aantal = Object.entries(verdeling).filter(([p]) => Number(p) >= van && Number(p) <= tot)
+      .reduce((a, [, n]) => a + n, 0);
+    return { van, tot, aantal };
+  });
+}
+// De race in het bestand van de sync, op de racesessie van OpenF1.
+export const spelersVan = (spelers, raceSessie) =>
+  (spelers?.races ?? []).find((x) => raceSessie && String(x.race_key) === String(raceSessie)) ?? null;
+
+function spelersSectie(code, T, v, sp) {
+  const S = T.spelers;
+  const volgorde = ['race', 'quali', 'sprint'].filter((w) => sp.sessies?.[w]);
+  if (!volgorde.length) return null;
+  const hoofd = volgorde[0];
+  const c = sp.sessies[hoofd];
+  const deel = (n) => procent(code, n / c.spelers);
+  const x = c.verrassing;
+  const verrassing = !x ? '' : x.plek
+    ? vul(S.verrassing, { wie: wie(x), verwacht: getal(code, x.verwacht), plek: x.plek })
+    : vul(S.verrassingBuiten, { wie: wie(x), erin: deel(x.erin) });
+  return {
+    id: RACE_IDS[code].spelers,
+    vraag: vul(S.vraag, v),
+    kort: vul(S.kort, { spelers: c.spelers, poules: c.poules, sessie: S.sessies[hoofd], gemiddeld: getal(code, c.gemiddeld),
+      max: c.max, p1: deel(c.p1.goed), eerste: S.eerste[hoofd], vaakst: wie(c.vaakst), vaakstAandeel: deel(c.vaakst.goed),
+      vaakstPlek: c.vaakst.plek, verrassing }).trim(),
+    tabellen: [
+      // Drie kolommen: met het aantal spelers erbij was hij op een telefoon van
+      // 360 pixels in het Frans, Spaans en Italiaans te breed. Het aantal staat
+      // in het korte antwoord.
+      { bijschrift: vul(S.bijschrift, v), kop: S.kop, klasse: 'compact',
+        rijen: volgorde.map((w) => { const y = sp.sessies[w]; return [T.sessies[SESSIENAAM[w]] ?? w,
+          vul(S.gemiddeld, { gemiddeld: getal(code, y.gemiddeld), max: y.max }), procent(code, y.p1.goed / y.spelers)]; }) },
+      { bijschrift: vul(S.verdeling, { sessie: S.sessies[hoofd] }), kop: S.kopVerdeling, klasse: 'compact',
+        rijen: banden(c.verdeling, c.max).map((b) => [vul(S.band, b), String(b.aantal), procent(code, b.aantal / c.spelers)]) },
+    ],
+    tekst: [vul(S.minst, { minst: wie(c.minst), minstAandeel: deel(c.minst.goed), minstPlek: c.minst.plek }), S.uitleg],
+    // Voor de JSON-LD (een Dataset) en llms.txt.
+    cijfers: { sessie: hoofd, spelers: c.spelers, poules: c.poules, gemiddeld: c.gemiddeld, max: c.max,
+      p1: c.p1.goed / c.spelers, vaakst: wie(c.vaakst), vaakstPlek: c.vaakst.plek, vaakstAandeel: c.vaakst.goed / c.spelers,
+      minst: wie(c.minst), minstPlek: c.minst.plek, verrassing: x ? wie(x) : null },
+  };
+}
+
 /** Eén racepagina, of null als hij onder de drempel blijft. */
-export function racePagina(cfg, r, circuits) {
+export function racePagina(cfg, r, circuits, spelers = null) {
   const race = r?.sessies?.find((s) => s.naam === 'Race');
   if (!race || !r.vorige?.race?.length) return null;
   const kwali = r.sessies.find((s) => s.naam === 'Qualifying');
@@ -133,6 +192,10 @@ export function racePagina(cfg, r, circuits) {
     if (r.uitslag?.race?.length >= 3) {
       secties.push({ id: ids.uitslag, vraag: vul(T.uitslag.vraag, { ...v, jaar: RACE_JAAR }),
         kort: winnaarZin(T, r.uitslag, v, RACE_JAAR), tabellen: topTabellen(T, r.uitslag, RACE_JAAR) });
+      // Na het weekend: hoe de spelers het voorspelden.
+      const sp = spelersVan(spelers, race.sessie);
+      const blok = sp && spelersSectie(code, T, v, sp);
+      if (blok) secties.push(blok);
     }
     if (r.vorige.race.length >= 3) {
       secties.push({ id: ids.vorig, vraag: vul(T.uitslag.vraagVorig, { ...v, jaar: r.vorige.jaar }),
@@ -224,16 +287,102 @@ export function overzicht(paginas, races) {
   return { id: 'races', soort: 'races', verwant: ['puntentelling'], lijst: paginas.map((pg) => pg.id), talen };
 }
 
-/** Alles uit de twee bestanden: de racepagina's op datum, dan het overzicht. */
-export function bouwRacepaginas(data, circuits) {
+/** Alles uit de bestanden: de racepagina's op datum, dan het overzicht. */
+export function bouwRacepaginas(data, circuits, spelers = null) {
   if (!data) return [];
-  const paginas = RACES.map((cfg) => racePagina(cfg, data.races.find((r) => r.slug === cfg.slug && r.circuit === cfg.circuit), circuits))
+  const paginas = RACES.map((cfg) => racePagina(cfg, data.races.find((r) => r.slug === cfg.slug && r.circuit === cfg.circuit), circuits, spelers))
     .filter(Boolean)
     .sort((a, b) => String(a.evenement.start).localeCompare(String(b.evenement.start)));
   const o = overzicht(paginas, data.races);
   return o ? [...paginas, o] : paginas;
 }
 
+// ---- wie wordt wereldkampioen (1 november) -----------------------------------------
+// Eén pagina per seizoen met cijfers over de seizoensvragen: van december tot
+// de eerste race werkt de sync hem bij, daarna blijft hij staan zoals de
+// spelers het voor het seizoen voorspelden. Zonder kampioen boven de drempel
+// geen pagina.
+const datumLang = (iso, code) => new Intl.DateTimeFormat(code, { day: 'numeric', month: 'long', year: 'numeric',
+  timeZone: RACE_TEKST[code]?.tijdzone ?? 'UTC' }).format(new Date(iso));
+const opsom = (code, delen) => new Intl.ListFormat(code, { type: 'conjunction' }).format(delen);
+
+export function kampioenPagina(data, metOverzicht = true) {
+  const s = data?.seizoen;
+  const k = s?.kampioen;
+  if (!k?.lijst?.length || !s.tot) return null;
+  const jaar = data.jaar;
+  const t = s.constructeur;
+  const talen = {};
+  for (const code of TALEN.filter((c) => KAMPIOEN_TEKST[c])) {
+    const K = KAMPIOEN_TEKST[code];
+    const pk = (n) => procent(code, n / k.spelers);
+    const pt = (n) => procent(code, n / t.spelers);
+    const [eerste, ...rest] = k.lijst;
+    const tot = datumLang(s.tot, code);
+    const v = { jaar, tot, spelers: k.spelers, poules: k.poules, naam: wie(eerste), teamVan: eerste.team ?? '',
+      aandeel: pk(eerste.aantal), drempel: DREMPEL.spelers, drempelPoules: DREMPEL.poules };
+    const volgersK = rest.slice(0, 3).map((x) => `${wie(x)} (${pk(x.aantal)})`);
+    const ids = K.ids;
+    const secties = [{
+      id: ids.coureur,
+      vraag: vul(K.coureur.vraag, v),
+      kort: vul(K.coureur.kort, { ...v, volgers: volgersK.length ? vul(K.volgers, { lijst: opsom(code, volgersK) }) : '' }),
+      tabel: { bijschrift: vul(K.coureur.bijschrift, v), kop: K.coureur.kop, klasse: 'compact',
+        rijen: k.lijst.map((x) => [wie(x), x.team ?? '', pk(x.aantal)]) },
+    }];
+    if (t?.lijst?.length) {
+      const [teamEerste, ...teamRest] = t.lijst;
+      const volgersT = teamRest.slice(0, 3).map((x) => `${x.team} (${pt(x.aantal)})`);
+      secties.push({
+        id: ids.team,
+        vraag: vul(K.team.vraag, v),
+        kort: vul(K.team.kort, { ...v, team: teamEerste.team, aandeel: pt(teamEerste.aantal), spelers: t.spelers, poules: t.poules,
+          volgers: volgersT.length ? vul(K.volgers, { lijst: opsom(code, volgersT) }) : '' }),
+        tabel: { bijschrift: vul(K.team.bijschrift, v), kop: K.team.kop, klasse: 'compact',
+          rijen: t.lijst.map((x) => [x.team, pt(x.aantal)]) },
+      });
+    }
+    secties.push({ id: ids.hoe, vraag: vul(K.hoe.vraag, v), kort: vul(K.hoe.kort, v) });
+    talen[code] = {
+      pad: vul(K.pad, { jaar }),
+      titel: vul(K.titel, v),
+      omschrijving: vul(K.omschrijving, v),
+      kop: vul(K.kop, v),
+      kort: vul(K.kort, { ...v, teamZin: t?.lijst?.length
+        ? vul(K.teamZin, { team: t.lijst[0].team, teamAandeel: pt(t.lijst[0].aantal) }) : '' }),
+      secties,
+      faq: [],
+      leesOok: [],
+      // De knop gaat naar de open poule (OPEN_POULE in site/teksten.mjs).
+      slot: { ...K.slot, kop: vul(K.slot.kop, v), tekst: vul(K.slot.tekst, v), knop: vul(K.slot.knop, v), openPoule: true },
+      // Voor de JSON-LD (een Dataset) en llms.txt.
+      dataset: { id: ids.coureur, naam: vul(K.coureur.bijschrift, v), omschrijving: vul(K.kort, { ...v, teamZin: '' }),
+        waarden: [['spelers', k.spelers], ['poules', k.poules], ...k.lijst.slice(0, 5).map((x) => [wie(x), k.spelers ? x.aantal / k.spelers : 0])] },
+    };
+  }
+  return {
+    id: `kampioen-${jaar}`,
+    soort: 'kampioen',
+    kruimel: metOverzicht ? 'races' : null,
+    verwant: metOverzicht ? ['races', 'puntentelling'] : ['puntentelling'],
+    talen,
+  };
+}
+
+// Alle seizoenen met een bestand van de sync en een kampioen erin.
+export function leesSpelers() {
+  let bestanden = [];
+  try { bestanden = readdirSync(join(wortel, 'site', 'data')); } catch { return []; }
+  return bestanden.filter((f) => /^spelers-\d{4}\.json$/.test(f)).sort()
+    .map((f) => lees(join('site', 'data', f))).filter(Boolean);
+}
+
 export const RACEDATA = lees(join('site', 'data', `races-${RACE_JAAR}.json`));
 export const CIRCUITDATA = lees(join('site', 'data', 'circuits.json'));
-export const RACEPAGINAS = bouwRacepaginas(RACEDATA, CIRCUITDATA);
+export const SPELERSDATA = lees(join('site', 'data', `spelers-${RACE_JAAR}.json`));
+const RACES_EN_OVERZICHT = bouwRacepaginas(RACEDATA, CIRCUITDATA, SPELERSDATA);
+// De racepagina's met hun overzicht, en de pagina's "wie wordt wereldkampioen":
+// allemaal pagina's uit site/data met hetzelfde sjabloon en dezelfde keuring.
+export const KAMPIOENPAGINAS = leesSpelers()
+  .map((d) => kampioenPagina(d, RACES_EN_OVERZICHT.some((pg) => pg.id === 'races'))).filter(Boolean);
+export const RACEPAGINAS = [...RACES_EN_OVERZICHT, ...KAMPIOENPAGINAS];

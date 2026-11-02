@@ -1552,6 +1552,26 @@ function artikelJsonLd(pg, code, datum, sinds) {
     kruimel,
     persoon(code),
   ];
+  // De cijfers over alle spelers samen (1 november; scripts/spelerscijfers.mjs):
+  // eigen gegevens die nergens anders staan, dus als Dataset. Op een racepagina
+  // over de race, op de pagina "wie wordt wereldkampioen" over het seizoen.
+  const spelers = (t.secties ?? []).find((x) => x.cijfers);
+  const set = spelers ? {
+    id: spelers.id, naam: spelers.tabellen?.[0]?.bijschrift ?? spelers.vraag, omschrijving: spelers.kort,
+    waarden: [['players', spelers.cijfers.spelers], ['pools', spelers.cijfers.poules],
+      [`average points on the ${spelers.cijfers.sessie} top 10`, spelers.cijfers.gemiddeld],
+      ['maximum points on the top 10', spelers.cijfers.max], ['share with P1 right', Math.round(spelers.cijfers.p1 * 1000) / 1000],
+      ['most often in the right place', `${spelers.cijfers.vaakst} (P${spelers.cijfers.vaakstPlek})`],
+      ['least often in the right place', `${spelers.cijfers.minst} (P${spelers.cijfers.minstPlek})`],
+      ...(spelers.cijfers.verrassing ? [['biggest surprise', spelers.cijfers.verrassing]] : [])],
+  } : t.dataset;
+  if (set) {
+    graaf.push({ '@type': 'Dataset', '@id': `${url}#${set.id}`, name: f(set.naam), description: f(set.omschrijving),
+      url: `${url}#${set.id}`, inLanguage: code, isAccessibleForFree: true, license: OPENF1_LICENTIE,
+      creator: { '@id': `${BASIS}/#organisatie` }, dateModified: datum,
+      ...(pg.soort === 'race' ? { about: { '@id': `${url}#race` } } : {}),
+      variableMeasured: set.waarden.map(([name, value]) => ({ '@type': 'PropertyValue', name, value })) });
+  }
   if (t.faq?.length) {
     graaf.push({ '@type': 'FAQPage', '@id': `${url}#faq`, inLanguage: code,
       mainEntity: t.faq.map(([vraag, antwoord]) => ({ '@type': 'Question', name: f(vraag),
@@ -1743,7 +1763,8 @@ ${leesOok.length ? `    <section class="leesook">
     <div class="slotblok">
       <h2>${f(slot.kop)}</h2>
       <p>${f(slot.tekst)}</p>
-      <a class="knop" href="${app}">${f(slot.knop)} <span aria-hidden="true">→</span></a>${openPoule(code, app, '      ')}
+      <a class="knop" href="${slot.openPoule && OPEN_POULE ? `${app}?code=${encodeURIComponent(OPEN_POULE)}` : app}">${
+        f(slot.knop)} <span aria-hidden="true">→</span></a>${openPoule(code, app, '      ')}
     </div>
   </div>
 </main>
@@ -1888,6 +1909,14 @@ function llms() {
       rest.length ? ` Also in ${rest.map((c) => `${taalNaamEn(c)} (${paginaUrl(pg, c)})`).join(', ')}.` : ''}`;
   });
   const soorten = Object.entries(LLMS_SOORTEN).map(([soort, kop]) => [kop, lijst(soort)]).filter(([, l]) => l.length);
+  // Wat de spelers voorspelden (1 november): de cijfers over alle spelers
+  // samen, per race na het weekend en per seizoen de kampioen. In het Engels.
+  const voorspeld = ALLE.filter((pg) => pg.talen.en).flatMap((pg) => {
+    const t = pg.talen.en;
+    const s = (t.secties ?? []).find((x) => x.cijfers);
+    if (s) return [`- [${t.kop}](${paginaUrl(pg, 'en')}#${s.id}): ${s.kort}`];
+    return pg.soort === 'kampioen' ? [`- [${t.kop}](${paginaUrl(pg, 'en')}): ${t.kort}`] : [];
+  });
   return `# Predict the Race
 
 > ${zin('en', 'kernzin')}
@@ -1926,7 +1955,13 @@ ${soorten.map(([kop, l]) => `
 ## ${kop}
 
 ${l.join('\n')}
-`).join('')}
+`).join('')}${voorspeld.length ? `
+## What the players predicted
+
+Own data that is not published anywhere else: Predict the Race counts the predictions of all its players together. Only predictions the players entered themselves, only after the deadline (the season picks before the first race), only from 50 players in at least 5 pools, and never per pool or with names.
+
+${voorspeld.join('\n')}
+` : ''}
 ## How it works
 
 ${en.stappen.items.map(([kop, tekst], i) => `${i + 1}. ${kop}: ${tekst}`).join('\n')}
