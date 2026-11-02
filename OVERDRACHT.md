@@ -12287,3 +12287,19 @@ gegevens; de nieuwe sitetest legt ze daarnaast).
 lijsten uit 8 poules), dus er verschijnt nog niets; dat gaat vanzelf zodra een
 sessie 50 spelers uit 5 poules heeft. De kampioenspagina komt pas als er in
 december genoeg spelers een kampioen voor 2027 kozen.
+
+**Gemerged** als #268 (2 november), na twee rode runs in de browsertests. Allebei
+de test, niet de app:
+- `test/spelerscijfers-site.test.mjs` ging ervan uit dat de race in Mexico-Stad
+  nog niet gereden was, maar de sync zette die uitslag op 2 november in
+  `site/data/races-2026.json`. In de kopie staat de uitslag van Mexico-Stad nu
+  zoals `racedata.mjs` hem tussen de kwalificatie en de race schrijft (de race
+  null), en de test controleert eerst welke races gereden zijn. Een test die op
+  de echte racegegevens leunt, moet zo'n toestand zelf vastzetten: het seizoen
+  loopt door.
+- `test/verversen.test.mjs` zakte af en toe op "(de pagina is langer dan het
+  scherm)". Na een wissel van scherm zet `scrolBijNieuwScherm()` de pagina een
+  beeld later (requestAnimationFrame) nog eens bovenaan; de test scrolde direct
+  na het terugschakelen omlaag, en viel dat beeld daarna, dan stond hij weer op
+  0. `inStand()` wacht dat beeld nu af. Met trage beelden (elk beeld 100 ms
+  later) zakte de oude test elke keer; zo is het na te spelen.
