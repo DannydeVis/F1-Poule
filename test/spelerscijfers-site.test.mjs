@@ -15,7 +15,7 @@
 //      antwoord met de aantallen, een tabel per sessie en de verdeling in vijf
 //      banden die optellen tot het aantal spelers. Austin (gereden, geen
 //      cijfers) en Mexico-Stad (cijfers van de kwalificatie, maar de race is
-//      nog niet gereden) krijgen niets.
+//      in de kopie nog niet gereden) krijgen niets.
 //   2. In de JSON-LD van die pagina een Dataset over de race, met de aantallen
 //      en de licentie; in llms.txt een blok "What the players predicted".
 //   3. De pagina "wie wordt wereldkampioen in 2027" in zeven talen, met de
@@ -53,8 +53,8 @@ const VERDELING = { 3: 5, 9: 9, 15: 12, 21: 16, 27: 11, 35: 6, 44: 2 };
 writeFileSync(join(kopie, 'site', 'data', 'spelers-2026.json'), JSON.stringify({ jaar: 2026, races: [
   { ronde: 18, naam: 'Singapore Grand Prix', race_key: 11388, sessies: {
     quali: sessie(64, 9, { 5: 4, 12: 10, 18: 14, 24: 18, 30: 12, 38: 6 }), race: sessie(61, 9, VERDELING) } },
-  // Mexico-Stad: de kwalificatie heeft cijfers, maar de race is op de site
-  // nog niet gereden. Dan nog geen blok.
+  // Mexico-Stad: de kwalificatie heeft cijfers, maar de race is in de kopie
+  // nog niet gereden (zie hieronder). Dan nog geen blok.
   { ronde: 21, naam: 'Mexico City Grand Prix', race_key: 11404, sessies: { quali: sessie(55, 6, { 20: 55 }) } },
 ], seizoen: null }, null, 1));
 const SEIZOEN = { spelers: 120, poules: 14, tot: '2027-03-05T05:30:00.000Z',
@@ -63,6 +63,16 @@ const SEIZOEN = { spelers: 120, poules: 14, tot: '2027-03-05T05:30:00.000Z',
     { ...coureur('81', 'Oscar Piastri', 'McLaren'), aantal: 20 }, { ...coureur('63', 'George Russell', 'Mercedes'), aantal: 16 }] },
   constructeur: { spelers: 118, poules: 14, lijst: [{ team: 'McLaren', aantal: 61 }, { team: 'Red Bull Racing', aantal: 57 }] } };
 writeFileSync(join(kopie, 'site', 'data', 'spelers-2027.json'), JSON.stringify({ jaar: 2027, races: [], seizoen: SEIZOEN }, null, 1));
+// In de kopie is de race in Mexico-Stad nog niet gereden: de uitslag staat
+// erin zoals scripts/racedata.mjs hem tussen de kwalificatie en de race
+// schrijft (de kwalificatie wel, de race null). In de echte repo is die race
+// inmiddels gereden; zo hangt de test niet af van hoe ver het seizoen is.
+const RACES = join(kopie, 'site', 'data', 'races-2026.json');
+const racedata = JSON.parse(readFileSync(RACES, 'utf8'));
+const mexico = racedata.races.find((r) => r.slug === 'mexico-city');
+mexico.uitslag = { kwalificatie: mexico.uitslag?.kwalificatie ?? null, race: null };
+writeFileSync(RACES, `${JSON.stringify(racedata, null, 2)}\n`);
+const gereden = (slug) => racedata.races.find((r) => r.slug === slug)?.uitslag?.race?.length >= 3;
 spawnSync('git', ['init', '-q'], { cwd: kopie });
 spawnSync('git', ['add', '-A'], { cwd: kopie });
 
@@ -102,7 +112,9 @@ const IDS = { nl: 'spelers', en: 'players', de: 'spieler', fr: 'joueurs', es: 'j
       && nl.includes('Oliver Bearman stond het minst vaak op de goede plek') && nl.includes('De grootste verrassing was Oscar Piastri'),
     nl.slice(nl.indexOf('Hoe voorspelden'), nl.indexOf('Hoe voorspelden') + 400));
   check('Austin (gereden, zonder cijfers) en Mexico-Stad (cijfers, maar de race niet gereden) krijgen niets',
-    !lees('races/2026/austin').includes('id="spelers"') && !lees('races/2026/mexico-city').includes('id="spelers"'));
+    gereden('singapore') && gereden('austin') && !gereden('mexico-city')
+      && !lees('races/2026/austin').includes('id="spelers"') && !lees('races/2026/mexico-city').includes('id="spelers"'),
+    `gereden: singapore ${gereden('singapore')}, austin ${gereden('austin')}, mexico-city ${gereden('mexico-city')}`);
   check('de banden: vijf, van 0 tot 50 (op een sprint tot 25), en alles telt mee',
     JSON.stringify(banden(VERDELING, 50).map((b) => [b.van, b.tot, b.aantal])) === '[[0,9,14],[10,19,12],[20,29,27],[30,39,6],[40,50,2]]'
       && banden({ 25: 3, 0: 1 }, 25).map((b) => `${b.van}-${b.tot}:${b.aantal}`).join() === '0-4:1,5-9:0,10-14:0,15-19:0,20-25:3');
