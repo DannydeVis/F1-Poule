@@ -39,12 +39,20 @@ const nieuweSpeler = (page) => page.evaluate((n) => {
   globalThis.__db.pool_members.push({ member_id: `lid-nieuw${n}`, pool_id: 'pool-1', display_name: naam, user_id: `n${n}` });
   return naam;
 }, ++nummer);
+// Een ander scherm begint bovenaan, en de app zet dat een beeld later nog een
+// keer (scrolBijNieuwScherm, met requestAnimationFrame). Wie na een wissel van
+// scherm zelf scrolt, wacht eerst dat beeld af; anders zet de app de pagina
+// soms na de test terug naar boven, afhankelijk van hoe snel de machine is.
+const volgendBeeld = (page) => page.evaluate(() => new Promise((klaar) => {
+  requestAnimationFrame(() => requestAnimationFrame(klaar));
+}));
 const inStand = async (page, naam) => {
   await page.click('[data-weergave="stand"]');
   await page.waitForSelector('.strij');
   const ja = (await page.textContent('#app')).includes(naam);
   await page.click('[data-weergave="races"]');
   await page.waitForSelector('[data-race]');
+  await volgendBeeld(page);
   return ja;
 };
 const klaar = (page) => page.waitForFunction(() => !document.querySelector('#trekker')?.dataset.stand);

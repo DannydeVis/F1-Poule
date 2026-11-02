@@ -75,7 +75,9 @@ won.
 
 **Je uitslag op het racescherm.** Bovenaan groot wat de sessie van dat tabblad
 je opleverde, met eronder wat het hele weekend oplevert ("146 punten dit
-weekend"): dat is wat in de stand komt. Daaronder **Punten per onderdeel**:
+weekend"): dat is wat in de stand komt. Sinds 1 november staat daar ook hoe
+je top 10 het deed tegen alle spelers samen: "Je top 10: beter dan 73% van
+alle spelers" (§11f). Daaronder **Punten per onderdeel**:
 per onderdeel een balkje en wat je behaalde van wat erin zat, met erboven het
 totaal (alleen onderdelen waarvan de uitslag er is, en pas vanaf twee
 onderdelen). Daaronder je voorspelling. Boven de
@@ -1774,7 +1776,9 @@ De regel, en vooral wat hij niet doet:
 Danny: "zou ik graag een notificatie willen als de resultaten bekend zijn".
 Wie meldingen aan heeft, krijgt zodra de uitslag van een sessie er is
 "Mexico City: uitslag kwalificatie binnen", met "Bekijk je punten en de stand."
-Een tik opent de app.
+Een tik opent de app. Zijn de cijfers over alle spelers er (§11f), dan staat
+er eerst "Je top 10: beter dan 73% van alle spelers." bij, voor wie zelf een
+top 10 invulde.
 
 - **Eén per toestel per sessie**: de sync onthoudt het in de kolom
   `uitslag_laatst` van `push_abonnementen`, los van `laatst` (de
@@ -2041,6 +2045,80 @@ Nederlandse zin en de Engelse ernaast.
 
 ---
 
+## 11f. Hoe deed jij het tegen iedereen (sinds 1 november)
+
+Danny: "De sync rekent na elke sessie anonieme cijfers uit over alle poules
+... Alleen na de deadline, en pas vanaf 50 spelers uit minstens 5 poules per
+sessie; daaronder niets tonen. Nooit per poule, nooit namen of id's."
+
+**Wat er uitgerekend wordt.** Na elke sessie (sprint, kwalificatie, race),
+over alle poules samen, alleen op de top 10 (die speelt elke poule):
+
+- de verdeling van de punten: per aantal punten hoeveel spelers, met de
+  punten zoals de app ze geeft (de sprint half);
+- welk deel van de spelers P1 goed had: de winnaar, of bij de kwalificatie de
+  pole;
+- welke coureur het vaakst en welke het minst vaak precies op de goede plek
+  stond;
+- de grootste verrassing: de coureur die het verst onder- of overschat werd
+  (waar de spelers hem gemiddeld zetten tegen waar hij eindigde; buiten de
+  top 10 telt als plek 11).
+
+En per seizoen de seizoensvragen (kampioen en constructeurs) van het komende
+seizoen, voor de pagina hieronder.
+
+**De regels.** Alleen echte voorspellingen: automatisch invullen gebeurt in
+de app als hij een poule toont en komt nooit in de database, en een lijst telt
+pas met tien verschillende coureurs. Alleen na de deadline. Pas vanaf 50
+spelers uit minstens 5 poules; daaronder staat er niets, en een rij die eronder
+zakt gaat weg. Nooit per poule, nooit een naam of een id. Dat staat niet alleen
+in de sync: de tabel `spelerscijfers` heeft geen kolom voor een poule, een
+speler of een account, en de database weigert zelf een rij onder de drempel,
+een rij met een uuid erin, en een sessie waarvan de deadline nog niet voorbij
+is. Iedereen mag de tabel lezen (net als `races`), alleen de sync schrijft.
+
+**Wanneer.** De sync rekent een sessie na tot een week na de deadline (een
+straf achteraf kan de uitslag nog veranderen); daarna ligt alles vast. De
+seizoensvragen van 1 december tot de eerste sessie van het seizoen; daarna
+blijft de pagina staan zoals de spelers het voor het seizoen voorspelden.
+
+**Waar het staat.**
+
+- In de app, op het uitslagscherm onder je punten: "Je top 10: beter dan 73%
+  van alle spelers". Het deel dat lager scoorde, naar beneden afgerond. Niet
+  als de app je lijst automatisch invulde, niet als je niemand voorbij was,
+  en niet zonder cijfers.
+- In de uitslagmelding (§11c), op dezelfde manier.
+- Op de racepagina, na het weekend: "Hoe voorspelden de spelers de Grand Prix
+  van ...?", met de aantallen, een tabel per sessie ("Zo voorspelden de
+  spelers ...") en de verdeling in vijf banden, in zeven talen. De cijfers
+  staan ook in de JSON-LD (een Dataset) en in llms.txt, onder "What the players
+  predicted": eigen gegevens die nergens anders staan.
+- Op de pagina "Wie wordt wereldkampioen in 2027? Zo voorspellen de spelers"
+  (`/wie-wordt-wereldkampioen-2027/`, en per taal, zie `KAMPIOEN_TEKST` in
+  `site/races.mjs`): per coureur en per team welk deel van de spelers hem
+  kiest, met een knop naar de open poule. Eén pagina per seizoen, alleen als
+  de kampioensvraag de drempel haalt.
+
+**Hoe het van de database op de site komt.** De sync schrijft na het
+uitrekenen `site/data/spelers-<jaar>.json` (alleen als er iets veranderde, met
+de namen van de coureurs erbij). Dan maakt `sync.yml` de site opnieuw
+(`maak-site.mjs`, met de datum in de sitemap) en legt hij alles vast in één
+commit met de agenda. Zo is de kampioenspagina bij elke sync bij.
+
+**Vandaag.** In productie haalt nog geen sessie de drempel: hoogstens 9
+lijsten uit 8 poules (ronde 21, Mexico City). Er staat dus nog niets, en dat is
+precies de bedoeling. Zodra een sessie 50 spelers uit 5 poules heeft, verschijnt
+het vanzelf: in de app, in de melding en op de racepagina.
+
+Nakijken in Supabase: Table Editor, `spelerscijfers`. De code:
+`scripts/spelerscijfers.mjs` (de regels, met de puntentelling uit de app
+zelf), `spelersCijfers()` en `jouwPlek()` in `scripts/sync.mjs`,
+`tegenIedereen()` in de app, `spelersSectie()` en `kampioenPagina()` in
+`scripts/racepaginas.mjs`.
+
+---
+
 ## 12. Wat de app van je weet
 
 Onder **Profiel** staat een dichtgeklapt blok "wat de app van je weet". Daarin
@@ -2063,6 +2141,9 @@ Wat de verklaring zegt, en waarom het waar is:
   soorten meldingen je wilt. Geen naam, geen mailadres, en weg zodra je ze
   weer uitzet. Die regel staat alleen in de verklaring als de app meldingen ook
   echt kan aanbieden.
+- **Cijfers over alle spelers samen** (sinds 1 november, §11f): anoniem, pas
+  vanaf 50 spelers uit 5 poules, nooit per poule en zonder namen. Op de site
+  onder "Cijfers over alle spelers samen", in de app als eigen alinea.
 - **De pagina's van de site tellen, zonder cookie** (sinds 1 november, §16):
   per dag per pagina een aantal, en de ref uit de link. Geen IP-adres, geen
   account. Dat staat op de site onder "Tellen"; in de app niet, want de app

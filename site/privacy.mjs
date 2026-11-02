@@ -43,6 +43,9 @@ export const PRIVACY = {
         'Wie de code van je poule heeft, ziet je naam en je punten. Wat je voorspeld hebt, is pas na de deadline te zien; daarvoor geeft de database het aan niemand. Verder ziet niemand iets. Zet de poulebaas de poule op openbaar, dan kan iedereen hem vinden en meedoen.',
         'Deel je je seizoen, dan komt er een pagina met je naam, je punten, je plek en je beste weekend. Niet je poule, niet je medespelers en niet wat iemand heeft ingevuld. Haal je hem weg, dan zijn die gegevens ook weg.',
       ]],
+      ['Cijfers over alle spelers samen', [
+        'Na elke sessie tellen we de voorspellingen van alle spelers samen: hoeveel punten ze op de top 10 haalden, welk deel de winnaar of de pole goed had, en welke coureurs het vaakst op de goede plek stonden. Voor een nieuw seizoen ook wie de spelers als wereldkampioen kiezen. Die cijfers staan in de app en op de site. Ze zijn anoniem: alleen als er minstens 50 spelers uit 5 poules meedoen, alleen voorspellingen die spelers zelf invulden, nooit per poule, zonder namen en zonder iets wat naar jou terug te leiden is.',
+      ]],
       ['Als je meldingen aanzet', [
         'Dan komt er één regel bij per toestel: het adres waar je pushdienst (Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee sleutels van dat toestel, de taal en de tijdzone van het toestel (voor de tijd in de melding), en welke meldingen je wilt. Geen naam en geen mailadres. Die regel gaat weg zodra je meldingen uitzet.',
       ]],
@@ -104,6 +107,9 @@ export const PRIVACY = {
       ['Who sees it', [
         'Anyone with your pool\'s code sees your name and your points. What you predicted only becomes visible after the deadline; until then the database gives it to no one. Nobody else sees anything. If the pool owner makes the pool public, anyone can find it and join.',
         'If you share your season, there is a page with your name, your points, your position and your best weekend. Not your pool, not your fellow players and not what anyone filled in. Take it down and that data is gone too.',
+      ]],
+      ['Figures about all players together', [
+        'After every session we count the predictions of all players together: how many points they scored on the top 10, what share had the winner or the pole right, and which drivers were most often in the right place. For a new season also who the players pick as world champion. Those figures appear in the app and on the site. They are anonymous: only when at least 50 players from 5 pools take part, only predictions players entered themselves, never per pool, without names and without anything that can be traced back to you.',
       ]],
       ['If you turn notifications on', [
         'Then one row is added per device: the address your push service (Google, Apple or Mozilla) can send a notification to, plus two keys from that device, its language and time zone (for the time in the notification), and which notifications you want. No name and no email address. That row goes away as soon as you turn notifications off.',

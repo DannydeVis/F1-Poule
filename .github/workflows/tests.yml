@@ -348,6 +348,17 @@ jobs:
           psql -d sitebezoeken -v ON_ERROR_STOP=1 -f schema.sql
           psql -d sitebezoeken -v ON_ERROR_STOP=1 -f test/sitebezoeken.test.sql
 
+      # De cijfers over alle spelers samen (1 november): iedereen leest, alleen
+      # de sync schrijft, en de database zelf weigert een rij onder de drempel
+      # (50 spelers uit 5 poules), van een sessie die nog open is, of met een
+      # id erin.
+      - name: spelerscijfers, de drempel en de deadline
+        run: |
+          createdb spelerscijfers
+          psql -d spelerscijfers -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d spelerscijfers -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d spelerscijfers -v ON_ERROR_STOP=1 -f test/spelerscijfers.test.sql
+
       # Een tweede database met de tabelstructuur zoals die in productie
       # bleek te staan: member_id in een samengestelde primaire sleutel.
       # Daar gaf schema.sql eerst 42830 op.

@@ -882,5 +882,7 @@
  "De eindstand en alle races van {jaar} staan in de keuzelijst bovenaan.": "A classificação final e todas as corridas de {jaar} estão na lista lá em cima.",
  "Naar {jaar}": "Ir para {jaar}",
  "Een poule gaat één seizoen tegelijk vooruit.": "Um bolão avança uma temporada de cada vez.",
- "Dit seizoen is nog niet klaar: er moet nog een race gereden worden.": "Esta temporada ainda não terminou: ainda falta uma corrida."
+ "Dit seizoen is nog niet klaar: er moet nog een race gereden worden.": "Esta temporada ainda não terminou: ainda falta uma corrida.",
+ "Je top 10: beter dan {p}% van alle spelers": "Seu top 10: melhor que {p}% dos jogadores",
+ "<b>Cijfers over alle spelers samen</b><br>Na elke sessie tellen we de voorspellingen van alle spelers samen, bijvoorbeeld welk deel de winnaar goed had. Die cijfers staan in de app en op de site, maar alleen vanaf 50 spelers uit 5 poules, nooit per poule en zonder namen.": "<b>Números de todos os jogadores juntos</b><br>Depois de cada sessão somamos os palpites de todos os jogadores, por exemplo que parte acertou o vencedor. Esses números aparecem no app e no site, mas só a partir de 50 jogadores de 5 bolões, nunca por bolão e sem nomes."
 }

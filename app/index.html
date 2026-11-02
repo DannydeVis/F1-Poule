@@ -819,6 +819,8 @@
     text-transform:uppercase;color:var(--groen)}
   /* Eronder: wat het hele weekend oplevert, het getal dat in de stand komt. */
   .weekendsom{font-size:15px;font-weight:700;color:var(--ink)}
+  /* Hoe je top 10 het deed tegen alle spelers samen (spelerscijfers). */
+  .tegeniedereen{font-size:14px;font-weight:600;color:var(--ink)}
   /* Halverwege het weekend, onder de rij van die race: wat je al pakte. Hangt
      aan de rij erboven (dezelfde rand links) en springt in tot onder de naam. */
   .tussenstand{display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -2897,6 +2899,14 @@ const ENGELS = Object.fromEntries([
    'of {max} points'],
   ['{n} punten dit weekend',
    '{n} points this weekend'],
+  ['Je top 10: beter dan {p}% van alle spelers',
+   'Your top 10: better than {p}% of all players'],
+  ['<b>Cijfers over alle spelers samen</b><br>Na elke sessie tellen we de voorspellingen '
+   + 'van alle spelers samen, bijvoorbeeld welk deel de winnaar goed had. Die cijfers staan in '
+   + 'de app en op de site, maar alleen vanaf 50 spelers uit 5 poules, nooit per poule en zonder namen.',
+   '<b>Figures about all players together</b><br>After every session we count the predictions '
+   + 'of all players together, for example what share had the winner right. Those figures appear '
+   + 'in the app and on the site, but only from 50 players in 5 pools, never per pool and without names.'],
   ['Punten per onderdeel',
    'Points per category'],
   ['van {max}',
@@ -6608,6 +6618,28 @@ const vragenVan = (welk) => [SESSIES[welk].vraag, ...coureurVragen(welk), ...ext
 // Heeft de app in deze sessie iets voor deze speler ingevuld?
 const autoInSessie = (pred, welk) => vragenVan(welk).some(id => autoAntwoord(pred, id));
 
+// Hoe jouw top 10 het deed tegen alle spelers samen (1 november): het deel
+// dat lager scoorde, naar beneden afgerond, met de punten zoals de app ze
+// geeft (de sprint half, zonder joker). Dezelfde som als beterDan() in
+// scripts/spelerscijfers.mjs. Alleen voor een lijst die je zelf invulde (een
+// automatische telt in die cijfers ook niet mee), alleen als de cijfers er
+// zijn (vanaf 50 spelers uit vijf poules), en niet als je niemand voorbij was.
+function tegenIedereen(r, pred, welk) {
+  const S_ = SESSIES[welk];
+  const rij = (S.spelerscijfers ?? []).find(x => zelfde(x.seizoen, r?.season)
+    && zelfde(x.ronde, r?.round) && x.sessie === welk);
+  const lijst = pred?.[S_?.vraag];
+  if (!rij || !lijst?.length || isAuto(pred, welk)) return null;
+  const punten = Math.round(scoreLijst(lijst, r[S_.uitslag] ?? []).totaal * (S_.weging ?? 1));
+  let lager = 0, totaal = 0;
+  for (const [p, n] of Object.entries(rij.cijfers?.verdeling ?? {})) {
+    totaal += Number(n) || 0;
+    if (Number(p) < punten) lager += Number(n) || 0;
+  }
+  const pct = totaal ? Math.floor((100 * lager) / totaal) : 0;
+  return pct >= 1 ? pct : null;
+}
+
 // Een automatische lijst moet overal waar hij te zien is zichzelf aanwijzen.
 // Punten die eruit komen zijn echt, maar de keuze is van de app en niet van
 // de speler, en dat verschil mag nergens wegvallen.
@@ -6752,6 +6784,7 @@ async function laad() {
     S.alleRaces = demoRaces; S.races = demoRaces; S.leden = demoLeden;
     S.vragen = demoVragen; S.poulevragen = demoVragen.map(v => v.id);
     S.antwoorden = demoAntwoorden();
+    S.spelerscijfers = [];
     S.jokers = demoJokers;
     S.ingeleverd = [];
     S.tikken = [];
@@ -6762,7 +6795,7 @@ async function laad() {
   // voor iedereen; de inhoud van één poule komt in één keer uit
   // poule_ophalen(). Sinds de leespolicies dicht staan is dat niet alleen
   // veiliger maar ook minder werk: één ronde in plaats van drie.
-  const [races, vragen, inhoud] = await Promise.all([
+  const [races, vragen, inhoud, cijfers] = await Promise.all([
     // Niet alleen dit seizoen: alles tot en met dit seizoen, zodat terugkijken
     // geen tweede ronde naar de server kost. Dat groeit met 24 rijen per jaar.
     // Wordt dat ooit te veel, dan kan poule_ophalen() erbij zeggen in welke
@@ -6771,6 +6804,9 @@ async function laad() {
       .order('season').order('round'),
     db.from('questions').select('*').order('volgorde'),
     pouleOphalen({ p_id: S.poule.id }),
+    // De cijfers over alle spelers samen (1 november; spelerscijfers in
+    // schema.sql). Openbaar, net als races, en hooguit drie rijen per ronde.
+    db.from('spelerscijfers').select('seizoen,ronde,sessie,cijfers').lte('seizoen', pouleSeizoen()),
   ]);
   // Een mislukte lees-actie stil laten passeren geeft een lege lijst zonder
   // uitleg; dat is precies hoe de bewaar-bug zo lang onzichtbaar bleef.
@@ -6790,6 +6826,9 @@ async function laad() {
   S.periodes = inhoud.data.periodes ?? [];
   S.eigenVragen = inhoud.data.eigenvragen ?? [];
   S.eigenAntwoorden = inhoud.data.eigenantwoorden ?? [];
+  // Een database zonder die tabel geeft een fout: dan zijn er gewoon geen
+  // cijfers, en dat is geen reden om de poule niet te tonen.
+  S.spelerscijfers = cijfers?.error ? [] : (cijfers?.data ?? []);
   S.geladenOp = Date.now();
   // De poule zelf komt mee, dus een omschrijving die iemand anders net
   // aanpaste staat er meteen goed bij.
@@ -9860,6 +9899,9 @@ function privacyBlok() {
         T('<b>Als iemand je aantikt</b><br>In een poule met premium kun je een medespeler aantikken die nog '
         + 'niets invulde; die krijgt dan een melding. We bewaren wie wie aantikte, voor welke race en wanneer, '
         + 'zodat niemand twee keer per race wordt aangetikt. Na twee maanden gaat dat weg.')}</p>` : ''}
+      <p style="margin:0 0 10px" data-privacy-samen>${T('<b>Cijfers over alle spelers samen</b><br>Na elke sessie tellen we de voorspellingen '
+        + 'van alle spelers samen, bijvoorbeeld welk deel de winnaar goed had. Die cijfers staan in '
+        + 'de app en op de site, maar alleen vanaf 50 spelers uit 5 poules, nooit per poule en zonder namen.')}</p>
       <p style="margin:0 0 10px" data-privacy-kopie>${T('<b>Hoe lang</b><br>'
         + 'Zolang de poule bestaat. Hieronder kun je er zelf een eind aan maken.')} ${
         T('Voor als er iets misgaat, wordt alles elke nacht versleuteld gekopieerd, naar GitHub. '
@@ -12629,6 +12671,7 @@ function uitslagWeergave(r, werkelijk) {
   // Het grote getal is deze sessie. Wat het hele weekend oplevert (wat in de
   // stand komt) staat eronder, zodra er meer dan één sessie meetelt.
   const weekend = scoreWeekend(mijn, r);
+  const tegen = tegenIedereen(r, mijn, S.tab);
   const weekendRegel = gespeeldeSessies(r).length > 1 && weekend !== scoreTabMetJoker(mijn, r, S.tab)
     ? `<span class="weekendsom">${T('{n} punten dit weekend', { n: weekend })}</span>` : '';
   const score = `
@@ -12639,6 +12682,8 @@ function uitslagWeergave(r, werkelijk) {
         <span class="zacht">${regels.length
           ? T('{n} van {totaal} exact voorspeld', { n: exact, totaal: regels.length })
           : T('geen top 10 ingevuld')}</span>
+        ${tegen ? `<span class="tegeniedereen" data-tegen-iedereen="${tegen}">${
+          T('Je top 10: beter dan {p}% van alle spelers', { p: tegen })}</span>` : ''}
         ${joker ? `<span class="jokersom">${T('{n} × 2 met je joker', { n: scoreTab(mijn, r, S.tab) })}</span>` : ''}
         ${weekendRegel}
       </span>

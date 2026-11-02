@@ -12210,3 +12210,80 @@ SQL-test met `<>` stil te slagen als een rij ontbrak (null), nu met
 vrijdag 6 november, na VT2 in São Paulo (20:00 tot 21:00 Nederlandse tijd),
 komt de eerste melding, op zijn vroegst om 21:35, en vanaf VT1 staat de top 10
 op het invulscherm.
+
+## Een extra moment per weekend, PR 2: hoe deed jij het tegen iedereen (2 november)
+
+PR 1 is gemerged (#267). De eerste sync daarna zette 90 paden voor de teller,
+de racepagina bij zeven races en de racepagina's in kalender.ics. Het rooster
+van de trainingen kwam er nog niet: vlak na de race in Mexico gaf OpenF1 een
+401 op de sessies van het seizoen, en dat haalt de sync bij een volgende run
+opnieuw op.
+
+**Wat PR 2 doet** (BEDIENING §11f). Na elke sessie rekent de sync anonieme
+cijfers uit over alle poules samen: de verdeling van de punten op de top 10,
+welk deel P1 goed had (de winnaar of de pole), welke coureur het vaakst en het
+minst vaak op de goede plek stond, en de grootste verrassing. Alleen echte
+voorspellingen (automatisch invullen komt nooit in `answers`, en een lijst
+telt pas met tien verschillende coureurs), alleen na de deadline, alleen vanaf
+50 spelers uit minstens 5 poules, nooit per poule, nooit een naam of id. Ze
+staan in de openbare tabel `spelerscijfers` (iedereen leest, alleen de sync
+schrijft), en de database zelf weigert een rij onder de drempel, met een uuid,
+of van een sessie die nog open is.
+
+- In de app: "Je top 10: beter dan p% van alle spelers" onder je punten op het
+  uitslagscherm, in zeven talen. Ook in de uitslagmelding.
+- Op de racepagina na het weekend het blok "Hoe voorspelden de spelers de
+  Grand Prix van ...?" (met als bijschrift "Zo voorspelden de spelers ..."),
+  in zeven talen, met een Dataset in de JSON-LD en een blok "What the players
+  predicted" in llms.txt.
+- De pagina "Wie wordt wereldkampioen in 2027? Zo voorspellen de spelers", in
+  zeven talen, van december tot de eerste race, met een knop naar de open
+  poule. De sync schrijft `site/data/spelers-<jaar>.json`, en `sync.yml` maakt
+  dan de site opnieuw en legt alles vast in één commit met de agenda.
+
+**Keuzes.**
+
+- De punten komen uit de rekenkern van de app zelf (`scoreLijst()` uit het
+  blok `<knip primitieven>`), niet uit een kopie. De sync laadt hem pas als er
+  iets te rekenen valt; lukt dat niet, dan slaat hij de cijfers over en gaat
+  de run door.
+- "Beter dan" is het deel dat lager scoorde, naar beneden afgerond; gelijk is
+  niet beter, en "beter dan 0%" zegt de app nooit. In de melding en de app
+  staat "Je top 10:" ervoor, omdat de vergelijking alleen over de top 10 gaat
+  (de losse vragen verschillen per poule).
+- De verrassing: waar de spelers een coureur gemiddeld zetten tegen waar hij
+  eindigde, met plek 11 voor buiten de top 10, aan beide kanten.
+- De sync rekent een sessie tot een week na de deadline na (een straf achteraf
+  verandert de uitslag); onder de drempel gaat een rij weer weg.
+- De kampioenspagina staat in dezelfde lijst als de racepagina's
+  (`RACEPAGINAS`), zodat alle sitetests hem vanzelf meenemen. De knop van het
+  slotblok gaat naar de open poule (`slot.openPoule`).
+- In de tabel per sessie op de racepagina staan drie kolommen: met het aantal
+  spelers erbij was hij op 360 pixels in het Frans, Spaans en Italiaans te
+  breed (de sitetest vond het in een kopie met voorbeeldcijfers).
+
+**Schema.** Al in productie (twee migraties: de tabel met de trigger en de
+policy, en de controleview), eerst gerepeteerd op een kopie van het schema van
+main; de md5's van de view en de functie zijn gelijk aan een verse bouw, en de
+controletabel staat op ok.
+
+**Opgemerkt, niet veranderd.** In productie zijn `races.quali_result` en
+`races.race_result` jsonb, terwijl `schema.sql` text[] zegt (`sprint_result` is
+wel text[]). Via de API werkt het hetzelfde, en een `add column if not exists`
+verandert een type niet. Mocht een functie ooit met array-functies op die
+kolommen werken, dan is dit het eerste om na te kijken.
+
+**Tests.** Nieuw: `test/spelerscijfers.test.mjs` (43, met de echte sync),
+`test/tegen-iedereen.test.mjs` (11, browser), `test/spelerscijfers-site.test.mjs`
+(13, in een kopie van de repo met voorbeeldcijfers; daar slagen ook
+antwoordvorm, vragen, geo, hoofdmenu en lastmod, en lokaal ook de volledige
+sitetest), `test/spelerscijfers.test.sql` (een eigen stap in tests.yml).
+Bijgewerkt: de reservekopie (de nieuwe tabel), de nabootsing (de tabel), en
+`test/site.test.mjs` slaat de getallen over de app over voor de
+kampioenspagina, net als voor de racepagina's (die cijfers komen uit de
+gegevens; de nieuwe sitetest legt ze daarnaast).
+
+**Danny moet:** niets. Vandaag haalt geen enkele sessie de drempel (hoogstens 9
+lijsten uit 8 poules), dus er verschijnt nog niets; dat gaat vanzelf zodra een
+sessie 50 spelers uit 5 poules heeft. De kampioenspagina komt pas als er in
+december genoeg spelers een kampioen voor 2027 kozen.

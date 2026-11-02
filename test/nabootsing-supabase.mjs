@@ -72,6 +72,9 @@ const beginstand = {
   answers: [],
   jokers: [],
   push_abonnementen: [],
+  // De cijfers over alle spelers samen (1 november): openbaar, en leeg tot
+  // een test ze zet.
+  spelerscijfers: [],
 };
 
 // Een echte database overleeft het herladen van de pagina, dus deze ook.
@@ -89,6 +92,7 @@ store.auth_users ??= [];
 store.otp ??= [];
 store.jokers ??= [];
 store.push_abonnementen ??= [];
+store.spelerscijfers ??= [];
 store.google_als ??= 'danny@gmail.voorbeeld';
 // Supabase zonder eigen mailserver: dan gaat er alleen mail naar het eigen
 // team, en krijgt iedereen anders een fout. Een test zet dit aan met

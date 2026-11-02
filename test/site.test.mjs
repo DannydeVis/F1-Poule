@@ -446,9 +446,12 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
         !/\{[a-zA-Z]+\}/.test(kop.alles) && !/[–—]/.test(kop.alles + kop.titel + kop.omschrijving),
         (kop.alles.match(/.{0,20}(\{[a-zA-Z]+\}|[–—]).{0,20}/) ?? [''])[0]);
       // De racepagina's hebben geen getallen over de app; wat erop staat, komt
-      // uit de gegevens en test/racepaginas.test.mjs legt het daarnaast.
+      // uit de gegevens en test/racepaginas.test.mjs legt het daarnaast. De
+      // pagina "wie wordt wereldkampioen" ook niet: die cijfers komen uit
+      // site/data/spelers-<jaar>.json, en test/spelerscijfers-site.test.mjs
+      // legt ze daarnaast.
       const feiten = FEITEN[pg.id]?.[code];
-      if (!race && !races) check(`${naam}: de getallen over de app komen uit de app`,
+      if (!race && !races && pg.soort !== 'kampioen') check(`${naam}: de getallen over de app komen uit de app`,
         feiten?.length > 0 && feiten.every((z) => kop.alles.includes(z)),
         feiten ? feiten.filter((z) => !kop.alles.includes(z)).join(' | ') : 'geen FEITEN voor deze gids');
       // De vergelijking heet "beste ... van 2026" (Danny, 12 oktober: gevonden
