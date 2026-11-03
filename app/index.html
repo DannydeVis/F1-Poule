@@ -2585,14 +2585,14 @@ const ENGELS = Object.fromEntries([
    + 'findable, or type in the code.'],
 
   // ---- op je beginscherm zetten --------------------------------
-  ['op je beginscherm',
-   'add to home screen'],
-  ['Zet Predict the Race op je beginscherm, dan '
-   + 'opent hij als een app: eigen tegel, eigen venster, geen adresbalk.',
-   'Add Predict the Race to your home screen and it opens like an app: its own '
-   + 'tile, its own window, no address bar.'],
-  ['Zet op beginscherm',
-   'Add to home screen'],
+  ['de app',
+   'the app'],
+  ['Installeer Predict the Race als app: gratis, en zonder App Store. Je zet hem vanuit je '
+   + 'browser op je beginscherm, en daarna opent hij met één tik in een eigen venster.',
+   'Install Predict the Race as an app: free, and no App Store needed. You add it to your '
+   + 'home screen from your browser, and after that it opens with one tap in its own window.'],
+  ['Installeer de app',
+   'Install the app'],
   ['Nu niet',
    'Not now'],
   ['Tik op {deel} <b>Deel</b>. Zie je dat niet, tik dan eerst op '
@@ -2677,12 +2677,10 @@ const ENGELS = Object.fromEntries([
    + 'linking. You can carry on here.'],
   ['Koppelen met Google',
    'Link with Google'],
-  ['Zet hem op je beginscherm',
-   'Put it on your home screen'],
-  ['Dan open je Predict the Race met één tik, als '
-   + 'een app: eigen tegel, eigen venster, geen adresbalk.',
-   'Then you open Predict the Race with one tap, like an app: its own tile, its '
-   + 'own window, no address bar.'],
+  ['Gratis, en zonder App Store: je zet hem vanuit je browser op je beginscherm. Daarna '
+   + 'open je Predict the Race met één tik, in een eigen venster zonder adresbalk.',
+   'Free, and no App Store needed: you add it to your home screen from your browser. After '
+   + 'that you open Predict the Race with one tap, in its own window without an address bar.'],
   ['Open hem daarna vanaf je beginscherm en log daar één keer '
    + 'in. Een iPhone onthoudt je in die app los van Safari.',
    'Then open it from your home screen and sign in there once. An iPhone '
@@ -2693,19 +2691,18 @@ const ENGELS = Object.fromEntries([
    + 'screen. Without a linked account you will not be {naam} there.'],
   ['Eerst je account koppelen',
    'Link your account first'],
-  ['Je account koppelen en de app op je beginscherm zetten kan later nog, onder Profiel.',
-   'You can still link your account and add the app to your home screen later, '
-   + 'under Profile.'],
+  ['Je account koppelen en de app installeren kan later nog, onder Profiel.',
+   'You can still link your account and install the app later, under Profile.'],
   ['Je account koppelen kan later nog, onder Profiel.',
    'You can still link your account later, under Profile.'],
-  ['De app op je beginscherm zetten kan later nog, onder Profiel.',
-   'You can still add the app to your home screen later, under Profile.'],
-  ['Je account koppelen, de app op je beginscherm zetten en meldingen aanzetten kan later nog, onder Profiel.',
-   'You can still link your account, add the app to your home screen and turn on notifications later, under Profile.'],
+  ['De app installeren kan later nog, onder Profiel.',
+   'You can still install the app later, under Profile.'],
+  ['Je account koppelen, de app installeren en meldingen aanzetten kan later nog, onder Profiel.',
+   'You can still link your account, install the app and turn on notifications later, under Profile.'],
   ['Je account koppelen en meldingen aanzetten kan later nog, onder Profiel.',
    'You can still link your account and turn on notifications later, under Profile.'],
-  ['De app op je beginscherm zetten en meldingen aanzetten kan later nog, onder Profiel.',
-   'You can still add the app to your home screen and turn on notifications later, under Profile.'],
+  ['De app installeren en meldingen aanzetten kan later nog, onder Profiel.',
+   'You can still install the app and turn on notifications later, under Profile.'],
   ['Meldingen aanzetten kan later nog, onder Profiel.',
    'You can still turn on notifications later, under Profile.'],
   ['Mis geen deadline',
@@ -2724,8 +2721,8 @@ const ENGELS = Object.fromEntries([
    'Now that Predict the Race is on your home screen, it can give you a nudge when a deadline is close and you have not filled anything in.'],
   ['Op een iPhone werkt dat alleen als Predict the Race op je beginscherm staat.',
    'On an iPhone this only works if Predict the Race is on your home screen.'],
-  ['Zo zet je hem op je beginscherm',
-   'How to put it on your home screen'],
+  ['Zo installeer je de app',
+   'How to install the app'],
 
   // ---- de schil: navigatie en kop ------------------------------
   ['Races',
@@ -4306,9 +4303,9 @@ const ENGELS = Object.fromEntries([
   ['Je positie per race: van {eerste} bij {race} naar {nu} nu.',
    'Your position per race: from {eerste} at {race} to {nu} now.'],
   ['Op een iPhone of iPad werken meldingen alleen in de app op je beginscherm, vanaf iOS 16.4. '
-    + 'Zet Predict the Race daar eerst op (zie "op je beginscherm" hierboven), open hem vanaf daar en tik dan opnieuw op deze knop.',
+    + 'Installeer Predict the Race eerst (zie "de app" hierboven), open hem vanaf je beginscherm en tik dan opnieuw op deze knop.',
    'On an iPhone or iPad, notifications only work in the app on your home screen, from iOS 16.4. '
-    + 'Add Predict the Race there first (see "add to home screen" above), open it from there and tap this button again.'],
+    + 'Install Predict the Race first (see "the app" above), open it from your home screen and tap this button again.'],
   ['{code}, niet meer in de lijst',
    '{code}, no longer in the line-up'],
   ['tijd voorlopig',
@@ -8401,7 +8398,7 @@ function meldingKaart() {
   const knop = safari
     ? `<p class="zacht" style="margin:0">${T('Op een iPhone werkt dat alleen als Predict the '
         + 'Race op je beginscherm staat.')}</p>
-       <button class="knop spook" id="kaartbeginscherm">${T('Zo zet je hem op je beginscherm')}</button>`
+       <button class="knop spook" id="kaartbeginscherm">${T('Zo installeer je de app')}</button>`
     : `<button class="knop primair" id="kaartmelding">${T('Zet meldingen aan')}</button>
        ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}`;
   return `<div class="meldingkaart" data-meldingkaart="${reden.soort}"${
@@ -9434,9 +9431,8 @@ function knoopMelding() {
   const uit = app.querySelector('#meldingUit');
   if (aan && pushNaBeginscherm()) aan.onclick = () => {
     S.pushFout = T('Op een iPhone of iPad werken meldingen alleen in de app op je '
-      + 'beginscherm, vanaf iOS 16.4. Zet Predict the Race daar eerst op (zie '
-      + '"op je beginscherm" hierboven), open hem vanaf daar en tik dan opnieuw '
-      + 'op deze knop.');
+      + 'beginscherm, vanaf iOS 16.4. Installeer Predict the Race eerst (zie "de app" '
+      + 'hierboven), open hem vanaf je beginscherm en tik dan opnieuw op deze knop.');
     render();
   };
   else if (aan) aan.onclick = async () => {
@@ -15199,14 +15195,13 @@ function rondleidingKlaar({ alles = false } = {}) {
   // Niets overgeslagen: dan blijft staan wat er al stond, zoals "Meldingen
   // staan aan op dit toestel." van de laatste stap.
   S.melding = {
-    'account+scherm+melding': T('Je account koppelen, de app op je beginscherm zetten en '
-      + 'meldingen aanzetten kan later nog, onder Profiel.'),
-    'account+scherm': T('Je account koppelen en de app op je beginscherm zetten kan later nog, onder Profiel.'),
+    'account+scherm+melding': T('Je account koppelen, de app installeren en meldingen '
+      + 'aanzetten kan later nog, onder Profiel.'),
+    'account+scherm': T('Je account koppelen en de app installeren kan later nog, onder Profiel.'),
     'account+melding': T('Je account koppelen en meldingen aanzetten kan later nog, onder Profiel.'),
-    'scherm+melding': T('De app op je beginscherm zetten en meldingen aanzetten kan later '
-      + 'nog, onder Profiel.'),
+    'scherm+melding': T('De app installeren en meldingen aanzetten kan later nog, onder Profiel.'),
     account: T('Je account koppelen kan later nog, onder Profiel.'),
-    scherm: T('De app op je beginscherm zetten kan later nog, onder Profiel.'),
+    scherm: T('De app installeren kan later nog, onder Profiel.'),
     melding: T('Meldingen aanzetten kan later nog, onder Profiel.'),
   }[later] ?? S.melding;
   naarBoven();
@@ -15358,12 +15353,13 @@ function accountStap(verder) {
 // ---- stap 3: op je beginscherm ------------------------------
 function beginschermStap(verder) {
   const kop = `
-    <h1 class="middel">${T('Zet hem op je beginscherm')}</h1>
-    <p class="zacht" style="margin:0">${T('Dan open je Predict the Race met één tik, als '
-      + 'een app: eigen tegel, eigen venster, geen adresbalk.')}</p>`;
+    <h1 class="middel">${T('Installeer de app')}</h1>
+    <p class="zacht" style="margin:0">${T('Gratis, en zonder App Store: je zet hem vanuit je '
+      + 'browser op je beginscherm. Daarna open je Predict the Race met één tik, in een eigen '
+      + 'venster zonder adresbalk.')}</p>`;
   if (installPrompt) {
     return `${kop}
-      <button class="knop primair" id="installeer">${T('Zet op beginscherm')}</button>
+      <button class="knop primair" id="installeer">${T('Installeer de app')}</button>
       <button class="knop klein" id="rondnunniet">${T('Nu niet')}</button>`;
   }
   // Op een iPhone eerst de valkuil, dan pas de knop verder: wie zonder
@@ -15908,12 +15904,13 @@ function installBlok() {
   if (!beginschermKan() || lees(INSTALLWEG)) return '';
   const kop = `<div class="scheiding"></div>
     <div class="veldblok">
-      <span class="label">${T('op je beginscherm')}</span>
-      <p class="zacht" style="margin:0">${T('Zet Predict the Race op je beginscherm, dan '
-        + 'opent hij als een app: eigen tegel, eigen venster, geen adresbalk.')}</p>`;
+      <span class="label">${T('de app')}</span>
+      <p class="zacht" style="margin:0">${T('Installeer Predict the Race als app: gratis, en '
+        + 'zonder App Store. Je zet hem vanuit je browser op je beginscherm, en daarna opent '
+        + 'hij met één tik in een eigen venster.')}</p>`;
   if (installPrompt) {
     return `${kop}
-      <button class="knop spook" id="installeer">${T('Zet op beginscherm')}</button>
+      <button class="knop spook" id="installeer">${T('Installeer de app')}</button>
       <button class="knop klein" id="installweg">${T('Nu niet')}</button>
     </div>`;
   }
@@ -15929,11 +15926,12 @@ function installBlok() {
 function beginschermBlok() {
   if (!beginschermKan()) return '';
   return `<div class="scheiding"></div>
-    <span class="label" data-beginscherm>${T('op je beginscherm')}</span>
-    <p class="zacht" style="margin:0">${T('Zet Predict the Race op je beginscherm, dan '
-      + 'opent hij als een app: eigen tegel, eigen venster, geen adresbalk.')}</p>
+    <span class="label" data-beginscherm>${T('de app')}</span>
+    <p class="zacht" style="margin:0">${T('Installeer Predict the Race als app: gratis, en '
+      + 'zonder App Store. Je zet hem vanuit je browser op je beginscherm, en daarna opent '
+      + 'hij met één tik in een eigen venster.')}</p>
     ${installPrompt
-      ? `<button class="knop klein" id="installeer">${T('Zet op beginscherm')}</button>`
+      ? `<button class="knop klein" id="installeer">${T('Installeer de app')}</button>`
       : beginschermStappen()}
     ${isApple() ? `<p class="zacht" style="margin:0;font-size:13px">${kanTerugkomen()
       ? T('Een iPhone onthoudt je in de app op je beginscherm los van Safari. Open hem '

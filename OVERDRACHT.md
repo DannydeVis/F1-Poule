@@ -12472,3 +12472,28 @@ in de app (allemaal gevangen).
 
 **Danny moet:** David antwoorden (de tekst staat in de chat van 3 november):
 inloggen met "Mit deiner E-Mail-Adresse anmelden", en hij is weer David G.
+
+## "Installeer de app" in plaats van "Zet hem op je beginscherm" (3 november)
+
+Danny, bij een schermafdruk van stap 3 van de rondleiding op zijn iPhone: "Beter
+om installeer de app te zetten?" Ja: "op je beginscherm" klinkt als een
+snelkoppeling, "de app installeren" kent iedereen, en de site zei het al zo
+(de knop "Installeer de app" in het blok "De app").
+
+**Wat er verandert.** De kop van de stap en de knop die de prompt van de browser
+afvuurt heten nu "Installeer de app"; de zin eronder zegt "Gratis, en zonder App
+Store: je zet hem vanuit je browser op je beginscherm", zodat niemand hem in de
+App Store gaat zoeken. Het blok op het beginscherm en onder Profiel heet "de
+app", met dezelfde knop. De knop op de meldingenkaart is "Zo installeer je de
+app", de meldingen "... kan later nog, onder Profiel" zeggen "de app
+installeren", en de uitleg bij meldingen op een iPhone verwijst naar het blok
+"de app". Wat blijft: de stappen met de woorden van iOS en Android zelf (*Zet op
+beginscherm*, *Voeg toe*, *App installeren*), en de waarschuwingen over "de app
+op je beginscherm" die los van Safari onthoudt. Zeven talen; de vertalingen
+volgen die van de site.
+
+**Tests.** `test/rondleiding.test.mjs` (de kop, "zonder App Store", het label
+"de app" onder Profiel, de nieuwe meldingen) en `test/meldingen-vragen.test.mjs`
+bijgewerkt.
+
+**Danny moet:** niets.
