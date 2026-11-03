@@ -3256,6 +3256,173 @@ drop policy if exists spelerscijfers_lezen on public.spelerscijfers;
 create policy spelerscijfers_lezen on public.spelerscijfers
   for select to anon, authenticated using (true);
 
+-- ---- mail als tweede kanaal (3 november) -------------------------------
+-- Danny: "Ik wil dat ze vaker de app openen." Maar 2 van de 16 spelers hebben
+-- meldingen aan, en 9 van de 15 accounts hebben een mailadres. Wie het onder
+-- Profiel aanzet, krijgt op vrijdagavond de vrije trainingen (en of hij al
+-- invulde) en na de race zijn punten en zijn plek (scripts/mailmomenten.mjs).
+--
+-- Het adres blijft in auth.users: deze tabel zegt alleen wie het wil, in welke
+-- taal en tijdzone, en welke mail hij al kreeg. Het token staat in de
+-- afmeldlink van elke mail. Niemand leest of schrijft de tabel zelf: de app
+-- gaat via de functies hieronder, de sync en de functie `mail`
+-- (supabase/functions/mail) via de service_role key. Een account dat weggaat,
+-- neemt zijn rij mee (on delete cascade).
+create table if not exists public.mail_abonnementen (
+  user_id         uuid not null primary key references auth.users(id) on delete cascade,
+  taal            text not null default 'nl',
+  tijdzone        text,
+  token           uuid not null default gen_random_uuid() unique,
+  aan_sinds       timestamptz not null default now(),
+  -- Welke vrijdagmail en welke racemail dit account al kreeg, zodat de sync
+  -- (elk kwartier) hem niet nog eens stuurt. Net als bij push_abonnementen.
+  training_laatst text,
+  uitslag_laatst  text
+);
+grant all on table public.mail_abonnementen to service_role;
+alter table public.mail_abonnementen drop constraint if exists mail_abonnementen_taal;
+alter table public.mail_abonnementen add constraint mail_abonnementen_taal
+  check (taal in ('nl', 'en', 'de', 'fr', 'es', 'it', 'pt'));
+alter table public.mail_abonnementen drop constraint if exists mail_abonnementen_tijdzone;
+alter table public.mail_abonnementen add constraint mail_abonnementen_tijdzone
+  check (tijdzone is null or tijdzone ~ '^[A-Za-z0-9_+/-]{1,64}$');
+alter table public.mail_abonnementen enable row level security;
+revoke all on public.mail_abonnementen from anon, authenticated;
+
+-- Een taal die de app niet kent wordt Engels, net als de mailsjablonen.
+create or replace function public.mail_taal(p_taal text)
+returns text
+language sql
+immutable
+set search_path = public
+as $$
+  select case when p_taal in ('nl', 'en', 'de', 'fr', 'es', 'it', 'pt') then p_taal else 'en' end
+$$;
+
+-- Een tijdzone zoals de browser hem noemt (Europe/Amsterdam), of null. Iets
+-- anders gaat niet de tabel in: de sync zet er de deadline mee in de mail.
+create or replace function public.mail_tijdzone(p_tijdzone text)
+returns text
+language sql
+immutable
+set search_path = public
+as $$
+  select case when p_tijdzone ~ '^[A-Za-z0-9_+/-]{1,64}$' then p_tijdzone end
+$$;
+
+-- Kan dit account mail krijgen (een bevestigd mailadres), en staat het aan?
+-- Zonder account allebei false.
+create or replace function public.mail_stand()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'kan', exists (select 1 from auth.users u
+                    where u.id = auth.uid() and coalesce(u.email, '') <> ''
+                      and u.email_confirmed_at is not null),
+    'aan', exists (select 1 from public.mail_abonnementen m where m.user_id = auth.uid()))
+$$;
+
+-- Aanzetten, of de taal en tijdzone bijwerken als het al aan stond. Alleen met
+-- een bevestigd mailadres: dan gaat de mail naar iemand die dat adres heeft.
+create or replace function public.mail_aan(p_taal text, p_tijdzone text default null)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Mail kan alleen met een account.' using hint = 'mail_geen_account';
+  end if;
+  if not exists (select 1 from auth.users u
+                  where u.id = auth.uid() and coalesce(u.email, '') <> ''
+                    and u.email_confirmed_at is not null) then
+    raise exception 'Je account heeft nog geen bevestigd mailadres.' using hint = 'mail_geen_adres';
+  end if;
+  insert into public.mail_abonnementen (user_id, taal, tijdzone)
+  values (auth.uid(), public.mail_taal(p_taal), public.mail_tijdzone(p_tijdzone))
+  on conflict (user_id) do update
+    set taal = excluded.taal,
+        tijdzone = coalesce(excluded.tijdzone, public.mail_abonnementen.tijdzone);
+end $$;
+
+-- De taal en tijdzone bijwerken, maar alleen als het al aan stond: de app doet
+-- dit bij het openen, en dat mag mail nooit zelf aanzetten. Geeft terug of er
+-- een rij was.
+create or replace function public.mail_bijwerken(p_taal text, p_tijdzone text default null)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.mail_abonnementen
+     set taal = public.mail_taal(p_taal),
+         tijdzone = coalesce(public.mail_tijdzone(p_tijdzone), tijdzone)
+   where user_id = auth.uid();
+  return found;
+end $$;
+
+create or replace function public.mail_uit()
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from public.mail_abonnementen where user_id = auth.uid()
+$$;
+
+-- De afmeldlink in elke mail: zonder in te loggen, met het token uit de link.
+-- Geeft terug of er iets uitging.
+create or replace function public.mail_afmelden(p_token uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from public.mail_abonnementen where token = p_token;
+  return found;
+end $$;
+
+-- Voor de sync: wie mail aan heeft en nog een bevestigd adres heeft. Zonder
+-- het adres zelf; dat zoekt de functie `mail` pas op bij het versturen.
+create or replace function public.mail_ontvangers()
+returns table (user_id uuid, taal text, tijdzone text, token uuid,
+               training_laatst text, uitslag_laatst text)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select m.user_id, m.taal, m.tijdzone, m.token, m.training_laatst, m.uitslag_laatst
+    from public.mail_abonnementen m
+    join auth.users u on u.id = m.user_id
+   where coalesce(u.email, '') <> '' and u.email_confirmed_at is not null
+$$;
+
+revoke all on function public.mail_ontvangers() from public, anon, authenticated;
+revoke all on function public.mail_stand() from public;
+revoke all on function public.mail_aan(text, text) from public, anon;
+revoke all on function public.mail_bijwerken(text, text) from public, anon;
+revoke all on function public.mail_uit() from public, anon;
+revoke all on function public.mail_afmelden(uuid) from public;
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute 'grant execute on function public.mail_ontvangers() to service_role';
+  end if;
+end $$;
+grant execute on function public.mail_stand() to anon, authenticated;
+grant execute on function public.mail_aan(text, text) to authenticated;
+grant execute on function public.mail_bijwerken(text, text) to authenticated;
+grant execute on function public.mail_uit() to authenticated;
+grant execute on function public.mail_afmelden(uuid) to anon, authenticated;
+
 -- ---- wat de beheerpagina te zien krijgt --------------------------------
 
 -- De getallen bovenaan: hoe groot, hoe actief, en draait de sync.
@@ -4306,6 +4473,8 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'eigen_vraag_open', 'eigen_vraag_opslaan', 'eigen_vraag_uitkomst',
           'eigen_vraag_weghalen', 'ik_ben_beheerder', 'is_member', 'joker_open',
           'lijst_omzetting', 'lijst_vervangen', 'mag_beheren', 'mag_logo_zetten',
+          'mail_aan', 'mail_afmelden', 'mail_bijwerken', 'mail_ontvangers', 'mail_stand',
+          'mail_taal', 'mail_tijdzone', 'mail_uit',
           'mag_voor_speler', 'mag_voor_speler_in', 'naam_netjes', 'naam_verboden',
           'naam_voor_filter', 'omgezette_waarde', 'periode_opslaan', 'periode_weghalen',
           'pool_members_bewaken', 'pool_members_woordfilter', 'pools_misbruik_bewaken',
@@ -4320,7 +4489,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'tel_pagina', 'tik_geven', 'tik_ontvangers',
           'vereis_sessie', 'verwijder_mijn_account'] as functies,
                array[
-          'aanmaak_log', 'actief', 'answers', 'bezoeken', 'jokers',
+          'aanmaak_log', 'actief', 'answers', 'bezoeken', 'jokers', 'mail_abonnementen',
           'pool_eigen_antwoorden', 'pool_eigen_vragen', 'pool_members', 'pool_periodes',
           'pool_questions', 'pool_teams', 'pools', 'poule_controle', 'push_abonnementen',
           'questions', 'races', 'site_beheerders', 'site_bezoeken', 'site_paden', 'spelerscijfers',

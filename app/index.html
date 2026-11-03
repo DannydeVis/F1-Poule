@@ -1947,6 +1947,7 @@ async function bestaandeSessie() {
     const { data } = await db.auth.getSession();
     const uid = zetAccount(data?.session?.user);
     taalNaarAccount();
+    perMailBijwerken();
     return uid;
   } catch { return zetAccount(null); }
 }
@@ -3377,6 +3378,37 @@ const ENGELS = Object.fromEntries([
    'This device gets a nudge for whatever is switched on below. Nothing more.'],
   ['Zet meldingen uit',
    'Turn notifications off'],
+  // per mail (3 november)
+  ["per mail",
+   "by email"],
+  ["Je krijgt op vrijdagavond en na de race een mail, naar <b>{adres}</b>.",
+   "You get an email on Friday evening and after the race, at <b>{adres}</b>."],
+  ["Zet mail uit",
+   "Turn off email"],
+  ["Op vrijdagavond de vrije trainingen en na de race je punten en je plek, per mail? Dat kan zodra je account een mailadres heeft: koppel er hierboven een.",
+   "Practice results on Friday evening and your points and place after the race, by email? You can once your account has an email address: link one above."],
+  ["Krijg op vrijdagavond een mail met de vrije trainingen (en of je al invulde), en na de race een met je punten en je plek. Naar <b>{adres}</b>. In elke mail staat een link om ermee te stoppen.",
+   "Get an email on Friday evening with the practice results (and whether you've filled in yet), and one after the race with your points and your place. To <b>{adres}</b>. Every email has a link to stop them."],
+  ["Zet mail aan",
+   "Turn on email"],
+  ["Mail staat aan.",
+   "Email is on."],
+  ["Mail staat uit.",
+   "Email is off."],
+  ["Deze afmeldlink klopt niet. Mail zet je uit onder Profiel.",
+   "This unsubscribe link isn't right. You can turn email off under Profile."],
+  ["Afmelden lukte niet. Probeer het zo nog eens, of zet mail uit onder Profiel.",
+   "Unsubscribing didn't work. Try again in a moment, or turn email off under Profile."],
+  ["Je krijgt geen mail meer van Predict the Race.",
+   "You won't get any more emails from Predict the Race."],
+  ["Mail stond al uit. Aanzetten kan onder Profiel.",
+   "Email was already off. You can turn it on under Profile."],
+  ["Je account heeft nog geen bevestigd mailadres.",
+   "Your account doesn't have a confirmed email address yet."],
+  ["Mail kan alleen met een account.",
+   "Email only works with an account."],
+  ["<b>Mail</b><br>Zet je onder Profiel mail aan, dan gebruiken we het mailadres van je account voor twee mails per raceweekend: op vrijdagavond en na de race. Ze gaan via Resend, zonder bij te houden of je ze opent. Elke mail heeft een afmeldlink.",
+   "<b>Email</b><br>If you turn on email under Profile, we use your account's email address for two emails per race weekend: on Friday evening and after the race. They go through Resend, without tracking whether you open them. Every email has an unsubscribe link."],
   ['Krijg een seintje op dit toestel als een deadline nadert en je nog niets hebt ingevuld, als de uitslag binnen is, en op vrijdagavond na de vrije training. Op een iPhone werkt dat alleen als Predict the Race op je beginscherm staat.',
    'Get a nudge on this device when a deadline is close and you have not filled anything in, when the results are in, and on Friday evening after free practice. On an iPhone this only works if Predict the Race is on your home screen.'],
   ['Zet meldingen aan',
@@ -4574,6 +4606,8 @@ async function zetTaal(taal) {
   pushTaalBijwerken();
   // En voor de mails van Supabase: de taal in het account (taalNaarAccount).
   taalNaarAccount();
+  // En voor de mail op vrijdag en na de race, als die aanstaat.
+  perMailBijwerken();
   // Het hele scherm opnieuw, want er is geen stukje dat geen tekst bevat.
   if (S.poule && S.ik) render(); else toonStart();
 }
@@ -5649,6 +5683,7 @@ const S = {
   omschrijvingFout: '',
   jokerFout: '',        // het aantal jokers bijstellen, onder Poule → beheer
   push: null, pushFout: '',   // meldingen: 'aan' | 'uit' | 'geweigerd' | 'kan niet'
+  perMail: null, perMailFout: '',   // mail op vrijdag en na de race: null, of { kan, aan }
   deelFout: '',               // het delen van je eigen cijfers, onder Profiel
   profiel: null,              // een publiek profiel dat je via een link opent
   mail:  { open: false, fout: '', gestuurd: '' },  // mailadres koppelen, onder Poule
@@ -6018,6 +6053,9 @@ function uitleg(error) {
   if (hint === 'poule_op_slot') return opSlotTekst();
   if (hint === 'geen_poulebaas') return T('Alleen de poulebaas kan een nieuwe code maken.');
   if (hint === 'code_vast') return T('De code van de open poule staat op de site en blijft dezelfde.');
+  // Mail (3 november): mail_aan() in schema.sql.
+  if (hint === 'mail_geen_adres') return T('Je account heeft nog geen bevestigd mailadres.');
+  if (hint === 'mail_geen_account') return T('Mail kan alleen met een account.');
   // De trigger pools_seizoen_bewaken() in schema.sql.
   if (hint === 'seizoen_stap') return T('Een poule gaat één seizoen tegelijk vooruit.');
   if (hint === 'seizoen_niet_klaar') {
@@ -7887,6 +7925,7 @@ function toonApp() {
   knoopMail();
   knoopInstall(() => render());
   knoopMelding();
+  knoopPerMail();
   knoopMeldingKaart();
   knoopTik();
   knoopTaal();
@@ -7900,6 +7939,7 @@ function toonApp() {
   // stellen zodra het profielscherm open is, en dan opnieuw tekenen met het
   // antwoord. S.push blijft daarna gevuld, dus dit loopt niet rond.
   if (S.weergave === 'profiel' && S.push === null) pushInlezen().then(render);
+  if (S.weergave === 'profiel' && S.perMail === null) perMailInlezen().then(render);
   misschienSnapshot();
   knoopPrivacy();
   knoopLosmaken();
@@ -9074,6 +9114,7 @@ function profielPagina() {
     ${mailBlok()}
     ${beginschermBlok()}
     ${meldingBlok()}
+    ${perMailBlok()}
     ${verhaalBlok()}
     ${deelBlok()}
     ${eigenLinkBlok()}
@@ -9280,6 +9321,108 @@ async function pushSoortZetten(id, aan) {
   const { error } = await db.from('push_abonnementen').update({ [MELDKOLOM[id]]: aan }).eq('endpoint', ab.endpoint);
   if (error) throw new Error(uitleg(error));
   S.pushSoorten = { ...(S.pushSoorten ?? {}), [id]: aan };
+}
+
+// ---- per mail (3 november) ------------------------------------
+// "Ik wil dat ze vaker de app openen." Maar 2 van de 16 spelers hadden
+// meldingen aan, en 9 van de 15 accounts een mailadres. Wie het hier aanzet,
+// krijgt op vrijdagavond een mail met de vrije trainingen (en of hij al
+// invulde) en na de race een met zijn punten en zijn plek
+// (scripts/mailmomenten.mjs). Alleen met een bevestigd mailadres aan het
+// account; de database bewaakt dat (mail_aan in schema.sql). Elke mail heeft
+// een afmeldlink (afmeldenUitLink() hieronder).
+async function perMailInlezen() {
+  // Een database zonder de functie (schema.sql nog niet gedraaid): dan blijft
+  // het blok weg, in plaats van te zeggen dat je eerst een adres moet koppelen.
+  S.perMail = { weg: true };
+  if (DEMO || !db || !mijnUid) return;
+  try {
+    const { data, error } = await db.rpc('mail_stand');
+    if (!error && data) S.perMail = { kan: !!data.kan, aan: !!data.aan };
+  } catch { /* blok weg */ }
+}
+
+function perMailBlok() {
+  if (!S.ik || !mijnUid || !S.perMail || S.perMail.weg) return '';
+  const kop = `<div class="scheiding"></div><span class="label">${T('per mail')}</span>`;
+  const fout = S.perMailFout ? `<p class="err">${esc(S.perMailFout)}</p>` : '';
+  if (S.perMail.aan) {
+    return `${kop}
+      <p class="zacht" style="margin:0" data-per-mail="aan">${T('Je krijgt op vrijdagavond en na de race een mail, naar <b>{adres}</b>.',
+        { adres: esc(googleMail() ?? '') })}</p>
+      <button class="knop klein" id="perMailUit">${T('Zet mail uit')}</button>${fout}`;
+  }
+  if (!S.perMail.kan) {
+    return `${kop}
+      <p class="zacht" style="margin:0" data-per-mail="kan-niet">${T('Op vrijdagavond de vrije trainingen en na de race je punten en je plek, '
+        + 'per mail? Dat kan zodra je account een mailadres heeft: koppel er hierboven een.')}</p>`;
+  }
+  return `${kop}
+    <p class="zacht" style="margin:0" data-per-mail="uit">${T('Krijg op vrijdagavond een mail met de vrije trainingen (en of je al invulde), '
+      + 'en na de race een met je punten en je plek. Naar <b>{adres}</b>. In elke mail staat een link om ermee te stoppen.',
+      { adres: esc(googleMail() ?? '') })}</p>
+    <button class="knop klein" id="perMailAan">${T('Zet mail aan')}</button>${fout}`;
+}
+
+function knoopPerMail() {
+  const aan = app.querySelector('#perMailAan');
+  const uit = app.querySelector('#perMailUit');
+  if (aan) aan.onclick = async () => {
+    aan.disabled = true; S.perMailFout = '';
+    const { error } = await db.rpc('mail_aan', { p_taal: TAAL, p_tijdzone: tijdzoneNu() });
+    if (error) S.perMailFout = uitleg(error);
+    else {
+      S.perMail = { ...S.perMail, aan: true };
+      schrijf(MAILINSTELLING, mailInstelling());
+      S.melding = T('Mail staat aan.');
+    }
+    render();
+  };
+  if (uit) uit.onclick = async () => {
+    uit.disabled = true; S.perMailFout = '';
+    const { error } = await db.rpc('mail_uit');
+    if (error) S.perMailFout = uitleg(error);
+    else { S.perMail = { ...S.perMail, aan: false }; S.melding = T('Mail staat uit.'); }
+    render();
+  };
+}
+
+// De taal en tijdzone van de mail bijhouden: bij het openen en bij een
+// taalwissel, net als taalNaarAccount(). mail_bijwerken() zet mail nooit
+// zelf aan; staat hij uit, dan gebeurt er niets. Alleen als er iets veranderd
+// is sinds de vorige keer op dit toestel, dus meestal kost het niets.
+const MAILINSTELLING = 'poule:mailinstelling';
+const mailInstelling = () => `${mijnUid}|${TAAL}|${tijdzoneNu() ?? ''}`;
+async function perMailBijwerken() {
+  try {
+    if (DEMO || !db || !mijnUid || !mijnMail() || lees(MAILINSTELLING) === mailInstelling()) return;
+    const { error } = await db.rpc('mail_bijwerken', { p_taal: TAAL, p_tijdzone: tijdzoneNu() });
+    if (!error) schrijf(MAILINSTELLING, mailInstelling());
+  } catch { /* één mail in de vorige taal is geen reden om iets te melden */ }
+}
+
+// De afmeldlink uit een mail: ?afmelden=<token>. Werkt zonder in te loggen,
+// op elk toestel; het token is de sleutel (mail_afmelden in schema.sql).
+// Daarna gaat hij uit de adresbalk, zodat herladen niet nog eens afmeldt.
+const AFMELDTOKEN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function afmeldenUitLink() {
+  let token = '';
+  try { token = (new URLSearchParams(location.search).get('afmelden') ?? '').trim(); }
+  catch { return; }
+  if (!token) return;
+  vergeetLinkCode();
+  if (!AFMELDTOKEN.test(token)) {
+    S.melding = T('Deze afmeldlink klopt niet. Mail zet je uit onder Profiel.');
+    return;
+  }
+  try {
+    const { data, error } = await db.rpc('mail_afmelden', { p_token: token });
+    S.melding = error ? T('Afmelden lukte niet. Probeer het zo nog eens, of zet mail uit onder Profiel.')
+      : data ? T('Je krijgt geen mail meer van Predict the Race.')
+      : T('Mail stond al uit. Aanzetten kan onder Profiel.');
+  } catch {
+    S.melding = T('Afmelden lukte niet. Probeer het zo nog eens, of zet mail uit onder Profiel.');
+  }
 }
 
 // De tijdzone van dit toestel, voor de trainingsmelding ("je top 10 kan nog
@@ -9912,6 +10055,9 @@ function privacyBlok() {
         + 'sleutels van dat toestel, de taal en de tijdzone van het toestel (voor de '
         + 'tijd in de melding), en welke meldingen je wilt. Geen naam en geen '
         + 'mailadres. Die regel gaat weg zodra je meldingen uitzet.')}</p>` : ''}
+      <p style="margin:0 0 10px" data-privacy-mail>${T('<b>Mail</b><br>Zet je onder Profiel mail aan, dan gebruiken '
+        + 'we het mailadres van je account voor twee mails per raceweekend: op vrijdagavond en na de race. Ze gaan '
+        + 'via Resend, zonder bij te houden of je ze opent. Elke mail heeft een afmeldlink.')}</p>
       ${premiumActief() ? `<p style="margin:0 0 10px" data-privacy-tik>${
         T('<b>Als iemand je aantikt</b><br>In een poule met premium kun je een medespeler aantikken die nog '
         + 'niets invulde; die krijgt dan een melding. We bewaren wie wie aantikte, voor welke race en wanneer, '
@@ -15989,6 +16135,7 @@ if (DEMO) {
     if (fout) { S.melding = fout; VAN_INLOGLINK = false; }
   }
   await bestaandeSessie();
+  await afmeldenUitLink();
   // Kom je net binnen via een inloglink, dan is dit toestel leeg: geen poules,
   // geen speler. Wat je account weet is dan het enige wat je bij je poule
   // brengt, en zonder dit stond je alsnog voor het codescherm.

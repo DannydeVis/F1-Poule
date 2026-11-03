@@ -363,6 +363,16 @@ jobs:
           psql -d spelerscijfers -v ON_ERROR_STOP=1 -f schema.sql
           psql -d spelerscijfers -v ON_ERROR_STOP=1 -f test/spelerscijfers.test.sql
 
+      # Mail als tweede kanaal (3 november): aanzetten alleen met een bevestigd
+      # adres, de tabel dicht voor iedereen, de afmeldlink met het token, en
+      # wat de sync ziet (zonder adres).
+      - name: mail, aanzetten en afmelden
+        run: |
+          createdb mail
+          psql -d mail -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d mail -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d mail -v ON_ERROR_STOP=1 -f test/mail.test.sql
+
       # Een tweede database met de tabelstructuur zoals die in productie
       # bleek te staan: member_id in een samengestelde primaire sleutel.
       # Daar gaf schema.sql eerst 42830 op.

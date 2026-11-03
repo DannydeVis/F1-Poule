@@ -36,6 +36,7 @@ import { maakAgenda } from './agenda.mjs';
 import { wieKrijgtEenSeintje, volgendeWekker, SEIZOENVRAGEN, SESSIES, SESSIEVOLGORDE } from './herinneringen.mjs';
 import { laatsteUitslag, wieKrijgtEenUitslag } from './uitslagmeldingen.mjs';
 import { trainingNieuws, wieKrijgtEenTraining } from './trainingmeldingen.mjs';
+import { mailNieuws, vrijdagMails, raceMails, pouleStand } from './mailmomenten.mjs';
 import { trainingRooster, teHalen, trainingTop10, zelfdeRooster } from './vrijetrainingen.mjs';
 import { leesRacePaginas, sitemapPaden } from './racepagina.mjs';
 import { sessieCijfers, teBerekenen, seizoenCijfers, komendSeizoen, seizoenStart, beterDan, topPunten,
@@ -1070,6 +1071,105 @@ async function trainingMeldingen(races) {
 }
 
 // ------------------------------------------------------------
+//  Mail als tweede kanaal (scripts/mailmomenten.mjs, 3 november). Op
+//  vrijdagavond de vrije training, na de race je punten en je plek, voor wie
+//  het onder Profiel aanzette. Na de meldingen, in dezelfde ronde. De sync
+//  stelt de mails samen; de functie `mail` in Supabase zoekt het adres op en
+//  verstuurt via Resend, dus hier komt geen adres langs en in de log ook niet.
+//  Lukt het niet (geen tabel, geen functie, geen sleutel), dan gaat de run door.
+// ------------------------------------------------------------
+
+const MAIL_PER_KEER = 50;
+
+async function mailMomenten(races) {
+  const nieuws = mailNieuws({ races });
+  if (!nieuws.training && !nieuws.race) return;
+  let ontvangers;
+  try {
+    ontvangers = await sb('rpc/mail_ontvangers', { method: 'POST', body: '{}' });
+  } catch (e) {
+    console.log(`Mail: niemand opgehaald (${String(e.message).slice(0, 120)}); draai schema.sql opnieuw`);
+    return;
+  }
+  if (!ontvangers?.length) return;
+  const leden = (await sb(`pool_members?user_id=in.(${ontvangers.map((o) => o.user_id).join(',')})`
+    + '&select=member_id,pool_id,user_id')) ?? [];
+  if (!leden.length) return;
+  const poolIds = [...new Set(leden.map((l) => l.pool_id))].join(',');
+  const [pools, poulevragen] = await Promise.all([
+    sb(`pools?id=in.(${poolIds})&select=*`),
+    sb(`pool_questions?pool_id=in.(${poolIds})&select=pool_id,question_id`),
+  ]);
+  const mails = [];
+
+  if (nieuws.training) {
+    const antwoorden = (await sb(`answers?race_id=eq.${nieuws.training.id}`
+      + `&member_id=in.(${leden.map((l) => l.member_id).join(',')})&select=member_id,pool_id,question_id,waarde`)) ?? [];
+    for (const m of vrijdagMails({ races, ontvangers, leden, pools, poulevragen, antwoorden, appUrl: APP_URL })) {
+      mails.push({ ...m, kolom: 'training_laatst' });
+    }
+  }
+
+  if (nieuws.race) {
+    const race = nieuws.race;
+    const seizoen = races.filter((r) => r.season === race.season);
+    const ids = seizoen.map((r) => r.id).join(',');
+    const vragen = (await sb('questions?select=*')) ?? [];
+    const standen = new Map();
+    // Alleen de poules die dit seizoen spelen; per poule de stand met de
+    // rekenkern van de app, zoals scripts/controle-stand.mjs.
+    for (const poule of pools ?? []) {
+      if (Number(poule.season) !== Number(race.season)) continue;
+      const [pLeden, antwoorden, jokers, eigenVragen, eigenAntwoorden] = await Promise.all([
+        sb(`pool_members?pool_id=eq.${poule.id}&select=*`),
+        alles(`answers?pool_id=eq.${poule.id}&race_id=in.(${ids})&select=*&order=race_id,member_id,question_id`),
+        sb(`jokers?pool_id=eq.${poule.id}&select=*`),
+        sb(`pool_eigen_vragen?pool_id=eq.${poule.id}&select=*`).catch(() => []),
+        sb(`pool_eigen_antwoorden?pool_id=eq.${poule.id}&select=*`).catch(() => []),
+      ]);
+      standen.set(poule.id, pouleStand({
+        leden: pLeden ?? [], races: seizoen, antwoorden, vragen, poule, jokers: jokers ?? [],
+        poulevragen: (poulevragen ?? []).filter((q) => q.pool_id === poule.id).map((q) => q.question_id),
+        eigenVragen: eigenVragen ?? [], eigenAntwoorden: eigenAntwoorden ?? [],
+      }, race));
+    }
+    for (const m of raceMails({ races, ontvangers, leden, pools, poulevragen, standen, appUrl: APP_URL,
+      beterDan: (lid) => jouwPlek(lid, race, 'race') })) {
+      mails.push({ ...m, kolom: 'uitslag_laatst' });
+    }
+  }
+
+  if (!mails.length) { console.log('Geen mails te sturen'); return; }
+  let verstuurd = 0, overgeslagen = 0, mislukt = 0;
+  for (let i = 0; i < mails.length; i += MAIL_PER_KEER) {
+    const deel = mails.slice(i, i + MAIL_PER_KEER);
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/mail`, {
+      method: 'POST', headers: kop,
+      body: JSON.stringify({ mails: deel.map(({ user_id, onderwerp, tekst, html, afmelden }) =>
+        ({ user_id, onderwerp, tekst, html, afmelden })) }),
+    }).catch(() => null);
+    const uit = res ? await res.json().catch(() => null) : null;
+    if (!res?.ok) {
+      console.log(uit?.hint === 'mail_geen_sleutel'
+        ? 'Mail: nog geen RESEND_API_KEY bij de functies in Supabase, dus niets verstuurd (BEDIENING §11g)'
+        : `Mail: de functie mail gaf ${res?.status ?? 'geen antwoord'}${uit?.hint ? ` (${uit.hint})` : ''}; niets verstuurd`);
+      return;
+    }
+    overgeslagen += uit.overgeslagen ?? 0;
+    mislukt += uit.mislukt ?? 0;
+    // Onthouden wat er ging, anders komt dezelfde mail volgend kwartier opnieuw.
+    for (const m of deel.filter((x) => (uit.verstuurd ?? []).includes(x.user_id))) {
+      verstuurd++;
+      await sb(`mail_abonnementen?user_id=eq.${m.user_id}`, { method: 'PATCH', body: JSON.stringify({ [m.kolom]: m.tag }) })
+        .catch((e) => console.log(`  kon '${m.kolom}' niet bijwerken: ${e.message}`));
+    }
+  }
+  console.log(`Mail: ${verstuurd} verstuurd`
+    + (overgeslagen ? `, ${overgeslagen} overgeslagen` : '') + (mislukt ? `, ${mislukt} mislukt` : ''));
+  if (verstuurd) noteer(`${verstuurd} mail(s) verstuurd`);
+}
+
+// ------------------------------------------------------------
 //  De paden voor de teller op de site (tel_pagina in schema.sql, 1 november):
 //  alleen wat in sitemap.xml staat telt. Alleen wat er nog niet stond gaat
 //  erheen. Lukt het niet (een database zonder de tabel), dan gaat de run door.
@@ -1196,6 +1296,11 @@ try {
   await herinneringen(lopend);
   await uitslagMeldingen(lopend);
   await trainingMeldingen(lopend);
+  try {
+    await mailMomenten(lopend);
+  } catch (e) {
+    console.log(`Mail niet verstuurd: ${String(e.message).slice(0, 200)}`);
+  }
   await sitePaden();
   await vaultBijwerken();
   await schrijfLogboek(true);

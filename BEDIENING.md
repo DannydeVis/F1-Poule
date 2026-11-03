@@ -2119,6 +2119,64 @@ zelf), `spelersCijfers()` en `jouwPlek()` in `scripts/sync.mjs`,
 
 ---
 
+## 11g. Mail op vrijdagavond en na de race (sinds 3 november)
+
+Danny: "Ik wil dat ze vaker de app openen." Maar 2 van de 16 spelers hebben
+meldingen aan, en 9 van de 15 accounts hebben een mailadres. Daarom kan elke
+speler met een bevestigd mailadres aan zijn account onder Profiel ("per mail")
+mail aanzetten. Hij krijgt dan twee mails per raceweekend:
+
+- **op vrijdagavond**, zodra de top 10 van VT2 (op een sprintweekend VT1)
+  binnen is, op hetzelfde moment als de trainingsmelding: die top 10, en per
+  poule of hij de eerstvolgende sessie al invulde en tot wanneer het kan (in
+  zijn eigen tijdzone);
+- **na de race**, zodra de uitslag binnen is: per poule zijn punten van het
+  weekend, zijn plek dat weekend en zijn plek in de stand, uitgerekend met de
+  rekenkern van de app zelf (met de joker en de eigen vragen). En "beter dan
+  p% van alle spelers" als die cijfers er zijn (§11f).
+
+Elke mail heeft onderaan een afmeldlink (die werkt zonder in te loggen, op elk
+toestel) en dezelfde link in de kop `List-Unsubscribe`. Uitzetten kan ook
+onder Profiel. In zeven talen, in de taal van het toestel waarop de speler het
+laatst speelde.
+
+**Wat jij één keer doet: de sleutel van Resend bij de functies zetten.** Tot dan
+stuurt de sync niets, en zegt hij in de log: "Mail: nog geen RESEND_API_KEY bij
+de functies in Supabase, dus niets verstuurd". De mails gaan via hetzelfde
+Resend als de inlogmails (§5b), van `noreply@predicttherace.com`, met
+`contact@predicttherace.com` als antwoordadres.
+
+1. Resend: API Keys → Create API key. Naam bijvoorbeeld `functie mail`,
+   Permission *Sending access*, Domain `predicttherace.com`. Kopieer de sleutel
+   (hij begint met `re_`). Hij is geheim: alleen in Supabase plakken, nooit in
+   de code, in GitHub of in een chat.
+2. Supabase: Edge Functions → Secrets (of Project Settings → Edge Functions)
+   → Add new secret. Naam `RESEND_API_KEY`, waarde de sleutel. Opslaan.
+3. Klaar. Wil je het zelf zien: zet onder Profiel mail aan; op vrijdagavond
+   na VT2 komt de eerste.
+
+Click tracking en open tracking staan bij Resend uit voor het domein (§5b);
+dat beloven we ook in de privacyverklaring. Zet ze dus niet aan.
+
+**Hoe het werkt.** De sync (`scripts/sync.mjs`, `mailMomenten()`) haalt na de
+meldingen op wie mail wil (`mail_ontvangers()` in `schema.sql`: alleen accounts
+met een bevestigd adres, en zonder dat adres), stelt de mails samen
+(`scripts/mailmomenten.mjs`) en stuurt ze in stukken van 50 naar de functie
+`mail` (`supabase/functions/mail`). Die zoekt per account het adres op, kijkt
+of mail nog aanstaat, en verstuurt via Resend, twee per seconde. Wat er ging,
+onthoudt de sync in `training_laatst` en `uitslag_laatst`, zodat niemand een
+mail twee keer krijgt. In de log staan alleen aantallen: geen adres, geen
+token, geen poulenaam.
+
+**De functie uitrollen** (na een wijziging in `supabase/functions/mail`): via
+de MCP van Supabase (`deploy_edge_function`, naam `mail`, verify_jwt aan, met
+`index.ts` en `mail-kern.mjs`), of `supabase functions deploy mail`.
+
+Nakijken in Supabase: Table Editor, `mail_abonnementen` (wie, welke taal en
+tijdzone, wat hij al kreeg). De mails zelf: Resend → Emails.
+
+---
+
 ## 12. Wat de app van je weet
 
 Onder **Profiel** staat een dichtgeklapt blok "wat de app van je weet". Daarin
@@ -2144,6 +2202,12 @@ Wat de verklaring zegt, en waarom het waar is:
 - **Cijfers over alle spelers samen** (sinds 1 november, §11f): anoniem, pas
   vanaf 50 spelers uit 5 poules, nooit per poule en zonder namen. Op de site
   onder "Cijfers over alle spelers samen", in de app als eigen alinea.
+- **Eén regel per account als je mail aanzet** (sinds 3 november, §11g): dat
+  je het wilt, de taal en de tijdzone van je toestel, een willekeurige code
+  voor de afmeldlink, en welke mail je al kreeg. Het adres blijft bij je
+  account en gaat alleen naar Resend, voor deze twee mails per raceweekend,
+  zonder open- of klikmetingen. Weg zodra je afmeldt of mail uitzet. Op de site
+  onder "Als je mail aanzet", in de app als eigen alinea ("Mail").
 - **De pagina's van de site tellen, zonder cookie** (sinds 1 november, §16):
   per dag per pagina een aantal, en de ref uit de link. Geen IP-adres, geen
   account. Dat staat op de site onder "Tellen"; in de app niet, want de app

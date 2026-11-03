@@ -12336,3 +12336,65 @@ controle op je lijstje, die op de poule zelf, ophalen op id in plaats van code,
 en de knop niet vastgeknoopt): alle vier gevangen.
 
 **Danny moet:** niets.
+
+## Mail als tweede kanaal (3 november)
+
+Danny: "Ik wil dat ze vaker de app openen", en op het voorstel "e-mail als
+tweede kanaal": "Ja die mag je bouwen". Waarom: maar 2 van de 16 spelers hebben
+meldingen aan, dus de vrijdagmelding en de uitslagmelding bereiken bijna
+niemand; 9 van de 15 accounts hebben een mailadres. PR 4 bij ROUTEKAART "Vaker
+de app openen"; PR 3 (de open poule) ging eraan vooraf. BEDIENING §11g.
+
+**Wat het doet.** Onder Profiel een blok "per mail" (`perMailBlok()`), alleen
+voor een account met een bevestigd mailadres; zonder adres zegt het dat het kan
+zodra je er een koppelt. Aan: op vrijdagavond een mail met de top 10 van VT2
+(sprintweekend VT1) en per poule of je al invulde en tot wanneer, en na de race
+een met per poule je punten, je plek dat weekend en je plek in de stand. Elke
+mail heeft een afmeldlink (`?afmelden=<token>`, `afmeldenUitLink()` in de app)
+die zonder inloggen werkt, en dezelfde link in `List-Unsubscribe`.
+
+**Hoe het in elkaar zit.**
+- `schema.sql`: de tabel `mail_abonnementen` (per account: taal, tijdzone,
+  token, `training_laatst`, `uitslag_laatst`; geen adres), dicht voor iedereen,
+  met `mail_stand()`, `mail_aan()` (alleen met een bevestigd adres),
+  `mail_bijwerken()` (zet nooit aan), `mail_uit()`, `mail_afmelden(token)` (ook
+  voor anon) en `mail_ontvangers()` (alleen de sync, zonder adres).
+- `scripts/mailmomenten.mjs`: wie wat krijgt (`vrijdagMails()`,
+  `raceMails()`), de mail zelf in de stijl van de inlogmails (`maakMail()`,
+  HTML en platte tekst, alles van buiten door `esc()`), en `pouleStand()`: de
+  stand van één poule met de rekenkern van de app (knipsel.mjs, in een
+  `node:vm`-context), net als `scripts/controle-stand.mjs`.
+- `scripts/sync.mjs`, `mailMomenten()`: na de meldingen; haalt de ontvangers,
+  hun poules en antwoorden, stuurt de mails in stukken van 50 naar de functie
+  `mail`, en onthoudt wat er ging. In de log alleen aantallen.
+- `supabase/functions/mail` (`index.ts`, logica in `mail-kern.mjs`): alleen de
+  sync (service_role), zoekt per account het adres op (`auth.admin`), kijkt of
+  mail nog aanstaat en of het adres bevestigd is, en verstuurt via Resend met
+  een pauze van 550 ms. Het antwoord noemt ids, nooit adressen; een adres in
+  een fout van Resend gaat er in de log uit.
+- De app: `perMailInlezen()` bij het openen van Profiel, `perMailBijwerken()`
+  bij een sessie en een taalwissel (taal en tijdzone, alleen als er iets
+  veranderde op dit toestel), de hints `mail_geen_adres` en
+  `mail_geen_account` in `uitleg()`.
+- Privacy: een alinea "Mail" in de app (zeven talen) en "Als je mail aanzet"
+  op de site; de datum van de verklaring staat op 3 november.
+- De reservekopie neemt `mail_abonnementen` mee.
+
+**Een fout die de test ving.** De eerste versie gaf de afmeldlink niet mee in
+de mail die de sync naar de functie stuurt; de functie had dan elke mail
+geweigerd (400). `test/mailmomenten.test.mjs` draait de échte sync tegen een
+nagebootste functie, en zag het.
+
+**Tests.** Nieuw: `test/mailmomenten.test.mjs` (30, met de échte sync),
+`test/mail-functie.test.mjs` (11), `test/mail-app.test.mjs` (15, browser),
+`test/mail.test.sql` (20, eigen stap in tests.yml). Bijgewerkt: de
+nabootsing (de functies en de tabel), `test/reservekopie-terugzetten.mjs`.
+Tien mutanten (onthouden, negen als ingevuld, plekken zonder delen, de sync die
+niets onthoudt, de functie zonder de twee controles, de afmeldlink in de
+adresbalk, de taalwissel, aanzetten zonder adres, `mail_ontvangers()` voor
+accounts): alle tien gevangen.
+
+**Danny moet:** één keer de sleutel van Resend als geheim `RESEND_API_KEY` bij
+de functies in Supabase zetten (BEDIENING §11g). Tot dan staat de knop in de
+app wel, maar gaat er geen mail uit, en zegt de sync dat in de log.
+
