@@ -117,14 +117,15 @@ const stuurPrompt = (page, keuze = 'accepted') => page.evaluate((k) => {
   const t = await tekst(page, '.meldingbalk');
   check('Overslaan op de eerste stap gaat meteen naar de poule, en de melding noemt '
     + 'allebei wat je niet zag',
-    t.includes('Je account koppelen en de app op je beginscherm zetten kan later nog, onder Profiel.'), t);
+    t.includes('Je account koppelen en de app installeren kan later nog, onder Profiel.'), t);
 
   // Daar staat het dan ook echt.
   await page.click('[data-weergave="profiel"]');
   await page.waitForSelector('[data-beginscherm]');
   const p = await tekst(page, '.kol.links');
-  check('onder Profiel staat op je beginscherm, met de stappen via Deel',
-    p.includes('Zet op beginscherm') && p.includes('Voeg toe')
+  check('onder Profiel staat "de app", met de stappen via Deel (met de woorden van iOS)',
+    (await tekst(page, '[data-beginscherm]')) === 'de app'
+    && p.includes('Installeer Predict the Race als app') && p.includes('Zet op beginscherm') && p.includes('Voeg toe')
     && (await page.$('.kol.links .rondlijst .deelicoon')) !== null);
   check('zonder Nu niet: Profiel is geen aanbieding die in de weg staat',
     (await page.$('.kol.links #installweg')) === null);
@@ -157,6 +158,9 @@ const stuurPrompt = (page, keuze = 'accepted') => page.evaluate((k) => {
     (await page.evaluate(() => scrollY)) === 0, `${await page.evaluate(() => scrollY)}px`);
 
   const t = await tekst(page);
+  check('de stap heet "Installeer de app", en zegt dat het zonder App Store gaat (3 november)',
+    (await tekst(page, '[data-rondleiding="beginscherm"] h1')) === 'Installeer de app'
+      && t.includes('zonder App Store'), t);
   check('de beginscherm-stap legt de weg via Deel uit, in drie stappen',
     t.includes('Deel') && t.includes('Zet op beginscherm') && t.includes('Voeg toe')
     && (await page.$$('[data-rondleiding] .rondlijst li')).length === 3, t);
@@ -227,7 +231,7 @@ const stuurPrompt = (page, keuze = 'accepted') => page.evaluate((k) => {
   check('die de prompt één keer aanroept', (await page.evaluate(() => window.__geprompt)) === 1);
   const t = await tekst(page, '.meldingbalk');
   check('wie de prompt wegklikt heeft de stap overgeslagen, en hoort waar hij later staat',
-    t.includes('Je account koppelen en de app op je beginscherm zetten kan later nog'), t);
+    t.includes('Je account koppelen en de app installeren kan later nog'), t);
   // De prompt is op, maar Android kan het ook met de hand: onder Profiel
   // staat dan de weg via het menu.
   await page.click('[data-weergave="profiel"]');
@@ -293,7 +297,7 @@ const stuurPrompt = (page, keuze = 'accepted') => page.evaluate((k) => {
   await page.waitForSelector('[data-race]');
   const t3 = await tekst(page, '.meldingbalk');
   check('wie gekoppeld is en alleen het beginscherm overslaat, hoort alleen dat',
-    t3 === 'De app op je beginscherm zetten kan later nog, onder Profiel.', t3);
+    t3 === 'De app installeren kan later nog, onder Profiel.', t3);
   check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
   await stoppen();
 }

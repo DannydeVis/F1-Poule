@@ -617,13 +617,20 @@ niet, het legt er alleen ronde hoeken omheen — de veilige zone van een maskabl
 icoon is daar dus verspilde ruimte en het motief zou klein uitkomen met een
 brede rand. Vandaar een vullende variant, uit hetzelfde script.
 
-**Het blok "op je beginscherm".** Installeerbaar zijn is niet hetzelfde als
+**Het blok "de app".** Installeerbaar zijn is niet hetzelfde als
 gevonden worden: onderaan het beginscherm staat sinds kort een blok dat het
-aanbiedt. Er zijn twee wegen, want de browsers zijn het oneens:
+aanbiedt. Sinds 3 november heet het aanbod overal **Installeer de app**, net als
+op de site: Danny zag "Zet hem op je beginscherm" in de rondleiding en vond
+"installeer de app" duidelijker, en dat is het. "Op je beginscherm" klinkt als
+een snelkoppeling; "de app installeren" kent iedereen. De zin eronder zegt
+erbij dat het gratis is en zonder App Store gaat, anders zoekt iemand met een
+iPhone hem daar. De stappen houden de woorden van iOS en Android zelf
+(*Zet op beginscherm*, *Voeg toe*), want die ziet de speler op zijn scherm. Er
+zijn twee wegen, want de browsers zijn het oneens:
 
 | | wat de speler ziet |
 |---|---|
-| Android / Chrome | een echte knop **Zet op beginscherm** die de installatie start |
+| Android / Chrome | een echte knop **Installeer de app** die de installatie start |
 | Android zonder prompt | twee stappen: *⋮ rechtsboven*, dan *Toevoegen aan startscherm* of *App installeren* |
 | iPhone / iPad | drie stappen: *Tik op ⤴ Deel* (sinds iOS 26 eerst op *•••* naast de adresbalk), *Zet op beginscherm*, *Voeg toe* |
 

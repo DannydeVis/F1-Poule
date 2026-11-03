@@ -383,7 +383,7 @@ const herlaad = async (page) => {
   } });
   await claim(page);
   check('in de app op het beginscherm geen beginscherm-stap, wel de meldingen',
-    !(await tekst(page)).includes('Zet hem op je beginscherm')
+    !(await tekst(page)).includes('Installeer de app')
       && (await page.$$('.stappen .stap')).length === 3);
   await page.click('#rondleidingweg');
   await page.waitForSelector('[data-meldingkaart="app"]');
