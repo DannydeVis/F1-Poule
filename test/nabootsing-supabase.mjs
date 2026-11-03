@@ -96,6 +96,8 @@ store.jokers ??= [];
 store.push_abonnementen ??= [];
 store.spelerscijfers ??= [];
 store.mail_abonnementen ??= [];
+// Kaartjes om je spelers mee te nemen bij het inloggen (3 november).
+store.account_meenemen ??= [];
 store.google_als ??= 'danny@gmail.voorbeeld';
 // Supabase zonder eigen mailserver: dan gaat er alleen mail naar het eigen
 // team, en krijgt iedereen anders een fout. Een test zet dit aan met
@@ -568,7 +570,7 @@ function huidigeSessie() {
 }
 
 function zetSessie(user) {
-  const sessie = { user, access_token: 'nep-' + user.id };
+  const sessie = { user, access_token: 'nep-' + user.id, refresh_token: 'nep-ververs-' + user.id };
   try { localStorage.setItem(SESSIE, JSON.stringify(sessie)); } catch { /* niets */ }
   return sessie;
 }
@@ -620,8 +622,35 @@ const nieuweSleutel = () => `pkce-${Date.now().toString(36)}-${++teller}-abcdefg
 // sjablonen (docs/mail/) meegeeft, en wat de app met verifyOtp inwisselt.
 const nieuweHash = () => `th${Date.now().toString(36)}${++teller}0123456789abcdef`;
 
+// Een sessie die er staat maar niet te verversen is (3 november, David G.):
+// supabase-js geeft dan geen sessie terug, met een fout, en laat hem in
+// localStorage staan. Een test zet dit aan met __sessie.hapert(true); de
+// sessie komt terug met __sessie.terug(), en dan krijgt wie luistert
+// (onAuthStateChange) TOKEN_REFRESHED, zoals bij supabase-js. Met
+// hapert('gooit') gooit getSession() een fout in plaats van er een terug te
+// geven, zoals supabase-js doet bij een fout die geen AuthError is.
+const luisteraars = [];
+globalThis.__sessie = {
+  hapert(aan = true) { store.sessie_hapert = aan; bewaren(); },
+  terug() {
+    store.sessie_hapert = false;
+    bewaren();
+    const s = huidigeSessie();
+    for (const f of luisteraars) f('TOKEN_REFRESHED', s);
+  },
+  luisteraars: () => luisteraars.length,
+};
+
 const auth = {
-  async getSession() { return { data: { session: huidigeSessie() }, error: null }; },
+  // De sleutel waaronder supabase-js de sessie in localStorage zet.
+  storageKey: SESSIE,
+  async getSession() {
+    if (store.sessie_hapert === 'gooit' && huidigeSessie()) throw new Error('Load failed');
+    if (store.sessie_hapert && huidigeSessie()) {
+      return { data: { session: null }, error: { name: 'AuthRetryableFetchError', status: 0, message: 'Load failed' } };
+    }
+    return { data: { session: huidigeSessie() }, error: null };
+  },
   async getUser() {
     const s = huidigeSessie();
     return { data: { user: s?.user ?? null }, error: s ? null : { message: 'geen sessie' } };
@@ -800,8 +829,12 @@ const auth = {
     try { localStorage.removeItem(SESSIE); } catch { /* niets */ }
     return { error: null };
   },
-  onAuthStateChange() {
-    return { data: { subscription: { unsubscribe() {} } } };
+  // Net als supabase-js meldt hij bij het aanmelden meteen hoe het nu staat
+  // (INITIAL_SESSION): met de sessie, of zonder als die hapert.
+  onAuthStateChange(f) {
+    luisteraars.push(f);
+    setTimeout(() => f('INITIAL_SESSION', store.sessie_hapert ? null : huidigeSessie()), 0);
+    return { data: { subscription: { unsubscribe() { luisteraars.splice(luisteraars.indexOf(f), 1); } } } };
   },
 };
 
@@ -1161,6 +1194,43 @@ const functies = {
     return { data: store.mail_abonnementen.length < voor, error: null };
   },
 
+  // Inloggen neemt je spelers mee (3 november), zoals in schema.sql: een
+  // kaartje alleen voor een anoniem account met spelers, hooguit één per
+  // account, een kwartier geldig; inwisselen één keer, alleen door een account
+  // dat niet anoniem is, en alleen van een account dat dat nog wel is. In een
+  // poule waar het nieuwe account al speelt, blijft de speler staan.
+  meenemen_klaarzetten() {
+    const ik = wieBenIk();
+    const user = store.auth_users.find((u) => u.id === ik);
+    if (!ik || !user?.is_anonymous || !store.pool_members.some((m) => m.user_id === ik)) return { data: null, error: null };
+    store.account_meenemen = store.account_meenemen.filter((k) => k.van_user !== ik && k.geldig_tot >= Date.now());
+    const token = crypto.randomUUID();
+    store.account_meenemen.push({ token, van_user: ik, geldig_tot: Date.now() + 15 * 60e3 });
+    bewaren();
+    return { data: token, error: null };
+  },
+  meenemen_afronden({ p_token } = {}) {
+    const ik = wieBenIk();
+    const niets = { data: { meegenomen: 0, niet: [] }, error: null };
+    if (!ik || !p_token) return niets;
+    const kaart = store.account_meenemen.find((k) => k.token === p_token && k.geldig_tot >= Date.now());
+    store.account_meenemen = store.account_meenemen.filter((k) => k.token !== p_token);
+    bewaren();
+    const anoniem = (id) => !!store.auth_users.find((u) => u.id === id)?.is_anonymous;
+    if (!kaart || anoniem(ik) || !anoniem(kaart.van_user)) return niets;
+    let meegenomen = 0;
+    for (const m of store.pool_members.filter((x) => x.user_id === kaart.van_user)) {
+      if (store.pool_members.some((n) => n.pool_id === m.pool_id && n.user_id === ik)) continue;
+      m.user_id = ik;
+      meegenomen++;
+    }
+    for (const m of store.pool_members) if (m.aangemaakt_door === kaart.van_user) m.aangemaakt_door = ik;
+    const niet = store.pool_members.filter((m) => m.user_id === kaart.van_user)
+      .map((m) => store.pools.find((p) => p.id === m.pool_id)?.name).filter(Boolean).sort();
+    bewaren();
+    return { data: { meegenomen, niet }, error: null };
+  },
+
   publiek_profiel({ p_code } = {}) {
     const lid = store.pool_members.find((m) => p_code && m.profiel_code === p_code && m.profiel);
     return { data: lid ? kopie(lid.profiel) : null, error: null };
@@ -1279,6 +1349,7 @@ const functies = {
     store.otp = store.otp.filter((o) => o.user_id !== ik);
     // Net als on delete cascade op mail_abonnementen in schema.sql.
     store.mail_abonnementen = store.mail_abonnementen.filter((m) => m.user_id !== ik);
+    store.account_meenemen = store.account_meenemen.filter((k) => k.van_user !== ik);
     bewaren();
     try { localStorage.removeItem(SESSIE); } catch { /* niets */ }
     return { data: weg, error: null };

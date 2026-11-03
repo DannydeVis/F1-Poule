@@ -373,6 +373,16 @@ jobs:
           psql -d mail -v ON_ERROR_STOP=1 -f schema.sql
           psql -d mail -v ON_ERROR_STOP=1 -f test/mail.test.sql
 
+      # Inloggen neemt je spelers mee (3 november): een kaartje alleen voor een
+      # anoniem account met spelers, eenmalig en kort geldig, en inwisselen
+      # alleen door een account met een mailadres of Google.
+      - name: inloggen neemt je spelers mee
+        run: |
+          createdb meenemen
+          psql -d meenemen -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d meenemen -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d meenemen -v ON_ERROR_STOP=1 -f test/meenemen.test.sql
+
       # Een tweede database met de tabelstructuur zoals die in productie
       # bleek te staan: member_id in een samengestelde primaire sleutel.
       # Daar gaf schema.sql eerst 42830 op.

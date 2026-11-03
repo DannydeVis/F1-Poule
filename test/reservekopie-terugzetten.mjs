@@ -83,6 +83,8 @@ insert into public.spelerscijfers (seizoen, ronde, sessie, spelers, poules, cijf
   (2026, 1, 'race', 60, 6, '{"verdeling": {"20": 60}}');
 insert into public.mail_abonnementen (user_id, taal, tijdzone, token, training_laatst) values
   ('00000000-0000-0000-0000-0000000000a1', 'nl', 'Europe/Amsterdam', '00000000-0000-0000-0000-0000000000f1', 'training:101');
+insert into public.account_meenemen (token, van_user, geldig_tot) values
+  ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000a2', '2026-11-03 12:15:00+00');
 insert into public.aanmaak_log (user_id) values ('00000000-0000-0000-0000-0000000000a1');
 commit;
 `);
@@ -102,7 +104,7 @@ psql(`delete from public.pools; delete from public.races; delete from public.sit
       delete from public.verboden_woorden; delete from public.aanmaak_log;
       delete from public.sync_runs; delete from public.bezoeken; delete from public.actief;
       delete from public.site_paden; delete from public.site_bezoeken; delete from public.spelerscijfers;
-      delete from public.mail_abonnementen;`);
+      delete from public.mail_abonnementen; delete from public.account_meenemen;`);
 check('na de ramp is de poule weg', psql('select count(*) from public.pool_members;') === '0'
   && psql('select count(*) from public.answers;') === '0');
 

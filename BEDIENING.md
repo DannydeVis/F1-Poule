@@ -1306,6 +1306,56 @@ leegmaakt zonder een mailadres gekoppeld te hebben, krijgt een nieuw account en
 kan daarna niets meer voor zijn eigen speler opslaan. Het mailadres is de
 reservesleutel, en dat is de reden dat het scherm er nadrukkelijk om vraagt.
 
+**Wat er sinds 3 november bij komt.** David G., poulebaas van een Duitse
+poule, mailde: "Die App sagt ich bin nicht derjenige und auch kein admin."
+Hij speelde anoniem op zijn iPhone. Na zes dagen kon supabase-js zijn sessie
+bij het openen niet verversen; dan geeft hij "geen sessie" terug, maar laat
+hij hem wel staan. De app nam dat voor "geen account", zei dat David bij een
+ander toestel hoorde en dat hij moest inloggen met zijn mailadres. Dat deed
+hij: dat gaf een nieuw, leeg account, en het inloggen verving de sessie die
+er nog stond. Twee dingen zijn daarom anders:
+
+- **Een sessie die even niet laadt, is geen "geen account".** Staat de sessie
+  op het toestel maar lukt het verversen niet, dan toont de app "Even geen
+  bereik: je account op dit toestel kon net niet geladen worden, je speler
+  staat veilig". Hij maakt dan niets aan en logt niet in, en gaat vanzelf door
+  zodra supabase-js de sessie terug heeft (of na "Opnieuw proberen").
+- **Inloggen neemt je spelers mee.** Speel je op een toestel anoniem en log je
+  in met een mailadres, de code uit de mail of Google, dan zet de app vlak
+  ervoor een kaartje klaar (`meenemen_klaarzetten()`), en na het inloggen gaan
+  je spelers mee naar dat account (`meenemen_afronden()`). Een poulebaas blijft
+  poulebaas, want dat hangt aan de speler. Alleen van een anoniem account,
+  eenmalig en een kwartier geldig. In een poule waar het andere account al
+  speelt, blijft de speler van het toestel apart staan; de melding noemt die
+  poule.
+
+**Mailt iemand toch dat de app zegt dat hij het niet is,** dan in de SQL
+editor van Supabase, met de poulecode en het mailadres van de afzender:
+
+```sql
+-- 1. Welke spelers, aan welk account, en kan dat account ergens inloggen?
+select m.member_id, m.display_name, m.user_id, u.is_anonymous,
+       u.email is not null as heeft_adres, u.last_sign_in_at
+  from public.pool_members m
+  join public.pools p on p.id = m.pool_id
+  left join auth.users u on u.id = m.user_id
+ where p.join_code = 'ABC123';
+
+-- 2. Het account dat hij nu met zijn mailadres heeft.
+select id, created_at from auth.users where lower(email) = lower('adres@voorbeeld.nl');
+
+-- 3. De speler aan dat account hangen (vul de twee id's in).
+update public.pool_members set user_id = '<id uit stap 2>', aangemaakt_door = null
+ where member_id = '<member_id uit stap 1>';
+```
+
+Daarna logt hij in met "Inloggen met je mailadres", en is hij weer zichzelf,
+poulebaas inbegrepen. Hangt de speler aan een anoniem account (stap 1:
+`is_anonymous` true, geen adres), dan is dat account toch onbereikbaar; met
+een gekoppeld adres kan hij gewoon daarmee inloggen en hoeft er niets te
+veranderen. Plak het mailadres van een speler nergens anders dan in de SQL
+editor.
+
 ---
 
 ## 7b. Misbruik tegengaan: sessie, limieten, woordfilter en Turnstile

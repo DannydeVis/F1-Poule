@@ -3423,6 +3423,104 @@ grant execute on function public.mail_bijwerken(text, text) to authenticated;
 grant execute on function public.mail_uit() to authenticated;
 grant execute on function public.mail_afmelden(uuid) to anon, authenticated;
 
+-- ---- inloggen neemt je spelers mee (3 november) -------------------------
+-- David G., poulebaas van een Duitse poule, speelde anoniem op zijn iPhone:
+-- zonder mailadres, dus zijn speler hing aan de sessie op dat ene toestel.
+-- Op 2 november herkende de app hem even niet. Hij logde in met zijn
+-- mailadres, zoals de app zei, en kreeg daarmee een nieuw, leeg account. Dat
+-- verving bij het inloggen de oude sessie: de enige sleutel van zijn speler.
+-- Hetzelfde gebeurt bij iedereen die op een toestel anoniem speelt en daar
+-- inlogt met een account dat al bestaat.
+--
+-- Daarom zet de app vlak voor zo'n inlog een kaartje klaar, nog als het
+-- anonieme account (meenemen_klaarzetten), en wisselt hij het daarna in als
+-- het account waarmee je binnenkomt (meenemen_afronden). Het kaartje bewijst
+-- dat je het anonieme account had, de nieuwe sessie dat je het andere hebt;
+-- dan gaan de spelers mee. Alleen van een account dat nog anoniem is, naar
+-- een account dat dat niet is, eenmalig, en een kwartier geldig. Niemand
+-- leest of schrijft de tabel zelf.
+create table if not exists public.account_meenemen (
+  token      uuid not null primary key default gen_random_uuid(),
+  van_user   uuid not null references auth.users(id) on delete cascade,
+  geldig_tot timestamptz not null default now() + interval '15 minutes'
+);
+grant all on table public.account_meenemen to service_role;
+alter table public.account_meenemen enable row level security;
+revoke all on public.account_meenemen from anon, authenticated;
+
+-- Het kaartje, als het anonieme account. Null als er niets mee te nemen is:
+-- een account met een mailadres of Google raak je bij een andere inlog niet
+-- kwijt, want daarmee kom je altijd weer binnen.
+create or replace function public.meenemen_klaarzetten()
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_token uuid;
+begin
+  if auth.uid() is null
+     or not exists (select 1 from auth.users where id = auth.uid() and is_anonymous)
+     or not exists (select 1 from public.pool_members where user_id = auth.uid()) then
+    return null;
+  end if;
+  -- Hooguit één kaartje per account, en wat verlopen is gaat meteen weg.
+  delete from public.account_meenemen where van_user = auth.uid() or geldig_tot < now();
+  insert into public.account_meenemen (van_user) values (auth.uid()) returning token into v_token;
+  return v_token;
+end $$;
+
+-- Het kaartje inwisselen, als het account waarmee je nu binnen bent. Geeft
+-- terug hoeveel spelers meegingen, en in welke poules er een bleef staan:
+-- had dit account daar al een speler, dan kan er geen tweede bij (één
+-- account staat maar één keer in een stand, zie pool_members_pool_user_uniek).
+-- Wat het anonieme account voor anderen aanmaakte en nog niet geclaimd is,
+-- gaat ook mee (aangemaakt_door), zodat je voor hen kunt blijven invullen.
+create or replace function public.meenemen_afronden(p_token uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_van  uuid;
+  v_mee  int := 0;
+  v_niet jsonb := '[]'::jsonb;
+begin
+  if auth.uid() is null or p_token is null then
+    return jsonb_build_object('meegenomen', 0, 'niet', v_niet);
+  end if;
+  delete from public.account_meenemen
+   where token = p_token and geldig_tot >= now()
+  returning van_user into v_van;
+  -- Van een anoniem account naar een account dat dat niet is: dan zijn het
+  -- vanzelf twee verschillende accounts.
+  if v_van is null
+     or exists (select 1 from auth.users where id = auth.uid() and is_anonymous)
+     or not exists (select 1 from auth.users where id = v_van and is_anonymous) then
+    return jsonb_build_object('meegenomen', 0, 'niet', v_niet);
+  end if;
+  with mee as (
+    update public.pool_members m
+       set user_id = auth.uid()
+     where m.user_id = v_van
+       and not exists (select 1 from public.pool_members n
+                        where n.pool_id = m.pool_id and n.user_id = auth.uid())
+    returning 1)
+  select count(*) into v_mee from mee;
+  update public.pool_members set aangemaakt_door = auth.uid() where aangemaakt_door = v_van;
+  select coalesce(jsonb_agg(p.name order by p.name), '[]'::jsonb) into v_niet
+    from public.pool_members m join public.pools p on p.id = m.pool_id
+   where m.user_id = v_van;
+  return jsonb_build_object('meegenomen', v_mee, 'niet', v_niet);
+end $$;
+
+revoke all on function public.meenemen_klaarzetten() from public, anon;
+revoke all on function public.meenemen_afronden(uuid) from public, anon;
+grant execute on function public.meenemen_klaarzetten() to authenticated;
+grant execute on function public.meenemen_afronden(uuid) to authenticated;
+
 -- ---- wat de beheerpagina te zien krijgt --------------------------------
 
 -- De getallen bovenaan: hoe groot, hoe actief, en draait de sync.
@@ -4474,7 +4572,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'eigen_vraag_weghalen', 'ik_ben_beheerder', 'is_member', 'joker_open',
           'lijst_omzetting', 'lijst_vervangen', 'mag_beheren', 'mag_logo_zetten',
           'mail_aan', 'mail_afmelden', 'mail_bijwerken', 'mail_ontvangers', 'mail_stand',
-          'mail_taal', 'mail_tijdzone', 'mail_uit',
+          'mail_taal', 'mail_tijdzone', 'mail_uit', 'meenemen_afronden', 'meenemen_klaarzetten',
           'mag_voor_speler', 'mag_voor_speler_in', 'naam_netjes', 'naam_verboden',
           'naam_voor_filter', 'omgezette_waarde', 'periode_opslaan', 'periode_weghalen',
           'pool_members_bewaken', 'pool_members_woordfilter', 'pools_misbruik_bewaken',
@@ -4489,7 +4587,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'tel_pagina', 'tik_geven', 'tik_ontvangers',
           'vereis_sessie', 'verwijder_mijn_account'] as functies,
                array[
-          'aanmaak_log', 'actief', 'answers', 'bezoeken', 'jokers', 'mail_abonnementen',
+          'aanmaak_log', 'account_meenemen', 'actief', 'answers', 'bezoeken', 'jokers', 'mail_abonnementen',
           'pool_eigen_antwoorden', 'pool_eigen_vragen', 'pool_members', 'pool_periodes',
           'pool_questions', 'pool_teams', 'pools', 'poule_controle', 'push_abonnementen',
           'questions', 'races', 'site_beheerders', 'site_bezoeken', 'site_paden', 'spelerscijfers',

@@ -1939,17 +1939,62 @@ const zetAccount = (user) => {
   return mijnUid;
 };
 
-// De sessie die al op dit toestel stond. Kost geen netwerkverkeer:
-// supabase-js bewaart hem zelf in localStorage.
+// Staat er een sessie op dit toestel, ook als supabase-js hem nu niet
+// teruggeeft? Hij bewaart hem in localStorage onder zijn eigen sleutel
+// (db.auth.storageKey; standaard sb-<project>-auth-token, voor als die
+// eigenschap ooit anders heet). Iets wat daar staat en geen sessie is, haalt
+// supabase-js bij getSession() zelf al weg.
+function sessieOpToestel() {
+  if (DEMO || !db) return false;
+  try {
+    return !!localStorage.getItem(db.auth?.storageKey
+      || `sb-${new URL(SUPABASE_URL).hostname.split('.')[0]}-auth-token`);
+  } catch { return false; }
+}
+
+// De sessie die al op dit toestel stond. supabase-js bewaart hem zelf in
+// localStorage, maar een sessie die langer dan een uur niet gebruikt is, moet
+// hij eerst verversen, en dat gaat over het netwerk. Lukt dat niet (haperend
+// bereik, Supabase even weg), dan geeft getSession() géén sessie terug en laat
+// hij hem wel staan; na een minuut probeert hij het zelf opnieuw.
+//
+// Tot 3 november las de app dat als "geen account". David G. opende de app na
+// zes dagen, werd niet herkend ("David G. hoort bij een ander toestel"), deed
+// wat de app zei en logde in met zijn mailadres. Dat maakte een nieuw, leeg
+// account, en het inloggen verving de sessie die er nog stond: de enige
+// sleutel van zijn speler. Nu is dat sessieHapert: de app zegt dat het account
+// even niet te laden is, doet verder niets wat een account maakt of vervangt,
+// en gaat vanzelf door zodra de sessie er weer is (wachtOpSessie()).
+let sessieHapert = false;
 async function bestaandeSessie() {
   if (DEMO || !db) return null;
   try {
-    const { data } = await db.auth.getSession();
-    const uid = zetAccount(data?.session?.user);
+    const { data, error } = await db.auth.getSession();
+    const sessie = data?.session ?? null;
+    sessieHapert = !sessie && !!error && sessieOpToestel();
+    const uid = zetAccount(sessie?.user);
     taalNaarAccount();
     perMailBijwerken();
     return uid;
-  } catch { return zetAccount(null); }
+  } catch {
+    sessieHapert = sessieOpToestel();
+    return zetAccount(null);
+  }
+}
+
+// Haperde de sessie bij het openen, dan probeert supabase-js het zelf opnieuw:
+// na een minuut pauze elke halve minuut, en als je terugkomt naar dit
+// tabblad. Lukt dat, dan herlaadt de app, want alles na de start rekent op het
+// account.
+function wachtOpSessie() {
+  let klaar = false;
+  try {
+    db.auth.onAuthStateChange((_soort, sessie) => {
+      if (klaar || !sessie?.user) return;
+      klaar = true;
+      location.reload();
+    });
+  } catch { /* dan blijft de knop "Opnieuw proberen" over */ }
 }
 
 // De taal van de speler in user_metadata, zodat de mails van Supabase
@@ -2022,6 +2067,78 @@ const kanTerugkomen = () => !!(mijnGoogle() || mijnMail());
 // dit toestel of uit poulesVanAccount().
 const inlogTerugLink = () => linkBasis();
 
+// ---- je spelers meenemen bij het inloggen --------------------
+// Inloggen met een ander account (een maillink, de code uit de mail, of
+// Google) vervangt de sessie op dit toestel. Speel je hier anoniem, dan is
+// die sessie de enige sleutel van je spelers, en zonder dit bleven ze achter
+// bij een account waar niemand meer bij kan. Precies wat David G. overkwam.
+//
+// Dus vlak voor zo'n inlog, nog als het anonieme account, een kaartje bij de
+// database (meenemen_klaarzetten() in schema.sql); na het inloggen wisselt
+// spelersMeenemen() het in, als het nieuwe account. In sessionStorage: het
+// moet een herlaadactie en de omweg via Google overleven, maar niet langer
+// dan dit tabblad.
+const MEENEMEN = 'poule:meenemen';
+let meenemenKaart = null;
+function bewaarMeenemen(kaart) {
+  meenemenKaart = kaart;
+  try { sessionStorage.setItem(MEENEMEN, JSON.stringify(kaart)); } catch { /* dan alleen in dit geheugen */ }
+}
+function leesMeenemen() {
+  try { return JSON.parse(sessionStorage.getItem(MEENEMEN) ?? 'null') ?? meenemenKaart; }
+  catch { return meenemenKaart; }
+}
+function vergeetMeenemen() {
+  meenemenKaart = null;
+  try { sessionStorage.removeItem(MEENEMEN); } catch { /* niets */ }
+}
+
+// Geeft 'hapert' als er een sessie op dit toestel staat die nu niet te laden
+// is: dan hoort er niet ingelogd te worden, want dat gooit hem weg. Anders ''.
+// Ook als er niets mee te nemen valt, of het kaartje niet lukt: dan gaat het
+// inloggen gewoon door, zoals voorheen.
+async function meenemenKlaarzetten() {
+  if (DEMO || !db) return '';
+  let sessie = null;
+  try {
+    const { data, error } = await db.auth.getSession();
+    sessie = data?.session ?? null;
+    if (!sessie && error && sessieOpToestel()) return 'hapert';
+  } catch { return sessieOpToestel() ? 'hapert' : ''; }
+  if (!sessie?.user?.is_anonymous) return '';
+  try {
+    const { data: token, error } = await db.rpc('meenemen_klaarzetten');
+    if (!error && token) bewaarMeenemen({ token, van: sessie.user.id });
+  } catch { /* dan zonder kaartje */ }
+  return '';
+}
+
+// Na het inloggen, bij de start: het kaartje inwisselen als het account
+// waarmee je nu binnen bent. De melding zegt wat er meeging, en in welke
+// poule een speler bleef staan omdat dit account daar al speelde.
+async function spelersMeenemen() {
+  const kaart = leesMeenemen();
+  if (!kaart) return;
+  vergeetMeenemen();
+  // Lukte het inloggen niet, of was de link voor dit account zelf (een
+  // mailadres koppelen), dan geeft de database gewoon 0 terug.
+  if (DEMO || !db || !mijnUid) return;
+  try {
+    const { data, error } = await db.rpc('meenemen_afronden', { p_token: kaart.token });
+    if (error || !data) return;
+    const n = Number(data.meegenomen) || 0;
+    const niet = Array.isArray(data.niet) ? data.niet.map(String) : [];
+    const zinnen = [];
+    if (n === 1) zinnen.push(T('Je speler van dit toestel is meegenomen naar je account.'));
+    if (n > 1) zinnen.push(T('Je {n} spelers van dit toestel zijn meegenomen naar je account.', { n }));
+    if (niet.length) {
+      zinnen.push(T('In {poules} speelde je account al. Daar staat je speler van dit toestel nog apart.',
+        { poules: opsomming(niet) }));
+    }
+    if (zinnen.length) S.melding = zinnen.join(' ');
+  } catch { /* dan blijven ze staan waar ze stonden */ }
+}
+
 // ---- met Google ---------------------------------------------
 // Waarom dit erbij is gekomen: een maillink werkt, maar "open je mail, zoek
 // het bericht, klik de link" is drie handelingen waar er één had gekund. En
@@ -2052,6 +2169,7 @@ async function koppelGoogle() {
 // herkent het aan VAN_INLOGLINK.
 async function inloggenMetGoogle() {
   if (DEMO || !db) return { fout: T('Inloggen kan niet in demomodus.') };
+  if (await meenemenKlaarzetten() === 'hapert') return { fout: T('Je account op dit toestel is nu even niet te laden. Probeer het zo opnieuw.') };
   try {
     const { error } = await db.auth.signInWithOAuth({
       provider: 'google', options: { redirectTo: inlogTerugLink() } });
@@ -2119,18 +2237,25 @@ async function stuurInlogLink(mail) {
 
 // De link uit de mail inwisselen. De adresbalk eerst leeg: de link werkt
 // één keer, en een herlaadactie hoort hem niet nog eens te proberen. Geeft
-// een foutmelding terug, of '' als het gelukt is; de sessie staat dan al op
-// dit toestel en bestaandeSessie() vindt hem.
+// { fout }: een foutmelding, of '' als het gelukt is; de sessie staat dan al
+// op dit toestel en bestaandeSessie() vindt hem.
+//
+// Eerst het kaartje om je spelers mee te nemen (meenemenKlaarzetten()). Staat
+// er een sessie die nu niet te laden is, dan de link nog níét inwisselen: dat
+// zou die sessie vervangen. De link blijft dan ongebruikt in de adresbalk
+// staan; bestaandeSessie() ziet daarna zelf dat de sessie hapert, en zodra hij
+// terug is (of met "Opnieuw proberen") komt de link nog een keer langs.
 async function inloggenMetMaillink({ sleutel, soort }) {
+  if (await meenemenKlaarzetten() === 'hapert') return { fout: '' };
   vergeetLinkCode();
   try {
     const { error } = await db.auth.verifyOtp({ token_hash: sleutel, type: soort,
       options: { captchaToken: await captcha() } });
-    if (!error) return '';
-    return error.code === 'otp_expired' || /expired|invalid/i.test(String(error.message ?? ''))
+    if (!error) return { fout: '' };
+    return { fout: error.code === 'otp_expired' || /expired|invalid/i.test(String(error.message ?? ''))
       ? T('Die link is al gebruikt of verlopen. Vraag een nieuwe mail aan.')
-      : uitlegAuth(error);
-  } catch (e) { return uitlegAuth(e); }
+      : uitlegAuth(error) };
+  } catch (e) { return { fout: uitlegAuth(e) }; }
 }
 
 // De code uit dezelfde mail, voor waar de link niet werkt. Dat is vooral de
@@ -2142,6 +2267,7 @@ async function inloggenMetMaillink({ sleutel, soort }) {
 // sjabloon "Magic Link" in Supabase. Zie BEDIENING.md §5b.
 async function inloggenMetCode(mail, code) {
   if (DEMO || !db) return { fout: T('Inloggen kan niet in demomodus.') };
+  if (await meenemenKlaarzetten() === 'hapert') return { fout: T('Je account op dit toestel is nu even niet te laden. Probeer het zo opnieuw.') };
   try {
     const { error } = await db.auth.verifyOtp({ email: mail, token: code, type: 'email',
       options: { captchaToken: await captcha() } });
@@ -2957,6 +3083,21 @@ const ENGELS = Object.fromEntries([
    + 'all there again.'],
   ['Opnieuw proberen',
    'Try again'],
+  // Je sessie staat op dit toestel maar is even niet te laden (3 november,
+  // David G.; zie bestaandeSessie()).
+  ['Je account op dit toestel kon net niet geladen worden. Je speler en je '
+   + 'inzendingen staan veilig; zodra er weer verbinding is, gaat de app vanzelf verder.',
+   'Your account on this device could not be loaded just now. Your player and your '
+   + 'entries are safe; as soon as there is a connection again, the app carries on by itself.'],
+  ['Je account op dit toestel is nu even niet te laden. Probeer het zo opnieuw.',
+   'Your account on this device cannot be loaded right now. Try again in a moment.'],
+  // Inloggen neemt je spelers mee (spelersMeenemen()).
+  ['Je speler van dit toestel is meegenomen naar je account.',
+   'Your player from this device has moved to your account.'],
+  ['Je {n} spelers van dit toestel zijn meegenomen naar je account.',
+   'Your {n} players from this device have moved to your account.'],
+  ['In {poules} speelde je account al. Daar staat je speler van dit toestel nog apart.',
+   'Your account was already playing in {poules}. There, your player from this device is still separate.'],
   ['Er ging iets mis',
    'Something went wrong'],
 
@@ -6078,21 +6219,29 @@ function uitleg(error) {
 // mee te praten. De app heeft met opzet geen service worker (een oude stand
 // tonen alsof hij klopt is erger dan een foutmelding), dus dit scherm is wat
 // er overblijft — en dan mag het tenminste uitleggen wat er aan de hand is.
-function geenVerbinding() {
+//
+// Met { account: true }: de sessie staat op dit toestel, maar is nu niet te
+// laden (zie bestaandeSessie()). Dan zegt dit scherm dat je speler veilig
+// staat, en gaat de app vanzelf verder zodra de sessie terug is.
+function geenVerbinding({ account = false } = {}) {
   app.innerHTML = `
-    <div class="toegang"><div class="kaart" data-intro="kaart|geen-verbinding"><div class="baan"></div>
+    <div class="toegang"><div class="kaart" data-intro="kaart|${account ? 'account-hapert' : 'geen-verbinding'}"><div class="baan"></div>
       <div class="kaart-in">
         <div class="rodevlag">
           <span class="label">${T('geen verbinding')}</span>
           <h1 class="middel">${T('Even geen bereik')}</h1>
-          <p class="zacht" style="margin:0">${T('Predict the Race haalt de standen live op, '
-            + 'dus zonder verbinding valt er niets te laten zien. Je inzendingen '
-            + 'staan veilig; zodra je weer online bent staat alles er gewoon.')}</p>
+          <p class="zacht" style="margin:0">${account
+            ? T('Je account op dit toestel kon net niet geladen worden. Je speler en je '
+              + 'inzendingen staan veilig; zodra er weer verbinding is, gaat de app vanzelf verder.')
+            : T('Predict the Race haalt de standen live op, '
+              + 'dus zonder verbinding valt er niets te laten zien. Je inzendingen '
+              + 'staan veilig; zodra je weer online bent staat alles er gewoon.')}</p>
           <button class="knop wit" id="opnieuw">${T('Opnieuw proberen')}</button>
         </div>
       </div>
     </div></div>`;
   app.querySelector('#opnieuw').onclick = () => location.reload();
+  if (account) wachtOpSessie();
 }
 
 function toonFout(bericht) {
@@ -16131,20 +16280,27 @@ if (DEMO) {
   // poule hoort hier niet op te wachten.
   versieOnline().then(v => { appVersie = v; });
   if (MAILLINK) {
-    const fout = await inloggenMetMaillink(MAILLINK);
+    const { fout } = await inloggenMetMaillink(MAILLINK);
     if (fout) { S.melding = fout; VAN_INLOGLINK = false; }
   }
   await bestaandeSessie();
-  await afmeldenUitLink();
-  // Kom je net binnen via een inloglink, dan is dit toestel leeg: geen poules,
-  // geen speler. Wat je account weet is dan het enige wat je bij je poule
-  // brengt, en zonder dit stond je alsnog voor het codescherm.
-  if (VAN_INLOGLINK) {
-    const poules = await poulesVanAccount();
-    for (const p of [...poules].reverse()) onthoudInLijst(p);
-    if (!laatstePoule() && poules.length === 1) onthoudPoule(poules[0].id);
+  if (sessieHapert) {
+    // Je account staat op dit toestel maar is nu niet te laden. Niet als
+    // vreemde verder: zie bestaandeSessie().
+    geenVerbinding({ account: true });
+  } else {
+    await spelersMeenemen();
+    await afmeldenUitLink();
+    // Kom je net binnen via een inloglink, dan is dit toestel leeg: geen poules,
+    // geen speler. Wat je account weet is dan het enige wat je bij je poule
+    // brengt, en zonder dit stond je alsnog voor het codescherm.
+    if (VAN_INLOGLINK) {
+      const poules = await poulesVanAccount();
+      for (const p of [...poules].reverse()) onthoudInLijst(p);
+      if (!laatstePoule() && poules.length === 1) onthoudPoule(poules[0].id);
+    }
+    await hervat();
   }
-  await hervat();
 }
 opstartWeg();
 
