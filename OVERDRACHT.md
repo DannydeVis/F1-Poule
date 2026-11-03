@@ -12398,3 +12398,77 @@ accounts): alle tien gevangen.
 de functies in Supabase zetten (BEDIENING §11g). Tot dan staat de knop in de
 app wel, maar gaat er geen mail uit, en zegt de sync dat in de log.
 
+
+## Een sessie die hapert, en inloggen dat je spelers meeneemt (3 november)
+
+Een mail aan contact@: David G., poulebaas van een Duitse poule (iPhone,
+Safari, niet op het beginscherm): "Die App sagt ich bin nicht derjenige und
+auch kein admin, obwohl ich es bin. Dann soll ich mich anmelden mit der Email
+und es sagt immer noch, dass ich es nicht bin." Danny: "Wat gaat hier mis".
+
+**Wat er misging.** Zijn speler hing aan een anoniem account van 26 oktober,
+zonder mailadres. Op 2 november opende hij de app weer. Zijn sessie stond er
+nog (in `auth.refresh_tokens`: die van 26 oktober is op 2 november om 11:52
+UTC nog ingewisseld, op dezelfde iPhone), dus Safari had niets gewist. Maar een
+sessie van zes dagen moet supabase-js eerst verversen, en lukt dat niet, dan
+geeft `getSession()` géén sessie terug en laat hij hem staan; een minuut lang
+geeft hij daarna dezelfde fout (`REFRESH_FAILURE_COOLDOWN_MS`) en daarna
+probeert hij het zelf opnieuw. `bestaandeSessie()` keek niet naar die fout en
+nam het voor "geen account". De app zei dat David bij een ander toestel hoorde
+en dat hij moest inloggen met zijn mailadres. Omdat dat adres nergens aan hing,
+maakte `stuurInlogLink()` een nieuw account, en het inloggen verving de sessie
+die er nog stond: de enige sleutel van zijn speler. Zijn bezoek van die dag
+staat in `actief` ook zonder zijn account, wat erbij past. Of het verversen
+haperde of dat hij in een ander venster zat (een privétabblad, de browser in
+een andere app): de reparatie dekt allebei.
+
+**Voor David opgelost** (3 november, met de MCP van Supabase): zijn speler hangt
+aan zijn nieuwe mailaccount (aangemaakt via de inlogknop van de app, Duits, het
+adres past bij de afzender). Poulebaas, want dat hangt aan de speler.
+BEDIENING ("Als een speler aan het verkeerde account hangt") zegt hoe je dat
+zelf doet.
+
+**Wat er verandert.**
+- `bestaandeSessie()` zet `sessieHapert` als `getSession()` een fout geeft
+  (of gooit) terwijl er een sessie op het toestel staat (`sessieOpToestel()`,
+  de sleutel van supabase-js in localStorage). Dan toont de start
+  `geenVerbinding({ account: true })`: "Even geen bereik", je account kon net
+  niet geladen worden, je speler en je inzendingen staan veilig. Niets
+  aanmaken, niet inloggen. `wachtOpSessie()` luistert naar
+  `onAuthStateChange` en herlaadt zodra de sessie terug is; "Opnieuw proberen"
+  herlaadt meteen.
+- Inloggen neemt je spelers mee. Vlak voor het inwisselen van een maillink of
+  de code, en voor het vertrek naar Google, zet `meenemenKlaarzetten()` als het
+  anonieme account een kaartje klaar (`meenemen_klaarzetten()`, in
+  sessionStorage). Bij de start wisselt `spelersMeenemen()` het in als het
+  nieuwe account (`meenemen_afronden()`): je spelers gaan mee, en wat je voor
+  anderen aanmaakte ook (`aangemaakt_door`). In een poule waar het nieuwe
+  account al speelt blijft de speler van het toestel staan; de melding noemt
+  die poule. Hapert de sessie op dat moment, dan logt de app niet in: de code
+  en Google geven een melding, een maillink blijft ongebruikt in de adresbalk
+  staan en werkt zodra de sessie terug is.
+- `schema.sql`: de tabel `account_meenemen` (token, van welk account, een
+  kwartier geldig; dicht voor iedereen), de twee functies (alleen
+  `authenticated`), en beide in `poule_controle`. Alleen van een account dat
+  nog anoniem is naar een dat dat niet is, eenmalig. De reservekopie neemt de
+  tabel mee.
+- Vijf zinnen erbij, in zeven talen.
+
+**Productie** (3 november, via de MCP): de tabel en de functies, en daarna de
+controletabel. Eerst lokaal geoefend op het schema van main; daarna dezelfde
+md5's als een verse opbouw (functies 97c0d84e, view 279e4406, tabel
+78f5c298), anon kan de functies niet aanroepen, en beide controleregels zeggen
+"ok". De Security Advisor meldt alleen wat hij ook bij de bestaande tabellen en
+functies meldt.
+
+**Tests.** Nieuw: `test/meenemen.test.sql` (19, eigen stap in tests.yml) en
+`test/meenemen.test.mjs` (28, browser; met het geval van David, de code,
+Google, en een sessie die hapert bij het openen en bij het inloggen). De
+nabootsing kent nu een haperende sessie (`__sessie.hapert()`, `terug()`),
+`onAuthStateChange` met `INITIAL_SESSION`, en de twee functies. Tegen de oude
+app zakt de browsertest op het eerste haperscherm. Mutanten: 10 in de
+database (9 gevangen; de tiende was een dubbele controle, die is eruit) en 16
+in de app (allemaal gevangen).
+
+**Danny moet:** David antwoorden (de tekst staat in de chat van 3 november):
+inloggen met "Mit deiner E-Mail-Adresse anmelden", en hij is weer David G.

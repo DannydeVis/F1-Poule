@@ -1118,11 +1118,27 @@ meldingen aan heeft hoort niets. Twee PR's die dat bereik vergroten.
 
 | Stap | Wat | Stand |
 |---|---|---|
-| PR 3, solospelers naar de open poule | in het blok "nog alleen jij" naast "Deel de code in je groepsapp" ook "Doe mee in de open poule"; je eigen poule blijft staan. Niet in de open poule zelf en niet als je er op dit toestel al in zit | **gebouwd** (3 november), BEDIENING (De open poule) |
-| PR 4, mail als tweede kanaal | wie het aanzet onder Profiel krijgt op vrijdagavond de vrije trainingen (en of hij al invulde) en na de race zijn punten en zijn plek, met een afmeldlink in elke mail. Via Resend, met de sleutel als geheim in Supabase | **gebouwd** (3 november), BEDIENING §11g. Danny zet één keer `RESEND_API_KEY` bij de functies in Supabase; tot dan stuurt de sync niets en zegt hij dat in de log |
+| PR 3, solospelers naar de open poule | in het blok "nog alleen jij" naast "Deel de code in je groepsapp" ook "Doe mee in de open poule"; je eigen poule blijft staan. Niet in de open poule zelf en niet als je er op dit toestel al in zit | **gemerged** (3 november, PR #270), BEDIENING (De open poule) |
+| PR 4, mail als tweede kanaal | wie het aanzet onder Profiel krijgt op vrijdagavond de vrije trainingen (en of hij al invulde) en na de race zijn punten en zijn plek, met een afmeldlink in elke mail. Via Resend, met de sleutel als geheim in Supabase | **gemerged** (3 november, PR #271), BEDIENING §11g. `RESEND_API_KEY` staat sinds 3 november bij de functies in Supabase |
 
 Meten: in het beheer de spelers per dag (de grafiek bezoeken per dag) en het
 aantal poules met één speler.
+
+## Spelers niet kwijtraken (3 november)
+
+Uit een supportmail van David G., poulebaas van een Duitse poule: "Die App
+sagt ich bin nicht derjenige und auch kein admin." Wie anoniem speelt, heeft
+één sleutel tot zijn speler: de sessie op dat ene toestel. Twee gaten waardoor
+die sleutel weg kon (OVERDRACHT, 3 november):
+
+| Stap | Wat | Stand |
+|---|---|---|
+| Een sessie die hapert | staat de sessie op het toestel maar lukt het verversen niet, dan zegt de app "even geen bereik, je speler staat veilig", maakt niets aan, logt niet in, en gaat vanzelf door zodra de sessie terug is | **gebouwd** (3 november), BEDIENING §7 (Als een speler aan het verkeerde account hangt) |
+| Inloggen neemt je spelers mee | wie anoniem speelt en inlogt met een mailadres, de code uit de mail of Google, neemt zijn spelers mee naar dat account (een eenmalig kaartje, een kwartier geldig) | **gebouwd** (3 november); de database staat al in productie |
+
+Nog een idee, niet gebouwd: de mail onder "Er klopt iets niet" kan de poulecode
+en een kort stukje van het account meesturen. Dan vind je zo'n geval met één
+query, in plaats van het te reconstrueren uit tijdstippen.
 
 ## Premium, later
 

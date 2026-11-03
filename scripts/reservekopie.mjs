@@ -36,7 +36,8 @@ export const TABELLEN = [
   'races', 'questions', 'pools', 'pool_teams', 'pool_members', 'pool_questions',
   'answers', 'jokers', 'pool_eigen_vragen', 'pool_eigen_antwoorden', 'pool_periodes',
   'push_abonnementen', 'tikken', 'site_beheerders', 'sync_runs', 'bezoeken', 'actief',
-  'site_paden', 'site_bezoeken', 'spelerscijfers', 'mail_abonnementen', 'verboden_woorden', 'aanmaak_log',
+  'site_paden', 'site_bezoeken', 'spelerscijfers', 'mail_abonnementen', 'account_meenemen',
+  'verboden_woorden', 'aanmaak_log',
 ];
 
 const KOP = Buffer.from('PTRK1');
