@@ -40,7 +40,8 @@ const NEGEER = {
   it: 'Non lo hai chiesto tu? Puoi ignorare questa email. Non cambia nulla.',
   pt: 'Não pediu isto? Pode ignorar este e-mail. Nada muda.',
 };
-const VOET = {
+// Ook onder de mails van de sync (scripts/mailmomenten.mjs).
+export const VOET = {
   en: 'the F1 prediction game for you and your friends',
   nl: 'het F1-voorspelspel voor jou en je vrienden',
   de: 'das F1-Tippspiel für dich und deine Freunde',

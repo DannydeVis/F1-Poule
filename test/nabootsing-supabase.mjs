@@ -75,6 +75,8 @@ const beginstand = {
   // De cijfers over alle spelers samen (1 november): openbaar, en leeg tot
   // een test ze zet.
   spelerscijfers: [],
+  // Wie mail aanzette (3 november); alleen via de functies hieronder.
+  mail_abonnementen: [],
 };
 
 // Een echte database overleeft het herladen van de pagina, dus deze ook.
@@ -93,6 +95,7 @@ store.otp ??= [];
 store.jokers ??= [];
 store.push_abonnementen ??= [];
 store.spelerscijfers ??= [];
+store.mail_abonnementen ??= [];
 store.google_als ??= 'danny@gmail.voorbeeld';
 // Supabase zonder eigen mailserver: dan gaat er alleen mail naar het eigen
 // team, en krijgt iedereen anders een fout. Een test zet dit aan met
@@ -1111,6 +1114,53 @@ const functies = {
     return { data: nieuw, error: null };
   },
 
+  // Mail als tweede kanaal (3 november), zoals in schema.sql: aanzetten alleen
+  // met een bevestigd adres (hier: een account met email gezet; een adres dat
+  // nog wacht staat in new_email), uitzetten, bijwerken zonder ooit aan te
+  // zetten, en afmelden met het token, zonder in te loggen.
+  mail_stand() {
+    const ik = wieBenIk();
+    const user = store.auth_users.find((u) => u.id === ik);
+    return { data: { kan: !!user?.email, aan: !!ik && store.mail_abonnementen.some((m) => m.user_id === ik) }, error: null };
+  },
+  mail_aan({ p_taal, p_tijdzone = null } = {}) {
+    const ik = wieBenIk();
+    if (!ik) return { data: null, error: { code: 'P0001', hint: 'mail_geen_account', message: 'Mail kan alleen met een account.' } };
+    if (!store.auth_users.find((u) => u.id === ik)?.email) {
+      return { data: null, error: { code: 'P0001', hint: 'mail_geen_adres', message: 'Je account heeft nog geen bevestigd mailadres.' } };
+    }
+    const taal = ['nl', 'en', 'de', 'fr', 'es', 'it', 'pt'].includes(p_taal) ? p_taal : 'en';
+    const rij = store.mail_abonnementen.find((m) => m.user_id === ik);
+    if (rij) { rij.taal = taal; rij.tijdzone = p_tijdzone ?? rij.tijdzone; }
+    else {
+      store.mail_abonnementen.push({ user_id: ik, taal, tijdzone: p_tijdzone, token: crypto.randomUUID(),
+        training_laatst: null, uitslag_laatst: null });
+    }
+    bewaren();
+    return { data: null, error: null };
+  },
+  mail_bijwerken({ p_taal, p_tijdzone = null } = {}) {
+    const rij = store.mail_abonnementen.find((m) => m.user_id === wieBenIk());
+    if (rij) {
+      rij.taal = ['nl', 'en', 'de', 'fr', 'es', 'it', 'pt'].includes(p_taal) ? p_taal : 'en';
+      rij.tijdzone = p_tijdzone ?? rij.tijdzone;
+      bewaren();
+    }
+    return { data: !!rij, error: null };
+  },
+  mail_uit() {
+    const ik = wieBenIk();
+    store.mail_abonnementen = store.mail_abonnementen.filter((m) => m.user_id !== ik);
+    bewaren();
+    return { data: null, error: null };
+  },
+  mail_afmelden({ p_token } = {}) {
+    const voor = store.mail_abonnementen.length;
+    store.mail_abonnementen = store.mail_abonnementen.filter((m) => m.token !== p_token);
+    bewaren();
+    return { data: store.mail_abonnementen.length < voor, error: null };
+  },
+
   publiek_profiel({ p_code } = {}) {
     const lid = store.pool_members.find((m) => p_code && m.profiel_code === p_code && m.profiel);
     return { data: lid ? kopie(lid.profiel) : null, error: null };
@@ -1227,6 +1277,8 @@ const functies = {
     }
     store.auth_users = store.auth_users.filter((u) => u.id !== ik);
     store.otp = store.otp.filter((o) => o.user_id !== ik);
+    // Net als on delete cascade op mail_abonnementen in schema.sql.
+    store.mail_abonnementen = store.mail_abonnementen.filter((m) => m.user_id !== ik);
     bewaren();
     try { localStorage.removeItem(SESSIE); } catch { /* niets */ }
     return { data: weg, error: null };

@@ -1119,7 +1119,7 @@ meldingen aan heeft hoort niets. Twee PR's die dat bereik vergroten.
 | Stap | Wat | Stand |
 |---|---|---|
 | PR 3, solospelers naar de open poule | in het blok "nog alleen jij" naast "Deel de code in je groepsapp" ook "Doe mee in de open poule"; je eigen poule blijft staan. Niet in de open poule zelf en niet als je er op dit toestel al in zit | **gebouwd** (3 november), BEDIENING (De open poule) |
-| PR 4, mail als tweede kanaal | wie het aanzet onder Profiel krijgt op vrijdagavond de vrije trainingen (en of hij al invulde) en na de race zijn punten en zijn plek, met een afmeldlink in elke mail. Via Resend, met de sleutel als geheim in Supabase | in de maak |
+| PR 4, mail als tweede kanaal | wie het aanzet onder Profiel krijgt op vrijdagavond de vrije trainingen (en of hij al invulde) en na de race zijn punten en zijn plek, met een afmeldlink in elke mail. Via Resend, met de sleutel als geheim in Supabase | **gebouwd** (3 november), BEDIENING §11g. Danny zet één keer `RESEND_API_KEY` bij de functies in Supabase; tot dan stuurt de sync niets en zegt hij dat in de log |
 
 Meten: in het beheer de spelers per dag (de grafiek bezoeken per dag) en het
 aantal poules met één speler.

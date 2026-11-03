@@ -81,6 +81,8 @@ insert into public.site_paden (pad) values ('/races/2026/sao-paulo/');
 insert into public.site_bezoeken (dag, pad, ref, aantal) values (current_date, '/races/2026/sao-paulo/', 'groepsapp', 3);
 insert into public.spelerscijfers (seizoen, ronde, sessie, spelers, poules, cijfers) values
   (2026, 1, 'race', 60, 6, '{"verdeling": {"20": 60}}');
+insert into public.mail_abonnementen (user_id, taal, tijdzone, token, training_laatst) values
+  ('00000000-0000-0000-0000-0000000000a1', 'nl', 'Europe/Amsterdam', '00000000-0000-0000-0000-0000000000f1', 'training:101');
 insert into public.aanmaak_log (user_id) values ('00000000-0000-0000-0000-0000000000a1');
 commit;
 `);
@@ -99,7 +101,8 @@ const voor = vinger();
 psql(`delete from public.pools; delete from public.races; delete from public.site_beheerders;
       delete from public.verboden_woorden; delete from public.aanmaak_log;
       delete from public.sync_runs; delete from public.bezoeken; delete from public.actief;
-      delete from public.site_paden; delete from public.site_bezoeken; delete from public.spelerscijfers;`);
+      delete from public.site_paden; delete from public.site_bezoeken; delete from public.spelerscijfers;
+      delete from public.mail_abonnementen;`);
 check('na de ramp is de poule weg', psql('select count(*) from public.pool_members;') === '0'
   && psql('select count(*) from public.answers;') === '0');
 

@@ -21,7 +21,7 @@
 // Waar iemand terecht kan met een vraag over zijn gegevens. Staat ook in de
 // app (PRIVACY_CONTACT); de test houdt die twee gelijk.
 export const CONTACT = 'contact@predicttherace.com';
-export const PRIVACY_BIJGEWERKT = '2026-11-01';
+export const PRIVACY_BIJGEWERKT = '2026-11-03';
 
 export const PRIVACY = {
   nl: {
@@ -30,7 +30,7 @@ export const PRIVACY = {
     omschrijving: 'Wat Predict the Race van je bewaart, waar het staat, wie het ziet en hoe je het weer weg krijgt. Geen advertenties, statistieken alleen met je ja.',
     kop: 'Wat Predict the Race van je weet',
     intro: 'Predict the Race is een gratis F1-voorspelspel voor vriendengroepen. Het bewaart zo weinig mogelijk, en wat het bewaart staat hieronder, in gewone taal.',
-    bijgewerkt: 'Bijgewerkt op 27 oktober 2026',
+    bijgewerkt: 'Bijgewerkt op 3 november 2026',
     secties: [
       ['Wat er bewaard wordt', [
         'De naam die je in een poule kiest, je voorspellingen en je punten. En een anoniem account: een willekeurig nummer, zodat de database weet welke voorspellingen van jou zijn.',
@@ -48,6 +48,9 @@ export const PRIVACY = {
       ]],
       ['Als je meldingen aanzet', [
         'Dan komt er één regel bij per toestel: het adres waar je pushdienst (Google, Apple of Mozilla) een melding naartoe kan sturen, plus twee sleutels van dat toestel, de taal en de tijdzone van het toestel (voor de tijd in de melding), en welke meldingen je wilt. Geen naam en geen mailadres. Die regel gaat weg zodra je meldingen uitzet.',
+      ]],
+      ['Als je mail aanzet', [
+        'Zet je onder Profiel mail aan, dan bewaren we dat je dat wilt, met de taal en de tijdzone van je toestel en een willekeurige code voor de afmeldlink. Je mailadres blijft bij je account, en we gebruiken het alleen voor deze mails: op vrijdagavond de vrije trainingen, en na de race je punten en je plek. Ze gaan via Resend, in Ierland, zonder bij te houden of je ze opent of erop klikt. Elke mail heeft een link om ermee te stoppen, en uitzetten kan ook onder Profiel. Dan is die regel weg.',
       ]],
       ['Als iemand je aantikt', [
         'In een poule met premium kun je een medespeler aantikken die nog niets invulde; die krijgt dan een melding. We bewaren wie wie aantikte, voor welke race en wanneer, zodat niemand twee keer per race wordt aangetikt. Na twee maanden gaat dat weg.',
@@ -95,7 +98,7 @@ export const PRIVACY = {
     omschrijving: 'What Predict the Race keeps about you, where it lives, who sees it and how to get it removed. No ads, statistics only with your yes.',
     kop: 'What Predict the Race knows about you',
     intro: 'Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.',
-    bijgewerkt: 'Updated on 27 October 2026',
+    bijgewerkt: 'Updated on 3 November 2026',
     secties: [
       ['What is kept', [
         'The name you pick in a pool, your predictions and your points. And an anonymous account: a random number, so the database knows which predictions are yours.',
@@ -113,6 +116,9 @@ export const PRIVACY = {
       ]],
       ['If you turn notifications on', [
         'Then one row is added per device: the address your push service (Google, Apple or Mozilla) can send a notification to, plus two keys from that device, its language and time zone (for the time in the notification), and which notifications you want. No name and no email address. That row goes away as soon as you turn notifications off.',
+      ]],
+      ['If you turn email on', [
+        'If you turn on email under Profile, we store that you want it, with your device\'s language and time zone and a random code for the unsubscribe link. Your email address stays with your account, and we only use it for these emails: the practice results on Friday evening, and your points and place after the race. They go through Resend, in Ireland, without tracking whether you open them or click anything. Every email has a link to stop them, and you can also turn them off under Profile. Then that row is gone.',
       ]],
       ['If someone nudges you', [
         'In a pool with premium you can nudge a fellow player who has not filled anything in yet; they then get a notification. We store who nudged whom, for which race and when, so that nobody gets nudged twice per race. That is removed after two months.',
