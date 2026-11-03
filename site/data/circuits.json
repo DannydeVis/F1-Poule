@@ -2,11 +2,11 @@
   "bron": "OpenF1 (https://openf1.org): race_control, en session_result en drivers voor pole en winnaar",
   "regel": "Een virtuele safety car telt mee, net als in de app (telSafetyCars en hadRodeVlag in scripts/uitslagen.mjs).",
   "vanaf": 2023,
-  "tot": "2026-10-25",
-  "races": 88,
-  "metSafetyCar": 61,
-  "metRodeVlag": 11,
-  "metPole": 88,
+  "tot": "2026-11-01",
+  "races": 89,
+  "metSafetyCar": 62,
+  "metRodeVlag": 12,
+  "metPole": 89,
   "poleGewonnen": 56,
   "ontbreekt": [
     {
@@ -797,11 +797,11 @@
       "naam": "Mexico City",
       "locatie": "Mexico City",
       "land": "Mexico",
-      "races": 3,
-      "metSafetyCar": 3,
-      "safetyCars": 4,
-      "metRodeVlag": 1,
-      "metPole": 3,
+      "races": 4,
+      "metSafetyCar": 4,
+      "safetyCars": 8,
+      "metRodeVlag": 2,
+      "metPole": 4,
       "poleGewonnen": 2,
       "perRace": [
         {
@@ -851,6 +851,22 @@
             "naam": "Lando Norris"
           },
           "poleWon": true
+        },
+        {
+          "jaar": 2026,
+          "datum": "2026-11-01",
+          "sessie": 11404,
+          "safetyCars": 4,
+          "rodeVlag": true,
+          "pole": {
+            "nr": "44",
+            "naam": "Lewis Hamilton"
+          },
+          "winnaar": {
+            "nr": "3",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
         }
       ]
     },

@@ -687,7 +687,7 @@
       "land": "Mexico",
       "circuitNaam": "Mexico City",
       "start": "2026-10-30T18:30:00+00:00",
-      "eind": "2026-11-01T23:00:00+00:00",
+      "eind": "2026-11-01T22:00:00+00:00",
       "sessies": [
         {
           "naam": "Practice 1",
@@ -717,7 +717,7 @@
           "naam": "Race",
           "sessie": 11404,
           "start": "2026-11-01T20:00:00+00:00",
-          "eind": "2026-11-01T23:00:00+00:00"
+          "eind": "2026-11-01T22:00:00+00:00"
         }
       ],
       "vorige": {
@@ -1009,8 +1009,8 @@
             "plek": 10,
             "nr": "50",
             "code": "HIR",
-            "naam": "Ryo HIRAKAWA",
-            "team": null
+            "naam": "Ryo Hirakawa",
+            "team": "Haas F1 Team"
           }
         ]
       },
