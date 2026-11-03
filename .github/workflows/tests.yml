@@ -18,7 +18,11 @@ on:
 jobs:
   browser:
     name: Browsertests
-    runs-on: ubuntu-latest
+    # Vast op 24.04: sinds 3 november is ubuntu-latest Ubuntu 26.04, en daar
+    # installeert Playwright 1.56.1 geen Chromium ("Playwright does not support
+    # chromium on ubuntu26.04-x64"). Overstappen kan zodra een nieuwere
+    # Playwright 26.04 kent; dan ook de versie hieronder en in android.yml.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
