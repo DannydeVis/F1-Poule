@@ -12303,3 +12303,36 @@ de test, niet de app:
   na het terugschakelen omlaag, en viel dat beeld daarna, dan stond hij weer op
   0. `inStand()` wacht dat beeld nu af. Met trage beelden (elk beeld 100 ms
   later) zakte de oude test elke keer; zo is het na te spelen.
+
+## Solospelers naar de open poule (3 november)
+
+Danny: "Ik wil dat ze vaker de app openen." De cijfers uit productie (laatste
+vijf weken): 16 spelers in 9 poules, en 6 van die poules hebben maar één
+speler. Wie alleen speelt heeft niemand om te verslaan: geen stand, geen
+podium, en in de uitslagmelding geen plek. Zie ROUTEKAART, "Vaker de app
+openen"; dit is PR 3 daarvan, de mail (PR 4) volgt.
+
+**Wat er verandert.** In `legePouleBlok()` (het blok "nog alleen jij" boven de
+weekendkaart) staat onder "Deel de code in je groepsapp" een tweede keuze: "Of
+speel nu al tegen anderen: doe ook mee in de open poule. Je eigen poule blijft
+gewoon staan.", met de knop "Doe mee in de open poule". Die gaat via
+`naarPouleMetCode()` naar de open poule; hoor je er nog niet bij, dan kom je op
+"Wie ben jij?" van die poule, net als met een uitnodigingslink, en je eigen
+poule staat daarna bij je andere poules. `naarPoule()` is daarvoor gesplitst:
+ophalen op id, en `wisselNaarPoule()` voor de rest; die doet precies wat
+`naarPoule()` deed.
+
+Niet in de open poule zelf, niet als die op dit toestel al in je lijstje staat
+(`mijnPoules()`), en niet in de demo. In een browser die niets mag onthouden
+is dat lijstje leeg; dan houdt de vergelijking met de poule zelf de knop weg.
+
+**Twee codes.** De app heeft de code van de open poule zelf (`OPEN_POULE` in
+`app/index.html`, ook al gebruikt in het toegangsblok), de site ook
+(`site/teksten.mjs`). `test/open-poule.test.mjs` zakt als ze verschillen; BEDIENING
+(De open poule) zegt dat je ze allebei aanpast.
+
+**Tests.** Nieuw: `test/open-poule.test.mjs` (14, browser). Vier mutanten (de
+controle op je lijstje, die op de poule zelf, ophalen op id in plaats van code,
+en de knop niet vastgeknoopt): alle vier gevangen.
+
+**Danny moet:** niets.

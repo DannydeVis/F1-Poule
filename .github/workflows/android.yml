@@ -116,7 +116,9 @@ jobs:
     # De teksten en plaatjes voor de Play Store, in zeven talen
     # (scripts/maak-winkel.mjs), met de nabootsing uit de tests.
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    # Vast op 24.04, net als de browsertests in tests.yml: op ubuntu-latest
+    # (sinds 3 november Ubuntu 26.04) installeert Playwright 1.56.1 geen Chromium.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4

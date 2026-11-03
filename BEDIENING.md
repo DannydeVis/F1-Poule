@@ -3026,12 +3026,17 @@ als archief staan. Wel vertoningen? Dan in januari de races van 2027 klaarzetten
 
 **De open poule.** Onder de knop op de voorpagina, de gidsen en de
 racepagina's hoort de regel "Geen groep? Speel mee in de open poule", met de
-uitnodigingslink van die poule. De code staat in `site/teksten.mjs` bij
-`OPEN_POULE`: nu `80C98C` (sinds 28 september). Een andere open poule? Zet daar
-de nieuwe code van zes tekens (dezelfde als in de uitnodigingslink,
-`app/?code=...`) tussen aanhalingstekens, of geef hem aan Claude Code; `null`
-haalt de regel overal weg. Zorg dat de poule openbaar is en blijft. Een code die
-de app niet als poulecode herkent, laat het maken van de site zakken.
+uitnodigingslink van die poule. En in de app krijgt wie nog alleen in zijn
+eigen poule zit, naast "Deel de code in je groepsapp" ook de knop "Doe mee in
+de open poule" (sinds 3 november); zijn eigen poule blijft gewoon staan. De
+code staat in `site/teksten.mjs` bij `OPEN_POULE`: nu `80C98C` (sinds 28
+september), en dezelfde in `app/index.html` bij `OPEN_POULE`. Een andere open
+poule? Zet op allebei de plekken de nieuwe code van zes tekens (dezelfde als in
+de uitnodigingslink, `app/?code=...`) tussen aanhalingstekens, of geef hem aan
+Claude Code; `null` haalt de regel en de knop overal weg. Zorg dat de poule
+openbaar is en blijft. Een code die de app niet als poulecode herkent, laat het
+maken van de site zakken, en twee verschillende codes laten
+`test/open-poule.test.mjs` zakken.
 
 **IndexNow.** Na elke deploy meldt de workflow "IndexNow" de gewijzigde
 pagina's bij Bing en de andere zoekmachines die meedoen (Google niet; die leest

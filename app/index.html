@@ -4106,6 +4106,10 @@ const ENGELS = Object.fromEntries([
    + 'your friends join with one tap.'],
   ['Deel de code in je groepsapp',
    'Share the code in your group chat'],
+  ['Of speel nu al tegen anderen: doe ook mee in de open poule. Je eigen poule blijft gewoon staan.',
+   'Or play against others right away: join the open league too. Your own league stays as it is.'],
+  ['Doe mee in de open poule',
+   'Join the open league'],
   ['Gekopieerd, plak hem in je groepsapp',
    'Copied, paste it in your group chat'],
 
@@ -8017,8 +8021,16 @@ function knoopVorigSeizoen() {
 // Bovenaan dus één blok met één knop: deel de code. Met het deelmenu van het
 // toestel (meteen WhatsApp); kan dat niet, dan naar het klembord. Uit het
 // feedbackrapport van 10 oktober.
+//
+// En een tweede keuze: de open poule (3 november). Van de negen poules hadden
+// er zes maar één speler, en wie alleen speelt heeft niemand om te verslaan:
+// geen stand, geen podium, geen plek in de uitslagmelding. In de open poule
+// wel, en je eigen poule blijft gewoon staan. Niet in de open poule zelf, en
+// niet als je er op dit toestel al in zit.
 function legePouleBlok() {
   if (S.leden.length > 1 || !S.poule?.join_code) return '';
+  const openPoule = !DEMO && !!OPEN_POULE && S.poule.join_code !== OPEN_POULE
+    && !mijnPoules().some(p => p.join_code === OPEN_POULE);
   return `<div class="legepoule" data-lege-poule>
     <span class="label">${T('nog alleen jij')}</span>
     <p class="zacht" style="margin:0">${T('Een poule is pas leuk met meer mensen. '
@@ -8027,6 +8039,9 @@ function legePouleBlok() {
     <button class="knop spook" id="deelcode">${DEELICOON}${T('Deel de code in je groepsapp')}</button>
     <textarea class="veld tekstblok hide" id="deelcodeveld" readonly rows="3"
       aria-label="${T('Uitnodiging om zelf te kopiëren')}"></textarea>
+    ${openPoule ? `<p class="zacht" style="margin:0" data-open-poule>${T('Of speel nu al tegen anderen: '
+      + 'doe ook mee in de open poule. Je eigen poule blijft gewoon staan.')}</p>
+    <button class="knop spook" id="naarOpenPoule">${T('Doe mee in de open poule')}</button>` : ''}
   </div>`;
 }
 
@@ -8238,6 +8253,8 @@ function knoopMeldingKaart() {
 }
 
 function knoopLegePoule() {
+  const open = app.querySelector('#naarOpenPoule');
+  if (open) open.onclick = () => { open.disabled = true; naarPouleMetCode(OPEN_POULE); };
   const knop = app.querySelector('#deelcode');
   if (!knop) return;
   knop.onclick = async () => {
@@ -11148,7 +11165,9 @@ function openbaarBlok() {
 // kan er niemand meer bij en ziet wie er niet in zit er niets meer van. Wie al
 // meedoet merkt van allebei niets. De regels staan in de database
 // (poule_nieuwe_code(), en op_slot in poule_meedoen() en poule_ophalen()).
-// De open poule houdt zijn code: die staat op de site.
+// De open poule houdt zijn code: die staat op de site. Dezelfde als OPEN_POULE
+// in site/teksten.mjs (test/open-poule.test.mjs houdt ze gelijk); null als er
+// geen open poule is.
 const OPEN_POULE = '80C98C';
 function toegangBlok() {
   if (!magBeheren()) return '';
@@ -11668,6 +11687,24 @@ async function naarPoule(poolId) {
     if (S.poule) { render(); } else { toonStart(); }
     return;
   }
+  await wisselNaarPoule(data);
+}
+
+// Naar een poule met zijn code, vanuit de app: de open poule voor wie nog
+// alleen in zijn eigen poule zit (legePouleBlok()). Het id van de open poule
+// staat nergens in de app, de code wel. Hoor je er nog niet bij, dan kom je op
+// "Wie ben jij?" van die poule, net als met een uitnodigingslink.
+async function naarPouleMetCode(code) {
+  const { data, error, opSlot } = await pouleBij({ p_code: code });
+  if (error || !data) {
+    S.melding = opSlot ? opSlotTekst() : T('Die poulecode bestaat niet');
+    render();
+    return;
+  }
+  await wisselNaarPoule(data);
+}
+
+async function wisselNaarPoule(data) {
   S.poule = data;
   S.ik = null; S.race = null; S.weergave = 'races';
   S.beheer = null; S.beheerFout = '';
