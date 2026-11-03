@@ -1106,6 +1106,24 @@ groepsapp, de agenda of de app binnenkwamen. Over een paar weekenden is te
 zien of vrijdag drukker wordt (de grafiek bezoeken per dag) en of de links
 iets doen (de kaart Bezoeken op de site).
 
+## Vaker de app openen (3 november)
+
+Danny: "Ik wil dat ze vaker de app openen." Na de twee PR's hierboven de
+cijfers uit productie, over de laatste vijf weken: 16 spelers in 9 poules,
+waarvan 6 poules met maar één speler; per dag openen gemiddeld 2 à 3 mensen de
+app (zondag 3,2, vrijdag 1,6); maar 2 van de 16 spelers hebben meldingen aan,
+en 9 van de 15 accounts hebben een mailadres. De momenten die er zijn bereiken
+dus bijna niemand: wie alleen speelt heeft niemand om te verslaan, en wie geen
+meldingen aan heeft hoort niets. Twee PR's die dat bereik vergroten.
+
+| Stap | Wat | Stand |
+|---|---|---|
+| PR 3, solospelers naar de open poule | in het blok "nog alleen jij" naast "Deel de code in je groepsapp" ook "Doe mee in de open poule"; je eigen poule blijft staan. Niet in de open poule zelf en niet als je er op dit toestel al in zit | **gebouwd** (3 november), BEDIENING (De open poule) |
+| PR 4, mail als tweede kanaal | wie het aanzet onder Profiel krijgt op vrijdagavond de vrije trainingen (en of hij al invulde) en na de race zijn punten en zijn plek, met een afmeldlink in elke mail. Via Resend, met de sleutel als geheim in Supabase | in de maak |
+
+Meten: in het beheer de spelers per dag (de grafiek bezoeken per dag) en het
+aantal poules met één speler.
+
 ## Premium, later
 
 Eerst de gratis app goed; daarna premium in twee stappen.
