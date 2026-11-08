@@ -6600,7 +6600,20 @@ function markeerNieuw() {
   for (const plek of [...introStand.keys()]) if (!gezien.has(plek)) introStand.delete(plek);
 }
 
+// Namen en codes niet laten vertalen (8 november). Een speler met Chrome op
+// "Engels altijd naar het Frans vertalen" zag HAM als JAMBON, LAW als LOI en
+// VER als LOIN: Google Translate pakt de coureurscodes als woorden. De app
+// heeft zelf zeven talen; de rest van de pagina mag de browser gewoon
+// vertalen, maar codes, coureurs, teams, spelers en poulenamen niet.
+const GEEN_VERTALING = '.code, .who, .nm, .drnaam, .tm, .pos, .merkpoule, .merknaam, .ptitel, option';
+function geenVertaling() {
+  for (const el of app.querySelectorAll(GEEN_VERTALING)) {
+    if (el.getAttribute('translate') !== 'no') el.setAttribute('translate', 'no');
+  }
+}
+
 new MutationObserver(() => {
+  geenVertaling();
   markeerNieuw();
   kijkOfErIetsTeMeldenIs();
   herstelFocus();
@@ -12948,7 +12961,7 @@ function trainingKaart(r) {
           const plek = mijn.indexOf(String(x.nr));
           return `<li style="--team:${esc(d?.kleur ?? 'var(--lijn)')}" data-trainingrij="${esc(x.nr)}">
             <span class="pos">P${esc(x.plek)}</span>
-            <span><b class="code">${esc(d?.code ?? x.code ?? x.nr)}</b> ${esc(achternaam(d ?? { naam: x.naam, code: x.code }))}</span>
+            <span translate="no"><b class="code">${esc(d?.code ?? x.code ?? x.nr)}</b> ${esc(achternaam(d ?? { naam: x.naam, code: x.code }))}</span>
             ${plek >= 0
               ? `<span class="jijplek gekozen" data-jij="${plek + 1}"><span class="alleenlezer">${T('jij')} </span>P${plek + 1}</span>`
               : `<span class="jijplek" data-jij=""><span aria-hidden="true">-</span><span class="alleenlezer">${
@@ -14188,7 +14201,7 @@ function verhaalDias(race) {
         : T('geen top 10 ingevuld')}${auto ? ` · ${T('automatisch ingevuld')}` : ''}</p>
       ${regels.length ? `<ol class="verhaal-bord">${regels.map((x, i) => `
         <li class="vh-op ${puntKlasse(x.punten)}" ${vertraging(350 + i * 90)}>
-          <span>P${x.voorspeld}</span><b>${esc(drv(race, x.nr).code)}</b><i>${x.punten}</i></li>`).join('')}
+          <span>P${x.voorspeld}</span><b translate="no">${esc(drv(race, x.nr).code)}</b><i>${x.punten}</i></li>`).join('')}
       </ol>` : ''}` });
   }
 

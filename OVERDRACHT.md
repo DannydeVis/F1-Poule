@@ -12497,3 +12497,23 @@ volgen die van de site.
 bijgewerkt.
 
 **Danny moet:** niets.
+
+## Namen en codes niet laten vertalen (8 november)
+
+Een speler (Android, Chrome, app in het Engels) mailde een schermafdruk van het
+invulscherm in het Frans: NOR stond er als NI, ANT als FOURMI, VER als LOIN, HAD
+als AVAIT, HAM als JAMBON en LAW als LOI. Dat is niet de app maar Google
+Translate in Chrome, dat de Engelse pagina automatisch naar het Frans vertaalt en
+de coureurscodes als woorden ziet.
+
+**Wat er verandert.** `geenVertaling()` zet bij elke schermwissel (in de
+bestaande MutationObserver op `#app`) `translate="no"` op codes, coureurs,
+teams, spelers en poulenamen (`GEEN_VERTALING`). Twee codes die buiten die
+klassen vallen kregen het attribuut in de opmaak. De rest van de pagina mag de
+browser gewoon vertalen; de app heeft zelf ook Frans, onder Profiel.
+
+**Tests.** Nieuw: `test/niet-vertalen.test.mjs` (7); tegen de oude app zakken er 4.
+
+**Danny moet:** de speler eventueel antwoorden: het lag aan de automatische
+vertaling van Chrome, het is opgelost, en onder Profiel kan hij de app ook in
+het Frans zetten.
