@@ -43,9 +43,9 @@ await page.waitForSelector('.hero');
 
 // ---- 1. welke race komt eraan -------------------------------------
 check('het circuit staat groot op de kaart',
-  (await tekst('.heronaam')) === 'Shanghai', await tekst('.heronaam'));
+  (await tekst('.hero .heronaam')) === 'Shanghai', await tekst('.hero .heronaam'));
 check('met het rondenummer erbij',
-  (await tekst('.hero-kop')).includes('ronde 02'), await tekst('.hero-kop'));
+  (await tekst('.hero .hero-kop')).includes('ronde 02'), await tekst('.hero .hero-kop'));
 check('en een afteller tot de deadline',
   await page.isVisible('.klok[data-tot]'));
 
@@ -83,7 +83,7 @@ check('de knop wijst naar de race, niet naar de sessie die al af is',
   await tekst('.hero .knop.primair'));
 
 // ---- 3. hoe sta ik ervoor -----------------------------------------
-const voet = await page.$$eval('.kaartvoet span', (n) => n.map((e) => e.textContent.trim()));
+const voet = await page.$$eval('.hero .kaartvoet span', (n) => n.map((e) => e.textContent.trim()));
 check('de kaart sluit af met je positie, je punten en je vorige weekend',
   voet.length === 3, JSON.stringify(voet));
 check('de positie staat erbij als plek van totaal',
@@ -100,7 +100,7 @@ await page.evaluate(() => {
 await page.reload();
 await page.waitForSelector('.hero');
 check('in je eentje staat er geen stand, want "1e van 1" zegt niets',
-  (await page.$('.kaartvoet')) === null);
+  (await page.$('.hero .kaartvoet')) === null);
 
 // ---- de automaat telt niet als ingevuld ---------------------------
 // Automatisch invullen zet een lijst neer die je niet zelf koos. Hier zeggen

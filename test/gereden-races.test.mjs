@@ -129,7 +129,7 @@ check('na de kwalificatie blijft het weekend bij wat er nog komt',
 check('met de race gewoon open om in te vullen',
   (await regel('Baku')).startsWith('open'), await regel('Baku'));
 check('en de weekendkaart noemt die punten "dit weekend", niet "vorig weekend"',
-  (await page.textContent('.kaartvoet')).includes('dit weekend'), await page.textContent('.kaartvoet'));
+  (await page.textContent('.hero .kaartvoet')).includes('dit weekend'), await page.textContent('.hero .kaartvoet'));
 {
   const strook = await page.$$eval('.tussenstand', (n) => n.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
   check('eronder staat wat je in de kwalificatie pakte, met de joker erbij (50 × 2)',
@@ -186,7 +186,7 @@ check('met de race erbij gaat het weekend naar de gereden races, en na afgelaste
   (await lijsten()).join(' | ') === '04 | 06,05,03,02,01', (await lijsten()).join(' | '));
 check('en de strook is weg', (await page.$('.tussenstand')) === null);
 check('en dan is het weer "vorig weekend"',
-  (await page.textContent('.kaartvoet')).includes('vorig weekend'), await page.textContent('.kaartvoet'));
+  (await page.textContent('.hero .kaartvoet')).includes('vorig weekend'), await page.textContent('.hero .kaartvoet'));
 
 check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
 

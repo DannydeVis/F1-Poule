@@ -905,5 +905,15 @@
  "Je account koppelen en de app installeren kan later nog, onder Profiel.": "Vous pourrez encore lier votre compte et installer l'appli plus tard, dans Profil.",
  "De app installeren en meldingen aanzetten kan later nog, onder Profiel.": "Vous pourrez encore installer l'appli et activer les notifications plus tard, dans Profil.",
  "De app installeren kan later nog, onder Profiel.": "Vous pourrez encore installer l'appli plus tard, dans Profil.",
- "Op een iPhone of iPad werken meldingen alleen in de app op je beginscherm, vanaf iOS 16.4. Installeer Predict the Race eerst (zie \"de app\" hierboven), open hem vanaf je beginscherm en tik dan opnieuw op deze knop.": "Sur un iPhone ou un iPad, les notifications ne marchent que dans l'appli sur votre écran d'accueil, à partir d'iOS 16.4. Installez d'abord Predict the Race (voir \"l'appli\" plus haut), ouvrez-la depuis votre écran d'accueil, puis touchez de nouveau ce bouton."
+ "Op een iPhone of iPad werken meldingen alleen in de app op je beginscherm, vanaf iOS 16.4. Installeer Predict the Race eerst (zie \"de app\" hierboven), open hem vanaf je beginscherm en tik dan opnieuw op deze knop.": "Sur un iPhone ou un iPad, les notifications ne marchent que dans l'appli sur votre écran d'accueil, à partir d'iOS 16.4. Installez d'abord Predict the Race (voir \"l'appli\" plus haut), ouvrez-la depuis votre écran d'accueil, puis touchez de nouveau ce bouton.",
+ "nu bezig · ronde {n}": "en cours · manche {n}",
+ "uitslag · ronde {n}": "résultat · manche {n}",
+ "Jouw top 3 voor de race: {wie}.": "Votre top 3 pour la course : {wie}.",
+ "Je hebt voor de race niets ingevuld.": "Vous n'avez rien saisi pour la course.",
+ "Je punten staan hier zodra de uitslag binnen is.": "Vos points apparaissent ici dès que le résultat est connu.",
+ "tot nu toe": "jusqu'ici",
+ "Je voorspelling bekijken": "Voir votre pronostic",
+ "Weekendwinst: {wie}.": "Victoire du week-end : {wie}.",
+ "van {n} dit weekend": "sur {n} ce week-end",
+ "in de stand": "au classement"
 }

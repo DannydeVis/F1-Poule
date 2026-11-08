@@ -1194,6 +1194,14 @@ zelf leuker maken. Elk in een eigen PR, alles afgedwongen in schema.sql:
 | seizoensoverzicht à la Wrapped: deelbare plaatjes aan het eind van het seizoen, gratis voor iedereen (het is reclame) | **gemerged** (13 oktober, PR #224): het seizoen als verhaal (je punten, de eindstand, je beste weekend, je coureur, de cijfers) en een staand deelplaatje "jouw seizoen"; speelt één keer vanzelf af als het seizoen erop zit, daarna via een knop onder de stand; BEDIENING "Het seizoen als verhaal" |
 | klein: de stand als PDF/CSV, een kant-en-klare samenvatting per race, een herinnerknop voor wie nog niet invulde | **gemerged** (13 oktober, PR #225): onder Poule "voor de groepsapp" (herinneren, samenvatting, CSV, afdrukken of PDF; sinds 29 oktober maakt de app zelf de PDF, omdat het afdrukvenster in de app op het beginscherm van een iPhone niet opent, en in de stijl van het deelplaatje met de letters van de site en het logo) en "Herinner ze" in de kaart bovenaan; alleen de poulebaas met premium; geen database (het is opmaak van wat spelers al zien); BEDIENING §19 |
 
+**Idee van een speler** (Anthony, 8 november): een eigen puntentelling per
+poule (de poulebaas kiest zelf hoeveel punten een goede voorspelling oplevert).
+Niet nu: de punten zitten in de app, de database, de stand van alle poules, de
+deelplaatjes, de mails en de site (de gids over de puntentelling), en een
+poule met eigen punten is niet meer te vergelijken met "hoe deed jij het tegen
+iedereen". Kan later als premium, afgedwongen in `schema.sql`, met een paar
+vaste varianten in plaats van vrije getallen.
+
 Laat liggen: white-label op eigen domein, een survival-modus en een
 knock-outtoernooi (veel werk voor weinig spelers). Een vrijwillige "Buy me a
 coffee"-link kan altijd; dat is aan Danny.
