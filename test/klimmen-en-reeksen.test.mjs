@@ -105,7 +105,7 @@ check('en wie zijn plek deelt, zakt niet', rijen.find((r) => r.naam === 'Bram')?
   const kaart = await page.evaluate(async () => {
     document.querySelector('[data-weergave="races"]').click();
     await new Promise((r) => setTimeout(r, 300));
-    return document.querySelector('.kaartvoet span')?.textContent.replace(/\s+/g, ' ').trim();
+    return document.querySelector('.hero .kaartvoet span')?.textContent.replace(/\s+/g, ' ').trim();
   });
   check('ook op de weekendkaart: 1e van 2, al staat Bram erboven', kaart?.replace(/\s/g, '') === '1evan2', kaart);
 }

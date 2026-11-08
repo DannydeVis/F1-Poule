@@ -12517,3 +12517,24 @@ browser gewoon vertalen; de app heeft zelf ook Frans, onder Profiel.
 **Danny moet:** de speler eventueel antwoorden: het lag aan de automatische
 vertaling van Chrome, het is opgelost, en onder Profiel kan hij de app ook in
 het Frans zetten.
+
+## Tijdens en na de race: de kaart van het lopende weekend (8 november)
+
+Danny, tijdens de race in São Paulo: op de Races-tab staat dan al de volgende
+race bovenaan, terwijl spelers juist hun uitslag willen zien.
+
+**Wat er verandert.** `lopendKaart()` zet vanaf de start van de race 30 uur
+lang (`LOPEND_NA_START`) een kaart boven de volgende race. Tijdens de race
+("nu bezig"): je top 3 voor de race en de punten tot nu toe. Met de uitslag:
+je punten dat weekend, je plek dat weekend en in de stand, en de
+weekendwinnaar. De knop opent de race. Zeven talen; de codes en namen staan
+binnen translate="no". BEDIENING §11h.
+
+**Ook.** Het idee van Anthony (eigen puntentelling per poule) staat in
+ROUTEKAART onder "Premium, later", met de reden waarom niet nu.
+
+**Tests.** Nieuw: `test/na-de-start.test.mjs` (11); tegen de oude app zakt hij
+op de eerste kaart.
+
+**Danny moet:** niets. Anthony eventueel antwoorden dat het idee op de lijst
+staat.

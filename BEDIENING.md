@@ -2234,6 +2234,20 @@ tijdzone, wat hij al kreeg). De mails zelf: Resend → Emails.
 
 ---
 
+## 11h. Tijdens en na de race: de kaart van het lopende weekend (sinds 8 november)
+
+Vanaf de start van de race staat bovenaan de Races-tab, boven de volgende race,
+een kaart over het weekend dat bezig is. Tijdens de race: "nu bezig", je top 3
+voor de race (of dat je niets invulde), en de punten van de kwalificatie tot nu
+toe. Zodra de uitslag binnen is: je punten dat weekend, je plek dat weekend en
+in de stand, en wie het weekend won. De knop opent de race. De kaart blijft 30
+uur na de start staan (`LOPEND_NA_START`), dus tot ongeveer maandagochtend;
+daarna is de volgende race weer het eerste wat je ziet. Een afgelaste race
+zonder uitslag geeft geen kaart. Zeven talen.
+
+**Test.** `test/na-de-start.test.mjs`. Gewoon onder deze kaart staat de
+weekendkaart van de volgende race (§2), zoals altijd.
+
 ## 12. Wat de app van je weet
 
 Onder **Profiel** staat een dichtgeklapt blok "wat de app van je weet". Daarin

@@ -662,11 +662,11 @@
      tekst zonder dat de kaart zelf een z-index nodig heeft. */
   /* flex:none om dezelfde reden als bij .err: overflow:hidden op een flexitem
      laat de browser hem platdrukken, en dan viel de voet van de kaart weg. */
-  .hero{position:relative;isolation:isolate;overflow:hidden;flex:none;
+  .hero,.lopend{position:relative;isolation:isolate;overflow:hidden;flex:none;
     background:radial-gradient(120% 80% at 0% 0%,var(--accent-vlak),transparent 60%),var(--paneel);
     border:1px solid var(--lijn);border-radius:16px;
     padding:22px;display:flex;flex-direction:column;gap:16px}
-  .hero[data-ronde]::after{content:attr(data-ronde);position:absolute;z-index:-1;
+  .hero[data-ronde]::after,.lopend[data-ronde]::after{content:attr(data-ronde);position:absolute;z-index:-1;
     right:-8px;top:-34px;font-family:var(--cond);font-weight:700;font-size:210px;
     line-height:1;letter-spacing:-.02em;color:var(--ink);opacity:.045;pointer-events:none}
   .hero-kop{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
@@ -3080,6 +3080,17 @@ const ENGELS = Object.fromEntries([
    + 'all there again.'],
   ['Opnieuw proberen',
    'Try again'],
+  // De kaart van het weekend van nu, bovenaan de races (8 november).
+  ['nu bezig · ronde {n}', 'live now · round {n}'],
+  ['uitslag · ronde {n}', 'result · round {n}'],
+  ['Jouw top 3 voor de race: {wie}.', 'Your top 3 for the race: {wie}.'],
+  ['Je hebt voor de race niets ingevuld.', 'You did not enter anything for the race.'],
+  ['Je punten staan hier zodra de uitslag binnen is.', 'Your points show up here as soon as the result is in.'],
+  ['tot nu toe', 'so far'],
+  ['Je voorspelling bekijken', 'View your prediction'],
+  ['Weekendwinst: {wie}.', 'Weekend win: {wie}.'],
+  ['van {n} dit weekend', 'of {n} this weekend'],
+  ['in de stand', 'in the standings'],
   // Je sessie staat op dit toestel maar is even niet te laden (3 november,
   // David G.; zie bestaandeSessie()).
   ['Je account op dit toestel kon net niet geladen worden. Je speler en je '
@@ -8167,6 +8178,7 @@ function racesPagina(volgend) {
     ${vorigSeizoenKaart()}
     ${legePouleBlok()}
     ${meldingKaart()}
+    ${lopendKaart()}
     ${volgend ? hero(volgend) : ''}
     <span class="label">${T('kalender')}</span>
     <div class="kalender">${komend.map(x => kalenderRij(x.r, x.st)).join('') || leeg}</div>
@@ -8551,6 +8563,68 @@ function positieRegel() {
       <span><b class="groot">${p.punten}</b><i>${T('punten')}</i></span>
       ${p.weekend === null ? '' :
         `<span><b class="groot">+${p.weekend}</b><i>${T(p.bezig ? 'dit weekend' : 'vorig weekend')}</i></span>`}
+    </div>`;
+}
+
+// ---- het weekend dat net gereden wordt -----------------------
+// Danny, tijdens de race in São Paulo: "Is het niet leuker om hier een uurtje
+// of anderhalf iets anders te zetten, of misschien wel een dag, zodat mensen
+// hun uitslag bovenaan zien staan." Bovenaan stond al de volgende race, twaalf
+// dagen voor de deadline. Nu staat daar eerst het weekend van nu: tijdens de
+// race wat je erop had gezet, en tot een dag na de start je uitslag. De
+// volgende race schuift eronder.
+const LOPEND_NA_START = 30 * 3600e3;
+function lopendWeekend(nu = Date.now()) {
+  return [...S.races].reverse().find(r => {
+    const start = Date.parse(r.deadline_race ?? '');
+    return Number.isFinite(start) && start <= nu && nu - start < LOPEND_NA_START
+      && !(r.afgelast && !heeftUitslag(r));
+  }) ?? null;
+}
+
+function lopendKaart(nu = Date.now()) {
+  const r = lopendWeekend(nu);
+  if (!r || !S.ik) return '';
+  const ronde = esc(String(r.round).padStart(2, '0'));
+  const knop = (tekst) => `<button class="knop primair" data-naar-race="${esc(r.id)}">${tekst}</button>`;
+  if (!weekendVoorbij(r)) {
+    const mijn = vindPred(r.id, S.ik.id);
+    const top3 = (mijn?.[SESSIES.race.vraag] ?? []).slice(0, 3).map(nr => drv(r, nr)?.code ?? nr);
+    const tussen = heeftUitslag(r) ? scoreWeekend(mijn, r) : null;
+    return `
+    <div class="lopend" data-lopend="bezig" data-ronde="${ronde}">
+      <div class="hero-kop">
+        <span class="label">${T('nu bezig · ronde {n}', { n: ronde })}</span>
+      </div>
+      <h1 class="heronaam">${esc(r.name)}</h1>
+      <p class="zacht" style="margin:0">${top3.length
+        ? T('Jouw top 3 voor de race: {wie}.', { wie: `<b class="code" translate="no">${top3.map(esc).join(' · ')}</b>` })
+        : T('Je hebt voor de race niets ingevuld.')} ${T('Je punten staan hier zodra de uitslag binnen is.')}</p>
+      ${tussen === null ? '' : `<div class="kaartvoet"><span><b class="groot">+${tussen}</b><i>${
+        T('tot nu toe')}</i></span></div>`}
+      ${knop(T('Je voorspelling bekijken'))}
+    </div>`;
+  }
+  const rijen = weekendUitslag(r) ?? [];
+  const ik = rijen.find(x => x.mij);
+  if (!ik) return '';
+  const winnaars = weekendWinnaars(r);
+  const stand = standRijen();
+  return `
+    <div class="lopend" data-lopend="uitslag" data-ronde="${ronde}">
+      <div class="hero-kop">
+        <span class="label">${T('uitslag · ronde {n}', { n: ronde })}</span>
+      </div>
+      <h1 class="heronaam">${esc(r.name)}</h1>
+      ${winnaars.length && rijen.length > 1 ? `<p class="zacht" style="margin:0">${T('Weekendwinst: {wie}.', {
+        wie: `<span translate="no">${esc(opsomming(winnaars.map(w => w.naam)))}</span>` })}</p>` : ''}
+      <div class="kaartvoet">
+        <span><b class="groot">+${ik.punten}</b><i>${T('dit weekend')}</i></span>
+        ${rijen.length > 1 ? `<span><b class="groot">${rang(plekVan(rijen, ik.id))}</b><i>${
+          T('van {n} dit weekend', { n: rijen.length })}</i></span>
+        <span><b class="groot">${rang(plekVan(stand, S.ik.id))}</b><i>${T('in de stand')}</i></span>` : ''}
+      </div>
+      ${knop(T('Bekijk de uitslag'))}
     </div>`;
 }
 
