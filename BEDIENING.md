@@ -2240,9 +2240,12 @@ Vanaf de start van de race staat bovenaan de Races-tab, boven de volgende race,
 een kaart over het weekend dat bezig is. Tijdens de race: "nu bezig", je top 3
 voor de race (of dat je niets invulde), en de punten van de kwalificatie tot nu
 toe. Zodra de uitslag binnen is: je punten dat weekend, je plek dat weekend en
-in de stand, en wie het weekend won. De knop opent de race. De kaart blijft 30
-uur na de start staan (`LOPEND_NA_START`), dus tot ongeveer maandagochtend;
-daarna is de volgende race weer het eerste wat je ziet. Een afgelaste race
+in de stand, en wie het weekend won. De knop opent de race. De kaart blijft 48
+uur na de start staan (`LOPEND_NA_START`), dus tot ongeveer dinsdag, en
+staat er dan alleen: de volgende race komt er pas onder als die binnen twee
+dagen sluit (`LOPEND_VOORRANG`; Danny, 9 november: "alleen dit scherm").
+Daarna is de volgende race weer het eerste wat je ziet, met onderaan de knop
+**Uitslag en punten** van de vorige race, zodat je je punten blijft vinden. Een afgelaste race
 zonder uitslag geeft geen kaart. Zeven talen.
 
 **Test.** `test/na-de-start.test.mjs`. Gewoon onder deze kaart staat de

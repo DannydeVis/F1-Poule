@@ -143,7 +143,8 @@ await page.waitForSelector('[data-lege-poule]');
 const blok = await page.evaluate(() => {
   const b = document.querySelector('[data-lege-poule]');
   // Boven de weekendkaart, want daar kijkt iedereen als eerste.
-  const kaart = document.querySelector('.hero[data-ronde]');
+  // (Of boven de kaart van het weekend van nu, als die er staat.)
+  const kaart = document.querySelector('.lopend[data-ronde], .hero[data-ronde]');
   return { tekst: b.textContent.replace(/\s+/g, ' ').trim(),
            boven: !!kaart && b.getBoundingClientRect().top < kaart.getBoundingClientRect().top,
            knop: document.querySelector('#deelcode')?.textContent.trim() };

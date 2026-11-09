@@ -12538,3 +12538,21 @@ op de eerste kaart.
 
 **Danny moet:** niets. Anthony eventueel antwoorden dat het idee op de lijst
 staat.
+
+## Het weekend van nu alleen, tot dinsdag (9 november)
+
+Danny, met een schermafdruk van de nieuwe kaart boven Las Vegas: "Ik bedoel
+eigenlijk alleen dit scherm", tot maandag of dinsdag, en daarna de volgende
+race, maar dan wel duidelijk waar je de punten kunt bekijken.
+
+**Wat er verandert.** De kaart van het weekend van nu blijft 48 uur na de
+start staan in plaats van 30, en de volgende race staat er dan niet meer
+onder, tenzij die binnen twee dagen sluit (`LOPEND_VOORRANG`). Is de kaart
+weg, dan heeft de kaart van de volgende race onderaan een knop "Uitslag en
+punten {race}" naar de vorige race (zeven talen). BEDIENING §11h.
+
+**Tests.** `test/na-de-start.test.mjs` van 11 naar 16. `groepsapp` en
+`klimmen-en-reeksen` kijken net na een race naar de nieuwe kaart in plaats van
+naar de volgende race.
+
+**Danny moet:** niets.

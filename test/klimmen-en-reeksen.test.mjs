@@ -105,9 +105,13 @@ check('en wie zijn plek deelt, zakt niet', rijen.find((r) => r.naam === 'Bram')?
   const kaart = await page.evaluate(async () => {
     document.querySelector('[data-weergave="races"]').click();
     await new Promise((r) => setTimeout(r, 300));
-    return document.querySelector('.hero .kaartvoet span')?.textContent.replace(/\s+/g, ' ').trim();
+    // Net na de race staat de kaart van het weekend van nu er in plaats van
+    // de weekendkaart; die noemt je plek in de stand als laatste.
+    return document.querySelector('.hero .kaartvoet span, [data-lopend] .kaartvoet span:last-child')
+      ?.textContent.replace(/\s+/g, ' ').trim();
   });
-  check('ook op de weekendkaart: 1e van 2, al staat Bram erboven', kaart?.replace(/\s/g, '') === '1evan2', kaart);
+  check('ook bovenaan de races: 1e, al staat Bram erboven',
+    ['1evan2', '1eindestand'].includes(kaart?.replace(/\s/g, '')), kaart);
 }
 await page.evaluate(() => {
   const db = globalThis.__db;
