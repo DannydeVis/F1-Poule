@@ -3087,6 +3087,8 @@ const ENGELS = Object.fromEntries([
   ['Je hebt voor de race niets ingevuld.', 'You did not enter anything for the race.'],
   ['Je punten staan hier zodra de uitslag binnen is.', 'Your points show up here as soon as the result is in.'],
   ['tot nu toe', 'so far'],
+  ['Uitslag en punten {race}',
+   'Results and points {race}'],
   ['Je voorspelling bekijken', 'View your prediction'],
   ['Weekendwinst: {wie}.', 'Weekend win: {wie}.'],
   ['van {n} dit weekend', 'of {n} this weekend'],
@@ -8159,6 +8161,10 @@ function racesPagina(volgend) {
   const achterDeRug = (st) => st.soort === 'klaar' || st.soort === 'afgelast';
   const komend = metStand.filter(x => !achterDeRug(x.st));
   const gereden = metStand.filter(x => achterDeRug(x.st)).reverse();
+  // Tijdens en na de race alleen het weekend van nu (Danny, 9 november:
+  // "alleen dit scherm", tot maandag of dinsdag). De volgende race komt er
+  // alleen bij als die binnen twee dagen al sluit.
+  const lopend = lopendKaart();
   // Twee heel verschillende soorten leegte: een poule die nog op de kalender
   // wacht, en een seizoen dat erop zit. Hetzelfde zinnetje voor allebei zou in
   // december beweren dat de races nog opgehaald moeten worden.
@@ -8178,8 +8184,8 @@ function racesPagina(volgend) {
     ${vorigSeizoenKaart()}
     ${legePouleBlok()}
     ${meldingKaart()}
-    ${lopendKaart()}
-    ${volgend ? hero(volgend) : ''}
+    ${lopend}
+    ${volgend && (!lopend || Date.parse(volgend.iso) - Date.now() < LOPEND_VOORRANG) ? hero(volgend, !lopend) : ''}
     <span class="label">${T('kalender')}</span>
     <div class="kalender">${komend.map(x => kalenderRij(x.r, x.st)).join('') || leeg}</div>
     ${gereden.length ? `<span class="label">${T('gereden')}</span>
@@ -8573,7 +8579,8 @@ function positieRegel() {
 // dagen voor de deadline. Nu staat daar eerst het weekend van nu: tijdens de
 // race wat je erop had gezet, en tot een dag na de start je uitslag. De
 // volgende race schuift eronder.
-const LOPEND_NA_START = 30 * 3600e3;
+const LOPEND_NA_START = 48 * 3600e3;
+const LOPEND_VOORRANG = 48 * 3600e3;
 function lopendWeekend(nu = Date.now()) {
   return [...S.races].reverse().find(r => {
     const start = Date.parse(r.deadline_race ?? '');
@@ -8628,8 +8635,11 @@ function lopendKaart(nu = Date.now()) {
     </div>`;
 }
 
-function hero(volgend) {
+function hero(volgend, metVorige = true) {
   const r = volgend.race;
+  // Is de kaart van het weekend weg, dan moet nog steeds te zien zijn waar je
+  // punten van de vorige race staan (Danny, 9 november).
+  const vorige = metVorige ? [...S.races].reverse().find(x => weekendVoorbij(x) && x.id !== r.id) : null;
   const aan = lampjes(volgend.iso);
   const wacht = nogNietIngevuld(r, volgend.welk);
   // Alle sessies van dit weekend, niet alleen de open: wie de kwalificatie al
@@ -8685,6 +8695,8 @@ function hero(volgend) {
           ? T('Top 10 {sessie} afmaken', { sessie: esc(teDoen.naam) })
           : T('Top 10 {sessie} invullen', { sessie: esc(teDoen.naam) })}</button>
       ${positieRegel()}
+      ${vorige ? `<button class="knop spook" data-naar-race="${esc(vorige.id)}" data-vorige-uitslag>${
+        T('Uitslag en punten {race}', { race: `<span translate="no">${esc(vorige.name)}</span>` })}</button>` : ''}
     </div>`;
 }
 
