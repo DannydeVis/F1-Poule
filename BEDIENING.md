@@ -2245,7 +2245,14 @@ uur na de start staan (`LOPEND_NA_START`), dus tot ongeveer dinsdag, en
 staat er dan alleen: de volgende race komt er pas onder als die binnen twee
 dagen sluit (`LOPEND_VOORRANG`; Danny, 9 november: "alleen dit scherm").
 Daarna is de volgende race weer het eerste wat je ziet, met onderaan de knop
-**Uitslag en punten** van de vorige race, zodat je je punten blijft vinden. Een afgelaste race
+**Uitslag en punten** van de vorige race, zodat je je punten blijft vinden.
+
+Wie de app open laat staan hoeft niets te doen: de klok van de app (elke 30
+seconden) tekent de Races-tab opnieuw zodra de kaart weg moet, de volgende
+race erbij komt of de uitslag binnen is. De knop naar de vorige uitslag staat
+er alleen als de race vlak ervoor een uitslag heeft; blijft die uit, dan wijst
+hij niet naar een ouder weekend. In een poule met alleen jij staan op de kaart
+je punten van het weekend en je totaal. Een afgelaste race
 zonder uitslag geeft geen kaart. Zeven talen.
 
 **Test.** `test/na-de-start.test.mjs`. Gewoon onder deze kaart staat de

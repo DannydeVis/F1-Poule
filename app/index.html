@@ -5965,6 +5965,18 @@ function tikkenBij() {
     el.innerHTML = klokTekst(el.dataset.tot, el.dataset.kort === '1');
   });
   verversNaDeadline();
+  racesBijDeTijd();
+}
+
+// Wat er bovenaan de races staat hangt van de klok af: de kaart van het
+// weekend van nu verdwijnt na twee dagen, en de volgende race komt erbij
+// zodra die binnen twee dagen sluit. Wie de app open laat staan zag dat pas
+// na een tik. Alleen op de lijst zelf, waar niemand iets invult.
+let racesGetekend = '';
+function racesBijDeTijd() {
+  if (S.weergave !== 'races' || S.race || !app.querySelector('.shell')) return;
+  if (document.querySelector('dialog[open]')) return;
+  if (racesBovenaan(eerstvolgende()).sleutel !== racesGetekend) render();
 }
 
 // Een deadline die verstreek terwijl de app openstond. De database geeft de
@@ -8063,6 +8075,10 @@ function toonApp() {
   app.querySelectorAll('[data-race]').forEach(b => b.onclick = () => openRace(b.dataset.race, b.dataset.sessie ?? null));
   app.querySelectorAll('[data-naar-race]').forEach(b => b.onclick = () =>
     openRace(b.dataset.naarRace, b.dataset.naarTab ?? null));
+  // Een eigen attribuut: binnen de kaart van de volgende race is er zo maar
+  // één knop met data-naar-race, en dat is de knop van die race.
+  app.querySelectorAll('[data-vorige-uitslag]').forEach(b => b.onclick = () =>
+    openRace(b.dataset.vorigeUitslag));
   const terug = app.querySelector('#terug');
   if (terug) terug.onclick = () => { S.race = null; terugNaarVorige = true; render(); };
   // Escape sluit een open race, zoals een venster. Niet als je in een veld
@@ -8161,10 +8177,8 @@ function racesPagina(volgend) {
   const achterDeRug = (st) => st.soort === 'klaar' || st.soort === 'afgelast';
   const komend = metStand.filter(x => !achterDeRug(x.st));
   const gereden = metStand.filter(x => achterDeRug(x.st)).reverse();
-  // Tijdens en na de race alleen het weekend van nu (Danny, 9 november:
-  // "alleen dit scherm", tot maandag of dinsdag). De volgende race komt er
-  // alleen bij als die binnen twee dagen al sluit.
-  const lopend = lopendKaart();
+  const boven = racesBovenaan(volgend);
+  racesGetekend = boven.sleutel;
   // Twee heel verschillende soorten leegte: een poule die nog op de kalender
   // wacht, en een seizoen dat erop zit. Hetzelfde zinnetje voor allebei zou in
   // december beweren dat de races nog opgehaald moeten worden.
@@ -8184,8 +8198,8 @@ function racesPagina(volgend) {
     ${vorigSeizoenKaart()}
     ${legePouleBlok()}
     ${meldingKaart()}
-    ${lopend}
-    ${volgend && (!lopend || Date.parse(volgend.iso) - Date.now() < LOPEND_VOORRANG) ? hero(volgend, !lopend) : ''}
+    ${boven.lopend}
+    ${boven.metVolgende ? hero(volgend, !boven.lopend) : ''}
     <span class="label">${T('kalender')}</span>
     <div class="kalender">${komend.map(x => kalenderRij(x.r, x.st)).join('') || leeg}</div>
     ${gereden.length ? `<span class="label">${T('gereden')}</span>
@@ -8577,16 +8591,46 @@ function positieRegel() {
 // of anderhalf iets anders te zetten, of misschien wel een dag, zodat mensen
 // hun uitslag bovenaan zien staan." Bovenaan stond al de volgende race, twaalf
 // dagen voor de deadline. Nu staat daar eerst het weekend van nu: tijdens de
-// race wat je erop had gezet, en tot een dag na de start je uitslag. De
-// volgende race schuift eronder.
+// race wat je erop had gezet, en daarna je uitslag.
+//
+// Een dag later (9 november), met de kaart boven Las Vegas: "Ik bedoel
+// eigenlijk alleen dit scherm", tot maandag of dinsdag. De kaart staat er dus
+// twee dagen na de start (LOPEND_NA_START), en alleen: de volgende race komt
+// er pas onder als die binnen twee dagen sluit (LOPEND_VOORRANG), want een
+// deadline mag niemand missen.
 const LOPEND_NA_START = 48 * 3600e3;
 const LOPEND_VOORRANG = 48 * 3600e3;
+// Een afgelast weekend waar niets van gereden is telt nergens mee.
+const geschrapt = (r) => !!r.afgelast && !heeftUitslag(r);
 function lopendWeekend(nu = Date.now()) {
   return [...S.races].reverse().find(r => {
     const start = Date.parse(r.deadline_race ?? '');
     return Number.isFinite(start) && start <= nu && nu - start < LOPEND_NA_START
-      && !(r.afgelast && !heeftUitslag(r));
+      && !geschrapt(r);
   }) ?? null;
+}
+
+// Wat staat er bovenaan de races: de kaart van het weekend van nu, de volgende
+// race, of allebei. Op één plek, zodat het tekenen en de klok (racesBijDeTijd)
+// dezelfde vraag stellen. Een deadline die er niet is of niet te lezen valt
+// telt als dichtbij: liever een kaart te veel dan een race die je niet ziet.
+function racesBovenaan(volgend, nu = Date.now()) {
+  const lopend = lopendKaart(nu);
+  const ver = !!volgend && Date.parse(volgend.iso) - nu >= LOPEND_VOORRANG;
+  const metVolgende = !!volgend && !(lopend && ver);
+  // Ook of de uitslag er is: komt die binnen terwijl de app openstaat, dan
+  // hoort "nu bezig" plaats te maken voor de punten.
+  const race = lopend ? lopendWeekend(nu) : null;
+  return { lopend, metVolgende,
+    sleutel: [race?.id ?? '', race && weekendVoorbij(race) ? 'uitslag' : '', metVolgende ? volgend.race.id : ''].join('|') };
+}
+
+// De race vóór deze, als die gereden is en een uitslag heeft. Niet "de laatste
+// race met een uitslag": blijft de uitslag van het vorige weekend uit, dan
+// wees de knop naar het weekend daarvoor.
+function vorigeUitslag(r) {
+  const eerder = S.races.slice(0, S.races.indexOf(r)).reverse().find(x => !geschrapt(x));
+  return eerder && weekendVoorbij(eerder) ? eerder : null;
 }
 
 function lopendKaart(nu = Date.now()) {
@@ -8629,7 +8673,8 @@ function lopendKaart(nu = Date.now()) {
         <span><b class="groot">+${ik.punten}</b><i>${T('dit weekend')}</i></span>
         ${rijen.length > 1 ? `<span><b class="groot">${rang(plekVan(rijen, ik.id))}</b><i>${
           T('van {n} dit weekend', { n: rijen.length })}</i></span>
-        <span><b class="groot">${rang(plekVan(stand, S.ik.id))}</b><i>${T('in de stand')}</i></span>` : ''}
+        <span><b class="groot">${rang(plekVan(stand, S.ik.id))}</b><i>${T('in de stand')}</i></span>`
+        : `<span><b class="groot">${stand.find(x => x.mij)?.punten ?? ik.punten}</b><i>${T('punten')}</i></span>`}
       </div>
       ${knop(T('Bekijk de uitslag'))}
     </div>`;
@@ -8639,7 +8684,7 @@ function hero(volgend, metVorige = true) {
   const r = volgend.race;
   // Is de kaart van het weekend weg, dan moet nog steeds te zien zijn waar je
   // punten van de vorige race staan (Danny, 9 november).
-  const vorige = metVorige ? [...S.races].reverse().find(x => weekendVoorbij(x) && x.id !== r.id) : null;
+  const vorige = metVorige ? vorigeUitslag(r) : null;
   const aan = lampjes(volgend.iso);
   const wacht = nogNietIngevuld(r, volgend.welk);
   // Alle sessies van dit weekend, niet alleen de open: wie de kwalificatie al
@@ -8695,7 +8740,7 @@ function hero(volgend, metVorige = true) {
           ? T('Top 10 {sessie} afmaken', { sessie: esc(teDoen.naam) })
           : T('Top 10 {sessie} invullen', { sessie: esc(teDoen.naam) })}</button>
       ${positieRegel()}
-      ${vorige ? `<button class="knop spook" data-naar-race="${esc(vorige.id)}" data-vorige-uitslag>${
+      ${vorige ? `<button class="knop spook" data-vorige-uitslag="${esc(vorige.id)}">${
         T('Uitslag en punten {race}', { race: `<span translate="no">${esc(vorige.name)}</span>` })}</button>` : ''}
     </div>`;
 }
