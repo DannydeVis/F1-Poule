@@ -12556,3 +12556,35 @@ punten {race}" naar de vorige race (zeven talen). BEDIENING §11h.
 naar de volgende race.
 
 **Danny moet:** niets.
+
+## De weekendkaart na de review (10 november)
+
+Een review van PR #276 vond negen punten; Danny: "Fix al the ugly coding and
+bugs".
+
+**Wat er verandert.**
+- `racesBovenaan()` beslist op één plek wat er bovenaan de Races-tab staat.
+  `racesBijDeTijd()` (in de klok van 30 seconden) tekent de lijst opnieuw als
+  dat antwoord verandert: de kaart is twee dagen oud, de volgende race sluit
+  binnen twee dagen, of de uitslag kwam binnen. Eerst gebeurde dat pas na een
+  tik.
+- Een deadline die ontbreekt of niet te lezen is verbergt de volgende race
+  niet meer.
+- `vorigeUitslag()`: de knop "Uitslag en punten" wijst naar de race vlak
+  ervoor, en staat er niet als die nog geen uitslag heeft.
+- De knop heeft een eigen attribuut (`data-vorige-uitslag`), zodat
+  `.hero [data-naar-race]` weer precies één knop is.
+- In een poule met alleen jij toont de kaart ook je totaal.
+- Het commentaar boven `LOPEND_NA_START` klopt weer.
+
+**Bewust zo gelaten.** Zolang de kaart er alleen staat, staat "Herinner ze" en
+"Nog invullen" van de volgende race er niet. Dat is wat Danny vroeg ("alleen
+dit scherm"); binnen twee dagen voor de deadline staat de volgende race er
+weer onder.
+
+**Tests.** `test/na-de-start.test.mjs` van 16 naar 22 (de grens op 47 en 49
+uur, in je eentje, geen knop zonder uitslag, één knop per kaart, en met een
+nepklok het opnieuw tekenen); `klimmen-en-reeksen` controleert weer elke kaart
+apart (15). Twee mutanten zakken.
+
+**Danny moet:** niets.

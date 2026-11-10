@@ -105,13 +105,31 @@ check('en wie zijn plek deelt, zakt niet', rijen.find((r) => r.naam === 'Bram')?
   const kaart = await page.evaluate(async () => {
     document.querySelector('[data-weergave="races"]').click();
     await new Promise((r) => setTimeout(r, 300));
-    // Net na de race staat de kaart van het weekend van nu er in plaats van
-    // de weekendkaart; die noemt je plek in de stand als laatste.
-    return document.querySelector('.hero .kaartvoet span, [data-lopend] .kaartvoet span:last-child')
-      ?.textContent.replace(/\s+/g, ' ').trim();
+    // Net na de race staat hier de kaart van het weekend van nu, en niet de
+    // weekendkaart; die noemt je plek in de stand als laatste.
+    return { hero: !!document.querySelector('.hero'),
+             plek: document.querySelector('[data-lopend] .kaartvoet span:last-child')
+               ?.textContent.replace(/\s+/g, '') };
   });
-  check('ook bovenaan de races: 1e, al staat Bram erboven',
-    ['1evan2', '1eindestand'].includes(kaart?.replace(/\s/g, '')), kaart);
+  check('ook op de kaart van het weekend van nu: 1e in de stand, al staat Bram erboven',
+    !kaart.hero && kaart.plek === '1eindestand', JSON.stringify(kaart));
+}
+{
+  // Drie dagen later staat de weekendkaart er weer, met dezelfde plek.
+  await page.evaluate(() => {
+    const db = globalThis.__db;
+    for (const r of db.races.slice(0, 2)) {
+      for (const k of ['deadline_quali', 'deadline_race']) {
+        r[k] = new Date(Date.parse(r[k]) - 72 * 36e5).toISOString();
+      }
+    }
+    sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+  });
+  await page.reload();
+  await page.waitForSelector('.hero .kaartvoet');
+  const plek = await page.$eval('.hero .kaartvoet span', (e) => e.textContent.replace(/\s+/g, ''));
+  check('en op de weekendkaart: 1e van 2',
+    plek === '1evan2' && (await page.$('[data-lopend]')) === null, plek);
 }
 await page.evaluate(() => {
   const db = globalThis.__db;

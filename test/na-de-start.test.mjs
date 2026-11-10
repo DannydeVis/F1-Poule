@@ -12,7 +12,10 @@
 //   4. Zolang hij er staat, staat de volgende race er niet onder, tenzij die
 //      binnen twee dagen sluit.
 //   5. Twee dagen (48 uur) na de start is hij weg; dan staat bij de volgende
-//      race een knop naar de uitslag en punten van de vorige.
+//      race een knop naar de uitslag en punten van de vorige (niet van een
+//      ouder weekend als die uitslag uitblijft).
+//   6. Staat de app open terwijl die tijd verstrijkt, dan tekent hij de
+//      races zelf opnieuw.
 
 import { maakControle, startPagina, meedoen, naarLijst } from './hulp.mjs';
 
@@ -22,8 +25,8 @@ const kaart = (page) => page.$('[data-lopend]');
 const UUR = 3600e3;
 const LIJST = ['1', '12', '63', '16', '44', '4', '81', '10', '14', '18'];
 
-async function zet(page, { start, quali = null, race = null, volgende = 10 * 24 * UUR }) {
-  await page.evaluate(({ start, quali, race, volgende, LIJST }) => {
+async function zet(page, { start, quali = null, race = null, volgende = 10 * 24 * UUR, alleen = false }) {
+  await page.evaluate(({ start, quali, race, volgende, alleen, LIJST }) => {
     const db = globalThis.__db;
     const r = db.races.find((x) => x.id === 1);
     r.deadline_quali = new Date(Date.now() + start - 24 * 3600e3).toISOString();
@@ -33,14 +36,18 @@ async function zet(page, { start, quali = null, race = null, volgende = 10 * 24 
     v.deadline_quali = new Date(Date.now() + volgende).toISOString();
     v.deadline_race = new Date(Date.now() + volgende + 24 * 3600e3).toISOString();
     v.quali_result = null; v.race_result = null;
-    db.pool_members.push({ member_id: 'lid-2', pool_id: 'pool-1', display_name: 'Sanne', user_id: null });
-    db.pool_members = db.pool_members.filter((m, i, a) => a.findIndex((x) => x.member_id === m.member_id) === i);
+    // De race daarna ver weg, zodat "de volgende race" altijd ronde 2 is.
+    const d = db.races.find((x) => x.id === 3);
+    d.deadline_quali = new Date(Date.now() + 30 * 24 * 3600e3).toISOString();
+    d.deadline_race = new Date(Date.now() + 31 * 24 * 3600e3).toISOString();
+    db.pool_members = db.pool_members.filter((m) => m.member_id !== 'lid-2');
+    if (!alleen) db.pool_members.push({ member_id: 'lid-2', pool_id: 'pool-1', display_name: 'Sanne', user_id: null });
     db.answers = db.answers.filter((a) => a.race_id !== 1);
     for (const q of ['quali_top10', 'race_top10']) {
       db.answers.push({ pool_id: 'pool-1', race_id: 1, member_id: 'lid-1', question_id: q, waarde: LIJST });
     }
     sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
-  }, { start, quali, race, volgende, LIJST });
+  }, { start, quali, race, volgende, alleen, LIJST });
   await page.reload();
   await page.waitForSelector('.shell');
   await naarLijst(page);
@@ -74,10 +81,19 @@ check('en wie het weekend won', uitslag.includes('Weekendwinst: Danny.'), uitsla
 await zet(page, { start: -40 * UUR, quali: LIJST, race: LIJST });
 check('op maandag staat hij er nog, en nog steeds alleen', (await kaart(page)) !== null && (await page.$('.hero')) === null);
 
-await zet(page, { start: -40 * UUR, quali: LIJST, race: LIJST, volgende: 30 * UUR });
+await zet(page, { start: -3 * UUR, quali: LIJST, race: LIJST, alleen: true });
+const solo = await tekst(page, '[data-lopend="uitslag"] .kaartvoet');
+check('in je eentje: je punten dit weekend en je totaal, zonder plek',
+  solo.includes('+100') && solo.includes('100punten') && !solo.includes('in de stand'), solo);
+
+await zet(page, { start: -40 * UUR, quali: LIJST, race: LIJST, volgende: 49 * UUR });
+check('sluit de volgende race over 49 uur, dan nog steeds alleen', (await kaart(page)) !== null && (await page.$('.hero')) === null);
+
+await zet(page, { start: -40 * UUR, quali: LIJST, race: LIJST, volgende: 47 * UUR });
 check('sluit de volgende race binnen twee dagen, dan staat die eronder', await page.evaluate(() => {
   const k = document.querySelector('[data-lopend]'); const h = document.querySelector('.hero');
-  return !!k && !!h && !!(k.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING);
+  return !!k && !!h && h.querySelector('.heronaam').textContent.trim() === 'Shanghai'
+    && !!(k.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING);
 }));
 check('en dan zonder de knop naar de vorige uitslag, want die staat erboven', (await page.$('.hero [data-vorige-uitslag]')) === null);
 
@@ -85,9 +101,27 @@ await zet(page, { start: -49 * UUR, quali: LIJST, race: LIJST });
 check('twee dagen na de start is hij weg en staat de volgende race er weer', (await kaart(page)) === null && (await page.$('.hero')) !== null);
 const vorige = await tekst(page, '.hero [data-vorige-uitslag]');
 check('met een duidelijke knop naar de punten van de vorige race', vorige === 'Uitslag en punten Melbourne', vorige);
+check('de kaart van de volgende race heeft één knop naar die race zelf',
+  (await page.$$('.hero [data-naar-race]')).length === 1);
 await page.click('.hero [data-vorige-uitslag]');
 await page.waitForSelector('#paneel');
 check('die de vorige race opent', (await tekst(page, '#paneel')).includes('Melbourne'));
+
+// Blijft de uitslag uit, dan wijst de knop niet naar een ouder weekend.
+await zet(page, { start: -49 * UUR, quali: LIJST });
+check('zonder uitslag van de vorige race geen knop', (await page.$('.hero')) !== null
+  && (await page.$('.hero [data-vorige-uitslag]')) === null);
+
+// De app blijft openstaan terwijl de twee dagen verstrijken: de klok van de
+// app (elke 30 seconden) tekent de races dan zelf opnieuw.
+// (De nepklok eerst: hij vangt alleen de timers die daarna gezet worden.)
+await page.clock.install();
+await zet(page, { start: -48 * UUR + 90e3, quali: LIJST, race: LIJST });
+check('anderhalve minuut voor het eind staat de kaart er nog', (await kaart(page)) !== null && (await page.$('.hero')) === null);
+await page.clock.fastForward(150e3);
+await page.waitForSelector('.hero', { timeout: 5000 }).catch(() => {});
+check('en zonder een tik maakt hij plaats voor de volgende race',
+  (await kaart(page)) === null && (await page.$('.hero')) !== null);
 
 check('geen javascriptfouten', jsFouten.length === 0, jsFouten.join(' | '));
 await stoppen();
