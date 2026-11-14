@@ -63,7 +63,11 @@ const openPunten = (page) => page.$$eval('.vragentegel [data-vraagblok]', (blokk
 {
   const { page, jsFouten, stoppen } = await startPagina();
   const tekst = tekstVan(page);
-  await page.setViewportSize({ width: 390, height: 844 });
+  // Een kleine telefoon (iPhone SE). Sinds de startopstelling in twee rijen
+  // staat (14 november) past de eerste losse vraag op een groot scherm al in
+  // beeld; op een klein scherm valt hij nog onder de rand, en daar is de
+  // regel bij Opslaan voor.
+  await page.setViewportSize({ width: 375, height: 667 });
   await meedoen(page);
   await openRace(page, 'Melbourne');           // de kwalificatie staat open
 
@@ -73,11 +77,13 @@ const openPunten = (page) => page.$$eval('.vragentegel [data-vraagblok]', (blokk
   check('met een lege plek in de vorm van de top 10, om aan te tikken',
     (await opPlek(page, POLE)) === '' && (await tekst(POLE)) === 'P tik om te kiezen'
       && (await page.$eval(POLE, (b) => b.classList.contains('open'))), await tekst(POLE));
-  check('en daaronder in amber wat er te halen valt',
-    (await tekst(`${BLOK} p.amber`)) === 'nog niets gekozen · hier liggen 10 punten');
+  // Sinds 14 november geen regel meer onder elke vraag: de punten in de kop
+  // zijn amber zolang de vraag open is.
+  check('de punten in de kop zijn amber: er valt nog iets te halen',
+    (await tekst(`${BLOK} .vraagpunten.amber`)) === '10 punten' && (await page.$(`${BLOK} p.amber`)) === null);
   const rand = await page.$eval(POLE, (b) => {
     const s = getComputedStyle(b);
-    const amber = getComputedStyle(b.parentElement.querySelector('p.amber')).color;
+    const amber = getComputedStyle(b.parentElement.querySelector('.vraagpunten.amber')).color;
     const lijn = getComputedStyle(document.querySelector('.slot.leegplek')).borderTopColor;
     return { stijl: s.borderTopStyle, kleur: s.borderTopColor, amber, lijn, breed: b.getBoundingClientRect().width,
       blok: b.parentElement.getBoundingClientRect().width };
@@ -109,7 +115,7 @@ const openPunten = (page) => page.$$eval('.vragentegel [data-vraagblok]', (blokk
   await page.waitForSelector('#kiesblad', { state: 'detached' });
   check('met een pole gekozen is de regel weg', (await page.$('#nogopen')) === null);
   check('en staat de keuze in het blok, zonder amber regel',
-    (await opPlek(page, POLE)) === 'LEC' && (await page.$(`${BLOK} p.amber`)) === null
+    (await opPlek(page, POLE)) === 'LEC' && (await page.$(`${BLOK} .amber`)) === null
       && (await page.$eval(POLE, (b) => b.classList.contains('vol'))), await tekst(BLOK));
   check('de teller van de losse vragen telt hem mee',
     (await tekst('.vragentegel .tegelsub')) === '1 van 1 ingevuld', await tekst('.vragentegel .tegelsub'));
@@ -309,8 +315,8 @@ for (const thema of ['light', 'dark']) {
     check('in het Engels: het blok',
       (await tekst(`${BLOK} .winnaarkop`)) === 'who takes pole? 10 points'
         && (await tekst(POLE)) === 'P tap to pick'
-        && (await tekst(`${BLOK} p.amber`)) === 'nothing picked yet · 10 points on the table',
-      `${await tekst(`${BLOK} .winnaarkop`)} / ${await tekst(POLE)} / ${await tekst(`${BLOK} p.amber`)}`);
+        && (await tekst(`${BLOK} .vraagpunten.amber`)) === '10 points',
+      `${await tekst(`${BLOK} .winnaarkop`)} / ${await tekst(POLE)}`);
     check('in het Engels: de regel bij Opslaan',
       (await tekst('#nogopen')) === 'still open: pole · 10 points →', await tekst('#nogopen'));
   }

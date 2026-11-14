@@ -687,6 +687,23 @@
     background:var(--paneel);border:1px solid var(--lijn);border-left:3px solid var(--amber);
     border-radius:14px}
   .accountkaart > .label{color:var(--amber)}
+  /* De seizoensvragen op de Stand-tab: buiten de aanloop naar het seizoen één
+     regel, oranje zolang er nog iets openstaat. */
+  .pitregel.let > summary{border-left-color:var(--amber)}
+  .pitregel.let .pitstand{color:var(--amber)}
+  .pitregel.let .pitlamp{background:var(--amber)}
+  .pitinhoud .seizoenslaag > .label{display:none}
+  /* De seizoensrecords als tegels: het getal groot, wie en wat eronder. */
+  .recordtegels{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .recordtegel{display:flex;flex-direction:column;gap:2px;padding:12px 14px;min-width:0;
+    background:var(--paneel);border:1px solid var(--lijn);border-radius:14px}
+  .recordtegel.winnaar{border-left:3px solid var(--accent);background:var(--eigen),var(--paneel)}
+  .recordtegel[data-record="weekend"]{grid-column:1 / -1}
+  .recordtegel .t{font-family:var(--cond);font-weight:700;font-size:28px;line-height:1.05;color:var(--ink)}
+  .recordtegel .kop{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+  .recordtegel .nm{font-size:14px;font-weight:600}
+  .strij .av,.duel .av{width:30px;height:30px;font-size:16px}
+  .trede .av{width:36px;height:36px;font-size:19px}
   .codekaart .code{font-family:var(--cond);font-weight:700;font-size:54px;line-height:1;
     letter-spacing:.12em;color:var(--ink)}
 
@@ -1086,9 +1103,14 @@
   @keyframes vhOp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
   /* ---- startgrid ------------------------------------------ */
-  .grid10{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-  .slotrij{display:flex}
-  .slotrij.rechts{justify-content:flex-end}
+  /* Een startopstelling in twee rijen, de rechter een halve plek naar achteren,
+     zoals op de grid. Tot 14 november stonden de tien plekken onder elkaar en
+     om en om ingesprongen: hetzelfde beeld, maar twee keer zo hoog. */
+  .grid10{list-style:none;margin:0;padding:0 0 28px;display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 10px}
+  .slotrij{display:block;min-width:0}
+  .slotrij > .slot{width:100%}
+  .slotrij.rechts{position:relative;top:28px}
   /* .vraagslot is een losse vraag (pole, winnaar, ...) in dezelfde vorm als
      een plek in de top 10, maar over de volle breedte en zonder zigzag. */
   :is(.slot,.vraagslot){
@@ -1113,6 +1135,11 @@
      kleur van "hier liggen nog punten" (de regel eronder). */
   .vraagslot.open{background:transparent;border:1px dashed var(--amber);padding-left:14px}
   .vraagslot.open:hover{background:var(--amber-vlak)}
+  /* De punten in de kop van een losse vraag: grijs als hij is ingevuld, amber
+     zolang er nog iets te halen valt. Eerst stond dat als een regel onder
+     elke vraag, zes keer onder elkaar. */
+  .vraagpunten{color:var(--ink3)}
+  .vraagpunten.amber{color:var(--amber)}
   :is(.slot.leegplek,.vraagslot.open) .who{font-size:13px;color:var(--ink3)}
   .vraagslot.open .who{color:var(--ink2)}
   .slot .who .code{font-size:21px}
@@ -3531,8 +3558,6 @@ const ENGELS = Object.fromEntries([
   // ---- losse vragen en duels invullen --------------------------
   ['{n} punten',
    '{n} points'],
-  ['nog niets gekozen · hier liggen {n} punten',
-   'nothing picked yet · {n} points on the table'],
   ['nog open: {wat} · {n} punten',
    'still open: {wat} · {n} points'],
   ['nog {aantal} losse vragen open · {n} punten',
@@ -7463,6 +7488,7 @@ function duels() {
   return S.leden
     .filter(l => !zelfde(l.member_id, S.ik.id))
     .map(l => ({
+      id: l.member_id,
       naam: l.display_name,
       ...duelStand(gescoord.map(r => ({
         ik:    scoreWeekend(vindPred(r.id, S.ik.id), r),
@@ -8940,6 +8966,7 @@ function standRij(r, i, alle, wissels) {
   const reeks = reeksVan(r.id);
   return `<div class="strij ${r.mij ? 'zelf' : ''}">
     <span class="p">${plekVan(alle, r.id)}</span>
+    ${avatar(r.id, r.naam)}
     <span class="nm">${esc(r.naam)}${r.mij ? ` <span class="jij">${T('jij')}</span>` : ''}
       ${reeks >= 3 ? `<span class="reeks" title="${
         T('{n} weekenden op rij ingeleverd', { n: reeks })}"
@@ -8964,6 +8991,7 @@ function standPagina(rijen) {
     </div>
     ${volgorde.length && hoogste ? `<div class="podium">${volgorde.map((r, i) => `
       <div class="trede ${i === 1 ? 'eerste' : ''}">
+        ${avatar(r.id, r.naam)}
         <span class="nm">${esc(r.naam)}</span>
         <span class="balk" style="height:${balk(r.punten)}px">${r.punten}</span>
       </div>`).join('')}</div>
@@ -9200,10 +9228,10 @@ function seizoensRecords() {
       : T('{n} punten', { n: wk.beste }) });
   if (!regels.length) return '';
   return `<span class="label">${T('seizoensrecords')}</span>
-    <div class="groep">${regels.map(r => `<div class="rest${r.wie.some(x => zelfde(x.id, S.ik.id)) ? ' winnaar' : ''}"
+    <div class="recordtegels">${regels.map(r => `<div class="recordtegel${r.wie.some(x => zelfde(x.id, S.ik.id)) ? ' winnaar' : ''}"
       data-record="${r.soort}">
-      <span class="nm"><span class="zacht" style="display:block;font-size:13px">${r.kop}</span>${namen(r.wie)}</span>
       <span class="t">${r.waarde}</span>
+      <span class="nm"><span class="kop" style="display:block">${r.kop}</span>${namen(r.wie)}</span>
     </div>`).join('')}</div>`;
 }
 
@@ -9298,7 +9326,7 @@ function seizoenslaagBlok() {
                           { n: teVullen.length })
                       : T('ingevuld · wordt gescoord als het seizoen erop zit');
 
-  return `
+  const blok = `
     <div class="scheiding"></div>
     <div class="seizoenslaag">
       <span class="label">${T('seizoensvragen')} · ${esc(kop)}</span>
@@ -9320,6 +9348,14 @@ function seizoenslaagBlok() {
         <button class="knop klein" id="seizoenOpslaan">${T('Opslaan')}</button>` : ''}
       ${S.seizoenFout ? `<p class="err">${esc(S.seizoenFout)}</p>` : ''}
     </div>`;
+  // Vóór de eerste race is dit waar het om gaat, en staat het formulier er
+  // gewoon. Daarna stond het midden in de stand, tussen de regels en de duels
+  // (14 november): dan is het één regel die zegt wat er nog open is, met het
+  // formulier erachter.
+  if (open) return blok;
+  const regelHtml = pitRegel('s-seizoen', T('seizoensvragen'), esc(kop), false, blok);
+  return `<div class="groep pitmuur" data-seizoenregel>${
+    teVullen.length || weg.length ? regelHtml.replace('class="pitregel', 'class="pitregel let') : regelHtml}</div>`;
 }
 
 function knoopSeizoenslaag() {
@@ -9395,6 +9431,7 @@ function duelLijst() {
       // getal van "1 – 0" bij die naam te horen — terwijl het juist jouw
       // score is. Vandaar het "jij" vlak achter je eigen cijfer.
       return `<div class="rest duel ${stand}">
+        ${avatar(d.id, d.naam)}
         <span class="nm">${esc(d.naam)}</span>
         ${d.gelijk ? `<span class="gelijkop-tel">${
           T('{n}× gelijk', { n: d.gelijk })}</span>` : ''}
@@ -12874,7 +12911,7 @@ function invulWeergave(paneel, r, dicht) {
                   ? T(', nu {wie}', { wie: esc(d.naam) }) : T(', nog leeg')}">
                 <span class="pos">P${i+1}</span>
                 ${d
-                  ? `<span class="who"><b class="code">${esc(d.code)}</b><small>${esc(d.naam)}</small></span>`
+                  ? `<span class="who"><b class="code">${esc(d.code)}</b><small>${esc(achternaam(d))}</small></span>`
                   : `<span class="who">${T('tik om te kiezen')}</span>`}
               </button></li>`;
           }).join('')}
@@ -13121,7 +13158,7 @@ function coureurKiezer(r, id) {
     <div class="winnaarblok" data-vraagblok="${esc(id)}">
       <div class="winnaarkop">
         <span class="label">${esc(T(v.kop))}</span>
-        <span class="mono" style="color:var(--ink3)">${T('{n} punten', { n: punten })}</span>
+        <span class="mono vraagpunten${d ? '' : ' amber'}">${T('{n} punten', { n: punten })}</span>
       </div>
       <button class="vraagslot ${d ? 'vol' : 'open'}" data-vraagplek="${esc(id)}"
         style="border-left-color:${d ? esc(d.kleur) : 'var(--amber)'}"
@@ -13132,8 +13169,6 @@ function coureurKiezer(r, id) {
           ? `<span class="who"><b class="code">${esc(d.code)}</b><small>${esc(d.naam)}</small></span>`
           : `<span class="who">${T('tik om te kiezen')}</span>`}
       </button>
-      ${d ? '' : `<p class="mono amber" style="margin:0">${
-        T('nog niets gekozen · hier liggen {n} punten', { n: punten })}</p>`}
     </div>`;
 }
 
@@ -13228,13 +13263,12 @@ function extraKiezer(r, id) {
     <div class="winnaarblok" data-vraagblok="${esc(id)}">
       <div class="winnaarkop">
         <span class="label">${esc(T(v.kop))}</span>
-        <span class="mono" style="color:var(--ink3)">${T('{n} punten', { n: punten })}</span>
+        <span class="mono vraagpunten${leegAntwoord(gekozen) ? ' amber' : ''}">${T('{n} punten', { n: punten })}</span>
       </div>
       ${v.uitleg ? `<p class="zacht" style="margin:0 0 8px">${esc(T(v.uitleg))}</p>` : ''}
       ${extraKnoppen(id, gekozen, 'extra')}
       ${leegAntwoord(gekozen)
-        ? `<p class="mono amber" style="margin:0">${
-            T('nog niets gekozen · hier liggen {n} punten', { n: punten })}</p>`
+        ? ''
         : `<p class="mono groen" style="margin:0">${
             T('jouw antwoord: {wat}', { wat: esc(String(v.toon(gekozen))) })}${
             v.soort === 'getal' ? T(' · eentje ernaast levert nog de helft op') : ''}</p>`}

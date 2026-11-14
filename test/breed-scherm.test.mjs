@@ -108,7 +108,10 @@ const invullen = async (breed) => {
 {
   const v = await invullen(2560);
   check('invullen op een groot scherm: de top 10 links, Opslaan rechts ernaast',
-    naast(v.grid, v.opslaan) && v.opslaan.t < v.grid.b, JSON.stringify({ grid: v.grid, opslaan: v.opslaan }));
+    // (Sinds 14 november is de top 10 een startopstelling in twee rijen en dus
+    // half zo hoog; Opslaan hoeft niet meer naast de plekken zelf te beginnen,
+    // wel in de kolom ernaast.)
+    naast(v.grid, v.opslaan), JSON.stringify({ grid: v.grid, opslaan: v.opslaan }));
   check('en de poule ook rechts, boven Opslaan',
     naast(v.grid, v.poule) && onder(v.poule, v.opslaan), JSON.stringify({ grid: v.grid, poule: v.poule, opslaan: v.opslaan }));
 }
