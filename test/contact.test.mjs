@@ -33,7 +33,7 @@ await page.waitForSelector('[data-lid]');
 await page.click('[data-lid]:has(.nm:text-is("Danny"))');
 await naDeClaim(page);
 await page.click('[data-weergave="profiel"]');
-await page.waitForSelector('[data-contact]');
+await page.waitForSelector('[data-contact]', { state: 'attached' });
 
 // Danny (8 oktober): "Ik zie nergens in de app de feedback knop." Hij stond
 // onderaan Profiel, onder uitloggen. Nu bovenaan, direct na de taal.

@@ -931,6 +931,7 @@ const functies = {
         profiel_code: m.user_id && gelijk(m.user_id, ik) ? m.profiel_code ?? null : null,
         profiel: m.user_id && gelijk(m.user_id, ik) ? m.profiel ?? null : null,
         team_id: m.team_id ?? null,
+        kleur: m.kleur ?? null,
       }));
     // De antwoorden van medespelers pas na hun deadline, je eigen altijd; van
     // de rest alleen dát ze er zijn. Zelfde voor de jokers, zonder de rest.
@@ -1107,6 +1108,17 @@ const functies = {
     if (!magBeheren(team.pool_id)) return { data: null, error: { code: 'P0001', message: 'alleen de poulebaas haalt een team weg' } };
     store.pool_teams = store.pool_teams.filter((t) => t !== team);
     for (const m of store.pool_members) if (gelijk(m.team_id, p_team)) m.team_id = null;
+    bewaren();
+    return { data: null, error: null };
+  },
+
+  poule_kleur_kiezen({ p_member, p_kleur = null } = {}) {
+    const fout = (message) => ({ data: null, error: { code: 'P0001', message } });
+    const lid = store.pool_members.find((m) => gelijk(m.member_id, p_member));
+    if (!lid) return fout('die speler bestaat niet');
+    if (!magVoorSpelerIn(p_member, lid.pool_id)) return fout('je kiest alleen je eigen kleur');
+    if (p_kleur !== null && !(Number.isInteger(p_kleur) && p_kleur >= 0 && p_kleur <= 7)) return fout('die kleur bestaat niet');
+    lid.kleur = p_kleur;
     bewaren();
     return { data: null, error: null };
   },

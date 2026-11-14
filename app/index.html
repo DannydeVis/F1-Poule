@@ -673,6 +673,20 @@
   .pitinhoud{display:flex;flex-direction:column;gap:14px;padding:4px 16px 18px}
   /* De kop van het blok staat al in de regel erboven. */
   .pitinhoud > span.label:first-child{display:none}
+  .pitstand:empty{display:none}
+  /* Een regel die geen stand heeft (contact, uitloggen) heeft ook geen lampje. */
+  .pitregel.zonder .pitlamp{display:none}
+  /* De rijderskaart bovenaan Profiel: je naam groot, je kleur, je cijfers. */
+  .helmrij{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .helmrij .label{flex:1;min-width:90px}
+  .helm{width:30px;height:30px;border-radius:50%;border:0;padding:0;cursor:pointer;
+    background:var(--av);flex:none}
+  .helm[aria-pressed="true"]{box-shadow:0 0 0 2px var(--paneel),0 0 0 4px var(--ink)}
+  /* Nog geen account gekoppeld: dat is het enige op dit scherm dat haast heeft. */
+  .accountkaart{display:flex;flex-direction:column;gap:12px;padding:16px;
+    background:var(--paneel);border:1px solid var(--lijn);border-left:3px solid var(--amber);
+    border-radius:14px}
+  .accountkaart > .label{color:var(--amber)}
   .codekaart .code{font-family:var(--cond);font-weight:700;font-size:54px;line-height:1;
     letter-spacing:.12em;color:var(--ink)}
 
@@ -3142,6 +3156,16 @@ const ENGELS = Object.fromEntries([
   ['premium', 'premium'],
   ['één keer abonneren', 'subscribe once'],
   ['berichten en de stand', 'messages and standings'],
+  // ---- profiel: de rijderskaart en de regels ----------------------
+  ['coureur · startnummer {n}', 'driver · start number {n}'],
+  ['jouw helmkleur', 'your helmet colour'],
+  ['kleur {n}', 'colour {n}'],
+  ['speler niet bewaard', 'player not saved'],
+  ['teamradio · meldingen', 'team radio · notifications'],
+  ['afstelling', 'set-up'],
+  ['pitstop · hulp', 'pit stop · help'],
+  ['geblokkeerd', 'blocked'],
+  ['gekoppeld', 'linked'],
   ['Uitslag en punten {race}',
    'Results and points {race}'],
   ['Je voorspelling bekijken', 'View your prediction'],
@@ -3644,8 +3668,6 @@ const ENGELS = Object.fromEntries([
    'Copy the link'],
   ['Haal de pagina weg',
    'Take the page down'],
-  ['Je speelt hier als <b>{naam}</b>.',
-   'You play here as <b>{naam}</b>.'],
   ['taal',
    'language'],
   ['De app kiest zelf een taal op basis van '
@@ -8132,6 +8154,7 @@ function toonApp() {
     openRace(b.dataset.vorigeUitslag));
   app.querySelectorAll('details[data-pit]').forEach(d => d.ontoggle = () =>
     pitOnthoud(d.dataset.pit, d.open));
+  app.querySelectorAll('[data-helm]').forEach(b => b.onclick = () => kiesKleur(Number(b.dataset.helm)));
   const terug = app.querySelector('#terug');
   if (terug) terug.onclick = () => { S.race = null; terugNaarVorige = true; render(); };
   // Escape sluit een open race, zoals een venster. Niet als je in een veld
@@ -9430,7 +9453,7 @@ const PIT_PIJL = `<svg class="pitpijl" viewBox="0 0 24 24" width="16" height="16
 function pitRegel(id, naam, stand, aan, blok) {
   if (!blok) return '';
   const inhoud = blok.replace(/^\s*<div class="scheiding"><\/div>\s*/, '');
-  return `<details class="pitregel${aan ? ' aan' : ''}" data-pit="${id}"${pitOpen.has(id) ? ' open' : ''}>
+  return `<details class="pitregel${aan ? ' aan' : ''}${stand ? '' : ' zonder'}" data-pit="${id}"${pitOpen.has(id) ? ' open' : ''}>
     <summary><span class="pittekst"><span class="pitnaam">${naam}</span>
       <span class="pitstand">${stand}</span></span>
       <i class="pitlamp" aria-hidden="true"></i>${PIT_PIJL}</summary>
@@ -9494,22 +9517,94 @@ function profielPagina() {
   if (!S.ik) return '';
   return `
     <h1 class="middel smalkop">${T('Profiel')}</h1>
-    <p class="zacht" style="margin:-10px 0 0">${T('Je speelt hier als <b>{naam}</b>.',
-      { naam: esc(S.ik.naam) })}</p>
-    ${taalBlok()}
-    ${mijnTeamBlok()}
-    ${contactBlok()}
-    ${mailBlok()}
-    ${beginschermBlok()}
-    ${meldingBlok()}
-    ${perMailBlok()}
-    ${verhaalBlok()}
-    ${deelBlok()}
-    ${eigenLinkBlok()}
-    ${uitlogBlok()}
-    ${privacyBlok()}
-    ${voorpaginaBlok()}
-    ${siteBeheerBlok()}`;
+    ${rijdersKaart()}
+    ${accountKaart()}
+    ${profielRegels()}`;
+}
+
+// De rijderskaart: wie je bent in deze poule. Je naam groot, het nummer
+// waarmee je binnenkwam, je kleur (die kies je hier) en hoe je ervoor staat.
+function rijdersKaart() {
+  const nr = S.leden.findIndex(l => zelfde(l.member_id, S.ik.id)) + 1;
+  const nu = spelerKleur(S.ik.id);
+  return `
+    <div class="hero rijder" data-ronde="${esc(String(S.ik.naam).trim().charAt(0).toUpperCase())}">
+      <div class="hero-kop"><span class="label">${T('coureur · startnummer {n}',
+        { n: String(nr).padStart(2, '0') })}</span></div>
+      <h2 class="heronaam" translate="no" data-rijder>${esc(S.ik.naam)}</h2>
+      <div class="helmrij" role="group" aria-label="${T('jouw helmkleur')}">
+        <span class="label">${T('jouw helmkleur')}</span>
+        ${SPELERKLEUREN.map((hex, i) => `<button class="helm" type="button" data-helm="${i}"
+          style="--av:${hex}" aria-pressed="${hex === nu}"
+          aria-label="${T('kleur {n}', { n: i + 1 })}"></button>`).join('')}
+      </div>
+      ${S.kleurFout ? `<p class="err" id="kleurfout">${esc(S.kleurFout)}</p>` : ''}
+      ${positieRegel()}
+    </div>`;
+}
+
+// Je kleur opslaan. Eerst op het scherm, dan in de database; lukt dat niet,
+// dan gaat hij terug en staat erbij waarom.
+async function kiesKleur(i) {
+  const lid = S.leden.find(l => zelfde(l.member_id, S.ik.id));
+  if (!lid) return;
+  const was = lid.kleur ?? null;
+  lid.kleur = i; S.kleurFout = '';
+  render();
+  if (DEMO || !db) return;
+  const { error } = await db.rpc('poule_kleur_kiezen', { p_member: S.ik.id, p_kleur: i });
+  if (error) {
+    lid.kleur = was;
+    S.kleurFout = uitleg(error);
+    render();
+  }
+}
+
+// Zonder gekoppeld account staat dat bovenaan, als gele vlag: wie zijn browser
+// leegmaakt is zijn speler anders kwijt. Is het geregeld, dan is het een
+// gewone regel tussen de rest.
+function accountKaart() {
+  const blok = mailBlok();
+  if (!blok || kanTerugkomen()) return '';
+  return `<div class="accountkaart" data-accountkaart>
+    <span class="label">${T('gele vlag')} · ${T('speler niet bewaard')}</span>
+    ${blok.replace(/^\s*<div class="scheiding"><\/div>\s*<span class="label">[^<]*<\/span>/, '')}
+  </div>`;
+}
+
+// De rest van Profiel als regels, net als de pitmuur op de Poule-tab: de naam,
+// hoe het nu staat, en de uitleg en de knoppen erachter.
+function profielRegels() {
+  const aanUit = (aan) => T(aan ? 'staat aan' : 'staat uit');
+  const groep = (kop, regels) => {
+    const inhoud = regels.join('');
+    return inhoud ? `<span class="label">${kop}</span><div class="groep pitmuur">${inhoud}</div>` : '';
+  };
+  const team = teamsActief() ? (S.teams ?? []).find(t => zelfde(t.id, teamVan(S.ik.id)))?.naam : null;
+  const gedeeld = !!ikRij()?.profiel_code;
+  return `
+    ${groep(T('teamradio · meldingen'), [
+      pitRegel('p-melding', T('herinneringen'),
+        S.push === 'aan' ? T('staat aan') : S.push === 'geweigerd' ? T('geblokkeerd') : T('staat uit'),
+        S.push === 'aan', meldingBlok()),
+      pitRegel('p-mail', T('per mail'), aanUit(!!S.perMail?.aan), !!S.perMail?.aan, perMailBlok()),
+    ])}
+    ${groep(T('afstelling'), [
+      pitRegel('p-taal', T('taal'), esc(TALEN[TAAL]?.naam ?? ''), false, taalBlok()),
+      pitRegel('p-team', T('jouw team'), team ? esc(team) : T('geen team'), !!team, mijnTeamBlok()),
+      pitRegel('p-verhaal', T('het weekend afspelen'), aanUit(verhaalAan()), verhaalAan(), verhaalBlok()),
+      pitRegel('p-app', T('de app'), '', false, beginschermBlok()),
+      pitRegel('p-deel', T('je seizoen delen'), aanUit(gedeeld), gedeeld, deelBlok()),
+      pitRegel('p-link', T('jezelf meenemen'), '', false, eigenLinkBlok()),
+      kanTerugkomen() ? pitRegel('p-account', T('je account meenemen'), T('gekoppeld'), true, mailBlok()) : '',
+    ])}
+    ${groep(T('pitstop · hulp'), [
+      pitRegel('p-contact', T('contact'), '', false, contactBlok()),
+      pitRegel('p-privacy', T('wat de app van je weet'), '', false, privacyBlok()),
+      pitRegel('p-over', T('over Predict the Race'), '', false, voorpaginaBlok()),
+      pitRegel('p-uitlog', T('uitloggen'), '', false, uitlogBlok()),
+      pitRegel('p-beheer', T('beheer van de site'), '', false, siteBeheerBlok()),
+    ])}`;
 }
 
 // De beheerder krijgt onderaan Profiel een knop naar het beheer (/beheer/).
@@ -9968,6 +10063,8 @@ function knoopUitloggen() {
 // letter erin, in het licht en in het donker.
 const SPELERKLEUREN = ['#d93d24', '#1f6feb', '#117c3e', '#7a4bd1', '#b85f00', '#0b7285', '#b02a8f', '#5b6470'];
 function spelerKleur(id) {
+  const gekozen = S.leden.find(l => zelfde(l.member_id, id))?.kleur;
+  if (Number.isInteger(gekozen) && SPELERKLEUREN[gekozen]) return SPELERKLEUREN[gekozen];
   let h = 0;
   for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return SPELERKLEUREN[h % SPELERKLEUREN.length];
@@ -10343,7 +10440,7 @@ function mailBlok() {
   if (!S.mail.open) {
     return `${kop}
       ${uitleg}
-      <button class="knop klein" id="googlekoppel">${T('Koppel je Google-account')}</button>
+      <button class="knop primair" id="googlekoppel">${T('Koppel je Google-account')}</button>
       <button class="knop spook klein" id="mailopen">${T('Liever met een mailadres')}</button>
       <p class="err" id="mailfout">${esc(S.mail.fout)}</p>`;
   }

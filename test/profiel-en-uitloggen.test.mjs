@@ -26,7 +26,7 @@ await page.click('[data-weergave="profiel"]');
 await page.waitForSelector('#eigenlink');
 const profiel1 = await tekst('#app');
 check('de Profiel-tab zegt als wie je speelt',
-  profiel1.includes('Je speelt hier als') && profiel1.includes('Danny'));
+  (await tekst('[data-rijder]')) === 'Danny', await tekst('.rijder'));
 check('zonder gekoppeld account staat er nog geen uitlogknop',
   (await page.$('#uitloggen')) === null);
 check('maar wel een uitleg waarom niet',

@@ -12615,3 +12615,26 @@ iets verzinnen.
 andere tests de regels open.
 
 **Danny moet:** niets.
+
+## Nieuw ontwerp, deel 2: Profiel en je eigen kleur (14 november)
+
+**Wat er verandert.**
+- Profiel begint met de rijderskaart (`rijdersKaart()`): je naam, je
+  startnummer, je plek en je punten, en acht kleuren om uit te kiezen.
+- De kleur staat in de database: `pool_members.kleur` (0 tot en met 7) en
+  `poule_kleur_kiezen()`. `poule_ophalen()` geeft hem mee, `spelerKleur()`
+  gebruikt hem, en zonder keuze blijft het de kleur op het id.
+- Zonder gekoppeld account staat dat bovenaan als gele vlag
+  (`accountKaart()`), met "Koppel je Google-account" als gekleurde knop.
+- De rest zijn regels in drie groepen (`profielRegels()`), met dezelfde
+  `pitRegel()` als de Poule-tab.
+- De zin "Je speelt hier als ..." is weg; de kaart zegt het.
+
+**Database.** De kolom, de functie, `poule_ophalen()` en de controleregel
+staan in schema.sql en in productie (14 november, via de MCP; lokaal eerst
+geoefend op het oude schema, de functies zijn gelijk aan een verse database).
+
+**Tests.** Nieuw: `test/rijderskaart.test.mjs` (19) en deel 6 van
+`test/teams.test.sql`. `profiel-en-uitloggen` leest de naam van de kaart.
+
+**Danny moet:** niets.

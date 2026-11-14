@@ -274,6 +274,29 @@ er in een regel staat is niet veranderd: het zijn de blokken die er al waren.
 **Test.** `test/pitmuur.test.mjs`. De andere tests krijgen de regels open
 (`pitmuur` in `startPagina`), zodat ze de knoppen kunnen bedienen.
 
+### Profiel: de rijderskaart, je kleur en de regels (sinds 14 november)
+
+Bovenaan Profiel staat de **rijderskaart**: je naam groot, je startnummer (de
+hoeveelste je in de poule kwam), je plek en je punten. Daar kies je ook je
+**helmkleur**: een van acht. Zonder keuze heb je de kleur die uit je speler
+volgt. De keuze staat in de database (`pool_members.kleur`, 0 tot en met 7,
+via `poule_kleur_kiezen()`), dus je medespelers zien hem ook. Alleen jijzelf
+kiest hem, ook de poulebaas niet. Weigert de database, dan springt de kleur
+terug en staat erbij waarom.
+
+Heb je nog geen account gekoppeld, dan staat dat direct onder de kaart als
+**gele vlag**, met één gekleurde knop. Is het geregeld, dan is het een gewone
+regel.
+
+De rest staat in drie groepen regels, net als de pitmuur: **teamradio**
+(meldingen en mail), **afstelling** (taal, team, het weekend afspelen, de app,
+je seizoen delen, jezelf meenemen) en **pitstop** (contact, wat de app van je
+weet, over de site, uitloggen). Een regel zegt hoe het staat als er iets te
+zeggen valt.
+
+**Test.** `test/rijderskaart.test.mjs`; de database in `test/teams.test.sql`
+(deel 6).
+
 ## 3. Poule aanmaken: vier stappen
 
 Eén vraag per scherm. Werkt beter op een telefoon dan een lang formulier.

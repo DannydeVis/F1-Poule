@@ -86,7 +86,10 @@ function zegNeeTegenMeten() {
 
 // De regels van de pitmuur (pitmuur() in de app), allemaal.
 export const PITREGELS = ['agenda', 'omschrijving', 'premium', 'teams', 'periodes', 'groepsapp',
-  'openbaar', 'toegang', 'autofill', 'jokers', 'contrair', 'seizoen', 'vragen'];
+  'openbaar', 'toegang', 'autofill', 'jokers', 'contrair', 'seizoen', 'vragen',
+  // En die van Profiel (profielRegels()).
+  'p-melding', 'p-mail', 'p-taal', 'p-team', 'p-verhaal', 'p-app', 'p-deel', 'p-link',
+  'p-account', 'p-contact', 'p-privacy', 'p-over', 'p-uitlog', 'p-beheer'];
 
 export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent, schaal,
                                    taal = 'nl', verhaal = false, toestemming = false, voorafAan,
@@ -208,6 +211,14 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent, s
 // wachten en alleen overslaan als hij er ook echt is — één plek voor deze
 // naad, in plaats van in elk testbestand apart. test/rondleiding.test.mjs
 // loopt de rondleiding zelf na.
+// Een regel van de pitmuur (Poule) of van Profiel opendoen, als hij dicht is.
+// Voor tests die niet via startPagina beginnen en de regels dus dicht vinden.
+export async function openRegel(page, id) {
+  const regel = page.locator(`details[data-pit="${id}"]`);
+  await regel.waitFor({ state: 'attached' });
+  if (!(await regel.evaluate((d) => d.open))) await regel.locator('summary').click();
+}
+
 export async function naDeClaim(page) {
   await Promise.race([
     page.waitForSelector('#rondleidingweg'),

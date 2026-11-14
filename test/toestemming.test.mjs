@@ -19,7 +19,7 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { maakControle, startSite, wortel } from './hulp.mjs';
+import { maakControle, startSite, wortel, openRegel } from './hulp.mjs';
 
 const { check, afronden } = maakControle('google analytics met toestemming');
 const bron = readFileSync(join(wortel, 'toestemming.js'), 'utf8');
@@ -116,6 +116,7 @@ await page.click('[data-lid]');
 await page.waitForSelector('#rondleidingweg, [data-race]');
 if (await page.$('#rondleidingweg')) await page.click('#rondleidingweg');
 await page.click('[data-weergave="profiel"]');
+await openRegel(page, 'p-privacy');
 await page.click('#privacyopen');
 await page.waitForSelector('[data-toestemming]');
 check('in Profiel, bij de privacyverklaring, staat "Statistieken en cookies"',

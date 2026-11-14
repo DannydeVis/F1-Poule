@@ -121,7 +121,7 @@ const stuurPrompt = (page, keuze = 'accepted') => page.evaluate((k) => {
 
   // Daar staat het dan ook echt.
   await page.click('[data-weergave="profiel"]');
-  await page.waitForSelector('[data-beginscherm]');
+  await page.waitForSelector('[data-beginscherm]', { state: 'attached' });
   const p = await tekst(page, '.kol.links');
   check('onder Profiel staat "de app", met de stappen via Deel (met de woorden van iOS)',
     (await tekst(page, '[data-beginscherm]')) === 'de app'
@@ -235,7 +235,7 @@ const stuurPrompt = (page, keuze = 'accepted') => page.evaluate((k) => {
   // De prompt is op, maar Android kan het ook met de hand: onder Profiel
   // staat dan de weg via het menu.
   await page.click('[data-weergave="profiel"]');
-  await page.waitForSelector('[data-beginscherm]');
+  await page.waitForSelector('[data-beginscherm]', { state: 'attached' });
   const p = await tekst(page, '.kol.links');
   check('onder Profiel staat dan de weg via het menu van de browser',
     p.includes('Toevoegen aan startscherm') && (await page.$('.kol.links #installeer')) === null, p);

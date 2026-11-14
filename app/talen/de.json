@@ -404,7 +404,6 @@
  "De link naar je publieke pagina": "Der Link zu deiner öffentlichen Seite",
  "Kopieer de link": "Link kopieren",
  "Haal de pagina weg": "Seite offline nehmen",
- "Je speelt hier als <b>{naam}</b>.": "Du spielst hier als <b>{naam}</b>.",
  "taal": "Sprache",
  "De app kiest zelf een taal op basis van je browser. Hier zet je hem vast.": "Die App wählt die Sprache nach deinem Browser. Hier legst du sie fest.",
  "je account meenemen": "dein Konto mitnehmen",
@@ -932,5 +931,14 @@
  "niet actief": "nicht aktiv",
  "premium": "Premium",
  "één keer abonneren": "einmal abonnieren",
- "berichten en de stand": "Nachrichten und Stand"
+ "berichten en de stand": "Nachrichten und Stand",
+ "coureur · startnummer {n}": "Fahrer · Startnummer {n}",
+ "jouw helmkleur": "deine Helmfarbe",
+ "kleur {n}": "Farbe {n}",
+ "speler niet bewaard": "Spieler nicht gesichert",
+ "teamradio · meldingen": "Teamfunk · Mitteilungen",
+ "afstelling": "Abstimmung",
+ "pitstop · hulp": "Boxenstopp · Hilfe",
+ "geblokkeerd": "blockiert",
+ "gekoppeld": "verknüpft"
 }
