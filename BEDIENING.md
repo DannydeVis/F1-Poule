@@ -297,6 +297,23 @@ zeggen valt.
 **Test.** `test/rijderskaart.test.mjs`; de database in `test/teams.test.sql`
 (deel 6).
 
+### De Stand en het invulscherm in het nieuwe ontwerp (sinds 14 november)
+
+**Stand.** Iedereen heeft zijn kleur: in de stand, op het podium en bij de
+duels. De **seizoensvragen** staan vóór de eerste race als formulier op de
+Stand-tab, zoals altijd. Loopt het seizoen, dan is het één regel die zegt wat
+er nog open is ("nog 4 in te vullen"), in oranje zolang er iets te halen
+valt; een tik opent het formulier. De **seizoensrecords** zijn tegels met het
+getal groot.
+
+**Invullen.** De top 10 is een startopstelling in twee rijen: P1 en P2 naast
+elkaar, P2 een halve plek naar achteren, zoals op de grid. Dat is half zo
+hoog als tien plekken onder elkaar. In een plek staat de code en de
+achternaam. Bij een losse vraag staat geen regel "nog niets gekozen" meer:
+de punten in de kop zijn oranje zolang de vraag open is.
+
+**Test.** `test/stand-en-grid.test.mjs`.
+
 ## 3. Poule aanmaken: vier stappen
 
 Eén vraag per scherm. Werkt beter op een telefoon dan een lang formulier.

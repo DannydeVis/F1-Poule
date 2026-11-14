@@ -12638,3 +12638,33 @@ geoefend op het oude schema, de functies zijn gelijk aan een verse database).
 `test/teams.test.sql`. `profiel-en-uitloggen` leest de naam van de kaart.
 
 **Danny moet:** niets.
+
+## Nieuw ontwerp, deel 3 en 4: de Stand en het invulscherm (14 november)
+
+**Stand.**
+- Een rondje in de kleur van de speler in de stand (`standRij`), op het
+  podium en bij de duels (`duels()` geeft nu ook het id mee).
+- De seizoensvragen: `seizoenslaagBlok()` geeft vóór de eerste race het
+  formulier terug zoals het was, en daarna een regel (`pitRegel('s-seizoen')`)
+  met het formulier erachter. De klasse `let` kleurt hem oranje zolang er iets
+  open is.
+- De seizoensrecords zijn tegels (`.recordtegel`); `data-record`, `.nm` en
+  `.t` zijn gebleven.
+
+**Invullen.**
+- `.grid10` is een rooster van twee kolommen, de rechter 28 pixels lager.
+  De markup is niet veranderd, alleen de css, en in een plek staat de
+  achternaam (`achternaam(d)`, die er al was) in plaats van de hele naam.
+- De regel "nog niets gekozen · hier liggen N punten" onder elke losse vraag
+  is weg (en de vertaalsleutel ook); `.vraagpunten.amber` in de kop zegt het.
+
+**Afwijking van het voorbeeld.** In het voorbeeld stonden bij de
+coureursvragen drie knoppen; in de app blijft de bestaande coureurskiezer.
+Het uitslagscherm is niet aangepast.
+
+**Tests.** Nieuw: `test/stand-en-grid.test.mjs` (18).
+`losse-vragen-in-beeld` gebruikt een kleine telefoon (375 bij 667) voor het
+geval waarin de eerste losse vraag onder de rand valt: op een groot scherm
+staat hij door de compacte startopstelling nu meteen in beeld.
+
+**Danny moet:** niets.

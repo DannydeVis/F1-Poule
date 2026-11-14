@@ -89,7 +89,9 @@ export const PITREGELS = ['agenda', 'omschrijving', 'premium', 'teams', 'periode
   'openbaar', 'toegang', 'autofill', 'jokers', 'contrair', 'seizoen', 'vragen',
   // En die van Profiel (profielRegels()).
   'p-melding', 'p-mail', 'p-taal', 'p-team', 'p-verhaal', 'p-app', 'p-deel', 'p-link',
-  'p-account', 'p-contact', 'p-privacy', 'p-over', 'p-uitlog', 'p-beheer'];
+  'p-account', 'p-contact', 'p-privacy', 'p-over', 'p-uitlog', 'p-beheer',
+  // En de seizoensvragen op de Stand-tab, buiten de aanloop naar het seizoen.
+  's-seizoen'];
 
 export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent, schaal,
                                    taal = 'nl', verhaal = false, toestemming = false, voorafAan,
