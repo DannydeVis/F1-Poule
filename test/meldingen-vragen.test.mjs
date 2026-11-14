@@ -367,7 +367,7 @@ const herlaad = async (page) => {
     t.includes('Op een iPhone werkt dat alleen als Predict the Race op je beginscherm staat.'), t);
   check('zonder knop die toch niets zou doen', (await page.$('#kaartmelding')) === null);
   await page.click('#kaartbeginscherm');
-  await page.waitForSelector('[data-beginscherm]');
+  await page.waitForSelector('[data-beginscherm]', { state: 'attached' });
   check('en de knop brengt je naar de stappen onder Profiel', true);
   check('geen javascriptfouten in de console', jsFouten.length === 0, jsFouten.join(' | '));
   await stoppen();

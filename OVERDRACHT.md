@@ -12588,3 +12588,53 @@ nepklok het opnieuw tekenen); `klimmen-en-reeksen` controleert weer elke kaart
 apart (15). Twee mutanten zakken.
 
 **Danny moet:** niets.
+
+## Nieuw ontwerp, deel 1: de Poule-tab en de balk onderin (14 november)
+
+Danny vroeg om ontwerpverbeteringen, kreeg een voorbeeld van vier schermen
+(Poule, Profiel, Stand, Invullen), vond de eerste versie "een beetje plat",
+keurde de tweede goed ("Dit is prima") en vroeg om alles te bouwen. Dit is het
+eerste van vier delen.
+
+**Wat er verandert.**
+- De Poule-tab begint met de code op een kaart in de stijl van de racekaart
+  (het aantal spelers groot op de achtergrond) en één gekleurde knop.
+- Spelers hebben een rondje in een eigen kleur (`spelerKleur()`, `avatar()`).
+  De kleur volgt nu uit het id; in deel 2 kan een speler hem zelf kiezen.
+- De instellingen zijn regels die openklappen (`pitmuur()`, `pitRegel()`), met
+  hoe het nu staat en een lampje. De blokken zelf zijn niet veranderd; ze
+  staan in een `<details>`. Welke openstaan onthoudt `poule:pitmuur`.
+- De balk onderin heeft op een telefoon een pictogram bij elk woord.
+
+**Afwijkingen van het voorbeeld.** De knop heet nog "Kopieer uitnodigingslink"
+en niet "Deel de uitnodiging", want hij kopieert. De balk met lampjes voor
+"bezette plekken" is er niet: een poule heeft geen maximum, dus die balk zou
+iets verzinnen.
+
+**Tests.** Nieuw: `test/pitmuur.test.mjs` (18). `startPagina` zet voor de
+andere tests de regels open.
+
+**Danny moet:** niets.
+
+## Nieuw ontwerp, deel 2: Profiel en je eigen kleur (14 november)
+
+**Wat er verandert.**
+- Profiel begint met de rijderskaart (`rijdersKaart()`): je naam, je
+  startnummer, je plek en je punten, en acht kleuren om uit te kiezen.
+- De kleur staat in de database: `pool_members.kleur` (0 tot en met 7) en
+  `poule_kleur_kiezen()`. `poule_ophalen()` geeft hem mee, `spelerKleur()`
+  gebruikt hem, en zonder keuze blijft het de kleur op het id.
+- Zonder gekoppeld account staat dat bovenaan als gele vlag
+  (`accountKaart()`), met "Koppel je Google-account" als gekleurde knop.
+- De rest zijn regels in drie groepen (`profielRegels()`), met dezelfde
+  `pitRegel()` als de Poule-tab.
+- De zin "Je speelt hier als ..." is weg; de kaart zegt het.
+
+**Database.** De kolom, de functie, `poule_ophalen()` en de controleregel
+staan in schema.sql en in productie (14 november, via de MCP; lokaal eerst
+geoefend op het oude schema, de functies zijn gelijk aan een verse database).
+
+**Tests.** Nieuw: `test/rijderskaart.test.mjs` (19) en deel 6 van
+`test/teams.test.sql`. `profiel-en-uitloggen` leest de naam van de kaart.
+
+**Danny moet:** niets.

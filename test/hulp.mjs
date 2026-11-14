@@ -84,8 +84,16 @@ function zegNeeTegenMeten() {
   } catch { /* niets */ }
 }
 
+// De regels van de pitmuur (pitmuur() in de app), allemaal.
+export const PITREGELS = ['agenda', 'omschrijving', 'premium', 'teams', 'periodes', 'groepsapp',
+  'openbaar', 'toegang', 'autofill', 'jokers', 'contrair', 'seizoen', 'vragen',
+  // En die van Profiel (profielRegels()).
+  'p-melding', 'p-mail', 'p-taal', 'p-team', 'p-verhaal', 'p-app', 'p-deel', 'p-link',
+  'p-account', 'p-contact', 'p-privacy', 'p-over', 'p-uitlog', 'p-beheer'];
+
 export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent, schaal,
-                                   taal = 'nl', verhaal = false, toestemming = false, voorafAan } = {}) {
+                                   taal = 'nl', verhaal = false, toestemming = false, voorafAan,
+                                   pitmuur = true } = {}) {
   const map = mkdtempSync(join(tmpdir(), 'poule-test-'));
 
   const nabootsen = (bron, waar) => {
@@ -162,6 +170,18 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent, s
       if (localStorage.getItem('poule:verhaal') === null) localStorage.setItem('poule:verhaal', 'uit');
     } catch { /* niets */ }
   });
+  // De instellingen op de Poule-tab zijn regels die je openklapt (de pitmuur),
+  // en het toestel onthoudt welke openstaan. Tientallen tests bedienen een
+  // knop in zo'n blok om iets anders te bekijken; die krijgen de regels open,
+  // zoals bij een speler die ze allemaal al eens opendeed. Alleen als er nog
+  // niets staat. test/pitmuur.test.mjs doet het juist zonder.
+  if (pitmuur) await page.addInitScript((regels) => {
+    try {
+      if (localStorage.getItem('poule:pitmuur') === null) {
+        localStorage.setItem('poule:pitmuur', JSON.stringify(regels));
+      }
+    } catch { /* niets */ }
+  }, PITREGELS);
   if (!toestemming) await page.addInitScript(zegNeeTegenMeten);
   // Turnstile (turnstile.js heeft een site key) komt in een test nooit van
   // Cloudflare: zonder token gaat elke aanroep gewoon door, net als op een
@@ -191,6 +211,14 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent, s
 // wachten en alleen overslaan als hij er ook echt is — één plek voor deze
 // naad, in plaats van in elk testbestand apart. test/rondleiding.test.mjs
 // loopt de rondleiding zelf na.
+// Een regel van de pitmuur (Poule) of van Profiel opendoen, als hij dicht is.
+// Voor tests die niet via startPagina beginnen en de regels dus dicht vinden.
+export async function openRegel(page, id) {
+  const regel = page.locator(`details[data-pit="${id}"]`);
+  await regel.waitFor({ state: 'attached' });
+  if (!(await regel.evaluate((d) => d.open))) await regel.locator('summary').click();
+}
+
 export async function naDeClaim(page) {
   await Promise.race([
     page.waitForSelector('#rondleidingweg'),

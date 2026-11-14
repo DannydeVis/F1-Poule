@@ -14,7 +14,7 @@
 // Dit draait tegen de site zoals GitHub Pages hem serveert (startSite in
 // hulp.mjs), met de nabootsing in plaats van Supabase.
 
-import { maakControle, startSite } from './hulp.mjs';
+import { maakControle, startSite, openRegel } from './hulp.mjs';
 
 const { check, afronden } = maakControle('doorsturen van / naar de app');
 
@@ -170,6 +170,7 @@ async function landt(pad, { voorafAan } = {}) {
   if (await page.$('#rondleidingweg')) await page.click('#rondleidingweg');
   await page.waitForSelector('[data-race]');
   await page.click('[data-weergave="poule"]');
+  await openRegel(page, 'agenda');
   await page.waitForSelector('#agendalink');
   const agenda = await page.getAttribute('a.knop[href^="webcal"]', 'href');
   check('de agendalink wijst naar de hoofdmap, niet naar app/kalender.ics',
@@ -196,6 +197,7 @@ async function naarDeVoorpagina({ taal = 'nl', iphone = false } = {}) {
   if (await page.$('#rondleidingweg')) await page.click('#rondleidingweg');
   await page.waitForSelector('[data-race]');
   await page.click('[data-weergave="profiel"]');
+  await openRegel(page, 'p-over');
   if (!(await page.waitForSelector('#voorpagina', { timeout: 5000 }).catch(() => null))) {
     await stoppen();
     return { pad: '(geen knop onder Profiel)', kop: '' };

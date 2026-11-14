@@ -15,6 +15,9 @@
 --   5. De tabel pool_teams en de kolom team_id zijn niet rechtstreeks te
 --      lezen of te schrijven; poule_ophalen geeft de teams en het team per
 --      speler mee.
+--   6. Je kleur (14 november): alleen voor je eigen speler, ook niet door de
+--      poulebaas; 0 tot en met 7 of leeg; niet rechtstreeks te zetten;
+--      poule_ophalen geeft hem mee.
 
 \set ON_ERROR_STOP on
 
@@ -167,6 +170,55 @@ begin
     raise exception 'gezakt: het weggehaalde team of zijn spelers staan er nog';
   end if;
   raise notice 'ok: de poulebaas haalt een team weg, ook na premium, en de spelers zijn dan zonder team';
+end $$;
+
+-- ============================================================
+--  6. je kleur (14 november): alleen voor je eigen speler, 0 tot en met 7
+-- ============================================================
+do $$
+declare uit jsonb;
+begin
+  set local role authenticated;
+  perform pg_temp.als('bbbbbbbb-0000-0000-0000-0000000000b3');
+  perform public.poule_kleur_kiezen('bbbb0000-0000-0000-0000-0000000000b2', 3);
+  uit := public.poule_ophalen(p_id => '11111111-0000-0000-0000-0000000000b1');
+  if (select l ->> 'kleur' from jsonb_array_elements(uit -> 'leden') l
+       where l ->> 'member_id' = 'bbbb0000-0000-0000-0000-0000000000b2') is distinct from '3' then
+    raise exception 'gezakt: de gekozen kleur staat niet in poule_ophalen: %', uit -> 'leden';
+  end if;
+  if (select l -> 'kleur' from jsonb_array_elements(uit -> 'leden') l
+       where l ->> 'member_id' = 'aaaa0000-0000-0000-0000-0000000000b1') <> 'null'::jsonb then
+    raise exception 'gezakt: een speler zonder keuze heeft toch een kleur';
+  end if;
+  raise notice 'ok: je kiest je eigen kleur, en de poule ziet hem';
+
+  perform pg_temp.fout_bij($q$select public.poule_kleur_kiezen('aaaa0000-0000-0000-0000-0000000000b1', 2)$q$,
+    'alleen je eigen kleur', 'een medespeler kiest jouw kleur niet');
+  perform pg_temp.fout_bij($q$select public.poule_kleur_kiezen('bbbb0000-0000-0000-0000-0000000000b2', 8)$q$,
+    'die kleur bestaat niet', 'een kleur buiten de acht bestaat niet');
+  perform pg_temp.fout_bij($q$select public.poule_kleur_kiezen('bbbb0000-0000-0000-0000-0000000000b2', -1)$q$,
+    'die kleur bestaat niet', 'een negatieve ook niet');
+  perform pg_temp.fout_bij($q$update public.pool_members set kleur = 5 where member_id = 'bbbb0000-0000-0000-0000-0000000000b2'$q$,
+    'permission denied', 'kleur is niet rechtstreeks te zetten');
+
+  perform pg_temp.als('aaaaaaaa-0000-0000-0000-0000000000b2');
+  perform pg_temp.fout_bij($q$select public.poule_kleur_kiezen('bbbb0000-0000-0000-0000-0000000000b2', 1)$q$,
+    'alleen je eigen kleur', 'ook de poulebaas kiest hem niet voor een ander');
+
+  perform pg_temp.als('bbbbbbbb-0000-0000-0000-0000000000b3');
+  perform public.poule_kleur_kiezen('bbbb0000-0000-0000-0000-0000000000b2', null);
+  uit := public.poule_ophalen(p_id => '11111111-0000-0000-0000-0000000000b1');
+  if (select l -> 'kleur' from jsonb_array_elements(uit -> 'leden') l
+       where l ->> 'member_id' = 'bbbb0000-0000-0000-0000-0000000000b2') <> 'null'::jsonb then
+    raise exception 'gezakt: terug naar geen keuze lukt niet';
+  end if;
+  raise notice 'ok: geen keuze kan ook weer';
+
+  reset role;
+  if (select uitkomst from public.poule_controle where controle = 'functies en tabellen: alleen die uit schema.sql') <> 'ok' then
+    raise exception 'gezakt: de controleregels kennen poule_kleur_kiezen niet';
+  end if;
+  raise notice 'ok: de controleregels kennen de functie';
 end $$;
 
 do $$ begin raise notice 'ok: teams.test.sql helemaal geslaagd'; end $$;

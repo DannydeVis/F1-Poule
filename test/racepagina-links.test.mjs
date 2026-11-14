@@ -22,7 +22,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { maakControle, startPagina, startSite, meedoen, openRace, kiesVoor, wortel } from './hulp.mjs';
+import { maakControle, startPagina, startSite, meedoen, openRace, kiesVoor, wortel, openRegel } from './hulp.mjs';
 import { RACE_TEKST } from '../site/races.mjs';
 
 const { check, afronden } = maakControle('racepagina vanuit de app, vrije trainingen, meldingen per soort, teller');
@@ -154,6 +154,7 @@ for (const taal of ['nl', 'en']) {
   await page.reload();
   await meedoen(page);
   await page.click('[data-weergave="profiel"]');
+  await openRegel(page, 'p-melding');
   await page.waitForSelector('#meldingAan');
   await page.click('#meldingAan');
   await page.waitForSelector('[data-meldsoorten]');

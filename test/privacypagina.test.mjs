@@ -17,7 +17,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { maakControle, startSite, meedoen, wortel } from './hulp.mjs';
+import { maakControle, startSite, meedoen, wortel, openRegel } from './hulp.mjs';
 import { teksten, TALEN, BASIS, STANDAARD } from '../site/teksten.mjs';
 import { PRIVACY, CONTACT, privacyTaal } from '../site/privacy.mjs';
 
@@ -186,6 +186,7 @@ const bestaat = (href, basis) => {
     await page.waitForSelector('#code');
     await meedoen(page);
     await page.click('[data-weergave="profiel"]');
+    await openRegel(page, 'p-privacy');
     await page.click('#privacyopen');
     await page.waitForSelector('#wegaccount');
     const links = await page.$$eval('#app .uitleg a', (as) => as.map((a) => ({ href: a.href, tekst: a.textContent })));

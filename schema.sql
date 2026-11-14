@@ -1467,6 +1467,42 @@ begin
   update public.pool_members set team_id = p_team where member_id = p_member;
 end $$;
 
+-- Je kleur (14 november): elke speler heeft in de app een rondje in een kleur.
+-- Zonder keuze volgt die uit zijn id; met keuze is het een van de acht uit de
+-- app (0 tot en met 7, SPELERKLEUREN). Een nummer en geen kleurcode, zodat er
+-- nooit een kleur staat waar de witte letter niet op te lezen is. Alleen voor
+-- je eigen speler: een poulebaas kiest hem niet voor een ander.
+alter table public.pool_members add column if not exists kleur smallint;
+do $$ begin
+  if not exists (select 1 from pg_constraint
+                 where conrelid = 'public.pool_members'::regclass and conname = 'pool_members_kleur_bereik') then
+    alter table public.pool_members
+      add constraint pool_members_kleur_bereik check (kleur is null or kleur between 0 and 7);
+  end if;
+end $$;
+
+create or replace function public.poule_kleur_kiezen(p_member uuid, p_kleur int)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_pool uuid;
+begin
+  select pool_id into v_pool from public.pool_members where member_id = p_member;
+  if v_pool is null then raise exception 'die speler bestaat niet'; end if;
+  if not public.mag_voor_speler_in(p_member, v_pool) then
+    raise exception 'je kiest alleen je eigen kleur';
+  end if;
+  if p_kleur is not null and p_kleur not between 0 and 7 then
+    raise exception 'die kleur bestaat niet';
+  end if;
+  update public.pool_members set kleur = p_kleur where member_id = p_member;
+end $$;
+
+revoke all on function public.poule_kleur_kiezen(uuid, int) from public;
+grant execute on function public.poule_kleur_kiezen(uuid, int) to anon, authenticated;
+
 revoke all on function public.poule_team_opslaan(uuid, uuid, text) from public;
 revoke all on function public.poule_team_weghalen(uuid)            from public;
 revoke all on function public.poule_team_kiezen(uuid, uuid)        from public;
@@ -1907,7 +1943,8 @@ as $$
                                           then m.profiel_code end,
                      'profiel',      case when m.user_id is not null and m.user_id = auth.uid()
                                           then m.profiel end,
-                     'team_id',      m.team_id) order by m.created_at)
+                     'team_id',      m.team_id,
+                     'kleur',        m.kleur) order by m.created_at)
                    from public.pool_members m, poule p where m.pool_id = p.id), '[]'::jsonb),
     -- De antwoorden van je medespelers pas als hun sessie dicht is; die van
     -- jezelf (en van de speler zonder account die jouw toestel inschreef)
@@ -4578,7 +4615,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'pool_members_bewaken', 'pool_members_woordfilter', 'pools_misbruik_bewaken',
           'pools_profiel_bewaken', 'poule_aanmaken', 'poule_antwoord_deadline',
           'poule_claim_speler', 'poule_deadline_bewaken', 'poule_joker_bewaken',
-          'poule_jokeraantal_bewaken', 'poule_meedoen', 'poule_nieuwe_code', 'poule_ophalen',
+          'poule_jokeraantal_bewaken', 'poule_kleur_kiezen', 'poule_meedoen', 'poule_nieuwe_code', 'poule_ophalen',
           'poule_seizoen_gestart', 'poule_seizoen_voorbij', 'poule_team_kiezen',
           'poule_team_opslaan', 'poule_team_weghalen', 'publiek_profiel',
           'push_sleutel', 'push_sleutel_vingerafdruk', 'push_sleutel_zetten',
