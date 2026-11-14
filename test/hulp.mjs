@@ -84,8 +84,13 @@ function zegNeeTegenMeten() {
   } catch { /* niets */ }
 }
 
+// De regels van de pitmuur (pitmuur() in de app), allemaal.
+export const PITREGELS = ['agenda', 'omschrijving', 'premium', 'teams', 'periodes', 'groepsapp',
+  'openbaar', 'toegang', 'autofill', 'jokers', 'contrair', 'seizoen', 'vragen'];
+
 export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent, schaal,
-                                   taal = 'nl', verhaal = false, toestemming = false, voorafAan } = {}) {
+                                   taal = 'nl', verhaal = false, toestemming = false, voorafAan,
+                                   pitmuur = true } = {}) {
   const map = mkdtempSync(join(tmpdir(), 'poule-test-'));
 
   const nabootsen = (bron, waar) => {
@@ -162,6 +167,18 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent, s
       if (localStorage.getItem('poule:verhaal') === null) localStorage.setItem('poule:verhaal', 'uit');
     } catch { /* niets */ }
   });
+  // De instellingen op de Poule-tab zijn regels die je openklapt (de pitmuur),
+  // en het toestel onthoudt welke openstaan. Tientallen tests bedienen een
+  // knop in zo'n blok om iets anders te bekijken; die krijgen de regels open,
+  // zoals bij een speler die ze allemaal al eens opendeed. Alleen als er nog
+  // niets staat. test/pitmuur.test.mjs doet het juist zonder.
+  if (pitmuur) await page.addInitScript((regels) => {
+    try {
+      if (localStorage.getItem('poule:pitmuur') === null) {
+        localStorage.setItem('poule:pitmuur', JSON.stringify(regels));
+      }
+    } catch { /* niets */ }
+  }, PITREGELS);
   if (!toestemming) await page.addInitScript(zegNeeTegenMeten);
   // Turnstile (turnstile.js heeft een site key) komt in een test nooit van
   // Cloudflare: zonder token gaat elke aanroep gewoon door, net als op een

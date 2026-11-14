@@ -43,6 +43,9 @@ Vier tabs, vast onderin beeld:
 └─────────────────────────────────────┘
 ```
 
+Sinds 14 november staat op een telefoon bij elk woord een pictogram (op een
+breed scherm stond het er al).
+
 **Licht of donker.** De app volgt het toestel. Bovenin, naast **Wissel**, staat
 een klein zonnetje (in het donker) of maantje (in het licht): daarmee kies je
 zelf. De app onthoudt dat op dat toestel (`poule:thema` in localStorage) en
@@ -252,6 +255,24 @@ nog niet opgeslagen zijn. In Safari of Chrome zelf trek je zoals altijd: dan
 herlaadt de browser de pagina.
 
 ---
+
+### De Poule-tab: de code, de spelers en de pitmuur (sinds 14 november)
+
+Bovenaan staat de poulecode op een kaart, met het aantal spelers en één
+gekleurde knop **Kopieer uitnodigingslink**. Daaronder de spelers, elk met een
+rondje in een eigen kleur (een vaste keuze uit acht, op de speler zelf, dus op
+elk toestel dezelfde).
+
+Alle instellingen staan daaronder als regels: de **pitmuur**. Elke regel noemt
+de instelling, hoe het nu staat ("staat uit", "5 per speler", "open met de
+code") en heeft een groen lampje als het aan staat. Tik op een regel en de
+uitleg en de knoppen klappen open; nog een tik en hij is weer dicht. Het
+toestel onthoudt welke regels openstaan (`poule:pitmuur` in localStorage).
+Iedereen ziet de regel voor de agenda; de rest ziet alleen de poulebaas. Wat
+er in een regel staat is niet veranderd: het zijn de blokken die er al waren.
+
+**Test.** `test/pitmuur.test.mjs`. De andere tests krijgen de regels open
+(`pitmuur` in `startPagina`), zodat ze de knoppen kunnen bedienen.
 
 ## 3. Poule aanmaken: vier stappen
 

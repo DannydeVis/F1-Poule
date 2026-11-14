@@ -34,7 +34,8 @@ const { check, afronden } = maakControle('vangnet: als het tekenen klapt');
 const { page, jsFouten, stoppen } = await startPagina({
   // Ook geen standaardinstelling voor het verhaal: hieronder wordt gekeken of
   // na "vergeet dit toestel" alleen poule:taal nog over is.
-  taal: null, verhaal: true,
+  // (Om dezelfde reden geen openstaande regels op de Poule-tab.)
+  taal: null, verhaal: true, pitmuur: false,
   voorafAan: (p) => p.addInitScript(() => {
     try {
       if (!localStorage.getItem('test:taalgezet')) {

@@ -637,7 +637,44 @@
      linksboven is daar de weg terug. */
   .shell.detail .nav{display:none}
   .zijvoet{display:none}
-  .navicoon{display:none}
+  /* Op een telefoon het pictogram boven het woord, zoals in elke app met een
+     balk onderin: je herkent de tab aan de vorm voordat je het woord leest. */
+  .navknop{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;min-height:52px;font-size:12px}
+  .navicoon{display:grid;place-items:center;color:inherit}
+
+  /* ---- een speler met een kleur ---------------------------- */
+  /* Iedereen een eigen kleur in plaats van een grijs rondje: in de stand en
+     de spelerslijst herken je elkaar dan aan meer dan een letter. */
+  .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none;
+    font-family:var(--cond);font-weight:700;font-size:18px;line-height:1;
+    color:#fff;background:var(--av,#5b6470)}
+
+  /* ---- de pitmuur: instellingen als regels ----------------- */
+  /* De Poule-tab was vijf schermen instellingen onder elkaar. Nu is elke
+     instelling een regel met haar stand erbij; de uitleg en de knoppen staan
+     erachter. Een <details>, zodat het ook zonder javascript open en dicht
+     gaat en een schermlezer weet wat het is. */
+  .pitregel > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;
+    min-height:56px;padding:8px 14px 8px 13px;border-left:3px solid transparent}
+  .pitregel > summary::-webkit-details-marker{display:none}
+  .pitregel > summary:hover{background:var(--zweef)}
+  .pitregel.aan > summary{border-left-color:var(--groen)}
+  .pittekst{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .pitnaam{font-size:15px;font-weight:600;color:var(--ink)}
+  .pitnaam::first-letter{text-transform:uppercase}
+  .pitstand{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pitregel.aan .pitstand{color:var(--groen)}
+  .pitlamp{width:10px;height:10px;border-radius:50%;background:var(--stippel);flex:none}
+  .pitregel.aan .pitlamp{background:var(--groen)}
+  .pitpijl{flex:none;color:var(--ink3);transition:transform .18s}
+  .pitregel[open] .pitpijl{transform:rotate(90deg)}
+  .pitinhoud{display:flex;flex-direction:column;gap:14px;padding:4px 16px 18px}
+  /* De kop van het blok staat al in de regel erboven. */
+  .pitinhoud > span.label:first-child{display:none}
+  .codekaart .code{font-family:var(--cond);font-weight:700;font-size:54px;line-height:1;
+    letter-spacing:.12em;color:var(--ink)}
 
   .hoofd{flex:1;display:flex;flex-direction:column;min-width:0}
   /* Dit is een opvangpunt voor de focus na een schermwissel, geen knop. Een
@@ -1645,7 +1682,7 @@
     .navknop[aria-current="true"]{background:var(--paneel2);color:var(--ink);
       border-left-color:var(--accent)}
     .zijvoet{margin-top:auto;display:flex;flex-direction:column;gap:14px}
-    .navknop{display:flex;align-items:center;gap:12px}
+    .navknop{display:flex;flex-direction:row;align-items:center;gap:12px}
     .navicoon{display:grid;place-items:center;color:var(--ink3);transition:color .18s}
     .navknop:hover .navicoon,.navknop[aria-current="true"] .navicoon{color:var(--accent)}
     .zijspeler{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 10px 0 14px;
@@ -3087,6 +3124,24 @@ const ENGELS = Object.fromEntries([
   ['Je hebt voor de race niets ingevuld.', 'You did not enter anything for the race.'],
   ['Je punten staan hier zodra de uitslag binnen is.', 'Your points show up here as soon as the result is in.'],
   ['tot nu toe', 'so far'],
+  // ---- de pitmuur ------------------------------------------------
+  ['pitmuur', 'pit wall'],
+  ['alleen de poulebaas', 'admin only'],
+  ['staat aan', 'on'],
+  ['staat uit', 'off'],
+  ['op slot', 'locked'],
+  ['open met de code', 'open with the code'],
+  ['nog leeg', 'still empty'],
+  ['{n} per speler', '{n} per player'],
+  ['{n} vragen', '{n} questions'],
+  ['{n} teams', '{n} teams'],
+  ['er wordt nog gereden', 'season still running'],
+  ['klaar om door te schuiven', 'ready to roll over'],
+  ['actief', 'active'],
+  ['niet actief', 'not active'],
+  ['premium', 'premium'],
+  ['één keer abonneren', 'subscribe once'],
+  ['berichten en de stand', 'messages and standings'],
   ['Uitslag en punten {race}',
    'Results and points {race}'],
   ['Je voorspelling bekijken', 'View your prediction'],
@@ -3207,10 +3262,6 @@ const ENGELS = Object.fromEntries([
    '{n}× drawn'],
 
   // ---- de poulepagina ------------------------------------------
-  ['Deel deze code met wie mee wil doen, of '
-   + 'stuur de link hieronder — dan hoeft niemand hem over te tikken.',
-   'Share this code with anyone who wants to join, or send the link below — '
-   + 'then nobody has to copy it out.'],
   ['Kopieer uitnodigingslink',
    'Copy invitation link'],
   ['Uitnodiging om zelf te kopiëren',
@@ -8079,6 +8130,8 @@ function toonApp() {
   // één knop met data-naar-race, en dat is de knop van die race.
   app.querySelectorAll('[data-vorige-uitslag]').forEach(b => b.onclick = () =>
     openRace(b.dataset.vorigeUitslag));
+  app.querySelectorAll('details[data-pit]').forEach(d => d.ontoggle = () =>
+    pitOnthoud(d.dataset.pit, d.open));
   const terug = app.querySelector('#terug');
   if (terug) terug.onclick = () => { S.race = null; terugNaarVorige = true; render(); };
   // Escape sluit een open race, zoals een venster. Niet als je in een veld
@@ -9339,14 +9392,12 @@ function poulePagina(rijen) {
     <h1 class="middel smalkop">${esc(S.poule.name)}</h1>
     ${S.poule.beschrijving ? `<p class="zacht pouletekst" style="margin:-10px 0 0">${
       esc(S.poule.beschrijving)}</p>` : ''}
-    <div class="hero">
-      <span class="label">${T('poulecode')}</span>
-      <div class="veld code" style="display:grid;place-items:center">${esc(S.poule.join_code ?? '—')}</div>
+    <div class="hero codekaart" data-ronde="${esc(String(rijen.length).padStart(2, '0'))}">
+      <div class="hero-kop"><span class="label">${T('poulecode')} · ${T('{n} spelers', { n: rijen.length })}</span></div>
+      <div class="code">${esc(S.poule.join_code ?? '—')}</div>
       ${S.poule.op_slot ? `<p class="zacht" style="margin:0" data-op-slot>${
         T('De poule is op slot: er kan niemand meer bij. De poulebaas kan hem van het slot halen.')}</p>`
-      : `<p class="zacht" style="margin:0">${T('Deel deze code met wie mee wil doen, of '
-        + 'stuur de link hieronder — dan hoeft niemand hem over te tikken.')}</p>
-      <button class="knop klein" id="uitnodiging">${T('Kopieer uitnodigingslink')}</button>
+      : `<button class="knop primair" id="uitnodiging">${T('Kopieer uitnodigingslink')}</button>
       <textarea class="veld tekstblok hide" id="uitnodigingveld" readonly rows="3"
         aria-label="${T('Uitnodiging om zelf te kopiëren')}"></textarea>`}
     </div>
@@ -9355,21 +9406,68 @@ function poulePagina(rijen) {
       : `<p class="zacht" style="margin:0">${T('Nog niemand meegedaan.')}</p>`}
     <div class="uitleg">${kleurPunten(T('Punten per plek: <b>5</b> exact, <b>3</b> één plek '
       + 'ernaast, <b>1</b> twee plekken ernaast.'))}</div>
-    ${agendaBlok()}
-    ${beheerKop()}
-    ${omschrijvingBlok()}
-    ${profielBlok()}
-    ${teamsBlok()}
-    ${periodesBeheer()}
-    ${groepsappBlok()}
-    ${openbaarBlok()}
-    ${toegangBlok()}
-    ${autofillBlok()}
-    ${jokersBlok()}
-    ${contrairBlok()}
-    ${nieuwSeizoenBlok()}
-    ${beheerBlok()}
+    ${pitmuur()}
     ${pouleLijstBlok()}`;
+}
+
+// ---- de pitmuur ------------------------------------------------
+// Alle instellingen van de poule, elk als één regel: de naam, hoe het nu
+// staat, en een lampje als het aan staat. Wat erachter zit is het blok zoals
+// het was, met zijn uitleg en zijn knoppen. Welke regels openstaan onthoudt
+// het toestel: de app tekent het scherm opnieuw na elke knop, en dan moet de
+// regel waar je in bezig bent niet dichtklappen.
+const PIT_SLEUTEL = 'poule:pitmuur';
+const pitOpen = new Set((() => {
+  try { return JSON.parse(localStorage.getItem(PIT_SLEUTEL) ?? '[]'); } catch { return []; }
+})());
+function pitOnthoud(id, open) {
+  if (open) pitOpen.add(id); else pitOpen.delete(id);
+  try { localStorage.setItem(PIT_SLEUTEL, JSON.stringify([...pitOpen])); } catch { /* dan niet */ }
+}
+const PIT_PIJL = `<svg class="pitpijl" viewBox="0 0 24 24" width="16" height="16" fill="none"
+  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+  aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`;
+function pitRegel(id, naam, stand, aan, blok) {
+  if (!blok) return '';
+  const inhoud = blok.replace(/^\s*<div class="scheiding"><\/div>\s*/, '');
+  return `<details class="pitregel${aan ? ' aan' : ''}" data-pit="${id}"${pitOpen.has(id) ? ' open' : ''}>
+    <summary><span class="pittekst"><span class="pitnaam">${naam}</span>
+      <span class="pitstand">${stand}</span></span>
+      <i class="pitlamp" aria-hidden="true"></i>${PIT_PIJL}</summary>
+    <div class="pitinhoud">${inhoud}</div></details>`;
+}
+function pitmuur() {
+  const aanUit = (aan) => T(aan ? 'staat aan' : 'staat uit');
+  const P = S.poule;
+  const voorIedereen = [
+    pitRegel('agenda', T('deadlines in je agenda'), T('één keer abonneren'), false, agendaBlok()),
+  ].join('');
+  const teams = (S.teams ?? []).length, periodes = (S.periodes ?? []).length;
+  const baas = !magBeheren() ? '' : [
+    pitRegel('omschrijving', T('waar gaat het over?'),
+      P.beschrijving ? esc(P.beschrijving) : T('nog leeg'), !!P.beschrijving, omschrijvingBlok()),
+    pitRegel('premium', T('premium'), T(premiumActief() ? 'actief' : 'niet actief'), premiumActief(), profielBlok()),
+    pitRegel('teams', T('teams'), teams ? T('{n} teams', { n: teams }) : T('nog leeg'), teams > 0, teamsBlok()),
+    pitRegel('periodes', T('tussenklassementen'), periodes ? String(periodes) : T('nog leeg'), periodes > 0, periodesBeheer()),
+    pitRegel('groepsapp', T('voor de groepsapp'), T('berichten en de stand'), false, groepsappBlok()),
+    pitRegel('openbaar', T('vindbaar voor iedereen'), aanUit(!!P.is_public), !!P.is_public, openbaarBlok()),
+    pitRegel('toegang', T('toegang'), T(P.op_slot ? 'op slot' : 'open met de code'), !P.op_slot, toegangBlok()),
+    pitRegel('autofill', T('automatisch invullen bij vergeten'), aanUit(!!P.autofill_vanaf), !!P.autofill_vanaf, autofillBlok()),
+    pitRegel('jokers', T('jokers'),
+      P.jokers_vanaf ? T('{n} per speler', { n: jokersPerSeizoen() }) : T('staat uit'), !!P.jokers_vanaf, jokersBlok()),
+    pitRegel('contrair', T('contrair voorspellen'), aanUit(!!P.contrair_vanaf), !!P.contrair_vanaf, contrairBlok()),
+    pitRegel('seizoen', T('seizoen {jaar}', { jaar: pouleSeizoen() }),
+      T(seizoenAfgerond() ? 'klaar om door te schuiven' : 'er wordt nog gereden'), false, nieuwSeizoenBlok()),
+    pitRegel('vragen', T('welke vragen doen mee'),
+      T('{n} vragen', { n: (S.beheer ?? pouleVragen()).length })
+        + (P.questions_locked ? ` · ${T('op slot')}` : ''), true, beheerBlok()),
+  ].join('');
+  if (!voorIedereen && !baas) return '';
+  return `
+    ${voorIedereen ? `<span class="label">${T('pitmuur')}</span>
+    <div class="groep pitmuur">${voorIedereen}</div>` : ''}
+    ${baas ? `<span class="label" data-beheerkop>${T('pitmuur')} · ${T('alleen de poulebaas')}</span>
+    <div class="groep pitmuur">${baas}</div>` : ''}`;
 }
 
 // Vier blokken die alleen de poulebaas ziet, en die samen langer zijn dan de
@@ -9865,6 +9963,18 @@ function knoopUitloggen() {
 // Vandaar deze uitweg, en alleen deze: de poulebaas maakt de speler los, en
 // de volgende die zichzelf aanwijst claimt hem opnieuw. Zie schema.sql,
 // policy pool_members_bijwerken.
+// De kleur van een speler: een vaste keuze uit acht, op zijn id, zodat hij op
+// elk toestel en elk scherm dezelfde is. Elke kleur haalt 3:1 met de witte
+// letter erin, in het licht en in het donker.
+const SPELERKLEUREN = ['#d93d24', '#1f6feb', '#117c3e', '#7a4bd1', '#b85f00', '#0b7285', '#b02a8f', '#5b6470'];
+function spelerKleur(id) {
+  let h = 0;
+  for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return SPELERKLEUREN[h % SPELERKLEUREN.length];
+}
+const avatar = (id, naam) => `<span class="av" aria-hidden="true" translate="no" style="--av:${
+  spelerKleur(id)}">${esc(String(naam).trim().charAt(0).toUpperCase() || '?')}</span>`;
+
 function spelerRij(r, i) {
   const lid = S.leden.find(l => zelfde(l.member_id, r.id));
   const bijEenAnder = lid?.user_id && !zelfde(lid.user_id, mijnUid);
@@ -9875,6 +9985,7 @@ function spelerRij(r, i) {
     : '';
   return `<div class="speler ${r.mij ? 'zelf' : ''}" style="animation:none">
     <span class="nr">${String(i + 1).padStart(2,'0')}</span>
+    ${avatar(r.id, r.naam)}
     <span class="nm">${esc(r.naam)}</span>
     ${los}
     <span class="ptn">${T('{n} ptn', { n: r.punten })}</span></div>`;

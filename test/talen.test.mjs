@@ -90,6 +90,9 @@ check('elke {plaatshouder} komt in beide talen voor',
 const MAG_GELIJK = new Set([
   'Races', 'races', 'Race', 'race', 'Sprint', 'sprint', 'demo',
   'Pole position', 'pole', 'safety cars', 'jokers', 'top 10', '{wie} won', 'team',
+  // De pitmuur op de Poule-tab: teams heten in het Engels ook teams, en
+  // premium is in elke taal premium.
+  '{n} teams', 'premium',
   // De afkortingen op de aftelklok. "u" wordt "h", maar dag en minuut
   // beginnen in beide talen met dezelfde letter.
   'd', 'm',

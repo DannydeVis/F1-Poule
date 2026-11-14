@@ -222,8 +222,17 @@ check('en brengt je naar je profiel', (await page.$('[data-weergave="profiel"][a
 await page.setViewportSize({ width: 390, height: 844 });
 await page.reload();
 await page.waitForSelector('.nav .navknop');
-check('op een telefoon geen pictogrammen in de balk onderin: daar is het te krap',
-  await page.$$eval('.nav .navicoon', (els) => els.every((e) => getComputedStyle(e).display === 'none')));
+// Sinds 14 november wel: het pictogram staat bóven het woord, en zo past het.
+check('op een telefoon staat het pictogram boven het woord',
+  await page.$$eval('.nav .navknop', (els) => els.every((k) => {
+    const i = k.querySelector('.navicoon').getBoundingClientRect();
+    return i.width > 0 && getComputedStyle(k).flexDirection === 'column';
+  })));
+await page.setViewportSize({ width: 360, height: 780 });
+check('en ook op 360 pixels past elk woord in zijn knop',
+  await page.$$eval('.nav .navknop', (els) => els.every((k) => k.scrollWidth <= k.clientWidth + 1))
+    && await page.evaluate(() => document.documentElement.scrollWidth <= 360));
+await page.setViewportSize({ width: 390, height: 844 });
 
 // ---- 3b. in je eentje ---------------------------------------------------------------------
 await page.setViewportSize({ width: 1366, height: 900 });

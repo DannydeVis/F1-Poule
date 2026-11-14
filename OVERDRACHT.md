@@ -12588,3 +12588,30 @@ nepklok het opnieuw tekenen); `klimmen-en-reeksen` controleert weer elke kaart
 apart (15). Twee mutanten zakken.
 
 **Danny moet:** niets.
+
+## Nieuw ontwerp, deel 1: de Poule-tab en de balk onderin (14 november)
+
+Danny vroeg om ontwerpverbeteringen, kreeg een voorbeeld van vier schermen
+(Poule, Profiel, Stand, Invullen), vond de eerste versie "een beetje plat",
+keurde de tweede goed ("Dit is prima") en vroeg om alles te bouwen. Dit is het
+eerste van vier delen.
+
+**Wat er verandert.**
+- De Poule-tab begint met de code op een kaart in de stijl van de racekaart
+  (het aantal spelers groot op de achtergrond) en één gekleurde knop.
+- Spelers hebben een rondje in een eigen kleur (`spelerKleur()`, `avatar()`).
+  De kleur volgt nu uit het id; in deel 2 kan een speler hem zelf kiezen.
+- De instellingen zijn regels die openklappen (`pitmuur()`, `pitRegel()`), met
+  hoe het nu staat en een lampje. De blokken zelf zijn niet veranderd; ze
+  staan in een `<details>`. Welke openstaan onthoudt `poule:pitmuur`.
+- De balk onderin heeft op een telefoon een pictogram bij elk woord.
+
+**Afwijkingen van het voorbeeld.** De knop heet nog "Kopieer uitnodigingslink"
+en niet "Deel de uitnodiging", want hij kopieert. De balk met lampjes voor
+"bezette plekken" is er niet: een poule heeft geen maximum, dus die balk zou
+iets verzinnen.
+
+**Tests.** Nieuw: `test/pitmuur.test.mjs` (18). `startPagina` zet voor de
+andere tests de regels open.
+
+**Danny moet:** niets.
