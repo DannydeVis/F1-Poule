@@ -292,6 +292,8 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
 {
   const lastmod = JSON.parse(readFileSync(join(wortel, 'site', 'lastmod.json'), 'utf8'));
   const jokersApp = Number(appBron.match(/const JOKERS_STANDAARD = (\d+);/)[1]);
+  const maxSpelersApp = Number(readFileSync(join(wortel, 'schema.sql'), 'utf8')
+    .match(/alter table public\.pools alter column max_spelers set default (\d+);/)[1]);
   const jokersMaxApp = Math.max(...appBron.match(/const JOKERKEUZES = \[([\d, ]+)\];/)[1].split(',').map(Number));
   const vensterApp = Number(readFileSync(join(wortel, 'scripts', 'herinneringen.mjs'), 'utf8')
     .match(/VENSTER_UREN = (\d+)/)[1]);
@@ -346,6 +348,12 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
     over: {
       nl: ['komen van OpenF1', 'een database bij Supabase', 'onafhankelijk fanproject'],
       en: ['come from OpenF1', 'a Supabase database', 'independent fan project'],
+    },
+    // De gids voor communities (15 november): hoe groot een poule kan zijn
+    // staat in schema.sql, en de zeven talen zijn die van de app.
+    community: {
+      nl: [`tot ${maxSpelersApp} spelers`, 'Nederlands, Engels, Duits, Frans, Spaans, Italiaans en Portugees'],
+      en: [`up to ${maxSpelersApp} players`, 'Dutch, English, German, French, Spanish, Italian and Portuguese'],
     },
     vergelijking: {
       nl: [`${exactApp} punten voor precies goed en ${bijnaApp} bij één plek ernaast`],

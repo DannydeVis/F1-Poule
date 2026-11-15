@@ -12836,3 +12836,25 @@ laat hem staan. `startSite()` doet dat niet: elke sleutel die met `poule:`
 begint stuurt de voorpagina door naar de app.
 
 **Danny moet:** niets.
+
+## Een gids voor communities (15 november)
+
+Uit de trechter: nieuwe poules haken af bij het uitnodigen. Wie al een groep
+heeft (een Discord, een podcast, een forum, een vereniging) heeft dat
+probleem niet, en voor hem was er nog geen pagina.
+
+**Wat er verandert.** Een nieuwe gids `community` in `site/paginas.mjs`, in
+het Nederlands (`/f1-poule-voor-je-community/`) en het Engels
+(`/en/f1-prediction-league-for-your-community/`): waarom, opzetten, hoe groot
+(500 spelers), betrokken houden (weekendduel, vraag van de week, prestaties),
+premium voor clubs, en geen geld in de app. Met een link op de voorpagina en
+in de voet, in de sitemap en in llms.txt. De vragen staan in
+`site/vragen.mjs`.
+
+**Bewust niet.** Geen andere talen: de vijf andere krijgen hem pas als deze
+twee bezoek trekken. Geen eigen ontwerp: het is een gewone gids.
+
+**Tests.** Geen nieuwe; de gids valt onder `site`, `antwoordvorm` (753),
+`vragen`, `geo`, `gratis-belofte` en `hoofdmenu`.
+
+**Danny moet:** niets. Wie een community kent: dit is de link om te sturen.

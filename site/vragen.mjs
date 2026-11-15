@@ -134,6 +134,16 @@ export const VRAGEN = [
     bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
   { vraag: 'Hoe tel ik de winnaar en de pole position mee?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
   { vraag: 'Hoe zet ik spelers met evenveel punten op dezelfde plek?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  // ---- community ----
+  { vraag: 'Waarom een F1-poule voor je community?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#waarom', status: 'beantwoord' },
+  { vraag: 'Hoe zet je een poule op voor je Discord, podcast of vereniging?', taal: 'nl', varianten: ['f1 poule discord', 'f1 poule voor een vereniging'], bron: 'hypothese', doel: 'community#opzetten', status: 'beantwoord' },
+  { vraag: 'Hoe groot kan een poule zijn?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#hoe-groot', status: 'beantwoord' },
+  { vraag: 'Hoe houd je leden het hele seizoen betrokken?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#betrokken', status: 'beantwoord' },
+  { vraag: 'Wat is er extra voor clubs en bedrijven?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#extras', status: 'beantwoord' },
+  { vraag: 'Kun je om geld of prijzen spelen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#prijzen', status: 'beantwoord' },
+  { vraag: 'Kunnen leden uit andere landen meedoen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
+  { vraag: 'Zien leden elkaars voorspelling voor de start?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
+  { vraag: 'Kan een lid later in het seizoen nog instappen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
 
   // ---- vergelijking (SEO fase 2) en over ----
   { vraag: 'Welke F1-poule-app past bij jouw groep?', taal: 'nl', varianten: ['Wat is de beste F1-poule-app?', 'f1 poule app'],
@@ -236,6 +246,16 @@ export const VRAGEN = [
   { vraag: 'How do I score the race winner and pole position?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
   { vraag: 'How do I put players on equal points in the same position?', taal: 'en', varianten: [],
     bron: 'hypothese', doel: 'excel#faq', status: 'beantwoord' },
+  // ---- community ----
+  { vraag: 'Why run an F1 prediction league for your community?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#why', status: 'beantwoord' },
+  { vraag: 'How do you set up a league for a Discord, podcast or club?', taal: 'en', varianten: ['f1 prediction league discord', 'f1 predictions for a community'], bron: 'hypothese', doel: 'community#set-up', status: 'beantwoord' },
+  { vraag: 'How big can a league get?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#how-big', status: 'beantwoord' },
+  { vraag: 'How do you keep members playing all season?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#engaged', status: 'beantwoord' },
+  { vraag: 'What extras are there for clubs and companies?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#extras', status: 'beantwoord' },
+  { vraag: 'Can you play for money or prizes?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#prizes', status: 'beantwoord' },
+  { vraag: 'Can members from other countries join?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
+  { vraag: 'Can members see each other\'s predictions before the start?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
+  { vraag: 'Can a member still join later in the season?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
 
   // ---- vergelijking en over ----
   // "Best F1 Prediction Apps & Games 2026" en meer van zulke lijstjes.
