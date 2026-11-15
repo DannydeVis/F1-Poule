@@ -27,7 +27,7 @@ import { join } from 'node:path';
 import { createECDH, randomBytes, hkdfSync, createDecipheriv } from 'node:crypto';
 import { wieKrijgtEenTraining, trainingNieuws, sleuteltraining, achternaam, deadlineTekst,
   TRAINING_MARGE_MIN } from '../scripts/trainingmeldingen.mjs';
-import { trainingRooster, teHalen, trainingTop10, zelfdeRooster } from '../scripts/vrijetrainingen.mjs';
+import { trainingRooster, teHalen, trainingTop10, trainingVolgorde, zelfdeRooster } from '../scripts/vrijetrainingen.mjs';
 import { racePaginas, sitemapPaden } from '../scripts/racepagina.mjs';
 import { trainingWekker } from '../scripts/bewaking.mjs';
 import { maakAgenda } from '../scripts/agenda.mjs';
@@ -162,6 +162,15 @@ check('de uitslagmelding slaat ook over wie hem uitzette',
   check('de top 10 op plek, met code en naam uit de deelnemerslijst, zonder wie geen plek heeft',
     JSON.stringify(top) === JSON.stringify([{ plek: 1, nr: '4', code: 'NOR', naam: 'Lando NORRIS' },
       { plek: 2, nr: '1', code: 'VER', naam: 'Max VERSTAPPEN' }]) && trainingTop10([], []) === null, JSON.stringify(top));
+  // De hele volgorde (15 november), voor de vraag van de week.
+  check('de hele volgorde: de nummers van iedereen met een plek, van snel naar langzaam',
+    JSON.stringify(trainingVolgorde([{ position: 2, driver_number: 1 }, { position: 1, driver_number: 4 },
+      { position: null, driver_number: 5 }, { position: 12, driver_number: 43 }])) === '["4","1","43"]'
+      && trainingVolgorde([]) === null && trainingVolgorde([{ position: null, driver_number: 5 }]) === null);
+  const metVolgorde = trainingRooster(sessies, [{ naam: 'Practice 1', sessie: 1, top: DRIE, volgorde: ['4', '1'] }]);
+  check('het rooster houdt de volgorde vast die er al stond, en zet er geen lege bij',
+    JSON.stringify(metVolgorde[0].volgorde) === '["4","1"]' && !('volgorde' in metVolgorde[1])
+      && !('volgorde' in rooster[0]), JSON.stringify(metVolgorde));
   check('hetzelfde rooster in een andere sleutelvolgorde (zo geeft jsonb het terug) is hetzelfde',
     zelfdeRooster([{ naam: 'a', top: [{ plek: 1, nr: '4' }] }], [{ top: [{ nr: '4', plek: 1 }], naam: 'a' }])
       && !zelfdeRooster([{ naam: 'a', top: null }], [{ naam: 'a', top: [] }]));

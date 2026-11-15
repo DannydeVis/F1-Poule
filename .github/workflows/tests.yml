@@ -235,6 +235,15 @@ jobs:
           psql -d herinner -v ON_ERROR_STOP=1 -f schema.sql
           psql -d herinner -v ON_ERROR_STOP=1 -f test/herinner.test.sql
 
+      # De vraag van de week (15 november): kiezen voor je eigen speler tot de
+      # eerste training begint, geheim tot dan, de tabel dicht.
+      - name: vraag van de week — kiezen tot de eerste training, geheim tot dan
+        run: |
+          createdb weekvraag
+          psql -d weekvraag -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d weekvraag -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d weekvraag -v ON_ERROR_STOP=1 -f test/weekvraag.test.sql
+
       # Het beheer ziet alles en mag poules en spelers weggooien. Dat mag
       # alleen de beheerder, en die word je alleen met het bevestigde
       # beheeradres. Deze test draait schema.sql zelf nog een keer, nadat dat

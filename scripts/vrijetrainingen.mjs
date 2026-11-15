@@ -28,14 +28,20 @@ export function trainingRooster(sessies = [], bestaand = []) {
   return (sessies ?? [])
     .filter((s) => VRIJE_TRAININGEN.includes(s.session_name))
     .sort((a, b) => Date.parse(a.date_start) - Date.parse(b.date_start))
-    .map((s) => ({
-      naam: s.session_name,
-      sessie: s.session_key,
-      start: s.date_start ?? null,
-      eind: s.date_end ?? null,
-      top: (bestaand ?? []).find((t) => t?.naam === s.session_name
-        && String(t.sessie) === String(s.session_key))?.top ?? null,
-    }));
+    .map((s) => {
+      const oud = (bestaand ?? []).find((t) => t?.naam === s.session_name
+        && String(t.sessie) === String(s.session_key));
+      return {
+        naam: s.session_name,
+        sessie: s.session_key,
+        start: s.date_start ?? null,
+        eind: s.date_end ?? null,
+        top: oud?.top ?? null,
+        // De hele volgorde (15 november), voor de vraag van de week. Alleen
+        // als hij er is: een training van voor die datum heeft hem niet.
+        ...(oud?.volgorde?.length ? { volgorde: oud.volgorde } : {}),
+      };
+    });
 }
 
 /**
@@ -65,6 +71,20 @@ export function trainingTop10(uitslag = [], drivers = []) {
       return { plek: r.position, nr: String(r.driver_number), code: d?.code ?? null, naam: d?.naam ?? null };
     });
   return top.length ? top : null;
+}
+
+/**
+ * De hele volgorde van een training: de nummers van iedereen met een plek,
+ * van snel naar langzaam. De vraag van de week ("wie van deze twee
+ * teamgenoten is sneller in de eerste training?") gaat vaak over coureurs
+ * buiten de top 10. null als er niets bruikbaars is.
+ */
+export function trainingVolgorde(uitslag = []) {
+  const rij = (uitslag ?? [])
+    .filter((r) => Number.isInteger(r.position) && r.position >= 1)
+    .sort((a, b) => a.position - b.position)
+    .map((r) => String(r.driver_number));
+  return rij.length ? rij : null;
 }
 
 /**

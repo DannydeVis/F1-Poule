@@ -102,39 +102,57 @@ const ZINNEN = {
     tekst: (r) => `${r}: wie dit weekend de meeste punten haalt, wint het duel.`,
     kop: 'Je weekendduel', regel: (p, n) => `${p}: je speelt dit weekend tegen ${n}.`,
     uitleg: 'Wie de meeste punten haalt wint het duel. Aan de gewone stand verandert het niets.',
-    knop: 'Vul je top 10 in' },
+    knop: 'Vul je top 10 in',
+    vraag: 'De vraag van de week staat ook open: wie is sneller in de eerste training?' },
   en: { titel: (n) => `Weekend duel: you against ${n}`,
     tekst: (r) => `${r}: whoever scores most this weekend wins the duel.`,
     kop: 'Your weekend duel', regel: (p, n) => `${p}: this weekend you play against ${n}.`,
     uitleg: 'Whoever scores most wins the duel. It does not change the regular standings.',
-    knop: 'Fill in your top 10' },
+    knop: 'Fill in your top 10',
+    vraag: 'The question of the week is open too: who is faster in first practice?' },
   de: { titel: (n) => `Wochenend-Duell: du gegen ${n}`,
     tekst: (r) => `${r}: Wer an diesem Wochenende die meisten Punkte holt, gewinnt das Duell.`,
     kop: 'Dein Wochenend-Duell', regel: (p, n) => `${p}: An diesem Wochenende spielst du gegen ${n}.`,
     uitleg: 'Wer die meisten Punkte holt, gewinnt das Duell. An der normalen Wertung ändert sich nichts.',
-    knop: 'Top 10 ausfüllen' },
+    knop: 'Top 10 ausfüllen',
+    vraag: 'Die Frage der Woche ist auch offen: Wer ist im ersten Training schneller?' },
   fr: { titel: (n) => `Duel du week-end : toi contre ${n}`,
     tekst: (r) => `${r} : celui qui marque le plus de points ce week-end gagne le duel.`,
     kop: 'Ton duel du week-end', regel: (p, n) => `${p} : ce week-end tu joues contre ${n}.`,
     uitleg: 'Celui qui marque le plus de points gagne le duel. Le classement habituel ne change pas.',
-    knop: 'Remplir mon top 10' },
+    knop: 'Remplir mon top 10',
+    vraag: 'La question de la semaine est ouverte aussi : qui sera le plus rapide aux premiers essais libres ?' },
   es: { titel: (n) => `Duelo del fin de semana: tú contra ${n}`,
     tekst: (r) => `${r}: quien sume más puntos este fin de semana gana el duelo.`,
     kop: 'Tu duelo del fin de semana', regel: (p, n) => `${p}: este fin de semana juegas contra ${n}.`,
     uitleg: 'Quien sume más puntos gana el duelo. La clasificación habitual no cambia.',
-    knop: 'Rellenar mi top 10' },
+    knop: 'Rellenar mi top 10',
+    vraag: 'La pregunta de la semana también está abierta: ¿quién es más rápido en los primeros libres?' },
   it: { titel: (n) => `Duello del weekend: tu contro ${n}`,
     tekst: (r) => `${r}: chi fa più punti questo weekend vince il duello.`,
     kop: 'Il tuo duello del weekend', regel: (p, n) => `${p}: questo weekend giochi contro ${n}.`,
     uitleg: 'Chi fa più punti vince il duello. La classifica normale non cambia.',
-    knop: 'Inserisci la tua top 10' },
+    knop: 'Inserisci la tua top 10',
+    vraag: 'Anche la domanda della settimana è aperta: chi è più veloce nelle prime libere?' },
   pt: { titel: (n) => `Duelo do fim de semana: você contra ${n}`,
     tekst: (r) => `${r}: quem fizer mais pontos neste fim de semana vence o duelo.`,
     kop: 'Seu duelo do fim de semana', regel: (p, n) => `${p}: neste fim de semana você joga contra ${n}.`,
     uitleg: 'Quem fizer mais pontos vence o duelo. A classificação normal não muda.',
-    knop: 'Preencher meu top 10' },
+    knop: 'Preencher meu top 10',
+    vraag: 'A pergunta da semana também está aberta: quem é mais rápido no primeiro treino livre?' },
 };
 export const duelZinnen = (taal) => ZINNEN[taal] ?? ZINNEN.en;
+
+/**
+ * Staat de vraag van de week open? Hij gaat over de eerste vrije training en
+ * sluit bij de start ervan (weekvraag_sluit() in schema.sql). Zonder rooster
+ * is er geen vraag, en dan zegt het bericht er niets over.
+ */
+export function weekvraagOpen(race, nu = Date.now()) {
+  const starts = (Array.isArray(race?.vrije_trainingen) ? race.vrije_trainingen : [])
+    .map((t) => Date.parse(t?.start)).filter(Number.isFinite);
+  return starts.length > 0 && nu < Math.min(...starts);
+}
 
 // Is er over dit weekend al iets gestuurd dat het duelbericht overbodig maakt?
 const alGestuurd = (laatst, race) => laatst === `duel:${race.id}` || laatst === `training:${race.id}`;
@@ -157,7 +175,8 @@ export function wieKrijgtEenDuel({ races = [], abonnementen = [], leden = [], nu
     const ander = tegen.get(String(ab.member_id));
     if (!ander) continue;                        // vrij, of geen duel
     const z = duelZinnen(ab.taal);
-    uit.push({ abonnement: ab, tag, bericht: { titel: z.titel(ander.naam), tekst: z.tekst(race.name), tag } });
+    uit.push({ abonnement: ab, tag, bericht: { titel: z.titel(ander.naam),
+      tekst: z.tekst(race.name) + (weekvraagOpen(race, nu) ? ` ${z.vraag}` : ''), tag } });
   }
   return uit;
 }
@@ -194,7 +213,8 @@ export function duelMails({ races = [], ontvangers = [], leden = [], pools = [],
         taal: o.taal,
         onderwerp: `${race.name}: ${z.titel(mijn[0].ander.naam)}`,
         kop: z.kop,
-        alineas: [...mijn.map((x) => z.regel(x.poule, x.ander.naam)), z.uitleg],
+        alineas: [...mijn.map((x) => z.regel(x.poule, x.ander.naam)), z.uitleg,
+          ...(weekvraagOpen(race, nu) ? [z.vraag] : [])],
         knop: z.knop,
         appUrl,
         afmelden,
