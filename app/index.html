@@ -704,6 +704,12 @@
   .recordtegel .nm{font-size:14px;font-weight:600}
   .strij .av,.duel .av{width:30px;height:30px;font-size:16px}
   .trede .av{width:36px;height:36px;font-size:19px}
+  /* Het weekendduel: tegen wie je dit weekend speelt, op de racekaart. */
+  .duelregel{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;
+    color:var(--ink2)}
+  .duelregel .av{width:24px;height:24px;font-size:13px}
+  .duelregel b{font-family:var(--sans,inherit);font-size:14px;color:var(--ink)}
+  .duelstand .wgv{font-family:var(--mono);font-size:12px;color:var(--ink2)}
   .codekaart .code{font-family:var(--cond);font-weight:700;font-size:54px;line-height:1;
     letter-spacing:.12em;color:var(--ink)}
 
@@ -3193,6 +3199,14 @@ const ENGELS = Object.fromEntries([
   ['pitstop · hulp', 'pit stop · help'],
   ['geblokkeerd', 'blocked'],
   ['gekoppeld', 'linked'],
+  // ---- het weekendduel -------------------------------------------
+  ['weekendduel: dit weekend ben je vrij', 'weekend duel: you sit this one out'],
+  ['weekendduel: jij tegen', 'weekend duel: you against'],
+  ['weekendduel', 'weekend duel'],
+  ['gewonnen', 'won'],
+  ['verloren', 'lost'],
+  ['gelijkspel', 'draw'],
+  ['weekendduels · winst, gelijk, verlies', 'weekend duels · won, drawn, lost'],
   ['Uitslag en punten {race}',
    'Results and points {race}'],
   ['Je voorspelling bekijken', 'View your prediction'],
@@ -8778,6 +8792,7 @@ function lopendKaart(nu = Date.now()) {
         <span><b class="groot">${rang(plekVan(stand, S.ik.id))}</b><i>${T('in de stand')}</i></span>`
         : `<span><b class="groot">${stand.find(x => x.mij)?.punten ?? ik.punten}</b><i>${T('punten')}</i></span>`}
       </div>
+      ${duelAfloop(r)}
       ${knop(T('Bekijk de uitslag'))}
     </div>`;
 }
@@ -8831,6 +8846,7 @@ function hero(volgend, metVorige = true) {
           ? T('nog geen top 10: {wie}', { wie: kortWie(wacht) })
           : T('iedereen heeft zijn top 10')}${wacht.length && groepsappHulp()
           ? ` <button class="knop klein herinner" data-herinner>${T('Herinner ze')}</button>` : ''}</div>` : ''}
+      ${duelRegel(r)}
       <button class="knop primair" data-naar-race="${esc(r.id)}"${
         losOpen ? ` data-naar-tab="${esc(losOpen.w)}"` : ''}>${
         losOpen
@@ -9006,6 +9022,7 @@ function standPagina(rijen) {
     ${teamStand(rijen)}
     ${periodesBlok()}
     ${seizoenslaagBlok()}
+    ${weekendDuelBlok()}
     ${weekendRanglijst()}
     ${seizoensRecords()}
     ${seizoensGrafiek()}
@@ -9236,6 +9253,102 @@ function seizoensRecords() {
 }
 
 // De tweede ranglijst: los van het seizoen valt er elk weekend iets te winnen.
+// ---- het weekendduel --------------------------------------------
+// Elk weekend speelt iedereen tegen één poulegenoot: wie dat weekend de meeste
+// punten haalt wint het duel. Het geeft doordeweeks iets om naar te kijken
+// ("tegen wie speel ik?") en ook wie onderaan staat begint elk weekend
+// opnieuw. Aan de gewone punten verandert het niets.
+//
+// De loting is geen loting maar een vast schema (iedereen tegen iedereen, de
+// cirkelmethode), op het rondenummer en op wie er vóór dat weekend al in de
+// poule zat. Zo is hij op elk toestel dezelfde, hoeft er niets opgeslagen te
+// worden, en verandert een weekend dat gereden is niet meer als er later
+// iemand bij komt. Bij een oneven aantal is er elk weekend één speler vrij.
+function duelParen(ids, ronde) {
+  const lijst = ids.length % 2 ? [...ids, null] : [...ids];
+  const n = lijst.length;
+  if (n < 2) return [];
+  const rest = lijst.slice(1);
+  const k = (((ronde - 1) % (n - 1)) + (n - 1)) % (n - 1);
+  const rij = [lijst[0], ...rest.slice(k), ...rest.slice(0, k)];
+  return Array.from({ length: n / 2 }, (_, i) => [rij[i], rij[n - 1 - i]]);
+}
+// Wie er aan het duel van dit weekend meedoet: wie er al was toen het weekend
+// begon. Zonder datum (een oude rij, de demo) telt een speler altijd mee.
+function duelDeelnemers(race) {
+  const begin = weekendStart(race);            // milliseconden, of null zonder deadlines
+  const start = begin === null ? NaN : begin;
+  return S.leden.filter(l => !l.sinds || !Number.isFinite(start) || Date.parse(l.sinds) <= start)
+    .map(l => String(l.member_id));
+}
+// De tegenstander van een speler in een weekend: een id, null als hij vrij
+// is, undefined als er geen duel is (alleen in de poule, of nog niet erbij).
+function duelTegenstander(race, id) {
+  const ids = duelDeelnemers(race);
+  if (ids.length < 2 || !ids.includes(String(id))) return undefined;
+  const paar = duelParen(ids, Number(race.round) || 1).find(p => p.includes(String(id)));
+  return paar ? (zelfde(paar[0], id) ? paar[1] : paar[0]) : undefined;
+}
+// Het duel van een gereden weekend: de punten van allebei, en wie won. Heeft
+// geen van beiden iets ingeleverd, dan is er niet gespeeld.
+function weekendDuelUitslag(race, id) {
+  const ander = duelTegenstander(race, id);
+  if (!ander || !weekendVoorbij(race)) return null;
+  if (!heeftVoorspeld(race, id) && !heeftVoorspeld(race, ander)) return null;
+  const ik = scoreWeekend(vindPred(race.id, id), race);
+  const hij = scoreWeekend(vindPred(race.id, ander), race);
+  return { ander, ik, hij, uitkomst: ik > hij ? 'winst' : ik < hij ? 'verlies' : 'gelijk' };
+}
+// De duelstand: drie punten voor winst, één voor gelijk.
+function weekendDuelStand() {
+  const rijen = new Map(S.leden.map(l => [String(l.member_id),
+    { id: l.member_id, naam: l.display_name, w: 0, g: 0, v: 0, mij: zelfde(l.member_id, S.ik?.id) }]));
+  for (const r of S.races.filter(weekendVoorbij)) {
+    for (const rij of rijen.values()) {
+      const u = weekendDuelUitslag(r, rij.id);
+      if (!u) continue;
+      if (u.uitkomst === 'winst') rij.w++; else if (u.uitkomst === 'gelijk') rij.g++; else rij.v++;
+    }
+  }
+  return [...rijen.values()].map(x => ({ ...x, punten: 3 * x.w + x.g, gespeeld: x.w + x.g + x.v }))
+    .sort((a, b) => b.punten - a.punten || b.w - a.w || String(a.naam).localeCompare(String(b.naam)));
+}
+const naamVan = (id) => S.leden.find(l => zelfde(l.member_id, id))?.display_name ?? '';
+
+// Op de kaart van de volgende race: tegen wie je dit weekend speelt.
+function duelRegel(race) {
+  if (!S.ik) return '';
+  const ander = duelTegenstander(race, S.ik.id);
+  if (ander === undefined) return '';
+  if (ander === null) return `<div class="duelregel" data-duel="vrij">${T('weekendduel: dit weekend ben je vrij')}</div>`;
+  return `<div class="duelregel" data-duel="${esc(ander)}">${T('weekendduel: jij tegen')}
+    ${avatar(ander, naamVan(ander))}<b translate="no">${esc(naamVan(ander))}</b></div>`;
+}
+// Op de kaart met de uitslag: hoe het duel afliep.
+function duelAfloop(race) {
+  if (!S.ik) return '';
+  const u = weekendDuelUitslag(race, S.ik.id);
+  if (!u) return '';
+  const woord = { winst: T('gewonnen'), verlies: T('verloren'), gelijk: T('gelijkspel') }[u.uitkomst];
+  return `<div class="duelregel" data-duel-afloop="${u.uitkomst}">${T('weekendduel')}:
+    ${avatar(u.ander, naamVan(u.ander))}<b translate="no">${esc(naamVan(u.ander))}</b>
+    <span>${u.ik} - ${u.hij} · ${woord}</span></div>`;
+}
+// Op de Stand-tab: de duelstand. Pas vanaf drie spelers; met z'n tweeën is het
+// hetzelfde als de onderlinge duels eronder.
+function weekendDuelBlok() {
+  if (!S.ik || S.leden.length < 3) return '';
+  const rijen = weekendDuelStand();
+  if (!rijen.some(x => x.gespeeld)) return '';
+  return `<span class="label">${T('weekendduels · winst, gelijk, verlies')}</span>
+    <div class="groep duelstand">${rijen.map((x, i) => `<div class="rest${x.mij ? ' winnaar' : ''}" data-duelrij="${esc(x.id)}">
+      ${avatar(x.id, x.naam)}
+      <span class="nm">${esc(x.naam)}${x.mij ? ` <span class="jij">${T('jij')}</span>` : ''}</span>
+      <span class="wgv">${x.w}-${x.g}-${x.v}</span>
+      <span class="t">${x.punten}</span>
+    </div>`).join('')}</div>`;
+}
+
 function weekendRanglijst() {
   if (S.leden.length < 2) return '';
   const winsten = weekendOverwinningen();

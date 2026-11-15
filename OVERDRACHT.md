@@ -12668,3 +12668,29 @@ geval waarin de eerste losse vraag onder de rand valt: op een groot scherm
 staat hij door de compacte startopstelling nu meteen in beeld.
 
 **Danny moet:** niets.
+
+## Het weekendduel (14 november)
+
+Danny wil dat spelers vaker dan alleen in het raceweekend de app openen. Van
+de voorstellen daarvoor is dit het eerste: elk weekend één tegenstander.
+
+**Wat er verandert.**
+- `duelParen()` maakt het schema (cirkelmethode, op het rondenummer),
+  `duelDeelnemers()` neemt wie er vóór het weekend al was,
+  `duelTegenstander()` geeft je tegenstander (of `null`: vrij),
+  `weekendDuelUitslag()` de afloop en `weekendDuelStand()` de stand (3 voor
+  winst, 1 voor gelijk).
+- Op het scherm: `duelRegel()` op de kaart van de volgende race,
+  `duelAfloop()` op de uitslagkaart, `weekendDuelBlok()` op de Stand-tab
+  (vanaf drie spelers).
+- `poule_ophalen()` geeft per speler `sinds` mee (wanneer hij erbij kwam).
+  In schema.sql en in productie (14 november; de functie is gelijk aan een
+  verse database).
+
+**Nog niet.** De melding of mail op woensdag (de "poulekrant") en de vraag
+van de week. Het schema staat nu alleen in de app; voor een melding moet de
+sync het ook kennen.
+
+**Tests.** Nieuw: `test/weekendduel.test.mjs` (16).
+
+**Danny moet:** niets.

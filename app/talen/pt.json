@@ -939,5 +939,12 @@
  "afstelling": "acerto",
  "pitstop · hulp": "pit stop · ajuda",
  "geblokkeerd": "bloqueado",
- "gekoppeld": "vinculada"
+ "gekoppeld": "vinculada",
+ "weekendduel: dit weekend ben je vrij": "duelo do fim de semana: você folga",
+ "weekendduel: jij tegen": "duelo do fim de semana: você contra",
+ "weekendduel": "duelo do fim de semana",
+ "gewonnen": "vitória",
+ "verloren": "derrota",
+ "gelijkspel": "empate",
+ "weekendduels · winst, gelijk, verlies": "duelos · vitórias, empates, derrotas"
 }

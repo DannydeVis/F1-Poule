@@ -939,5 +939,12 @@
  "afstelling": "Abstimmung",
  "pitstop · hulp": "Boxenstopp · Hilfe",
  "geblokkeerd": "blockiert",
- "gekoppeld": "verknüpft"
+ "gekoppeld": "verknüpft",
+ "weekendduel: dit weekend ben je vrij": "Wochenend-Duell: du hast spielfrei",
+ "weekendduel: jij tegen": "Wochenend-Duell: du gegen",
+ "weekendduel": "Wochenend-Duell",
+ "gewonnen": "gewonnen",
+ "verloren": "verloren",
+ "gelijkspel": "unentschieden",
+ "weekendduels · winst, gelijk, verlies": "Wochenend-Duelle · Sieg, Remis, Niederlage"
 }

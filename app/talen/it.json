@@ -939,5 +939,12 @@
  "afstelling": "assetto",
  "pitstop · hulp": "pit stop · aiuto",
  "geblokkeerd": "bloccato",
- "gekoppeld": "collegato"
+ "gekoppeld": "collegato",
+ "weekendduel: dit weekend ben je vrij": "duello del weekend: riposi",
+ "weekendduel: jij tegen": "duello del weekend: tu contro",
+ "weekendduel": "duello del weekend",
+ "gewonnen": "vinto",
+ "verloren": "perso",
+ "gelijkspel": "pareggio",
+ "weekendduels · winst, gelijk, verlies": "duelli del weekend · vinti, pari, persi"
 }

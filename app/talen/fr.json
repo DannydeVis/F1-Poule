@@ -939,5 +939,12 @@
  "afstelling": "réglages",
  "pitstop · hulp": "arrêt au stand · aide",
  "geblokkeerd": "bloqué",
- "gekoppeld": "associé"
+ "gekoppeld": "associé",
+ "weekendduel: dit weekend ben je vrij": "duel du week-end : tu es exempt",
+ "weekendduel: jij tegen": "duel du week-end : toi contre",
+ "weekendduel": "duel du week-end",
+ "gewonnen": "gagné",
+ "verloren": "perdu",
+ "gelijkspel": "égalité",
+ "weekendduels · winst, gelijk, verlies": "duels du week-end · gagné, nul, perdu"
 }
