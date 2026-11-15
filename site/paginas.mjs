@@ -2066,10 +2066,9 @@ export const PAGINAS = [
           {
             id: 'betrokken',
             vraag: 'Hoe houd je leden het hele seizoen betrokken?',
-            kort: 'Leden blijven het hele seizoen betrokken als er ook iets te halen valt voor wie niet meer eerste kan worden. Predict the Race heeft daarom een winnaar per weekend, een weekendduel tegen één ander lid, een vraag van de week over de eerste training en prestaties, zoals de pole goed hebben.',
+            kort: 'Leden blijven het hele seizoen betrokken als er ook iets te halen valt voor wie niet meer eerste kan worden. Predict the Race heeft daarom een winnaar per weekend, een weekendduel tegen één ander lid en prestaties, zoals de pole goed hebben of vijf weekenden op rij inleveren.',
             punten: [
               ['Het weekendduel', 'Elk weekend speelt ieder lid tegen één ander lid. Wie dat weekend de meeste punten haalt, wint. Ook wie onderaan staat begint elk weekend opnieuw.'],
-              ['De vraag van de week', 'Wie van twee teamgenoten is sneller in de eerste training? Eén tik, met een eigen stand, los van de punten.'],
               ['Automatisch invullen', 'Wie een weekend vergeet krijgt een willekeurige invulling in plaats van nul punten, en haakt niet af.'],
               ['Een seintje voor de deadline', 'Wie meldingen of mail aanzet, krijgt een bericht als een deadline nadert en hij nog niets heeft ingevuld.'],
               ['De stand in je kanaal', 'Na elke race zet je de uitslag met één tik als plaatje in je Discord of groepsapp.'],
@@ -2140,10 +2139,9 @@ export const PAGINAS = [
           {
             id: 'engaged',
             vraag: 'How do you keep members playing all season?',
-            kort: 'Members keep playing all season when there is something to win for people who can no longer finish first. Predict the Race therefore has a winner for every weekend, a weekend duel against one other member, a question of the week about first practice, and achievements such as calling pole.',
+            kort: 'Members keep playing all season when there is something to win for people who can no longer finish first. Predict the Race therefore has a winner for every weekend, a weekend duel against one other member, and achievements such as calling pole or predicting five weekends in a row.',
             punten: [
               ['The weekend duel', 'Every weekend each member plays against one other member. Whoever scores most that weekend wins. Even the player at the bottom starts fresh every weekend.'],
-              ['The question of the week', 'Which of two team mates is faster in first practice? One tap, with its own table, separate from the points.'],
               ['Autofill', 'A member who forgets a weekend gets a random entry instead of zero points, and stays in the game.'],
               ['A nudge before the deadline', 'Members who turn on notifications or email get a message when a deadline is close and they have not predicted yet.'],
               ['The standings in your channel', 'After every race you post the result as an image in your Discord or group chat with one tap.'],

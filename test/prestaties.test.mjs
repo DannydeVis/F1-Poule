@@ -4,7 +4,7 @@
 // onderaan staat kan de pole goed hebben. Alles wordt uitgerekend uit wat er
 // al is; er wordt niets opgeslagen. Wat hier vastligt:
 //   1. Onder Profiel staat de regel "prestaties" met hoeveel je er hebt, en
-//      daaronder negen tegels: behaald brandt, de rest is gedimd met wat je
+//      daaronder acht tegels: behaald brandt, de rest is gedimd met wat je
 //      ervoor moet doen.
 //   2. Zonder iets ingeleverd heb je er geen.
 //   3. Een weekend met alles goed geeft Van start, Pole, Winnaar, Podium,
@@ -86,13 +86,14 @@ const ids = [1, 2, 3, 4, 5, 6];
 // --- 2. niets ingeleverd -------------------------------------------------------
 await zet({});
 let t = await tegels();
-check('onder Profiel staan negen prestaties, in een vaste volgorde',
-  Object.keys(t).join() === 'start,pole,winnaar,podium,scherp,weekend,trouw,duellist,kenner', Object.keys(t).join());
+// Acht: de negende (Kenner) hoort bij de vraag van de week, en die staat uit.
+check('onder Profiel staan acht prestaties, in een vaste volgorde',
+  Object.keys(t).join() === 'start,pole,winnaar,podium,scherp,weekend,trouw,duellist', Object.keys(t).join());
 check('zonder iets ingeleverd is er geen een behaald, en dat staat in de regel',
-  behaald(t) === '' && (await stand()) === '0 van 9 behaald'
+  behaald(t) === '' && (await stand()) === '0 van 8 behaald'
     && !(await page.$eval('details[data-pit="p-prestaties"]', (d) => d.classList.contains('aan'))), `${behaald(t)} · ${await stand()}`);
 check('bij de drie die je opbouwt staat hoe ver je bent',
-  t.scherp.voortgang === '0/5' && t.trouw.voortgang === '0/5' && t.duellist.voortgang === '0/3' && t.kenner.voortgang === '0/3',
+  t.scherp.voortgang === '0/5' && t.trouw.voortgang === '0/5' && t.duellist.voortgang === '0/3',
   JSON.stringify(t));
 check('voor wie niet kan zien staat erbij dat hij nog niet behaald is',
   Object.values(t).every((x) => x.lezer === 'nog niet behaald'));
@@ -105,7 +106,7 @@ t = await tegels();
 check('een weekend met alles goed geeft Van start, Pole, Winnaar, Podium, Scherp en Weekendwinst',
   behaald(t) === 'podium,pole,scherp,start,weekend,winnaar', behaald(t));
 check('de regel telt ze en het lampje brandt',
-  (await stand()) === '6 van 9 behaald'
+  (await stand()) === '6 van 8 behaald'
     && await page.$eval('details[data-pit="p-prestaties"]', (d) => d.classList.contains('aan')), await stand());
 check('het duel van dat weekend telt voor Duellist, het weekend voor Trouw',
   t.duellist.voortgang === '1/3' && t.trouw.voortgang === '1/5' && t.scherp.voortgang === '', JSON.stringify(t));
@@ -132,8 +133,8 @@ check('in je eentje is er geen Weekendwinst en geen duel', !t.weekend.aan && t.d
 // --- 4. de drie die je opbouwt ---------------------------------------------------------------
 await zet({ weekvraag: 3, races: Object.fromEntries(ids.slice(0, 5).map((id) => [id, { mijn: GOED, ander: OM }])) });
 t = await tegels();
-check('vijf weekenden op rij, drie gewonnen duels en drie goede vragen van de week: alle negen',
-  behaald(t) === 'duellist,kenner,podium,pole,scherp,start,trouw,weekend,winnaar' && (await stand()) === '9 van 9 behaald',
+check('vijf weekenden op rij en drie gewonnen duels: alle acht, ook met goede vragen van de week in de database',
+  behaald(t) === 'duellist,podium,pole,scherp,start,trouw,weekend,winnaar' && (await stand()) === '8 van 8 behaald',
   `${behaald(t)} · ${await stand()}`);
 // Een weekend overgeslagen in het midden: de reeks is dan hoogstens drie.
 await zet({ races: Object.fromEntries(ids.slice(0, 6).map((id, i) => [id, { mijn: i === 2 ? null : GOED, ander: OM }])) });

@@ -1284,3 +1284,10 @@ iPhone-maat, ook voor de opvouwbare iPhone Duo (dicht, open en open dwars;
 de maten zijn afgeleid uit Apples schermpixels); BEDIENING §18, "De app op je telefoon".
 Open bij Danny: niets.
 
+## Bewust niet (15 november)
+
+- **Een poule-optie "alleen top 3".** Danny: niet bouwen. Nieuwe poules haken
+  af bij het uitnodigen, niet bij het invullen, en het zou de puntentelling
+  en bijna elk scherm raken.
+- **De vraag van de week.** Gebouwd en dezelfde dag uitgezet; zie BEDIENING
+  §11j. Terugzetten is twee regels.

@@ -17,10 +17,42 @@
 //   7. Aan de gewone punten verandert het niets.
 //   8. Weigert de database (te laat), dan staat dat erbij.
 
-import { maakControle, startPagina, meedoen } from './hulp.mjs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { maakControle, startPagina, meedoen, wortel } from './hulp.mjs';
 
 const { check, afronden } = maakControle('de vraag van de week');
-const { page, jsFouten, stoppen } = await startPagina();
+
+// De vraag van de week staat uit sinds 15 november (Danny: "ik zie de
+// toegevoegde waarde niet"). Eerst: uit is ook echt uit. Daarna draait de rest
+// van deze test op een kopie van de app met de schakelaar aan, zodat de code
+// die er nog staat blijft werken voor als hij terugkomt.
+const BRON = readFileSync(join(wortel, 'app', 'index.html'), 'utf8');
+check('de schakelaar staat uit in de app', BRON.split('const WEEKVRAAG_AAN = false;').length === 2);
+{
+  const uit = await startPagina();
+  await meedoen(uit.page);
+  await uit.page.evaluate(() => {
+    const db = globalThis.__db;
+    const r = db.races.find((x) => x.id === 1);
+    r.vrije_trainingen = [{ naam: 'Practice 1', sessie: 11, start: new Date(Date.now() + 3600e3).toISOString(),
+      eind: new Date(Date.now() + 7200e3).toISOString(), top: null }];
+    sessionStorage.setItem('nabootsing:db', JSON.stringify(db));
+  });
+  await uit.page.reload();
+  await uit.page.waitForSelector('.shell');
+  await uit.page.click('[data-weergave="races"]');
+  await uit.page.waitForSelector('.hero');
+  check('uit: met een rooster staat er toch geen vraag op de racekaart', (await uit.page.$('[data-weekvraag]')) === null);
+  await uit.page.click('[data-weergave="stand"]');
+  await uit.page.waitForTimeout(300);
+  check('uit: geen stand van de vraag op de Stand-tab', (await uit.page.$('[data-weekvraagrij]')) === null);
+  check('uit: geen javascriptfouten', uit.jsFouten.length === 0, uit.jsFouten.join(' | '));
+  await uit.stoppen();
+}
+const aanPad = join(process.env.TMPDIR ?? '/tmp', `poule-weekvraag-aan-${process.pid}.html`);
+writeFileSync(aanPad, BRON.replace('const WEEKVRAAG_AAN = false;', 'const WEEKVRAAG_AAN = true;'));
+const { page, jsFouten, stoppen } = await startPagina({ indexPad: aanPad });
 await page.setViewportSize({ width: 390, height: 844 });
 const tekst = async (kies) => ((await page.textContent(kies)) ?? '').replace(/\s+/g, ' ').trim();
 const LIJST = ['1', '12', '63', '16', '44', '4', '81', '10', '14', '18'];
@@ -208,6 +240,10 @@ check('op 360 pixels passen de twee knoppen naast elkaar, zonder horizontale scr
     && document.documentElement.scrollWidth <= 360;
 }));
 
+await page.click('[data-weergave="profiel"]');
+await page.waitForSelector('details[data-pit="p-prestaties"]');
+check('met de schakelaar aan is er ook de negende prestatie, Kenner',
+  (await page.$('[data-prestatie="kenner"]')) !== null && (await page.$$('[data-prestatie]')).length === 9);
 check('geen javascriptfouten', jsFouten.length === 0, jsFouten.join(' | '));
 await stoppen();
 process.exit(afronden() ? 0 : 1);
