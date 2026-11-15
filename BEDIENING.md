@@ -2360,6 +2360,12 @@ zonder uitslag geeft geen kaart. Zeven talen.
 **Test.** `test/na-de-start.test.mjs`. Gewoon onder deze kaart staat de
 weekendkaart van de volgende race (§2), zoals altijd.
 
+**Op het uitslagscherm** (sinds 15 november) staat onder je punten een
+drieluik: je plek van dit weekend, en bij de laatst gereden race ook je plek
+in de stand en of je steeg, zakte of gelijk bleef. Bij een oudere race alleen
+het weekend. Niet in je eentje, en pas als de race gereden is.
+`test/uitslag-drieluik.test.mjs`.
+
 ## 11i. Het weekendduel (sinds 14 november)
 
 Elk weekend speelt iedereen in de poule tegen één poulegenoot. Wie dat weekend

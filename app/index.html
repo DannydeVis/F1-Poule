@@ -805,6 +805,9 @@
      woord eronder in plaats van drie losse kadertjes: het zijn drie getallen
      over hetzelfde, dus ze horen bij elkaar in één rij te staan. */
   .kaartvoet{display:flex;gap:22px;padding-top:14px;border-top:1px solid var(--lijn)}
+  /* Op het uitslagscherm staat hij los, als eigen tegel onder je punten. */
+  .drieluik{padding:14px 18px}
+  .drieluik .kaartvoet{padding-top:0;border-top:0;flex-wrap:wrap}
   .kaartvoet span{display:flex;flex-direction:column;gap:1px}
   .kaartvoet .groot{font-family:var(--cond);font-size:30px;font-weight:700;line-height:1}
   .kaartvoet i{font-style:normal;font-size:11px;letter-spacing:.06em;
@@ -3236,6 +3239,7 @@ const ENGELS = Object.fromEntries([
   ['verloren', 'lost'],
   ['gelijkspel', 'draw'],
   ['weekendduels · winst, gelijk, verlies', 'weekend duels · won, drawn, lost'],
+  ['gelijk gebleven', 'no change'],
   // ---- nieuw in de app ---------------------------------------------
   ['nieuw in de app', 'new in the app'],
   ['Weekendduel: elk weekend speel je tegen één poulegenoot.', 'Weekend duel: every weekend you play against one pool mate.'],
@@ -13776,6 +13780,28 @@ function tweeKolommen({ hoofd, zij }) {
   </div>`;
 }
 
+// Onder je punten op het uitslagscherm: waar die punten je brachten. Je plek
+// dit weekend, en bij de laatst gereden race ook je plek in de stand en of je
+// steeg of zakte. Bij een oudere race alleen het weekend: de stand van nu zegt
+// niets over toen. Pas als het weekend erop zit, en niet in je eentje.
+function uitslagDrieluik(r) {
+  if (!weekendVoorbij(r) || S.leden.length < 2) return '';
+  const rijen = weekendUitslag(r) ?? [];
+  if (!rijen.some(x => x.mij)) return '';
+  const vak = (getal, tekst, soort) => `<span data-vak="${soort}"><b class="groot">${getal}</b><i>${tekst}</i></span>`;
+  const vakken = [vak(rang(plekVan(rijen, S.ik.id)), T('van {n} dit weekend', { n: rijen.length }), 'weekend')];
+  if (zelfde(laatsteMetUitslag()?.id, r.id)) {
+    vakken.push(vak(rang(plekVan(standRijen(), S.ik.id)), T('in de stand'), 'stand'));
+    const wissels = positieWissels();
+    if (wissels.size) {
+      const w = wissels.get(String(S.ik.id)) ?? 0;
+      vakken.push(vak(w > 0 ? `+${w}` : String(w),
+        w > 0 ? T('gestegen sinds vorige race') : w < 0 ? T('gezakt sinds vorige race') : T('gelijk gebleven'), 'wissel'));
+    }
+  }
+  return `<div class="tegel drieluik"><div class="kaartvoet" data-drieluik>${vakken.join('')}</div></div>`;
+}
+
 function uitslagWeergave(r, werkelijk) {
   const mijn = vindPred(r.id, S.ik.id);
   const lijst = mijn?.[SESSIES[S.tab].vraag];
@@ -13855,7 +13881,7 @@ function uitslagWeergave(r, werkelijk) {
       </ul>` : `<p class="zacht tegelleeg">${T('geen top 10 ingevuld')}</p>`}
       ${losse.trim() ? `<div class="tegelvoet">${losse}</div>` : ''}
     </section>`;
-  return `${noot}${score}${onderdelenKaart(r, mijn)}${tweeKolommen({
+  return `${noot}${score}${uitslagDrieluik(r)}${onderdelenKaart(r, mijn)}${tweeKolommen({
     hoofd: voorspelling, zij: `${pouleKaart(r)}${bijnaGoedBlok(r, regels)}${weekendVoet(r)}` })}`;
 }
 
