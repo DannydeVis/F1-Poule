@@ -12818,3 +12818,21 @@ de gedeelde seizoenspagina: eerst zien of mensen ernaar kijken.
 regel `p-prestaties`.
 
 **Danny moet:** niets.
+
+## Nieuw in de app (15 november)
+
+In één week kwamen het weekendduel, de vraag van de week en de prestaties
+erbij, en niets vertelde een bestaande speler dat. Nu wel.
+
+**Wat er verandert.** `nieuwKaart()` op het racescherm: de drie nieuwe
+dingen en "Begrepen". Eén keer per toestel per lijst (`poule:nieuw` onthoudt
+de datum), niet voor wie er pas op of na de datum van de lijst bij kwam, en
+niet zolang de kaart over meldingen er staat. Een nieuwe lijst: `NIEUW` in de
+app, zie BEDIENING §2.
+
+**Tests.** Nieuw: `test/nieuw.test.mjs` (13). `startPagina()` zet de kaart
+weg, zoals bij een speler die hem al wegtikte; `startPagina({ nieuw: true })`
+laat hem staan. `startSite()` doet dat niet: elke sleutel die met `poule:`
+begint stuurt de voorpagina door naar de app.
+
+**Danny moet:** niets.

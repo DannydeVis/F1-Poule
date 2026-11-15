@@ -35,7 +35,8 @@ const { page, jsFouten, stoppen } = await startPagina({
   // Ook geen standaardinstelling voor het verhaal: hieronder wordt gekeken of
   // na "vergeet dit toestel" alleen poule:taal nog over is.
   // (Om dezelfde reden geen openstaande regels op de Poule-tab.)
-  taal: null, verhaal: true, pitmuur: false,
+  // En de kaart "nieuw in de app" wordt hier niet vooraf weggezet.
+  taal: null, verhaal: true, pitmuur: false, nieuw: true,
   voorafAan: (p) => p.addInitScript(() => {
     try {
       if (!localStorage.getItem('test:taalgezet')) {

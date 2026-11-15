@@ -676,6 +676,7 @@
   .pitstand:empty{display:none}
   /* Een regel die geen stand heeft (contact, uitloggen) heeft ook geen lampje. */
   .pitregel.zonder .pitlamp{display:none}
+  .nieuwlijst{margin:0;padding-left:18px;display:grid;gap:6px;font-size:14px;color:var(--ink)}
   /* De prestaties onder Profiel: behaald brandt het lampje, de rest is gedimd. */
   .prestaties{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .prestatie{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center;padding:12px;min-width:0;
@@ -3235,6 +3236,12 @@ const ENGELS = Object.fromEntries([
   ['verloren', 'lost'],
   ['gelijkspel', 'draw'],
   ['weekendduels · winst, gelijk, verlies', 'weekend duels · won, drawn, lost'],
+  // ---- nieuw in de app ---------------------------------------------
+  ['nieuw in de app', 'new in the app'],
+  ['Weekendduel: elk weekend speel je tegen één poulegenoot.', 'Weekend duel: every weekend you play against one pool mate.'],
+  ['Vraag van de week: wie van twee teamgenoten is sneller in de eerste training?', 'Question of the week: which of two team mates is faster in first practice?'],
+  ['Prestaties: negen dingen om te halen, onder Profiel.', 'Achievements: nine things to earn, under Profile.'],
+  ['Begrepen', 'Got it'],
   // ---- prestaties --------------------------------------------------
   ['prijzenkast', 'trophy cabinet'],
   ['prestaties', 'achievements'],
@@ -8299,6 +8306,7 @@ function toonApp() {
   knoopMelding();
   knoopPerMail();
   knoopMeldingKaart();
+  knoopNieuwKaart();
   knoopTik();
   knoopTaal();
   knoopTaalKeuze();
@@ -8381,7 +8389,7 @@ function racesPagina(volgend) {
     ${seizoenBalk()}
     ${vorigSeizoenKaart()}
     ${legePouleBlok()}
-    ${meldingKaart()}
+    ${meldingKaart() || nieuwKaart()}
     ${boven.lopend}
     ${boven.metVolgende ? hero(volgend, !boven.lopend) : ''}
     <span class="label">${T('kalender')}</span>
@@ -8636,6 +8644,35 @@ function meldingKaart() {
     ${knop}
     <button class="knop klein" id="kaartmeldingweg">${T('Nu niet')}</button>
   </div>`;
+}
+
+// ---- nieuw in de app -------------------------------------------
+// Wat er sinds iemands vorige bezoek bij kwam, één keer, op het racescherm.
+// Zonder dit vindt een speler het weekendduel of de vraag van de week alleen
+// als hij er toevallig langs scrolt. Het toestel onthoudt de datum van de
+// laatste lijst die het zag; een nieuwe lijst is een nieuwe datum hier. Wie
+// er pas op of na die datum bij kwam krijgt de kaart niet: voor hem is alles
+// nieuw, en daar is de rondleiding voor.
+const NIEUW = { id: '2026-11-15', punten: () => [
+  T('Weekendduel: elk weekend speel je tegen één poulegenoot.'),
+  T('Vraag van de week: wie van twee teamgenoten is sneller in de eerste training?'),
+  T('Prestaties: negen dingen om te halen, onder Profiel.'),
+] };
+const NIEUWGEZIEN = 'poule:nieuw';
+function nieuwKaart() {
+  if (DEMO || !S.ik || S.race || S.weergave !== 'races') return '';
+  if (String(lees(NIEUWGEZIEN) ?? '') >= NIEUW.id) return '';
+  const sinds = ikRij()?.sinds;
+  if (sinds && String(sinds).slice(0, 10) >= NIEUW.id) return '';
+  return `<div class="meldingkaart" data-nieuw="${NIEUW.id}">
+    <span class="label">${T('nieuw in de app')}</span>
+    <ul class="nieuwlijst">${NIEUW.punten().map(p => `<li>${p}</li>`).join('')}</ul>
+    <button class="knop klein" id="nieuwweg">${T('Begrepen')}</button>
+  </div>`;
+}
+function knoopNieuwKaart() {
+  const weg = app.querySelector('#nieuwweg');
+  if (weg) weg.onclick = () => { schrijf(NIEUWGEZIEN, NIEUW.id); render(); };
 }
 
 function knoopMeldingKaart() {

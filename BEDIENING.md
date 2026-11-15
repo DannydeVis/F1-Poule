@@ -322,6 +322,22 @@ de app automatisch voor je invulde telt niet.
 
 **Test.** `test/prestaties.test.mjs`.
 
+### Nieuw in de app (sinds 15 november)
+
+Komt er iets bij dat spelers moeten weten, dan staat het één keer bovenaan het
+racescherm: de kaart "nieuw in de app", met een paar regels en de knop
+"Begrepen". Het toestel onthoudt de datum van de laatste lijst die het zag
+(`poule:nieuw`). Wie er pas op of na die datum bij kwam krijgt de kaart niet:
+voor hem is alles nieuw. Staat de kaart over meldingen er al, dan wacht deze
+tot die weg is.
+
+**Een nieuwe lijst maken:** in `app/index.html` bij `NIEUW` de datum (`id`)
+op vandaag zetten en de regels vervangen (hoogstens drie, in gewone taal), met
+de vertalingen erbij. De oude regels gaan weg; ook uit de taalbestanden,
+anders zakt de talentest.
+
+**Test.** `test/nieuw.test.mjs`.
+
 ### De Stand en het invulscherm in het nieuwe ontwerp (sinds 14 november)
 
 **Stand.** Iedereen heeft zijn kleur: in de stand, op het podium en bij de

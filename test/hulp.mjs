@@ -95,7 +95,7 @@ export const PITREGELS = ['agenda', 'omschrijving', 'premium', 'teams', 'periode
 
 export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent, schaal,
                                    taal = 'nl', verhaal = false, toestemming = false, voorafAan,
-                                   pitmuur = true } = {}) {
+                                   pitmuur = true, nieuw = false } = {}) {
   const map = mkdtempSync(join(tmpdir(), 'poule-test-'));
 
   const nabootsen = (bron, waar) => {
@@ -184,6 +184,12 @@ export async function startPagina({ aanpassen = (s) => s, indexPad, userAgent, s
       }
     } catch { /* niets */ }
   }, PITREGELS);
+  // De kaart "nieuw in de app" op het racescherm: in een test staat hij in de
+  // weg, zoals bij een speler die hem al wegtikte. test/nieuw.test.mjs doet
+  // het juist zonder.
+  if (!nieuw) await page.addInitScript(() => {
+    try { if (localStorage.getItem('poule:nieuw') === null) localStorage.setItem('poule:nieuw', '9999-12-31'); } catch { /* niets */ }
+  });
   if (!toestemming) await page.addInitScript(zegNeeTegenMeten);
   // Turnstile (turnstile.js heeft een site key) komt in een test nooit van
   // Cloudflare: zonder token gaat elke aanroep gewoon door, net als op een
