@@ -3219,6 +3219,77 @@ end $$;
 revoke all on function public.tel_pagina(text, text) from public;
 grant execute on function public.tel_pagina(text, text) to anon, authenticated;
 
+-- ---- herinner mij voor het volgende seizoen (15 november) --------------
+-- Op de voorpagina kan een bezoeker zijn mailadres achterlaten voor één mail
+-- als het voorspellen voor het volgende seizoen opengaat. Het is het enige
+-- mailadres dat hier staat van iemand zonder account, dus zo krap mogelijk:
+--
+--   * alleen het adres (in kleine letters), de taal van de pagina en een
+--     token voor de afmeldlink;
+--   * de tabel is dicht voor iedereen: aanmelden en afmelden gaan via de twee
+--     functies hieronder, lezen doet alleen de sync;
+--   * de functie zegt nooit of een adres er al stond, en neemt hoogstens 200
+--     nieuwe adressen per dag aan, zodat niemand de tabel vol kan gooien;
+--   * na die ene mail gaat het adres weg (de sync, als hij verstuurt).
+create table if not exists public.seizoen_herinneringen (
+  email      text primary key,
+  taal       text not null default 'en',
+  token      uuid not null default gen_random_uuid() unique,
+  created_at timestamptz not null default now()
+);
+grant all on table public.seizoen_herinneringen to service_role;
+alter table public.seizoen_herinneringen drop constraint if exists seizoen_herinneringen_taal;
+alter table public.seizoen_herinneringen add constraint seizoen_herinneringen_taal
+  check (taal in ('nl', 'en', 'de', 'fr', 'es', 'it', 'pt'));
+alter table public.seizoen_herinneringen drop constraint if exists seizoen_herinneringen_email;
+alter table public.seizoen_herinneringen add constraint seizoen_herinneringen_email
+  check (email = lower(email) and length(email) <= 254 and email ~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]{2,}$');
+alter table public.seizoen_herinneringen enable row level security;
+revoke all on public.seizoen_herinneringen from anon, authenticated;
+
+-- 'ok' (ook als het adres er al stond), 'ongeldig' of 'druk'.
+create or replace function public.herinnering_aanmelden(p_email text, p_taal text default 'en')
+returns text
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+declare
+  v_email text := lower(btrim(coalesce(p_email, '')));
+begin
+  if length(v_email) > 254 or v_email !~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]{2,}$' then
+    return 'ongeldig';
+  end if;
+  if exists (select 1 from public.seizoen_herinneringen where email = v_email) then return 'ok'; end if;
+  if (select count(*) from public.seizoen_herinneringen where created_at > now() - interval '1 day') >= 200 then
+    return 'druk';
+  end if;
+  insert into public.seizoen_herinneringen (email, taal) values (v_email, public.mail_taal(p_taal))
+    on conflict (email) do nothing;
+  return 'ok';
+end $$;
+
+-- De afmeldlink uit de mail: zonder account, met het token.
+create or replace function public.herinnering_afmelden(p_token uuid)
+returns boolean
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+declare v_n int;
+begin
+  delete from public.seizoen_herinneringen where token = p_token;
+  get diagnostics v_n = row_count;
+  return v_n > 0;
+end $$;
+
+revoke all on function public.herinnering_aanmelden(text, text) from public;
+revoke all on function public.herinnering_afmelden(uuid)        from public;
+grant execute on function public.herinnering_aanmelden(text, text) to anon, authenticated;
+grant execute on function public.herinnering_afmelden(uuid)        to anon, authenticated;
+
 -- ---- hoe deed jij het tegen iedereen (1 november) -------------------------
 -- Danny: "De sync rekent na elke sessie anonieme cijfers uit over alle
 -- poules. Alleen na de deadline, en pas vanaf 50 spelers uit minstens 5
@@ -3950,6 +4021,8 @@ begin
                    (select count(distinct a.member_id) from public.answers a where a.pool_id = p.id) inzenders
               from public.pools p
              where p.created_at > now() - interval '90 days' and not coalesce(p.is_public, false)) x),
+    -- Hoeveel mensen een herinnering voor het volgende seizoen vroegen.
+    'herinneringen', (select count(*) from public.seizoen_herinneringen),
     -- Wat voor accounts er achter de spelers zitten.
     'accounts', coalesce((
       select jsonb_object_agg(soort, n)
@@ -4625,7 +4698,8 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'beheer_speler_verwijderen', 'beheer_spelers', 'beheer_statistieken',
           'beheer_sync', 'controle_seizoen', 'coureur_sleutel', 'eigen_antwoord_geven',
           'eigen_vraag_open', 'eigen_vraag_opslaan', 'eigen_vraag_uitkomst',
-          'eigen_vraag_weghalen', 'ik_ben_beheerder', 'is_member', 'joker_open',
+          'eigen_vraag_weghalen', 'herinnering_aanmelden', 'herinnering_afmelden',
+          'ik_ben_beheerder', 'is_member', 'joker_open',
           'lijst_omzetting', 'lijst_vervangen', 'mag_beheren', 'mag_logo_zetten',
           'mail_aan', 'mail_afmelden', 'mail_bijwerken', 'mail_ontvangers', 'mail_stand',
           'mail_taal', 'mail_tijdzone', 'mail_uit', 'meenemen_afronden', 'meenemen_klaarzetten',
@@ -4646,7 +4720,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'aanmaak_log', 'account_meenemen', 'actief', 'answers', 'bezoeken', 'jokers', 'mail_abonnementen',
           'pool_eigen_antwoorden', 'pool_eigen_vragen', 'pool_members', 'pool_periodes',
           'pool_questions', 'pool_teams', 'pools', 'poule_controle', 'push_abonnementen',
-          'questions', 'races', 'site_beheerders', 'site_bezoeken', 'site_paden', 'spelerscijfers',
+          'questions', 'races', 'seizoen_herinneringen', 'site_beheerders', 'site_bezoeken', 'site_paden', 'spelerscijfers',
           'sync_runs', 'tikken', 'verboden_woorden'] as tabellen) v
 union all
 -- Premium (13 oktober): de vijf kolommen op pools, de bewaking erop, de teams

@@ -225,6 +225,16 @@ jobs:
           psql -d jokers -v ON_ERROR_STOP=1 -f schema.sql
           psql -d jokers -v ON_ERROR_STOP=1 -f test/jokers.test.sql
 
+      # Herinner mij voor het volgende seizoen (15 november): het enige
+      # mailadres van iemand zonder account. Aanmelden en afmelden zonder
+      # account, de tabel dicht voor iedereen, hoogstens 200 per dag.
+      - name: herinner mij — een mailadres zonder account, en verder niets
+        run: |
+          createdb herinner
+          psql -d herinner -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d herinner -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d herinner -v ON_ERROR_STOP=1 -f test/herinner.test.sql
+
       # Het beheer ziet alles en mag poules en spelers weggooien. Dat mag
       # alleen de beheerder, en die word je alleen met het bevestigde
       # beheeradres. Deze test draait schema.sql zelf nog een keer, nadat dat

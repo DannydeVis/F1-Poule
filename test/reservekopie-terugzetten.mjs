@@ -86,6 +86,8 @@ insert into public.mail_abonnementen (user_id, taal, tijdzone, token, training_l
 insert into public.account_meenemen (token, van_user, geldig_tot) values
   ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000a2', '2026-11-03 12:15:00+00');
 insert into public.aanmaak_log (user_id) values ('00000000-0000-0000-0000-0000000000a1');
+insert into public.seizoen_herinneringen (email, taal, token) values
+  ('iemand@example.com', 'nl', '00000000-0000-0000-0000-0000000000f3');
 commit;
 `);
 const leeg = TABELLEN.filter((t) => psql(`select count(*) from public.${t};`) === '0');
@@ -104,7 +106,8 @@ psql(`delete from public.pools; delete from public.races; delete from public.sit
       delete from public.verboden_woorden; delete from public.aanmaak_log;
       delete from public.sync_runs; delete from public.bezoeken; delete from public.actief;
       delete from public.site_paden; delete from public.site_bezoeken; delete from public.spelerscijfers;
-      delete from public.mail_abonnementen; delete from public.account_meenemen;`);
+      delete from public.mail_abonnementen; delete from public.account_meenemen;
+      delete from public.seizoen_herinneringen;`);
 check('na de ramp is de poule weg', psql('select count(*) from public.pool_members;') === '0'
   && psql('select count(*) from public.answers;') === '0');
 

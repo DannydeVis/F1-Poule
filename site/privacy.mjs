@@ -21,7 +21,7 @@
 // Waar iemand terecht kan met een vraag over zijn gegevens. Staat ook in de
 // app (PRIVACY_CONTACT); de test houdt die twee gelijk.
 export const CONTACT = 'contact@predicttherace.com';
-export const PRIVACY_BIJGEWERKT = '2026-11-03';
+export const PRIVACY_BIJGEWERKT = '2026-11-15';
 
 export const PRIVACY = {
   nl: {
@@ -30,11 +30,12 @@ export const PRIVACY = {
     omschrijving: 'Wat Predict the Race van je bewaart, waar het staat, wie het ziet en hoe je het weer weg krijgt. Geen advertenties, statistieken alleen met je ja.',
     kop: 'Wat Predict the Race van je weet',
     intro: 'Predict the Race is een gratis F1-voorspelspel voor vriendengroepen. Het bewaart zo weinig mogelijk, en wat het bewaart staat hieronder, in gewone taal.',
-    bijgewerkt: 'Bijgewerkt op 3 november 2026',
+    bijgewerkt: 'Bijgewerkt op 15 november 2026',
     secties: [
       ['Wat er bewaard wordt', [
         'De naam die je in een poule kiest, je voorspellingen en je punten. En een anoniem account: een willekeurig nummer, zodat de database weet welke voorspellingen van jou zijn.',
         'Je mailadres alleen als je het zelf koppelt, om op een ander toestel verder te spelen. Doe je dat niet, dan staat er geen mailadres.',
+        'Vraag je op de voorpagina om een herinnering voor het volgende seizoen, dan bewaren we het mailadres dat je daar invult en de taal van de pagina. Daar gaat één mail naartoe, als het voorspellen voor dat seizoen opengaat, met een link om je af te melden. Daarna gooien we het adres weg. Het hangt niet aan een speler of een poule.',
       ]],
       ['Als je met Google inlogt', [
         'Dan weet Google dat je deze app gebruikt, en krijgt de app je naam en mailadres van Google. Dat gebeurt alleen als je er zelf voor kiest. Koppel je niets, of gebruik je een mailadres, dan komt Google er niet aan te pas.',
@@ -98,11 +99,12 @@ export const PRIVACY = {
     omschrijving: 'What Predict the Race keeps about you, where it lives, who sees it and how to get it removed. No ads, statistics only with your yes.',
     kop: 'What Predict the Race knows about you',
     intro: 'Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.',
-    bijgewerkt: 'Updated on 3 November 2026',
+    bijgewerkt: 'Updated on 15 November 2026',
     secties: [
       ['What is kept', [
         'The name you pick in a pool, your predictions and your points. And an anonymous account: a random number, so the database knows which predictions are yours.',
         'Your email address only if you link it yourself, to carry on playing on another device. If you do not, there is no email address.',
+        'If you ask for a reminder for next season on the home page, we keep the email address you enter there and the language of the page. One email goes to it, when predictions for that season open, with a link to unsubscribe. After that we delete the address. It is not tied to a player or a pool.',
       ]],
       ['If you sign in with Google', [
         'Then Google knows you use this app, and the app gets your name and email address from Google. That only happens if you choose it yourself. Link nothing, or use an email address, and Google is not involved at all.',

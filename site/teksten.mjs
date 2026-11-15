@@ -72,6 +72,12 @@ export const LLMS = {
 export const TALEN = ['nl', 'en', 'de', 'fr', 'es', 'it', 'pt'];
 export const STANDAARD = 'en';
 
+// "Herinner mij voor het volgende seizoen" op de voorpagina (15 november). Het
+// blok staat er tot het voorspellen voor dat seizoen open is; daarna laat
+// maak-site.mjs het weg en verbergt herinner.js het op een pagina die nog in
+// een cache staat.
+export const HERINNER = { jaar: 2027, tot: '2027-03-01' };
+
 export const teksten = {
   // ---------------------------------------------------------------- NL
   nl: {
@@ -175,6 +181,7 @@ export const teksten = {
     // Het blok "De app" op de voorpagina (21 oktober): de app staat niet in de
     // stores, maar op het beginscherm werkt hij als een app. Wie een store-knop
     // zoekt, leest hier hoe het wel gaat.
+    herinner: {"kop": "Seizoen {jaar}: krijg een seintje", "tekst": "Het seizoen loopt op zijn eind. Laat je mailadres achter en je krijgt één mail als het voorspellen voor {jaar} opengaat, vlak voor de eerste race.", "label": "Je mailadres", "plek": "jij@voorbeeld.nl", "knop": "Herinner mij", "ok": "Genoteerd. Je hoort van ons voor de eerste race van {jaar}.", "ongeldig": "Dat lijkt geen mailadres.", "fout": "Dat lukte niet. Probeer het later nog eens.", "privacy": "We gebruiken je adres alleen voor die ene mail en gooien het daarna weg."},
     app: {
       label: 'De app', kop: 'Op je beginscherm, zonder App Store.',
       intro: 'Predict the Race werkt als een gewone app: een eigen icoon op je beginscherm, geen adresbalk en als je wilt een melding voor je deadlines. Je haalt hem niet uit de App Store of Google Play, maar zet hem in twee tikken vanuit je browser op je telefoon. Gratis, en altijd de nieuwste versie.',
@@ -320,6 +327,7 @@ export const teksten = {
       uitslag: ['After the race you see what your prediction earned for every driver.', 'A race result with the points per driver'],
       stand: ['The standings, with your own row highlighted and head-to-head results below.', 'League standings with a podium and the table'],
     },
+    herinner: {"kop": "Season {jaar}: get a heads-up", "tekst": "The season is nearly over. Leave your email address and you get one email when predictions for {jaar} open, just before the first race.", "label": "Your email address", "plek": "you@example.com", "knop": "Remind me", "ok": "Noted. You will hear from us before the first race of {jaar}.", "ongeldig": "That does not look like an email address.", "fout": "That did not work. Please try again later.", "privacy": "We use your address for that one email only and delete it afterwards."},
     app: {
       label: 'The app', kop: 'On your home screen, no App Store needed.',
       intro: 'Predict the Race works like a regular app: its own icon on your home screen, no address bar, and reminders before your deadlines if you want them. You do not get it from the App Store or Google Play; you add it to your phone from the browser in two taps. Free, and always the latest version.',
@@ -464,6 +472,7 @@ export const teksten = {
       uitslag: ['Nach dem Rennen siehst du für jeden Fahrer, was dein Tipp gebracht hat.', 'Ein Rennergebnis mit den Punkten pro Fahrer'],
       stand: ['Die Tabelle, mit deiner eigenen Zeile hervorgehoben und den Duellen darunter.', 'Die Tabelle einer Tipprunde mit Podium und Rangliste'],
     },
+    herinner: {"kop": "Saison {jaar}: lass dich erinnern", "tekst": "Die Saison geht zu Ende. Hinterlasse deine E-Mail-Adresse und du bekommst eine einzige E-Mail, wenn das Tippen für {jaar} öffnet, kurz vor dem ersten Rennen.", "label": "Deine E-Mail-Adresse", "plek": "du@beispiel.de", "knop": "Erinnere mich", "ok": "Notiert. Du hörst vor dem ersten Rennen {jaar} von uns.", "ongeldig": "Das sieht nicht nach einer E-Mail-Adresse aus.", "fout": "Das hat nicht geklappt. Versuche es später noch einmal.", "privacy": "Wir nutzen deine Adresse nur für diese eine E-Mail und löschen sie danach."},
     app: {
       label: 'Die App', kop: 'Auf dem Startbildschirm, ohne App Store.',
       intro: 'Predict the Race funktioniert wie eine normale App: eigenes Symbol auf dem Startbildschirm, keine Adressleiste und auf Wunsch Erinnerungen vor deinen Deadlines. Du lädst es nicht aus dem App Store oder von Google Play, sondern legst es mit zwei Tipps aus dem Browser auf dein Handy. Kostenlos und immer aktuell.',
@@ -608,6 +617,7 @@ export const teksten = {
       uitslag: ['Après la course, vous voyez ce que votre pronostic a rapporté pour chaque pilote.', 'Le résultat d\'une course avec les points par pilote'],
       stand: ['Le classement, avec votre ligne mise en avant et les face-à-face en dessous.', 'Le classement d\'une ligue avec le podium et le tableau'],
     },
+    herinner: {"kop": "Saison {jaar} : sois prévenu", "tekst": "La saison touche à sa fin. Laisse ton adresse e-mail et tu recevras un seul e-mail à l'ouverture des pronostics {jaar}, juste avant la première course.", "label": "Ton adresse e-mail", "plek": "toi@exemple.fr", "knop": "Préviens-moi", "ok": "Noté. Tu auras de nos nouvelles avant la première course de {jaar}.", "ongeldig": "Cela ne ressemble pas à une adresse e-mail.", "fout": "Cela n'a pas fonctionné. Réessaie plus tard.", "privacy": "Nous utilisons ton adresse uniquement pour cet e-mail, puis nous la supprimons."},
     app: {
       label: 'L\'appli', kop: 'Sur votre écran d\'accueil, sans App Store.',
       intro: 'Predict the Race fonctionne comme une appli classique : sa propre icône sur l\'écran d\'accueil, pas de barre d\'adresse et, si vous le souhaitez, des rappels avant vos échéances. Vous ne la téléchargez pas sur l\'App Store ou Google Play : vous l\'ajoutez à votre téléphone depuis le navigateur en deux gestes. Gratuite et toujours à jour.',
@@ -752,6 +762,7 @@ export const teksten = {
       uitslag: ['Después de la carrera ves lo que tu predicción sumó con cada piloto.', 'El resultado de una carrera con los puntos por piloto'],
       stand: ['La clasificación, con tu fila resaltada y los cara a cara debajo.', 'La clasificación de una liga con el podio y la tabla'],
     },
+    herinner: {"kop": "Temporada {jaar}: recibe un aviso", "tekst": "La temporada está a punto de terminar. Deja tu correo y recibirás un único mensaje cuando se abran los pronósticos de {jaar}, justo antes de la primera carrera.", "label": "Tu correo electrónico", "plek": "tu@ejemplo.es", "knop": "Avísame", "ok": "Anotado. Te escribiremos antes de la primera carrera de {jaar}.", "ongeldig": "Eso no parece una dirección de correo.", "fout": "No ha funcionado. Inténtalo más tarde.", "privacy": "Usamos tu dirección solo para ese mensaje y después la borramos."},
     app: {
       label: 'La app', kop: 'En tu pantalla de inicio, sin App Store.',
       intro: 'Predict the Race funciona como una app normal: su propio icono en la pantalla de inicio, sin barra de direcciones y, si quieres, avisos antes de tus plazos. No la descargas de la App Store ni de Google Play: la añades a tu móvil desde el navegador en dos toques. Gratis y siempre actualizada.',
@@ -896,6 +907,7 @@ export const teksten = {
       uitslag: ['Dopo la gara vedi cosa ha portato il tuo pronostico per ogni pilota.', 'Il risultato di una gara con i punti per pilota'],
       stand: ['La classifica, con la tua riga evidenziata e i testa a testa sotto.', 'La classifica di una lega con il podio e la tabella'],
     },
+    herinner: {"kop": "Stagione {jaar}: ricevi un avviso", "tekst": "La stagione sta per finire. Lascia il tuo indirizzo e-mail e riceverai una sola e-mail quando si apriranno i pronostici per il {jaar}, poco prima della prima gara.", "label": "Il tuo indirizzo e-mail", "plek": "tu@esempio.it", "knop": "Avvisami", "ok": "Segnato. Ti scriveremo prima della prima gara del {jaar}.", "ongeldig": "Non sembra un indirizzo e-mail.", "fout": "Non ha funzionato. Riprova più tardi.", "privacy": "Usiamo il tuo indirizzo solo per quell'e-mail e poi lo cancelliamo."},
     app: {
       label: 'L\'app', kop: 'Sulla schermata Home, senza App Store.',
       intro: 'Predict the Race funziona come una normale app: la sua icona sulla schermata Home, niente barra degli indirizzi e, se vuoi, promemoria prima delle scadenze. Non la scarichi dall\'App Store o da Google Play: la aggiungi al telefono dal browser con due tocchi. Gratis e sempre aggiornata.',
@@ -1040,6 +1052,7 @@ export const teksten = {
       uitslag: ['Depois da corrida você vê quanto seu palpite rendeu com cada piloto.', 'O resultado de uma corrida com os pontos por piloto'],
       stand: ['A classificação, com a sua linha destacada e os confrontos diretos logo abaixo.', 'A classificação de um bolão com pódio e tabela'],
     },
+    herinner: {"kop": "Temporada {jaar}: receba um aviso", "tekst": "A temporada está chegando ao fim. Deixe seu e-mail e você recebe uma única mensagem quando os palpites de {jaar} abrirem, pouco antes da primeira corrida.", "label": "Seu e-mail", "plek": "voce@exemplo.com.br", "knop": "Avise-me", "ok": "Anotado. Você terá notícias nossas antes da primeira corrida de {jaar}.", "ongeldig": "Isso não parece um e-mail.", "fout": "Não funcionou. Tente de novo mais tarde.", "privacy": "Usamos seu endereço só para essa mensagem e depois o apagamos."},
     app: {
       label: 'O app', kop: 'Na tela inicial, sem App Store.',
       intro: 'O Predict the Race funciona como um app comum: ícone próprio na tela inicial, sem barra de endereço e, se você quiser, lembretes antes dos prazos. Você não baixa da App Store nem do Google Play: adiciona ao celular pelo navegador em dois toques. Grátis e sempre atualizado.',

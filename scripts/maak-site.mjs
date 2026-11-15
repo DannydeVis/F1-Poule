@@ -38,7 +38,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { teksten, TALEN, STANDAARD, BASIS, MAKER, INDEXNOW_SLEUTEL, LLMS, OPEN_POULE } from '../site/teksten.mjs';
+import { teksten, TALEN, STANDAARD, BASIS, MAKER, INDEXNOW_SLEUTEL, LLMS, OPEN_POULE, HERINNER } from '../site/teksten.mjs';
 import { PRIVACY, CONTACT, PRIVACY_BIJGEWERKT, privacyTaal } from '../site/privacy.mjs';
 import { PAGINAS, PAGINA_UI } from '../site/paginas.mjs';
 import { knipUit } from './knipsel.mjs';
@@ -461,6 +461,19 @@ const CSS = `
   .codeveld button{border:0;border-left:1px solid var(--nacht-lijn);background:none;color:var(--nacht-ink);
     font:inherit;font-weight:600;font-size:15px;padding:0 16px;cursor:pointer;min-height:46px}
   .codeveld button:hover{background:#1d1f24}
+  /* "Herinner mij": een veld voor een mailadres, op een lichte kaart. */
+  .herinner{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .herinner label{font-size:13px;color:var(--ink2)}
+  .herinner div{display:flex;border:1px solid var(--lijn);border-radius:10px;overflow:hidden;background:var(--bg);max-width:460px}
+  .herinner input{flex:1;min-width:0;min-height:48px;border:0;background:none;color:var(--ink);padding:0 14px;font:inherit;font-size:16px}
+  .herinner input:focus{outline:none}
+  .herinner div:focus-within{border-color:var(--ink2)}
+  .herinner button{border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:600;font-size:15px;
+    padding:0 18px;cursor:pointer;min-height:48px;white-space:nowrap}
+  .herinner button:disabled{opacity:.6;cursor:default}
+  .herinnerstatus{margin:0;min-height:1.4em;font-size:14px;font-weight:600;color:var(--ink)}
+  .herinnerstatus[data-soort="ok"]{color:var(--groen)}
+  .herinnerklein{margin:0;font-size:13px;color:var(--ink2)}
   .vertrouwen{display:flex;flex-wrap:wrap;gap:8px 20px;margin:26px 0 0;padding:0;list-style:none;
     font-size:14px;color:var(--nacht-ink2)}
   .vertrouwen li{display:flex;align-items:center;gap:8px}
@@ -1180,6 +1193,7 @@ ${jsonLd(code, datum)}
   </div>
 </section>
 
+${herinnerBlok(code, t)}
 <section class="blok">
   <div class="binnen los">
     <article class="onthul"><h2>${esc(t.privacy.kop)}</h2><p>${esc(t.privacy.tekst)} <a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.privacy.meer)}</a></p></article>
@@ -1227,7 +1241,8 @@ ${jsonLd(code, datum)}
 <script>${BEWEGING}</script>
 <script>${INSTALLEER}</script>
 <script src="${p}toestemming.js" defer></script>
-<script src="${p}teller.js" defer></script>
+<script src="${p}teller.js" defer></script>${herinnerOpen() ? `
+<script src="${p}herinner.js" defer></script>` : ''}
 </body>
 </html>
 `;
@@ -2099,6 +2114,67 @@ function metDatum(url, maak) {
 //  ze nooit uit elkaar lopen. Zie "Tellen" in de privacyverklaring.
 // ------------------------------------------------------------
 
+// "Herinner mij voor het volgende seizoen": een veld voor een mailadres op de
+// voorpagina, tot dat seizoen begint (HERINNER in site/teksten.mjs). Het
+// formulier werkt alleen met javascript (herinner.js stuurt het adres naar
+// herinnering_aanmelden() in schema.sql); zonder staat het er niet.
+const herinnerOpen = () => Date.now() < Date.parse(HERINNER.tot);
+function herinnerBlok(code, t) {
+  if (!herinnerOpen() || !t.herinner) return '';
+  const h = t.herinner, jaar = (tekst) => esc(tekst.replaceAll('{jaar}', HERINNER.jaar));
+  return `<section class="blok" id="herinner" data-herinner-tot="${HERINNER.tot}" hidden>
+  <div class="binnen los">
+    <article class="onthul"><h2>${jaar(h.kop)}</h2><p>${jaar(h.tekst)}</p>
+      <form class="herinner" data-herinner data-taal="${code}" novalidate>
+        <label for="herinnermail">${esc(h.label)}</label>
+        <div><input id="herinnermail" type="email" inputmode="email" autocomplete="email" spellcheck="false"
+          maxlength="254" placeholder="${esc(h.plek)}" required>
+          <button type="submit">${esc(h.knop)}</button></div>
+        <p class="herinnerstatus" role="status" aria-live="polite" data-ok="${jaar(h.ok)}"
+          data-ongeldig="${esc(h.ongeldig)}" data-fout="${esc(h.fout)}"></p>
+        <p class="herinnerklein">${esc(h.privacy)} <a href="${naarPrivacy(code)}"${privacyHreflang(code)}>${esc(t.privacy.meer)}</a></p>
+      </form></article>
+  </div>
+</section>
+`;
+}
+
+function herinner() {
+  const url = appBron.match(/const SUPABASE_URL = '([^']+)';/)?.[1];
+  const sleutel = appBron.match(/const SUPABASE_ANON_KEY = '([^']+)';/)?.[1];
+  if (!url || !sleutel) throw new Error('app/index.html: SUPABASE_URL of SUPABASE_ANON_KEY niet gevonden voor herinner.js');
+  return `// "Herinner mij voor het volgende seizoen" op de voorpagina. Gemaakt door
+// scripts/maak-site.mjs: niet met de hand bewerken. Stuurt het mailadres dat
+// je zelf invult naar herinnering_aanmelden() in schema.sql, en verder niets.
+// Geen cookie, niets in je browser bewaard. Zie de privacyverklaring.
+(function () {
+  var blok = document.getElementById('herinner');
+  if (!blok) return;
+  if (Date.now() >= Date.parse(blok.getAttribute('data-herinner-tot'))) return;
+  blok.hidden = false;
+  var form = blok.querySelector('[data-herinner]');
+  var veld = form.querySelector('input'), knop = form.querySelector('button');
+  var status = form.querySelector('.herinnerstatus');
+  var zeg = function (soort) { status.textContent = status.getAttribute('data-' + soort); status.setAttribute('data-soort', soort); };
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var adres = veld.value.trim();
+    if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]{2,}$/.test(adres)) { zeg('ongeldig'); veld.focus(); return; }
+    knop.disabled = true;
+    fetch(${JSON.stringify(`${url}/rest/v1/rpc/herinnering_aanmelden`)}, {
+      method: 'POST',
+      headers: { apikey: ${JSON.stringify(sleutel)}, Authorization: ${JSON.stringify(`Bearer ${sleutel}`)},
+        'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_email: adres, p_taal: form.getAttribute('data-taal') })
+    }).then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (uit) {
+      if (uit === 'ok') { zeg('ok'); veld.value = ''; veld.disabled = true; }
+      else { zeg(uit === 'ongeldig' ? 'ongeldig' : 'fout'); knop.disabled = false; }
+    }).catch(function () { zeg('fout'); knop.disabled = false; });
+  });
+})();
+`;
+}
+
 function teller() {
   const url = appBron.match(/const SUPABASE_URL = '([^']+)';/)?.[1];
   const sleutel = appBron.match(/const SUPABASE_ANON_KEY = '([^']+)';/)?.[1];
@@ -2145,6 +2221,7 @@ bestanden.set('robots.txt', ROBOTS);
 bestanden.set('llms.txt', llms());
 bestanden.set('404.html', NIET_GEVONDEN);
 bestanden.set('teller.js', teller());
+bestanden.set('herinner.js', herinner());
 // Het sleutelbestand van IndexNow: de sleutel zelf, niets anders.
 if (!/^[0-9a-f]{32}$/.test(INDEXNOW_SLEUTEL)) throw new Error('INDEXNOW_SLEUTEL in site/teksten.mjs is geen 32 hex-tekens');
 bestanden.set(`${INDEXNOW_SLEUTEL}.txt`, INDEXNOW_SLEUTEL);

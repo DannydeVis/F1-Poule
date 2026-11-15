@@ -204,6 +204,19 @@
   .codeveld button{border:0;border-left:1px solid var(--nacht-lijn);background:none;color:var(--nacht-ink);
     font:inherit;font-weight:600;font-size:15px;padding:0 16px;cursor:pointer;min-height:46px}
   .codeveld button:hover{background:#1d1f24}
+  /* "Herinner mij": een veld voor een mailadres, op een lichte kaart. */
+  .herinner{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .herinner label{font-size:13px;color:var(--ink2)}
+  .herinner div{display:flex;border:1px solid var(--lijn);border-radius:10px;overflow:hidden;background:var(--bg);max-width:460px}
+  .herinner input{flex:1;min-width:0;min-height:48px;border:0;background:none;color:var(--ink);padding:0 14px;font:inherit;font-size:16px}
+  .herinner input:focus{outline:none}
+  .herinner div:focus-within{border-color:var(--ink2)}
+  .herinner button{border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:600;font-size:15px;
+    padding:0 18px;cursor:pointer;min-height:48px;white-space:nowrap}
+  .herinner button:disabled{opacity:.6;cursor:default}
+  .herinnerstatus{margin:0;min-height:1.4em;font-size:14px;font-weight:600;color:var(--ink)}
+  .herinnerstatus[data-soort="ok"]{color:var(--groen)}
+  .herinnerklein{margin:0;font-size:13px;color:var(--ink2)}
   .vertrouwen{display:flex;flex-wrap:wrap;gap:8px 20px;margin:26px 0 0;padding:0;list-style:none;
     font-size:14px;color:var(--nacht-ink2)}
   .vertrouwen li{display:flex;align-items:center;gap:8px}
@@ -520,11 +533,12 @@
   <div class="binnen">
     <h1>What Predict the Race knows about you</h1>
     <p class="inleiding">Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.</p>
-    <p class="label"><time datetime="2026-11-03">Updated on 3 November 2026</time></p>
+    <p class="label"><time datetime="2026-11-15">Updated on 15 November 2026</time></p>
     <section id="what-is-kept">
       <h2>What is kept</h2>
       <p>The name you pick in a pool, your predictions and your points. And an anonymous account: a random number, so the database knows which predictions are yours.</p>
       <p>Your email address only if you link it yourself, to carry on playing on another device. If you do not, there is no email address.</p>
+      <p>If you ask for a reminder for next season on the home page, we keep the email address you enter there and the language of the page. One email goes to it, when predictions for that season open, with a link to unsubscribe. After that we delete the address. It is not tied to a player or a pool.</p>
     </section>
     <section id="if-you-sign-in-with-google">
       <h2>If you sign in with Google</h2>

@@ -1140,6 +1140,16 @@ Nog een idee, niet gebouwd: de mail onder "Er klopt iets niet" kan de poulecode
 en een kort stukje van het account meesturen. Dan vind je zo'n geval met één
 query, in plaats van het te reconstrueren uit tijdstippen.
 
+## Voor het seizoen van 2027 (15 november)
+
+- **De herinneringsmail versturen.** Op de voorpagina laten bezoekers hun
+  mailadres achter voor één mail als 2027 opengaat (BEDIENING §16). Het
+  versturen is niet gebouwd. Uiterlijk half februari 2027: een stap in de sync
+  die één mail per adres stuurt, met de afmeldlink, en het adres daarna
+  weggooit. Zonder dat is de belofte op de voorpagina niet waargemaakt.
+- **Het blok weghalen.** Gaat vanzelf op 1 maart 2027 (`HERINNER` in
+  `site/teksten.mjs`); verzet die datum als de eerste race anders valt.
+
 ## Premium, later
 
 Eerst de gratis app goed; daarna premium in twee stappen.

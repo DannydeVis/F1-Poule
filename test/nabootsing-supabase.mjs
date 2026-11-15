@@ -1622,6 +1622,7 @@ Object.assign(functies, {
           ingevuld: poules.filter((p) => inzenders(p) >= 1).length,
           samen_ingevuld: poules.filter((p) => inzenders(p) >= 2).length };
       })(),
+      herinneringen: (store.seizoen_herinneringen ?? []).length,
       accounts: perSoort,
     }, error: null };
   }),

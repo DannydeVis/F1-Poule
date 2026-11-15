@@ -12743,3 +12743,27 @@ poule en is niet gebouwd.
 stap groter dan de eerste) en `test/beheer.test.sql` (de tellingen).
 
 **Danny moet:** niets.
+
+## Herinner mij voor het volgende seizoen (15 november)
+
+Danny zei ja: mailadressen bewaren van mensen die nog geen speler zijn, en
+het in de privacyverklaring zetten.
+
+**Wat er verandert.**
+- Database: de tabel `seizoen_herinneringen` (dicht voor iedereen) en de
+  functies `herinnering_aanmelden()` en `herinnering_afmelden()`. In
+  schema.sql en in productie (15 november; de functies zijn gelijk aan een
+  verse database, de controleregels kennen ze).
+- Site: het blok op de voorpagina in zeven talen (`herinnerBlok()` in
+  `maak-site.mjs`, de teksten in `site/teksten.mjs`) en `herinner.js`, dat
+  het adres naar de database stuurt. Zonder javascript staat het blok er niet.
+- Privacy: een alinea in de verklaring (NL en EN), bijgewerkt op 15 november.
+- Beheer: het aantal aanmeldingen onder de trechter.
+
+**Nog te doen: de mail versturen.** Niet gebouwd. Uiterlijk half februari
+2027: een stap in de sync die één mail per adres stuurt en het adres daarna
+weggooit. Staat ook in BEDIENING en ROUTEKAART.
+
+**Tests.** Nieuw: `test/herinner.test.mjs` (38) en `test/herinner.test.sql`.
+
+**Danny moet:** niets nu. In februari 2027 de mail laten bouwen en versturen.

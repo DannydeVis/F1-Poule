@@ -3071,6 +3071,33 @@ heeft gedeeld meet de app niet: dat zou een teller per poule vragen.
 De cijfers komen uit `beheer_statistieken()` (`trechter`). Een database
 zonder die cijfers geeft geen kaart.
 
+### Herinner mij voor het volgende seizoen (sinds 15 november)
+
+Op de voorpagina, in alle zeven talen, staat een blok "Seizoen 2027: krijg een
+seintje". Een bezoeker laat zijn mailadres achter en krijgt één mail als het
+voorspellen voor 2027 opengaat. Danny zei ja op het bewaren van die adressen.
+
+- **Wat er bewaard wordt.** Het adres (in kleine letters), de taal van de
+  pagina en een token voor de afmeldlink, in `seizoen_herinneringen`. Het
+  hangt niet aan een speler of een poule. De privacyverklaring noemt het (NL
+  en EN).
+- **Dicht.** Niemand leest of schrijft de tabel via de API. Aanmelden gaat via
+  `herinnering_aanmelden()`, afmelden via `herinnering_afmelden()` met het
+  token. De functie zegt nooit of een adres er al stond en neemt hoogstens
+  200 nieuwe adressen per dag aan.
+- **Hoeveel.** Onder Statistieken in het beheer, onder de trechter.
+- **Tot wanneer.** Het blok staat er tot 1 maart 2027 (`HERINNER` in
+  `site/teksten.mjs`). Daarna maakt `maak-site.mjs` het niet meer, en
+  `herinner.js` verbergt het op een pagina die nog in een cache staat.
+
+**Nog te doen vóór het seizoen van 2027: de mail zelf versturen.** Dat is niet
+gebouwd. Het vraagt een stap in de sync die de adressen ophaalt, één mail per
+adres stuurt via Resend (met de afmeldlink) en het adres daarna weggooit,
+zoals de privacyverklaring belooft. Uiterlijk half februari 2027.
+
+**Test.** `test/herinner.test.mjs` (de site) en `test/herinner.test.sql` (de
+database, eigen stap in tests.yml).
+
 ## 17. Google Analytics, alleen met toestemming
 
 Naast de eigen statistieken in het beheer (§16) kan de site Google Analytics

@@ -1027,6 +1027,8 @@ function trechterKaart(st) {
           <span class="spoor" style="width:${(100 * (Number(t[k]) || 0) / top).toFixed(1)}%"></span>
           <span class="getal">${getal(t[k])} <span class="zacht klein">${Math.round(100 * (Number(t[k]) || 0) / top)}%</span></span></div>`).join('')
         : '<p class="zacht">Nog geen nieuwe poules in deze periode.</p>'}</div>
+      ${st.herinneringen === undefined ? '' : `<p class="zacht klein" data-herinneringen style="margin:12px 0 0">${
+        getal(st.herinneringen)} ${Number(st.herinneringen) === 1 ? 'bezoeker vroeg' : 'bezoekers vroegen'} op de voorpagina om een herinnering voor het volgende seizoen.</p>`}
     </section>`;
 }
 
