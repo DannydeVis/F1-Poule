@@ -932,6 +932,7 @@ const functies = {
         profiel: m.user_id && gelijk(m.user_id, ik) ? m.profiel ?? null : null,
         team_id: m.team_id ?? null,
         kleur: m.kleur ?? null,
+        sinds: m.created_at ?? null,
       }));
     // De antwoorden van medespelers pas na hun deadline, je eigen altijd; van
     // de rest alleen dát ze er zijn. Zelfde voor de jokers, zonder de rest.

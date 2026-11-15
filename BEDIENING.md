@@ -2319,6 +2319,33 @@ zonder uitslag geeft geen kaart. Zeven talen.
 **Test.** `test/na-de-start.test.mjs`. Gewoon onder deze kaart staat de
 weekendkaart van de volgende race (§2), zoals altijd.
 
+## 11i. Het weekendduel (sinds 14 november)
+
+Elk weekend speelt iedereen in de poule tegen één poulegenoot. Wie dat weekend
+de meeste punten haalt wint het duel: drie punten in de duelstand, één bij
+gelijk. Aan de gewone punten en de gewone stand verandert het niets. Het is
+er om doordeweeks iets te hebben om naar te kijken, en omdat ook wie onderaan
+staat elk weekend opnieuw begint.
+
+- **Tegen wie.** Geen loting maar een vast schema, iedereen tegen iedereen, op
+  het rondenummer. Daardoor is het op elk toestel hetzelfde en hoeft er niets
+  opgeslagen te worden. Bij een oneven aantal is er elk weekend één speler
+  vrij. Wie er later bij komt, doet mee vanaf het eerstvolgende weekend; een
+  gereden weekend verandert niet meer (`poule_ophalen()` geeft daarvoor mee
+  sinds wanneer een speler meedoet).
+- **Waar je het ziet.** Op de kaart van de volgende race ("weekendduel: jij
+  tegen Sanne"), na de race op de uitslagkaart (de punten van allebei en of
+  je won), en op de Stand-tab de duelstand met winst, gelijk en verlies.
+- **Wanneer niet.** In je eentje is er geen duel. Met z'n tweeën speel je
+  elk weekend tegen elkaar en staat er geen aparte duelstand: dat is hetzelfde
+  als de onderlinge duels. Leverde geen van beiden iets in, dan is er niet
+  gespeeld.
+
+Nog niet gebouwd: een melding of mail op woensdag ("dit weekend speel je
+tegen ..."). Dat vraagt dat de sync het schema ook kent.
+
+**Test.** `test/weekendduel.test.mjs`.
+
 ## 12. Wat de app van je weet
 
 Onder **Profiel** staat een dichtgeklapt blok "wat de app van je weet". Daarin

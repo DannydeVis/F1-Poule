@@ -1944,7 +1944,10 @@ as $$
                      'profiel',      case when m.user_id is not null and m.user_id = auth.uid()
                                           then m.profiel end,
                      'team_id',      m.team_id,
-                     'kleur',        m.kleur) order by m.created_at)
+                     'kleur',        m.kleur,
+                     -- Sinds wanneer hij meedoet: het weekendduel (14 november)
+                     -- loot alleen onder wie er vóór dat weekend al was.
+                     'sinds',        m.created_at) order by m.created_at)
                    from public.pool_members m, poule p where m.pool_id = p.id), '[]'::jsonb),
     -- De antwoorden van je medespelers pas als hun sessie dicht is; die van
     -- jezelf (en van de speler zonder account die jouw toestel inschreef)
