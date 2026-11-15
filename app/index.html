@@ -3243,8 +3243,8 @@ const ENGELS = Object.fromEntries([
   // ---- nieuw in de app ---------------------------------------------
   ['nieuw in de app', 'new in the app'],
   ['Weekendduel: elk weekend speel je tegen één poulegenoot.', 'Weekend duel: every weekend you play against one pool mate.'],
-  ['Vraag van de week: wie van twee teamgenoten is sneller in de eerste training?', 'Question of the week: which of two team mates is faster in first practice?'],
-  ['Prestaties: negen dingen om te halen, onder Profiel.', 'Achievements: nine things to earn, under Profile.'],
+  ['Prestaties: acht dingen om te halen, onder Profiel.', 'Achievements: eight things to earn, under Profile.'],
+  ['Uitslag: je plek van het weekend en of je steeg, onder je punten.', 'Results: your weekend position and whether you climbed, below your points.'],
   ['Begrepen', 'Got it'],
   // ---- prestaties --------------------------------------------------
   ['prijzenkast', 'trophy cabinet'],
@@ -8659,8 +8659,8 @@ function meldingKaart() {
 // nieuw, en daar is de rondleiding voor.
 const NIEUW = { id: '2026-11-15', punten: () => [
   T('Weekendduel: elk weekend speel je tegen één poulegenoot.'),
-  T('Vraag van de week: wie van twee teamgenoten is sneller in de eerste training?'),
-  T('Prestaties: negen dingen om te halen, onder Profiel.'),
+  T('Prestaties: acht dingen om te halen, onder Profiel.'),
+  T('Uitslag: je plek van het weekend en of je steeg, onder je punten.'),
 ] };
 const NIEUWGEZIEN = 'poule:nieuw';
 function nieuwKaart() {
@@ -9474,6 +9474,13 @@ function weekendDuelBlok() {
 // coureurs op naam, en elke ronde het volgende. Zo is de vraag op elk toestel
 // dezelfde en hoeft hij nergens opgeslagen. In de database staat alleen het
 // nummer van de coureur die iemand koos (weekvraag_kiezen() in schema.sql).
+//
+// Staat uit sinds 15 november. Danny, dezelfde dag dat hij live ging: "ik zie
+// de toegevoegde waarde niet van die extra vraag". De code en de database
+// blijven staan; met WEEKVRAAG_AAN op true (hier en in
+// scripts/weekendduel.mjs) is alles terug. Uit betekent: geen strook op de
+// racekaart, geen stand, geen prestatie, niets in het bericht op woensdag.
+const WEEKVRAAG_AAN = false;
 function weekvraagPaar(race) {
   const teams = new Map();
   for (const d of race?.drivers ?? []) {
@@ -9519,6 +9526,7 @@ function weekvraagKeuze(race, id) {
 }
 // 'open' zolang je kunt kiezen, 'dicht' tot de training binnen is, 'uit' erna.
 function weekvraagStaat(race, nu = Date.now()) {
+  if (!WEEKVRAAG_AAN) return '';
   const sluit = weekvraagSluit(race);
   if (!race || sluit === null || !weekvraagPaar(race)) return '';
   if (nu < sluit) return 'open';
@@ -9978,7 +9986,7 @@ function accountKaart() {
 // De rest van Profiel als regels, net als de pitmuur op de Poule-tab: de naam,
 // hoe het nu staat, en de uitleg en de knoppen erachter.
 // ---- prestaties ---------------------------------------------
-// Negen dingen die je in een seizoen kunt halen, los van de stand: ook wie
+// Acht dingen (negen met de vraag van de week aan) die je in een seizoen kunt halen, los van de stand: ook wie
 // onderaan staat kan de pole goed hebben of een weekend winnen. Alles wordt
 // uitgerekend uit wat er al is (je lijsten, de uitslagen, het weekendduel en
 // de vraag van de week); er wordt niets opgeslagen. Een lijst die de app
@@ -10021,7 +10029,9 @@ function prestaties(id = S.ik.id) {
     { id: 'weekend', naam: T('Weekendwinst'), hoe: T('Win een weekend in je poule.'), behaald: winst },
     { id: 'trouw', naam: T('Trouw'), hoe: T('Lever vijf weekenden op rij in.'), ...tot(reeks, PRESTATIE_REEKS) },
     { id: 'duellist', naam: T('Duellist'), hoe: T('Win drie weekendduels.'), ...tot(duels, PRESTATIE_DUELS) },
-    { id: 'kenner', naam: T('Kenner'), hoe: T('Heb drie keer de vraag van de week goed.'), ...tot(vragen, PRESTATIE_VRAGEN) },
+    // Alleen als de vraag van de week aan staat: anders is hij niet te halen.
+    ...(WEEKVRAAG_AAN ? [{ id: 'kenner', naam: T('Kenner'), hoe: T('Heb drie keer de vraag van de week goed.'),
+      ...tot(vragen, PRESTATIE_VRAGEN) }] : []),
   ];
 }
 function prestatiesBlok(lijst = prestaties()) {

@@ -299,7 +299,7 @@ zeggen valt.
 
 **Prestaties** (sinds 15 november). Boven de drie groepen staat de
 **prijzenkast**: één regel "prestaties" met hoeveel je er hebt, en daaronder
-negen tegels. Behaald brandt het lampje; de rest is gedimd, met wat je ervoor
+acht tegels. Behaald brandt het lampje; de rest is gedimd, met wat je ervoor
 moet doen. Het is er voor wie onderaan staat: de pole goed hebben of een
 weekend winnen kan iedereen.
 
@@ -313,9 +313,9 @@ weekend winnen kan iedereen.
 | Weekendwinst | een weekend gewonnen in je poule (niet in je eentje) |
 | Trouw | vijf weekenden op rij ingeleverd (de langste reeks telt) |
 | Duellist | drie weekendduels gewonnen |
-| Kenner | drie keer de vraag van de week goed |
+| Kenner | drie keer de vraag van de week goed (alleen als die aan staat, zie §11j) |
 
-Bij Scherp, Trouw, Duellist en Kenner staat hoe ver je bent ("2/5"). Alles
+Bij Scherp, Trouw en Duellist staat hoe ver je bent ("2/5"). Alles
 wordt uitgerekend uit wat er al is (`prestaties()` in de app); er wordt niets
 opgeslagen, dus een prestatie geldt per poule en per seizoen. Een lijst die
 de app automatisch voor je invulde telt niet.
@@ -2408,7 +2408,17 @@ weekend. Wie vrij is of alleen in zijn poule zit krijgt niets.
 **Test.** `test/weekendduel.test.mjs` (de app) en
 `test/weekendduel-sync.test.mjs` (de sync).
 
-## 11j. De vraag van de week (sinds 15 november)
+## 11j. De vraag van de week (gebouwd op 15 november, staat uit)
+
+**Staat uit.** Danny, op de dag dat hij live ging: "ik zie de toegevoegde
+waarde niet van die extra vraag". Sindsdien staat er geen strook op de
+racekaart, geen stand op de Stand-tab, geen prestatie "Kenner", en noemt het
+bericht op woensdag hem niet. De code, de tabel en de functies staan er nog;
+een keuze die iemand in die paar uur maakte blijft in de database staan en
+doet niets. Weer aanzetten: `WEEKVRAAG_AAN` op `true` in `app/index.html` en
+in `scripts/weekendduel.mjs`. De tests draaien de vraag op een kopie van de
+app met de schakelaar aan, zodat hij blijft werken. Wat hieronder staat
+beschrijft hoe hij werkt als hij aan staat.
 
 Elk weekend één vraag: wie van twee teamgenoten is sneller in de eerste vrije
 training? Net als het weekendduel is hij er om doordeweeks iets te doen te

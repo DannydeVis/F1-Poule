@@ -37,9 +37,9 @@ check('een speler die er al was ziet de kaart op het racescherm',
   (await page.getAttribute('[data-nieuw]', 'data-nieuw')) === '2026-11-15'
     && (await tekst('[data-nieuw] .label')) === 'nieuw in de app');
 const punten = await page.$$eval('[data-nieuw] li', (l) => l.map((e) => e.textContent.trim()));
-check('met de drie nieuwe dingen: het weekendduel, de vraag van de week en de prestaties',
-  punten.length === 3 && punten[0].startsWith('Weekendduel:') && punten[1].startsWith('Vraag van de week:')
-    && punten[2].startsWith('Prestaties:'), punten.join(' | '));
+check('met de drie nieuwe dingen: het weekendduel, de prestaties en het uitslagscherm',
+  punten.length === 3 && punten[0].startsWith('Weekendduel:') && punten[1].startsWith('Prestaties: acht')
+    && punten[2].startsWith('Uitslag:') && !punten.some((p) => /vraag van de week/i.test(p)), punten.join(' | '));
 check('de kaart staat boven de kaart van de race', await page.evaluate(() => {
   const k = document.querySelector('[data-nieuw]'), r = document.querySelector('.hero, [data-lopend]');
   return !r || k.getBoundingClientRect().top < r.getBoundingClientRect().top;

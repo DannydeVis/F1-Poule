@@ -148,7 +148,9 @@ export const duelZinnen = (taal) => ZINNEN[taal] ?? ZINNEN.en;
  * sluit bij de start ervan (weekvraag_sluit() in schema.sql). Zonder rooster
  * is er geen vraag, en dan zegt het bericht er niets over.
  */
-export function weekvraagOpen(race, nu = Date.now()) {
+export const WEEKVRAAG_AAN = false;   // uit sinds 15 november, zie app/index.html
+export function weekvraagOpen(race, nu = Date.now(), aan = WEEKVRAAG_AAN) {
+  if (!aan) return false;
   const starts = (Array.isArray(race?.vrije_trainingen) ? race.vrije_trainingen : [])
     .map((t) => Date.parse(t?.start)).filter(Number.isFinite);
   return starts.length > 0 && nu < Math.min(...starts);
@@ -162,7 +164,7 @@ const alGestuurd = (laatst, race) => laatst === `duel:${race.id}` || laatst === 
  * @param abonnementen rijen uit push_abonnementen (member_id, pool_id, taal, tijdzone, meld_training, training_laatst)
  * @param leden        pool_members van die poules
  */
-export function wieKrijgtEenDuel({ races = [], abonnementen = [], leden = [], nu = Date.now() } = {}) {
+export function wieKrijgtEenDuel({ races = [], abonnementen = [], leden = [], nu = Date.now(), weekvraag = WEEKVRAAG_AAN } = {}) {
   const nieuws = duelNieuws({ races, nu });
   if (!nieuws) return [];
   const { race, start, tag } = nieuws;
@@ -176,7 +178,7 @@ export function wieKrijgtEenDuel({ races = [], abonnementen = [], leden = [], nu
     if (!ander) continue;                        // vrij, of geen duel
     const z = duelZinnen(ab.taal);
     uit.push({ abonnement: ab, tag, bericht: { titel: z.titel(ander.naam),
-      tekst: z.tekst(race.name) + (weekvraagOpen(race, nu) ? ` ${z.vraag}` : ''), tag } });
+      tekst: z.tekst(race.name) + (weekvraagOpen(race, nu, weekvraag) ? ` ${z.vraag}` : ''), tag } });
   }
   return uit;
 }
@@ -188,7 +190,8 @@ export function wieKrijgtEenDuel({ races = [], abonnementen = [], leden = [], nu
  * @param leden      pool_members van de poules van die accounts (ook de medespelers)
  * @param pools      id en name van die poules
  */
-export function duelMails({ races = [], ontvangers = [], leden = [], pools = [], nu = Date.now(), appUrl } = {}) {
+export function duelMails({ races = [], ontvangers = [], leden = [], pools = [], nu = Date.now(), appUrl,
+  weekvraag = WEEKVRAAG_AAN } = {}) {
   const nieuws = duelNieuws({ races, nu });
   if (!nieuws) return [];
   const { race, start, tag } = nieuws;
@@ -214,7 +217,7 @@ export function duelMails({ races = [], ontvangers = [], leden = [], pools = [],
         onderwerp: `${race.name}: ${z.titel(mijn[0].ander.naam)}`,
         kop: z.kop,
         alineas: [...mijn.map((x) => z.regel(x.poule, x.ander.naam)), z.uitleg,
-          ...(weekvraagOpen(race, nu) ? [z.vraag] : [])],
+          ...(weekvraagOpen(race, nu, weekvraag) ? [z.vraag] : [])],
         knop: z.knop,
         appUrl,
         afmelden,

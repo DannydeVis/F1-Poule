@@ -12873,3 +12873,28 @@ in je eentje en niet zolang de race nog moet komen. Eén nieuwe tekst
 **Tests.** Nieuw: `test/uitslag-drieluik.test.mjs` (10).
 
 **Danny moet:** niets.
+
+## De vraag van de week staat uit (15 november)
+
+Danny zag hem op zijn telefoon en schreef: "ik zie de toegevoegde waarde niet
+van die extra vraag. Mag je uit zetten."
+
+**Wat er verandert.**
+- App: `WEEKVRAAG_AAN = false`. Geen strook op de racekaart, geen stand, en
+  de prestatie Kenner vervalt (acht in plaats van negen).
+- Sync: dezelfde schakelaar in `scripts/weekendduel.mjs`; het bericht op
+  woensdag noemt de vraag niet meer.
+- De kaart "nieuw in de app" noemt nu het weekendduel, de prestaties en het
+  uitslagscherm.
+- De gids voor communities noemt de vraag niet meer.
+- De database blijft zoals hij is: de tabel en de functies zijn onschadelijk
+  en maken terugzetten een kwestie van twee regels.
+
+**Ook besloten.** De poule-optie "alleen top 3" wordt niet gebouwd. Reacties
+op elkaars uitslag komen er wel, met emoji (Danny: mag).
+
+**Tests.** `weekvraag.test.mjs` (31) controleert eerst dat uit ook uit is, en
+draait de rest op een kopie van de app met de schakelaar aan. Aangepast:
+`prestaties`, `nieuw`, `weekendduel-sync` (46).
+
+**Danny moet:** niets.
