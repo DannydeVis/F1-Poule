@@ -522,6 +522,14 @@ await page.click('[data-tab="statistieken"]');
   const assen = await page.$$eval('[data-grafiek="races"] text.as', (t) => t.map((x) => x.textContent));
   check('ingeleverd per race is een percentage, tot 100', assen.includes('100') && assen.includes('50'), assen.join(','));
   check('de accounts achter de spelers', (await page.$$eval('.balk', (b) => b.length)) >= 3);
+  // De trechter (15 november): vier stappen, elk als deel van de eerste.
+  const trechter = await page.$$eval('[data-trechter] [data-stap]', (b) => b.map((e) => ({
+    stap: e.dataset.stap, tekst: e.querySelector('.getal').textContent.replace(/\s+/g, ' ').trim(),
+    breed: parseFloat(e.querySelector('.spoor').style.width) })));
+  check('de trechter van nieuwe poules: vier stappen in volgorde',
+    trechter.map((t) => t.stap).join() === 'aangemaakt,tweede_speler,ingevuld,samen_ingevuld', JSON.stringify(trechter));
+  check('de eerste stap is het geheel, en geen stap is groter',
+    trechter[0]?.breed === 100 && trechter.every((t) => t.breed <= 100 && /\d+ \d+%/.test(t.tekst)), JSON.stringify(trechter));
 }
 
 // ---- 3b. een poule verwijderen ---------------------------------------------------

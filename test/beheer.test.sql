@@ -264,6 +264,15 @@ begin
       where (r ->> 'race_id')::int = 952) <> 2 then
     raise exception 'gezakt: inzendingen per race klopt niet: %', uit -> 'inzendingen_per_race';
   end if;
+  -- De trechter: twee poules, geen van beide openbaar; samen vier spelers.
+  if (uit -> 'trechter' ->> 'dagen')::int <> 90
+     or (uit -> 'trechter' ->> 'aangemaakt')::int <> (select count(*) from public.pools where not coalesce(is_public, false))
+     or (uit -> 'trechter' ->> 'tweede_speler')::int > (uit -> 'trechter' ->> 'aangemaakt')::int
+     or (uit -> 'trechter' ->> 'samen_ingevuld')::int > (uit -> 'trechter' ->> 'ingevuld')::int
+     or (uit -> 'trechter' ->> 'ingevuld')::int <> (select count(distinct a.pool_id) from public.answers a
+           join public.pools p on p.id = a.pool_id where not coalesce(p.is_public, false)) then
+    raise exception 'gezakt: de trechter klopt niet: %', uit -> 'trechter';
+  end if;
   if (uit -> 'accounts' ->> 'geen')::int <> 2 then
     raise exception 'gezakt: accounts per soort klopt niet: %', uit -> 'accounts';
   end if;

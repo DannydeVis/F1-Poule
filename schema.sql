@@ -3934,6 +3934,22 @@ begin
       where r.season = seizoen
         and coalesce(least(r.deadline_sprint, r.deadline_quali, r.deadline_race), now()) < now() + interval '7 days'),
       '[]'::jsonb),
+    -- De trechter (15 november): van de poules die de afgelopen negentig dagen
+    -- zijn aangemaakt, hoeveel er een tweede speler kregen, in hoeveel er iets
+    -- is ingevuld, en in hoeveel door minstens twee spelers. Daar haken
+    -- nieuwe poules af: in november zaten zes van de negen poules op één
+    -- speler. Zonder de openbare poules: daar komt iedereen vanzelf bij.
+    'trechter', (
+      select jsonb_build_object(
+               'dagen', 90,
+               'aangemaakt', count(*),
+               'tweede_speler', count(*) filter (where x.spelers >= 2),
+               'ingevuld', count(*) filter (where x.inzenders >= 1),
+               'samen_ingevuld', count(*) filter (where x.inzenders >= 2))
+      from (select (select count(*) from public.pool_members m where m.pool_id = p.id) spelers,
+                   (select count(distinct a.member_id) from public.answers a where a.pool_id = p.id) inzenders
+              from public.pools p
+             where p.created_at > now() - interval '90 days' and not coalesce(p.is_public, false)) x),
     -- Wat voor accounts er achter de spelers zitten.
     'accounts', coalesce((
       select jsonb_object_agg(soort, n)

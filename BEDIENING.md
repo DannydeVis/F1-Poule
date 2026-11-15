@@ -3052,6 +3052,25 @@ niet opnieuw gedraaid.
 
 ---
 
+### De trechter: waar haken nieuwe poules af (sinds 15 november)
+
+Onder **Statistieken** staat de kaart "Trechter: nieuwe poules". Van de
+poules die de afgelopen negentig dagen zijn aangemaakt (zonder de openbare)
+zie je vier stappen, elk als aantal en als deel van de eerste:
+
+1. poule aangemaakt;
+2. tweede speler erbij;
+3. iets ingevuld;
+4. door twee of meer spelers ingevuld.
+
+Zo zie je waar het misgaat. Op 15 november: 11 aangemaakt, 2 met een tweede
+speler, 10 met iets ingevuld, 2 door twee of meer ingevuld. Mensen maken dus
+een poule en vullen in, maar krijgen niemand mee. Of iemand de uitnodiging
+heeft gedeeld meet de app niet: dat zou een teller per poule vragen.
+
+De cijfers komen uit `beheer_statistieken()` (`trechter`). Een database
+zonder die cijfers geeft geen kaart.
+
 ## 17. Google Analytics, alleen met toestemming
 
 Naast de eigen statistieken in het beheer (§16) kan de site Google Analytics
