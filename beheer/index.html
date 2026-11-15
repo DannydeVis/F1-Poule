@@ -998,12 +998,35 @@ function statistiekenTab() {
           <span class="getal">${getal(v.aantal)}</span></div>`).join('')}</div>
     </section>
     ${siteKaart(st)}
+    ${trechterKaart(st)}
     <section class="kaart">
       <div class="kaartkop"><h2>Accounts achter de spelers</h2><span class="zacht klein">wie zijn browser leegmaakt zonder koppeling is zijn speler kwijt</span></div>
       <div class="balken">${['google', 'mail', 'anoniem', 'geen', 'weg'].filter((k) => accounts[k]).map((k) => `
         <div class="balk"><span>${esc(ACCOUNT[k])}</span>
           <span class="spoor" style="width:${(100 * accounts[k] / totaalAcc).toFixed(1)}%"></span>
           <span class="getal">${getal(accounts[k])}</span></div>`).join('') || '<p class="zacht">Nog geen spelers.</p>'}</div>
+    </section>`;
+}
+
+// De trechter (15 november): waar haken nieuwe poules af? Van de poules van de
+// afgelopen negentig dagen: aangemaakt, een tweede speler erbij, iets ingevuld,
+// en door minstens twee spelers ingevuld. Elke stap als deel van de eerste.
+// Een database zonder de cijfers (een oud schema) geeft geen kaart.
+function trechterKaart(st) {
+  const t = st.trechter;
+  if (!t) return '';
+  const stappen = [['aangemaakt', 'Poule aangemaakt'], ['tweede_speler', 'Tweede speler erbij'],
+    ['ingevuld', 'Iets ingevuld'], ['samen_ingevuld', 'Door twee of meer ingevuld']];
+  const top = Number(t.aangemaakt) || 0;
+  return `
+    <section class="kaart" data-trechter>
+      <div class="kaartkop"><h2>Trechter: nieuwe poules</h2><span class="zacht klein">poules van de afgelopen ${
+        getal(t.dagen)} dagen, zonder de openbare</span></div>
+      <div class="balken">${top ? stappen.map(([k, naam]) => `
+        <div class="balk" data-stap="${k}"><span>${naam}</span>
+          <span class="spoor" style="width:${(100 * (Number(t[k]) || 0) / top).toFixed(1)}%"></span>
+          <span class="getal">${getal(t[k])} <span class="zacht klein">${Math.round(100 * (Number(t[k]) || 0) / top)}%</span></span></div>`).join('')
+        : '<p class="zacht">Nog geen nieuwe poules in deze periode.</p>'}</div>
     </section>`;
 }
 

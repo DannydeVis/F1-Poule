@@ -1612,6 +1612,16 @@ Object.assign(functies, {
           inzenders: new Set(antwoordenVan((a) => gelijk(a.race_id, r.id) && !seizoensvragen.has(a.question_id))
             .map((a) => String(a.member_id))).size,
           spelers: store.pool_members.length })),
+      trechter: (() => {
+        const poules = store.pools.filter((p) => !p.is_public
+          && (!p.created_at || Date.parse(p.created_at) > Date.now() - 90 * 864e5));
+        const spelers = (p) => store.pool_members.filter((m) => gelijk(m.pool_id, p.id)).length;
+        const inzenders = (p) => new Set(antwoordenVan((a) => gelijk(a.pool_id, p.id)).map((a) => String(a.member_id))).size;
+        return { dagen: 90, aangemaakt: poules.length,
+          tweede_speler: poules.filter((p) => spelers(p) >= 2).length,
+          ingevuld: poules.filter((p) => inzenders(p) >= 1).length,
+          samen_ingevuld: poules.filter((p) => inzenders(p) >= 2).length };
+      })(),
       accounts: perSoort,
     }, error: null };
   }),

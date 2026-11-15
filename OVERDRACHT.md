@@ -12720,3 +12720,26 @@ afhankelijk van wanneer het gemerged is.
 **Tests.** Nieuw: `test/weekendduel-sync.test.mjs` (40), zonder browser.
 
 **Danny moet:** niets.
+
+## De trechter in het beheer (15 november)
+
+Uit het gesprek over groei: meten waar nieuwe poules afhaken, voordat er iets
+aan gebouwd wordt.
+
+**Wat er verandert.** `beheer_statistieken()` geeft `trechter` mee (de poules
+van de afgelopen negentig dagen, zonder de openbare: aangemaakt, tweede
+speler, ingevuld, door twee of meer ingevuld), en het beheer toont dat als
+kaart onder Statistieken (`trechterKaart()`). In schema.sql en in productie
+(15 november; de functie is gelijk aan een verse database).
+
+**Wat het zegt.** Op 15 november: 11 aangemaakt, 2 met een tweede speler, 10
+met iets ingevuld, 2 door twee of meer ingevuld. Het lek zit dus bij
+uitnodigen, niet bij invullen. Dat is waar de volgende verbetering hoort.
+
+**Niet gemeten.** Of de uitnodiging gedeeld is. Dat vraagt een teller per
+poule en is niet gebouwd.
+
+**Tests.** `test/beheer.test.mjs` (de kaart, vier stappen in volgorde, geen
+stap groter dan de eerste) en `test/beheer.test.sql` (de tellingen).
+
+**Danny moet:** niets.
