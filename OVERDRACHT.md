@@ -12858,3 +12858,18 @@ twee bezoek trekken. Geen eigen ontwerp: het is een gewone gids.
 `vragen`, `geo`, `gratis-belofte` en `hoofdmenu`.
 
 **Danny moet:** niets. Wie een community kent: dit is de link om te sturen.
+
+## Het drieluik op het uitslagscherm (15 november)
+
+Je punten stonden er groot, maar niet wat ze je brachten.
+
+**Wat er verandert.** Onder de kaart met je punten staat `uitslagDrieluik()`:
+je plek van dit weekend, en bij de laatst gereden race ook je plek in de
+stand en of je steeg, zakte of gelijk bleef (vanaf de tweede race). Bij een
+oudere race alleen het weekend: de stand van nu zegt niets over toen. Niet
+in je eentje en niet zolang de race nog moet komen. Eén nieuwe tekst
+("gelijk gebleven") in zeven talen.
+
+**Tests.** Nieuw: `test/uitslag-drieluik.test.mjs` (10).
+
+**Danny moet:** niets.
