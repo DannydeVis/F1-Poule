@@ -528,6 +528,8 @@ await page.click('[data-tab="statistieken"]');
     breed: parseFloat(e.querySelector('.spoor').style.width) })));
   check('de trechter van nieuwe poules: vier stappen in volgorde',
     trechter.map((t) => t.stap).join() === 'aangemaakt,tweede_speler,ingevuld,samen_ingevuld', JSON.stringify(trechter));
+  check('en hoeveel bezoekers een herinnering voor het volgende seizoen vroegen',
+    /^0 bezoekers vroegen/.test((await page.textContent('[data-herinneringen]')).trim()));
   check('de eerste stap is het geheel, en geen stap is groter',
     trechter[0]?.breed === 100 && trechter.every((t) => t.breed <= 100 && /\d+ \d+%/.test(t.tekst)), JSON.stringify(trechter));
 }

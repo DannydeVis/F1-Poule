@@ -112,7 +112,7 @@ addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.ptr
    "about": {
     "@id": "https://predicttherace.com/#app"
    },
-   "dateModified": "2026-11-01",
+   "dateModified": "2026-11-15",
    "primaryImageOfPage": "https://predicttherace.com/site/og/og-fr.jpg",
    "speakable": {
     "@type": "SpeakableSpecification",
@@ -531,6 +531,19 @@ addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.ptr
   .codeveld button{border:0;border-left:1px solid var(--nacht-lijn);background:none;color:var(--nacht-ink);
     font:inherit;font-weight:600;font-size:15px;padding:0 16px;cursor:pointer;min-height:46px}
   .codeveld button:hover{background:#1d1f24}
+  /* "Herinner mij": een veld voor een mailadres, op een lichte kaart. */
+  .herinner{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .herinner label{font-size:13px;color:var(--ink2)}
+  .herinner div{display:flex;border:1px solid var(--lijn);border-radius:10px;overflow:hidden;background:var(--bg);max-width:460px}
+  .herinner input{flex:1;min-width:0;min-height:48px;border:0;background:none;color:var(--ink);padding:0 14px;font:inherit;font-size:16px}
+  .herinner input:focus{outline:none}
+  .herinner div:focus-within{border-color:var(--ink2)}
+  .herinner button{border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:600;font-size:15px;
+    padding:0 18px;cursor:pointer;min-height:48px;white-space:nowrap}
+  .herinner button:disabled{opacity:.6;cursor:default}
+  .herinnerstatus{margin:0;min-height:1.4em;font-size:14px;font-weight:600;color:var(--ink)}
+  .herinnerstatus[data-soort="ok"]{color:var(--groen)}
+  .herinnerklein{margin:0;font-size:13px;color:var(--ink2)}
   .vertrouwen{display:flex;flex-wrap:wrap;gap:8px 20px;margin:26px 0 0;padding:0;list-style:none;
     font-size:14px;color:var(--nacht-ink2)}
   .vertrouwen li{display:flex;align-items:center;gap:8px}
@@ -1038,6 +1051,21 @@ addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.ptr
   </div>
 </section>
 
+<section class="blok" id="herinner" data-herinner-tot="2027-03-01" hidden>
+  <div class="binnen los">
+    <article class="onthul"><h2>Saison 2027 : sois prévenu</h2><p>La saison touche à sa fin. Laisse ton adresse e-mail et tu recevras un seul e-mail à l'ouverture des pronostics 2027, juste avant la première course.</p>
+      <form class="herinner" data-herinner data-taal="fr" novalidate>
+        <label for="herinnermail">Ton adresse e-mail</label>
+        <div><input id="herinnermail" type="email" inputmode="email" autocomplete="email" spellcheck="false"
+          maxlength="254" placeholder="toi@exemple.fr" required>
+          <button type="submit">Préviens-moi</button></div>
+        <p class="herinnerstatus" role="status" aria-live="polite" data-ok="Noté. Tu auras de nos nouvelles avant la première course de 2027."
+          data-ongeldig="Cela ne ressemble pas à une adresse e-mail." data-fout="Cela n'a pas fonctionné. Réessaie plus tard."></p>
+        <p class="herinnerklein">Nous utilisons ton adresse uniquement pour cet e-mail, puis nous la supprimons. <a href="../en/privacy/" hreflang="en">Lire toute la politique de confidentialité (en anglais)</a></p>
+      </form></article>
+  </div>
+</section>
+
 <section class="blok">
   <div class="binnen los">
     <article class="onthul"><h2>Sans publicité</h2><p>Predict the Race n'a pas de publicité et ne revend rien. Vous jouez avec un code et un nom ; une adresse e-mail n'est utile que si vous voulez emporter votre compte sur un autre appareil. Les statistiques de visite avec Google Analytics ne s'ajoutent que si vous l'acceptez vous-même. <a href="../en/privacy/" hreflang="en">Lire toute la politique de confidentialité (en anglais)</a></p></article>
@@ -1141,5 +1169,6 @@ addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.ptr
 }catch(e){}})();</script>
 <script src="../toestemming.js" defer></script>
 <script src="../teller.js" defer></script>
+<script src="../herinner.js" defer></script>
 </body>
 </html>

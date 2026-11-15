@@ -122,7 +122,7 @@ addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.ptr
    "about": {
     "@id": "https://predicttherace.com/#app"
    },
-   "dateModified": "2026-11-01",
+   "dateModified": "2026-11-15",
    "primaryImageOfPage": "https://predicttherace.com/site/og/og-nl.jpg",
    "speakable": {
     "@type": "SpeakableSpecification",
@@ -541,6 +541,19 @@ addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.ptr
   .codeveld button{border:0;border-left:1px solid var(--nacht-lijn);background:none;color:var(--nacht-ink);
     font:inherit;font-weight:600;font-size:15px;padding:0 16px;cursor:pointer;min-height:46px}
   .codeveld button:hover{background:#1d1f24}
+  /* "Herinner mij": een veld voor een mailadres, op een lichte kaart. */
+  .herinner{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .herinner label{font-size:13px;color:var(--ink2)}
+  .herinner div{display:flex;border:1px solid var(--lijn);border-radius:10px;overflow:hidden;background:var(--bg);max-width:460px}
+  .herinner input{flex:1;min-width:0;min-height:48px;border:0;background:none;color:var(--ink);padding:0 14px;font:inherit;font-size:16px}
+  .herinner input:focus{outline:none}
+  .herinner div:focus-within{border-color:var(--ink2)}
+  .herinner button{border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:600;font-size:15px;
+    padding:0 18px;cursor:pointer;min-height:48px;white-space:nowrap}
+  .herinner button:disabled{opacity:.6;cursor:default}
+  .herinnerstatus{margin:0;min-height:1.4em;font-size:14px;font-weight:600;color:var(--ink)}
+  .herinnerstatus[data-soort="ok"]{color:var(--groen)}
+  .herinnerklein{margin:0;font-size:13px;color:var(--ink2)}
   .vertrouwen{display:flex;flex-wrap:wrap;gap:8px 20px;margin:26px 0 0;padding:0;list-style:none;
     font-size:14px;color:var(--nacht-ink2)}
   .vertrouwen li{display:flex;align-items:center;gap:8px}
@@ -1048,6 +1061,21 @@ addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.ptr
   </div>
 </section>
 
+<section class="blok" id="herinner" data-herinner-tot="2027-03-01" hidden>
+  <div class="binnen los">
+    <article class="onthul"><h2>Seizoen 2027: krijg een seintje</h2><p>Het seizoen loopt op zijn eind. Laat je mailadres achter en je krijgt één mail als het voorspellen voor 2027 opengaat, vlak voor de eerste race.</p>
+      <form class="herinner" data-herinner data-taal="nl" novalidate>
+        <label for="herinnermail">Je mailadres</label>
+        <div><input id="herinnermail" type="email" inputmode="email" autocomplete="email" spellcheck="false"
+          maxlength="254" placeholder="jij@voorbeeld.nl" required>
+          <button type="submit">Herinner mij</button></div>
+        <p class="herinnerstatus" role="status" aria-live="polite" data-ok="Genoteerd. Je hoort van ons voor de eerste race van 2027."
+          data-ongeldig="Dat lijkt geen mailadres." data-fout="Dat lukte niet. Probeer het later nog eens."></p>
+        <p class="herinnerklein">We gebruiken je adres alleen voor die ene mail en gooien het daarna weg. <a href="privacy/">Lees de hele privacyverklaring</a></p>
+      </form></article>
+  </div>
+</section>
+
 <section class="blok">
   <div class="binnen los">
     <article class="onthul"><h2>Geen advertenties</h2><p>Predict the Race heeft geen advertenties en verkoopt niets door. Je doet mee met een poulecode en een naam; een mailadres is alleen nodig als je je account zelf wilt meenemen naar een ander toestel. Bezoekstatistieken met Google Analytics komen er alleen bij als je daar zelf ja op zegt. <a href="privacy/">Lees de hele privacyverklaring</a></p></article>
@@ -1152,5 +1180,6 @@ addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.ptr
 }catch(e){}})();</script>
 <script src="toestemming.js" defer></script>
 <script src="teller.js" defer></script>
+<script src="herinner.js" defer></script>
 </body>
 </html>
