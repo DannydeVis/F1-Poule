@@ -676,6 +676,18 @@
   .pitstand:empty{display:none}
   /* Een regel die geen stand heeft (contact, uitloggen) heeft ook geen lampje. */
   .pitregel.zonder .pitlamp{display:none}
+  /* De prestaties onder Profiel: behaald brandt het lampje, de rest is gedimd. */
+  .prestaties{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .prestatie{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center;padding:12px;min-width:0;
+    background:var(--paneel);border:1px solid var(--lijn);border-radius:14px}
+  .prestatie b{font-size:14px;color:var(--ink2)}
+  .prestatie span{grid-column:1 / -1;font-size:12px;color:var(--ink2)}
+  .prestatie .voortgang{font-family:var(--mono);font-style:normal;color:var(--ink)}
+  .prestatie.behaald{border-left:3px solid var(--accent);background:var(--eigen),var(--paneel)}
+  .prestatie.behaald b{color:var(--ink)}
+  /* De regel eromheen kan aan staan: het lampje van een tegel volgt de tegel. */
+  .pitregel .prestatie .pitlamp{background:var(--stippel)}
+  .pitregel .prestatie.behaald .pitlamp{background:var(--groen)}
   /* De rijderskaart bovenaan Profiel: je naam groot, je kleur, je cijfers. */
   .helmrij{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .helmrij .label{flex:1;min-width:90px}
@@ -3223,6 +3235,29 @@ const ENGELS = Object.fromEntries([
   ['verloren', 'lost'],
   ['gelijkspel', 'draw'],
   ['weekendduels · winst, gelijk, verlies', 'weekend duels · won, drawn, lost'],
+  // ---- prestaties --------------------------------------------------
+  ['prijzenkast', 'trophy cabinet'],
+  ['prestaties', 'achievements'],
+  ['{n} van {totaal} behaald', '{n} of {totaal} earned'],
+  ['behaald', 'earned'],
+  ['nog niet behaald', 'not earned yet'],
+  ['Van start', 'Lights out'],
+  ['Lever je eerste weekend in.', 'Submit your first weekend.'],
+  ['Pole', 'Pole position'],
+  ['Zet de snelste van een kwalificatie op 1.', 'Put the fastest driver in qualifying on 1.'],
+  ['Zet de winnaar van een race op 1.', 'Put the winner of a race on 1.'],
+  ['Podium', 'The podium'],
+  ['De top 3 van een race precies goed.', 'Get the top 3 of a race exactly right.'],
+  ['Scherp', 'Sharp'],
+  ['Vijf coureurs op precies de goede plek in één lijst.', 'Five drivers in exactly the right spot in one list.'],
+  ['Weekendwinst', 'Weekend win'],
+  ['Win een weekend in je poule.', 'Win a weekend in your pool.'],
+  ['Trouw', 'Loyal'],
+  ['Lever vijf weekenden op rij in.', 'Submit five weekends in a row.'],
+  ['Duellist', 'Duellist'],
+  ['Win drie weekendduels.', 'Win three weekend duels.'],
+  ['Kenner', 'Expert'],
+  ['Heb drie keer de vraag van de week goed.', 'Get the question of the week right three times.'],
   // ---- de vraag van de week ---------------------------------------
   ['vraag van de week · sluit {wanneer}', 'question of the week · closes {wanneer}'],
   ['Wie is sneller in de eerste training?', 'Who is faster in first practice?'],
@@ -9901,6 +9936,62 @@ function accountKaart() {
 
 // De rest van Profiel als regels, net als de pitmuur op de Poule-tab: de naam,
 // hoe het nu staat, en de uitleg en de knoppen erachter.
+// ---- prestaties ---------------------------------------------
+// Negen dingen die je in een seizoen kunt halen, los van de stand: ook wie
+// onderaan staat kan de pole goed hebben of een weekend winnen. Alles wordt
+// uitgerekend uit wat er al is (je lijsten, de uitslagen, het weekendduel en
+// de vraag van de week); er wordt niets opgeslagen. Een lijst die de app
+// automatisch voor je invulde telt niet: een prestatie is iets wat je doet.
+const PRESTATIE_REEKS = 5, PRESTATIE_DUELS = 3, PRESTATIE_VRAGEN = 3, PRESTATIE_EXACT = 5;
+function prestaties(id = S.ik.id) {
+  let pole = false, winnaar = false, podium = false, exact = 0;
+  for (const r of S.races) {
+    const p = vindPred(r.id, id);
+    if (!p) continue;
+    for (const w of weekendSessies(r)) {
+      const kolom = SESSIES[w].vraag;
+      if (p.auto?.includes(kolom)) continue;
+      const werkelijk = r[SESSIES[w].uitslag], voorspeld = p[kolom];
+      if (!werkelijk?.length || !voorspeld?.length) continue;
+      const goed = (i) => voorspeld[i] != null && zelfde(voorspeld[i], werkelijk[i]);
+      if (w === 'quali' && goed(0)) pole = true;
+      if (w === 'race' && goed(0)) winnaar = true;
+      if (w === 'race' && goed(0) && goed(1) && goed(2)) podium = true;
+      exact = Math.max(exact, voorspeld.filter((_, i) => goed(i)).length);
+    }
+  }
+  let reeks = 0, loopt = 0;
+  for (const r of S.races.filter(heeftUitslag).sort((a, b) => a.round - b.round)) {
+    loopt = heeftVoorspeld(r, id) ? loopt + 1 : 0;
+    reeks = Math.max(reeks, loopt);
+  }
+  const winst = S.leden.length > 1 && S.races.some(r => weekendWinnaars(r).some(x => zelfde(x.id, id)));
+  const duels = weekendDuelStand().find(x => zelfde(x.id, id))?.w ?? 0;
+  const vragen = weekvraagStand().find(x => zelfde(x.id, id))?.goed ?? 0;
+  const tot = (n, doel) => ({ behaald: n >= doel, voortgang: n >= doel ? '' : `${n}/${doel}` });
+  return [
+    { id: 'start', naam: T('Van start'), hoe: T('Lever je eerste weekend in.'),
+      behaald: S.races.some(r => heeftVoorspeld(r, id)) },
+    { id: 'pole', naam: T('Pole'), hoe: T('Zet de snelste van een kwalificatie op 1.'), behaald: pole },
+    { id: 'winnaar', naam: T('Winnaar'), hoe: T('Zet de winnaar van een race op 1.'), behaald: winnaar },
+    { id: 'podium', naam: T('Podium'), hoe: T('De top 3 van een race precies goed.'), behaald: podium },
+    { id: 'scherp', naam: T('Scherp'), hoe: T('Vijf coureurs op precies de goede plek in één lijst.'),
+      ...tot(exact, PRESTATIE_EXACT) },
+    { id: 'weekend', naam: T('Weekendwinst'), hoe: T('Win een weekend in je poule.'), behaald: winst },
+    { id: 'trouw', naam: T('Trouw'), hoe: T('Lever vijf weekenden op rij in.'), ...tot(reeks, PRESTATIE_REEKS) },
+    { id: 'duellist', naam: T('Duellist'), hoe: T('Win drie weekendduels.'), ...tot(duels, PRESTATIE_DUELS) },
+    { id: 'kenner', naam: T('Kenner'), hoe: T('Heb drie keer de vraag van de week goed.'), ...tot(vragen, PRESTATIE_VRAGEN) },
+  ];
+}
+function prestatiesBlok(lijst = prestaties()) {
+  return `<div class="prestaties" data-prestaties>${lijst.map(x => `
+    <div class="prestatie${x.behaald ? ' behaald' : ''}" data-prestatie="${x.id}">
+      <i class="pitlamp" aria-hidden="true"></i><b>${x.naam}</b>
+      <span>${x.hoe}${x.voortgang ? ` <i class="voortgang">${x.voortgang}</i>` : ''}</span>
+      <span class="alleenlezer">${x.behaald ? T('behaald') : T('nog niet behaald')}</span>
+    </div>`).join('')}</div>`;
+}
+
 function profielRegels() {
   const aanUit = (aan) => T(aan ? 'staat aan' : 'staat uit');
   const groep = (kop, regels) => {
@@ -9909,7 +10000,13 @@ function profielRegels() {
   };
   const team = teamsActief() ? (S.teams ?? []).find(t => zelfde(t.id, teamVan(S.ik.id)))?.naam : null;
   const gedeeld = !!ikRij()?.profiel_code;
+  const behaald = prestaties();
+  const aantal = behaald.filter(x => x.behaald).length;
   return `
+    ${groep(T('prijzenkast'), [
+      pitRegel('p-prestaties', T('prestaties'), T('{n} van {totaal} behaald', { n: aantal, totaal: behaald.length }),
+        aantal > 0, prestatiesBlok(behaald)),
+    ])}
     ${groep(T('teamradio · meldingen'), [
       pitRegel('p-melding', T('herinneringen'),
         S.push === 'aan' ? T('staat aan') : S.push === 'geweigerd' ? T('geblokkeerd') : T('staat uit'),

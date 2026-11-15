@@ -297,6 +297,31 @@ zeggen valt.
 **Test.** `test/rijderskaart.test.mjs`; de database in `test/teams.test.sql`
 (deel 6).
 
+**Prestaties** (sinds 15 november). Boven de drie groepen staat de
+**prijzenkast**: één regel "prestaties" met hoeveel je er hebt, en daaronder
+negen tegels. Behaald brandt het lampje; de rest is gedimd, met wat je ervoor
+moet doen. Het is er voor wie onderaan staat: de pole goed hebben of een
+weekend winnen kan iedereen.
+
+| Prestatie | Wanneer |
+|---|---|
+| Van start | je eerste weekend ingeleverd |
+| Pole | de snelste van een kwalificatie op 1 |
+| Winnaar | de winnaar van een race op 1 |
+| Podium | de top 3 van een race precies goed |
+| Scherp | vijf coureurs op precies de goede plek in één lijst |
+| Weekendwinst | een weekend gewonnen in je poule (niet in je eentje) |
+| Trouw | vijf weekenden op rij ingeleverd (de langste reeks telt) |
+| Duellist | drie weekendduels gewonnen |
+| Kenner | drie keer de vraag van de week goed |
+
+Bij Scherp, Trouw, Duellist en Kenner staat hoe ver je bent ("2/5"). Alles
+wordt uitgerekend uit wat er al is (`prestaties()` in de app); er wordt niets
+opgeslagen, dus een prestatie geldt per poule en per seizoen. Een lijst die
+de app automatisch voor je invulde telt niet.
+
+**Test.** `test/prestaties.test.mjs`.
+
 ### De Stand en het invulscherm in het nieuwe ontwerp (sinds 14 november)
 
 **Stand.** Iedereen heeft zijn kleur: in de stand, op het podium en bij de

@@ -12799,3 +12799,22 @@ regel op een kaart die er al stond. Geen punten in de gewone stand.
 `trainingmeldingen` (46), `reservekopie-terugzetten`.
 
 **Danny moet:** niets.
+
+## Prestaties onder Profiel (15 november)
+
+Uit de lijst met voorstellen: iets te halen voor wie niet meer om de eerste
+plek speelt.
+
+**Wat er verandert.** Onder Profiel, boven de andere regels, de groep
+"prijzenkast" met de regel "prestaties" (`p-prestaties`): negen tegels, zie
+BEDIENING §2. `prestaties()` rekent ze uit de lijsten, de uitslagen, het
+weekendduel en de vraag van de week; `prestatiesBlok()` tekent ze. Geen
+database, geen opslag. 22 nieuwe teksten in zeven talen.
+
+**Bewust niet.** Geen melding bij een nieuwe prestatie en geen prestaties op
+de gedeelde seizoenspagina: eerst zien of mensen ernaar kijken.
+
+**Tests.** Nieuw: `test/prestaties.test.mjs` (19). `test/hulp.mjs` kent de
+regel `p-prestaties`.
+
+**Danny moet:** niets.
