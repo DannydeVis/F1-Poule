@@ -139,6 +139,10 @@ const uitBron = (bron, re, wat) => {
 const JOKERS = Number(uitBron(appBron, /const JOKERS_STANDAARD = (\d+);/, 'JOKERS_STANDAARD in app/index.html')[1]);
 const JOKERS_MAX = Math.max(...uitBron(appBron, /const JOKERKEUZES = \[([\d, ]+)\];/, 'JOKERKEUZES in app/index.html')[1]
   .split(',').map(Number));
+// Hoeveel spelers er in een poule passen: de standaard van pools.max_spelers
+// in schema.sql. De gids voor communities noemt het.
+const MAX_SPELERS = Number(uitBron(readFileSync(join(wortel, 'schema.sql'), 'utf8'),
+  /alter table public\.pools alter column max_spelers set default (\d+);/, 'het maximum aantal spelers in schema.sql')[1]);
 const VENSTER = Number(uitBron(readFileSync(join(wortel, 'scripts', 'herinneringen.mjs'), 'utf8'),
   /export const VENSTER_UREN = (\d+);/, 'VENSTER_UREN in scripts/herinneringen.mjs')[1]);
 const AGENDA_UUR = Number(uitBron(readFileSync(join(wortel, 'scripts', 'agenda.mjs'), 'utf8'),
@@ -212,6 +216,7 @@ const spreadsheetFormule = (code) => {
 // alleen de gidsen nodig hebben.
 const feitenVoor = (code) => ({
   ...APP_GETALLEN,
+  maxSpelers: MAX_SPELERS,
   bijna: PLEKPUNTEN[1], top10: PUNTEN.race_top10.punten, sprint: PUNTEN.sprint_top10.punten,
   nSimpel: PRESET_VRAGEN.simpel.length, nKlassiek: PRESET_VRAGEN.klassiek.length, nGevorderd: PRESET_VRAGEN.gevorderd.length,
   jokers: JOKERS, jokersMax: JOKERS_MAX,

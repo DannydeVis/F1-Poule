@@ -2019,6 +2019,165 @@ export const PAGINAS = [
       },
     },
   },
+  // Een poule voor een community (15 november): voor wie een Discord, een
+  // podcast, een forum of een vereniging heeft en zijn leden iets te doen wil
+  // geven. Uit de trechter: nieuwe poules haken af bij het uitnodigen, en wie
+  // al een groep heeft, heeft dat probleem niet. Alleen Nederlands en Engels.
+  {
+    id: 'community',
+    soort: 'gids',
+    verwant: ['organiseren', 'puntentelling'],
+    talen: {
+      nl: {
+        pad: 'f1-poule-voor-je-community',
+        titel: 'F1-poule voor je community of club | Predict the Race',
+        omschrijving: 'Een F1-poule voor je Discord, podcast, forum of vereniging: zo zet je hem op, hoe groot hij kan worden en hoe je leden het hele seizoen laat meedoen.',
+        kop: 'Een F1-poule voor je community',
+        kort: 'Een F1-poule voor je community zet je op in een paar minuten en kost niets: maak de poule aan, zet de uitnodigingslink in je Discord, nieuwsbrief of podcastbeschrijving, en je leden doen mee zonder account. Elk raceweekend is er daarna iets om samen over te praten: wie het weekend won en wie er in de stand klom.',
+        teaser: 'Een poule voor je Discord, podcast of club',
+        secties: [
+          {
+            id: 'waarom',
+            vraag: 'Waarom een F1-poule voor je community?',
+            kort: 'Een F1-poule geeft een community elk raceweekend een eigen gespreksonderwerp: wie de pole goed had, wie het weekend won en wie er in de stand klom. Leden die anders alleen meelezen doen ook mee, want een top 10 invullen kost een minuut en de uitslag komt na elke sessie vanzelf binnen.',
+            tekst: [
+              'Je hoeft zelf niets bij te houden. De app haalt de officiële uitslag op, rekent de punten uit en zet de stand klaar. Verandert de uitslag kort na de race door een straf, dan rekent hij opnieuw.',
+            ],
+          },
+          {
+            id: 'opzetten',
+            vraag: 'Hoe zet je een poule op voor je Discord, podcast of vereniging?',
+            kort: 'Een poule voor je Discord, podcast of vereniging maak je aan in de app, waarna je de uitnodigingslink deelt op de plek waar je leden al zijn. Wie op de link tikt kiest een naam en doet mee. Niemand hoeft een account aan te maken of een app te installeren, want het werkt in de browser.',
+            punten: [
+              ['Kies Simpel', 'Met alleen de twee top 10\'s is iedereen in een minuut klaar, ook wie niet elke race kijkt. Meer vragen kan later in een tweede poule voor de liefhebbers.'],
+              ['Eén link op een vaste plek', 'Zet de link vast in een kanaal, in de beschrijving van elke aflevering of onderaan je nieuwsbrief. Nieuwe leden kunnen het hele seizoen instappen.'],
+              ['Een omschrijving erbij', 'Zet erbij van wie de poule is en waar het om gaat. Wie in meer poules zit, ziet bij het wisselen meteen welke de jouwe is.'],
+              ['Vindbaar zonder link', 'Maak de poule openbaar en hij staat in de lijst op het beginscherm van de app. Dan kan ook meedoen wie de link niet heeft. Op namen in een openbare poule staat een woordfilter.'],
+            ],
+          },
+          {
+            id: 'hoe-groot',
+            vraag: 'Hoe groot kan een poule zijn?',
+            kort: 'Een poule in Predict the Race kan tot {maxSpelers} spelers hebben, en meespelen is voor iedereen gratis, hoe groot de poule ook is. In een grote poule noemt de app niet iedereen bij naam: op de kaart van het weekend staan de eerste namen en hoeveel er nog meer zijn, met je eigen plek erbij.',
+            tekst: [
+              'Verwacht je meer spelers, stuur dan een bericht naar contact@predicttherace.com. Dan kijken we wat er kan.',
+            ],
+          },
+          {
+            id: 'betrokken',
+            vraag: 'Hoe houd je leden het hele seizoen betrokken?',
+            kort: 'Leden blijven het hele seizoen betrokken als er ook iets te halen valt voor wie niet meer eerste kan worden. Predict the Race heeft daarom een winnaar per weekend, een weekendduel tegen één ander lid, een vraag van de week over de eerste training en prestaties, zoals de pole goed hebben.',
+            punten: [
+              ['Het weekendduel', 'Elk weekend speelt ieder lid tegen één ander lid. Wie dat weekend de meeste punten haalt, wint. Ook wie onderaan staat begint elk weekend opnieuw.'],
+              ['De vraag van de week', 'Wie van twee teamgenoten is sneller in de eerste training? Eén tik, met een eigen stand, los van de punten.'],
+              ['Automatisch invullen', 'Wie een weekend vergeet krijgt een willekeurige invulling in plaats van nul punten, en haakt niet af.'],
+              ['Een seintje voor de deadline', 'Wie meldingen of mail aanzet, krijgt een bericht als een deadline nadert en hij nog niets heeft ingevuld.'],
+              ['De stand in je kanaal', 'Na elke race zet je de uitslag met één tik als plaatje in je Discord of groepsapp.'],
+            ],
+          },
+          {
+            id: 'extras',
+            vraag: 'Wat is er extra voor clubs en bedrijven?',
+            kort: 'Voor clubs, bedrijven en grote communities is er premium: teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met een eigen winnaar, en een eigen logo, kleur en sponsorregel. Om mee te spelen heeft niemand premium nodig. Betalen staat nog niet aan, dus er is nog geen prijs.',
+            tekst: [
+              'Tot die tijd vraag je premium aan via contact@predicttherace.com. Zeg erbij voor welke poule het is en wat je ermee wilt doen.',
+            ],
+          },
+          {
+            id: 'prijzen',
+            vraag: 'Kun je om geld of prijzen spelen?',
+            kort: 'Predict the Race kent geen inleg, pot of uitbetaling: in de app gaat geen geld om. Wil je als community zelf iets weggeven, zoals een pet voor de winnaar, dan regel je dat buiten de app. Met premium kun je bij een tussenklassement wel opschrijven wat de winnaar van die periode krijgt.',
+            tekst: [
+              'Dat houdt het eenvoudig: er valt niets te innen, en niemand hoeft uit te zoeken welke regels er voor een spel om geld gelden.',
+            ],
+          },
+        ],
+        faq: [
+          ['Kunnen leden uit andere landen meedoen?', 'Ja. De app is er in het Nederlands, Engels, Duits, Frans, Spaans, Italiaans en Portugees, en iedere speler ziet de deadlines in de tijd van zijn eigen toestel.'],
+          ['Zien leden elkaars voorspelling voor de start?', 'Nee. Tot een sessie sluit is een voorspelling alleen van de speler zelf. Daarna ziet iedereen in de poule wat de anderen kozen.'],
+          ['Kan een lid later in het seizoen nog instappen?', 'Ja, op elk moment. De gemiste races leveren geen punten op, maar het weekendduel, de winnaar per weekend en de prestaties beginnen voor hem gewoon bij de eerstvolgende race.'],
+        ],
+        leesOok: [
+          ['hoe', 'Zo werkt Predict the Race'],
+          ['faq', 'Veelgestelde vragen over de app'],
+        ],
+      },
+      en: {
+        pad: 'en/f1-prediction-league-for-your-community',
+        titel: 'F1 prediction league for your community | Predict the Race',
+        omschrijving: 'Run an F1 prediction league for your Discord, podcast, forum or club: how to set it up, how big it can get and how to keep members playing all season.',
+        kop: 'An F1 prediction league for your community',
+        kort: 'An F1 prediction league for your community takes a few minutes to set up and costs nothing: create the league, post the invite link in your Discord, newsletter or podcast notes, and members join without an account. Every race weekend then gives the group something to talk about: who won the weekend and who climbed the standings.',
+        teaser: 'A league for your Discord, podcast or club',
+        secties: [
+          {
+            id: 'why',
+            vraag: 'Why run an F1 prediction league for your community?',
+            kort: 'An F1 prediction league gives a community its own talking point every race weekend: who called pole, who won the weekend and who moved up the standings. Members who usually only read along join in too, because picking a top 10 takes a minute and the result arrives by itself after every session.',
+            tekst: [
+              'There is nothing for you to keep track of. The app fetches the official result, works out the points and updates the standings. If a penalty changes the result shortly after the race, it scores again.',
+            ],
+          },
+          {
+            id: 'set-up',
+            vraag: 'How do you set up a league for a Discord, podcast or club?',
+            kort: 'A league for a Discord, podcast or club is created in the app, after which you share the invite link wherever your members already are. Anyone who taps the link picks a name and is in. Nobody needs to create an account or install anything, because it runs in the browser.',
+            punten: [
+              ['Pick Simple', 'With only the two top 10s everyone is done in a minute, including members who do not watch every race. More questions can come later in a second league for the keen ones.'],
+              ['One link in a fixed place', 'Pin the link in a channel, put it in every episode description or at the bottom of your newsletter. New members can join at any point in the season.'],
+              ['Add a description', 'Say whose league it is and what it is for. Members who play in several leagues see at a glance which one is yours.'],
+              ['Findable without the link', 'Make the league public and it shows up in the list on the app\'s start screen, so people without the link can join too. Names in a public league go through a word filter.'],
+            ],
+          },
+          {
+            id: 'how-big',
+            vraag: 'How big can a league get?',
+            kort: 'A league in Predict the Race can hold up to {maxSpelers} players, and playing is free for everyone however big the league is. In a large league the app does not list everybody by name: the weekend card shows the first few names and how many more there are, next to your own position.',
+            tekst: [
+              'Expecting more players than that? Send a message to contact@predicttherace.com and we will see what is possible.',
+            ],
+          },
+          {
+            id: 'engaged',
+            vraag: 'How do you keep members playing all season?',
+            kort: 'Members keep playing all season when there is something to win for people who can no longer finish first. Predict the Race therefore has a winner for every weekend, a weekend duel against one other member, a question of the week about first practice, and achievements such as calling pole.',
+            punten: [
+              ['The weekend duel', 'Every weekend each member plays against one other member. Whoever scores most that weekend wins. Even the player at the bottom starts fresh every weekend.'],
+              ['The question of the week', 'Which of two team mates is faster in first practice? One tap, with its own table, separate from the points.'],
+              ['Autofill', 'A member who forgets a weekend gets a random entry instead of zero points, and stays in the game.'],
+              ['A nudge before the deadline', 'Members who turn on notifications or email get a message when a deadline is close and they have not predicted yet.'],
+              ['The standings in your channel', 'After every race you post the result as an image in your Discord or group chat with one tap.'],
+            ],
+          },
+          {
+            id: 'extras',
+            vraag: 'What extras are there for clubs and companies?',
+            kort: 'Clubs, companies and large communities can get premium: teams that play against each other, your own questions every weekend, interim standings with their own winner, and your own logo, colour and sponsor line. Nobody needs premium to play. Payment is not switched on yet, so there is no price so far.',
+            tekst: [
+              'Until then you can ask for premium at contact@predicttherace.com. Tell us which league it is for and what you want to do with it.',
+            ],
+          },
+          {
+            id: 'prizes',
+            vraag: 'Can you play for money or prizes?',
+            kort: 'Predict the Race has no stake, pot or payout: no money moves through the app. A community that wants to give something away, such as a cap for the winner, arranges that outside the app. With premium you can write down what the winner of an interim standing gets.',
+            tekst: [
+              'That keeps things simple: there is nothing to collect, and nobody has to work out which rules apply to a game played for money.',
+            ],
+          },
+        ],
+        faq: [
+          ['Can members from other countries join?', 'Yes. The app is available in Dutch, English, German, French, Spanish, Italian and Portuguese, and every player sees the deadlines in the time of their own device.'],
+          ['Can members see each other\'s predictions before the start?', 'No. Until a session closes, a prediction belongs to the player alone. After that everyone in the league sees what the others picked.'],
+          ['Can a member still join later in the season?', 'Yes, at any time. The races they missed score nothing, but the weekend duel, the weekend winner and the achievements simply start for them at the next race.'],
+        ],
+        leesOok: [
+          ['hoe', 'How Predict the Race works'],
+          ['faq', 'Frequently asked questions about the app'],
+        ],
+      },
+    },
+  },
   // De vergelijking met andere apps (zoekplan SEO fase 2, AEO 3.2, GEO fase 4).
   // Bovenaan zegt de pagina wie hem schreef (openheid, in de auteursregel).
   // Elk feit over een andere app staat op diens eigen site; wat daar niet te
