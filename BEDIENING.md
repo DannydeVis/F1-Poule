@@ -2361,6 +2361,40 @@ weekend. Wie vrij is of alleen in zijn poule zit krijgt niets.
 **Test.** `test/weekendduel.test.mjs` (de app) en
 `test/weekendduel-sync.test.mjs` (de sync).
 
+## 11j. De vraag van de week (sinds 15 november)
+
+Elk weekend één vraag: wie van twee teamgenoten is sneller in de eerste vrije
+training? Net als het weekendduel is hij er om doordeweeks iets te doen te
+hebben. Hij telt **niet** mee in de gewone stand (Danny: nee); er is een
+eigen stand.
+
+- **Welke twee.** De teams met twee coureurs, op naam, en elke ronde het
+  volgende team (`weekvraagPaar()` in de app). Zo is de vraag op elk toestel
+  dezelfde en hoeft hij nergens opgeslagen te worden.
+- **Tot wanneer.** Tot de eerste vrije training begint. Dat moment komt uit
+  het trainingsrooster dat de sync in `races.vrije_trainingen` zet
+  (`weekvraag_sluit()` in schema.sql). Zonder rooster is er geen vraag.
+- **Waar je hem ziet.** Op de kaart van de volgende race, met twee knoppen.
+  Nog een keer tikken haalt je keuze weg. Na de start staat er wat je koos;
+  is de training binnen, dan staat er wie sneller was en of je gelijk had.
+  Dat staat ook op de kaart van het lopende weekend en op de uitslagkaart.
+- **De uitkomst.** De sync zet sinds 15 november de hele volgorde van elke
+  training erbij (`volgorde`, naast de top 10). Wie eerder in die rij staat
+  was sneller. Reed een van de twee niet, dan wint de ander; reden ze geen
+  van beiden, dan is er geen uitkomst en telt het weekend niet.
+- **De eigen stand.** Op de Stand-tab: hoe vaak iemand gelijk had, van de
+  keren dat hij meedeed.
+- **Geheim tot de start.** Wat een ander koos krijg je pas te zien als de
+  training begonnen is; je eigen keuze altijd (`poule_ophalen()`). De tabel
+  `weekvraag_antwoorden` is dicht; kiezen gaat via `weekvraag_kiezen()`, en
+  alleen voor je eigen speler.
+- **In het bericht op woensdag.** Staat de vraag open, dan noemen het seintje
+  en de mail van het weekendduel hem ook.
+
+**Test.** `test/weekvraag.test.mjs` (de app), `test/weekvraag.test.sql` (de
+database), en een paar regels in `test/weekendduel-sync.test.mjs` en
+`test/trainingmeldingen.test.mjs` (de sync).
+
 ## 12. Wat de app van je weet
 
 Onder **Profiel** staat een dichtgeklapt blok "wat de app van je weet". Daarin

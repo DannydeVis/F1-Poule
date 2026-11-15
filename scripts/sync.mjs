@@ -38,7 +38,7 @@ import { laatsteUitslag, wieKrijgtEenUitslag } from './uitslagmeldingen.mjs';
 import { trainingNieuws, wieKrijgtEenTraining } from './trainingmeldingen.mjs';
 import { mailNieuws, vrijdagMails, raceMails, pouleStand } from './mailmomenten.mjs';
 import { duelNieuws, wieKrijgtEenDuel, duelMails } from './weekendduel.mjs';
-import { trainingRooster, teHalen, trainingTop10, zelfdeRooster } from './vrijetrainingen.mjs';
+import { trainingRooster, teHalen, trainingTop10, trainingVolgorde, zelfdeRooster } from './vrijetrainingen.mjs';
 import { leesRacePaginas, sitemapPaden } from './racepagina.mjs';
 import { sessieCijfers, teBerekenen, seizoenCijfers, komendSeizoen, seizoenStart, beterDan, topPunten,
          echteLijst, zelfdeCijfers, sitebestand, UITSLAG, SEIZOENSCIJFERS } from './spelerscijfers.mjs';
@@ -496,8 +496,11 @@ async function uitslagen(races, jaar, vorig = []) {
       const rooster = trainingRooster(sessiesVanRace(race, weekenden), race.vrije_trainingen);
       for (const t of teHalen(rooster, race)) {
         try {
-          t.top = trainingTop10(await openf1(`session_result?session_key=${t.sessie}`),
-            patch.drivers ?? race.drivers);
+          const uitslag = await openf1(`session_result?session_key=${t.sessie}`);
+          t.top = trainingTop10(uitslag, patch.drivers ?? race.drivers);
+          // De hele volgorde erbij, voor de vraag van de week.
+          const volgorde = trainingVolgorde(uitslag);
+          if (volgorde) t.volgorde = volgorde;
           await wacht(700);
         } catch (e) {
           // Nog niet op te halen (404), of OpenF1 is dicht rond een sessie

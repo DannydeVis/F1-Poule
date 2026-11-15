@@ -12767,3 +12767,35 @@ weggooit. Staat ook in BEDIENING en ROUTEKAART.
 **Tests.** Nieuw: `test/herinner.test.mjs` (38) en `test/herinner.test.sql`.
 
 **Danny moet:** niets nu. In februari 2027 de mail laten bouwen en versturen.
+
+## De vraag van de week (15 november)
+
+Danny koos: wel een vraag van de week, maar hij telt niet mee in de gewone
+stand. Hij krijgt een eigen stand.
+
+**Wat er verandert.**
+- De vraag: wie van twee teamgenoten is sneller in de eerste vrije training?
+  Welk team aan de beurt is hangt aan het rondenummer (`weekvraagPaar()`),
+  dus er wordt geen vraag opgeslagen.
+- Database: de tabel `weekvraag_antwoorden` (race, speler, het nummer van de
+  gekozen coureur; dicht voor iedereen) en de functies `weekvraag_sluit()`,
+  `weekvraag_open()` en `weekvraag_kiezen()`. `poule_ophalen()` geeft
+  `weekvraag` mee: je eigen keuze altijd, die van een ander pas als de eerste
+  training begonnen is. De tabel zit in de reservekopie.
+- Sync: `trainingVolgorde()` in `scripts/vrijetrainingen.mjs` zet de hele
+  volgorde van een training naast de top 10. Een training van voor 15
+  november heeft alleen de top 10; dan wint wie daarin staat.
+- App: `weekvraagRegel()` op de drie racekaarten, `weekvraagBlok()` op de
+  Stand-tab, tien nieuwe teksten in zeven talen. De kaart verandert vanzelf
+  als de vraag dichtgaat (de sleutel in `racesBovenaan()`).
+- Het bericht op woensdag noemt de vraag als hij openstaat (`weekvraagOpen()`
+  en de zin `vraag` in `scripts/weekendduel.mjs`).
+
+**Bewust niet.** Geen schakelaar per poule en geen eigen melding: het is één
+regel op een kaart die er al stond. Geen punten in de gewone stand.
+
+**Tests.** Nieuw: `test/weekvraag.test.mjs` (26) en `test/weekvraag.test.sql`
+(eigen stap in tests.yml). Uitgebreid: `weekendduel-sync` (45),
+`trainingmeldingen` (46), `reservekopie-terugzetten`.
+
+**Danny moet:** niets.

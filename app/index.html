@@ -710,6 +710,22 @@
   .duelregel .av{width:24px;height:24px;font-size:13px}
   .duelregel b{font-family:var(--sans,inherit);font-size:14px;color:var(--ink)}
   .duelstand .wgv{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  /* De vraag van de week: een eigen strook op de racekaart, met twee knoppen
+     in de kleur van het team. */
+  .weekvraag{display:grid;gap:8px;padding-top:12px;border-top:1px solid var(--lijn)}
+  .weekvraag .wvvraag{margin:0;font-weight:600;color:var(--ink)}
+  .weekvraag .wvklein{margin:0;font-size:12px;color:var(--ink2)}
+  .wvkeuzes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .wvknop{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;
+    border:1px solid var(--lijn);border-left:4px solid var(--team,var(--lijn));border-radius:10px;
+    background:var(--paneel);color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-width:0}
+  .wvknop b{font-family:var(--mono);font-size:13px}
+  .wvknop span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wvknop[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;
+    background:var(--eigen),var(--paneel)}
+  .wvregel{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;
+    color:var(--ink2)}
+  .wvregel b{color:var(--ink)}
   .codekaart .code{font-family:var(--cond);font-weight:700;font-size:54px;line-height:1;
     letter-spacing:.12em;color:var(--ink)}
 
@@ -3207,6 +3223,17 @@ const ENGELS = Object.fromEntries([
   ['verloren', 'lost'],
   ['gelijkspel', 'draw'],
   ['weekendduels · winst, gelijk, verlies', 'weekend duels · won, drawn, lost'],
+  // ---- de vraag van de week ---------------------------------------
+  ['vraag van de week · sluit {wanneer}', 'question of the week · closes {wanneer}'],
+  ['Wie is sneller in de eerste training?', 'Who is faster in first practice?'],
+  ['Telt niet mee voor de punten. Er is een eigen stand onder Stand.', 'Does not count for points. It has its own table under Standings.'],
+  ['niet meegedaan', 'did not play'],
+  ['jij koos {wie}', 'you picked {wie}'],
+  ['vraag van de week', 'question of the week'],
+  ['{wie} was sneller', '{wie} was faster'],
+  ['jij had het goed', 'you got it right'],
+  ['jij had het fout', 'you got it wrong'],
+  ['vraag van de week · goed van meegedaan', 'question of the week · right out of played'],
   ['Een paar dagen voor het weekend hoor je ook tegen wie je speelt in het weekendduel.',
    'A few days before the weekend you also hear who you play in the weekend duel.'],
   ['Uitslag en punten {race}',
@@ -7166,6 +7193,8 @@ async function laad() {
   S.periodes = inhoud.data.periodes ?? [];
   S.eigenVragen = inhoud.data.eigenvragen ?? [];
   S.eigenAntwoorden = inhoud.data.eigenantwoorden ?? [];
+  S.weekvraag = inhoud.data.weekvraag ?? [];
+  S.weekvraagFout = '';
   // Een database zonder die tabel geeft een fout: dan zijn er gewoon geen
   // cijfers, en dat is geen reden om de poule niet te tonen.
   S.spelerscijfers = cijfers?.error ? [] : (cijfers?.data ?? []);
@@ -8194,6 +8223,8 @@ function toonApp() {
   // één knop met data-naar-race, en dat is de knop van die race.
   app.querySelectorAll('[data-vorige-uitslag]').forEach(b => b.onclick = () =>
     openRace(b.dataset.vorigeUitslag));
+  app.querySelectorAll('[data-weekvraag-kies]').forEach(b => b.onclick = () =>
+    weekvraagKies(b.dataset.wvRace, b.dataset.weekvraagKies));
   app.querySelectorAll('details[data-pit]').forEach(d => d.ontoggle = () =>
     pitOnthoud(d.dataset.pit, d.open));
   app.querySelectorAll('[data-helm]').forEach(b => b.onclick = () => kiesKleur(Number(b.dataset.helm)));
@@ -8740,7 +8771,10 @@ function racesBovenaan(volgend, nu = Date.now()) {
   // hoort "nu bezig" plaats te maken voor de punten.
   const race = lopend ? lopendWeekend(nu) : null;
   return { lopend, metVolgende,
-    sleutel: [race?.id ?? '', race && weekendVoorbij(race) ? 'uitslag' : '', metVolgende ? volgend.race.id : ''].join('|') };
+    // En de vraag van de week: gaat hij dicht of komt de training binnen, dan
+    // hoort de kaart mee te veranderen.
+    sleutel: [race?.id ?? '', race && weekendVoorbij(race) ? 'uitslag' : '', metVolgende ? volgend.race.id : '',
+      race ? weekvraagStaat(race, nu) : '', metVolgende ? weekvraagStaat(volgend.race, nu) : ''].join('|') };
 }
 
 // De race vóór deze, als die gereden is en een uitslag heeft. Niet "de laatste
@@ -8771,6 +8805,7 @@ function lopendKaart(nu = Date.now()) {
         : T('Je hebt voor de race niets ingevuld.')} ${T('Je punten staan hier zodra de uitslag binnen is.')}</p>
       ${tussen === null ? '' : `<div class="kaartvoet"><span><b class="groot">+${tussen}</b><i>${
         T('tot nu toe')}</i></span></div>`}
+      ${weekvraagRegel(r, nu)}
       ${knop(T('Je voorspelling bekijken'))}
     </div>`;
   }
@@ -8795,6 +8830,7 @@ function lopendKaart(nu = Date.now()) {
         : `<span><b class="groot">${stand.find(x => x.mij)?.punten ?? ik.punten}</b><i>${T('punten')}</i></span>`}
       </div>
       ${duelAfloop(r)}
+      ${weekvraagRegel(r, nu)}
       ${knop(T('Bekijk de uitslag'))}
     </div>`;
 }
@@ -8849,6 +8885,7 @@ function hero(volgend, metVorige = true) {
           : T('iedereen heeft zijn top 10')}${wacht.length && groepsappHulp()
           ? ` <button class="knop klein herinner" data-herinner>${T('Herinner ze')}</button>` : ''}</div>` : ''}
       ${duelRegel(r)}
+      ${weekvraagRegel(r)}
       <button class="knop primair" data-naar-race="${esc(r.id)}"${
         losOpen ? ` data-naar-tab="${esc(losOpen.w)}"` : ''}>${
         losOpen
@@ -9025,6 +9062,7 @@ function standPagina(rijen) {
     ${periodesBlok()}
     ${seizoenslaagBlok()}
     ${weekendDuelBlok()}
+    ${weekvraagBlok()}
     ${weekendRanglijst()}
     ${seizoensRecords()}
     ${seizoensGrafiek()}
@@ -9349,6 +9387,143 @@ function weekendDuelBlok() {
       <span class="wgv">${x.w}-${x.g}-${x.v}</span>
       <span class="t">${x.punten}</span>
     </div>`).join('')}</div>`;
+}
+
+// ---- de vraag van de week ----------------------------------------
+// Elk weekend één vraag: wie van deze twee teamgenoten is sneller in de eerste
+// vrije training? Iets om doordeweeks voor terug te komen. Telt niet mee in
+// de gewone stand (Danny: nee), maar heeft een eigen stand op de Stand-tab.
+//
+// Welk team aan de beurt is hangt aan het rondenummer: de teams met twee
+// coureurs op naam, en elke ronde het volgende. Zo is de vraag op elk toestel
+// dezelfde en hoeft hij nergens opgeslagen. In de database staat alleen het
+// nummer van de coureur die iemand koos (weekvraag_kiezen() in schema.sql).
+function weekvraagPaar(race) {
+  const teams = new Map();
+  for (const d of race?.drivers ?? []) {
+    if (!d?.team) continue;
+    if (!teams.has(d.team)) teams.set(d.team, []);
+    teams.get(d.team).push(d);
+  }
+  const paren = [...teams.entries()].filter(([, ds]) => ds.length >= 2)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  if (!paren.length) return null;
+  const k = (((Number(race.round) || 1) - 1) % paren.length + paren.length) % paren.length;
+  return [...paren[k][1]].sort((a, b) => Number(a.nr) - Number(b.nr)).slice(0, 2);
+}
+// De eerste vrije training van het weekend: daar gaat de vraag over, en bij
+// de start ervan gaat hij dicht. Zonder rooster is er geen vraag.
+function weekvraagTraining(race) {
+  return (Array.isArray(race?.vrije_trainingen) ? race.vrije_trainingen : [])
+    .filter(t => Number.isFinite(Date.parse(t?.start)))
+    .sort((a, b) => Date.parse(a.start) - Date.parse(b.start))[0] ?? null;
+}
+const weekvraagSluit = (race) => {
+  const t = weekvraagTraining(race);
+  return t ? Date.parse(t.start) : null;
+};
+// Wie was sneller: het nummer, of null zolang de training niet binnen is (of
+// geen van beiden reed). De sync zet de hele volgorde erbij; een training van
+// voor 15 november heeft alleen de top 10, en dan wint wie daarin staat.
+function weekvraagUitkomst(race) {
+  const paar = weekvraagPaar(race);
+  const t = weekvraagTraining(race);
+  const rij = (t?.volgorde?.length ? t.volgorde : (t?.top ?? []).map(x => x.nr)).map(String);
+  if (!paar || !rij.length) return null;
+  const [a, b] = paar.map(d => rij.indexOf(String(d.nr)));
+  if (a < 0 && b < 0) return null;
+  return String((b < 0 || (a >= 0 && a < b)) ? paar[0].nr : paar[1].nr);
+}
+// Wat een speler koos: alleen als het een van de twee is. Verandert de
+// deelnemerslijst na de keuze, dan is een keuze voor een ander geen keuze.
+function weekvraagKeuze(race, id) {
+  const paar = weekvraagPaar(race);
+  const k = (S.weekvraag ?? []).find(w => zelfde(w.race_id, race.id) && zelfde(w.member_id, id))?.keuze;
+  return paar && k != null && paar.some(d => zelfde(d.nr, k)) ? String(k) : null;
+}
+// 'open' zolang je kunt kiezen, 'dicht' tot de training binnen is, 'uit' erna.
+function weekvraagStaat(race, nu = Date.now()) {
+  const sluit = weekvraagSluit(race);
+  if (!race || sluit === null || !weekvraagPaar(race)) return '';
+  if (nu < sluit) return 'open';
+  return weekvraagUitkomst(race) ? 'uit' : 'dicht';
+}
+// De eigen stand: hoe vaak iemand gelijk had, van de keren dat hij meedeed.
+function weekvraagStand() {
+  const rijen = new Map(S.leden.map(l => [String(l.member_id),
+    { id: l.member_id, naam: l.display_name, goed: 0, mee: 0, mij: zelfde(l.member_id, S.ik?.id) }]));
+  for (const r of S.races) {
+    const uit = weekvraagUitkomst(r);
+    if (!uit || weekvraagStaat(r) !== 'uit') continue;
+    for (const rij of rijen.values()) {
+      const k = weekvraagKeuze(r, rij.id);
+      if (k === null) continue;
+      rij.mee++;
+      if (k === uit) rij.goed++;
+    }
+  }
+  return [...rijen.values()]
+    .sort((a, b) => b.goed - a.goed || a.mee - b.mee || String(a.naam).localeCompare(String(b.naam)));
+}
+// Op de racekaart: de vraag met twee knoppen zolang hij open is, daarna wat je
+// koos, en als de training binnen is wie er sneller was.
+function weekvraagRegel(race, nu = Date.now()) {
+  if (!S.ik) return '';
+  const staat = weekvraagStaat(race, nu);
+  if (!staat) return '';
+  const paar = weekvraagPaar(race);
+  const mijn = weekvraagKeuze(race, S.ik.id);
+  const code = (nr) => { const d = paar.find(x => zelfde(x.nr, nr)); return esc(d?.code ?? d?.naam ?? nr); };
+  if (staat === 'open') {
+    return `<div class="weekvraag" data-weekvraag="open">
+      <span class="label">${T('vraag van de week · sluit {wanneer}', {
+        wanneer: esc(sluitTekst(new Date(weekvraagSluit(race)).toISOString())) })}</span>
+      <p class="wvvraag">${T('Wie is sneller in de eerste training?')}</p>
+      <div class="wvkeuzes">${paar.map(d => `<button type="button" class="wvknop" data-weekvraag-kies="${esc(d.nr)}"
+        data-wv-race="${esc(race.id)}" aria-pressed="${mijn !== null && zelfde(mijn, d.nr)}"
+        style="--team:${esc(d.kleur ?? 'var(--lijn)')}"><b translate="no">${esc(d.code ?? d.nr)}</b><span translate="no">${
+          esc(achternaam(d))}</span></button>`).join('')}</div>
+      <p class="wvklein">${S.weekvraagFout ? `<span class="amber">${esc(S.weekvraagFout)}</span>`
+        : T('Telt niet mee voor de punten. Er is een eigen stand onder Stand.')}</p>
+    </div>`;
+  }
+  const koos = mijn === null ? T('niet meegedaan')
+    : T('jij koos {wie}', { wie: `<b translate="no">${code(mijn)}</b>` });
+  if (staat === 'dicht') {
+    return `<div class="wvregel" data-weekvraag="dicht">${T('vraag van de week')}: ${koos}</div>`;
+  }
+  const uit = weekvraagUitkomst(race);
+  const afloop = mijn === null ? 'gemist' : mijn === uit ? 'goed' : 'fout';
+  return `<div class="wvregel" data-weekvraag="${afloop}">${T('vraag van de week')}:
+    ${T('{wie} was sneller', { wie: `<b translate="no">${code(uit)}</b>` })} ·
+    ${mijn === null ? koos : mijn === uit ? `<span class="groen">${T('jij had het goed')}</span>`
+      : `<span>${T('jij had het fout')}</span>`}</div>`;
+}
+// Op de Stand-tab: de eigen stand van de vraag van de week.
+function weekvraagBlok() {
+  if (!S.ik) return '';
+  const rijen = weekvraagStand();
+  if (!rijen.some(x => x.mee)) return '';
+  return `<span class="label">${T('vraag van de week · goed van meegedaan')}</span>
+    <div class="groep duelstand">${rijen.map(x => `<div class="rest${x.mij ? ' winnaar' : ''}" data-weekvraagrij="${esc(x.id)}">
+      ${avatar(x.id, x.naam)}
+      <span class="nm">${esc(x.naam)}${x.mij ? ` <span class="jij">${T('jij')}</span>` : ''}</span>
+      <span class="wgv">${x.goed}/${x.mee}</span>
+      <span class="t">${x.goed}</span>
+    </div>`).join('')}</div>`;
+}
+async function weekvraagKies(raceId, nr) {
+  const race = S.races.find(r => zelfde(r.id, raceId));
+  if (!race || !S.ik) return;
+  const keuze = weekvraagKeuze(race, S.ik.id) === String(nr) ? null : String(nr);
+  S.weekvraagFout = '';
+  if (!DEMO) {
+    const { error } = await db.rpc('weekvraag_kiezen', { p_member: S.ik.id, p_race: race.id, p_keuze: keuze });
+    if (error) { S.weekvraagFout = uitleg(error); render(); return; }
+  }
+  S.weekvraag = (S.weekvraag ?? []).filter(w => !(zelfde(w.race_id, race.id) && zelfde(w.member_id, S.ik.id)));
+  if (keuze) S.weekvraag.push({ race_id: race.id, member_id: S.ik.id, keuze });
+  render();
 }
 
 function weekendRanglijst() {

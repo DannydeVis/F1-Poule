@@ -906,6 +906,15 @@ function eigenVraagOpen(raceId) {
   return !!r?.deadline_race && Date.parse(r.deadline_race) > Date.now();
 }
 
+// weekvraag_open(): de eerste vrije training is nog niet begonnen. Zonder
+// rooster dicht (schema.sql, test/weekvraag.test.sql).
+function weekvraagOpen(raceId) {
+  const r = store.races.find((x) => gelijk(x.id, raceId));
+  const starts = (Array.isArray(r?.vrije_trainingen) ? r.vrije_trainingen : [])
+    .map((t) => Date.parse(t?.start)).filter(Number.isFinite);
+  return starts.length > 0 && Date.now() < Math.min(...starts);
+}
+
 const functies = {
   // De vier functies uit fase 0. Ze bestaan omdat een policy niet kan eisen
   // dát je filtert: "een poule vinden op zijn code" en "de hele tabel
@@ -959,6 +968,12 @@ const functies = {
         const v = (store.pool_eigen_vragen ?? []).find((x) => gelijk(x.id, a.vraag_id));
         return v && gelijk(v.pool_id, poule.id) && (!eigenVraagOpen(v.race_id) || magVoorSpeler(a.member_id));
       }).map(({ vraag_id, member_id, keuze }) => ({ vraag_id, member_id, keuze })),
+      // De vraag van de week: je eigen keuze altijd, die van een ander pas
+      // als de eerste training begonnen is.
+      weekvraag: (store.weekvraag_antwoorden ?? []).filter((w) =>
+        store.pool_members.some((l) => gelijk(l.member_id, w.member_id) && gelijk(l.pool_id, poule.id))
+        && (!weekvraagOpen(w.race_id) || magVoorSpeler(w.member_id)))
+        .map(({ race_id, member_id, keuze }) => ({ race_id, member_id, keuze })),
       // Wie er voor een open sessie al getikt is (premium), niet door wie.
       tikken: (store.tikken ?? []).filter((t) => gelijk(t.pool_id, poule.id) && tikSessieOpen(t))
         .map(({ race_id, sessie, aan_member }) => ({ race_id, sessie, aan: aan_member })),
@@ -1072,6 +1087,23 @@ const functies = {
       if (!v.opties.includes(p_keuze)) return fout('kies een van de antwoorden');
       store.pool_eigen_antwoorden.push({ vraag_id: p_vraag, member_id: p_member, keuze: p_keuze });
     }
+    bewaren();
+    return { data: null, error: null };
+  },
+
+  // De vraag van de week, met de regels van schema.sql (test/weekvraag.test.sql).
+  weekvraag_kiezen({ p_member, p_race, p_keuze } = {}) {
+    const fout = (message) => ({ data: null, error: { code: 'P0001', message } });
+    if (!magVoorSpeler(p_member)) return fout('je antwoordt alleen voor jezelf');
+    if (!weekvraagOpen(p_race)) return fout('de vraag van de week is gesloten');
+    store.weekvraag_antwoorden ??= [];
+    const zonder = store.weekvraag_antwoorden.filter((w) => !(gelijk(w.race_id, p_race) && gelijk(w.member_id, p_member)));
+    if (p_keuze) {
+      const r = store.races.find((x) => gelijk(x.id, p_race));
+      if (!(r?.drivers ?? []).some((d) => String(d.nr) === String(p_keuze))) return fout('kies een van de twee coureurs');
+      zonder.push({ race_id: p_race, member_id: p_member, keuze: String(p_keuze) });
+    }
+    store.weekvraag_antwoorden = zonder;
     bewaren();
     return { data: null, error: null };
   },

@@ -947,5 +947,15 @@
  "gelijkspel": "égalité",
  "weekendduels · winst, gelijk, verlies": "duels du week-end · gagné, nul, perdu",
  "het weekend eraan komt: je weekendduel, en op vrijdagavond de vrije training": "le week-end approche : ton duel du week-end, et le vendredi soir les essais libres",
- "Een paar dagen voor het weekend hoor je ook tegen wie je speelt in het weekendduel.": "Quelques jours avant le week-end, tu apprends aussi contre qui tu joues dans le duel du week-end."
+ "Een paar dagen voor het weekend hoor je ook tegen wie je speelt in het weekendduel.": "Quelques jours avant le week-end, tu apprends aussi contre qui tu joues dans le duel du week-end.",
+ "vraag van de week · sluit {wanneer}": "question de la semaine · ferme {wanneer}",
+ "Wie is sneller in de eerste training?": "Qui sera le plus rapide aux premiers essais libres ?",
+ "Telt niet mee voor de punten. Er is een eigen stand onder Stand.": "Ne compte pas pour les points. Il y a un classement à part sous Classement.",
+ "niet meegedaan": "pas joué",
+ "jij koos {wie}": "tu as choisi {wie}",
+ "vraag van de week": "question de la semaine",
+ "{wie} was sneller": "{wie} a été plus rapide",
+ "jij had het goed": "tu avais raison",
+ "jij had het fout": "tu avais tort",
+ "vraag van de week · goed van meegedaan": "question de la semaine · bonnes réponses sur jouées"
 }

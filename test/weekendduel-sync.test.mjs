@@ -16,7 +16,7 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { duelParen, duelNieuws, overdag, tegenstanders, wieKrijgtEenDuel, duelMails,
+import { duelParen, duelNieuws, overdag, tegenstanders, wieKrijgtEenDuel, duelMails, weekvraagOpen, duelZinnen,
   DUEL_VROEGST, DUEL_LAATST } from '../scripts/weekendduel.mjs';
 import { maakControle, wortel } from './hulp.mjs';
 
@@ -92,6 +92,25 @@ check('wie een tegenstander heeft krijgt één melding, met diens naam',
   een.length === 1 && een[0].bericht.titel === 'Weekendduel: jij tegen Sanne' && een[0].tag === 'duel:23',
   JSON.stringify(een.map((x) => x.bericht)));
 check('de tekst noemt de race', een[0].bericht.tekst.includes('Las Vegas'));
+// De vraag van de week (15 november): alleen genoemd als hij openstaat.
+{
+  const metRooster = (start) => ({ ...race, vrije_trainingen: [
+    { naam: 'Practice 2', start: new Date(start + 4 * UUR).toISOString() }, { naam: 'Practice 1', start: new Date(start).toISOString() }] });
+  check('de vraag van de week staat open tot de vroegste training begint; zonder rooster niet',
+    weekvraagOpen(metRooster(NU + UUR), NU) && !weekvraagOpen(metRooster(NU - UUR), NU)
+      && !weekvraagOpen(race, NU) && !weekvraagOpen({ ...race, vrije_trainingen: [{ naam: 'Practice 1', start: 'geen tijd' }] }, NU));
+  check('zonder rooster zegt de melding niets over de vraag van de week', !een[0].bericht.tekst.includes('vraag van de week'));
+  const metVraag = wieKrijgtEenDuel({ races: [metRooster(NU + 30 * UUR)], abonnementen: [ab(1)], leden: vier, nu: NU });
+  check('staat de vraag open, dan noemt de melding hem',
+    metVraag.length === 1 && metVraag[0].bericht.tekst.endsWith(duelZinnen('nl').vraag), metVraag[0]?.bericht.tekst);
+  check('de zin is er in alle zeven talen, zonder streepjes',
+    ['nl', 'en', 'de', 'fr', 'es', 'it', 'pt'].every((t) => duelZinnen(t).vraag?.length > 20 && !/[–—]/.test(duelZinnen(t).vraag))
+      && new Set(['nl', 'en', 'de', 'fr', 'es', 'it', 'pt'].map((t) => duelZinnen(t).vraag)).size === 7);
+  const mailMet = duelMails({ races: [metRooster(NU + 30 * UUR)], ontvangers: [{ user_id: 'u-1', taal: 'nl', tijdzone: 'Europe/Amsterdam', token: 't-1', training_laatst: null }],
+    leden: vier.map((l) => (l.member_id === 'lid-1' ? { ...l, user_id: 'u-1' } : l)), pools: [{ id: vier[0].pool_id, name: 'Poule' }],
+    nu: NU, appUrl: 'https://predicttherace.com/app/' });
+  check('en de mail ook', mailMet.length === 1 && mailMet[0].tekst.includes(duelZinnen('nl').vraag), mailMet[0]?.tekst);
+}
 check('in de taal van het toestel',
   krijg({ abonnementen: [ab(1, { taal: 'en' })] })[0].bericht.titel === 'Weekend duel: you against Sanne'
     && krijg({ abonnementen: [ab(1, { taal: 'de' })] })[0].bericht.titel === 'Wochenend-Duell: du gegen Sanne');
