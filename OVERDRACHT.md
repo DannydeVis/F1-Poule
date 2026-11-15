@@ -12694,3 +12694,29 @@ sync het ook kennen.
 **Tests.** Nieuw: `test/weekendduel.test.mjs` (16).
 
 **Danny moet:** niets.
+
+## Het weekendduel op woensdag: seintje en mail (15 november)
+
+Danny zei ja op drie vragen: de melding en mail op woensdag, de vraag van de
+week met een eigen stand (niet in de gewone stand), en "herinner mij voor
+2027". Dit is de eerste.
+
+**Wat er verandert.**
+- `scripts/weekendduel.mjs`: `duelNieuws()` (het moment), `overdag()`,
+  `tegenstanders()`, `wieKrijgtEenDuel()` (meldingen) en `duelMails()`.
+- `scripts/sync.mjs`: `duelBerichten()` na de mailmomenten, in een eigen
+  try/catch. Het versturen van mails staat nu los in `stuurMails()`, zodat de
+  vrijdagmail, de racemail en de duelmail dezelfde weg gaan.
+- De app: de schakelaar voor de vrije training heet nu "het weekend eraan
+  komt: je weekendduel, en op vrijdagavond de vrije training", en het blok
+  "per mail" noemt het duel.
+- Geen wijziging in de database en geen nieuwe functie in Supabase: het
+  bericht gebruikt `training_laatst` en de bestaande functie `mail`.
+
+**Let op.** Alleen poules die dit seizoen spelen krijgen een bericht. De
+eerste keer dat dit iets stuurt is voor het weekend van Las Vegas of Lusail,
+afhankelijk van wanneer het gemerged is.
+
+**Tests.** Nieuw: `test/weekendduel-sync.test.mjs` (40), zonder browser.
+
+**Danny moet:** niets.
