@@ -2341,10 +2341,25 @@ staat elk weekend opnieuw begint.
   als de onderlinge duels. Leverde geen van beiden iets in, dan is er niet
   gespeeld.
 
-Nog niet gebouwd: een melding of mail op woensdag ("dit weekend speel je
-tegen ..."). Dat vraagt dat de sync het schema ook kent.
+**Het bericht op woensdag** (sinds 15 november; Danny: ja). Een paar dagen
+voor het weekend stuurt de sync een seintje en een mail: "Weekendduel: jij
+tegen Sanne". Tussen drieënhalve dag en één dag voor de eerste deadline van
+het weekend, dus woensdag tot en met vrijdag voor een gewoon weekend, en
+alleen overdag (9 tot 21 uur) in de tijdzone van de ontvanger. Eén keer per
+weekend. Wie vrij is of alleen in zijn poule zit krijgt niets.
 
-**Test.** `test/weekendduel.test.mjs`.
+- **Wie het krijgt.** Het seintje: wie meldingen aan heeft en de soort "het
+  weekend eraan komt" niet uitzette (dat is dezelfde schakelaar als de vrije
+  training). De mail: wie mail aan heeft staan onder Profiel.
+- **Geen nieuwe kolom.** Het bericht gebruikt het geheugen van de vrije
+  training (`training_laatst`, met de waarde `duel:<race>`). Daardoor gaat
+  het duelbericht ook niet meer uit nadat de melding van vrijdag over
+  hetzelfde weekend al ging.
+- **Hetzelfde schema.** `scripts/weekendduel.mjs` heeft een kopie van
+  `duelParen()` uit de app; de test vergelijkt de twee.
+
+**Test.** `test/weekendduel.test.mjs` (de app) en
+`test/weekendduel-sync.test.mjs` (de sync).
 
 ## 12. Wat de app van je weet
 

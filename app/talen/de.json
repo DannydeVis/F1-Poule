@@ -395,7 +395,6 @@
  "een seintje als": "einen Stups, wenn",
  "een deadline nadert en je nog niets hebt ingevuld": "eine Deadline naht und du noch nichts getippt hast",
  "de uitslag binnen is": "das Ergebnis da ist",
- "de vrije training binnen is, op vrijdagavond": "das freie Training vorbei ist, am Freitagabend",
  "je seizoen delen": "deine Saison teilen",
  "Zet dit aan en je krijgt een link naar een pagina met jouw cijfers: je punten, je plek en je beste weekend. Wie die link heeft ziet <b>alleen jouw getallen</b> — niet de poule, niet je medespelers en niet wat iemand heeft ingevuld.": "Schalte das ein und du bekommst einen Link zu einer Seite mit deinen Zahlen: deine Punkte, dein Platz und dein bestes Wochenende. Wer den Link hat, sieht <b>nur deine Zahlen</b>: nicht die Tipprunde, nicht deine Mitspieler und nicht, was jemand getippt hat.",
  "Maak een deelbare pagina": "Teilbare Seite erstellen",
@@ -946,5 +945,7 @@
  "gewonnen": "gewonnen",
  "verloren": "verloren",
  "gelijkspel": "unentschieden",
- "weekendduels · winst, gelijk, verlies": "Wochenend-Duelle · Sieg, Remis, Niederlage"
+ "weekendduels · winst, gelijk, verlies": "Wochenend-Duelle · Sieg, Remis, Niederlage",
+ "het weekend eraan komt: je weekendduel, en op vrijdagavond de vrije training": "das Wochenende ansteht: dein Wochenend-Duell, und am Freitagabend das freie Training",
+ "Een paar dagen voor het weekend hoor je ook tegen wie je speelt in het weekendduel.": "Ein paar Tage vor dem Wochenende erfährst du auch, gegen wen du im Wochenend-Duell spielst."
 }

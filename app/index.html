@@ -3207,6 +3207,8 @@ const ENGELS = Object.fromEntries([
   ['verloren', 'lost'],
   ['gelijkspel', 'draw'],
   ['weekendduels · winst, gelijk, verlies', 'weekend duels · won, drawn, lost'],
+  ['Een paar dagen voor het weekend hoor je ook tegen wie je speelt in het weekendduel.',
+   'A few days before the weekend you also hear who you play in the weekend duel.'],
   ['Uitslag en punten {race}',
    'Results and points {race}'],
   ['Je voorspelling bekijken', 'View your prediction'],
@@ -3684,8 +3686,8 @@ const ENGELS = Object.fromEntries([
    'a deadline is close and you have not filled anything in'],
   ['de uitslag binnen is',
    'the results are in'],
-  ['de vrije training binnen is, op vrijdagavond',
-   'free practice is in, on Friday evening'],
+  ['het weekend eraan komt: je weekendduel, en op vrijdagavond de vrije training',
+   'the weekend is coming: your weekend duel, and free practice on Friday evening'],
   ['je seizoen delen',
    'share your season'],
   ['Zet dit aan en je krijgt een link naar '
@@ -9899,7 +9901,7 @@ function meldingBlok() {
         <legend class="zacht">${T('een seintje als')}</legend>
         ${soort('deadline', T('een deadline nadert en je nog niets hebt ingevuld'))}
         ${soort('uitslag', T('de uitslag binnen is'))}
-        ${soort('training', T('de vrije training binnen is, op vrijdagavond'))}
+        ${soort('training', T('het weekend eraan komt: je weekendduel, en op vrijdagavond de vrije training'))}
       </fieldset>` : ''}
       <button class="knop klein" id="meldingUit">${T('Zet meldingen uit')}</button>
       ${S.pushFout ? `<p class="err">${esc(S.pushFout)}</p>` : ''}`;
@@ -9981,7 +9983,7 @@ function perMailBlok() {
   if (S.perMail.aan) {
     return `${kop}
       <p class="zacht" style="margin:0" data-per-mail="aan">${T('Je krijgt op vrijdagavond en na de race een mail, naar <b>{adres}</b>.',
-        { adres: esc(googleMail() ?? '') })}</p>
+        { adres: esc(googleMail() ?? '') })} ${T('Een paar dagen voor het weekend hoor je ook tegen wie je speelt in het weekendduel.')}</p>
       <button class="knop klein" id="perMailUit">${T('Zet mail uit')}</button>${fout}`;
   }
   if (!S.perMail.kan) {
@@ -9992,7 +9994,7 @@ function perMailBlok() {
   return `${kop}
     <p class="zacht" style="margin:0" data-per-mail="uit">${T('Krijg op vrijdagavond een mail met de vrije trainingen (en of je al invulde), '
       + 'en na de race een met je punten en je plek. Naar <b>{adres}</b>. In elke mail staat een link om ermee te stoppen.',
-      { adres: esc(googleMail() ?? '') })}</p>
+      { adres: esc(googleMail() ?? '') })} ${T('Een paar dagen voor het weekend hoor je ook tegen wie je speelt in het weekendduel.')}</p>
     <button class="knop klein" id="perMailAan">${T('Zet mail aan')}</button>${fout}`;
 }
 

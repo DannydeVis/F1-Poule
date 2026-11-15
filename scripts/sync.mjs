@@ -37,6 +37,7 @@ import { wieKrijgtEenSeintje, volgendeWekker, SEIZOENVRAGEN, SESSIES, SESSIEVOLG
 import { laatsteUitslag, wieKrijgtEenUitslag } from './uitslagmeldingen.mjs';
 import { trainingNieuws, wieKrijgtEenTraining } from './trainingmeldingen.mjs';
 import { mailNieuws, vrijdagMails, raceMails, pouleStand } from './mailmomenten.mjs';
+import { duelNieuws, wieKrijgtEenDuel, duelMails } from './weekendduel.mjs';
 import { trainingRooster, teHalen, trainingTop10, zelfdeRooster } from './vrijetrainingen.mjs';
 import { leesRacePaginas, sitemapPaden } from './racepagina.mjs';
 import { sessieCijfers, teBerekenen, seizoenCijfers, komendSeizoen, seizoenStart, beterDan, topPunten,
@@ -1081,6 +1082,95 @@ async function trainingMeldingen(races) {
 
 const MAIL_PER_KEER = 50;
 
+// De mails versturen via de functie `mail` in Supabase, en onthouden wat er
+// ging. Elke mail draagt zijn eigen kolom en tag.
+async function stuurMails(mails) {
+  if (!mails.length) { console.log('Geen mails te sturen'); return; }
+  let verstuurd = 0, overgeslagen = 0, mislukt = 0;
+  for (let i = 0; i < mails.length; i += MAIL_PER_KEER) {
+    const deel = mails.slice(i, i + MAIL_PER_KEER);
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/mail`, {
+      method: 'POST', headers: kop,
+      body: JSON.stringify({ mails: deel.map(({ user_id, onderwerp, tekst, html, afmelden }) =>
+        ({ user_id, onderwerp, tekst, html, afmelden })) }),
+    }).catch(() => null);
+    const uit = res ? await res.json().catch(() => null) : null;
+    if (!res?.ok) {
+      console.log(uit?.hint === 'mail_geen_sleutel'
+        ? 'Mail: nog geen RESEND_API_KEY bij de functies in Supabase, dus niets verstuurd (BEDIENING §11g)'
+        : `Mail: de functie mail gaf ${res?.status ?? 'geen antwoord'}${uit?.hint ? ` (${uit.hint})` : ''}; niets verstuurd`);
+      return;
+    }
+    overgeslagen += uit.overgeslagen ?? 0;
+    mislukt += uit.mislukt ?? 0;
+    // Onthouden wat er ging, anders komt dezelfde mail volgend kwartier opnieuw.
+    for (const m of deel.filter((x) => (uit.verstuurd ?? []).includes(x.user_id))) {
+      verstuurd++;
+      await sb(`mail_abonnementen?user_id=eq.${m.user_id}`, { method: 'PATCH', body: JSON.stringify({ [m.kolom]: m.tag }) })
+        .catch((e) => console.log(`  kon '${m.kolom}' niet bijwerken: ${e.message}`));
+    }
+  }
+  console.log(`Mail: ${verstuurd} verstuurd`
+    + (overgeslagen ? `, ${overgeslagen} overgeslagen` : '') + (mislukt ? `, ${mislukt} mislukt` : ''));
+  if (verstuurd) noteer(`${verstuurd} mail(s) verstuurd`);
+}
+
+// ------------------------------------------------------------
+//  Het weekendduel (scripts/weekendduel.mjs, 14 november): een paar dagen
+//  voor het weekend een seintje en een mail met tegen wie je speelt. Onder
+//  dezelfde schakelaar en met hetzelfde geheugen als de vrije training. Lukt
+//  het niet, dan gaat de run door.
+// ------------------------------------------------------------
+
+async function duelBerichten(races) {
+  const nieuws = duelNieuws({ races });
+  if (!nieuws) return;
+  const ledenVan = async (poolIds) => poolIds.length
+    ? (await sb(`pool_members?pool_id=in.(${poolIds.join(',')})`
+        + '&select=member_id,pool_id,display_name,user_id,created_at&order=created_at')) ?? []
+    : [];
+
+  if (VAPID_PRIVE) {
+    const abonnementen = (await sb('push_abonnementen?select=*')) ?? [];
+    if (abonnementen.length && 'training_laatst' in abonnementen[0]) {
+      // Alleen poules die dit seizoen spelen: een poule die nog op vorig jaar
+      // staat heeft dit weekend geen duel.
+      const ids = [...new Set(abonnementen.map((a) => a.pool_id).filter(Boolean))];
+      const spelend = new Set(((ids.length ? await sb(`pools?id=in.(${ids.join(',')})&select=id,season`) : []) ?? [])
+        .filter((p) => Number(p.season) === Number(nieuws.race.season)).map((p) => p.id));
+      const leden = await ledenVan([...spelend]);
+      const lijst = wieKrijgtEenDuel({ races, leden,
+        abonnementen: abonnementen.filter((a) => spelend.has(a.pool_id)) });
+      if (lijst.length) {
+        const { gelukt, opgeruimd } = await verstuur(lijst, 'training_laatst');
+        console.log(`Duelmeldingen: ${gelukt} verstuurd`
+          + (opgeruimd ? `, ${opgeruimd} verlopen abonnement(en) opgeruimd` : ''));
+        if (gelukt) noteer(`${gelukt} duelmelding(en) verstuurd`);
+      }
+    }
+  }
+
+  let ontvangers;
+  try {
+    ontvangers = await sb('rpc/mail_ontvangers', { method: 'POST', body: '{}' });
+  } catch {
+    return;      // een database zonder de mail: dan alleen de meldingen
+  }
+  if (!ontvangers?.length) return;
+  const eigen = (await sb(`pool_members?user_id=in.(${ontvangers.map((o) => o.user_id).join(',')})`
+    + '&select=pool_id')) ?? [];
+  const poolIds = [...new Set(eigen.map((l) => l.pool_id))];
+  if (!poolIds.length) return;
+  const [leden, pools] = await Promise.all([
+    ledenVan(poolIds),
+    sb(`pools?id=in.(${poolIds.join(',')})&select=id,name,season`),
+  ]);
+  const ditSeizoen = (pools ?? []).filter((p) => Number(p.season) === Number(nieuws.race.season));
+  const mails = duelMails({ races, ontvangers, leden, pools: ditSeizoen, appUrl: APP_URL })
+    .map((m) => ({ ...m, kolom: 'training_laatst' }));
+  if (mails.length) await stuurMails(mails);
+}
+
 async function mailMomenten(races) {
   const nieuws = mailNieuws({ races });
   if (!nieuws.training && !nieuws.race) return;
@@ -1139,34 +1229,7 @@ async function mailMomenten(races) {
     }
   }
 
-  if (!mails.length) { console.log('Geen mails te sturen'); return; }
-  let verstuurd = 0, overgeslagen = 0, mislukt = 0;
-  for (let i = 0; i < mails.length; i += MAIL_PER_KEER) {
-    const deel = mails.slice(i, i + MAIL_PER_KEER);
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/mail`, {
-      method: 'POST', headers: kop,
-      body: JSON.stringify({ mails: deel.map(({ user_id, onderwerp, tekst, html, afmelden }) =>
-        ({ user_id, onderwerp, tekst, html, afmelden })) }),
-    }).catch(() => null);
-    const uit = res ? await res.json().catch(() => null) : null;
-    if (!res?.ok) {
-      console.log(uit?.hint === 'mail_geen_sleutel'
-        ? 'Mail: nog geen RESEND_API_KEY bij de functies in Supabase, dus niets verstuurd (BEDIENING §11g)'
-        : `Mail: de functie mail gaf ${res?.status ?? 'geen antwoord'}${uit?.hint ? ` (${uit.hint})` : ''}; niets verstuurd`);
-      return;
-    }
-    overgeslagen += uit.overgeslagen ?? 0;
-    mislukt += uit.mislukt ?? 0;
-    // Onthouden wat er ging, anders komt dezelfde mail volgend kwartier opnieuw.
-    for (const m of deel.filter((x) => (uit.verstuurd ?? []).includes(x.user_id))) {
-      verstuurd++;
-      await sb(`mail_abonnementen?user_id=eq.${m.user_id}`, { method: 'PATCH', body: JSON.stringify({ [m.kolom]: m.tag }) })
-        .catch((e) => console.log(`  kon '${m.kolom}' niet bijwerken: ${e.message}`));
-    }
-  }
-  console.log(`Mail: ${verstuurd} verstuurd`
-    + (overgeslagen ? `, ${overgeslagen} overgeslagen` : '') + (mislukt ? `, ${mislukt} mislukt` : ''));
-  if (verstuurd) noteer(`${verstuurd} mail(s) verstuurd`);
+  await stuurMails(mails);
 }
 
 // ------------------------------------------------------------
@@ -1300,6 +1363,11 @@ try {
     await mailMomenten(lopend);
   } catch (e) {
     console.log(`Mail niet verstuurd: ${String(e.message).slice(0, 200)}`);
+  }
+  try {
+    await duelBerichten(lopend);
+  } catch (e) {
+    console.log(`Duelberichten niet verstuurd: ${String(e.message).slice(0, 200)}`);
   }
   await sitePaden();
   await vaultBijwerken();
