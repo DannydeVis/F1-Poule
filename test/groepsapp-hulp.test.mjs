@@ -137,8 +137,9 @@ const zonder = { kaart: await bestaat('[data-herinner]'), poule: false };
 await naar('poule');
 zonder.poule = await bestaat('[data-samenvatting], [data-export-csv]');
 check('zonder premium niets van te zien', !zonder.kaart && !zonder.poule, JSON.stringify(zonder));
-check('de uitleg over premium noemt de groepsapp en de stand als bestand',
-  (await page.textContent('[data-premium-uitleg]')).replace(/\s+/g, ' ').includes('herinneringen en samenvattingen voor de groepsapp, de stand als bestand'));
+// De opsomming staat sinds 16 november op de premiumpagina van de site; de app verwijst erheen.
+check('onder de uitleg over premium staat de knop naar de premiumpagina, waar de groepsapp en de stand als bestand staan',
+  (await page.$('[data-premium-pagina]')) !== null);
 
 // ---- 2. herinneren --------------------------------------------------------------------
 await db(`d.pools[0].premium_tot = new Date(Date.now() + 864e5).toISOString();`);

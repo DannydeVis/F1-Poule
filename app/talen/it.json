@@ -823,7 +823,6 @@
  "{plek} van {n}, {punten} punten": "{plek} su {n}, {punten} punti",
  "Jouw seizoen {jaar} in {poule}: {n} punten": "La tua stagione {jaar} in {poule}: {n} punti",
  "weekendzeges": "vittorie",
- "Meespelen blijft gratis, en alles voor een poule met vrienden zit al in de app. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen: teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met een eigen winnaar, een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.": "Giocare resta gratis, e tutto ciò che serve a una lega tra amici è già nell'app. Leghe grandi, aziende e club possono aggiungere degli extra: squadre che si sfidano, domande proprie ogni weekend, classifiche parziali con un proprio vincitore, un colpetto a chi non ha ancora compilato nulla, promemoria e riepiloghi per la chat di gruppo, la classifica in un file, un logo proprio, un colore proprio e una riga per lo sponsor con un link. Pagare non è ancora possibile. Vuoi gli extra già adesso? Scrivi a {adres}.",
  "voor de groepsapp": "per la chat di gruppo",
  "Kant-en-klare berichten om in de groepsapp te zetten, en de stand als bestand.": "Messaggi pronti da mettere nella chat di gruppo, e la classifica in un file.",
  "Herinner wie nog niets invulde ({n})": "Ricorda a chi non ha ancora compilato ({n})",
@@ -991,5 +990,7 @@
  "in vorm": "in forma",
  "lachen": "risata",
  "verrast": "sorpresa",
- "pijnlijk": "ahi"
+ "pijnlijk": "ahi",
+ "Meespelen blijft gratis. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen, zoals teams, eigen vragen en een eigen logo. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.": "Giocare resta gratis. Leghe grandi, aziende e club possono aggiungere degli extra, come squadre, domande proprie e un logo proprio. Pagare non è ancora possibile. Vuoi gli extra già adesso? Scrivi a {adres}.",
+ "Bekijk premium met voorbeelden": "Guarda premium con esempi"
 }

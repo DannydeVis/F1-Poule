@@ -62,7 +62,7 @@ await naar('stand'); zonder.stand = await bestaat('[data-teamstand]');
 check('zonder premium geen teams: geen beheer, geen keuze, geen teamstand', !zonder.beheer && !zonder.kies && !zonder.stand,
   JSON.stringify(zonder));
 await naar('poule');
-check('de uitleg over premium noemt de teams', (await tekst('[data-premium-uitleg]')).includes('teams die tegen elkaar spelen'),
+check('de uitleg over premium noemt de teams', (await tekst('[data-premium-uitleg]')).includes('zoals teams,'),
   await tekst('[data-premium-uitleg]'));
 
 // ---- 2. met premium: teams maken --------------------------------------------------

@@ -1,7 +1,7 @@
 {
   "https://predicttherace.com/": {
-    "datum": "2026-11-15",
-    "hash": "5e3de6f91d6ab816"
+    "datum": "2026-11-16",
+    "hash": "84b69ddcdd2fdf5a"
   },
   "https://predicttherace.com/de/": {
     "datum": "2026-11-15",
@@ -63,8 +63,8 @@
     "sinds": "2026-10-13"
   },
   "https://predicttherace.com/en/": {
-    "datum": "2026-11-15",
-    "hash": "2280321485887439"
+    "datum": "2026-11-16",
+    "hash": "15698a1569d07bcd"
   },
   "https://predicttherace.com/en/about/": {
     "datum": "2026-11-01",
@@ -95,6 +95,11 @@
     "datum": "2026-11-01",
     "hash": "dff69dec8a181505",
     "sinds": "2026-09-26"
+  },
+  "https://predicttherace.com/en/premium/": {
+    "datum": "2026-11-16",
+    "hash": "42d701383e4e4b6b",
+    "sinds": "2026-11-16"
   },
   "https://predicttherace.com/en/privacy/": {
     "datum": "2026-11-16",
@@ -346,6 +351,11 @@
     "datum": "2026-11-01",
     "hash": "a8b36572717926f5",
     "sinds": "2026-09-27"
+  },
+  "https://predicttherace.com/premium/": {
+    "datum": "2026-11-16",
+    "hash": "fa60a591eeaa1415",
+    "sinds": "2026-11-16"
   },
   "https://predicttherace.com/privacy/": {
     "datum": "2026-11-16",

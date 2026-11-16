@@ -3719,6 +3719,33 @@ logo of nieuwe kleur meer zetten (weghalen kan wel).
   kiest haalt niet vanzelf het contrast.
 
 
+### De premiumpagina en de knop in de app (sinds 16 november)
+
+Zonder premium zag de poulebaas op de Poule-tab een lange opsomming. Danny:
+"kan hier niet een korte uitleg komen en dan een knop naar een geweldige
+premium pagina met alle voorbeelden en screenshots". Nu staat er één alinea
+(gratis blijft gratis, voor wie de extra's zijn, drie voorbeelden, betalen
+kan nog niet, het mailadres) en de knop **Bekijk premium met voorbeelden**.
+
+- **De pagina** staat op `/premium/` en `/en/premium/` (de gids `premium` in
+  `site/paginas.mjs`). De app in het Nederlands linkt naar de Nederlandse,
+  elke andere taal naar de Engelse (`premiumPagina()`).
+- **Per onderdeel een sectie met een schermafdruk uit de app zelf:** de eigen
+  kleur en sponsor, teams, eigen vragen, tussenklassementen, de tik en de hulp
+  voor de groepsapp. Daaronder hoe je het aanvraagt, met een knop die een
+  mail opent.
+- **De plaatjes** maakt `node scripts/maak-premiumbeelden.mjs`, uit de
+  nabootsing met de voorbeeldpoule en premium aan: `site/beeld/premium-*`,
+  in twee talen, licht en donker, met de maten in `site/premium-maten.json` (dat bestand komt niet online).
+  Draai het opnieuw als een premium-onderdeel er anders uit is gaan zien, en
+  daarna `node scripts/maak-site.mjs`.
+- **Een sectie met een plaatje** kan elke gids krijgen: `beeld` en `beeldAlt`
+  in de sectie, en `knop: { tekst, href }` voor een knop eronder.
+- **Verandert er iets aan premium**, pas dan de pagina aan en niet de alinea
+  in de app: die noemt met opzet alleen drie voorbeelden.
+
+**Test.** `test/premiumpagina.test.mjs`; de app-kant in `test/premium.test.mjs`.
+
 ## 20. Bewaking
 
 Sinds 21 oktober meldt healthchecks.io (gratis plan, 20 checks) het als er iets

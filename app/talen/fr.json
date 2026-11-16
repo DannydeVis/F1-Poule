@@ -823,7 +823,6 @@
  "{plek} van {n}, {punten} punten": "{plek} sur {n}, {punten} points",
  "Jouw seizoen {jaar} in {poule}: {n} punten": "Votre saison {jaar} dans {poule} : {n} points",
  "weekendzeges": "victoires",
- "Meespelen blijft gratis, en alles voor een poule met vrienden zit al in de app. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen: teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met een eigen winnaar, een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.": "Jouer reste gratuit, et tout ce qu'il faut pour une ligue entre amis est déjà dans l'appli. Les grandes ligues, les entreprises et les clubs peuvent y ajouter des extras : des équipes qui s'affrontent, leurs propres questions chaque week-end, des classements intermédiaires avec leur propre vainqueur, un petit signe pour qui n'a encore rien rempli, des rappels et des résumés pour le groupe de discussion, le classement en fichier, leur propre logo, leur propre couleur et une ligne pour le sponsor avec un lien. Le paiement n'est pas encore possible. Vous voulez les extras dès maintenant ? Écrivez à {adres}.",
  "voor de groepsapp": "pour le groupe de discussion",
  "Kant-en-klare berichten om in de groepsapp te zetten, en de stand als bestand.": "Des messages prêts à publier dans le groupe, et le classement en fichier.",
  "Herinner wie nog niets invulde ({n})": "Relancer ceux qui n’ont pas encore rempli ({n})",
@@ -991,5 +990,7 @@
  "in vorm": "en feu",
  "lachen": "rire",
  "verrast": "surpris",
- "pijnlijk": "aïe"
+ "pijnlijk": "aïe",
+ "Meespelen blijft gratis. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen, zoals teams, eigen vragen en een eigen logo. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.": "Jouer reste gratuit. Les grandes ligues, les entreprises et les clubs peuvent y ajouter des extras, comme des équipes, leurs propres questions et leur propre logo. Le paiement n'est pas encore possible. Vous voulez les extras dès maintenant ? Écrivez à {adres}.",
+ "Bekijk premium met voorbeelden": "Voir premium avec des exemples"
 }

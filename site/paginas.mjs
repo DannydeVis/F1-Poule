@@ -2176,6 +2176,187 @@ export const PAGINAS = [
       },
     },
   },
+  // De premiumpagina (16 november). Danny: in de app een korte uitleg en een
+  // knop naar een pagina met alle voorbeelden en schermafdrukken. Elke sectie
+  // over een onderdeel heeft een plaatje uit de app zelf (beeld: de naam uit
+  // ONDERDELEN in scripts/maak-premiumbeelden.mjs). De app linkt hierheen
+  // (premiumPagina() in app/index.html): Nederlands naar de Nederlandse
+  // pagina, elke andere taal naar de Engelse. Alleen Nederlands en Engels.
+  {
+    id: 'premium',
+    soort: 'gids',
+    verwant: ['community', 'organiseren'],
+    talen: {
+      nl: {
+        pad: 'premium',
+        titel: 'Premium voor je F1-poule: wat je krijgt | Predict the Race',
+        omschrijving: 'Premium voor grote poules, bedrijven en clubs: een eigen logo en kleur, teams, eigen vragen, tussenklassementen, de tik en hulp voor de groepsapp. Met voorbeelden.',
+        kop: 'Premium voor je F1-poule',
+        kort: 'Premium is een pakket extra\'s voor grote poules, bedrijven en clubs: een eigen logo en kleur, teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen, de tik en hulp voor de groepsapp. Meespelen blijft voor iedereen gratis. Hieronder staat elk onderdeel met een schermafdruk uit de app.',
+        secties: [
+          {
+            id: 'profiel',
+            vraag: 'Hoe ziet een poule met een eigen kleur en sponsor eruit?',
+            kort: 'Een poule met premium krijgt een eigen gezicht: je logo naast de naam, je eigen kleur in de app en een regel "mogelijk gemaakt door" met een link naar de sponsor. Dat staat in de app, op het deelplaatje van de uitslag en bij de uitnodiging.',
+            beeld: 'profiel',
+            beeldAlt: 'De app met een groene kleurbalk onder de naam van de poule en de regel "mogelijk gemaakt door Bakkerij Jansen"',
+            tekst: [
+              'De poulebaas stelt het in op de Poule-tab: een logo uploaden (een groot plaatje maakt de app vanzelf kleiner), een kleur kiezen en de naam en de link van de sponsor invullen.',
+            ],
+          },
+          {
+            id: 'teams',
+            vraag: 'Hoe werken teams in een poule?',
+            kort: 'Met teams spelen afdelingen of vriendengroepen binnen één poule tegen elkaar. De poulebaas maakt de teams aan, elke speler kiest zijn team onder Profiel, en op de Stand-tab staat de teamstand. Die telt het gemiddelde per speler, zodat een groot team niet vanzelf wint.',
+            beeld: 'teams',
+            beeldAlt: 'De teamstand met drie teams: Verkoop, Techniek en Directie, elk met het gemiddelde aantal punten per speler',
+            tekst: [
+              'De gewone stand verandert er niet door: iedereen speelt nog steeds ook voor zichzelf. Het beste team staat in de samenvatting voor de groepsapp.',
+            ],
+          },
+          {
+            id: 'eigen-vragen',
+            vraag: 'Wat zijn eigen vragen?',
+            kort: 'Met eigen vragen stelt de poulebaas per raceweekend zelf tot drie vragen, elk met twee tot zes antwoorden, bijvoorbeeld of er een Ferrari uitvalt. Spelers antwoorden tot de start van de race, en een goed antwoord levert {eigenPunten} punten op. Na de race vult de poulebaas de uitkomst in.',
+            beeld: 'vragen',
+            beeldAlt: 'Twee vragen van de poulebaas met hun antwoorden als knoppen, en eronder het formulier om een vraag toe te voegen',
+            tekst: [
+              'Zo maak je de poule van jezelf: een vraag over de thuisrijder, over het weer, of over de collega die altijd te laat inlevert. Wat een ander antwoordde zie je pas als de race begonnen is.',
+            ],
+          },
+          {
+            id: 'tussenklassementen',
+            vraag: 'Wat is een tussenklassement?',
+            kort: 'Een tussenklassement is een eigen stand over een deel van het seizoen, bijvoorbeeld het voorjaar, met een eigen winnaar. De poulebaas kiest de rondes en kan erbij zetten wat de winnaar krijgt. Zo valt er halverwege het seizoen ook iets te winnen voor wie in de eindstand achterstaat.',
+            beeld: 'periodes',
+            beeldAlt: 'Het tussenklassement Voorjaar met de winnaar en de prijs, en het tussenklassement Zomer dat nog moet beginnen',
+            tekst: [
+              'De prijs is een regel tekst: de app int en betaalt niets. Wat je uitreikt, regel je zelf.',
+            ],
+          },
+          {
+            id: 'tik',
+            vraag: 'Wat is de tik?',
+            kort: 'De tik is een seintje aan een medespeler die zijn top 10 nog niet invulde. In de lijst van de poule staat bij die speler de knop Tik aan, en hij krijgt dan een melding op zijn telefoon. Elke speler kan per race één keer worden aangetikt, zodat het een herinnering blijft.',
+            beeld: 'tik',
+            beeldAlt: 'De lijst van de poule voor een open race, met bij vier spelers die nog niets inleverden de knop Tik aan',
+            tekst: [
+              'Heeft die speler geen meldingen aan staan, dan zet de app een berichtje klaar om zelf te sturen. De knop staat er in de week voor de deadline.',
+            ],
+          },
+          {
+            id: 'groepsapp',
+            vraag: 'Wat doet premium voor de groepsapp?',
+            kort: 'Voor de groepsapp zet premium kant-en-klare berichten klaar: een herinnering met de namen van wie nog niets invulde, en na elke race een samenvatting met de winnaar van het weekend, de grootste stijger en de stand. De stand is er ook als CSV-bestand en als PDF.',
+            beeld: 'groepsapp',
+            beeldAlt: 'Vier knoppen op de Poule-tab: herinner wie nog niets invulde, samenvatting van de race, stand als CSV en stand afdrukken of als PDF',
+            tekst: [
+              'Eén tik en het bericht staat in je deelmenu. Het CSV-bestand opent in Excel en in Google Sheets; de PDF is om op te hangen bij de koffieautomaat.',
+            ],
+          },
+          {
+            id: 'aanvragen',
+            vraag: 'Hoe vraag je premium aan?',
+            kort: 'Premium vraag je aan met een mail naar contact@predicttherace.com, met de naam van je poule erbij. Betalen staat nog niet aan, dus er is nog geen prijs. Meespelen blijft hoe dan ook gratis, voor elke speler en in elke poule, ook als premium later iets gaat kosten.',
+            knop: { tekst: 'Mail voor premium', href: 'mailto:contact@predicttherace.com?subject=Premium' },
+          },
+        ],
+        faq: [
+          ['Moet elke speler premium hebben?', 'Nee. Premium hoort bij de poule, niet bij een speler. Staat het aan, dan ziet iedereen in de poule de teams, de eigen vragen en de tussenklassementen, zonder zelf iets te doen.'],
+          ['Wat gebeurt er als premium afloopt?', 'Dan verdwijnen de extra\'s uit beeld. De voorspellingen, de punten en de gewone stand blijven gewoon staan, en iedereen speelt verder.'],
+          ['Kan ik premium eerst zien voordat ik het aanvraag?', 'Op deze pagina staat elk onderdeel met een schermafdruk uit de app. Wil je het in je eigen poule proberen, zet dat dan in je mail.'],
+        ],
+        leesOok: [
+          ['hoe', 'Zo werkt Predict the Race'],
+          ['faq', 'Veelgestelde vragen over de app'],
+        ],
+      },
+      en: {
+        pad: 'en/premium',
+        titel: 'Premium for your F1 prediction league | Predict the Race',
+        omschrijving: 'Premium for big leagues, companies and clubs: your own logo and colour, teams, custom questions, interim standings, nudges and group chat help. With examples.',
+        kop: 'Premium for your F1 prediction league',
+        kort: 'Premium is a set of extras for big leagues, companies and clubs: your own logo and colour, teams that play each other, custom questions every weekend, interim standings, nudges and help for the group chat. Playing stays free for everyone. Every part is shown below with a screenshot from the app.',
+        secties: [
+          {
+            id: 'branding',
+            vraag: 'What does a league with its own colour and sponsor look like?',
+            kort: 'A league with premium gets its own look: your logo next to the name, your own colour in the app and a "made possible by" line with a link to the sponsor. It shows in the app, on the share image of the result and on the invitation.',
+            beeld: 'profiel',
+            beeldAlt: 'The app with a green colour bar below the league name and the line "made possible by Jansen Bakery"',
+            tekst: [
+              'The league owner sets it up on the Pool tab: upload a logo (the app shrinks a large image by itself), pick a colour and fill in the sponsor\'s name and link.',
+            ],
+          },
+          {
+            id: 'teams',
+            vraag: 'How do teams work in a league?',
+            kort: 'Teams let departments or groups of friends play each other inside one league. The league owner creates the teams, every player picks a team under Profile, and the Standings tab shows the team table. It uses the average per player, so a big team does not win by default.',
+            beeld: 'teams',
+            beeldAlt: 'The team table with three teams: Sales, Engineering and Management, each with the average points per player',
+            tekst: [
+              'The regular standings do not change: everyone still plays for themselves too. The best team is mentioned in the summary for the group chat.',
+            ],
+          },
+          {
+            id: 'custom-questions',
+            vraag: 'What are custom questions?',
+            kort: 'Custom questions let the league owner ask up to three questions of their own every race weekend, each with two to six answers, such as whether a Ferrari will retire. Players answer until the race starts, and a correct answer is worth {eigenPunten} points. After the race the owner enters the outcome.',
+            beeld: 'vragen',
+            beeldAlt: 'Two questions from the league owner with their answers as buttons, and below them the form to add a question',
+            tekst: [
+              'It makes the league your own: a question about the home driver, about the weather, or about the colleague who always submits late. You only see what others answered once the race has started.',
+            ],
+          },
+          {
+            id: 'interim-standings',
+            vraag: 'What is an interim standing?',
+            kort: 'An interim standing is a separate table over part of the season, for example the spring, with its own winner. The league owner picks the rounds and can add what the winner gets. It gives players who are behind overall something to win halfway through the season.',
+            beeld: 'periodes',
+            beeldAlt: 'The interim standing Spring with its winner and prize, and the interim standing Summer that has yet to start',
+            tekst: [
+              'The prize is a line of text: the app collects and pays out nothing. Whatever you hand out, you arrange yourself.',
+            ],
+          },
+          {
+            id: 'nudge',
+            vraag: 'What is a nudge?',
+            kort: 'A nudge is a quick reminder for a fellow player who has not picked a top 10 yet. In the league list that player gets a Nudge button, and tapping it sends a notification to their phone. Each player can be nudged once per race, so it stays a reminder.',
+            beeld: 'tik',
+            beeldAlt: 'The league list for an open race, with a Nudge button next to four players who have not submitted yet',
+            tekst: [
+              'If that player has notifications switched off, the app prepares a short message for you to send yourself. The button appears in the week before the deadline.',
+            ],
+          },
+          {
+            id: 'group-chat',
+            vraag: 'What does premium do for the group chat?',
+            kort: 'For the group chat, premium prepares ready-made messages: a reminder naming everyone who has not predicted yet, and after every race a summary with the weekend winner, the biggest climber and the standings. The standings also come as a CSV file and as a PDF.',
+            beeld: 'groepsapp',
+            beeldAlt: 'Four buttons on the Pool tab: remind those who have not predicted, summary of the race, standings as CSV and print the standings or save as PDF',
+            tekst: [
+              'One tap and the message is in your share menu. The CSV file opens in Excel and Google Sheets; the PDF is for the wall next to the coffee machine.',
+            ],
+          },
+          {
+            id: 'request',
+            vraag: 'How do you get premium?',
+            kort: 'Premium is requested by email to contact@predicttherace.com, with the name of your league. Payment is not switched on yet, so there is no price so far. Playing stays free either way, for every player in every league, even if premium costs something later.',
+            knop: { tekst: 'Email us about premium', href: 'mailto:contact@predicttherace.com?subject=Premium' },
+          },
+        ],
+        faq: [
+          ['Does every player need premium?', 'No. Premium belongs to the league, not to a player. Once it is on, everyone in the league sees the teams, the custom questions and the interim standings without doing anything.'],
+          ['What happens when premium ends?', 'The extras disappear from view. The predictions, the points and the regular standings stay where they are, and everyone keeps playing.'],
+          ['Can I see premium before I ask for it?', 'This page shows every part with a screenshot from the app. If you want to try it in your own league, say so in your email.'],
+        ],
+        leesOok: [
+          ['hoe', 'How Predict the Race works'],
+          ['faq', 'Frequently asked questions about the app'],
+        ],
+      },
+    },
+  },
   // De vergelijking met andere apps (zoekplan SEO fase 2, AEO 3.2, GEO fase 4).
   // Bovenaan zegt de pagina wie hem schreef (openheid, in de auteursregel).
   // Elk feit over een andere app staat op diens eigen site; wat daar niet te

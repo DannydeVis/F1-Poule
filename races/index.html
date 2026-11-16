@@ -625,6 +625,16 @@
   .artikel p,.artikel li{line-height:1.65}
   .artikel p{margin:0 0 12px}
   .artikel section .kort{font-weight:600}
+  /* Een sectie met een schermafdruk uit de app (de premiumpagina): op een
+     breed scherm de tekst links en het plaatje rechts. */
+  .artikel .schermbeeld{display:block;margin:18px 0}
+  .artikel .schermbeeld img{display:block;width:100%;max-width:390px;height:auto;border-radius:16px;
+    border:1px solid var(--lijn);box-shadow:0 14px 40px rgba(0,0,0,.18)}
+  @media (min-width:860px){
+    .artikel section[data-beeld]{display:grid;grid-template-columns:minmax(0,1fr) 340px;column-gap:40px;align-items:start}
+    .artikel section[data-beeld] > *{grid-column:1}
+    .artikel section[data-beeld] > .schermbeeld{grid-column:2;grid-row:1 / span 6;margin:4px 0 0}
+  }
   .artikel .door{font-size:15px;color:var(--ink2);margin:0 0 16px}
   .artikel .door a{color:var(--accent-tekst)}
   .artikel caption{text-align:left;font-size:15px;color:var(--ink2);padding:0 0 8px}

@@ -61,8 +61,9 @@ const zonder = { beheer: await bestaat('#nieuweperiode'), stand: false };
 await naar('stand'); zonder.stand = await bestaat('[data-periodes]');
 check('zonder premium geen tussenklassementen', !zonder.beheer && !zonder.stand, JSON.stringify(zonder));
 await naar('poule');
-check('de uitleg over premium noemt de tussenklassementen', (await tekst('[data-premium-uitleg]')).includes('tussenklassementen met een eigen winnaar'),
-  await tekst('[data-premium-uitleg]'));
+// De opsomming staat sinds 16 november op de premiumpagina van de site; de app verwijst erheen.
+check('onder de uitleg over premium staat de knop naar de premiumpagina, waar de tussenklassementen staan',
+  (await page.$('[data-premium-pagina]')) !== null, await tekst('[data-premium-uitleg]'));
 
 // ---- 2. met premium: periodes zetten -------------------------------------------------
 await db(`d.pools[0].premium_tot = new Date(Date.now() + 864e5).toISOString();`);
