@@ -292,6 +292,7 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
 {
   const lastmod = JSON.parse(readFileSync(join(wortel, 'site', 'lastmod.json'), 'utf8'));
   const jokersApp = Number(appBron.match(/const JOKERS_STANDAARD = (\d+);/)[1]);
+  const eigenPuntenApp = Number(appBron.match(/const EIGEN_PUNTEN = (\d+);/)[1]);
   const maxSpelersApp = Number(readFileSync(join(wortel, 'schema.sql'), 'utf8')
     .match(/alter table public\.pools alter column max_spelers set default (\d+);/)[1]);
   const jokersMaxApp = Math.max(...appBron.match(/const JOKERKEUZES = \[([\d, ]+)\];/)[1].split(',').map(Number));
@@ -348,6 +349,11 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
     over: {
       nl: ['komen van OpenF1', 'een database bij Supabase', 'onafhankelijk fanproject'],
       en: ['come from OpenF1', 'a Supabase database', 'independent fan project'],
+    },
+    // De premiumpagina (16 november): wat een eigen vraag oplevert komt uit de app.
+    premium: {
+      nl: [`een goed antwoord levert ${eigenPuntenApp} punten op`, 'tot drie vragen, elk met twee tot zes antwoorden'],
+      en: [`a correct answer is worth ${eigenPuntenApp} points`, 'up to three questions of their own every race weekend, each with two to six answers'],
     },
     // De gids voor communities (15 november): hoe groot een poule kan zijn
     // staat in schema.sql, en de zeven talen zijn die van de app.

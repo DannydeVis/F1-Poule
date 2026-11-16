@@ -12922,3 +12922,31 @@ reacties op de Stand-tab.
 (eigen stap in tests.yml).
 
 **Danny moet:** niets.
+
+## De premiumpagina, en een korte uitleg in de app (16 november)
+
+Danny stuurde een schermafdruk van het premiumblok op de Poule-tab: een lap
+tekst. "Kan hier niet een korte uitleg komen en dan een knop naar een
+geweldige premium pagina met alle voorbeelden en screenshots."
+
+**Wat er verandert.**
+- App: het blok zonder premium is één korte alinea met de knop "Bekijk
+  premium met voorbeelden" (`premiumPagina()`). De oude lange tekst is weg,
+  ook uit de taalbestanden.
+- Site: de gids `premium`, Nederlands en Engels, met per onderdeel een
+  schermafdruk uit de app. `scripts/maak-premiumbeelden.mjs` maakt de 24
+  plaatjes en `premium-maten.json`.
+- Generator: een sectie kan nu een `beeld` (met `beeldAlt`) en een `knop`
+  hebben; op een breed scherm staat het plaatje naast de tekst. Het getal
+  `{eigenPunten}` komt uit `EIGEN_PUNTEN` in de app.
+
+**Bewust niet.** Geen andere talen dan Nederlands en Engels. Geen prijs: die
+is er nog niet. Het logo zelf staat niet op het plaatje van het profiel (de
+nabootsing heeft geen opslag voor een upload); de kleur en de sponsorregel
+wel.
+
+**Tests.** Nieuw: `test/premiumpagina.test.mjs`. Aangepast: `premium`,
+`teams`, `periodes`, `groepsapp-hulp` (die lazen de lange opsomming na) en
+`site` (de feiten van de pagina).
+
+**Danny moet:** niets. Kijk even of de pagina zegt wat je wilt verkopen.

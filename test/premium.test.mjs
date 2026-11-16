@@ -65,8 +65,15 @@ await naarPoule();
     mail: p.querySelector('a[href^="mailto:"]')?.getAttribute('href') })).catch(() => null);
   // In gewone taal dat het extra's zijn en dat meespelen gratis blijft (Danny, 1 november).
   check('zonder premium: de poulebaas leest wat het is en hoe hij eraan komt',
-    uitleg?.tekst.includes('Grote poules, bedrijven en clubs kunnen er extra\'s bij krijgen: teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met een eigen winnaar, een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo') && uitleg.mail?.startsWith('mailto:contact@predicttherace.com'),
+    uitleg?.tekst.includes('Grote poules, bedrijven en clubs kunnen er extra\'s bij krijgen, zoals teams, eigen vragen en een eigen logo.')
+      && uitleg.tekst.length < 260 && uitleg.mail?.startsWith('mailto:'),
     JSON.stringify(uitleg));
+  // De hele lijst met voorbeelden staat op de premiumpagina van de site (16 november).
+  const knop = await page.$eval('[data-premium-pagina]', (k) => ({ tekst: k.textContent.trim(), href: k.href,
+    naUitleg: k.previousElementSibling?.hasAttribute('data-premium-uitleg') })).catch(() => null);
+  check('zonder premium: onder de uitleg een knop naar de premiumpagina op de site',
+    knop?.tekst === 'Bekijk premium met voorbeelden' && new URL(knop.href).pathname.endsWith('/premium/')
+      && !new URL(knop.href).pathname.includes('/en/') && knop.naUitleg, JSON.stringify(knop));
   check('zonder premium: er staat dat meespelen gratis blijft en dat betalen nog niet kan',
     uitleg?.tekst.startsWith('Meespelen blijft gratis') && uitleg.tekst.includes('Betalen kan nog niet')
       && (await page.$eval('[data-premium-uitleg]', (p) => p.previousElementSibling?.textContent ?? ''))
@@ -362,7 +369,11 @@ await stoppen();
   await en.click('[data-weergave="poule"]');
   await en.waitForSelector('[data-premium-uitleg]');
   const t = (await en.textContent('[data-premium-uitleg]')).replace(/\s+/g, ' ');
-  check('in het Engels: de uitleg in het Engels', t.startsWith('Playing stays free') && t.includes('Big leagues, companies and clubs can add extras: teams that play against each other, their own questions every weekend, interim standings with their own winner, a nudge for anyone who has not filled anything in, reminders and summaries for the group chat, the standings as a file, their own logo') && t.includes('Paying is not possible yet'), t);
+  check('in het Engels: de uitleg in het Engels', t.startsWith('Playing stays free')
+    && t.includes('Big leagues, companies and clubs can add extras, such as teams, their own questions and their own logo.'), t);
+  check('in het Engels: de knop gaat naar de Engelse premiumpagina',
+    await en.$eval('[data-premium-pagina]', (k) => k.textContent.trim() === 'See premium with examples'
+      && new URL(k.href).pathname.endsWith('/en/premium/')));
   check('geen javascriptfouten in het Engels', fouten.length === 0, fouten.join(' | '));
   await stop();
 }

@@ -823,7 +823,6 @@
  "{plek} van {n}, {punten} punten": "{plek} de {n}, {punten} puntos",
  "Jouw seizoen {jaar} in {poule}: {n} punten": "Tu temporada {jaar} en {poule}: {n} puntos",
  "weekendzeges": "victorias",
- "Meespelen blijft gratis, en alles voor een poule met vrienden zit al in de app. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen: teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met een eigen winnaar, een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.": "Jugar sigue siendo gratis, y todo lo que necesita una liga con amigos ya está en la app. Las ligas grandes, las empresas y los clubes pueden añadir extras: equipos que compiten entre sí, preguntas propias cada fin de semana, clasificaciones parciales con su propio ganador, un toque para quien todavía no ha rellenado nada, recordatorios y resúmenes para el chat del grupo, la clasificación en un archivo, su propio logo, su propio color y una línea para el patrocinador con un enlace. Todavía no se puede pagar. ¿Quieres los extras ya? Escribe a {adres}.",
  "voor de groepsapp": "para el chat del grupo",
  "Kant-en-klare berichten om in de groepsapp te zetten, en de stand als bestand.": "Mensajes listos para el chat del grupo, y la clasificación en un archivo.",
  "Herinner wie nog niets invulde ({n})": "Recordar a quien aún no ha rellenado ({n})",
@@ -991,5 +990,7 @@
  "in vorm": "en racha",
  "lachen": "risa",
  "verrast": "sorpresa",
- "pijnlijk": "ay"
+ "pijnlijk": "ay",
+ "Meespelen blijft gratis. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen, zoals teams, eigen vragen en een eigen logo. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.": "Jugar sigue siendo gratis. Las ligas grandes, las empresas y los clubes pueden añadir extras, como equipos, preguntas propias y su propio logo. Todavía no se puede pagar. ¿Quieres los extras ya? Escribe a {adres}.",
+ "Bekijk premium met voorbeelden": "Ver premium con ejemplos"
 }

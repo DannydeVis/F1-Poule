@@ -144,6 +144,17 @@ export const VRAGEN = [
   { vraag: 'Kunnen leden uit andere landen meedoen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
   { vraag: 'Zien leden elkaars voorspelling voor de start?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
   { vraag: 'Kan een lid later in het seizoen nog instappen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
+  // ---- premium ----
+  { vraag: 'Hoe ziet een poule met een eigen kleur en sponsor eruit?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#profiel', status: 'beantwoord' },
+  { vraag: 'Hoe werken teams in een poule?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#teams', status: 'beantwoord' },
+  { vraag: 'Wat zijn eigen vragen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#eigen-vragen', status: 'beantwoord' },
+  { vraag: 'Wat is een tussenklassement?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#tussenklassementen', status: 'beantwoord' },
+  { vraag: 'Wat is de tik?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#tik', status: 'beantwoord' },
+  { vraag: 'Wat doet premium voor de groepsapp?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#groepsapp', status: 'beantwoord' },
+  { vraag: 'Hoe vraag je premium aan?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#aanvragen', status: 'beantwoord' },
+  { vraag: 'Moet elke speler premium hebben?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#faq', status: 'beantwoord' },
+  { vraag: 'Wat gebeurt er als premium afloopt?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#faq', status: 'beantwoord' },
+  { vraag: 'Kan ik premium eerst zien voordat ik het aanvraag?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#faq', status: 'beantwoord' },
 
   // ---- vergelijking (SEO fase 2) en over ----
   { vraag: 'Welke F1-poule-app past bij jouw groep?', taal: 'nl', varianten: ['Wat is de beste F1-poule-app?', 'f1 poule app'],
@@ -256,6 +267,17 @@ export const VRAGEN = [
   { vraag: 'Can members from other countries join?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
   { vraag: 'Can members see each other\'s predictions before the start?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
   { vraag: 'Can a member still join later in the season?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
+  // ---- premium ----
+  { vraag: 'What does a league with its own colour and sponsor look like?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#branding', status: 'beantwoord' },
+  { vraag: 'How do teams work in a league?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#teams', status: 'beantwoord' },
+  { vraag: 'What are custom questions?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#custom-questions', status: 'beantwoord' },
+  { vraag: 'What is an interim standing?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#interim-standings', status: 'beantwoord' },
+  { vraag: 'What is a nudge?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#nudge', status: 'beantwoord' },
+  { vraag: 'What does premium do for the group chat?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#group-chat', status: 'beantwoord' },
+  { vraag: 'How do you get premium?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#request', status: 'beantwoord' },
+  { vraag: 'Does every player need premium?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#faq', status: 'beantwoord' },
+  { vraag: 'What happens when premium ends?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#faq', status: 'beantwoord' },
+  { vraag: 'Can I see premium before I ask for it?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#faq', status: 'beantwoord' },
 
   // ---- vergelijking en over ----
   // "Best F1 Prediction Apps & Games 2026" en meer van zulke lijstjes.

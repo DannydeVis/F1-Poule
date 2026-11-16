@@ -143,6 +143,11 @@ const JOKERS_MAX = Math.max(...uitBron(appBron, /const JOKERKEUZES = \[([\d, ]+)
 // in schema.sql. De gids voor communities noemt het.
 const MAX_SPELERS = Number(uitBron(readFileSync(join(wortel, 'schema.sql'), 'utf8'),
   /alter table public\.pools alter column max_spelers set default (\d+);/, 'het maximum aantal spelers in schema.sql')[1]);
+// Wat een goed antwoord op een eigen vraag van de poulebaas oplevert (premium).
+const EIGEN_PUNTEN = Number(uitBron(appBron, /const EIGEN_PUNTEN = (\d+);/, 'EIGEN_PUNTEN in app/index.html')[1]);
+// De maten van de plaatjes op de premiumpagina (scripts/maak-premiumbeelden.mjs).
+const PREMIUM_MATEN_PAD = join(wortel, 'site', 'premium-maten.json');
+const PREMIUM_MATEN = existsSync(PREMIUM_MATEN_PAD) ? JSON.parse(readFileSync(PREMIUM_MATEN_PAD, 'utf8')) : {};
 const VENSTER = Number(uitBron(readFileSync(join(wortel, 'scripts', 'herinneringen.mjs'), 'utf8'),
   /export const VENSTER_UREN = (\d+);/, 'VENSTER_UREN in scripts/herinneringen.mjs')[1]);
 const AGENDA_UUR = Number(uitBron(readFileSync(join(wortel, 'scripts', 'agenda.mjs'), 'utf8'),
@@ -217,6 +222,7 @@ const spreadsheetFormule = (code) => {
 const feitenVoor = (code) => ({
   ...APP_GETALLEN,
   maxSpelers: MAX_SPELERS,
+  eigenPunten: EIGEN_PUNTEN,
   bijna: PLEKPUNTEN[1], top10: PUNTEN.race_top10.punten, sprint: PUNTEN.sprint_top10.punten,
   nSimpel: PRESET_VRAGEN.simpel.length, nKlassiek: PRESET_VRAGEN.klassiek.length, nGevorderd: PRESET_VRAGEN.gevorderd.length,
   jokers: JOKERS, jokersMax: JOKERS_MAX,
@@ -1413,6 +1419,16 @@ const ARTIKEL_CSS = `
   .artikel p,.artikel li{line-height:1.65}
   .artikel p{margin:0 0 12px}
   .artikel section .kort{font-weight:600}
+  /* Een sectie met een schermafdruk uit de app (de premiumpagina): op een
+     breed scherm de tekst links en het plaatje rechts. */
+  .artikel .schermbeeld{display:block;margin:18px 0}
+  .artikel .schermbeeld img{display:block;width:100%;max-width:390px;height:auto;border-radius:16px;
+    border:1px solid var(--lijn);box-shadow:0 14px 40px rgba(0,0,0,.18)}
+  @media (min-width:860px){
+    .artikel section[data-beeld]{display:grid;grid-template-columns:minmax(0,1fr) 340px;column-gap:40px;align-items:start}
+    .artikel section[data-beeld] > *{grid-column:1}
+    .artikel section[data-beeld] > .schermbeeld{grid-column:2;grid-row:1 / span 6;margin:4px 0 0}
+  }
   .artikel .door{font-size:15px;color:var(--ink2);margin:0 0 16px}
   .artikel .door a{color:var(--accent-tekst)}
   .artikel caption{text-align:left;font-size:15px;color:var(--ink2);padding:0 0 8px}
@@ -1689,10 +1705,22 @@ function artikelPagina(pg, code, datum, sinds) {
           : r.pagina ? `<a href="${naarPagina(r)}">${f(r.naam)}</a>` : f(r.naam)}</th>${
           r.cellen.map((c, i) => `<td data-kop="${f(a.kop[i + 1])}">${f(c)}</td>`).join('')}</tr>`).join('')}</tbody>
       </table>`;
+  // Een schermafdruk uit de app bij een sectie (de premiumpagina): licht en
+  // donker, in de taal van de pagina, met zijn maten erbij.
+  const schermbeeld = (s) => {
+    const maat = PREMIUM_MATEN[`${s.beeld}-${code}-licht`];
+    if (!maat) throw new Error(`geen plaatje premium-${s.beeld}-${code}: draai scripts/maak-premiumbeelden.mjs`);
+    const pad = (thema) => `${p}site/beeld/premium-${s.beeld}-${code}-${thema}.jpg`;
+    return `
+      <picture class="schermbeeld">
+        <source srcset="${pad('donker')}" media="(prefers-color-scheme: dark)">
+        <img src="${pad('licht')}" alt="${esc(s.beeldAlt)}" width="${maat[0]}" height="${maat[1]}" loading="lazy" decoding="async">
+      </picture>`;
+  };
   const sectie = (s) => `
-    <section class="vraag" id="${s.id}">
+    <section class="vraag" id="${s.id}"${s.beeld ? ' data-beeld' : ''}>
       <h2>${f(s.vraag)}</h2>
-      <p class="kort">${f(s.kort)}</p>${s.stappen ? `
+      <p class="kort">${f(s.kort)}</p>${s.beeld ? schermbeeld(s) : ''}${s.stappen ? `
       <ol>${s.stappen.map((x) => `<li>${f(x)}</li>`).join('')}</ol>` : ''}${s.tabel ? `
       <table class="tabel${s.tabel.klasse ? ` ${s.tabel.klasse}` : ''}">
         <caption>${f(bijschrift(s.tabel, s.id))}</caption>
@@ -1716,7 +1744,8 @@ function artikelPagina(pg, code, datum, sinds) {
       <ul>${s.punten.map(([kop, tekst]) => `<li><b>${f(kop)}.</b> ${f(tekst)}</li>`).join('')}</ul>` : ''}${s.lijst ? `
       <ul>${s.lijst.map((x) => `<li>${f(x)}</li>`).join('')}</ul>` : ''}${(s.tekst ?? []).map((x) => `
       <p>${f(x)}</p>`).join('')}${s.links ? `
-      <ul class="links">${s.links.map((l) => `<li><a href="${naarPagina(l)}">${f(l.tekst)}</a></li>`).join('')}</ul>` : ''}
+      <ul class="links">${s.links.map((l) => `<li><a href="${naarPagina(l)}">${f(l.tekst)}</a></li>`).join('')}</ul>` : ''}${s.knop ? `
+      <p><a class="knop" href="${esc(s.knop.href)}">${f(s.knop.tekst)}</a></p>` : ''}
     </section>`;
 
   return `<!DOCTYPE html>

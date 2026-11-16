@@ -4780,8 +4780,9 @@ const ENGELS = Object.fromEntries([
    'outcome of "{vraag}"'],
   ['Zet een eigen vraag bij dit weekend, met 2 tot 6 antwoorden om uit te kiezen.',
    'Add your own question to this weekend, with 2 to 6 answers to choose from.'],
-  ["Meespelen blijft gratis, en alles voor een poule met vrienden zit al in de app. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen: teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met een eigen winnaar, een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.",
-   'Playing stays free, and everything a league with friends needs is already in the app. Big leagues, companies and clubs can add extras: teams that play against each other, their own questions every weekend, interim standings with their own winner, a nudge for anyone who has not filled anything in, reminders and summaries for the group chat, the standings as a file, their own logo, their own colour and a sponsor line with a link. Paying is not possible yet. Want the extras now? Email {adres}.'],
+  ["Meespelen blijft gratis. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen, zoals teams, eigen vragen en een eigen logo. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.",
+   'Playing stays free. Big leagues, companies and clubs can add extras, such as teams, their own questions and their own logo. Paying is not possible yet. Want the extras now? Email {adres}.'],
+  ['Bekijk premium met voorbeelden', 'See premium with examples'],
   ['tussenklassementen',
    'interim standings'],
   ['ronde {van} tot en met {tot}',
@@ -11272,6 +11273,11 @@ async function omschrijvingBewaren(tekst) {
 // voorbeeld van hoe het eruitziet. De database controleert alles nog een keer
 // (pools_profiel_bewaken, de checks op pools, de policies op poulelogo); de
 // controles hier zijn er alleen voor een duidelijke melding.
+// De premiumpagina op de site (16 november; Danny: een korte uitleg in de app
+// en een knop naar een pagina met alle voorbeelden en schermafdrukken). De
+// pagina is er in het Nederlands en het Engels (site/paginas.mjs, 'premium');
+// elke andere taal gaat naar de Engelse.
+const premiumPagina = () => new URL(TAAL === 'nl' ? '../premium/' : '../en/premium/', linkBasis()).href;
 function profielBlok() {
   if (!magBeheren()) return '';
   if (!premiumActief()) {
@@ -11280,12 +11286,10 @@ function profielBlok() {
     return `
     <div class="scheiding"></div>
     <span class="label">${T("premium: extra's voor grote poules")}</span>
-    <p class="zacht" style="margin:0" data-premium-uitleg>${T('Meespelen blijft gratis, en alles voor een '
-      + "poule met vrienden zit al in de app. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen: "
-      + 'teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met een eigen winnaar, '
-      + 'een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als '
-      + 'bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Betalen kan nog '
-      + "niet. Wil je de extra's nu al? Mail dan {adres}.", { adres: mail })}</p>`;
+    <p class="zacht" style="margin:0" data-premium-uitleg>${T('Meespelen blijft gratis. Grote poules, bedrijven '
+      + "en clubs kunnen er extra's bij krijgen, zoals teams, eigen vragen en een eigen logo. Betalen kan nog "
+      + "niet. Wil je de extra's nu al? Mail dan {adres}.", { adres: mail })}</p>
+    <a class="knop klein" data-premium-pagina href="${esc(premiumPagina())}">${T('Bekijk premium met voorbeelden')}</a>`;
   }
   const P = S.profiel ?? {};
   const kleur = P.kleur ?? S.poule.merk_kleur ?? '#ee4d33';

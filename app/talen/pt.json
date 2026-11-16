@@ -823,7 +823,6 @@
  "{plek} van {n}, {punten} punten": "{plek} de {n}, {punten} pontos",
  "Jouw seizoen {jaar} in {poule}: {n} punten": "Sua temporada {jaar} em {poule}: {n} pontos",
  "weekendzeges": "vitórias",
- "Meespelen blijft gratis, en alles voor een poule met vrienden zit al in de app. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen: teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen met een eigen winnaar, een tik voor wie nog niets invulde, herinneringen en samenvattingen voor de groepsapp, de stand als bestand, een eigen logo, een eigen kleur en een regel over de sponsor met een link. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.": "Jogar continua grátis, e tudo o que um bolão com amigos precisa já está no app. Bolões grandes, empresas e clubes podem ganhar extras: times que jogam entre si, perguntas próprias a cada fim de semana, classificações parciais com vencedor próprio, uma cutucada em quem ainda não preencheu nada, lembretes e resumos para o grupo, a classificação em arquivo, logo próprio, cor própria e uma linha para o patrocinador com link. Ainda não é possível pagar. Quer os extras já? Escreva para {adres}.",
  "voor de groepsapp": "para o grupo",
  "Kant-en-klare berichten om in de groepsapp te zetten, en de stand als bestand.": "Mensagens prontas para o grupo, e a classificação em arquivo.",
  "Herinner wie nog niets invulde ({n})": "Lembrar quem ainda não preencheu ({n})",
@@ -991,5 +990,7 @@
  "in vorm": "em chamas",
  "lachen": "risada",
  "verrast": "surpresa",
- "pijnlijk": "ai"
+ "pijnlijk": "ai",
+ "Meespelen blijft gratis. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen, zoals teams, eigen vragen en een eigen logo. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.": "Jogar continua grátis. Bolões grandes, empresas e clubes podem ganhar extras, como times, perguntas próprias e logo próprio. Ainda não é possível pagar. Quer os extras já? Escreva para {adres}.",
+ "Bekijk premium met voorbeelden": "Ver o premium com exemplos"
 }
