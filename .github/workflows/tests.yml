@@ -244,6 +244,15 @@ jobs:
           psql -d weekvraag -v ON_ERROR_STOP=1 -f schema.sql
           psql -d weekvraag -v ON_ERROR_STOP=1 -f test/weekvraag.test.sql
 
+      # Reacties op elkaars weekend (15 november): een van vijf, voor je eigen
+      # speler, op een poulegenoot, op een weekend met een uitslag.
+      - name: reacties — een van vijf, op een poulegenoot, en de tabel dicht
+        run: |
+          createdb reacties
+          psql -d reacties -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d reacties -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d reacties -v ON_ERROR_STOP=1 -f test/reacties.test.sql
+
       # Het beheer ziet alles en mag poules en spelers weggooien. Dat mag
       # alleen de beheerder, en die word je alleen met het bevestigde
       # beheeradres. Deze test draait schema.sql zelf nog een keer, nadat dat

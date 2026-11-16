@@ -30,7 +30,7 @@ export const PRIVACY = {
     omschrijving: 'Wat Predict the Race van je bewaart, waar het staat, wie het ziet en hoe je het weer weg krijgt. Geen advertenties, statistieken alleen met je ja.',
     kop: 'Wat Predict the Race van je weet',
     intro: 'Predict the Race is een gratis F1-voorspelspel voor vriendengroepen. Het bewaart zo weinig mogelijk, en wat het bewaart staat hieronder, in gewone taal.',
-    bijgewerkt: 'Bijgewerkt op 15 november 2026',
+    bijgewerkt: 'Bijgewerkt op 16 november 2026',
     secties: [
       ['Wat er bewaard wordt', [
         'De naam die je in een poule kiest, je voorspellingen en je punten. En een anoniem account: een willekeurig nummer, zodat de database weet welke voorspellingen van jou zijn.',
@@ -55,6 +55,9 @@ export const PRIVACY = {
       ]],
       ['Als iemand je aantikt', [
         'In een poule met premium kun je een medespeler aantikken die nog niets invulde; die krijgt dan een melding. We bewaren wie wie aantikte, voor welke race en wanneer, zodat niemand twee keer per race wordt aangetikt. Na twee maanden gaat dat weg.',
+      ]],
+      ['Als je reageert op iemands weekend', [
+        'Onder een medespeler in je poule kun je een van vijf vaste reacties zetten. We bewaren wie op wie reageerde, bij welke race en met welke reactie. Iedereen in je poule ziet dat. Je haalt je reactie weg door er nog een keer op te tikken, en hij verdwijnt als jij of die medespeler uit de poule gaat.',
       ]],
       ['Waar het staat', [
         'In een database bij Supabase. De app en deze site staan bij GitHub Pages, dat net als elke webserver je IP-adres ziet als je een pagina opent. De kalender, de coureurs en de uitslagen komen van OpenF1; daar staat niets van jou in.',
@@ -99,7 +102,7 @@ export const PRIVACY = {
     omschrijving: 'What Predict the Race keeps about you, where it lives, who sees it and how to get it removed. No ads, statistics only with your yes.',
     kop: 'What Predict the Race knows about you',
     intro: 'Predict the Race is a free F1 prediction game for groups of friends. It keeps as little as possible, and what it keeps is listed below, in plain language.',
-    bijgewerkt: 'Updated on 15 November 2026',
+    bijgewerkt: 'Updated on 16 November 2026',
     secties: [
       ['What is kept', [
         'The name you pick in a pool, your predictions and your points. And an anonymous account: a random number, so the database knows which predictions are yours.',
@@ -124,6 +127,9 @@ export const PRIVACY = {
       ]],
       ['If someone nudges you', [
         'In a pool with premium you can nudge a fellow player who has not filled anything in yet; they then get a notification. We store who nudged whom, for which race and when, so that nobody gets nudged twice per race. That is removed after two months.',
+      ]],
+      ['If you react to someone\'s weekend', [
+        'Below a fellow player in your pool you can leave one of five fixed reactions. We store who reacted to whom, for which race and with which reaction. Everyone in your pool can see it. You remove your reaction by tapping it again, and it disappears when you or that player leaves the pool.',
       ]],
       ['Where it lives', [
         'In a database at Supabase. The app and this site are hosted on GitHub Pages, which, like any web server, sees your IP address when you open a page. The calendar, the drivers and the results come from OpenF1; nothing of yours is in there.',

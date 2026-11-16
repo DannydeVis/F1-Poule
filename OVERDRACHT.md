@@ -12898,3 +12898,27 @@ draait de rest op een kopie van de app met de schakelaar aan. Aangepast:
 `prestaties`, `nieuw`, `weekendduel-sync` (46).
 
 **Danny moet:** niets.
+
+## Reacties op elkaars weekend (16 november)
+
+Danny: reacties mogen, en met emoji.
+
+**Wat er verandert.**
+- App: `reactieStrook()` onder elke speler in "De poule" op het
+  uitslagscherm, `reactieGeef()`, en `REACTIE_EMOJI` met de vijf tekens. Zes
+  nieuwe teksten in zeven talen (de namen van de reacties, voor de
+  voorlezer).
+- Database: de tabel `reacties` en `reactie_geven()`; `poule_ophalen()` geeft
+  `reacties` mee. In schema.sql en in productie.
+- De bewaking tegen emoji laat de vijf toe, alleen in de app en alleen op de
+  regel waar ze gedefinieerd zijn.
+- Privacy: een alinea in de verklaring (NL en EN), bijgewerkt op 16 november.
+- De tabel zit in de reservekopie (en de terugzettest heeft er een rij voor).
+
+**Bewust niet.** Geen vrije tekst, geen melding bij een reactie, geen
+reacties op de Stand-tab.
+
+**Tests.** Nieuw: `test/reacties.test.mjs` (19) en `test/reacties.test.sql`
+(eigen stap in tests.yml).
+
+**Danny moet:** niets.

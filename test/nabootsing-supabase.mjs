@@ -968,6 +968,10 @@ const functies = {
         const v = (store.pool_eigen_vragen ?? []).find((x) => gelijk(x.id, a.vraag_id));
         return v && gelijk(v.pool_id, poule.id) && (!eigenVraagOpen(v.race_id) || magVoorSpeler(a.member_id));
       }).map(({ vraag_id, member_id, keuze }) => ({ vraag_id, member_id, keuze })),
+      // De reacties op elkaars weekend, van iedereen in de poule.
+      reacties: (store.reacties ?? []).filter((x) =>
+        store.pool_members.some((l) => gelijk(l.member_id, x.van_member) && gelijk(l.pool_id, poule.id)))
+        .map(({ race_id, van_member, aan_member, soort }) => ({ race_id, van: van_member, aan: aan_member, soort })),
       // De vraag van de week: je eigen keuze altijd, die van een ander pas
       // als de eerste training begonnen is.
       weekvraag: (store.weekvraag_antwoorden ?? []).filter((w) =>
@@ -1087,6 +1091,26 @@ const functies = {
       if (!v.opties.includes(p_keuze)) return fout('kies een van de antwoorden');
       store.pool_eigen_antwoorden.push({ vraag_id: p_vraag, member_id: p_member, keuze: p_keuze });
     }
+    bewaren();
+    return { data: null, error: null };
+  },
+
+  // Reacties op elkaars weekend, met de regels van schema.sql (test/reacties.test.sql).
+  reactie_geven({ p_member, p_race, p_aan, p_soort } = {}) {
+    const fout = (message) => ({ data: null, error: { code: 'P0001', message } });
+    if (!magVoorSpeler(p_member)) return fout('je reageert alleen voor jezelf');
+    if (gelijk(p_member, p_aan)) return fout('op jezelf reageren kan niet');
+    const lid = (id) => store.pool_members.find((l) => gelijk(l.member_id, id));
+    if (!lid(p_member) || !lid(p_aan) || !gelijk(lid(p_member).pool_id, lid(p_aan).pool_id)) return fout('die speler zit niet in je poule');
+    const r = store.races.find((x) => gelijk(x.id, p_race));
+    if (!r || !(r.quali_result || r.sprint_result || r.race_result)) return fout('reageren kan pas als er een uitslag is');
+    store.reacties ??= [];
+    const zonder = store.reacties.filter((x) => !(gelijk(x.race_id, p_race) && gelijk(x.van_member, p_member) && gelijk(x.aan_member, p_aan)));
+    if (p_soort) {
+      if (!['klap', 'vuur', 'lach', 'schrik', 'schedel'].includes(p_soort)) return fout('kies een van de reacties');
+      zonder.push({ race_id: p_race, van_member: p_member, aan_member: p_aan, soort: p_soort });
+    }
+    store.reacties = zonder;
     bewaren();
     return { data: null, error: null };
   },
