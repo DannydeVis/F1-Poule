@@ -2408,6 +2408,33 @@ weekend. Wie vrij is of alleen in zijn poule zit krijgt niets.
 **Test.** `test/weekendduel.test.mjs` (de app) en
 `test/weekendduel-sync.test.mjs` (de sync).
 
+## 11k. Reacties op elkaars weekend (sinds 16 november)
+
+Op het uitslagscherm, in "De poule", staat onder elke medespeler een plusje.
+Een tik laat vijf reacties zien: applaus, in vorm, lachen, verrast en
+pijnlijk. Dit is de enige plek in de app met emoji (Danny, 15 november:
+"emojis mag"); `test/geen-emoji.test.mjs` laat ze alleen toe op de regel
+`REACTIE_EMOJI`.
+
+- **Eén per speler per weekend.** Een andere kiezen wisselt, nog een keer
+  tikken op je eigen reactie haalt hem weg. Op jezelf reageren kan niet;
+  onder je eigen regel staat wat je kreeg.
+- **Geen vrije tekst**, dus niets om te modereren en geen woordfilter nodig.
+- **Iedereen in de poule ziet ze**, met een teller. Wie reageerde staat in
+  het label (voor de voorlezer en als je de muis erop houdt).
+- **Pas na een uitslag.** De reactie hangt aan het weekend, niet aan de
+  kwalificatie of de race apart.
+- **Database.** De tabel `reacties` (dicht) bewaart de naam van de reactie
+  (`klap`, `vuur`, `lach`, `schrik`, `schedel`), niet het teken. Schrijven
+  via `reactie_geven()`, lezen via `poule_ophalen()`. Gaat een speler weg,
+  dan gaan zijn reacties en de reacties op hem mee. De tabel zit in de
+  reservekopie en staat in de privacyverklaring.
+- **Geen melding** als iemand op je reageert. Dat kan later, als blijkt dat
+  mensen het gebruiken.
+
+**Test.** `test/reacties.test.mjs` (de app) en `test/reacties.test.sql` (de
+database).
+
 ## 11j. De vraag van de week (gebouwd op 15 november, staat uit)
 
 **Staat uit.** Danny, op de dag dat hij live ging: "ik zie de toegevoegde

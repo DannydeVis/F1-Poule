@@ -74,6 +74,8 @@ insert into public.push_abonnementen (endpoint, member_id, pool_id, p256dh, auth
 insert into public.tikken (id, pool_id, race_id, sessie, van_member, aan_member, verstuurd) values
   (9001, '00000000-0000-0000-0000-0000000000b1', 102, 'quali', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000d2', 1);
 insert into public.weekvraag_antwoorden (race_id, member_id, keuze) values (102, '00000000-0000-0000-0000-0000000000d2', '1');
+insert into public.reacties (race_id, van_member, aan_member, soort) values
+  (101, '00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000d1', 'klap');
 insert into public.site_beheerders (user_id) values ('00000000-0000-0000-0000-0000000000a1');
 insert into public.sync_runs (id, ok, bijgewerkt, samenvatting) values (7001, true, 3, 'Melbourne nagekeken');
 insert into public.bezoeken (dag, pad, aantal) values (current_date, '/app/', 12);

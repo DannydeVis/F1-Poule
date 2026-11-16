@@ -16,6 +16,11 @@ import { maakControle, wortel } from './hulp.mjs';
 const { check, afronden } = maakControle('geen emoji');
 
 const MAG = new Set(['★']);
+// De reacties op elkaars weekend (15 november; Danny: "emojis mag"). Vijf
+// tekens, alleen in de app en alleen op de regel waar ze gedefinieerd zijn.
+const REACTIES = new Set(['👏', '🔥', '😂', '😮', '💀']);
+const magHier = (bestand, regel, teken) => MAG.has(teken)
+  || (bestand === 'app/index.html' && regel.includes('const REACTIE_EMOJI = ') && REACTIES.has(teken));
 const lijst = (map, eind) => existsSync(join(wortel, map))
   ? readdirSync(join(wortel, map)).filter((f) => f.endsWith(eind)).map((f) => `${map}/${f}`) : [];
 const BESTANDEN = [
@@ -31,10 +36,17 @@ for (const f of BESTANDEN) {
   const fout = [];
   regels.forEach((r, i) => {
     for (const t of r.match(/[\p{Extended_Pictographic}\u{FE0F}]/gu) ?? []) {
-      if (!MAG.has(t)) fout.push(`regel ${i + 1}: ${t}`);
+      if (!magHier(f, r, t)) fout.push(`regel ${i + 1}: ${t}`);
     }
   });
   check(`${f}: geen emoji`, fout.length === 0, fout.slice(0, 5).join(' · '));
+}
+
+{
+  const app = readFileSync(join(wortel, 'app/index.html'), 'utf8');
+  const regels = app.split('\n').filter((r) => [...REACTIES].some((t) => r.includes(t)));
+  check('de vijf reacties staan op precies één regel in de app, en nergens anders',
+    regels.length === 1 && [...REACTIES].every((t) => regels[0].includes(t)), `${regels.length} regels`);
 }
 
 process.exit(afronden() ? 0 : 1);

@@ -1463,6 +1463,15 @@
   /* De poule: iedereen met een rondje met zijn eerste letter, jij gemarkeerd. */
   .poulelijst{display:flex;flex-direction:column;border-top:1px solid var(--lijn)}
   .poulelijst > * + *{border-top:1px solid var(--lijn)}
+  /* De reacties horen bij de regel erboven: geen lijn ertussen. */
+  .poulelijst > .reacties{border-top:0;display:flex;flex-wrap:wrap;gap:6px;padding:0 18px 12px}
+  .reactie{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;min-height:44px;
+    padding:0 12px;border:1px solid var(--lijn);border-radius:22px;background:var(--paneel);color:var(--ink);
+    font:inherit;font-size:18px;line-height:1;cursor:pointer}
+  .reactie .aantal{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .reactie[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  span.reactie{cursor:default}
+  .reactie.plus{color:var(--ink2);font-size:20px}
   .pouleregel{min-height:56px}
   .pouleregel .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
     flex:none;background:var(--gedempt);color:var(--ink2);font-family:var(--cond);
@@ -3240,6 +3249,13 @@ const ENGELS = Object.fromEntries([
   ['gelijkspel', 'draw'],
   ['weekendduels · winst, gelijk, verlies', 'weekend duels · won, drawn, lost'],
   ['gelijk gebleven', 'no change'],
+  // ---- reacties ----------------------------------------------------
+  ['Reageer op {naam}', 'React to {naam}'],
+  ['applaus', 'applause'],
+  ['in vorm', 'on fire'],
+  ['lachen', 'laughing'],
+  ['verrast', 'surprised'],
+  ['pijnlijk', 'ouch'],
   // ---- nieuw in de app ---------------------------------------------
   ['nieuw in de app', 'new in the app'],
   ['Weekendduel: elk weekend speel je tegen één poulegenoot.', 'Weekend duel: every weekend you play against one pool mate.'],
@@ -7240,6 +7256,7 @@ async function laad() {
   S.eigenVragen = inhoud.data.eigenvragen ?? [];
   S.eigenAntwoorden = inhoud.data.eigenantwoorden ?? [];
   S.weekvraag = inhoud.data.weekvraag ?? [];
+  S.reacties = inhoud.data.reacties ?? [];
   S.weekvraagFout = '';
   // Een database zonder die tabel geeft een fout: dan zijn er gewoon geen
   // cijfers, en dat is geen reden om de poule niet te tonen.
@@ -13946,6 +13963,53 @@ const VINKJE = `<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="tru
 // openstaat (`open`) alleen wie er al iets heeft ingeleverd: wat ze kozen
 // blijft geheim tot de deadline, dus dan zijn de regels ook geen knop. In je
 // eentje valt er niets te vergelijken en is er geen kaart.
+// ---- reacties op elkaars weekend ---------------------------------
+// Onder elke speler in "De poule" op het uitslagscherm: een van vijf vaste
+// reacties op zijn weekend. Danny (15 november): hier mogen emoji, de enige
+// plek in de app (test/geen-emoji.test.mjs laat alleen deze regel toe). Geen
+// vrije tekst, dus niets om te modereren. De database kent de naam van de
+// reactie, niet het teken (reactie_geven() in schema.sql).
+const REACTIE_EMOJI = { klap: '👏', vuur: '🔥', lach: '😂', schrik: '😮', schedel: '💀' };
+const reactieNaam = (soort) => ({ klap: T('applaus'), vuur: T('in vorm'), lach: T('lachen'),
+  schrik: T('verrast'), schedel: T('pijnlijk') })[soort];
+function reactieStrook(r, x) {
+  if (!heeftUitslag(r)) return '';
+  const alle = (S.reacties ?? []).filter(q => zelfde(q.race_id, r.id) && zelfde(q.aan, x.id));
+  const mijn = alle.find(q => zelfde(q.van, S.ik.id))?.soort ?? null;
+  const open = !x.mij && zelfde(S.reactieOpen, x.id);
+  const tegels = Object.keys(REACTIE_EMOJI).map(soort => {
+    const van = alle.filter(q => q.soort === soort);
+    if (!van.length && !open) return '';
+    const wie = van.map(q => naamVan(q.van)).filter(Boolean).join(', ');
+    const inhoud = `<span aria-hidden="true">${REACTIE_EMOJI[soort]}</span>${
+      van.length ? `<span class="aantal">${van.length}</span>` : ''}`;
+    const label = esc(wie ? `${reactieNaam(soort)}: ${wie}` : reactieNaam(soort));
+    // Je eigen regel: je ziet wat je kreeg, maar reageert niet op jezelf.
+    return x.mij
+      ? `<span class="reactie" data-reactie-soort="${soort}" role="img" aria-label="${label}" title="${label}">${inhoud}</span>`
+      : `<button type="button" class="reactie" data-reactie="${soort}" data-reactie-aan="${esc(x.id)}"
+          aria-pressed="${mijn === soort}" aria-label="${label}" title="${label}">${inhoud}</button>`;
+  }).join('');
+  const plus = x.mij ? '' : `<button type="button" class="reactie plus" data-reactie-open="${esc(x.id)}"
+    aria-expanded="${open}" aria-label="${T('Reageer op {naam}', { naam: esc(x.naam) })}">${open ? '×' : '+'}</button>`;
+  if (!tegels && !plus) return '';
+  return `<div class="reacties" data-reacties="${esc(x.id)}">${tegels}${plus}${
+    S.reactieFout && open ? `<span class="amber klein">${esc(S.reactieFout)}</span>` : ''}</div>`;
+}
+async function reactieGeef(raceId, aan, soort) {
+  const zelfdeRij = (q) => zelfde(q.race_id, raceId) && zelfde(q.van, S.ik.id) && zelfde(q.aan, aan);
+  const nieuw = (S.reacties ?? []).find(zelfdeRij)?.soort === soort ? null : soort;
+  S.reactieFout = '';
+  if (!DEMO) {
+    const { error } = await db.rpc('reactie_geven', { p_member: S.ik.id, p_race: raceId, p_aan: aan, p_soort: nieuw });
+    if (error) { S.reactieFout = uitleg(error); S.reactieOpen = aan; render(); return; }
+  }
+  S.reacties = (S.reacties ?? []).filter(q => !zelfdeRij(q));
+  if (nieuw) S.reacties.push({ race_id: raceId, van: S.ik.id, aan, soort: nieuw });
+  S.reactieOpen = null;
+  render();
+}
+
 function pouleKaart(r, { open = false } = {}) {
   if (S.leden.length < 2) return '';
   const werkelijk = r[SESSIES[S.tab].uitslag];
@@ -13987,7 +14051,7 @@ function pouleKaart(r, { open = false } = {}) {
     <section class="tegel poulekaart">
       <div class="tegelkop"><h2>${T('De poule')}</h2>
         <span class="tegelsub">${sub}</span></div>
-      <div class="poulelijst">${rijen.map(regel).join('')}</div>
+      <div class="poulelijst">${rijen.map(x => regel(x) + (open ? '' : reactieStrook(r, x))).join('')}</div>
       <div class="tegelknoppen"><button class="knop spook" data-naar-stand>${
         T('Bekijk poulestand')} <span aria-hidden="true">→</span></button></div>
     </section>`;
@@ -15706,6 +15770,13 @@ function duelUitslag(r, mijn, werkelijk) {
 }
 
 function knoopBekijk(paneel) {
+  paneel.querySelectorAll('[data-reactie]').forEach(b => b.onclick = () =>
+    reactieGeef(S.race.id, b.dataset.reactieAan, b.dataset.reactie));
+  paneel.querySelectorAll('[data-reactie-open]').forEach(b => b.onclick = () => {
+    S.reactieOpen = zelfde(S.reactieOpen, b.dataset.reactieOpen) ? null : b.dataset.reactieOpen;
+    S.reactieFout = '';
+    render();
+  });
   paneel.querySelectorAll('[data-bekijk]').forEach(b => b.onclick = () => {
     S.bekijk = b.dataset.bekijk;
     vulPaneel();

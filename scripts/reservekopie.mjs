@@ -35,7 +35,7 @@ import { pathToFileURL } from 'node:url';
 export const TABELLEN = [
   'races', 'questions', 'pools', 'pool_teams', 'pool_members', 'pool_questions',
   'answers', 'jokers', 'pool_eigen_vragen', 'pool_eigen_antwoorden', 'pool_periodes',
-  'push_abonnementen', 'tikken', 'weekvraag_antwoorden', 'site_beheerders', 'sync_runs', 'bezoeken', 'actief',
+  'push_abonnementen', 'tikken', 'weekvraag_antwoorden', 'reacties', 'site_beheerders', 'sync_runs', 'bezoeken', 'actief',
   'site_paden', 'site_bezoeken', 'spelerscijfers', 'mail_abonnementen', 'account_meenemen', 'seizoen_herinneringen',
   'verboden_woorden', 'aanmaak_log',
 ];

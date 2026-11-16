@@ -411,6 +411,25 @@ create table if not exists public.weekvraag_antwoorden (
 );
 grant all on table public.weekvraag_antwoorden to service_role;
 
+-- Reacties op elkaars weekend (15 november): een speler zet een van vijf vaste
+-- reacties bij het weekend van een poulegenoot. Geen vrije tekst, dus niets om
+-- te modereren. Hier staat de naam van de reactie (klap, vuur, lach, schrik,
+-- schedel); welk teken daarbij hoort weet de app. Eén reactie per speler per
+-- poulegenoot per weekend. Schrijven alleen via reactie_geven(), lezen via
+-- poule_ophalen(). De verwijzingen staan verderop, bij de andere.
+create table if not exists public.reacties (
+  race_id    bigint not null,
+  van_member uuid   not null,
+  aan_member uuid   not null,
+  soort      text   not null,
+  gemaakt    timestamptz not null default now(),
+  primary key (race_id, van_member, aan_member)
+);
+alter table public.reacties drop constraint if exists reacties_soort;
+alter table public.reacties  add constraint reacties_soort
+  check (soort in ('klap', 'vuur', 'lach', 'schrik', 'schedel'));
+grant all on table public.reacties to service_role;
+
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
 alter table public.pool_members add column if not exists created_at   timestamptz not null default now();
@@ -765,6 +784,15 @@ alter table public.weekvraag_antwoorden  add constraint weekvraag_antwoorden_rac
 alter table public.weekvraag_antwoorden drop constraint if exists weekvraag_antwoorden_member_fk;
 alter table public.weekvraag_antwoorden  add constraint weekvraag_antwoorden_member_fk
   foreign key (member_id) references public.pool_members(member_id) on delete cascade;
+alter table public.reacties drop constraint if exists reacties_race_fk;
+alter table public.reacties  add constraint reacties_race_fk
+  foreign key (race_id) references public.races(id) on delete cascade;
+alter table public.reacties drop constraint if exists reacties_van_fk;
+alter table public.reacties  add constraint reacties_van_fk
+  foreign key (van_member) references public.pool_members(member_id) on delete cascade;
+alter table public.reacties drop constraint if exists reacties_aan_fk;
+alter table public.reacties  add constraint reacties_aan_fk
+  foreign key (aan_member) references public.pool_members(member_id) on delete cascade;
 alter table public.answers drop constraint if exists answers_member_fk;
 alter table public.answers  add constraint answers_member_fk
   foreign key (member_id) references public.pool_members(member_id) on delete cascade;
@@ -1598,6 +1626,44 @@ revoke all on function public.weekvraag_open(bigint)               from public;
 revoke all on function public.weekvraag_kiezen(uuid, bigint, text) from public;
 grant execute on function public.weekvraag_kiezen(uuid, bigint, text) to anon, authenticated;
 
+-- ---- reacties op elkaars weekend ---------------------------------
+-- Reageren: voor je eigen speler, op een ander in dezelfde poule, op een
+-- weekend waarvan al een uitslag binnen is, en een van de vijf. Leeg haalt je
+-- reactie weg. Op jezelf reageren kan niet.
+create or replace function public.reactie_geven(p_member uuid, p_race bigint, p_aan uuid, p_soort text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.mag_voor_speler(p_member) then
+    raise exception 'je reageert alleen voor jezelf';
+  end if;
+  if p_member = p_aan then
+    raise exception 'op jezelf reageren kan niet';
+  end if;
+  if not exists (select 1 from public.pool_members a join public.pool_members b on b.pool_id = a.pool_id
+                  where a.member_id = p_member and b.member_id = p_aan) then
+    raise exception 'die speler zit niet in je poule';
+  end if;
+  if not exists (select 1 from public.races r where r.id = p_race
+                    and (r.quali_result is not null or r.sprint_result is not null or r.race_result is not null)) then
+    raise exception 'reageren kan pas als er een uitslag is';
+  end if;
+  if nullif(p_soort, '') is null then
+    delete from public.reacties where race_id = p_race and van_member = p_member and aan_member = p_aan;
+    return;
+  end if;
+  if p_soort not in ('klap', 'vuur', 'lach', 'schrik', 'schedel') then
+    raise exception 'kies een van de reacties';
+  end if;
+  insert into public.reacties (race_id, van_member, aan_member, soort) values (p_race, p_member, p_aan, p_soort)
+  on conflict (race_id, van_member, aan_member) do update set soort = excluded.soort, gemaakt = now();
+end $$;
+revoke all on function public.reactie_geven(uuid, bigint, uuid, text) from public;
+grant execute on function public.reactie_geven(uuid, bigint, uuid, text) to anon, authenticated;
+
 -- ---- eigen vragen (premium) ------------------------------------
 -- Open zolang de race nog niet begonnen is (deadline_race).
 create or replace function public.eigen_vraag_open(p_race bigint)
@@ -2096,6 +2162,13 @@ as $$
                    where v.pool_id = p.id
                      and (not public.eigen_vraag_open(v.race_id)
                           or public.mag_voor_speler(a.member_id))), '[]'::jsonb),
+    -- De reacties op elkaars weekend, van iedereen in de poule. Een reactie
+    -- is er om gezien te worden, dus hier is niets geheim.
+    'reacties',   coalesce((select jsonb_agg(jsonb_build_object('race_id', x.race_id,
+                     'van', x.van_member, 'aan', x.aan_member, 'soort', x.soort))
+                   from public.reacties x
+                   join public.pool_members m on m.member_id = x.van_member, poule p
+                   where m.pool_id = p.id), '[]'::jsonb),
     -- De vraag van de week: je eigen keuze altijd, die van je medespelers
     -- pas als de eerste training begonnen is.
     'weekvraag',  coalesce((select jsonb_agg(jsonb_build_object('race_id', w.race_id,
@@ -2775,6 +2848,8 @@ alter table public.tikken                enable row level security;
 revoke all on public.tikken from anon, authenticated;
 alter table public.weekvraag_antwoorden  enable row level security;
 revoke all on public.weekvraag_antwoorden from anon, authenticated;
+alter table public.reacties              enable row level security;
+revoke all on public.reacties from anon, authenticated;
 
 -- Eerst élke policy in public weg, ook die dit bestand niet kent, en daarna
 -- alleen de policies hieronder terug. Tot 29 september stond hier een lijst
@@ -4810,7 +4885,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'poule_jokeraantal_bewaken', 'poule_kleur_kiezen', 'poule_meedoen', 'poule_nieuwe_code', 'poule_ophalen',
           'poule_seizoen_gestart', 'poule_seizoen_voorbij', 'poule_team_kiezen',
           'poule_team_opslaan', 'poule_team_weghalen', 'publiek_profiel',
-          'push_sleutel', 'push_sleutel_vingerafdruk', 'push_sleutel_zetten',
+          'push_sleutel', 'push_sleutel_vingerafdruk', 'push_sleutel_zetten', 'reactie_geven',
           'seizoen_klaar', 'seizoenen_doorschuiven', 'pools_seizoen_bewaken',
           'sessie_deadline', 'speler_naam', 'spelerscijfers_bewaken', 'sync_runs_opruimen', 'tel_bezoek',
           'tel_pagina', 'tik_geven', 'tik_ontvangers',
@@ -4820,7 +4895,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'aanmaak_log', 'account_meenemen', 'actief', 'answers', 'bezoeken', 'jokers', 'mail_abonnementen',
           'pool_eigen_antwoorden', 'pool_eigen_vragen', 'pool_members', 'pool_periodes',
           'pool_questions', 'pool_teams', 'pools', 'poule_controle', 'push_abonnementen',
-          'questions', 'races', 'seizoen_herinneringen', 'site_beheerders', 'site_bezoeken', 'site_paden', 'spelerscijfers',
+          'questions', 'races', 'reacties', 'seizoen_herinneringen', 'site_beheerders', 'site_bezoeken', 'site_paden', 'spelerscijfers',
           'sync_runs', 'tikken', 'verboden_woorden', 'weekvraag_antwoorden'] as tabellen) v
 union all
 -- Premium (13 oktober): de vijf kolommen op pools, de bewaking erop, de teams
