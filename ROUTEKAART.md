@@ -1284,6 +1284,28 @@ iPhone-maat, ook voor de opvouwbare iPhone Duo (dicht, open en open dwars;
 de maten zijn afgeleid uit Apples schermpixels); BEDIENING §18, "De app op je telefoon".
 Open bij Danny: niets.
 
+## Een fooienpot, later (17 november)
+
+Danny zag in de App Store dat PayPal fooien mogelijk maakt en vroeg of dat
+makkelijk in te bouwen is. **On hold** (Danny: "zet on hold voor nu maar denk
+wel voor de toekomst").
+
+- **Wat het zou zijn.** Een link "Steun Predict the Race" naar een
+  PayPal.Me- of Ko-fi-pagina van Danny. De app verwerkt geen betaling en
+  slaat niets op. Bouwen kost een uur.
+- **Waar.** Op de site (onderaan de voorpagina en de premiumpagina), niet in
+  de app: de Android-app staat in de Play Store, en Google heeft regels over
+  betalen buiten Google om. Eerst nakijken of een fooienlink daar mag,
+  voordat hij ooit in de app komt.
+- **Wat eerst moet.** Toestemming van OpenF1: ook vrijwillig geld kan onder
+  "commercieel" vallen, en hun data is alleen gratis voor niet-commercieel
+  gebruik. De aanvraag in BEDIENING §10 vraagt er sinds 17 november naar,
+  samen met premium; één mail voor allebei.
+- **Wat het niet is.** Geen inleg of pot: een fooi aan de maker is geen inzet
+  op een uitslag, dus de Wet op de kansspelen (BEDIENING §10) speelt hier
+  niet. Wel zijn fooien inkomsten (belasting, KvK), net als premium.
+- **Wanneer.** Als OpenF1 ja zegt, tegelijk met betalen voor premium.
+
 ## Bewust niet (15 november)
 
 - **Een poule-optie "alleen top 3".** Danny: niet bouwen. Nieuwe poules haken

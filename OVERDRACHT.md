@@ -12971,3 +12971,14 @@ elke premium-rij is een onderdeel met een plaatje, de vinkjes hebben ja of
 nee voor de voorlezer, en de tabel past op 360 pixels.
 
 **Danny moet:** niets.
+
+## Een fooienpot: on hold (17 november)
+
+Danny vroeg of fooien via PayPal makkelijk in te bouwen zijn. Technisch wel
+(een link), maar het wacht op toestemming van OpenF1 en gaat niet in de
+Play-app zonder dat de regels van Google zijn nagekeken. Het plan staat in de
+ROUTEKAART ("Een fooienpot, later"), en de aanvraag aan OpenF1 in BEDIENING
+§10 vraagt er nu ook naar. Verder niets gebouwd.
+
+**Danny moet:** niets nu. Als je OpenF1 mailt over premium, gaat de fooienpot
+in dezelfde mail mee.

@@ -1615,9 +1615,14 @@ the Race commercieel.
   > on the site and in the app as "Results via OpenF1 (CC BY-NC-SA 4.0)".
   > Playing is and will stay free. I would like to offer optional paid extras
   > for big leagues and companies, such as team standings, custom questions
-  > and a league logo. Since that would be commercial use, I would like to ask
-  > for your permission, or for a commercial license. Is that possible, and on
-  > what terms? Kind regards, Danny de Visser
+  > and a league logo. I would also like to put a voluntary tip link on the
+  > website, so players who enjoy the game can support it. Since that would
+  > be commercial use, I would like to ask for your permission, or for a
+  > commercial license. Is that possible, and on what terms? Kind regards,
+  > Danny de Visser
+
+  De zin over de fooienpot staat erin sinds 17 november (ROUTEKAART,
+  "Een fooienpot, later").
 
 - Overstappen helpt niet: Jolpica (de opvolger van Ergast) heeft dezelfde
   licentie, en de officiële F1-data is alleen met een dure licentie te
