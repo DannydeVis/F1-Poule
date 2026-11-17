@@ -50,6 +50,20 @@ for (const taal of PREMIUM_TALEN) {
       const naam = licht.match(/premium-(.+)-licht\.jpg$/)?.[1];
       return donker.endsWith(`premium-${naam}-donker.jpg`) && maten[`${naam}-licht`]?.join() === `${w},${h}`;
     }), `${imgs.length} plaatjes`);
+  // De vergelijking van gratis en premium (17 november; Danny: "ik mis nog
+  // zo'n vergelijk met gratis en premium"): de eerste sectie, een tabel met
+  // drie kolommen; wat gratis is staat er twee keer aan, wat premium is alleen
+  // in de laatste kolom; de prijs als laatste rij.
+  const vgl = t.secties[0];
+  const ja = vgl.tabel?.rijen.filter((r) => r[1] === true && r[2] === true) ?? [];
+  const alleenPremium = vgl.tabel?.rijen.filter((r) => r[1] === false && r[2] === true) ?? [];
+  check(`${taal}: de pagina begint met een vergelijking van gratis en premium`,
+    vgl.tabel?.klasse === 'vergelijk' && vgl.tabel.kop.length === 3 && ja.length >= 5
+      && alleenPremium.length === ONDERDELEN.length && vgl.tabel.rijen.every((r) => r.length === 3)
+      && /\?$/.test(vgl.vraag), JSON.stringify(vgl.tabel?.kop));
+  check(`${taal}: in de tabel een vinkje of een kruisje, met ja of nee voor wie niet kan zien`,
+    (html.match(/<td class="ja"><span aria-hidden="true">✓<\/span><span class="alleenlezer">/g) ?? []).length === 2 * ja.length + alleenPremium.length
+      && (html.match(/<td class="nee"><span aria-hidden="true">✕<\/span><span class="alleenlezer">/g) ?? []).length === alleenPremium.length);
   const aanvraag = t.secties.at(-1);
   check(`${taal}: de laatste sectie zegt hoe je het aanvraagt, met een knop die een mail opent`,
     aanvraag.knop?.href.startsWith('mailto:contact@predicttherace.com') && aanvraag.kort.includes('contact@predicttherace.com')
@@ -78,6 +92,13 @@ for (const [taal, pad] of [['nl', 'premium/'], ['en', 'en/premium/']]) {
     return uit;
   });
   check(`${taal}: alle zes de plaatjes laden echt`, geladen.length === 6 && geladen.every((w) => w > 300), geladen.join());
+  await page.setViewportSize({ width: 360, height: 760 });
+  check(`${taal}: de vergelijking past op 360 pixels: alle drie de kolommen in beeld`, await page.evaluate(() => {
+    const t = document.querySelector('table.vergelijk');
+    const laatste = t.querySelector('thead th:last-child').getBoundingClientRect();
+    return laatste.right <= 360 && t.getBoundingClientRect().right <= 360 && document.documentElement.scrollWidth <= 360;
+  }));
+  await page.setViewportSize({ width: 390, height: 844 });
   check(`${taal}: op een telefoon staat alles onder elkaar, zonder horizontale scroll`, await page.evaluate(() => {
     const s = document.querySelector('section[data-beeld]');
     const kort = s.querySelector('.kort').getBoundingClientRect(), img = s.querySelector('.schermbeeld').getBoundingClientRect();

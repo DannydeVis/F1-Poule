@@ -631,6 +631,26 @@
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
   .artikel .tabellen{margin:4px 0 16px}
   .artikel .tabellen .tabel{margin:0}
+  /* Gratis tegenover premium: twee smalle kolommen met een vinkje of een
+     kruisje, en de kolom van premium licht gekleurd. */
+  .artikel .tabel.vergelijk{table-layout:fixed}
+  .artikel .tabel.vergelijk th,.artikel .tabel.vergelijk td{padding:12px 14px;font-size:15px;line-height:1.35;
+    overflow-wrap:anywhere}
+  .artikel .tabel.vergelijk tbody th{font-weight:400}
+  .artikel .tabel.vergelijk thead th:not(:first-child),.artikel .tabel.vergelijk td{text-align:center;width:22%}
+  .artikel .tabel.vergelijk td:last-child{font-family:inherit;font-weight:600;font-size:15px;line-height:1.35}
+  .artikel .tabel.vergelijk th:last-child,.artikel .tabel.vergelijk td:last-child{background:var(--accent-vlak)}
+  .artikel .tabel.vergelijk thead th:last-child{color:var(--accent-tekst)}
+  .artikel .tabel.vergelijk td.ja,.artikel .tabel.vergelijk td.nee{font-size:20px;font-weight:700}
+  .artikel .tabel.vergelijk td.ja{color:var(--groen)}
+  .artikel .tabel.vergelijk td.nee{color:var(--ink3)}
+  @media (max-width:520px){
+    .artikel .tabel.vergelijk th,.artikel .tabel.vergelijk td{padding:10px 8px;font-size:14px}
+    .artikel .tabel.vergelijk tbody th{padding-left:12px}
+    .artikel .tabel.vergelijk thead th{letter-spacing:.06em;font-size:11px}
+    .artikel .tabel.vergelijk thead th:not(:first-child),.artikel .tabel.vergelijk td{width:25%}
+    .artikel .tabel.vergelijk td:last-child:not(.ja):not(.nee){font-size:13px}
+  }
   .artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 8px}
   @media (min-width:480px){.artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 14px}}
   .artikel .rekenvoorbeeld tbody th{font-weight:600}

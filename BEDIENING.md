@@ -3739,8 +3739,16 @@ kan nog niet, het mailadres) en de knop **Bekijk premium met voorbeelden**.
   in twee talen, licht en donker, met de maten in `site/premium-maten.json` (dat bestand komt niet online).
   Draai het opnieuw als een premium-onderdeel er anders uit is gaan zien, en
   daarna `node scripts/maak-site.mjs`.
+- **Bovenaan de vergelijking** (sinds 17 november; Danny: "ik mis nog zo'n
+  vergelijk met gratis en premium"): een tabel met wat gratis is en wat
+  premium erbij geeft, met een vinkje of een kruisje, en de prijs als laatste
+  rij. Komt er een premium-onderdeel bij, zet het dan ook in die tabel; de
+  test telt of er net zoveel premium-rijen zijn als onderdelen met een
+  plaatje.
 - **Een sectie met een plaatje** kan elke gids krijgen: `beeld` en `beeldAlt`
-  in de sectie, en `knop: { tekst, href }` voor een knop eronder.
+  in de sectie, en `knop: { tekst, href }` voor een knop eronder. In een tabel
+  worden `true` en `false` een vinkje en een kruisje (met `klasse: 'vergelijk'`
+  voor de opmaak van de vergelijking).
 - **Verandert er iets aan premium**, pas dan de pagina aan en niet de alinea
   in de app: die noemt met opzet alleen drie voorbeelden.
 
