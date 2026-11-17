@@ -44,7 +44,7 @@
     "@id": "https://predicttherace.com/en/premium/#kruimel"
    },
    "datePublished": "2026-11-16",
-   "dateModified": "2026-11-16"
+   "dateModified": "2026-11-17"
   },
   {
    "@type": "Article",
@@ -56,7 +56,7 @@
     "@id": "https://predicttherace.com/en/premium/#pagina"
    },
    "datePublished": "2026-11-16",
-   "dateModified": "2026-11-16",
+   "dateModified": "2026-11-17",
    "author": {
     "@id": "https://predicttherace.com/#maker"
    },
@@ -662,6 +662,26 @@
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
   .artikel .tabellen{margin:4px 0 16px}
   .artikel .tabellen .tabel{margin:0}
+  /* Gratis tegenover premium: twee smalle kolommen met een vinkje of een
+     kruisje, en de kolom van premium licht gekleurd. */
+  .artikel .tabel.vergelijk{table-layout:fixed}
+  .artikel .tabel.vergelijk th,.artikel .tabel.vergelijk td{padding:12px 14px;font-size:15px;line-height:1.35;
+    overflow-wrap:anywhere}
+  .artikel .tabel.vergelijk tbody th{font-weight:400}
+  .artikel .tabel.vergelijk thead th:not(:first-child),.artikel .tabel.vergelijk td{text-align:center;width:22%}
+  .artikel .tabel.vergelijk td:last-child{font-family:inherit;font-weight:600;font-size:15px;line-height:1.35}
+  .artikel .tabel.vergelijk th:last-child,.artikel .tabel.vergelijk td:last-child{background:var(--accent-vlak)}
+  .artikel .tabel.vergelijk thead th:last-child{color:var(--accent-tekst)}
+  .artikel .tabel.vergelijk td.ja,.artikel .tabel.vergelijk td.nee{font-size:20px;font-weight:700}
+  .artikel .tabel.vergelijk td.ja{color:var(--groen)}
+  .artikel .tabel.vergelijk td.nee{color:var(--ink3)}
+  @media (max-width:520px){
+    .artikel .tabel.vergelijk th,.artikel .tabel.vergelijk td{padding:10px 8px;font-size:14px}
+    .artikel .tabel.vergelijk tbody th{padding-left:12px}
+    .artikel .tabel.vergelijk thead th{letter-spacing:.06em;font-size:11px}
+    .artikel .tabel.vergelijk thead th:not(:first-child),.artikel .tabel.vergelijk td{width:25%}
+    .artikel .tabel.vergelijk td:last-child:not(.ja):not(.nee){font-size:13px}
+  }
   .artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 8px}
   @media (min-width:480px){.artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 14px}}
   .artikel .rekenvoorbeeld tbody th{font-weight:600}
@@ -703,8 +723,19 @@
       <li aria-current="page">Premium for your F1 prediction league</li>
     </ol></nav>
     <h1>Premium for your F1 prediction league</h1>
-    <p class="door">By <a href="../../en/about/" rel="author">Danny de Visser</a>, updated <time datetime="2026-11-16">November 16, 2026</time></p>
-    <p class="kort inleiding">Premium is a set of extras for big leagues, companies and clubs: your own logo and colour, teams that play each other, custom questions every weekend, interim standings, nudges and help for the group chat. Playing stays free for everyone. Every part is shown below with a screenshot from the app.</p>
+    <p class="door">By <a href="../../en/about/" rel="author">Danny de Visser</a>, updated <time datetime="2026-11-17">November 17, 2026</time></p>
+    <p class="kort inleiding">Premium is a set of extras for big leagues, companies and clubs: your own logo and colour, teams that play each other, custom questions every weekend, interim standings, nudges and help for the group chat. Playing stays free for everyone. Below you first see what is free and what premium adds, then every part with a screenshot from the app.</p>
+
+    <section class="vraag" id="free-or-premium">
+      <h2>What is the difference between free and premium?</h2>
+      <p class="kort">The difference between free and premium is that everything you need to play is free: predicting, the results, the points, the standings, the jokers, the weekend duel and the notifications. Premium adds extras for the owner of a big league, a company or a club, such as teams, custom questions and your own logo.</p>
+      <table class="tabel vergelijk">
+        <caption>What is free, and what premium adds</caption>
+        <thead><tr><th scope="col">Feature</th><th scope="col">Free</th><th scope="col">Premium</th></tr></thead>
+        <tbody><tr><th scope="row">Playing, for every player in the league</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">The top 10 for qualifying and the race, the sprint, the extra questions and the season questions</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">Results and points by themselves, also when a penalty changes the result</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">Jokers, autofill and contrarian predictions</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">The standings, the weekend winner, the weekend duel and achievements</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">Reactions to each other's weekend</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">A notification or an email before the deadline and after the result</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">Players per league</th><td>up to 500</td><td>up to 500</td></tr><tr><th scope="row">Your own logo, colour and sponsor line</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">no</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">Teams with a team table</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">no</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">Custom questions every weekend</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">no</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">Interim standings with their own winner</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">no</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">Nudges for players who have not predicted yet</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">no</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">Messages for the group chat, and the standings as CSV and PDF</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">no</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">yes</span></td></tr><tr><th scope="row">Price</th><td>free</td><td>not set yet</td></tr></tbody>
+      </table>
+      <p>Premium belongs to the league, not to a player. Once it is on, everyone in the league sees the extras. Below, every part of premium is shown with a screenshot from the app.</p>
+    </section>
 
     <section class="vraag" id="branding" data-beeld>
       <h2>What does a league with its own colour and sponsor look like?</h2>

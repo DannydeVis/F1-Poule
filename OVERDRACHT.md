@@ -12950,3 +12950,24 @@ wel.
 `site` (de feiten van de pagina).
 
 **Danny moet:** niets. Kijk even of de pagina zegt wat je wilt verkopen.
+
+## Gratis tegenover premium op de premiumpagina (17 november)
+
+Danny: "ik mis nog zo'n vergelijk met gratis en premium".
+
+**Wat er verandert.** De premiumpagina begint nu met de vraag "Wat is het
+verschil tussen gratis en premium?" en een tabel: wat gratis is (meespelen,
+alle vragen, de uitslagen vanzelf, jokers, de stand, het weekendduel,
+prestaties, reacties, meldingen en mail, tot 500 spelers) en wat premium
+erbij geeft (de zes onderdelen met een schermafdruk), met de prijs als
+laatste rij. In het Nederlands en het Engels.
+
+De generator maakt van `true` en `false` in een tabel een vinkje en een
+kruisje, met ja of nee voor de voorlezer; `klasse: 'vergelijk'` geeft de
+opmaak (premiumkolom licht gekleurd, op een telefoon smaller).
+
+**Tests.** `premiumpagina.test.mjs` (31): de vergelijking staat bovenaan,
+elke premium-rij is een onderdeel met een plaatje, de vinkjes hebben ja of
+nee voor de voorlezer, en de tabel past op 360 pixels.
+
+**Danny moet:** niets.

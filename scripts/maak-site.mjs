@@ -1448,6 +1448,26 @@ const ARTIKEL_CSS = `
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
   .artikel .tabellen{margin:4px 0 16px}
   .artikel .tabellen .tabel{margin:0}
+  /* Gratis tegenover premium: twee smalle kolommen met een vinkje of een
+     kruisje, en de kolom van premium licht gekleurd. */
+  .artikel .tabel.vergelijk{table-layout:fixed}
+  .artikel .tabel.vergelijk th,.artikel .tabel.vergelijk td{padding:12px 14px;font-size:15px;line-height:1.35;
+    overflow-wrap:anywhere}
+  .artikel .tabel.vergelijk tbody th{font-weight:400}
+  .artikel .tabel.vergelijk thead th:not(:first-child),.artikel .tabel.vergelijk td{text-align:center;width:22%}
+  .artikel .tabel.vergelijk td:last-child{font-family:inherit;font-weight:600;font-size:15px;line-height:1.35}
+  .artikel .tabel.vergelijk th:last-child,.artikel .tabel.vergelijk td:last-child{background:var(--accent-vlak)}
+  .artikel .tabel.vergelijk thead th:last-child{color:var(--accent-tekst)}
+  .artikel .tabel.vergelijk td.ja,.artikel .tabel.vergelijk td.nee{font-size:20px;font-weight:700}
+  .artikel .tabel.vergelijk td.ja{color:var(--groen)}
+  .artikel .tabel.vergelijk td.nee{color:var(--ink3)}
+  @media (max-width:520px){
+    .artikel .tabel.vergelijk th,.artikel .tabel.vergelijk td{padding:10px 8px;font-size:14px}
+    .artikel .tabel.vergelijk tbody th{padding-left:12px}
+    .artikel .tabel.vergelijk thead th{letter-spacing:.06em;font-size:11px}
+    .artikel .tabel.vergelijk thead th:not(:first-child),.artikel .tabel.vergelijk td{width:25%}
+    .artikel .tabel.vergelijk td:last-child:not(.ja):not(.nee){font-size:13px}
+  }
   .artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 8px}
   @media (min-width:480px){.artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 14px}}
   .artikel .rekenvoorbeeld tbody th{font-weight:600}
@@ -1636,6 +1656,15 @@ function artikelPagina(pg, code, datum, sinds) {
   // De teksten van de voorpagina in deze taal: de namen van de vragen.
   const t2 = teksten[code];
   // Een tabel zonder bijschrift is een fout in site/paginas.mjs, geen lege caption.
+  // Een cel in een tabel van een gids. true en false worden een vinkje en een
+  // kruisje, met ja of nee voor wie niet kan zien (de vergelijking van gratis
+  // en premium op de premiumpagina).
+  const JA_NEE = { nl: ['ja', 'nee'], en: ['yes', 'no'], de: ['ja', 'nein'], fr: ['oui', 'non'],
+    es: ['sí', 'no'], it: ['sì', 'no'], pt: ['sim', 'não'] };
+  const cel = (c) => (c === true || c === false
+    ? `<td class="${c ? 'ja' : 'nee'}"><span aria-hidden="true">${c ? '✓' : '✕'}</span><span class="alleenlezer">${
+      JA_NEE[code][c ? 0 : 1]}</span></td>`
+    : `<td>${f(c)}</td>`);
   const bijschrift = (tabel, waar) => {
     if (!tabel.bijschrift) throw new Error(`site/paginas.mjs: de tabel in ${pg.id}#${waar} (${code}) heeft geen bijschrift`);
     return tabel.bijschrift;
@@ -1725,7 +1754,7 @@ function artikelPagina(pg, code, datum, sinds) {
       <table class="tabel${s.tabel.klasse ? ` ${s.tabel.klasse}` : ''}">
         <caption>${f(bijschrift(s.tabel, s.id))}</caption>
         <thead><tr>${s.tabel.kop.map((k) => `<th scope="col">${f(k)}</th>`).join('')}</tr></thead>
-        <tbody>${s.tabel.rijen.map((r) => `<tr>${r.map((c, i) => i === 0 ? `<th scope="row">${f(c)}</th>` : `<td>${f(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+        <tbody>${s.tabel.rijen.map((r) => `<tr>${r.map((c, i) => i === 0 ? `<th scope="row">${f(c)}</th>` : cel(c)).join('')}</tr>`).join('')}</tbody>
       </table>` : ''}${(s.tabellen ?? []).map((tabel, i) => `
       <table class="tabel${tabel.klasse ? ` ${tabel.klasse}` : ''}">
         <caption>${f(bijschrift(tabel, `${s.id}-${i + 1}`))}</caption>

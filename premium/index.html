@@ -44,7 +44,7 @@
     "@id": "https://predicttherace.com/premium/#kruimel"
    },
    "datePublished": "2026-11-16",
-   "dateModified": "2026-11-16"
+   "dateModified": "2026-11-17"
   },
   {
    "@type": "Article",
@@ -56,7 +56,7 @@
     "@id": "https://predicttherace.com/premium/#pagina"
    },
    "datePublished": "2026-11-16",
-   "dateModified": "2026-11-16",
+   "dateModified": "2026-11-17",
    "author": {
     "@id": "https://predicttherace.com/#maker"
    },
@@ -662,6 +662,26 @@
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
   .artikel .tabellen{margin:4px 0 16px}
   .artikel .tabellen .tabel{margin:0}
+  /* Gratis tegenover premium: twee smalle kolommen met een vinkje of een
+     kruisje, en de kolom van premium licht gekleurd. */
+  .artikel .tabel.vergelijk{table-layout:fixed}
+  .artikel .tabel.vergelijk th,.artikel .tabel.vergelijk td{padding:12px 14px;font-size:15px;line-height:1.35;
+    overflow-wrap:anywhere}
+  .artikel .tabel.vergelijk tbody th{font-weight:400}
+  .artikel .tabel.vergelijk thead th:not(:first-child),.artikel .tabel.vergelijk td{text-align:center;width:22%}
+  .artikel .tabel.vergelijk td:last-child{font-family:inherit;font-weight:600;font-size:15px;line-height:1.35}
+  .artikel .tabel.vergelijk th:last-child,.artikel .tabel.vergelijk td:last-child{background:var(--accent-vlak)}
+  .artikel .tabel.vergelijk thead th:last-child{color:var(--accent-tekst)}
+  .artikel .tabel.vergelijk td.ja,.artikel .tabel.vergelijk td.nee{font-size:20px;font-weight:700}
+  .artikel .tabel.vergelijk td.ja{color:var(--groen)}
+  .artikel .tabel.vergelijk td.nee{color:var(--ink3)}
+  @media (max-width:520px){
+    .artikel .tabel.vergelijk th,.artikel .tabel.vergelijk td{padding:10px 8px;font-size:14px}
+    .artikel .tabel.vergelijk tbody th{padding-left:12px}
+    .artikel .tabel.vergelijk thead th{letter-spacing:.06em;font-size:11px}
+    .artikel .tabel.vergelijk thead th:not(:first-child),.artikel .tabel.vergelijk td{width:25%}
+    .artikel .tabel.vergelijk td:last-child:not(.ja):not(.nee){font-size:13px}
+  }
   .artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 8px}
   @media (min-width:480px){.artikel .rekenvoorbeeld th,.artikel .rekenvoorbeeld td{padding:10px 14px}}
   .artikel .rekenvoorbeeld tbody th{font-weight:600}
@@ -703,8 +723,19 @@
       <li aria-current="page">Premium voor je F1-poule</li>
     </ol></nav>
     <h1>Premium voor je F1-poule</h1>
-    <p class="door">Door <a href="../over/" rel="author">Danny de Visser</a>, bijgewerkt op <time datetime="2026-11-16">16 november 2026</time></p>
-    <p class="kort inleiding">Premium is een pakket extra's voor grote poules, bedrijven en clubs: een eigen logo en kleur, teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen, de tik en hulp voor de groepsapp. Meespelen blijft voor iedereen gratis. Hieronder staat elk onderdeel met een schermafdruk uit de app.</p>
+    <p class="door">Door <a href="../over/" rel="author">Danny de Visser</a>, bijgewerkt op <time datetime="2026-11-17">17 november 2026</time></p>
+    <p class="kort inleiding">Premium is een pakket extra's voor grote poules, bedrijven en clubs: een eigen logo en kleur, teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen, de tik en hulp voor de groepsapp. Meespelen blijft voor iedereen gratis. Hieronder eerst wat gratis is en wat premium erbij geeft, en dan elk onderdeel met een schermafdruk uit de app.</p>
+
+    <section class="vraag" id="gratis-of-premium">
+      <h2>Wat is het verschil tussen gratis en premium?</h2>
+      <p class="kort">Het verschil tussen gratis en premium is dat alles om te spelen gratis is: voorspellen, de uitslagen, de punten, de stand, de jokers, het weekendduel en de meldingen. Premium voegt extra's toe voor de poulebaas van een grote poule, een bedrijf of een club, zoals teams, eigen vragen en een eigen logo.</p>
+      <table class="tabel vergelijk">
+        <caption>Wat er gratis is, en wat premium erbij geeft</caption>
+        <thead><tr><th scope="col">Onderdeel</th><th scope="col">Gratis</th><th scope="col">Premium</th></tr></thead>
+        <tbody><tr><th scope="row">Meespelen, voor elke speler in de poule</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">De top 10 van de kwalificatie en de race, de sprint, de losse vragen en de seizoensvragen</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">Uitslagen en punten vanzelf, ook als een straf de uitslag verandert</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">Jokers, automatisch invullen en contrair voorspellen</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">De stand, de weekendwinnaar, het weekendduel en prestaties</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">Reacties op elkaars weekend</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">Een seintje of een mail voor de deadline en na de uitslag</th><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">Spelers per poule</th><td>tot 500</td><td>tot 500</td></tr><tr><th scope="row">Eigen logo, kleur en sponsorregel</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">nee</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">Teams met een teamstand</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">nee</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">Eigen vragen per weekend</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">nee</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">Tussenklassementen met een eigen winnaar</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">nee</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">De tik voor wie nog niets invulde</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">nee</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">Berichten voor de groepsapp, en de stand als CSV en PDF</th><td class="nee"><span aria-hidden="true">✕</span><span class="alleenlezer">nee</span></td><td class="ja"><span aria-hidden="true">✓</span><span class="alleenlezer">ja</span></td></tr><tr><th scope="row">Prijs</th><td>gratis</td><td>nog niet bekend</td></tr></tbody>
+      </table>
+      <p>Premium hoort bij de poule, niet bij een speler. Staat het aan, dan ziet iedereen in de poule de extra's. Hieronder staat elk onderdeel van premium met een schermafdruk uit de app.</p>
+    </section>
 
     <section class="vraag" id="profiel" data-beeld>
       <h2>Hoe ziet een poule met een eigen kleur en sponsor eruit?</h2>
