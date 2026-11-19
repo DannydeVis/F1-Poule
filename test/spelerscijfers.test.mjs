@@ -152,8 +152,13 @@ const RACE = { id: 1, season: 2026, round: 21, name: 'São Paulo', deadline_qual
   check('de seizoenspagina leeft van 1 december tot de eerste sessie',
     !seizoenVenster(seizoen, 2027, Date.UTC(2026, 10, 30, 23)) && !!seizoenVenster(seizoen, 2027, Date.UTC(2026, 11, 1, 0, 1))
       && !!seizoenVenster(seizoen, 2027, Date.parse('2027-03-06T04:59:00Z')) && !seizoenVenster(seizoen, 2027, Date.parse('2027-03-06T05:00:00Z')));
-  check('en dat is het komende seizoen', komendSeizoen([...races, ...seizoen], Date.UTC(2026, 11, 10)) === 2027
-    && komendSeizoen([...races, ...seizoen], Date.UTC(2026, 10, 10)) === null);
+  // Met een vast seizoen 2026 en niet met de races hierboven: die staan rond
+  // vandaag, en dan lag 10 november vanaf 19 november 2026 vóór de eerste race
+  // en leefde 2026 nog.
+  const vorig = [{ id: 20, season: 2026, round: 1, name: 'Melbourne', deadline_quali: '2026-03-07T05:00:00Z', deadline_race: '2026-03-08T04:00:00Z' }];
+  check('en dat is het komende seizoen', komendSeizoen([...vorig, ...seizoen], Date.UTC(2026, 11, 10)) === 2027
+    && komendSeizoen([...vorig, ...seizoen], Date.UTC(2026, 10, 10)) === null
+    && komendSeizoen([...races, ...seizoen], Date.UTC(2027, 0, 10)) === 2027);
 
   const kies = (n, poules, vraag, waarde) => Array.from({ length: n }, (_, i) => ({ pool_id: `q${i % poules}`, question_id: vraag,
     waarde: typeof waarde === 'function' ? waarde(i) : waarde }));

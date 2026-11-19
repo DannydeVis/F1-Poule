@@ -998,6 +998,7 @@ function statistiekenTab() {
           <span class="getal">${getal(v.aantal)}</span></div>`).join('')}</div>
     </section>
     ${siteKaart(st)}
+    ${bronKaart(st)}
     ${trechterKaart(st)}
     <section class="kaart">
       <div class="kaartkop"><h2>Accounts achter de spelers</h2><span class="zacht klein">wie zijn browser leegmaakt zonder koppeling is zijn speler kwijt</span></div>
@@ -1036,7 +1037,7 @@ function trechterKaart(st) {
 // de afgelopen dertig dagen, met per ref (groepsapp, kalender, app, anders)
 // hoeveel daarvan via zo'n link kwamen, en per ref het totaal. "zonder ref" is
 // gewoon binnengekomen: via een zoekmachine, een bladwijzer of getypt.
-const REFNAAM = { '': 'zonder ref', groepsapp: 'groepsapp', kalender: 'kalender', app: 'app', anders: 'anders' };
+const REFNAAM = { '': 'zonder ref' };
 function siteKaart(st) {
   const paginas = st.site_per_pagina ?? [];
   const refs = st.site_per_ref ?? [];
@@ -1051,6 +1052,26 @@ function siteKaart(st) {
           .filter(([ref]) => ref).map(([ref, n]) => ` <span class="zacht klein">${esc(REFNAAM[ref] ?? ref)} ${getal(n)}</span>`).join('')}</span>
           <span class="spoor" style="width:${(100 * p.aantal / max).toFixed(1)}%"></span>
           <span class="getal">${getal(p.aantal)}</span></div>`).join('')}</div>
+    </section>`;
+}
+
+// Waar de nieuwe spelers vandaan kwamen (speler_bronnen, 19 november): per
+// bron uit de link (?ref=reddit) de spelers van de afgelopen negentig dagen,
+// en hoeveel daarvan een poule begonnen. De rest kwam zonder ref binnen:
+// via een uitnodiging, een zoekmachine of getypt.
+function bronKaart(st) {
+  const bronnen = st.bronnen ?? [];
+  const totaal = st.spelers_90d ?? 0;
+  const metBron = bronnen.reduce((s, b) => s + b.spelers, 0);
+  const max = Math.max(1, ...bronnen.map((b) => b.spelers));
+  return `
+    <section class="kaart" data-bronnen>
+      <div class="kaartkop"><h2>Waar nieuwe spelers vandaan komen</h2><span class="zacht klein">90 dagen, uit ?ref= in de link</span></div>
+      <p class="zacht klein" style="margin:0" data-bronnen-totaal>${getal(totaal)} nieuwe spelers, ${getal(metBron)} via een link met een bron, ${getal(Math.max(0, totaal - metBron))} zonder</p>
+      <div class="balken">${bronnen.map((b) => `
+        <div class="balk" data-bron="${esc(b.bron)}"><span>${esc(b.bron)} <span class="zacht klein">${getal(b.poules)} ${b.poules === 1 ? 'poule' : 'poules'} begonnen</span></span>
+          <span class="spoor" style="width:${(100 * b.spelers / max).toFixed(1)}%"></span>
+          <span class="getal">${getal(b.spelers)}</span></div>`).join('') || '<p class="zacht" style="margin:0">Nog niemand via een link met een bron.</p>'}</div>
     </section>`;
 }
 

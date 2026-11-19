@@ -430,6 +430,20 @@ alter table public.reacties  add constraint reacties_soort
   check (soort in ('klap', 'vuur', 'lach', 'schrik', 'schedel'));
 grant all on table public.reacties to service_role;
 
+-- Waar een nieuwe speler vandaan kwam (19 november): de ref uit de link
+-- waarmee hij binnenkwam (?ref=reddit, ?ref=producthunt). Zo is in maart te
+-- zien welk kanaal echt spelers en poules opleverde, en niet alleen bezoeken.
+-- Een eigen tabel en geen kolom op pool_members: dan komt het nooit mee naar
+-- medespelers. Alleen het beheer telt het, per bron (beheer_statistieken).
+-- Schrijven alleen via bron_zetten(), één keer per speler, kort na het
+-- meedoen. Alleen namen uit bron_naam(); de rest wordt 'anders'.
+create table if not exists public.speler_bronnen (
+  member_id uuid primary key,
+  bron      text not null,
+  gemaakt   timestamptz not null default now()
+);
+grant all on table public.speler_bronnen to service_role;
+
 alter table public.pool_members add column if not exists pool_id      uuid;
 alter table public.pool_members add column if not exists display_name text;
 alter table public.pool_members add column if not exists created_at   timestamptz not null default now();
@@ -793,6 +807,9 @@ alter table public.reacties  add constraint reacties_van_fk
 alter table public.reacties drop constraint if exists reacties_aan_fk;
 alter table public.reacties  add constraint reacties_aan_fk
   foreign key (aan_member) references public.pool_members(member_id) on delete cascade;
+alter table public.speler_bronnen drop constraint if exists speler_bronnen_member_fk;
+alter table public.speler_bronnen  add constraint speler_bronnen_member_fk
+  foreign key (member_id) references public.pool_members(member_id) on delete cascade;
 alter table public.answers drop constraint if exists answers_member_fk;
 alter table public.answers  add constraint answers_member_fk
   foreign key (member_id) references public.pool_members(member_id) on delete cascade;
@@ -1663,6 +1680,53 @@ begin
 end $$;
 revoke all on function public.reactie_geven(uuid, bigint, uuid, text) from public;
 grant execute on function public.reactie_geven(uuid, bigint, uuid, text) to anon, authenticated;
+
+-- ---- waar een nieuwe speler vandaan kwam (19 november) ----------
+-- De vaste lijst bronnen, voor de spelers (bron_zetten) en de bezoeken van de
+-- site (tel_pagina): leeg blijft leeg, een bekende naam blijft staan, de rest
+-- is 'anders'. Zo is geen van beide vol te schrijven met verzonnen namen.
+-- Een nieuw kanaal? Zet het hier bij, en in BEDIENING bij "Waar spelers
+-- vandaan komen".
+create or replace function public.bron_naam(p text)
+returns text
+language sql
+immutable
+set search_path = public
+as $$
+  select case
+    when coalesce(p, '') = '' then ''
+    when p in ('groepsapp', 'kalender', 'app', 'reddit', 'producthunt', 'tiktok', 'linkedin',
+               'instagram', 'facebook', 'x', 'alternativeto', 'nieuwsbrief') then p
+    else 'anders' end
+$$;
+revoke all on function public.bron_naam(text) from public;
+
+-- De app roept dit aan meteen na poule_aanmaken() of poule_meedoen(), als hij
+-- binnenkwam via een link met ?ref=. Alleen voor je eigen speler, alleen in
+-- het eerste uur na het meedoen, en maar één keer: een bron achteraf
+-- veranderen kan niet. Zonder ref doet het niets.
+create or replace function public.bron_zetten(p_member uuid, p_bron text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_bron text := public.bron_naam(p_bron);
+begin
+  if v_bron = '' then return; end if;
+  if not public.mag_voor_speler(p_member) then
+    raise exception 'je zet alleen de bron van je eigen speler';
+  end if;
+  if not exists (select 1 from public.pool_members
+                  where member_id = p_member and created_at > now() - interval '1 hour') then
+    return;
+  end if;
+  insert into public.speler_bronnen (member_id, bron) values (p_member, v_bron)
+  on conflict (member_id) do nothing;
+end $$;
+revoke all on function public.bron_zetten(uuid, text) from public;
+grant execute on function public.bron_zetten(uuid, text) to anon, authenticated;
 
 -- ---- eigen vragen (premium) ------------------------------------
 -- Open zolang de race nog niet begonnen is (deadline_race).
@@ -2850,6 +2914,8 @@ alter table public.weekvraag_antwoorden  enable row level security;
 revoke all on public.weekvraag_antwoorden from anon, authenticated;
 alter table public.reacties              enable row level security;
 revoke all on public.reacties from anon, authenticated;
+alter table public.speler_bronnen        enable row level security;
+revoke all on public.speler_bronnen from anon, authenticated;
 
 -- Eerst élke policy in public weg, ook die dit bestand niet kent, en daarna
 -- alleen de policies hieronder terug. Tot 29 september stond hier een lijst
@@ -3383,10 +3449,9 @@ security definer
 set search_path = public
 as $$
 declare
-  v_ref text := coalesce(p_ref, '');
+  v_ref text := public.bron_naam(p_ref);
 begin
   if p_pad is null or not exists (select 1 from public.site_paden where pad = p_pad) then return; end if;
-  if v_ref not in ('', 'groepsapp', 'kalender', 'app') then v_ref := 'anders'; end if;
   insert into public.site_bezoeken (dag, pad, ref, aantal) values (current_date, p_pad, v_ref, 1)
     on conflict (dag, pad, ref) do update set aantal = public.site_bezoeken.aantal + 1;
 end $$;
@@ -4161,6 +4226,19 @@ begin
       select jsonb_agg(jsonb_build_object('ref', ref, 'aantal', n) order by n desc, ref)
       from (select ref, sum(aantal) n from public.site_bezoeken
              where dag > current_date - 30 group by ref) x), '[]'::jsonb),
+    -- Waar de nieuwe spelers van de afgelopen negentig dagen vandaan kwamen
+    -- (speler_bronnen, 19 november): per bron de spelers, en hoeveel daarvan
+    -- een poule begonnen. Wie zonder ref binnenkwam staat er niet in; het
+    -- totaal ernaast laat zien hoeveel dat er waren.
+    'bronnen', coalesce((
+      select jsonb_agg(jsonb_build_object('bron', bron, 'spelers', s, 'poules', p) order by s desc, bron)
+      from (select b.bron, count(*) s, count(*) filter (where po.owner_member_id = b.member_id) p
+              from public.speler_bronnen b
+              join public.pool_members m on m.member_id = b.member_id
+              left join public.pools po on po.id = m.pool_id
+             where m.created_at > now() - interval '90 days'
+             group by b.bron) x), '[]'::jsonb),
+    'spelers_90d', (select count(*) from public.pool_members where created_at > now() - interval '90 days'),
     -- Per race van dit seizoen: hoeveel spelers er iets inleverden, tegen
     -- hoeveel er toen in een poule van dit seizoen zaten. De seizoensvragen
     -- tellen niet mee: die hangen aan de eerste race en zouden die opblazen.
@@ -4870,7 +4948,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'beheer_poule_bijwerken', 'beheer_poule_verwijderen', 'beheer_poules',
           'beheer_race_bijwerken', 'beheer_speler_bijwerken', 'beheer_speler_losmaken',
           'beheer_speler_verwijderen', 'beheer_spelers', 'beheer_statistieken',
-          'beheer_sync', 'controle_seizoen', 'coureur_sleutel', 'eigen_antwoord_geven',
+          'beheer_sync', 'bron_naam', 'bron_zetten', 'controle_seizoen', 'coureur_sleutel', 'eigen_antwoord_geven',
           'eigen_vraag_open', 'eigen_vraag_opslaan', 'eigen_vraag_uitkomst',
           'eigen_vraag_weghalen', 'herinnering_aanmelden', 'herinnering_afmelden',
           'ik_ben_beheerder', 'is_member', 'joker_open',
@@ -4895,7 +4973,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'aanmaak_log', 'account_meenemen', 'actief', 'answers', 'bezoeken', 'jokers', 'mail_abonnementen',
           'pool_eigen_antwoorden', 'pool_eigen_vragen', 'pool_members', 'pool_periodes',
           'pool_questions', 'pool_teams', 'pools', 'poule_controle', 'push_abonnementen',
-          'questions', 'races', 'reacties', 'seizoen_herinneringen', 'site_beheerders', 'site_bezoeken', 'site_paden', 'spelerscijfers',
+          'questions', 'races', 'reacties', 'seizoen_herinneringen', 'site_beheerders', 'site_bezoeken', 'site_paden', 'speler_bronnen', 'spelerscijfers',
           'sync_runs', 'tikken', 'verboden_woorden', 'weekvraag_antwoorden'] as tabellen) v
 union all
 -- Premium (13 oktober): de vijf kolommen op pools, de bewaking erop, de teams

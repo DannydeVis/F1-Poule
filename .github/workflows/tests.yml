@@ -253,6 +253,15 @@ jobs:
           psql -d reacties -v ON_ERROR_STOP=1 -f schema.sql
           psql -d reacties -v ON_ERROR_STOP=1 -f test/reacties.test.sql
 
+      # Waar nieuwe spelers vandaan komen (19 november): de bron uit ?ref=,
+      # één keer, alleen voor je eigen nieuwe speler, en alleen het beheer telt.
+      - name: bronnen — waar nieuwe spelers vandaan komen
+        run: |
+          createdb bronnen
+          psql -d bronnen -v ON_ERROR_STOP=1 -f test/auth-nabootsing.sql
+          psql -d bronnen -v ON_ERROR_STOP=1 -f schema.sql
+          psql -d bronnen -v ON_ERROR_STOP=1 -f test/bronnen.test.sql
+
       # Het beheer ziet alles en mag poules en spelers weggooien. Dat mag
       # alleen de beheerder, en die word je alleen met het bevestigde
       # beheeradres. Deze test draait schema.sql zelf nog een keer, nadat dat
