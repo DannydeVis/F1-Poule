@@ -2518,7 +2518,32 @@ async function maakSpeler(poolId, naam) {
   // `returning` heeft leesrecht nodig en op dit moment ben je nog geen lid.
   // De botsing hierboven zit nu in poule_meedoen() zelf -- het is een regel
   // van de database, niet van het scherm.
-  return db.rpc('poule_meedoen', { p_pool: poolId, p_naam: naam });
+  const uit = await db.rpc('poule_meedoen', { p_pool: poolId, p_naam: naam });
+  if (uit?.data?.member_id) bronZetten(uit.data.member_id);
+  return uit;
+}
+
+// ---- waar je vandaan kwam (19 november) ----------------------
+// Een gedeelde link zegt met ?ref= waar hij gedeeld werd (?ref=reddit,
+// ?ref=producthunt). De app onthoudt dat voor dit tabblad, en zet het één keer
+// bij een nieuwe speler, na poule_meedoen() of poule_aanmaken()
+// (bron_zetten() in schema.sql). Alleen het beheer telt het, per bron; je
+// medespelers zien het niet. In sessionStorage en niet onder `poule:`: een
+// sleutel met `poule:` stuurt de voorpagina door naar de app. Een fout bij
+// het bewaren merkt de speler niet: meedoen is dan al gelukt.
+const BRON_SLEUTEL = 'ptr:bron';
+const BRON = (() => {
+  try {
+    const ref = new URLSearchParams(location.search).get('ref');
+    if (ref && /^[a-z]{1,20}$/.test(ref)) sessionStorage.setItem(BRON_SLEUTEL, ref);
+    return sessionStorage.getItem(BRON_SLEUTEL);
+  } catch { return null; }
+})();
+function bronZetten(memberId) {
+  if (!BRON || !memberId || !db) return;
+  try {
+    Promise.resolve(db.rpc('bron_zetten', { p_member: memberId, p_bron: BRON })).catch(() => {});
+  } catch { /* tellen mag nooit iets breken */ }
 }
 
 // Wat de database zegt als er geen sessie is (vereis_sessie() in schema.sql).
@@ -16686,6 +16711,7 @@ async function pouleAanmaken(m) {
   if (error) throw new Error(uitleg(error));
   m.poule = data.poule;
   m.ik = { id: data.ik.member_id, naam: data.ik.display_name };
+  bronZetten(data.ik.member_id);
 }
 
 // ============================================================

@@ -3153,8 +3153,8 @@ je telefoon"). Die bezoeken tellen ook gewoon mee bij "Bezoeken vandaag".
 `teller.js` (de generator maakt hem, met de url en de publieke sleutel van de
 app), en die telt één bezoek met `tel_pagina()`: alleen het pad, zoals
 `/races/2026/sao-paulo/`, en de ref uit de link (`?ref=groepsapp`,
-`?ref=kalender` of `?ref=app`; een andere ref wordt "anders", geen ref is
-leeg). Geen cookie, geen opslag in de browser, geen IP-adres, geen account.
+`?ref=reddit`; de vaste lijst staat hieronder bij "Waar nieuwe spelers vandaan
+komen", een andere ref wordt "anders", geen ref is leeg). Geen cookie, geen opslag in de browser, geen IP-adres, geen account.
 Alleen paden uit de sitemap tellen: de sync zet die bij elke run in
 `site_paden`, en een pad dat daar niet in staat, telt niet. Zo kan niemand de
 tabel volschrijven met verzonnen paden.
@@ -3165,6 +3165,27 @@ pagina hoeveel er via een link kwamen), en bovenaan per ref het totaal, dus
 hoeveel er via de groepsapp, de agenda of de app binnenkwamen. Zo zie je of de links uit §2 ("Een link in
 alles wat naar buiten gaat") iets doen. De tabellen `site_paden` en
 `site_bezoeken` zijn alleen voor de service_role key en het beheer leesbaar.
+
+**Waar nieuwe spelers vandaan komen** (sinds 19 november). Deel je een link
+naar de site of de app, zet er dan een bron achter: `?ref=reddit`,
+`?ref=producthunt`, `?ref=tiktok`, `?ref=linkedin`. Kwam iemand zo binnen en
+doet hij mee of begint hij een poule, dan bewaart de app die bron één keer bij
+zijn nieuwe speler (`bron_zetten()`, tabel `speler_bronnen`). Op de site geeft
+`teller.js` de ref door aan elke link naar de app, zodat hij ook meegaat als
+iemand eerst een paar pagina's leest. De app onthoudt hem voor dat tabblad
+(sessionStorage), niet langer.
+
+- **De vaste lijst** staat in `bron_naam()` in `schema.sql`: groepsapp,
+  kalender, app, reddit, producthunt, tiktok, linkedin, instagram, facebook,
+  x, alternativeto en nieuwsbrief. Een andere naam telt als "anders". Een nieuw
+  kanaal? Vraag Claude Code het erbij te zetten, en draai daarna `schema.sql`.
+- **In het beheer** staat het onder Statistieken, in de kaart **Waar nieuwe
+  spelers vandaan komen**: per bron de nieuwe spelers van de laatste negentig
+  dagen en hoeveel daarvan een poule begonnen, met het totaal en hoeveel er
+  zonder bron binnenkwamen (een uitnodiging, een zoekmachine).
+- **Medespelers zien het niet**: het komt niet mee in `poule_ophalen()`. Het
+  gaat weg met de speler. De privacyverklaring zegt het erbij.
+- **Test.** `test/bronnen.test.sql` en `test/bronnen.test.mjs`.
 
 ### Als opslaan in het beheer een fout geeft
 

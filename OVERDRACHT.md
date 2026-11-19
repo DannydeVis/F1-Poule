@@ -12982,3 +12982,45 @@ ROUTEKAART ("Een fooienpot, later"), en de aanvraag aan OpenF1 in BEDIENING
 
 **Danny moet:** niets nu. Als je OpenF1 mailt over premium, gaat de fooienpot
 in dezelfde mail mee.
+
+## Waar nieuwe spelers vandaan komen (19 november)
+
+Uit TickTick: "Elke link die je deelt krijgt een bron (?ref=reddit,
+?ref=producthunt, ?ref=tiktok, ?ref=linkedin). Laat de app die bewaren bij een
+nieuwe poule of speler en in het beheer per bron tellen. Anders weet je in
+maart niet wat werkte."
+
+**Wat er verandert.**
+- Database: de tabel `speler_bronnen` (een eigen tabel, zodat het nooit mee
+  naar medespelers gaat), `bron_naam()` met de vaste lijst, en
+  `bron_zetten()`: alleen je eigen speler, alleen in het eerste uur, één keer.
+  `tel_pagina()` gebruikt dezelfde lijst, dus een bezoek via `?ref=reddit` telt
+  nu als reddit en niet meer als anders. `beheer_statistieken()` geeft
+  `bronnen` en `spelers_90d`.
+- App: leest `?ref=` bij het openen, onthoudt hem voor het tabblad
+  (sessionStorage `ptr:bron`, met opzet niet onder `poule:`: dan stuurt de
+  voorpagina je door) en zet hem na `poule_meedoen()` en `poule_aanmaken()`.
+- Site: `teller.js` geeft de ref door aan elke link naar de app.
+- Beheer: de kaart "Waar nieuwe spelers vandaan komen".
+- Privacyverklaring (NL en EN): een zin erbij onder Tellen.
+
+**Bewust niet.** Geen bron bij wie een bestaande speler aanwijst: die is niet
+nieuw. Geen bron achteraf. Geen vrije tekst: alleen namen uit de lijst.
+
+**Ook uit TickTick (19 november).** Het stopcriterium voor de racepagina's
+vervalt: de links in de deelteksten, de agenda en het uitslagscherm wijzen
+naar de racepagina's, dus 2027 heeft ze sowieso nodig. In TickTick staat op
+18 januari 2027 "Zeg tegen Claude Code: racepagina's van 2027 maken". Grote
+poules laten schalen is verzet naar 1 februari 2027: de grootste poule heeft
+8 spelers. De workflow Zoekcijfers ziet het secret SEARCH_CONSOLE_SLEUTEL nog
+niet (log van 16 november); de taak staat weer open.
+
+**Tests.** Nieuw: `test/bronnen.test.sql` (eigen stap in tests.yml) en
+`test/bronnen.test.mjs`. Aangepast: de reservekopie (nieuwe tabel).
+En `spelerscijfers.test.mjs`: "en dat is het komende seizoen" zakte sinds
+19 november ook op main. De races in die test staan rond vandaag, dus de vaste
+datum van 10 november lag ineens vóór de eerste race van 2026. Nu met een
+vast seizoen 2026.
+
+**Danny moet:** niets; `schema.sql` staat al in productie. Zet voortaan een
+`?ref=` achter elke link die je deelt.

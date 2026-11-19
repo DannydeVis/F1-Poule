@@ -1095,6 +1095,21 @@ const functies = {
     return { data: null, error: null };
   },
 
+  // Waar een nieuwe speler vandaan kwam, met de regels van schema.sql
+  // (test/bronnen.test.sql): de vaste lijst, één keer, alleen je eigen speler.
+  bron_zetten({ p_member, p_bron } = {}) {
+    const LIJST = ['groepsapp', 'kalender', 'app', 'reddit', 'producthunt', 'tiktok', 'linkedin',
+      'instagram', 'facebook', 'x', 'alternativeto', 'nieuwsbrief'];
+    if (!p_bron) return { data: null, error: null };
+    if (!magVoorSpeler(p_member)) return { data: null, error: { code: 'P0001', message: 'je zet alleen de bron van je eigen speler' } };
+    store.speler_bronnen ??= [];
+    if (!store.speler_bronnen.some((b) => gelijk(b.member_id, p_member))) {
+      store.speler_bronnen.push({ member_id: p_member, bron: LIJST.includes(p_bron) ? p_bron : 'anders' });
+      bewaren();
+    }
+    return { data: null, error: null };
+  },
+
   // Reacties op elkaars weekend, met de regels van schema.sql (test/reacties.test.sql).
   reactie_geven({ p_member, p_race, p_aan, p_soort } = {}) {
     const fout = (message) => ({ data: null, error: { code: 'P0001', message } });
@@ -1679,6 +1694,15 @@ Object.assign(functies, {
           samen_ingevuld: poules.filter((p) => inzenders(p) >= 2).length };
       })(),
       herinneringen: (store.seizoen_herinneringen ?? []).length,
+      // Per bron de nieuwe spelers en hoeveel er een poule begonnen (bron_zetten).
+      bronnen: Object.values((store.speler_bronnen ?? []).reduce((uit, b) => {
+        const rij = uit[b.bron] ??= { bron: b.bron, spelers: 0, poules: 0 };
+        rij.spelers += 1;
+        const lid = store.pool_members.find((m) => gelijk(m.member_id, b.member_id));
+        if (lid && store.pools.some((p) => gelijk(p.id, lid.pool_id) && gelijk(p.owner_member_id, b.member_id))) rij.poules += 1;
+        return uit;
+      }, {})).sort((x, y) => y.spelers - x.spelers || x.bron.localeCompare(y.bron)),
+      spelers_90d: store.pool_members.length,
       accounts: perSoort,
     }, error: null };
   }),
