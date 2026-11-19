@@ -1,0 +1,433 @@
+{
+ "jaar": 2026,
+ "bron": "Predict the Race, op basis van OpenF1 (https://openf1.org): de uitslagen van kwalificatie, sprint en race",
+ "max": 50,
+ "laatste": {
+  "ronde": 22,
+  "naam": "São Paulo",
+  "datum": "2026-11-08"
+ },
+ "gereden": 20,
+ "afgelast": [
+  "Sakhir",
+  "Jeddah"
+ ],
+ "gemiddeld": {
+  "kwalificatie": {
+   "gemiddeld": 17.8,
+   "races": 20
+  },
+  "stand": {
+   "gemiddeld": 14.3,
+   "races": 19
+  },
+  "vorige": {
+   "gemiddeld": 14.2,
+   "races": 19
+  },
+  "willekeurig": {
+   "gemiddeld": 5.7,
+   "races": 20
+  }
+ },
+ "best": [
+  {
+   "ronde": 3,
+   "naam": "Suzuka",
+   "punten": 27
+  },
+  {
+   "ronde": 2,
+   "naam": "Shanghai",
+   "punten": 26
+  },
+  {
+   "ronde": 9,
+   "naam": "Barcelona",
+   "punten": 23
+  }
+ ],
+ "slechtst": [
+  {
+   "ronde": 7,
+   "naam": "Montréal",
+   "punten": 4
+  },
+  {
+   "ronde": 22,
+   "naam": "São Paulo",
+   "punten": 8
+  },
+  {
+   "ronde": 21,
+   "naam": "Mexico City",
+   "punten": 11
+  }
+ ],
+ "pole": {
+  "gewonnen": 14,
+  "races": 20
+ },
+ "races": [
+  {
+   "ronde": 1,
+   "naam": "Melbourne",
+   "land": "Australia",
+   "datum": "2026-03-08",
+   "winnaar": {
+    "nr": "63",
+    "naam": "George RUSSELL",
+    "team": "Mercedes"
+   },
+   "pole": "63",
+   "punten": {
+    "kwalificatie": 22,
+    "stand": null,
+    "vorige": null,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 2,
+   "naam": "Shanghai",
+   "land": "China",
+   "datum": "2026-03-15",
+   "winnaar": {
+    "nr": "12",
+    "naam": "Kimi ANTONELLI",
+    "team": "Mercedes"
+   },
+   "pole": "12",
+   "punten": {
+    "kwalificatie": 26,
+    "stand": 13,
+    "vorige": 13,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 3,
+   "naam": "Suzuka",
+   "land": "Japan",
+   "datum": "2026-03-29",
+   "winnaar": {
+    "nr": "12",
+    "naam": "Kimi ANTONELLI",
+    "team": "Mercedes"
+   },
+   "pole": "12",
+   "punten": {
+    "kwalificatie": 27,
+    "stand": 27,
+    "vorige": 13,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 6,
+   "naam": "Miami Gardens",
+   "land": "United States",
+   "datum": "2026-05-03",
+   "winnaar": {
+    "nr": "12",
+    "naam": "Kimi ANTONELLI",
+    "team": "Mercedes"
+   },
+   "pole": "12",
+   "punten": {
+    "kwalificatie": 17,
+    "stand": 7,
+    "vorige": 18,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 7,
+   "naam": "Montréal",
+   "land": "Canada",
+   "datum": "2026-05-24",
+   "winnaar": {
+    "nr": "12",
+    "naam": "Kimi ANTONELLI",
+    "team": "Mercedes"
+   },
+   "pole": "63",
+   "punten": {
+    "kwalificatie": 4,
+    "stand": 12,
+    "vorige": 14,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 8,
+   "naam": "Monte Carlo",
+   "land": "Monaco",
+   "datum": "2026-06-07",
+   "winnaar": {
+    "nr": "12",
+    "naam": "Kimi ANTONELLI",
+    "team": "Mercedes"
+   },
+   "pole": "12",
+   "punten": {
+    "kwalificatie": 12,
+    "stand": 9,
+    "vorige": 16,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 9,
+   "naam": "Barcelona",
+   "land": "Spain",
+   "datum": "2026-06-14",
+   "winnaar": {
+    "nr": "44",
+    "naam": "Lewis HAMILTON",
+    "team": "Ferrari"
+   },
+   "pole": "63",
+   "punten": {
+    "kwalificatie": 23,
+    "stand": 15,
+    "vorige": 11,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 10,
+   "naam": "Spielberg",
+   "land": "Austria",
+   "datum": "2026-06-28",
+   "winnaar": {
+    "nr": "63",
+    "naam": "George RUSSELL",
+    "team": "Mercedes"
+   },
+   "pole": "63",
+   "punten": {
+    "kwalificatie": 23,
+    "stand": 7,
+    "vorige": 18,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 11,
+   "naam": "Silverstone",
+   "land": "United Kingdom",
+   "datum": "2026-07-05",
+   "winnaar": {
+    "nr": "16",
+    "naam": "Charles LECLERC",
+    "team": "Ferrari"
+   },
+   "pole": "12",
+   "punten": {
+    "kwalificatie": 16,
+    "stand": 16,
+    "vorige": 7,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 12,
+   "naam": "Spa-Francorchamps",
+   "land": "Belgium",
+   "datum": "2026-07-19",
+   "winnaar": {
+    "nr": "12",
+    "naam": "Kimi ANTONELLI",
+    "team": "Mercedes"
+   },
+   "pole": "12",
+   "punten": {
+    "kwalificatie": 16,
+    "stand": 16,
+    "vorige": 21,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 13,
+   "naam": "Budapest",
+   "land": "Hungary",
+   "datum": "2026-07-26",
+   "winnaar": {
+    "nr": "1",
+    "naam": "Lando NORRIS",
+    "team": "McLaren"
+   },
+   "pole": "1",
+   "punten": {
+    "kwalificatie": 23,
+    "stand": 8,
+    "vorige": 16,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 14,
+   "naam": "Zandvoort",
+   "land": "Netherlands",
+   "datum": "2026-08-23",
+   "winnaar": {
+    "nr": "1",
+    "naam": "Lando NORRIS",
+    "team": "McLaren"
+   },
+   "pole": "1",
+   "punten": {
+    "kwalificatie": 22,
+    "stand": 21,
+    "vorige": 21,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 15,
+   "naam": "Monza",
+   "land": "Italy",
+   "datum": "2026-09-06",
+   "winnaar": {
+    "nr": "12",
+    "naam": "Kimi ANTONELLI",
+    "team": "Mercedes"
+   },
+   "pole": "10",
+   "punten": {
+    "kwalificatie": 13,
+    "stand": 16,
+    "vorige": 10,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 16,
+   "naam": "Madrid",
+   "land": "Spain",
+   "datum": "2026-09-13",
+   "winnaar": {
+    "nr": "12",
+    "naam": "Kimi ANTONELLI",
+    "team": "Mercedes"
+   },
+   "pole": "1",
+   "punten": {
+    "kwalificatie": 21,
+    "stand": 14,
+    "vorige": 15,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 17,
+   "naam": "Baku",
+   "land": "Azerbaijan",
+   "datum": "2026-09-26",
+   "winnaar": {
+    "nr": "63",
+    "naam": "George RUSSELL",
+    "team": "Mercedes"
+   },
+   "pole": "63",
+   "punten": {
+    "kwalificatie": 17,
+    "stand": 6,
+    "vorige": 14,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 18,
+   "naam": "Kuala Lumpur",
+   "land": "Bahrain",
+   "datum": "2026-10-04",
+   "winnaar": {
+    "nr": "3",
+    "naam": "Max VERSTAPPEN",
+    "team": "Red Bull Racing"
+   },
+   "pole": "3",
+   "punten": {
+    "kwalificatie": 16,
+    "stand": 15,
+    "vorige": 9,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 19,
+   "naam": "Marina Bay",
+   "land": "Singapore",
+   "datum": "2026-10-11",
+   "winnaar": {
+    "nr": "3",
+    "naam": "Max VERSTAPPEN",
+    "team": "Red Bull Racing"
+   },
+   "pole": "3",
+   "punten": {
+    "kwalificatie": 18,
+    "stand": 11,
+    "vorige": 17,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 20,
+   "naam": "Austin",
+   "land": "United States",
+   "datum": "2026-10-25",
+   "winnaar": {
+    "nr": "12",
+    "naam": "Kimi ANTONELLI",
+    "team": "Mercedes"
+   },
+   "pole": "12",
+   "punten": {
+    "kwalificatie": 21,
+    "stand": 30,
+    "vorige": 16,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 21,
+   "naam": "Mexico City",
+   "land": "Mexico",
+   "datum": "2026-11-01",
+   "winnaar": {
+    "nr": "3",
+    "naam": "Max VERSTAPPEN",
+    "team": "Red Bull Racing"
+   },
+   "pole": "44",
+   "punten": {
+    "kwalificatie": 11,
+    "stand": 14,
+    "vorige": 11,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 22,
+   "naam": "São Paulo",
+   "land": "Brazil",
+   "datum": "2026-11-08",
+   "winnaar": {
+    "nr": "1",
+    "naam": "Lando NORRIS",
+    "team": "McLaren"
+   },
+   "pole": "1",
+   "punten": {
+    "kwalificatie": 8,
+    "stand": 14,
+    "vorige": 10,
+    "willekeurig": 5.7
+   }
+  }
+ ]
+}
