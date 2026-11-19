@@ -1,10 +1,12 @@
 name: Circuitcijfers
 
-# Twee soorten eigen cijfers uit OpenF1, allebei voor de site:
+# Drie soorten eigen cijfers, allemaal voor de site:
 #   - safety cars en rode vlaggen per circuit sinds 2023 (zoekplan GEO 3.2,
 #     scripts/circuits.mjs, site/data/circuits.json);
 #   - de tijden en uitslagen voor de racepagina's (zoekplan SEO fase 4,
-#     scripts/racedata.mjs, site/data/races-<jaar>.json).
+#     scripts/racedata.mjs, site/data/races-<jaar>.json);
+#   - hoe voorspelbaar het seizoen was (zoekplan GEO 3.1, scripts/statistiek.mjs,
+#     site/data/statistiek-<jaar>.json), uit de uitslagen in Supabase.
 # api.openf1.org is niet vanaf elke plek bereikbaar, vanaf een GitHub-runner
 # wel; daarom hier en niet op de laptop.
 #
@@ -40,6 +42,7 @@ on:
     paths:
       - 'scripts/circuits.mjs'
       - 'scripts/racedata.mjs'
+      - 'scripts/statistiek.mjs'
       - 'site/races.mjs'
       - '.github/workflows/circuits.yml'
 
@@ -65,6 +68,17 @@ jobs:
         env:
           DROOG: ${{ github.event_name == 'pull_request' && '1' || '' }}
         run: node scripts/circuits.mjs
+      # Hoe voorspelbaar was F1 (zoekplan GEO 3.1, scripts/statistiek.mjs): uit
+      # de uitslagen in Supabase, met de publieke sleutel. De pagina zelf staat
+      # pas online als STATISTIEK_LIVE aan staat (scripts/statistiekpagina.mjs).
+      # Gaat dit mis (Supabase even weg), dan gaan de circuitcijfers en de
+      # racepagina's gewoon door: de stap staat rood in de log, de run niet.
+      - name: Hoe voorspelbaar was F1
+        if: github.event.schedule != '23 */1 * * 5,6,0'
+        continue-on-error: true
+        env:
+          DROOG: ${{ github.event_name == 'pull_request' && '1' || '' }}
+        run: node scripts/statistiek.mjs
 
       # De pull --rebase is er voor de samenloop dat automerge of de sync net
       # iets in main zet terwijl deze run bezig is.

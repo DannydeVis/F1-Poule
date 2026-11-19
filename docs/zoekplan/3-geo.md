@@ -180,6 +180,8 @@ Een assistent citeert graag een concreet getal met een jaartal en een bron. Staa
 
 ### 3.1 "Hoe voorspelbaar was F1 in 2026?" (online in de week na Abu Dhabi, 6 december 2026)
 
+**Stand (19 november):** als concept gebouwd. De cijfers uit de uitslagen in Supabase in plaats van rechtstreeks uit OpenF1 (dezelfde lijsten, die de sync uit OpenF1 haalt), en de kwalificatie in plaats van de startopstelling na straffen: die staat niet in de database, en dat staat als beperking op de pagina. Publiceren staat in BEDIENING §18, "De datapagina".
+
 Voor elke race van 2026 uitrekenen hoeveel punten een simpele voorspelling had opgeleverd, met de puntentelling van de app. De voorspellingen om tegen te meten:
 
 - een willekeurige top 10, zoals automatisch invullen doet: hoeveel scoort iemand die niets invult?

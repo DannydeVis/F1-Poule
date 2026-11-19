@@ -28,6 +28,7 @@ import { teksten, TALEN, STANDAARD, BASIS } from '../site/teksten.mjs';
 import { PRIVACY } from '../site/privacy.mjs';
 import { PAGINAS } from '../site/paginas.mjs';
 import { RACEPAGINAS } from '../scripts/racepaginas.mjs';
+import { STATISTIEKPAGINAS } from '../scripts/statistiekpagina.mjs';
 import { knipUit } from '../scripts/knipsel.mjs';
 
 const { check, afronden } = maakControle('de landingspagina in zeven talen');
@@ -380,7 +381,7 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
   };
   // De gidsen en de about-pagina, en de racepagina's met hun overzicht
   // (scripts/racepaginas.mjs): hetzelfde sjabloon, dezelfde keuring.
-  for (const pg of [...PAGINAS, ...RACEPAGINAS]) {
+  for (const pg of [...PAGINAS, ...STATISTIEKPAGINAS, ...RACEPAGINAS]) {
     const cluster = TALEN.filter((c) => pg.talen[c]);
     const verwacht = [...cluster.map((c) => `${c}=${BASIS}/${pg.talen[c].pad}/`),
       `x-default=${BASIS}/${pg.talen[pg.talen.en ? 'en' : 'nl'].pad}/`].sort();
@@ -464,8 +465,10 @@ check('geen javascriptfouten op de landingspagina\'s', jsFouten.length === 0, js
       // pagina "wie wordt wereldkampioen" ook niet: die cijfers komen uit
       // site/data/spelers-<jaar>.json, en test/spelerscijfers-site.test.mjs
       // legt ze daarnaast.
+      // De datapagina "Hoe voorspelbaar was F1" ook niet: die cijfers komen uit
+      // site/data/statistiek-<jaar>.json (test/statistiekpagina.test.mjs).
       const feiten = FEITEN[pg.id]?.[code];
-      if (!race && !races && pg.soort !== 'kampioen') check(`${naam}: de getallen over de app komen uit de app`,
+      if (!race && !races && !['kampioen', 'data'].includes(pg.soort)) check(`${naam}: de getallen over de app komen uit de app`,
         feiten?.length > 0 && feiten.every((z) => kop.alles.includes(z)),
         feiten ? feiten.filter((z) => !kop.alles.includes(z)).join(' | ') : 'geen FEITEN voor deze gids');
       // De vergelijking heet "beste ... van 2026" (Danny, 12 oktober: gevonden
@@ -820,13 +823,13 @@ await stoppen();
   const privacy = Object.values(PRIVACY).map((p) => `${BASIS}/${p.pad}/`);
   // En dan de gidsen, elk in de talen waarin hij bestaat, en de racepagina's
   // met hun overzicht.
-  const gidsen = [...PAGINAS, ...RACEPAGINAS].flatMap((pg) => TALEN.filter((c) => pg.talen[c]).map((c) => `${BASIS}/${pg.talen[c].pad}/`));
+  const gidsen = [...PAGINAS, ...STATISTIEKPAGINAS, ...RACEPAGINAS].flatMap((pg) => TALEN.filter((c) => pg.talen[c]).map((c) => `${BASIS}/${pg.talen[c].pad}/`));
   check('de sitemap noemt elke taal, de privacyverklaring, de gidsen en de racepagina\'s',
     JSON.stringify(locs) === JSON.stringify([...TALEN.map(urlVan), ...privacy, ...gidsen]), locs.join(' '));
   const perUrl = sitemap.split('<url>').slice(1).map((u) => ({
     loc: u.match(/<loc>([^<]+)</)?.[1], n: (u.match(/hreflang="/g) ?? []).length }));
   const clusterGrootte = (loc) => {
-    const pg = [...PAGINAS, ...RACEPAGINAS].find((x) => Object.values(x.talen).some((t) => loc === `${BASIS}/${t.pad}/`));
+    const pg = [...PAGINAS, ...STATISTIEKPAGINAS, ...RACEPAGINAS].find((x) => Object.values(x.talen).some((t) => loc === `${BASIS}/${t.pad}/`));
     return pg ? Object.keys(pg.talen).length : privacy.includes(loc) ? privacy.length : TALEN.length;
   };
   check('met bij elke url de alternatieven van zijn eigen cluster, plus x-default',
