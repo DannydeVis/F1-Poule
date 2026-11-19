@@ -44,6 +44,7 @@ import { PAGINAS, PAGINA_UI } from '../site/paginas.mjs';
 import { knipUit } from './knipsel.mjs';
 import { uitersten, MIN_RACES } from './circuits.mjs';
 import { RACEPAGINAS } from './racepaginas.mjs';
+import { STATISTIEKPAGINAS } from './statistiekpagina.mjs';
 import { openPouleRegel, controleerCode } from './openpoule.mjs';
 import { ANDROID } from '../site/android.mjs';
 
@@ -1387,7 +1388,9 @@ const xDefaultVan = (pg) => (pg.talen.en ? 'en' : pg.talen.nl ? 'nl' : clusterVa
 // Alle artikelpagina's: de gidsen en de about-pagina uit site/paginas.mjs, en
 // de racepagina's met hun overzicht, gebouwd uit de gegevens van de workflow
 // "Circuitcijfers" (scripts/racepaginas.mjs, zoekplan SEO fase 4).
-const ALLE = [...PAGINAS, ...RACEPAGINAS];
+// En de datapagina "Hoe voorspelbaar was F1" (scripts/statistiekpagina.mjs,
+// zoekplan GEO 3.1), zodra die aan staat.
+const ALLE = [...PAGINAS, ...STATISTIEKPAGINAS, ...RACEPAGINAS];
 const paginasIn = (code) => ALLE.filter((pg) => pg.talen[code]);
 // Het overzicht van de races in deze taal, voor de voet en het kruimelpad.
 const racesIn = (code) => ALLE.find((pg) => pg.id === 'races')?.talen[code];
@@ -1446,6 +1449,13 @@ const ARTIKEL_CSS = `
   .artikel .slotblok p{color:var(--nacht-ink2)}
   .artikel .tabel.getallen th:last-child{text-align:right}
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
+  /* De datapagina (scripts/statistiekpagina.mjs): een race en vier kolommen
+     met getallen, ook op een telefoon van 360 pixels. */
+  .artikel .tabel.statistiek th,.artikel .tabel.statistiek td{padding:10px 5px;font-size:15px}
+  .artikel .tabel.statistiek thead th{font-size:10px;letter-spacing:.03em;white-space:normal;hyphens:auto;overflow-wrap:anywhere}
+  .artikel .tabel.statistiek td,.artikel .tabel.statistiek thead th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+  .artikel .tabel.statistiek tbody th{overflow-wrap:anywhere}
+  .artikel .tabel.statistiek td:last-child{font-weight:400;font-size:15px;line-height:1.35}
   .artikel .tabellen{margin:4px 0 16px}
   .artikel .tabellen .tabel{margin:0}
   /* Gratis tegenover premium: twee smalle kolommen met een vinkje of een
@@ -1626,6 +1636,9 @@ function artikelJsonLd(pg, code, datum, sinds) {
       url: `${url}#${set.id}`, inLanguage: code, isAccessibleForFree: true, license: OPENF1_LICENTIE,
       creator: { '@id': `${BASIS}/#organisatie` }, dateModified: datum,
       ...(pg.soort === 'race' ? { about: { '@id': `${url}#race` } } : {}),
+      // De datapagina: het jaar en het CSV-bestand om te downloaden.
+      ...(pg.csv ? { temporalCoverage: String(pg.id.match(/\d{4}/)?.[0] ?? ''), distribution: [{ '@type': 'DataDownload',
+        encodingFormat: 'text/csv', contentUrl: `${BASIS}/${pg.csv.pad}` }] } : {}),
       variableMeasured: set.waarden.map(([name, value]) => ({ '@type': 'PropertyValue', name, value })) });
   }
   if (t.faq?.length) {
@@ -2294,6 +2307,8 @@ bestanden.set(LASTMOD, JSON.stringify(Object.fromEntries([...LASTMOD_NIEUW].sort
 bestanden.set('sitemap.xml', sitemap());
 bestanden.set('robots.txt', ROBOTS);
 bestanden.set('llms.txt', llms());
+// Het CSV-bestand van de datapagina, naast de pagina's.
+for (const pg of STATISTIEKPAGINAS) if (pg.csv) bestanden.set(pg.csv.pad, pg.csv.inhoud);
 bestanden.set('404.html', NIET_GEVONDEN);
 bestanden.set('teller.js', teller());
 bestanden.set('herinner.js', herinner());

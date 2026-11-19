@@ -673,6 +673,13 @@
   .artikel .slotblok p{color:var(--nacht-ink2)}
   .artikel .tabel.getallen th:last-child{text-align:right}
   .artikel .tabel.getallen td:last-child{text-align:right;font-family:var(--cond);font-weight:700;font-size:22px;line-height:1}
+  /* De datapagina (scripts/statistiekpagina.mjs): een race en vier kolommen
+     met getallen, ook op een telefoon van 360 pixels. */
+  .artikel .tabel.statistiek th,.artikel .tabel.statistiek td{padding:10px 5px;font-size:15px}
+  .artikel .tabel.statistiek thead th{font-size:10px;letter-spacing:.03em;white-space:normal;hyphens:auto;overflow-wrap:anywhere}
+  .artikel .tabel.statistiek td,.artikel .tabel.statistiek thead th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+  .artikel .tabel.statistiek tbody th{overflow-wrap:anywhere}
+  .artikel .tabel.statistiek td:last-child{font-weight:400;font-size:15px;line-height:1.35}
   .artikel .tabellen{margin:4px 0 16px}
   .artikel .tabellen .tabel{margin:0}
   /* Gratis tegenover premium: twee smalle kolommen met een vinkje of een

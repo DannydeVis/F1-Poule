@@ -3502,6 +3502,39 @@ gaan als gewone PR en de automerge zet ze online zodra de tests groen zijn.
 Wil je iets toch eerst lezen, zeg het, of zet de PR op GitHub zelf terug op
 concept ("Convert to draft"); de automerge slaat een concept over.
 
+### De datapagina "Hoe voorspelbaar was F1 in 2026?" (concept sinds 19 november)
+
+Zoekplan GEO 3.1: per race hoeveel punten een simpele voorspelling van de top
+10 had opgeleverd, met de puntentelling van de app. Vier voorspellingen: de
+uitslag van de kwalificatie, de WK-stand vóór de race, de uitslag van de
+vorige race, en een willekeurige top 10 (exact uitgerekend, niet nagespeeld).
+
+- **De cijfers** rekent `scripts/statistiek.mjs` uit de uitslagen in Supabase
+  (de tabel races, met de publieke sleutel). Het draait elke dag in de
+  workflow "Circuitcijfers" en schrijft `site/data/statistiek-2026.json`.
+  Supabase en OpenF1 zijn niet vanaf elke plek bereikbaar, vanaf een
+  GitHub-runner wel.
+- **De pagina** maakt `scripts/statistiekpagina.mjs`: `/f1-2026-voorspelbaarheid/`
+  en `/en/how-predictable-was-f1-2026/`, met een tabel per race, de
+  voorspelbaarste races, hoe vaak de poleman won, de methode, de beperkingen en
+  de data als CSV (`data/voorspelbaarheid-2026.csv`), plus een `Dataset` in de
+  JSON-LD. Elk getal komt uit het bestand.
+- **Nog niet online.** `STATISTIEK_LIVE` in `scripts/statistiekpagina.mjs` staat
+  uit: dan is er geen pagina, geen CSV en niets in de sitemap.
+- **Bekijken zonder te publiceren:** `PTR_CONCEPT=1 node scripts/maak-site.mjs`
+  in een kopie van de repo, of vraag Claude Code om een schermafdruk.
+
+**Publiceren, na de finale in Abu Dhabi (6 december).** Zeg tegen Claude Code
+"zet de datapagina online". Die (1) start de workflow "Circuitcijfers" met de
+hand, zodat Abu Dhabi erin zit, (2) loopt drie races na tegen de uitslag op
+formula1.com, (3) laat jou de tekst lezen, en (4) zet `STATISTIEK_LIVE` op
+`true`. De generator zet de pagina dan in de sitemap, llms.txt en de JSON-LD.
+De beperking die erbij staat: de kwalificatie is niet de startopstelling na
+straffen, want die staat niet in de database.
+
+**Test.** `test/statistiek.test.mjs` (het rekenen) en
+`test/statistiekpagina.test.mjs` (de pagina, uit en aangezet in een kopie).
+
 ### De app op je telefoon
 
 Predict the Race staat niet in de App Store of Google Play. Op de voorpagina

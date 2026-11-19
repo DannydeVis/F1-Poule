@@ -13024,3 +13024,36 @@ vast seizoen 2026.
 
 **Danny moet:** niets; `schema.sql` staat al in productie. Zet voortaan een
 `?ref=` achter elke link die je deelt.
+
+## De datapagina "Hoe voorspelbaar was F1 in 2026?", als concept (19 november)
+
+Uit TickTick: "Vraag Claude Code om zoekplan GEO fase 3.1 nu al als concept te
+bouwen, met de races tot nu toe. Dan hoeft er op 8 december alleen nog de
+laatste run en het publiceren bij."
+
+**Wat er is.**
+- `scripts/statistiek.mjs`: per gereden race de punten van vier voorspellingen
+  (kwalificatie, WK-stand vóór de race, vorige race, willekeurig), met de
+  plekpunten van de app. Willekeurig is exact: 125 plekpunten gedeeld door het
+  aantal deelnemers (P11 en P12 tellen mee, zoals in de app). De stand telt races en sprints, met terugtellen bij gelijke
+  punten. Leest de tabel races in Supabase met de publieke sleutel; schrijft
+  `site/data/statistiek-2026.json`. Een stap in de workflow "Circuitcijfers"
+  (met `continue-on-error`, zodat de rest doorgaat als Supabase even weg is).
+- `scripts/statistiekpagina.mjs`: de pagina in NL en EN (soort `data`), met de
+  CSV en een Dataset met `distribution`. `STATISTIEK_LIVE = false`; met
+  `PTR_CONCEPT=1` maakt de generator hem toch.
+- Generator: de datapagina's in `ALLE`, de CSV als bestand, de Dataset met
+  jaar en download, en een tabelklasse `statistiek` die op 360 pixels past.
+- `test/site.test.mjs` kent de datapagina: aangezet wordt hij net zo gekeurd
+  als elke andere pagina, op de FEITEN na (de getallen komen uit de data).
+
+**Bewust anders dan het plan.** Uit Supabase en niet rechtstreeks uit OpenF1:
+dezelfde uitslagen, en het werkt ook als OpenF1 dicht is. De kwalificatie in
+plaats van de startopstelling na straffen: die staat niet in de database. Nog
+geen grafiek: de tabel per race staat er wel.
+
+**Nog te doen, na Abu Dhabi.** De workflow met de hand starten, drie races
+nalopen tegen formula1.com, Danny laten lezen, `STATISTIEK_LIVE` aan. De
+Reddit-post van 15 december kan dan naar de pagina linken (met `?ref=reddit`).
+
+**Tests.** Nieuw: `test/statistiek.test.mjs` en `test/statistiekpagina.test.mjs`.
