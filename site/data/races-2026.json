@@ -1545,7 +1545,83 @@
         ]
       },
       "uitslag": null,
-      "vrijeTrainingen": []
+      "vrijeTrainingen": [
+        {
+          "naam": "Practice 2",
+          "top": [
+            {
+              "plek": 1,
+              "nr": "63",
+              "code": "RUS",
+              "naam": "George Russell",
+              "team": "Mercedes"
+            },
+            {
+              "plek": 2,
+              "nr": "10",
+              "code": "GAS",
+              "naam": "Pierre Gasly",
+              "team": "Alpine"
+            },
+            {
+              "plek": 3,
+              "nr": "16",
+              "code": "LEC",
+              "naam": "Charles Leclerc",
+              "team": "Ferrari"
+            },
+            {
+              "plek": 4,
+              "nr": "6",
+              "code": "HAD",
+              "naam": "Isack Hadjar",
+              "team": "Red Bull Racing"
+            },
+            {
+              "plek": 5,
+              "nr": "81",
+              "code": "PIA",
+              "naam": "Oscar Piastri",
+              "team": "McLaren"
+            },
+            {
+              "plek": 6,
+              "nr": "44",
+              "code": "HAM",
+              "naam": "Lewis Hamilton",
+              "team": "Ferrari"
+            },
+            {
+              "plek": 7,
+              "nr": "1",
+              "code": "NOR",
+              "naam": "Lando Norris",
+              "team": "McLaren"
+            },
+            {
+              "plek": 8,
+              "nr": "12",
+              "code": "ANT",
+              "naam": "Kimi Antonelli",
+              "team": "Mercedes"
+            },
+            {
+              "plek": 9,
+              "nr": "43",
+              "code": "COL",
+              "naam": "Franco Colapinto",
+              "team": "Alpine"
+            },
+            {
+              "plek": 10,
+              "nr": "14",
+              "code": "ALO",
+              "naam": "Fernando Alonso",
+              "team": "Aston Martin"
+            }
+          ]
+        }
+      ]
     },
     {
       "circuit": 150,
