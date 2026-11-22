@@ -3,31 +3,31 @@
  "bron": "Predict the Race, op basis van OpenF1 (https://openf1.org): de uitslagen van kwalificatie, sprint en race",
  "max": 50,
  "laatste": {
-  "ronde": 22,
-  "naam": "São Paulo",
-  "datum": "2026-11-08"
+  "ronde": 23,
+  "naam": "Las Vegas",
+  "datum": "2026-11-22"
  },
- "gereden": 20,
+ "gereden": 21,
  "afgelast": [
   "Sakhir",
   "Jeddah"
  ],
  "gemiddeld": {
   "kwalificatie": {
-   "gemiddeld": 17.8,
-   "races": 20
+   "gemiddeld": 17.1,
+   "races": 21
   },
   "stand": {
-   "gemiddeld": 14.3,
-   "races": 19
+   "gemiddeld": 13.7,
+   "races": 20
   },
   "vorige": {
    "gemiddeld": 14.2,
-   "races": 19
+   "races": 20
   },
   "willekeurig": {
    "gemiddeld": 5.7,
-   "races": 20
+   "races": 21
   }
  },
  "best": [
@@ -54,19 +54,19 @@
    "punten": 4
   },
   {
+   "ronde": 23,
+   "naam": "Las Vegas",
+   "punten": 4
+  },
+  {
    "ronde": 22,
    "naam": "São Paulo",
    "punten": 8
-  },
-  {
-   "ronde": 21,
-   "naam": "Mexico City",
-   "punten": 11
   }
  ],
  "pole": {
   "gewonnen": 14,
-  "races": 20
+  "races": 21
  },
  "races": [
   {
@@ -426,6 +426,24 @@
     "kwalificatie": 8,
     "stand": 14,
     "vorige": 10,
+    "willekeurig": 5.7
+   }
+  },
+  {
+   "ronde": 23,
+   "naam": "Las Vegas",
+   "land": "United States",
+   "datum": "2026-11-22",
+   "winnaar": {
+    "nr": "3",
+    "naam": "Max VERSTAPPEN",
+    "team": "Red Bull Racing"
+   },
+   "pole": "12",
+   "punten": {
+    "kwalificatie": 4,
+    "stand": 3,
+    "vorige": 14,
     "willekeurig": 5.7
    }
   }

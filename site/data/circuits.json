@@ -2,11 +2,11 @@
   "bron": "OpenF1 (https://openf1.org): race_control, en session_result en drivers voor pole en winnaar",
   "regel": "Een virtuele safety car telt mee, net als in de app (telSafetyCars en hadRodeVlag in scripts/uitslagen.mjs).",
   "vanaf": 2023,
-  "tot": "2026-11-08",
-  "races": 90,
-  "metSafetyCar": 62,
+  "tot": "2026-11-22",
+  "races": 91,
+  "metSafetyCar": 63,
   "metRodeVlag": 12,
-  "metPole": 90,
+  "metPole": 91,
   "poleGewonnen": 57,
   "ontbreekt": [
     {
@@ -487,11 +487,11 @@
       "naam": "Las Vegas",
       "locatie": "Las Vegas",
       "land": "United States",
-      "races": 3,
-      "metSafetyCar": 2,
-      "safetyCars": 5,
+      "races": 4,
+      "metSafetyCar": 3,
+      "safetyCars": 6,
       "metRodeVlag": 0,
-      "metPole": 3,
+      "metPole": 4,
       "poleGewonnen": 1,
       "perRace": [
         {
@@ -538,6 +538,22 @@
           },
           "winnaar": {
             "nr": "1",
+            "naam": "Max Verstappen"
+          },
+          "poleWon": false
+        },
+        {
+          "jaar": 2026,
+          "datum": "2026-11-22",
+          "sessie": 11420,
+          "safetyCars": 1,
+          "rodeVlag": false,
+          "pole": {
+            "nr": "12",
+            "naam": "Kimi Antonelli"
+          },
+          "winnaar": {
+            "nr": "3",
             "naam": "Max Verstappen"
           },
           "poleWon": false
