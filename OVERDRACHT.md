@@ -13057,3 +13057,32 @@ nalopen tegen formula1.com, Danny laten lezen, `STATISTIEK_LIVE` aan. De
 Reddit-post van 15 december kan dan naar de pagina linken (met `?ref=reddit`).
 
 **Tests.** Nieuw: `test/statistiek.test.mjs` en `test/statistiekpagina.test.mjs`.
+
+## Premium: een banner en een groter logo (23 november)
+
+Danny, met een schermafdruk van de premiumpagina (het profiel was een smalle
+balk met een kleine sponsorregel): "Kan je de premium feature verbeteren op
+dit punt. Het moet groter en groter plaatje, banner. En pas gelijk ook de
+premium pagina aan."
+
+**Wat er verandert.**
+- Database: `pools.merk_banner` (een pad in dezelfde map van de bucket
+  `poulelogo`, zelfde check als het logo), en `pools_profiel_bewaken()` laat
+  een banner alleen zetten zolang premium loopt. De controleregel telt zes
+  kolommen. Staat in productie.
+- App: `merkBanner()` bovenaan de racelijst (de banner, en op een telefoon
+  daaronder het logo op 64 pixels met naam en sponsorregel); het logo in de
+  kop op een breed scherm van 44 naar 64 pixels; de banner bij "Wie ben jij?"
+  en als voorbeeld bij het profiel. Uploaden via `verkleinBanner()`: bijsnijden
+  tot 3 bij 1, hoogstens 1500 breed, webp of jpg onder 200 kB. Weghalen haalt
+  ook de banner weg. Twee teksten nieuw of anders, in alle zeven talen.
+- Premiumpagina: de sectie over het profiel gaat nu over banner, logo en
+  sponsor, met een nieuwe schermafdruk. `scripts/maak-premiumbeelden.mjs`
+  tekent een verzonnen logo en banner van "Bakkerij Jansen" en zet die in de
+  opslag van de nabootsing. De vergelijkingstabel noemt de banner.
+
+**Bewust niet.** De banner staat niet op het deelplaatje en niet in de pdf: die
+hebben al het logo, en een tweede beeld maakt ze druk.
+
+**Tests.** `premium.test.mjs` (banner: 10 nieuwe checks), `premium.test.sql`
+(banner), en de premiumpagina met de nieuwe plaatjes.

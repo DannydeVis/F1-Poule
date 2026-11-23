@@ -23,6 +23,11 @@
 //      sponsor.
 //   6. Het deelplaatje: de schuine strepen in de kleur van de poule, en het
 //      logo onderaan; in de story ook (logo rechtsonder, strepen linksonder).
+//   6b. De banner (23 november): een breed plaatje dat de app bijsnijdt tot 3
+//      bij 1 en kleiner maakt; groot bovenaan de racelijst met het logo op 64
+//      pixels, de naam en de sponsorregel eronder; op een breed scherm alleen
+//      de banner (logo en naam staan in de kop, ook op 64 pixels); niet op
+//      de andere tabs; ook bij "Wie ben jij?"; een nieuwe banner ruimt de oude op.
 //   7. Weghalen haalt alles weg, ook het bestand. Is premium voorbij, dan is
 //      het profiel nergens meer te zien.
 //   8. In het Engels de uitleg in het Engels; geen javascriptfouten.
@@ -333,6 +338,99 @@ await page.keyboard.press('Escape');
   check('en het vorige logo is weg uit de opslag', Object.keys(d.opslag ?? {}).length === 1, Object.keys(d.opslag ?? {}).join(', '));
 }
 
+// ---- 6b. de banner ------------------------------------------------------------------------
+{
+  const foto = async (kleur) => Buffer.from(await page.evaluate((k) => {
+    const c = document.createElement('canvas'); c.width = 2400; c.height = 1600;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 2400, 1600); g.addColorStop(0, k); g.addColorStop(1, '#2040d0');
+    x.fillStyle = g; x.fillRect(0, 0, 2400, 1600);
+    const d = x.getImageData(0, 0, 2400, 1600);
+    for (let i = 0; i < d.data.length; i += 4) { const r = (Math.random() - 0.5) * 24; d.data[i] += r; d.data[i + 1] += r; d.data[i + 2] += r; }
+    x.putImageData(d, 0, 0);
+    return c.toDataURL('image/png').split(',')[1];
+  }, kleur), 'base64');
+  const bewaar = async (buf) => {
+    await naarPoule();
+    await page.setInputFiles('#profielbanner', { name: 'banner.png', mimeType: 'image/png', buffer: buf });
+    await page.click('#profielBewaren');
+    await page.waitForFunction(() => document.querySelector('.melding')?.textContent.includes('opgeslagen')
+      || document.querySelector('#profielfout')?.textContent.trim(), null, { timeout: 20000 }).catch(() => {});
+  };
+  const eerste = await foto('#d04020');
+  await page.reload();
+  await bewaar(eerste);
+  let d = await lees();
+  const pad = d.pools[0].merk_banner ?? '';
+  const url = d.opslag?.[pad] ?? '';
+  const maat = await page.evaluate((src) => new Promise((klaar) => {
+    const b = new Image(); b.onload = () => klaar([b.naturalWidth, b.naturalHeight]); b.onerror = () => klaar([0, 0]); b.src = src;
+  }), url);
+  const bytes = Buffer.from(url.split(',')[1] ?? '', 'base64').length;
+  check('een banner: de app snijdt hem bij tot 3 bij 1, hoogstens 1500 breed, webp onder 200 kB, in de map van de poule',
+    eerste.length > 204800 && /^pool-1\/banner-\d+\.webp$/.test(pad) && url.startsWith('data:image/webp')
+      && maat[0] === 1500 && maat[1] === 500 && bytes <= 204800,
+    `${pad} · ${maat.join('x')} · ${bytes} bytes · ${(await page.textContent('#profielfout').catch(() => '')).trim()}`);
+  check('de poulebaas ziet de banner bij het profiel', !!(await page.$('[data-profielvoorbeeld]'))
+    && (await page.getAttribute('.bannerbeeld.voorbeeld', 'src')) === url);
+
+  const zichtbaar = (sel) => page.evaluate((s) => {
+    const e = document.querySelector(s);
+    return !!e && getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0;
+  }, sel);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.click('[data-weergave="races"]');
+  if (await page.isVisible('#terug')) await page.click('#terug');
+  await page.waitForSelector('[data-merkbanner]');
+  const tel = await page.evaluate(() => {
+    const b = document.querySelector('[data-merkbanner]');
+    const beeld = b.querySelector('[data-banner]').getBoundingClientRect();
+    const logo = b.querySelector('[data-poulelogo]')?.getBoundingClientRect();
+    return { breed: Math.round(beeld.width), hoog: Math.round(beeld.height), logo: logo && Math.round(logo.width),
+      tekst: b.querySelector('.bannerregel').textContent.replace(/\s+/g, ' ').trim(),
+      boven: Math.round(b.getBoundingClientRect().top), scroll: document.documentElement.scrollWidth };
+  });
+  check('op een telefoon groot bovenaan de racelijst: de banner over de hele breedte, 3 bij 1',
+    tel.breed >= 350 && Math.abs(tel.breed / tel.hoog - 3) < 0.05 && tel.boven < 200 && tel.scroll <= 390, JSON.stringify(tel));
+  check('met daaronder het logo op 64 pixels, de naam en de sponsorregel',
+    tel.logo === 64 && tel.tekst.includes('mogelijk gemaakt door Bakkerij Jansen'), JSON.stringify(tel));
+  check('en de sponsor niet nog een keer in een balk erboven', !(await zichtbaar('.sponsorbalk')));
+  await page.click('[data-weergave="stand"]');
+  check('op de andere tabs geen banner, wel de sponsorbalk', !(await page.$('[data-merkbanner]')) && await zichtbaar('.sponsorbalk'));
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.click('[data-weergave="races"]');
+  if (await page.isVisible('#terug')) await page.click('#terug');
+  await page.waitForSelector('[data-merkbanner]');
+  const breed = await page.evaluate(() => ({
+    beeld: Math.round(document.querySelector('[data-merkbanner] [data-banner]').getBoundingClientRect().width),
+    regel: getComputedStyle(document.querySelector('[data-merkbanner] .bannerregel')).display,
+    koplogo: Math.round(document.querySelector('.kop [data-poulelogo]')?.getBoundingClientRect().width ?? 0) }));
+  check('op een breed scherm de banner, en het logo groot in de kop (niet dubbel eronder)',
+    breed.beeld > 600 && breed.regel === 'none' && breed.koplogo === 64, JSON.stringify(breed));
+
+  // Wie met de code binnenkomt, ziet de banner ook.
+  {
+    const basis = page.url().replace(/[?#].*$/, '');
+    const toestel = await page.evaluate(() => JSON.stringify(localStorage));
+    await page.evaluate(() => localStorage.clear());
+    await page.goto(`${basis}?code=RTM026`);
+    await page.waitForSelector('[data-lid]');
+    const src = await page.getAttribute('.kaart [data-banner]', 'src').catch(() => null);
+    check('wie met de code binnenkomt ziet bij "Wie ben jij?" de banner', src === url, String(src).slice(0, 40));
+    await page.evaluate((t) => {
+      localStorage.clear();
+      for (const [k, v] of Object.entries(JSON.parse(t))) localStorage.setItem(k, v);
+    }, toestel);
+    await page.goto(basis);
+    await page.waitForSelector('[data-weergave="poule"]');
+  }
+  // Een nieuwe banner: de oude is weg uit de opslag.
+  await bewaar(await foto('#20a040'));
+  d = await lees();
+  check('een nieuwe banner ruimt de oude op', d.pools[0].merk_banner !== pad && !d.opslag?.[pad] && !!d.opslag?.[d.pools[0].merk_banner],
+    Object.keys(d.opslag ?? {}).join(', '));
+}
+
 // ---- 7. weghalen, en premium voorbij --------------------------------------------------
 await naarPoule();
 await page.click('#profielWeg');
@@ -341,7 +439,7 @@ await page.waitForFunction(() => document.querySelector('.melding')?.textContent
   const d = await lees();
   const p = d.pools[0];
   check('weghalen haalt alles weg, ook het bestand in de opslag',
-    !p.merk_logo && !p.merk_kleur && !p.sponsor_tekst && !p.sponsor_url && !Object.keys(d.opslag ?? {}).length,
+    !p.merk_logo && !p.merk_banner && !p.merk_kleur && !p.sponsor_tekst && !p.sponsor_url && !Object.keys(d.opslag ?? {}).length,
     JSON.stringify({ p, opslag: d.opslag && Object.keys(d.opslag) }));
 }
 // Weer een profiel, en dan loopt premium af.
