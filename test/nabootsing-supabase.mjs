@@ -216,6 +216,7 @@ function magVoorSpelerIn(memberId, poolId) {
 function profielFout(p) {
   if (p.merk_kleur != null && !/^#[0-9a-f]{6}$/.test(p.merk_kleur)) return 'pools_merk_kleur';
   if (p.merk_logo != null && !new RegExp(`^${p.id}/[A-Za-z0-9_-]{1,60}[.](png|jpg|jpeg|webp)$`).test(p.merk_logo)) return 'pools_merk_logo';
+  if (p.merk_banner != null && !new RegExp(`^${p.id}/[A-Za-z0-9_-]{1,60}[.](png|jpg|jpeg|webp)$`).test(p.merk_banner)) return 'pools_merk_banner';
   if (p.sponsor_tekst != null && !(String(p.sponsor_tekst).trim().length >= 1 && String(p.sponsor_tekst).trim().length <= 80)) return 'pools_sponsor_tekst';
   if (p.sponsor_url != null && !(p.sponsor_tekst != null && p.sponsor_url.length <= 300
       && /^https:\/\/[A-Za-z0-9.-]+([/?#][^\s<>"'`]*)?$/.test(p.sponsor_url))) return 'pools_sponsor_url';
@@ -468,7 +469,7 @@ function uitvoeren(tabel, q) {
       if ('premium_tot' in u && raakt.some((r) => (r.premium_tot ?? null) !== (u.premium_tot ?? null))) {
         return { data: null, error: { code: 'P0001', message: 'premium zet alleen het beheer aan' } };
       }
-      const zet = ['merk_kleur', 'merk_logo', 'sponsor_tekst', 'sponsor_url'].filter((k) => k in u && u[k] !== null);
+      const zet = ['merk_kleur', 'merk_logo', 'merk_banner', 'sponsor_tekst', 'sponsor_url'].filter((k) => k in u && u[k] !== null);
       if (zet.length && raakt.some((r) => !(r.premium_tot && Date.parse(r.premium_tot) > Date.now())
           && zet.some((k) => u[k] !== r[k]))) {
         return { data: null, error: { code: 'P0001', message: 'een eigen profiel kan alleen met premium' } };
@@ -1569,7 +1570,7 @@ Object.assign(functies, {
     // komt terug zonder premiumkolommen (test/beheer.test.mjs).
     if (globalThis.__zonderPremium) {
       bewaren();
-      const { premium_tot, merk_kleur, merk_logo, sponsor_tekst, sponsor_url, ...oud } = kopie(p);
+      const { premium_tot, merk_kleur, merk_logo, merk_banner, sponsor_tekst, sponsor_url, ...oud } = kopie(p);
       return { data: oud, error: null };
     }
     if ('premium_tot' in p_wijziging) p.premium_tot = p_wijziging.premium_tot || null;

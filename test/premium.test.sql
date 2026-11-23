@@ -96,7 +96,15 @@ begin
   exception when others then fout := sqlerrm;
   end;
   if fout is null then raise exception 'gezakt: zonder premium kon de poulebaas een sponsorregel zetten'; end if;
-  raise notice 'ok: zonder premium geen kleur en geen sponsorregel';
+  fout := null;
+  begin
+    update pools set merk_banner = '11111111-0000-0000-0000-0000000000a1/banner-1.jpg' where id = '11111111-0000-0000-0000-0000000000a1';
+  exception when others then fout := sqlerrm;
+  end;
+  if fout is null or fout not like '%alleen met premium%' then
+    raise exception 'gezakt: zonder premium kon de poulebaas een banner zetten (%)', fout;
+  end if;
+  raise notice 'ok: zonder premium geen kleur, geen sponsorregel en geen banner';
 
   -- De beheerder zet premium aan.
   perform set_config('request.jwt.claims', '{"sub":"dddddddd-0000-0000-0000-0000000000a1"}', true);
@@ -109,10 +117,11 @@ begin
   perform set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-0000000000a2"}', true);
   update pools set merk_kleur = '#1a2b3c', sponsor_tekst = 'Bakkerij Jansen',
     sponsor_url = 'https://bakkerij-jansen.example/actie?bron=poule',
-    merk_logo = '11111111-0000-0000-0000-0000000000a1/logo-1.png'
+    merk_logo = '11111111-0000-0000-0000-0000000000a1/logo-1.png',
+    merk_banner = '11111111-0000-0000-0000-0000000000a1/banner-1.webp'
   where id = '11111111-0000-0000-0000-0000000000a1';
   if not found then raise exception 'gezakt: met premium kon de poulebaas zijn profiel niet zetten'; end if;
-  raise notice 'ok: met premium zet de poulebaas logo, kleur en sponsorregel';
+  raise notice 'ok: met premium zet de poulebaas logo, banner, kleur en sponsorregel';
 
   -- Bram speelt mee maar is geen poulebaas: hij raakt niets.
   perform set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-0000000000a3"}', true);
@@ -138,15 +147,17 @@ begin
       $q$update pools set sponsor_tekst = null where id = '11111111-0000-0000-0000-0000000000a1'$q$,
       $q$update pools set merk_logo = '22222222-0000-0000-0000-0000000000a2/logo.png' where id = '11111111-0000-0000-0000-0000000000a1'$q$,
       $q$update pools set merk_logo = '11111111-0000-0000-0000-0000000000a1/logo.svg' where id = '11111111-0000-0000-0000-0000000000a1'$q$,
-      $q$update pools set merk_logo = '11111111-0000-0000-0000-0000000000a1/../logo.png' where id = '11111111-0000-0000-0000-0000000000a1'$q$
+      $q$update pools set merk_logo = '11111111-0000-0000-0000-0000000000a1/../logo.png' where id = '11111111-0000-0000-0000-0000000000a1'$q$,
+      $q$update pools set merk_banner = '22222222-0000-0000-0000-0000000000a2/banner.jpg' where id = '11111111-0000-0000-0000-0000000000a1'$q$,
+      $q$update pools set merk_banner = '11111111-0000-0000-0000-0000000000a1/banner.gif' where id = '11111111-0000-0000-0000-0000000000a1'$q$
     ]) loop
     begin
       execute fout;
     exception when check_violation then n := n + 1;
     end;
   end loop;
-  if n <> 12 then raise exception 'gezakt: % van de 12 verkeerde waarden werden geweigerd', n; end if;
-  raise notice 'ok: een kleur is #rrggbb, een link is https zonder rare tekens en met een tekst, het logo staat in de eigen map en is geen svg';
+  if n <> 14 then raise exception 'gezakt: % van de 14 verkeerde waarden werden geweigerd', n; end if;
+  raise notice 'ok: een kleur is #rrggbb, een link is https zonder rare tekens en met een tekst, het logo en de banner staan in de eigen map en zijn geen svg of gif';
 
   -- ============================================================
   --  4. de logo's in de opslag
@@ -273,7 +284,13 @@ begin
   exception when insufficient_privilege then null;
   end;
   if gelukt then raise exception 'gezakt: na premium kon de poulebaas nog een logo zetten'; end if;
-  update pools set merk_kleur = null, merk_logo = null, sponsor_url = null, sponsor_tekst = null
+  fout := null;
+  begin
+    update pools set merk_banner = '11111111-0000-0000-0000-0000000000a1/banner-9.jpg' where id = '11111111-0000-0000-0000-0000000000a1';
+  exception when others then fout := sqlerrm;
+  end;
+  if fout is null then raise exception 'gezakt: na premium kon de poulebaas nog een banner zetten'; end if;
+  update pools set merk_kleur = null, merk_logo = null, merk_banner = null, sponsor_url = null, sponsor_tekst = null
   where id = '11111111-0000-0000-0000-0000000000a1';
   if not found then raise exception 'gezakt: na premium kon de poulebaas zijn profiel niet weghalen'; end if;
   raise notice 'ok: is premium voorbij, dan geen nieuwe kleur of logo meer, maar weghalen kan altijd';

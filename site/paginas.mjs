@@ -2190,9 +2190,9 @@ export const PAGINAS = [
       nl: {
         pad: 'premium',
         titel: 'Premium voor je F1-poule: wat je krijgt | Predict the Race',
-        omschrijving: 'Premium voor grote poules, bedrijven en clubs: een eigen logo en kleur, teams, eigen vragen, tussenklassementen, de tik en hulp voor de groepsapp. Met voorbeelden.',
+        omschrijving: 'Premium voor grote poules, bedrijven en clubs: een eigen banner en logo, teams, eigen vragen, tussenklassementen, de tik en hulp voor de groepsapp. Met voorbeelden.',
         kop: 'Premium voor je F1-poule',
-        kort: 'Premium is een pakket extra\'s voor grote poules, bedrijven en clubs: een eigen logo en kleur, teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen, de tik en hulp voor de groepsapp. Meespelen blijft voor iedereen gratis. Hieronder eerst wat gratis is en wat premium erbij geeft, en dan elk onderdeel met een schermafdruk uit de app.',
+        kort: 'Premium is een pakket extra\'s voor grote poules, bedrijven en clubs: een eigen banner, logo en kleur, teams die tegen elkaar spelen, eigen vragen per weekend, tussenklassementen, de tik en hulp voor de groepsapp. Meespelen blijft voor iedereen gratis. Hieronder eerst wat gratis is en wat premium erbij geeft, en dan elk onderdeel met een schermafdruk uit de app.',
         secties: [
           {
             id: 'gratis-of-premium',
@@ -2211,7 +2211,7 @@ export const PAGINAS = [
                 ['Reacties op elkaars weekend', true, true],
                 ['Een seintje of een mail voor de deadline en na de uitslag', true, true],
                 ['Spelers per poule', 'tot {maxSpelers}', 'tot {maxSpelers}'],
-                ['Eigen logo, kleur en sponsorregel', false, true],
+                ['Eigen banner, logo, kleur en sponsorregel', false, true],
                 ['Teams met een teamstand', false, true],
                 ['Eigen vragen per weekend', false, true],
                 ['Tussenklassementen met een eigen winnaar', false, true],
@@ -2226,12 +2226,12 @@ export const PAGINAS = [
           },
           {
             id: 'profiel',
-            vraag: 'Hoe ziet een poule met een eigen kleur en sponsor eruit?',
-            kort: 'Een poule met premium krijgt een eigen gezicht: je logo naast de naam, je eigen kleur in de app en een regel "mogelijk gemaakt door" met een link naar de sponsor. Dat staat in de app, op het deelplaatje van de uitslag en bij de uitnodiging.',
+            vraag: 'Hoe ziet een poule met een eigen banner, logo en sponsor eruit?',
+            kort: 'Een poule met premium krijgt een eigen gezicht: een grote banner bovenaan de app, je logo groot naast de naam, je eigen kleur en een regel "mogelijk gemaakt door" met een link naar de sponsor. Iedereen in de poule ziet de banner elke keer dat hij de app opent; het logo en de sponsor staan ook op het deelplaatje van de uitslag en bij de uitnodiging.',
             beeld: 'profiel',
-            beeldAlt: 'De app met een groene kleurbalk onder de naam van de poule en de regel "mogelijk gemaakt door Bakkerij Jansen"',
+            beeldAlt: 'De app met een groene banner van Bakkerij Jansen bovenaan, daaronder het logo groot met de naam van de poule en de regel "mogelijk gemaakt door Bakkerij Jansen"',
             tekst: [
-              'De poulebaas stelt het in op de Poule-tab: een logo uploaden (een groot plaatje maakt de app vanzelf kleiner), een kleur kiezen en de naam en de link van de sponsor invullen.',
+              'De poulebaas stelt het in op de Poule-tab: een banner en een logo uploaden, een kleur kiezen en de naam en de link van de sponsor invullen. De banner mag elk breed plaatje zijn: de app snijdt hem bij tot 3 bij 1 en maakt hem zelf kleiner, net als een groot logo.',
             ],
           },
           {
@@ -2304,9 +2304,9 @@ export const PAGINAS = [
       en: {
         pad: 'en/premium',
         titel: 'Premium for your F1 prediction league | Predict the Race',
-        omschrijving: 'Premium for big leagues, companies and clubs: your own logo and colour, teams, custom questions, interim standings, nudges and group chat help. With examples.',
+        omschrijving: 'Premium for big leagues, companies and clubs: your own banner and logo, teams, custom questions, interim standings, nudges and group chat help. With examples.',
         kop: 'Premium for your F1 prediction league',
-        kort: 'Premium is a set of extras for big leagues, companies and clubs: your own logo and colour, teams that play each other, custom questions every weekend, interim standings, nudges and help for the group chat. Playing stays free for everyone. Below you first see what is free and what premium adds, then every part with a screenshot from the app.',
+        kort: 'Premium is a set of extras for big leagues, companies and clubs: your own banner, logo and colour, teams that play each other, custom questions every weekend, interim standings, nudges and help for the group chat. Playing stays free for everyone. Below you first see what is free and what premium adds, then every part with a screenshot from the app.',
         secties: [
           {
             id: 'free-or-premium',
@@ -2325,7 +2325,7 @@ export const PAGINAS = [
                 ['Reactions to each other\'s weekend', true, true],
                 ['A notification or an email before the deadline and after the result', true, true],
                 ['Players per league', 'up to {maxSpelers}', 'up to {maxSpelers}'],
-                ['Your own logo, colour and sponsor line', false, true],
+                ['Your own banner, logo, colour and sponsor line', false, true],
                 ['Teams with a team table', false, true],
                 ['Custom questions every weekend', false, true],
                 ['Interim standings with their own winner', false, true],
@@ -2340,12 +2340,12 @@ export const PAGINAS = [
           },
           {
             id: 'branding',
-            vraag: 'What does a league with its own colour and sponsor look like?',
-            kort: 'A league with premium gets its own look: your logo next to the name, your own colour in the app and a "made possible by" line with a link to the sponsor. It shows in the app, on the share image of the result and on the invitation.',
+            vraag: 'What does a league with its own banner, logo and sponsor look like?',
+            kort: 'A league with premium gets its own look: a large banner at the top of the app, your logo in large next to the name, your own colour and a "brought to you by" line with a link to the sponsor. Everyone in the league sees the banner every time they open the app; the logo and the sponsor also show on the share image of the result and on the invitation.',
             beeld: 'profiel',
-            beeldAlt: 'The app with a green colour bar below the league name and the line "made possible by Jansen Bakery"',
+            beeldAlt: 'The app with a green Jansen Bakery banner at the top, below it the logo in large with the league name and the line "brought to you by Jansen Bakery"',
             tekst: [
-              'The league owner sets it up on the Pool tab: upload a logo (the app shrinks a large image by itself), pick a colour and fill in the sponsor\'s name and link.',
+              'The league owner sets it up on the Pool tab: upload a banner and a logo, pick a colour and fill in the sponsor\'s name and link. The banner can be any wide image: the app crops it to 3 by 1 and shrinks it by itself, just like a large logo.',
             ],
           },
           {

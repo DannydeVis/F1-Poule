@@ -460,6 +460,15 @@
   .merk .poulelogo.klein{width:34px;height:34px;border-radius:8px;padding:3px}
   .merk .blok.metlogo{display:none}
   .sponsorbalk{padding:8px 16px;border-bottom:1px solid var(--lijn);background:var(--paneel)}
+  /* De banner (premium, 23 november): groot bovenaan de racelijst, 3 bij 1,
+     met daaronder het logo op 64 pixels, de naam en de sponsorregel. */
+  .merkbanner{margin:14px 16px 0;border:1px solid var(--lijn);border-radius:18px;overflow:hidden;
+    background:var(--paneel)}
+  .bannerbeeld{display:block;width:100%;height:auto;aspect-ratio:3/1;object-fit:cover;background:var(--lijn)}
+  .bannerbeeld.uitnodiging,.bannerbeeld.voorbeeld{border-radius:14px;border:1px solid var(--lijn)}
+  .bannerregel{display:flex;align-items:center;gap:14px;padding:12px 14px}
+  .bannerregel strong{display:block;font-size:17px;line-height:1.25}
+  .merkbanner:not(.metbeeld) .bannerregel{padding:16px}
   .teamstand{display:flex;flex-direction:column;gap:8px}
   .periodes{display:flex;flex-direction:column;gap:12px}
   .periode{display:flex;flex-direction:column;gap:8px}
@@ -1728,6 +1737,10 @@
        the Race" is langer dan waar die maat op berekend was. */
     .merk{flex-wrap:wrap;row-gap:6px}
     .merk .poulelogo.klein, .sponsorbalk{display:none}
+    /* Op een breed scherm staan logo en naam al groot in de kop: hier alleen
+       de banner zelf. */
+    .merkbanner{margin:4px 28px 0}
+    .merkbanner .bannerregel, .merkbanner:not(.metbeeld){display:none}
     .merk .blok.metlogo{display:block}
     /* "Predict the Race" past niet naast het blok én de wisselknop. De knop
        zakt daarom naar de tweede regel, naast de ondertitel -- dan houdt de
@@ -4844,8 +4857,10 @@ const ENGELS = Object.fromEntries([
    'premium: extras for big leagues'],
   ['eigen profiel',
    'league profile'],
-  ['Premium tot {datum}. Het logo, de kleur en de sponsorregel staan in de app, op het deelplaatje en bij de uitnodiging.',
-   'Premium until {datum}. The logo, the colour and the sponsor line appear in the app, on the share image and on the invite.'],
+  ['Premium tot {datum}. De banner staat groot bovenaan de app; het logo, de kleur en de sponsorregel staan in de app, op het deelplaatje en bij de uitnodiging.',
+   'Premium until {datum}. The banner appears large at the top of the app; the logo, the colour and the sponsor line appear in the app, on the share image and on the invite.'],
+  ['banner (een breed plaatje; de app snijdt het bij tot 3 bij 1)',
+   'banner (a wide image; the app crops it to 3 by 1)'],
   ['nog geen sponsorregel',
    'no sponsor line yet'],
   ['logo (een groot plaatje maakt de app vanzelf kleiner)',
@@ -8164,6 +8179,39 @@ function logoUrl(p = S.poule) {
   if (!premiumActief(p) || !p.merk_logo || !db?.storage) return null;
   return db.storage.from('poulelogo').getPublicUrl(p.merk_logo).data?.publicUrl ?? null;
 }
+// De banner (23 november; Danny: "het moet groter, een groter plaatje, een
+// banner"): een breed plaatje bovenaan de racelijst, 3 bij 1. De app snijdt
+// elk plaatje bij tot 3 bij 1 vanuit het midden en maakt het hoogstens 1500
+// pixels breed, als webp of jpg en onder LOGO_MAX (dezelfde bucket, dezelfde
+// grens). null: niet te lezen, of ook op 900 pixels nog te zwaar.
+const BANNER_VERHOUDING = 3;
+async function verkleinBanner(bestand) {
+  let beeld;
+  try { beeld = await createImageBitmap(bestand); } catch { return null; }
+  let sw = beeld.width, sh = Math.round(beeld.width / BANNER_VERHOUDING);
+  if (sh > beeld.height) { sh = beeld.height; sw = Math.round(beeld.height * BANNER_VERHOUDING); }
+  const sx = Math.round((beeld.width - sw) / 2), sy = Math.round((beeld.height - sh) / 2);
+  for (const breed of [1500, 1200, 900]) {
+    const doek = document.createElement('canvas');
+    doek.width = Math.min(breed, sw);
+    doek.height = Math.max(1, Math.round(doek.width / BANNER_VERHOUDING));
+    const x = doek.getContext('2d');
+    for (const [soort, kwaliteit] of [['image/webp', 0.85], ['image/jpeg', 0.85], ['image/jpeg', 0.7]]) {
+      x.fillStyle = '#fff';
+      x.fillRect(0, 0, doek.width, doek.height);
+      x.drawImage(beeld, sx, sy, sw, sh, 0, 0, doek.width, doek.height);
+      const blob = await new Promise((klaar) => doek.toBlob(klaar, soort, kwaliteit));
+      if (blob?.type === soort && blob.size <= LOGO_MAX) {
+        return new File([blob], `banner.${LOGO_SOORTEN[soort]}`, { type: soort });
+      }
+    }
+  }
+  return null;
+}
+function bannerUrl(p = S.poule) {
+  if (!premiumActief(p) || !p.merk_banner || !db?.storage) return null;
+  return db.storage.from('poulelogo').getPublicUrl(p.merk_banner).data?.publicUrl ?? null;
+}
 const merkKleur = (p = S.poule) =>
   (premiumActief(p) && /^#[0-9a-f]{6}$/.test(p.merk_kleur ?? '') ? p.merk_kleur : null);
 function sponsorRegel(p = S.poule) {
@@ -8176,6 +8224,23 @@ function sponsorRegel(p = S.poule) {
 const poulelogoImg = (klasse = '') => (logoUrl()
   ? `<img class="poulelogo${klasse ? ` ${klasse}` : ''}" data-poulelogo src="${esc(logoUrl())}" alt="" width="44" height="44">` : '');
 const merkbaan = () => (merkKleur() ? `<div class="baan merkbaan" style="background:${merkKleur()}"></div>` : '<div class="baan"></div>');
+// Bovenaan de racelijst: de banner, en daaronder het logo groot met de naam
+// en de sponsorregel. Op een breed scherm staan logo en naam al in de kop;
+// daar alleen de banner. Zonder banner, logo en sponsorregel niets.
+function merkBanner() {
+  if (!premiumActief()) return '';
+  const beeld = bannerUrl();
+  if (!beeld && !logoUrl() && !S.poule.sponsor_tekst) return '';
+  return `
+    <section class="merkbanner${beeld ? ' metbeeld' : ''}" data-merkbanner>
+      ${beeld ? `<img class="bannerbeeld" data-banner src="${esc(beeld)}" alt="${
+        esc(S.poule.sponsor_tekst || S.poule.name)}" width="1500" height="500">` : ''}
+      <div class="bannerregel">
+        ${poulelogoImg('groot')}
+        <div><strong>${esc(S.poule.name)}</strong>${sponsorRegel()}</div>
+      </div>
+    </section>`;
+}
 
 // Het pijltje achter de poulenaam: hier kun je kiezen.
 const KEUZE_PIJL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -8227,9 +8292,10 @@ function toonApp() {
 
       <main class="hoofd" tabindex="-1">
         ${merkbaan()}
-        ${sponsorRegel() ? `<div class="sponsorbalk">${sponsorRegel()}</div>` : ''}
+        ${sponsorRegel() && !(S.weergave === 'races' && !detail && merkBanner())
+          ? `<div class="sponsorbalk">${sponsorRegel()}</div>` : ''}
         <div class="kop">
-          ${poulelogoImg()}
+          ${poulelogoImg('groot')}
           <div class="koptekst">
             <span class="meta">${T('seizoen {jaar} · {n} {spelers}', {
               jaar: seizoen(), n: S.leden.length,
@@ -8245,6 +8311,7 @@ function toonApp() {
             esc(volgend.race.id)}">${T('Top 10 invullen')}</button>` : ''}
         </div>
 
+        ${S.weergave === 'races' && !detail ? merkBanner() : ''}
         ${S.melding ? `<div class="meldingbalk"><div class="melding" data-intro="melding|${
           esc(S.melding)}">${esc(S.melding)}</div></div>` : ''}
 
@@ -11323,9 +11390,10 @@ function profielBlok() {
   return `
     <div class="scheiding"></div>
     <span class="label">${T('eigen profiel')}</span>
-    <p class="zacht" style="margin:0">${T('Premium tot {datum}. Het logo, de kleur en de '
-      + 'sponsorregel staan in de app, op het deelplaatje en bij de uitnodiging.',
+    <p class="zacht" style="margin:0">${T('Premium tot {datum}. De banner staat groot bovenaan de app; '
+      + 'het logo, de kleur en de sponsorregel staan in de app, op het deelplaatje en bij de uitnodiging.',
       { datum: esc(datumKort(S.poule.premium_tot)) })}</p>
+    ${bannerUrl() ? `<img class="bannerbeeld voorbeeld" data-banner src="${esc(bannerUrl())}" alt="" width="1500" height="500">` : ''}
     <div class="profielvoorbeeld" data-profielvoorbeeld>
       ${poulelogoImg() || `<span class="kleurvlak" style="background:${esc(kleur)}"></span>`}
       <div><strong>${esc(S.poule.name)}</strong><br>${sponsorRegel()
@@ -11333,6 +11401,8 @@ function profielBlok() {
     </div>
     <label class="label" for="profiellogo">${T('logo (een groot plaatje maakt de app vanzelf kleiner)')}</label>
     <input class="veld" id="profiellogo" type="file" accept="image/*">
+    <label class="label" for="profielbanner">${T('banner (een breed plaatje; de app snijdt het bij tot 3 bij 1)')}</label>
+    <input class="veld" id="profielbanner" type="file" accept="image/*">
     <label class="label" for="profielkleur">${T('kleur')}</label>
     <input class="kleurveld" id="profielkleur" type="color" value="${esc(kleur)}">
     <label class="label" for="profieltekst">${T('sponsorregel')}</label>
@@ -11343,7 +11413,7 @@ function profielBlok() {
       placeholder="https://" value="${esc(url)}">
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="knop klein" id="profielBewaren">${T('Profiel opslaan')}</button>
-      ${S.poule.merk_logo || S.poule.merk_kleur || S.poule.sponsor_tekst
+      ${S.poule.merk_logo || S.poule.merk_banner || S.poule.merk_kleur || S.poule.sponsor_tekst
         ? `<button class="knop klein" id="profielWeg">${T('Profiel weghalen')}</button>` : ''}
     </div>
     <p class="err" id="profielfout">${esc(S.profielFout)}</p>`;
@@ -12236,9 +12306,11 @@ function knoopProfiel() {
     const url = schoon(veld('#profielurl').value);
     const gekozen = veld('#profiellogo').files?.[0] ?? null;
     const bestand = gekozen ? await verkleinLogo(gekozen) : null;
+    const gekozenBanner = veld('#profielbanner').files?.[0] ?? null;
+    const banner = gekozenBanner ? await verkleinBanner(gekozenBanner) : null;
     S.profielFout = url && !tekst ? T('Een link hoort bij een sponsorregel: vul ook de tekst in.')
       : url && !SPONSOR_URL.test(url) ? T('De link moet met https:// beginnen, zonder spaties.')
-      : gekozen && !bestand ? T('De app kan dit plaatje niet lezen. Kies een png, jpg of webp.')
+      : (gekozen && !bestand) || (gekozenBanner && !banner) ? T('De app kan dit plaatje niet lezen. Kies een png, jpg of webp.')
       : '';
     if (S.profielFout) { render(); return; }
     bewaren.disabled = true;
@@ -12247,21 +12319,22 @@ function knoopProfiel() {
       const wijziging = { merk_kleur: /^#[0-9a-f]{6}$/.test(kleur) ? kleur : null,
                           sponsor_tekst: tekst || null, sponsor_url: url || null };
       const oud = S.poule.merk_logo;
+      const oudeBanner = S.poule.merk_banner;
       if (!DEMO) {
-        if (bestand) {
-          const pad = `${S.poule.id}/logo-${Date.now()}.${LOGO_SOORTEN[bestand.type]}`;
+        for (const [b, naam, kolom] of [[bestand, 'logo', 'merk_logo'], [banner, 'banner', 'merk_banner']]) {
+          if (!b) continue;
+          const pad = `${S.poule.id}/${naam}-${Date.now()}.${LOGO_SOORTEN[b.type]}`;
           const { error } = await db.storage.from('poulelogo')
-            .upload(pad, bestand, { contentType: bestand.type, upsert: false });
+            .upload(pad, b, { contentType: b.type, upsert: false });
           if (error) throw new Error(uitleg(error));
-          wijziging.merk_logo = pad;
+          wijziging[kolom] = pad;
         }
         const { error } = await db.from('pools').update(wijziging).eq('id', S.poule.id);
         if (error) throw new Error(uitleg(error));
-        // Het vorige logo mag weg; lukt dat niet, dan blijft er een bestand
-        // liggen dat niemand ziet.
-        if (wijziging.merk_logo && oud) {
-          Promise.resolve(db.storage.from('poulelogo').remove([oud])).catch(() => {});
-        }
+        // Het vorige logo en de vorige banner mogen weg; lukt dat niet, dan
+        // blijft er een bestand liggen dat niemand ziet.
+        const weg = [wijziging.merk_logo && oud, wijziging.merk_banner && oudeBanner].filter(Boolean);
+        if (weg.length) Promise.resolve(db.storage.from('poulelogo').remove(weg)).catch(() => {});
       }
       Object.assign(S.poule, wijziging);
       onthoudInLijst(S.poule);
@@ -12276,12 +12349,12 @@ function knoopProfiel() {
     weg.disabled = true;
     weg.textContent = T('Bezig...');
     try {
-      const leeg = { merk_kleur: null, merk_logo: null, sponsor_tekst: null, sponsor_url: null };
-      const oud = S.poule.merk_logo;
+      const leeg = { merk_kleur: null, merk_logo: null, merk_banner: null, sponsor_tekst: null, sponsor_url: null };
+      const oud = [S.poule.merk_logo, S.poule.merk_banner].filter(Boolean);
       if (!DEMO) {
         const { error } = await db.from('pools').update(leeg).eq('id', S.poule.id);
         if (error) throw new Error(uitleg(error));
-        if (oud) Promise.resolve(db.storage.from('poulelogo').remove([oud])).catch(() => {});
+        if (oud.length) Promise.resolve(db.storage.from('poulelogo').remove(oud)).catch(() => {});
       }
       Object.assign(S.poule, leeg);
       onthoudInLijst(S.poule);
@@ -16373,6 +16446,8 @@ function kiesSpeler() {
           <span class="naam">Predict the Race</span>
           <span class="code">${esc(S.poule.join_code ?? S.poule.name)}</span>
         </div>
+        ${bannerUrl() ? `<img class="bannerbeeld uitnodiging" data-banner src="${esc(bannerUrl())}" alt="${
+          esc(S.poule.sponsor_tekst || S.poule.name)}" width="1500" height="500">` : ''}
         ${premiumActief() && (logoUrl() || S.poule.sponsor_tekst) ? `<div class="merkkop">
           ${poulelogoImg('groot')}
           <div><strong>${esc(S.poule.name)}</strong><br>${sponsorRegel()}</div>

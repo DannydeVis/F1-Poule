@@ -249,17 +249,24 @@ alter table public.pools        add column if not exists contrair_vanaf timestam
 -- policies op de logo's, niet alleen in de app: de code is openbaar.
 --   merk_logo  het pad in de bucket poulelogo: <poule-id>/<naam>.png|jpg|webp
 --   merk_kleur #rrggbb, in kleine letters
+--   merk_banner (23 november) een breed plaatje van 3 bij 1 bovenaan de app,
+--              in dezelfde map van dezelfde bucket. Danny: "het moet groter,
+--              een groter plaatje, een banner".
 alter table public.pools        add column if not exists premium_tot   timestamptz;
 alter table public.pools        add column if not exists merk_kleur    text;
 alter table public.pools        add column if not exists merk_logo     text;
 alter table public.pools        add column if not exists sponsor_tekst text;
 alter table public.pools        add column if not exists sponsor_url   text;
+alter table public.pools        add column if not exists merk_banner   text;
 alter table public.pools        drop constraint if exists pools_merk_kleur;
 alter table public.pools         add constraint pools_merk_kleur
   check (merk_kleur is null or merk_kleur ~ '^#[0-9a-f]{6}$');
 alter table public.pools        drop constraint if exists pools_merk_logo;
 alter table public.pools         add constraint pools_merk_logo
   check (merk_logo is null or merk_logo ~ ('^' || id::text || '/[A-Za-z0-9_-]{1,60}[.](png|jpg|jpeg|webp)$'));
+alter table public.pools        drop constraint if exists pools_merk_banner;
+alter table public.pools         add constraint pools_merk_banner
+  check (merk_banner is null or merk_banner ~ ('^' || id::text || '/[A-Za-z0-9_-]{1,60}[.](png|jpg|jpeg|webp)$'));
 alter table public.pools        drop constraint if exists pools_sponsor_tekst;
 alter table public.pools         add constraint pools_sponsor_tekst
   check (sponsor_tekst is null or char_length(btrim(sponsor_tekst)) between 1 and 80);
@@ -1406,7 +1413,7 @@ create trigger pool_members_bewaken
 --
 --   * premium_tot zet alleen het beheer. Anders zette elke poulebaas premium
 --     voor zichzelf aan.
---   * Een logo, kleur of sponsorregel zetten kan alleen zolang premium loopt.
+--   * Een logo, banner, kleur of sponsorregel zetten kan alleen zolang premium loopt.
 --     Weghalen (leeg maken) mag altijd, ook als premium voorbij is.
 --   * Wie mag bijwerken bepaalt pools_bijwerken al: de poulebaas.
 create or replace function public.pools_profiel_bewaken()
@@ -1421,6 +1428,7 @@ begin
   end if;
   if ((new.merk_kleur    is distinct from old.merk_kleur    and new.merk_kleur    is not null)
    or (new.merk_logo     is distinct from old.merk_logo     and new.merk_logo     is not null)
+   or (new.merk_banner   is distinct from old.merk_banner   and new.merk_banner   is not null)
    or (new.sponsor_tekst is distinct from old.sponsor_tekst and new.sponsor_tekst is not null)
    or (new.sponsor_url   is distinct from old.sponsor_url   and new.sponsor_url   is not null))
      and not coalesce(old.premium_tot > now(), false) then
@@ -4976,7 +4984,7 @@ select 'functies en tabellen: alleen die uit schema.sql',
           'questions', 'races', 'reacties', 'seizoen_herinneringen', 'site_beheerders', 'site_bezoeken', 'site_paden', 'speler_bronnen', 'spelerscijfers',
           'sync_runs', 'tikken', 'verboden_woorden', 'weekvraag_antwoorden'] as tabellen) v
 union all
--- Premium (13 oktober): de vijf kolommen op pools, de bewaking erop, de teams
+-- Premium (13 oktober): de zes kolommen op pools (de banner sinds 23 november), de bewaking erop, de teams
 -- (pool_teams en de functies erbij), en de vier regels van de bucket
 -- poulelogo in Storage. Zonder Storage (een kale
 -- PostgreSQL) alleen de kolommen en de bewaking.
@@ -4984,7 +4992,7 @@ select 'premium: kolommen, bewaking en logo-opslag',
        case
          when (select count(*) from information_schema.columns
                where table_schema = 'public' and table_name = 'pools'
-                 and column_name in ('premium_tot', 'merk_kleur', 'merk_logo', 'sponsor_tekst', 'sponsor_url')) <> 5
+                 and column_name in ('premium_tot', 'merk_kleur', 'merk_logo', 'merk_banner', 'sponsor_tekst', 'sponsor_url')) <> 6
            then 'KOLOMMEN ONTBREKEN: draai schema.sql opnieuw'
          when not exists (select 1 from pg_trigger
                           where tgrelid = 'public.pools'::regclass and tgname = 'pools_profiel_bewaken')

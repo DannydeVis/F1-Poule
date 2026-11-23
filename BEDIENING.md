@@ -3611,8 +3611,19 @@ zijn dan wel opgeslagen. Laad schema.sql en sla de datum opnieuw op.
 3. Vul bij "Premium tot en met" een datum in, bijvoorbeeld het einde van het
    seizoen → Opslaan. In de lijst staat er "premium" achter de naam.
 4. De poulebaas ziet nu onder Poule (niet onder Profiel: dat is je eigen
-   speler) het blok "eigen profiel": logo kiezen, kleur kiezen, sponsorregel
-   en link invullen, Profiel opslaan.
+   speler) het blok "eigen profiel": banner en logo kiezen, kleur kiezen,
+   sponsorregel en link invullen, Profiel opslaan.
+
+**De banner** (sinds 23 november; Danny: "het moet groter, een groter plaatje,
+een banner"). Een breed plaatje, groot bovenaan de racelijst: op een telefoon
+over de hele breedte met daaronder het logo op 64 pixels, de naam en de
+sponsorregel; op een breed scherm alleen de banner, want logo (ook 64 pixels)
+en naam staan daar al in de kop. Op de andere tabs blijft het bij de smalle
+sponsorbalk. Ook bij "Wie ben jij?" voor wie met de code binnenkomt. De app
+snijdt elk plaatje bij tot 3 bij 1 vanuit het midden en maakt het hoogstens
+1500 pixels breed, onder 200 kB, in dezelfde map van de bucket `poulelogo`
+(kolom `pools.merk_banner`). Advies voor de sponsor: 1500 bij 500 pixels,
+met de tekst niet te dicht bij de randen.
 
 ### Teams
 

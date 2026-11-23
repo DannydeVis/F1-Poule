@@ -37,16 +37,48 @@ export const ONDERDELEN = ['profiel', 'teams', 'periodes', 'vragen', 'tik', 'gro
 const TEKST = {
   nl: { teams: ['Verkoop', 'Techniek', 'Directie'], periodes: [['Voorjaar', 'Taart van de bakker'], ['Zomer', 'Een rondje van de zaak']],
     vraag: 'Valt er een Ferrari uit?', opties: ['Ja', 'Nee'], vraag2: 'Hoeveel pitstops maakt de winnaar?', opties2: ['1', '2', '3 of meer'],
-    sponsor: 'Bakkerij Jansen' },
+    sponsor: 'Bakkerij Jansen', regel: 'Vers brood, elke ochtend sinds 1952' },
   en: { teams: ['Sales', 'Engineering', 'Management'], periodes: [['Spring', 'Cake from the bakery'], ['Summer', 'A round on the house']],
     vraag: 'Will a Ferrari retire?', opties: ['Yes', 'No'], vraag2: 'How many pit stops for the winner?', opties2: ['1', '2', '3 or more'],
-    sponsor: 'Jansen Bakery' },
+    sponsor: 'Jansen Bakery', regel: 'Fresh bread every morning since 1952' },
 };
-const maakPremium = (t) => {
+// Een verzonnen logo en een verzonnen banner voor de bakker, getekend in de
+// browser en als data-url in de opslag van de nabootsing gezet (zoals een
+// upload daar terechtkomt).
+const MERK_HTML = (soort, t) => `<!doctype html><html><head><style>
+  html,body{margin:0}body{font-family:system-ui,sans-serif}
+  .logo{width:256px;height:256px;border-radius:56px;background:#0a7d4f;display:flex;align-items:center;justify-content:center;
+    color:#fff8e7;font:800 112px/1 Georgia,serif;letter-spacing:-4px}
+  .banner{width:1500px;height:500px;position:relative;overflow:hidden;color:#fff8e7;
+    background:radial-gradient(circle at 78% 40%,#e9b65c 0 170px,transparent 171px),linear-gradient(115deg,#064d31,#0a7d4f 55%,#13965f)}
+  .banner .tekst{position:absolute;left:96px;top:120px}
+  .banner b{display:block;font:800 120px/1 Georgia,serif;letter-spacing:-2px}
+  .banner span{display:block;margin-top:26px;font:500 46px/1.2 system-ui,sans-serif;opacity:.92}
+  .brood{position:absolute;right:150px;top:115px;width:330px;height:220px;border-radius:50% 50% 40% 40%;
+    background:#b9742d;box-shadow:inset 0 -26px 0 #8f5520}
+  .brood i{position:absolute;top:58px;width:22px;height:104px;border-radius:11px;background:#e9b65c;transform:rotate(28deg)}
+</style></head><body>${soort === 'logo' ? '<div class="logo">BJ</div>'
+    : `<div class="banner"><div class="tekst"><b>${t.sponsor}</b><span>${t.regel}</span></div>
+       <div class="brood"><i style="left:80px"></i><i style="left:150px"></i><i style="left:220px"></i></div></div>`}</body></html>`;
+async function merkBeelden(page, t) {
+  const blad = await page.context().browser().newPage();
+  const uit = {};
+  for (const [soort, w, h] of [['logo', 256, 256], ['banner', 1500, 500]]) {
+    await blad.setViewportSize({ width: w, height: h });
+    await blad.setContent(MERK_HTML(soort, t));
+    const buf = await blad.screenshot({ type: soort === 'logo' ? 'png' : 'jpeg', quality: soort === 'logo' ? undefined : 82 });
+    uit[soort] = `data:image/${soort === 'logo' ? 'png' : 'jpeg'};base64,${buf.toString('base64')}`;
+  }
+  await blad.close();
+  return uit;
+}
+const maakPremium = ([t, beelden]) => {
   const db = globalThis.__db;
   const p = db.pools[0];
   Object.assign(p, { owner_member_id: 'lid-1', premium_tot: new Date(Date.now() + 200 * 864e5).toISOString(),
-    merk_kleur: '#0a7d4f', sponsor_tekst: t.sponsor, sponsor_url: 'https://example.com' });
+    merk_kleur: '#0a7d4f', sponsor_tekst: t.sponsor, sponsor_url: 'https://example.com',
+    merk_logo: `${p.id}/logo-1.png`, merk_banner: `${p.id}/banner-1.jpg` });
+  db.opslag = { ...(db.opslag ?? {}), [`${p.id}/logo-1.png`]: beelden.logo, [`${p.id}/banner-1.jpg`]: beelden.banner };
   db.pool_teams = t.teams.map((naam, i) => ({ id: `team-${i + 1}`, pool_id: 'pool-1', naam,
     created_at: new Date(Date.now() - (9 - i) * 864e5).toISOString() }));
   const indeling = { 'lid-1': 'team-1', 'lid-2': 'team-1', 'lid-3': 'team-2', 'lid-4': 'team-2', 'lid-5': 'team-3' };
@@ -68,7 +100,7 @@ async function schermen(taal) {
   await page.setViewportSize({ width: 390, height: 844 });
   await meedoen(page);
   await page.evaluate(vulPoule(), POULENAAM[taal]);
-  await page.evaluate(maakPremium, TEKST[taal]);
+  await page.evaluate(maakPremium, [TEKST[taal], await merkBeelden(page, TEKST[taal])]);
   await page.reload();
   await page.waitForSelector('[data-weergave]');
   for (const [thema, schema] of [['licht', 'light'], ['donker', 'dark']]) {
@@ -94,14 +126,16 @@ async function schermen(taal) {
       await page.setViewportSize({ width: 390, height: 844 });
     };
 
-    // Het eigen profiel: de kop met de kleur en de sponsorregel, en de kaart
-    // van het weekend eronder.
+    // Het eigen profiel: de kop met het logo en de kleur, en daaronder de
+    // banner met het logo groot en de sponsorregel (23 november).
     await page.click('[data-weergave="races"]');
-    await page.waitForSelector('.hero');
+    await page.waitForSelector('[data-merkbanner] [data-banner]');
     await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForFunction(() => [...document.querySelectorAll('[data-merkbanner] img')].every((i) => i.complete && i.naturalWidth > 0));
     await page.waitForTimeout(200);
-    maten[`profiel-${taal}-${thema}`] = [390, 430];
-    bewaar('profiel', await page.screenshot({ type: 'jpeg', quality: 80, clip: { x: 0, y: 0, width: 390, height: 430 } }));
+    const onder = Math.round(await page.$eval('[data-merkbanner]', (el) => el.getBoundingClientRect().bottom)) + 14;
+    maten[`profiel-${taal}-${thema}`] = [390, onder];
+    bewaar('profiel', await page.screenshot({ type: 'jpeg', quality: 80, clip: { x: 0, y: 0, width: 390, height: onder } }));
 
     await page.click('[data-weergave="stand"]');
     await page.waitForSelector('[data-teamstand]');

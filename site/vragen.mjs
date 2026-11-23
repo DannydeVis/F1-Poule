@@ -146,7 +146,7 @@ export const VRAGEN = [
   { vraag: 'Kan een lid later in het seizoen nog instappen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
   // ---- premium ----
   { vraag: 'Wat is het verschil tussen gratis en premium?', taal: 'nl', varianten: ['f1 poule gratis of betaald'], bron: 'hypothese', doel: 'premium#gratis-of-premium', status: 'beantwoord' },
-  { vraag: 'Hoe ziet een poule met een eigen kleur en sponsor eruit?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#profiel', status: 'beantwoord' },
+  { vraag: 'Hoe ziet een poule met een eigen banner, logo en sponsor eruit?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#profiel', status: 'beantwoord' },
   { vraag: 'Hoe werken teams in een poule?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#teams', status: 'beantwoord' },
   { vraag: 'Wat zijn eigen vragen?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#eigen-vragen', status: 'beantwoord' },
   { vraag: 'Wat is een tussenklassement?', taal: 'nl', varianten: [], bron: 'hypothese', doel: 'premium#tussenklassementen', status: 'beantwoord' },
@@ -270,7 +270,7 @@ export const VRAGEN = [
   { vraag: 'Can a member still join later in the season?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'community#faq', status: 'beantwoord' },
   // ---- premium ----
   { vraag: 'What is the difference between free and premium?', taal: 'en', varianten: ['f1 prediction league free vs premium'], bron: 'hypothese', doel: 'premium#free-or-premium', status: 'beantwoord' },
-  { vraag: 'What does a league with its own colour and sponsor look like?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#branding', status: 'beantwoord' },
+  { vraag: 'What does a league with its own banner, logo and sponsor look like?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#branding', status: 'beantwoord' },
   { vraag: 'How do teams work in a league?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#teams', status: 'beantwoord' },
   { vraag: 'What are custom questions?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#custom-questions', status: 'beantwoord' },
   { vraag: 'What is an interim standing?', taal: 'en', varianten: [], bron: 'hypothese', doel: 'premium#interim-standings', status: 'beantwoord' },
