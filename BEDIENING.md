@@ -3625,6 +3625,19 @@ snijdt elk plaatje bij tot 3 bij 1 vanuit het midden en maakt het hoogstens
 (kolom `pools.merk_banner`). Advies voor de sponsor: 1500 bij 500 pixels,
 met de tekst niet te dicht bij de randen.
 
+**De uitnodiging als plaatje** (sinds 24 november; Danny: "als de poule
+gedeeld wordt dat dan ook dat logo erbij komt"). Heeft een premium-poule een
+logo of banner, dan heet de knop onder Poule "Deel de uitnodiging": er gaat
+een plaatje mee met de banner, de naam van de poule, de code met het logo
+ernaast en onderaan de sponsor, en de link en de sponsorregel als tekst
+erbij. Zonder logo en banner blijft het de link om te kopiëren.
+
+Het voorbeeld onder een link in WhatsApp (het plaatje dat de app zelf bij een
+link laat zien) kan niet per poule. De site is een vaste site op GitHub Pages:
+elke link naar de app krijgt hetzelfde voorbeeld. Een eigen pagina per poule
+zou in de openbare repo staan, met de code erin, en met de code kom je een
+poule binnen. Vandaar het plaatje in het bericht zelf.
+
 ### Teams
 
 Met premium kan de poulebaas teams maken: afdelingen, clubs of families tegen

@@ -2227,7 +2227,7 @@ export const PAGINAS = [
           {
             id: 'profiel',
             vraag: 'Hoe ziet een poule met een eigen banner, logo en sponsor eruit?',
-            kort: 'Een poule met premium krijgt een eigen gezicht: een grote banner bovenaan de app, je logo groot naast de naam, je eigen kleur en een regel "mogelijk gemaakt door" met een link naar de sponsor. Iedereen in de poule ziet de banner elke keer dat hij de app opent; het logo en de sponsor staan ook op het deelplaatje van de uitslag en bij de uitnodiging.',
+            kort: 'Een poule met premium krijgt een eigen gezicht: een grote banner bovenaan de app, je logo groot naast de naam, je eigen kleur en een regel "mogelijk gemaakt door" met een link naar de sponsor. Iedereen in de poule ziet de banner elke keer dat hij de app opent. De uitnodiging gaat als plaatje mee met de banner en het logo, en het logo en de sponsor staan ook op het deelplaatje van de uitslag.',
             beeld: 'profiel',
             beeldAlt: 'De app met een groene banner van Bakkerij Jansen bovenaan, daaronder het logo groot met de naam van de poule en de regel "mogelijk gemaakt door Bakkerij Jansen"',
             tekst: [
@@ -2341,7 +2341,7 @@ export const PAGINAS = [
           {
             id: 'branding',
             vraag: 'What does a league with its own banner, logo and sponsor look like?',
-            kort: 'A league with premium gets its own look: a large banner at the top of the app, your logo in large next to the name, your own colour and a "brought to you by" line with a link to the sponsor. Everyone in the league sees the banner every time they open the app; the logo and the sponsor also show on the share image of the result and on the invitation.',
+            kort: 'A league with premium gets its own look: a large banner at the top of the app, your logo in large next to the name, your own colour and a "brought to you by" line with a link to the sponsor. Everyone sees the banner every time they open the app. The invitation goes out as an image with the banner and the logo, and the logo and sponsor also show on the result\'s share image.',
             beeld: 'profiel',
             beeldAlt: 'The app with a green Jansen Bakery banner at the top, below it the logo in large with the league name and the line "brought to you by Jansen Bakery"',
             tekst: [

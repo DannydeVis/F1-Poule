@@ -993,5 +993,9 @@
  "verrast": "sorpresa",
  "pijnlijk": "ay",
  "Meespelen blijft gratis. Grote poules, bedrijven en clubs kunnen er extra's bij krijgen, zoals teams, eigen vragen en een eigen logo. Betalen kan nog niet. Wil je de extra's nu al? Mail dan {adres}.": "Jugar sigue siendo gratis. Las ligas grandes, las empresas y los clubes pueden añadir extras, como equipos, preguntas propias y su propio logo. Todavía no se puede pagar. ¿Quieres los extras ya? Escribe a {adres}.",
- "Bekijk premium met voorbeelden": "Ver premium con ejemplos"
+ "Bekijk premium met voorbeelden": "Ver premium con ejemplos",
+ "Deel de uitnodiging": "Comparte la invitación",
+ "uitnodiging": "invitación",
+ "Open de link in het bericht, of tik de code in de app in.": "Abre el enlace del mensaje o escribe el código en la app.",
+ "Uitnodiging voor {poule} met de poulecode {code}": "Invitación a {poule} con el código de la liga {code}"
 }

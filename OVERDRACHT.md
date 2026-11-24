@@ -13086,3 +13086,24 @@ hebben al het logo, en een tweede beeld maakt ze druk.
 
 **Tests.** `premium.test.mjs` (banner: 10 nieuwe checks), `premium.test.sql`
 (banner), en de premiumpagina met de nieuwe plaatjes.
+
+## De uitnodiging als plaatje, met het logo (24 november)
+
+Danny: "Misschien ook als de poule gedeeld word dat dan ook dat logo erbij
+komt staan in de link?"
+
+**Wat er verandert.** Een premium-poule met een logo of banner deelt de
+uitnodiging als plaatje (`tekenUitnodiging()`, 1080 bij 1350): de banner, de
+naam, de code met het logo groot ernaast, en onderaan de sponsor
+(`deelVoet`). Het gaat via het bestaande deelvenster (`openDeelvenster`),
+dat nu ook tekst mee kan geven aan `navigator.share` (`deelTekst`): de link
+en de sponsorregel. De knoppen "Kopieer uitnodigingslink" (Poule) en "Deel de
+code" (nog alleen jij) worden dan "Deel de uitnodiging". Vier teksten nieuw,
+in alle zeven talen. Premiumpagina: de zin over de uitnodiging.
+
+**Bewust niet.** Het voorbeeld onder de link zelf (og:image) per poule: de
+site is statisch op GitHub Pages, en een pagina per poule zou de code in de
+openbare repo zetten. Een Edge Function van Supabase geeft op het eigen
+supabase.co-adres geen html terug die WhatsApp leest. Staat in BEDIENING.
+
+**Tests.** `premium.test.mjs`: 5 checks erbij (48).
