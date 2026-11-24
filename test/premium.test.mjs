@@ -179,18 +179,44 @@ const kop = () => page.evaluate(() => {
     balk: await zichtbaar('.sponsorbalk') };
   check('op een breed scherm niet dubbel: daar staan ze in de kop', !breed.logo && breed.p && !breed.balk, JSON.stringify(breed));
 }
-// De uitnodiging die je in de groepsapp zet, noemt de sponsor ook.
+// De uitnodiging (24 november; Danny: "als de poule gedeeld wordt dat dan ook
+// dat logo erbij komt"). Met een logo deelt de knop een plaatje met de
+// banner, de naam, de code en het logo, met de link en de sponsor als tekst
+// erbij. Het voorbeeld onder een link kan niet per poule (een vaste site).
 {
-  const tekst = await page.evaluate(() => {
-    let gekopieerd = '';
-    navigator.share = undefined;
-    navigator.clipboard.writeText = async (t) => { gekopieerd = t; };
-    return new Promise((klaar) => {
-      document.querySelector('#uitnodiging')?.click();
-      setTimeout(() => klaar(gekopieerd), 300);
-    });
+  await page.evaluate(() => {
+    window.__gedeeld = null;
+    navigator.canShare = () => true;
+    navigator.share = async (d) => { window.__gedeeld = { tekst: d.text, bestanden: (d.files ?? []).map((f) => `${f.name}:${f.type}`) }; };
   });
-  check('de uitnodiging noemt de sponsor', /\?code=/.test(tekst) && tekst.includes('mogelijk gemaakt door Bakkerij Jansen'), tekst);
+  check('met een logo deelt de knop de uitnodiging als plaatje', (await page.textContent('#uitnodiging')).trim() === 'Deel de uitnodiging');
+  await page.click('#uitnodiging');
+  await page.waitForSelector('.deelvenster .deelbeeld');
+  const beeld = await page.$eval('.deelvenster .deelbeeld', (i) => ({ w: i.naturalWidth, h: i.naturalHeight, alt: i.alt }));
+  check('een plaatje van 1080 bij 1350 met de naam en de code in de beschrijving',
+    beeld.w === 1080 && beeld.h === 1350 && beeld.alt === 'Uitnodiging voor Vrijdagmiddagpoule met de poulecode RTM026', JSON.stringify(beeld));
+  // Het logo staat erop: groene pixels (het logo is effen #00ff00).
+  const groen = await page.$eval('.deelvenster .deelbeeld', (i) => {
+    const c = document.createElement('canvas'); c.width = i.naturalWidth; c.height = i.naturalHeight;
+    const x = c.getContext('2d'); x.drawImage(i, 0, 0);
+    const d = x.getImageData(0, 0, c.width, c.height).data;
+    let n = 0; for (let k = 0; k < d.length; k += 4) if (d[k] < 40 && d[k + 1] > 200 && d[k + 2] < 40) n++;
+    return n;
+  });
+  check('met het logo van de poule erop, groot naast de code', groen > 8000, String(groen));
+  await page.click('.deelvenster [data-delen]');
+  await page.waitForFunction(() => window.__gedeeld);
+  const gedeeld = await page.evaluate(() => window.__gedeeld);
+  check('delen stuurt het plaatje mee, met de link en de sponsor als tekst',
+    /\?code=RTM026/.test(gedeeld.tekst) && gedeeld.tekst.includes('mogelijk gemaakt door Bakkerij Jansen')
+      && gedeeld.bestanden.length === 1 && /uitnodiging-vrijdagmiddagpoule\.png:image\/png$/.test(gedeeld.bestanden[0]), JSON.stringify(gedeeld));
+  const tekst = await page.evaluate(() => new Promise((klaar) => {
+    navigator.clipboard.writeText = async (t) => klaar(t);
+    document.querySelector('.deelvenster [data-kopieer-tekst]').click();
+    setTimeout(() => klaar(''), 1000);
+  }));
+  check('als tekst: de uitnodiging met de link en de sponsor', /\?code=/.test(tekst) && tekst.includes('mogelijk gemaakt door Bakkerij Jansen'), tekst);
+  await page.keyboard.press('Escape');
 }
 
 // Bram is geen poulebaas: hij ziet het profiel wel, de velden niet.
@@ -438,6 +464,8 @@ await page.waitForFunction(() => document.querySelector('.melding')?.textContent
 {
   const d = await lees();
   const p = d.pools[0];
+  check('zonder logo of banner blijft het een link om te kopiëren',
+    (await page.textContent('#uitnodiging').catch(() => '')).trim() === 'Kopieer uitnodigingslink');
   check('weghalen haalt alles weg, ook het bestand in de opslag',
     !p.merk_logo && !p.merk_banner && !p.merk_kleur && !p.sponsor_tekst && !p.sponsor_url && !Object.keys(d.opslag ?? {}).length,
     JSON.stringify({ p, opslag: d.opslag && Object.keys(d.opslag) }));

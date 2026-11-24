@@ -4861,6 +4861,14 @@ const ENGELS = Object.fromEntries([
    'Premium until {datum}. The banner appears large at the top of the app; the logo, the colour and the sponsor line appear in the app, on the share image and on the invite.'],
   ['banner (een breed plaatje; de app snijdt het bij tot 3 bij 1)',
    'banner (a wide image; the app crops it to 3 by 1)'],
+  ['Deel de uitnodiging',
+   'Share the invitation'],
+  ['uitnodiging',
+   'invitation'],
+  ['Open de link in het bericht, of tik de code in de app in.',
+   'Open the link in the message, or enter the code in the app.'],
+  ['Uitnodiging voor {poule} met de poulecode {code}',
+   'Invitation to {poule} with the league code {code}'],
   ['nog geen sponsorregel',
    'no sponsor line yet'],
   ['logo (een groot plaatje maakt de app vanzelf kleiner)',
@@ -7759,6 +7767,12 @@ const agendaAbonnee = () => agendaLink().replace(/^https?:/, 'webcal:');
 // selecteren — zie naarKlembord() hieronder.
 function knoopUitnodiging(waar, poule = S.poule) {
   kopieerknop(waar, '#uitnodiging', '#uitnodigingveld', () => uitnodigingsTekst(poule));
+  // Premium met een logo of banner: de uitnodiging als plaatje, met de link erbij.
+  const knop = waar.querySelector('#uitnodiging');
+  if (knop && poule === S.poule && uitnodigingMetBeeld()) {
+    knop.textContent = T('Deel de uitnodiging');
+    knop.onclick = () => openDeelvenster(uitnodigingDelen(), knop);
+  }
   if (S.poule && S.ik) kopieerknop(waar, '#eigenlink', '#eigenlinkveld', eigenLinkTekst);
   kopieerknop(waar, '#agendalink', '#agendalinkveld', agendaLink);
 }
@@ -8823,6 +8837,7 @@ function knoopLegePoule() {
   if (open) open.onclick = () => { open.disabled = true; naarPouleMetCode(OPEN_POULE); };
   const knop = app.querySelector('#deelcode');
   if (!knop) return;
+  if (uitnodigingMetBeeld()) { knop.onclick = () => openDeelvenster(uitnodigingDelen(), knop); return; }
   knop.onclick = async () => {
     const tekst = uitnodigingsTekst();
     if (navigator.share) {
@@ -14908,6 +14923,64 @@ async function tekenStoryStand() {
   return d.doek;
 }
 
+// De uitnodiging als plaatje (premium, 24 november). Danny: "Misschien ook als
+// de poule gedeeld wordt dat dan ook dat logo erbij komt staan in de link?"
+// Het voorbeeld onder een link (og:image) kan niet per poule: de site is een
+// vaste site op GitHub Pages, en een eigen pagina per poule zou de code
+// openbaar maken. Dus gaat er een plaatje mee met de link: de banner, de naam,
+// de code, en onderaan het logo en de sponsor (deelVoet).
+async function tekenUitnodiging() {
+  const p = S.poule;
+  const d = await deelDoek(`${p.name}${p.join_code}${T('Open de link in het bericht, of tik de code in de app in.')}`);
+  const { x, schrijf, label, K, L, rand, breed } = d;
+  const rond = (px, py, w, h, r) => {
+    x.beginPath();
+    if (x.roundRect) x.roundRect(px, py, w, h, r); else x.rect(px, py, w, h);
+  };
+  let y = 170;
+  const banner = bannerUrl() ? await laadBeeld(bannerUrl(), true) : null;
+  if (banner) {
+    const hoog = Math.round(breed / 3);
+    x.save(); rond(rand, y, breed, hoog, 22); x.clip();
+    x.drawImage(banner, rand, y, breed, hoog);
+    x.restore();
+    y += hoog + 70;
+  } else y += 70;
+  label(T('uitnodiging'), rand, y);
+  y = deelKop(d, p.name, y) + 80;
+  const kaart = 200;
+  x.fillStyle = K.paneel; rond(rand, y, breed, kaart, 22); x.fill();
+  x.fillStyle = d.strepen; x.fillRect(rand, y, 8, kaart);
+  label(T('poulecode'), rand + 40, y + 54);
+  schrijf(String(p.join_code ?? ''), rand + 40, y + 160, { font: `700 112px ${L.mono}`, spatie: 16 });
+  // Het logo van de poule groot naast de code, op wit zoals in de app.
+  if (d.poulelogo) {
+    const m = 156, lx = rand + breed - m - 22, ly = y + (kaart - m) / 2;
+    x.fillStyle = '#fff'; rond(lx, ly, m, m, 26); x.fill();
+    const s = Math.min((m - 24) / d.poulelogo.width, (m - 24) / d.poulelogo.height);
+    const w = d.poulelogo.width * s, h = d.poulelogo.height * s;
+    x.drawImage(d.poulelogo, lx + (m - w) / 2, ly + (m - h) / 2, w, h);
+  }
+  y += kaart + 64;
+  x.font = `600 38px ${L.cond}`;
+  schrijf(pasIn(x, T('Open de link in het bericht, of tik de code in de app in.'), breed), rand, y,
+    { font: `600 38px ${L.cond}`, kleur: K.ink2 });
+  deelVoet(d);
+  return d.doek;
+}
+// Alleen met premium, en alleen als er een logo of banner is: anders is het
+// plaatje niets meer dan de tekst, en blijft het bij de link.
+const uitnodigingMetBeeld = () => !!S.poule?.join_code && premiumActief() && !!(logoUrl() || bannerUrl());
+const uitnodigingDelen = () => ({
+  kop: T('Deel de uitnodiging'),
+  teken: tekenUitnodiging,
+  naam: deelBestandsnaam(`uitnodiging ${S.poule?.name ?? ''}`),
+  titel: S.poule?.name ?? '',
+  alt: T('Uitnodiging voor {poule} met de poulecode {code}', { poule: S.poule?.name ?? '', code: S.poule?.join_code ?? '' }),
+  tekst: () => uitnodigingsTekst(),
+  deelTekst: () => uitnodigingsTekst(),
+});
+
 // "Grand Prix van Singapore" wordt predict-the-race-grand-prix-van-singapore.png.
 const deelBestandsnaam = (naam) => `predict-the-race-${String(naam ?? 'uitslag')
   .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -15073,7 +15146,7 @@ async function openDeelvenster(stuk, knop) {
   const delen = venster.querySelector('[data-delen]');
   if (delen) delen.onclick = async () => {
     try {
-      await navigator.share({ files: [bestand], title: stuk.titel });
+      await navigator.share({ files: [bestand], title: stuk.titel, ...(stuk.deelTekst ? { text: stuk.deelTekst() } : {}) });
     } catch (e) {
       // Wegtikken van het deelmenu is geen fout. Al het andere wel: dan wordt
       // de knop alsnog een gewone download.
